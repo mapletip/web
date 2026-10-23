@@ -1,0 +1,104 @@
+{
+  "name": "@mapletip/config",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Shared tooling configs (eslint, prettier, tsconfig, lint-staged, vitest, vite)",
+  "type": "module",
+  "exports": {
+    "./eslint/next": "./eslint/next.js",
+    "./eslint/node": "./eslint/node.js",
+    "./eslint/react": "./eslint/react.js",
+    "./eslint/vitest": "./eslint/vitest.js",
+    "./lint-staged": "./lint-staged/index.js",
+    "./prettier": "./prettier/index.js",
+    "./typescript/nextjs": "./typescript/nextjs.json",
+    "./typescript/node": "./typescript/node.json",
+    "./typescript/react-library": "./typescript/react-library.json",
+    "./typescript/vite-react": "./typescript/vite-react.json",
+    "./vite/lib": "./vite/lib.js",
+    "./vitest/browser": "./vitest/browser.js",
+    "./vitest/react": "./vitest/react.js"
+  },
+  "scripts": {
+    "check-types": "tsc",
+    "test": "node scripts/smoke.mjs"
+  },
+  "dependencies": {
+    "@eslint/js": "catalog:",
+    "@vitest/eslint-plugin": "catalog:",
+    "eslint-import-resolver-typescript": "catalog:",
+    "eslint-plugin-import-x": "catalog:",
+    "globals": "catalog:",
+    "prettier-plugin-packagejson": "catalog:",
+    "typescript-eslint": "catalog:"
+  },
+  "devDependencies": {
+    "@next/eslint-plugin-next": "catalog:",
+    "@types/eslint-plugin-jsx-a11y": "catalog:",
+    "@types/node": "catalog:",
+    "@vitejs/plugin-react": "catalog:",
+    "@vitest/browser-playwright": "catalog:",
+    "eslint": "catalog:",
+    "eslint-plugin-jsx-a11y": "catalog:",
+    "eslint-plugin-react": "catalog:",
+    "eslint-plugin-react-hooks": "catalog:",
+    "playwright": "catalog:",
+    "prettier": "catalog:",
+    "typescript": "catalog:",
+    "vite": "catalog:",
+    "vite-plugin-dts": "catalog:",
+    "vite-plugin-externalize-deps": "catalog:",
+    "vitest": "catalog:"
+  },
+  "peerDependencies": {
+    "@next/eslint-plugin-next": ">=16",
+    "@vitejs/plugin-react": ">=6",
+    "@vitest/browser-playwright": ">=4",
+    "eslint": ">=10",
+    "eslint-plugin-jsx-a11y": ">=6",
+    "eslint-plugin-react": ">=7.37",
+    "eslint-plugin-react-hooks": ">=7",
+    "playwright": ">=1.50",
+    "prettier": ">=3",
+    "typescript": ">=5.9",
+    "vite": ">=7",
+    "vite-plugin-dts": ">=4",
+    "vite-plugin-externalize-deps": ">=0.9",
+    "vitest": ">=3"
+  },
+  "peerDependenciesMeta": {
+    "@next/eslint-plugin-next": {
+      "optional": true
+    },
+    "@vitejs/plugin-react": {
+      "optional": true
+    },
+    "@vitest/browser-playwright": {
+      "optional": true
+    },
+    "eslint-plugin-jsx-a11y": {
+      "optional": true
+    },
+    "eslint-plugin-react": {
+      "optional": true
+    },
+    "eslint-plugin-react-hooks": {
+      "optional": true
+    },
+    "playwright": {
+      "optional": true
+    },
+    "vite": {
+      "optional": true
+    },
+    "vite-plugin-dts": {
+      "optional": true
+    },
+    "vite-plugin-externalize-deps": {
+      "optional": true
+    },
+    "vitest": {
+      "optional": true
+    }
+  }
+}

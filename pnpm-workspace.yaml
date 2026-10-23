@@ -1,0 +1,72 @@
+packages:
+  - apps/*
+  - packages/*
+
+allowBuilds:
+  esbuild: true
+  sharp: true
+  unrs-resolver: true
+
+catalog:
+  # linting
+  '@eslint/js': ^10.0.1
+  '@next/eslint-plugin-next': ^16.4.3
+  '@types/eslint-plugin-jsx-a11y': ^6.10.1
+  '@vitest/eslint-plugin': ^1.6.28
+  eslint: ^10.13.0
+  eslint-import-resolver-typescript: ^4.4.5
+  eslint-plugin-import-x: ^4.17.1
+  eslint-plugin-jsx-a11y: ^6.10.2
+  eslint-plugin-react: ^7.37.5
+  eslint-plugin-react-hooks: ^7.1.1
+  globals: ^17.13.0
+  typescript-eslint: ^8.72.0
+  # formatting
+  prettier: ^3.9.10
+  prettier-plugin-packagejson: ^3.0.2
+  # toolchain
+  '@types/node': ^26.6.5
+  turbo: ^2.11.10
+  # typescript 7 (native) drops the JS Compiler API that typescript-eslint
+  # and vite-plugin-dts require; stay on 6.x until they support it
+  typescript: ^6.0.3
+  # bundling
+  '@vitejs/plugin-react': ^6.1.2
+  vite: ^8.3.5
+  vite-plugin-dts: ^5.1.2
+  vite-plugin-externalize-deps: ^0.10.0
+  # testing
+  '@vitest/browser-playwright': ^5.0.5
+  # exact pin: CI's mcr.microsoft.com/playwright image tag is derived from it
+  playwright: 1.64.1
+  vitest: ^5.0.5
+  vitest-browser-react: ^2.3.0
+  # react / next
+  '@types/react': ^19.2.18
+  '@types/react-dom': ^19.2.5
+  next: ^16.4.3
+  react: ^19.2.8
+  react-dom: ^19.2.8
+  # ui
+  '@mantine/core': ^9.7.3
+  '@mantine/hooks': ^9.7.3
+  postcss: ^8.5.31
+  postcss-preset-mantine: ^1.18.0
+  postcss-simple-vars: ^7.0.1
+  # storybook
+  '@storybook/addon-vitest': ^10.6.3
+  '@storybook/react-vite': ^10.6.3
+  storybook: ^10.6.3
+
+minimumReleaseAgeExclude:
+  - '@next/env@16.4.3'
+  - '@next/eslint-plugin-next@16.4.3'
+  - '@next/swc-darwin-arm64@16.4.3'
+  - '@next/swc-darwin-x64@16.4.3'
+  - '@next/swc-linux-arm64-gnu@16.4.3'
+  - '@next/swc-linux-arm64-musl@16.4.3'
+  - '@next/swc-linux-x64-gnu@16.4.3'
+  - '@next/swc-linux-x64-musl@16.4.3'
+  - '@next/swc-win32-arm64-msvc@16.4.3'
+  - '@next/swc-win32-x64-msvc@16.4.3'
+  - next@16.4.3

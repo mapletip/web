@@ -1,0 +1,10 @@
+{
+  "extends": "@mapletip/config/typescript/nextjs",
+  "include": [
+    "**/*.ts",
+    "**/*.tsx",
+    "next-env.d.ts",
+    "next.config.js",
+    ".next/types/**/*.ts"
+  ]
+}
