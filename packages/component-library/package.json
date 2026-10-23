@@ -27,6 +27,8 @@
     "@types/react-dom": "catalog:",
     "@vitejs/plugin-react": "catalog:",
     "@vitest/browser-playwright": "catalog:",
+    "ag-grid-community": "catalog:",
+    "ag-grid-react": "catalog:",
     "eslint": "catalog:",
     "playwright": "catalog:",
     "postcss": "catalog:",

@@ -1,0 +1,87 @@
+.fixedFrame {
+  /* Fill the viewport below the sticky app header so the grid header stays visible. */
+  height: calc(100dvh - var(--spike-header-height, 0px) - 120px);
+  min-height: 320px;
+}
+
+.boundedFrame {
+  /* Read by the theme's autoHeightMaxBodyHeight; header + toolbar budget is a spike guess. */
+  --comparison-grid-max-body-height: calc(
+    100dvh - var(--spike-header-height, 0px) - 160px
+  );
+}
+
+.identity {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-block: 6px;
+  line-height: 1.3;
+}
+
+.sprite,
+.missingSprite {
+  flex: none;
+  width: 28px;
+  height: 28px;
+}
+
+.missingSprite {
+  display: inline-grid;
+  place-items: center;
+  border: 1px dashed var(--mantine-color-default-border);
+  border-radius: var(--mantine-radius-sm);
+  color: var(--mantine-color-dimmed);
+  font-weight: 700;
+}
+
+.identityText {
+  display: grid;
+  min-width: 0;
+}
+
+.link {
+  color: var(--mantine-color-anchor);
+  text-decoration: none;
+  overflow-wrap: anywhere;
+}
+
+.link:hover {
+  text-decoration: underline;
+}
+
+.link:focus-visible {
+  outline: 2px solid var(--mantine-primary-color-filled);
+  outline-offset: 2px;
+}
+
+.trait {
+  color: var(--mantine-color-orange-text);
+  font-size: var(--mantine-font-size-xs);
+}
+
+.unknown {
+  color: var(--mantine-color-dimmed);
+}
+
+.sorted {
+  background-color: color-mix(
+    in srgb,
+    var(--mantine-primary-color-filled) 8%,
+    transparent
+  );
+  font-weight: 600;
+}
+
+.frame :global(.ag-cell) {
+  font-variant-numeric: tabular-nums;
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
