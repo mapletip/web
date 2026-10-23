@@ -20,9 +20,9 @@
     "test": {
       "passThroughEnv": ["PLAYWRIGHT_BROWSERS_PATH", "PLAYWRIGHT_WS_ENDPOINT"]
     },
-    "//#format": {
+    "//#format:root": {
       "cache": false
     },
-    "//#format:check": {}
+    "//#format:check:root": {}
   }
 }

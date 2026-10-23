@@ -25,7 +25,7 @@ pnpm install
 | `pnpm test`            | Config smoke tests + browser tests            |
 | `pnpm lint`            | ESLint (type-checked)                         |
 | `pnpm check-types`     | TypeScript                                    |
-| `pnpm format`          | Prettier write (`format:check` to verify)     |
+| `pnpm format`          | Prettier via turbo (`format:check` to verify) |
 
 ## Tests
 
@@ -41,9 +41,6 @@ Install the browser once with
 
 To use a remote browser instead (e.g. on hosts that can't run Chromium
 natively), set `PLAYWRIGHT_WS_ENDPOINT` to a Playwright server's WebSocket URL.
-
-All tasks, including `format` and `format:check`, can also run through turbo
-(`pnpm turbo run format:check lint check-types`) for caching and parallelism.
 
 CI runs the tests inside the `mcr.microsoft.com/playwright` image matching the
 `playwright` pin in `pnpm-workspace.yaml`.
