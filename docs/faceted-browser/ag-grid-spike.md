@@ -3,9 +3,19 @@
 **Question:** can AG Grid Community supply the desktop comparison table for the
 Faceted Browser without MapleTip-specific table infrastructure?
 
-**Answer:** provisionally yes, with constraints. Final adoption is pending the
-accessibility gate and decisions D1–D4. See
-[the recommendation](./README.md#1-recommendation).
+**Answer (at the time of the spike):** provisionally yes, with constraints.
+
+> **Update — superseded as the production plan.** Server-side rendering was
+> later made the first decision criterion. The
+> [SSR-first evaluation](./ssr-first-table-evaluation.md) shows AG Grid renders
+> 0 of 100 records (and no links) into server HTML and shifts the layout by
+> 779 px on hydration, while first-party Mantine `Table` renders everything and
+> hydrates cleanly. This spike is kept unchanged as the **interaction-quality
+> baseline**; the current recommendation is in the [plan](./README.md).
+>
+> One correction: `api.refreshCells` was called without registering
+> `RenderApiModule` (AG error #200 on every header sort). It was redundant and
+> has been removed; the sorted-column tint test still passes.
 
 Labels used below:
 

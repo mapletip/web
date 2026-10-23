@@ -218,8 +218,6 @@ export function MonsterComparisonGrid({
             }
           : null,
       );
-      // Re-evaluate the sorted-column cell class after the header state changes.
-      event.api.refreshCells({ force: true });
     },
     [onSortChange],
   );

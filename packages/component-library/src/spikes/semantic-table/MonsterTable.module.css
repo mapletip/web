@@ -1,0 +1,190 @@
+/* Shared by the Mantine Table (+ TanStack) and plain Mantine Table spikes. */
+
+.scroll {
+  /* Same body budget as the AG Grid bounded layout: header + toolbar guess. */
+  --scroll-max-height: calc(100dvh - var(--spike-header-height, 0px) - 120px);
+  border: 1px solid var(--mantine-color-default-border);
+  border-radius: var(--mantine-radius-default);
+}
+
+.table {
+  --table-highlight-on-hover-color: color-mix(
+    in srgb,
+    var(--mantine-color-text) 7%,
+    transparent
+  );
+  --column-hover-color: color-mix(
+    in srgb,
+    var(--mantine-color-text) 7%,
+    transparent
+  );
+  --sorted-color: color-mix(
+    in srgb,
+    var(--mantine-primary-color-filled) 8%,
+    transparent
+  );
+
+  /* Clips the column-highlight pseudo-elements to the table. */
+  contain: paint;
+  font-size: var(--mantine-font-size-sm);
+}
+
+.head {
+  color: var(--mantine-color-dimmed);
+  font-size: var(--mantine-font-size-xs);
+  font-weight: 650;
+}
+
+.numeric {
+  position: relative;
+  text-align: end;
+}
+
+.sorted {
+  background-color: var(--sorted-color);
+  font-weight: 600;
+}
+
+/* Sticky identity column: opaque, so rows hovering must repaint it explicitly. */
+.pinned {
+  position: sticky;
+  inset-inline-start: 0;
+  z-index: 2;
+  background-color: var(--mantine-color-body);
+  box-shadow: inset -1px 0 var(--mantine-color-default-border);
+}
+
+thead .pinned {
+  z-index: 4;
+}
+
+/* Mantine renders <th> bold; the identity row header should read as a normal cell. */
+tbody .pinned {
+  font-weight: 400;
+}
+
+.row:focus-within {
+  outline: 2px solid var(--mantine-primary-color-filled);
+  outline-offset: -2px;
+}
+
+.sortButton {
+  display: inline-flex;
+  gap: 4px;
+  align-items: center;
+  width: 100%;
+  font: inherit;
+  color: inherit;
+}
+
+.numeric .sortButton {
+  justify-content: flex-end;
+}
+
+.sortButton:focus-visible {
+  outline: 2px solid var(--mantine-primary-color-filled);
+  outline-offset: 2px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  tr:hover > .pinned {
+    background-color: color-mix(
+      in srgb,
+      var(--mantine-color-text) 7%,
+      var(--mantine-color-body)
+    );
+  }
+
+  /*
+   * Declarative column highlight, no JS and no per-column selectors: a body
+   * cell under the pointer paints a translucent overlay far above and below
+   * itself, clipped by `contain: paint` on the table. The overlay stacks with
+   * the row's own hover tint, so the intersection is darker.
+   */
+  tbody .numeric:hover::after {
+    position: absolute;
+    inset: -100vmax 0;
+    pointer-events: none;
+    content: '';
+    background-color: var(--column-hover-color);
+  }
+}
+
+@media (forced-colors: active) {
+  .pinned {
+    background-color: Canvas;
+  }
+
+  /* Forced colors drop background tints, so row hover needs an outline. */
+  tbody tr:hover {
+    outline: 1px solid Highlight;
+    outline-offset: -1px;
+  }
+
+  tbody .numeric:hover::after {
+    background-color: transparent;
+    outline: 2px solid Highlight;
+    outline-offset: -2px;
+  }
+}
+
+.identity {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  line-height: 1.3;
+}
+
+.sprite,
+.missingSprite {
+  flex: none;
+  width: 28px;
+  height: 28px;
+}
+
+.missingSprite {
+  display: inline-grid;
+  place-items: center;
+  font-weight: 700;
+  color: var(--mantine-color-dimmed);
+  border: 1px dashed var(--mantine-color-default-border);
+  border-radius: var(--mantine-radius-sm);
+}
+
+.identityText {
+  display: grid;
+  min-width: 0;
+}
+
+.link {
+  color: var(--mantine-color-anchor);
+  text-decoration: none;
+  overflow-wrap: anywhere;
+}
+
+.link:hover {
+  text-decoration: underline;
+}
+
+.link:focus-visible {
+  outline: 2px solid var(--mantine-primary-color-filled);
+  outline-offset: 2px;
+}
+
+.trait {
+  font-size: var(--mantine-font-size-xs);
+  color: var(--mantine-color-orange-text);
+}
+
+.unknown {
+  color: var(--mantine-color-dimmed);
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  white-space: nowrap;
+  clip-path: inset(50%);
+}
