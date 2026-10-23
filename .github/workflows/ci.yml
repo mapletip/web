@@ -39,14 +39,15 @@ jobs:
       - name: Check formatting
         run: pnpm run format:check
 
-      - name: Lint
-        run: pnpm run lint
+      # Local Turborepo remote-cache server backed by the GitHub Actions
+      # cache; exports TURBO_API/TURBO_TOKEN/TURBO_TEAM for later steps.
+      - name: Turborepo remote cache
+        uses: rharkor/caching-for-turbo@2238fae6eb9a9936f92356f54cb3660200d105e7 # v2.5.1
+        with:
+          use-relative-cache-path: true
 
-      - name: Typecheck
-        run: pnpm run check-types
-
-      - name: Build Storybook
-        run: pnpm run build-storybook
+      - name: Lint, typecheck, build Storybook
+        run: pnpm turbo run lint check-types build-storybook
 
       - name: Upload Storybook
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
@@ -98,5 +99,12 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      # Local Turborepo remote-cache server backed by the GitHub Actions
+      # cache; exports TURBO_API/TURBO_TOKEN/TURBO_TEAM for later steps.
+      - name: Turborepo remote cache
+        uses: rharkor/caching-for-turbo@2238fae6eb9a9936f92356f54cb3660200d105e7 # v2.5.1
+        with:
+          use-relative-cache-path: true
+
       - name: Test (config smoke, unit + Storybook browser tests)
-        run: pnpm run test
+        run: pnpm turbo run test
