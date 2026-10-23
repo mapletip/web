@@ -22,7 +22,7 @@ const PER_TARGET_KEYS = new Set([
   'noEmit',
 ]);
 
-const TS_PRESETS = ['node', 'vite-react', 'react-library'];
+const TS_PRESETS = ['node', 'vite-react'];
 
 /** @type {Array<[string, () => Promise<void>]>} */
 const checks = [

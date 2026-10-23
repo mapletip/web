@@ -1,4 +1,0 @@
-{
-  "extends": "@mapletip/config/typescript/react-library",
-  "include": ["src"]
-}

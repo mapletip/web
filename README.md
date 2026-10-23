@@ -5,7 +5,6 @@ pnpm + [Turborepo](https://turborepo.dev/) monorepo.
 ## Packages
 
 - `@mapletip/component-library`: [Mantine](https://mantine.dev/)-based component library with [Storybook](https://storybook.js.org/)
-- `@mapletip/ui`: stub React components from the Turborepo template
 - `@mapletip/config`: shared eslint, prettier, tsconfig, lint-staged, vite and vitest configs
 
 ## Setup

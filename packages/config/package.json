@@ -11,7 +11,6 @@
     "./lint-staged": "./lint-staged/index.js",
     "./prettier": "./prettier/index.js",
     "./typescript/node": "./typescript/node.json",
-    "./typescript/react-library": "./typescript/react-library.json",
     "./typescript/vite-react": "./typescript/vite-react.json",
     "./vite/lib": "./vite/lib.js",
     "./vitest/browser": "./vitest/browser.js",
