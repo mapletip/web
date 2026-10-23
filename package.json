@@ -1,10 +1,8 @@
 {
-  "name": "mapletip-web",
+  "name": "@mapletip/web",
   "private": true,
   "type": "module",
   "scripts": {
-    "browser:down": "scripts/playwright-server.sh down",
-    "browser:up": "scripts/playwright-server.sh up",
     "build-storybook": "turbo run build-storybook",
     "check-types": "turbo run check-types",
     "format": "prettier --write .",

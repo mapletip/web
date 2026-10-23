@@ -36,9 +36,6 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Check formatting
-        run: pnpm run format:check
-
       # Local Turborepo remote-cache server backed by the GitHub Actions
       # cache; exports TURBO_API/TURBO_TOKEN/TURBO_TEAM for later steps.
       - name: Turborepo remote cache
@@ -46,8 +43,8 @@ jobs:
         with:
           use-relative-cache-path: true
 
-      - name: Lint, typecheck, build Storybook
-        run: pnpm turbo run lint check-types build-storybook
+      - name: Format check, lint, typecheck, build Storybook
+        run: pnpm turbo run format:check lint check-types build-storybook
 
       - name: Upload Storybook
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7

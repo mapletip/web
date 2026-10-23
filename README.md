@@ -25,7 +25,7 @@ pnpm install
 | `pnpm test`            | Config smoke tests + browser tests            |
 | `pnpm lint`            | ESLint (type-checked)                         |
 | `pnpm check-types`     | TypeScript                                    |
-| `pnpm format`          | Prettier (`format:check` to verify)           |
+| `pnpm format`          | Prettier write (`format:check` to verify)     |
 
 ## Tests
 
@@ -39,15 +39,11 @@ headless Chromium via Playwright):
 Install the browser once with
 `pnpm --filter @mapletip/component-library exec playwright install --with-deps chromium`.
 
-On hosts that can't run Chromium natively (e.g. Fedora CoreOS), run the
-browser in the official Playwright container and point Vitest at it:
+To use a remote browser instead (e.g. on hosts that can't run Chromium
+natively), set `PLAYWRIGHT_WS_ENDPOINT` to a Playwright server's WebSocket URL.
 
-```sh
-pnpm browser:up   # podman; prints the export line below
-export PLAYWRIGHT_WS_ENDPOINT=ws://127.0.0.1:3333/
-pnpm test
-pnpm browser:down
-```
+All tasks, including `format` and `format:check`, can also run through turbo
+(`pnpm turbo run format:check lint check-types`) for caching and parallelism.
 
 CI runs the tests inside the `mcr.microsoft.com/playwright` image matching the
 `playwright` pin in `pnpm-workspace.yaml`.

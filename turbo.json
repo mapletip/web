@@ -19,6 +19,10 @@
     },
     "test": {
       "passThroughEnv": ["PLAYWRIGHT_BROWSERS_PATH", "PLAYWRIGHT_WS_ENDPOINT"]
-    }
+    },
+    "//#format": {
+      "cache": false
+    },
+    "//#format:check": {}
   }
 }
