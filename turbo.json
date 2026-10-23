@@ -1,0 +1,28 @@
+{
+  "$schema": "https://turborepo.dev/schema.json",
+  "ui": "tui",
+  "globalDependencies": [".nvmrc"],
+  "tasks": {
+    "lint": {
+      "dependsOn": ["^lint"]
+    },
+    "check-types": {
+      "dependsOn": ["^check-types"]
+    },
+    "build-storybook": {
+      "outputs": ["storybook-static/**"]
+    },
+    "storybook": {
+      "cache": false,
+      "persistent": true,
+      "passThroughEnv": ["PLAYWRIGHT_BROWSERS_PATH", "PLAYWRIGHT_WS_ENDPOINT"]
+    },
+    "test": {
+      "passThroughEnv": ["PLAYWRIGHT_BROWSERS_PATH", "PLAYWRIGHT_WS_ENDPOINT"]
+    },
+    "//#format:root": {
+      "cache": false
+    },
+    "//#format:check:root": {}
+  }
+}

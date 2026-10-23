@@ -1,0 +1,48 @@
+{
+  $schema: 'https://docs.renovatebot.com/renovate-schema.json',
+  extends: [
+    'helpers:pinGitHubActionDigests',
+    ':semanticCommits',
+    ':semanticCommitTypeAll(chore)',
+    ':semanticCommitScope(deps)',
+  ],
+  enabledManagers: ['npm', 'github-actions', 'nvm'],
+  dependencyDashboard: true,
+  automerge: false,
+  prConcurrentLimit: 4,
+  branchConcurrentLimit: 4,
+  timezone: 'America/Los_Angeles',
+  schedule: ['* 2 * * 6'],
+  packageRules: [
+    {
+      matchManagers: ['npm'],
+      minimumReleaseAge: '7 days',
+      rangeStrategy: 'bump',
+    },
+    {
+      matchManagers: ['npm'],
+      matchUpdateTypes: ['minor'],
+      automerge: true,
+      automergeType: 'pr',
+      platformAutomerge: false,
+    },
+    {
+      // Group all TypeScript ecosystem packages into one PR so that
+      // typescript, typescript-eslint, and any @typescript-eslint/* plugins
+      // are always upgraded together and validated as a compatible set.
+      matchPackageNames: [
+        'typescript',
+        'typescript-eslint',
+        '@typescript-eslint/**',
+      ],
+      groupName: 'TypeScript ecosystem',
+    },
+    {
+      // Hold TypeScript below v7: typescript-eslint and vite-plugin-dts both
+      // require the JS Compiler API that TypeScript 7 (native) drops.
+      // Remove once both packages support TS7 (see pnpm-workspace.yaml).
+      matchPackageNames: ['typescript'],
+      allowedVersions: '<7',
+    },
+  ],
+}

@@ -1,0 +1,29 @@
+{
+  "name": "@mapletip/web",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build-storybook": "turbo run build-storybook",
+    "check-types": "turbo run check-types",
+    "format": "turbo run format:root",
+    "format:check": "turbo run format:check:root",
+    "format:check:root": "prettier --check .",
+    "format:root": "prettier --write .",
+    "lint": "turbo run lint",
+    "storybook": "turbo run storybook --filter=@mapletip/component-library",
+    "test": "turbo run test"
+  },
+  "prettier": "@mapletip/config/prettier",
+  "devDependencies": {
+    "@mapletip/config": "workspace:*",
+    "prettier": "catalog:",
+    "turbo": "catalog:",
+    "typescript": "catalog:"
+  },
+  "packageManager": "pnpm@12.15.0",
+  "engines": {
+    "node": ">=24",
+    "npm": "please-use-pnpm",
+    "yarn": "please-use-pnpm"
+  }
+}

@@ -1,0 +1,4 @@
+{
+  "extends": "@mapletip/config/typescript/vite-react",
+  "include": ["src", ".storybook/*.ts", ".storybook/*.tsx", "vitest.config.ts"]
+}
