@@ -5,10 +5,8 @@
   "scripts": {
     "browser:down": "scripts/playwright-server.sh down",
     "browser:up": "scripts/playwright-server.sh up",
-    "build": "turbo run build",
     "build-storybook": "turbo run build-storybook",
     "check-types": "turbo run check-types",
-    "dev": "turbo run dev",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint": "turbo run lint",

@@ -20,12 +20,9 @@ const PER_TARGET_KEYS = new Set([
   'types',
   'jsx',
   'noEmit',
-  'allowJs',
-  'incremental',
-  'plugins',
 ]);
 
-const TS_PRESETS = ['node', 'vite-react', 'react-library', 'nextjs'];
+const TS_PRESETS = ['node', 'vite-react', 'react-library'];
 
 /** @type {Array<[string, () => Promise<void>]>} */
 const checks = [
@@ -58,13 +55,6 @@ const checks = [
     async () => {
       const { react } = await import('../eslint/react.js');
       assert.ok(react(import.meta.dirname).length > 0);
-    },
-  ],
-  [
-    'eslint/next',
-    async () => {
-      const { next } = await import('../eslint/next.js');
-      assert.ok(next(import.meta.dirname).length > 0);
     },
   ],
   [

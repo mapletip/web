@@ -45,9 +45,6 @@ jobs:
       - name: Typecheck
         run: pnpm run check-types
 
-      - name: Build apps
-        run: pnpm run build
-
       - name: Build Storybook
         run: pnpm run build-storybook
 
