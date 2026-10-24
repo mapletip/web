@@ -40,7 +40,9 @@
   text-align: end;
 }
 
-.sorted {
+.sorted,
+.table td.sorted {
+  /* The second selector outranks DataTable's own cell background rules. */
   background-color: var(--sorted-color);
   font-weight: 600;
 }
@@ -104,6 +106,9 @@ tbody .pinned {
   tbody .numeric:hover::after {
     position: absolute;
     inset: -100vmax 0;
+
+    /* Above later rows' positioned cells; still below sticky cells (z-index 2+). */
+    z-index: 1;
     pointer-events: none;
     content: '';
     background-color: var(--column-hover-color);

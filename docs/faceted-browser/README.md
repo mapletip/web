@@ -39,12 +39,12 @@ conditional AG Grid recommendation:
 domain-owned columns and cells. **No TanStack Table, no Mantine DataTable, no
 table wrapper component.**
 
-| Candidate                | Verdict                                                                                                                                                           |
-| ------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Mantine Table alone**  | **Recommended.** Same HTML and behaviour as the TanStack version with fewer parts: +7.6 KB gzip, 121 lines.                                                       |
-| TanStack Table + Mantine | Rejected for now: identical output; used only for sorting _state_ and visibility; +10.5 KB gzip, +48 lines, no removed code. Revisit for reorder/resize/grouping. |
-| Mantine DataTable        | Rejected: `th role=button` headers, no `aria-sort`/`scope`/caption, Space does not sort, no column hover, +58 KB gzip, slowest mount.                             |
-| AG Grid Community        | Withdrawn as the production plan (SSR + hydration). Kept as the **UX reference** and an unchanged spike.                                                          |
+| Candidate                | Verdict                                                                                                                                                                                                      |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Mantine Table alone**  | **Recommended.** Same HTML and behaviour as the TanStack version with fewer parts: +7.6 KB gzip, 121 lines.                                                                                                  |
+| TanStack Table + Mantine | Rejected for now: identical output; used only for sorting _state_ and visibility; +10.5 KB gzip, +48 lines, no removed code. Revisit for reorder/resize/grouping.                                            |
+| Mantine DataTable        | Rejected: `th role=button` headers, no `aria-sort`/`scope`/caption, Space does not sort, +58 KB gzip, slowest mount. Column highlight needs the same CSS as Mantine Table (it attaches via its class hooks). |
+| AG Grid Community        | Withdrawn as the production plan (SSR + hydration). Kept as the **UX reference** and an unchanged spike.                                                                                                     |
 
 ### Compromises product must accept (relative to AG Grid)
 
@@ -76,15 +76,15 @@ table wrapper component.**
 
 Full evidence is in [ssr-first-table-evaluation.md](./ssr-first-table-evaluation.md).
 
-| Dimension (priority order)                  | AG Grid Community                                                 | TanStack + Mantine | **Mantine Table**     | Mantine DataTable                |
-| ------------------------------------------- | ----------------------------------------------------------------- | ------------------ | --------------------- | -------------------------------- |
-| 1. Server-rendered, indexable HTML          | **Fails**                                                         | Pass               | **Pass**              | Rows pass; headers poor          |
-| 2. Semantics, accessibility, web navigation | ARIA grid, one Tab stop; links need arrows + Enter; SR unverified | Native table       | **Native table**      | `th role=button`, no `aria-sort` |
-| 3. MapleTip-owned complexity                | Low for UX; heavy dependency                                      | +48 lines, no gain | **Fewest parts**      | Cannot reach required semantics  |
-| 4. Comparison UX                            | **Best** (built-in column hover)                                  | CSS-only, limited  | **CSS-only, limited** | Row hover only                   |
-| 5. JS gzip added                            | +207 KB                                                           | +18.1 KB           | **+7.6 KB**           | +58.0 KB                         |
-| Mount → painted (median)                    | 115–125 ms                                                        | 89–104 ms          | **77–93 ms**          | 175–191 ms                       |
-| Sort event → painted (median)               | 75–82 ms                                                          | 100–116 ms         | **83 ms**             | 116–117 ms                       |
+| Dimension (priority order)                  | AG Grid Community                                                 | TanStack + Mantine | **Mantine Table**     | Mantine DataTable                                 |
+| ------------------------------------------- | ----------------------------------------------------------------- | ------------------ | --------------------- | ------------------------------------------------- |
+| 1. Server-rendered, indexable HTML          | **Fails**                                                         | Pass               | **Pass**              | Rows pass; headers poor                           |
+| 2. Semantics, accessibility, web navigation | ARIA grid, one Tab stop; links need arrows + Enter; SR unverified | Native table       | **Native table**      | `th role=button`, no `aria-sort`                  |
+| 3. MapleTip-owned complexity                | Low for UX; heavy dependency                                      | +48 lines, no gain | **Fewest parts**      | Cannot reach required semantics                   |
+| 4. Comparison UX                            | **Best** (built-in column hover)                                  | CSS-only, limited  | **CSS-only, limited** | Row hover built in; column hover via the same CSS |
+| 5. JS gzip added                            | +207 KB                                                           | +18.1 KB           | **+7.6 KB**           | +58.0 KB                                          |
+| Mount → painted (median)                    | 115–125 ms                                                        | 89–104 ms          | **77–93 ms**          | 175–191 ms                                        |
+| Sort event → painted (median)               | 75–82 ms                                                          | 100–116 ms         | **83 ms**             | 116–117 ms                                        |
 
 The four implementations were measured on the same 100 × 11 fixtures at
 1440×900. Timings include remote-browser overhead and are for relative

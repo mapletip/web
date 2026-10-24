@@ -6,6 +6,7 @@ import type { SpikeMonster } from '../ag-grid/fixtures';
 
 import { Identity, StatValue, valueOf } from './cells';
 import { allColumns } from './columns';
+import classes from './MonsterTable.module.css';
 import type { MonsterTableProps } from './types';
 
 /**
@@ -17,13 +18,28 @@ export function MonsterDataTable({
   rows,
   sort,
   onSortChange,
-}: MonsterTableProps): ReactElement {
+  columnHighlight = false,
+}: MonsterTableProps & {
+  /**
+   * Attach the shared CSS-only column highlight and sorted tint through
+   * DataTable's public class hooks (`classNames.table`, `cellsClassName`).
+   */
+  readonly columnHighlight?: boolean;
+}): ReactElement {
   const columns: DataTableColumn<SpikeMonster>[] = allColumns.map((column) => ({
     accessor: column.id,
     title: column.header,
     width: column.width,
     sortable: true,
     textAlign: column.numeric ? 'right' : 'left',
+    ...(columnHighlight && column.numeric
+      ? {
+          cellsClassName: [
+            classes['numeric'],
+            sort?.field === column.id ? classes['sorted'] : '',
+          ].join(' '),
+        }
+      : {}),
     render: (record) =>
       column.numeric ? (
         <StatValue value={valueOf(record, column.id)} />
@@ -39,6 +55,9 @@ export function MonsterDataTable({
       idAccessor="id"
       pinFirstColumn
       highlightOnHover
+      {...(columnHighlight
+        ? { classNames: { table: classes['table'] ?? '' } }
+        : {})}
       withTableBorder
       withColumnBorders={false}
       horizontalSpacing={10}

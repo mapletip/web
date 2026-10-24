@@ -203,7 +203,14 @@ export const MantineTableOnly: Story = {
   render: () => <Page Table={MonsterMantineTable} />,
 };
 
-/** Mantine DataTable (minimal comparison, no column menu support in the harness). */
+/** Mantine DataTable with the shared CSS-only column highlight attached via its public class hooks. */
+export const DataTableWithColumnHighlight: Story = {
+  render: () => (
+    <Page Table={(props) => <MonsterDataTable {...props} columnHighlight />} />
+  ),
+};
+
+/** Mantine DataTable out of the box (minimal comparison, no column menu support in the harness). */
 export const DataTableMinimal: Story = {
   render: () => <Page Table={MonsterDataTable} />,
 };

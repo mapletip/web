@@ -131,4 +131,28 @@ describe('Mantine DataTable 9.4 (minimal comparison)', () => {
     ).toBe(true);
     expect(stops[leading + 11]).toBe('A');
   });
+
+  test('with the shared CSS attached through public class hooks, column hover and sorted tint work', async () => {
+    const WithHighlight = (props: Parameters<typeof MonsterDataTable>[0]) => (
+      <MonsterDataTable {...props} columnHighlight />
+    );
+    const container = await renderTable({ Table: WithHighlight });
+    const target = cell(container, 3, 5);
+    await userEvent.hover(target);
+    await vi.waitFor(() =>
+      expect(getComputedStyle(target, '::after').backgroundColor).not.toBe(
+        'rgba(0, 0, 0, 0)',
+      ),
+    );
+    expect(getComputedStyle(target, '::after').position).toBe('absolute');
+    // Sorted column (EXP) is tinted; an unsorted one is not.
+    expect(getComputedStyle(cell(container, 0, 3)).backgroundColor).not.toBe(
+      'rgba(0, 0, 0, 0)',
+    );
+    expect(getComputedStyle(cell(container, 0, 5)).backgroundColor).toBe(
+      'rgba(0, 0, 0, 0)',
+    );
+    // The pinned identity column is not given the column-highlight class.
+    expect(cell(container, 3, 0).className).not.toMatch(/numeric/u);
+  });
 });
