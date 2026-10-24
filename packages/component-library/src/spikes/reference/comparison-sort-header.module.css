@@ -1,0 +1,17 @@
+.button {
+  display: inline-flex;
+  gap: 4px;
+  align-items: center;
+  width: 100%;
+  font: inherit;
+  color: inherit;
+}
+
+.button[data-align='end'] {
+  justify-content: flex-end;
+}
+
+.button:focus-visible {
+  outline: 2px solid var(--mantine-primary-color-filled);
+  outline-offset: 2px;
+}
