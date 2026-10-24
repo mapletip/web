@@ -1,0 +1,68 @@
+.table {
+  --table-highlight-on-hover-color: color-mix(
+    in srgb,
+    var(--mantine-color-text) 7%,
+    transparent
+  );
+  --column-hover-color: color-mix(
+    in srgb,
+    var(--mantine-color-text) 7%,
+    transparent
+  );
+  --sorted-color: color-mix(
+    in srgb,
+    var(--mantine-primary-color-filled) 8%,
+    transparent
+  );
+
+  /* Clips the oversized column-hover overlay to the table. */
+  contain: paint;
+  font-size: var(--mantine-font-size-sm);
+}
+
+.headerCell {
+  font-size: var(--mantine-font-size-xs);
+  font-weight: 650;
+  color: var(--mantine-color-dimmed);
+}
+
+.numericCell {
+  position: relative;
+  text-align: end;
+}
+
+.sortedCell,
+.table td.sortedCell {
+  /* The second selector outranks DataTable's own cell background rules. */
+  font-weight: 600;
+  background-color: var(--sorted-color);
+}
+
+.table tr:focus-within {
+  outline: 2px solid var(--mantine-primary-color-filled);
+  outline-offset: -2px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .table tbody .numericCell:hover::after {
+    position: absolute;
+    inset: -100vmax 0;
+    z-index: 1;
+    pointer-events: none;
+    content: '';
+    background-color: var(--column-hover-color);
+  }
+}
+
+@media (forced-colors: active) {
+  .table tbody tr:hover {
+    outline: 1px solid Highlight;
+    outline-offset: -1px;
+  }
+
+  .table tbody .numericCell:hover::after {
+    outline: 2px solid Highlight;
+    outline-offset: -2px;
+    background-color: transparent;
+  }
+}

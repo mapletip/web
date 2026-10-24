@@ -1,0 +1,29 @@
+.content {
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+}
+
+.body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+  padding: 0;
+}
+
+.scroll {
+  flex: 1;
+  min-height: 0;
+  padding: var(--mantine-spacing-md);
+  overflow-y: auto;
+}
+
+.footer {
+  display: flex;
+  gap: var(--mantine-spacing-xs);
+  justify-content: space-between;
+  padding: var(--mantine-spacing-sm) var(--mantine-spacing-md);
+  background-color: var(--mantine-color-body);
+  border-top: 1px solid var(--mantine-color-default-border);
+}
