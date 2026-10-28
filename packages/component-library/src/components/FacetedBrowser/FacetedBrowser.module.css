@@ -1,0 +1,62 @@
+.root {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
+}
+
+@media (min-width: $mantine-breakpoint-md) {
+  .root[data-has-rail] {
+    grid-template-columns: 240px minmax(0, 1fr);
+  }
+}
+
+.rail {
+  width: 240px;
+  max-width: 100%;
+  min-width: 0;
+  align-self: start;
+}
+
+.results {
+  display: flex;
+  flex-direction: column;
+  gap: var(--mantine-spacing-sm);
+  min-width: 0;
+}
+
+.status {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-width: 0;
+}
+
+.cards {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  gap: var(--mantine-spacing-sm);
+}
+
+.cards > * {
+  max-width: 100%;
+  min-width: 0;
+}
+
+.activeFilters {
+  min-width: 0;
+}
+
+.header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--mantine-spacing-xs);
+}
+
+.bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--mantine-spacing-xs);
+  align-items: center;
+  justify-content: space-between;
+}

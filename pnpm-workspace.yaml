@@ -15,6 +15,7 @@ catalog:
   eslint-plugin-import-x: ^4.17.1
   eslint-plugin-jsx-a11y: ^6.10.2
   eslint-plugin-react: ^7.37.5
+  eslint-plugin-react-hooks: ^7.1.1
   globals: ^17.13.0
   typescript-eslint: ^8.72.0
   # formatting
@@ -43,12 +44,17 @@ catalog:
   react: ^19.2.8
   react-dom: ^19.2.8
   # ui
+  '@phosphor-icons/react': ^2.1.10
+  '@tanstack/react-table': ^9.3.1
+  '@tanstack/table-core': ^9.3.1
   '@mantine/core': ^9.7.3
   '@mantine/hooks': ^9.7.3
+  mantine-datatable: ^9.4.0
   postcss: ^8.5.31
   postcss-preset-mantine: ^1.18.0
   postcss-simple-vars: ^7.0.1
   # storybook
+  '@storybook/addon-a11y': ^10.6.3
   '@storybook/addon-vitest': ^10.6.3
   '@storybook/react-vite': ^10.6.3
   storybook: ^10.6.3

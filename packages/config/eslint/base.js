@@ -31,6 +31,7 @@ export function base(tsconfigRootDir, extra = []) {
     {
       rules: {
         'import-x/no-cycle': 'error',
+        'no-nested-ternary': 'error',
         'import-x/no-duplicates': 'error',
         'import-x/order': [
           'error',

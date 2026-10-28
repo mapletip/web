@@ -1,0 +1,7 @@
+.content {
+  display: flex;
+  width: max-content;
+  align-items: center;
+  gap: 12px;
+  padding-block: 2px;
+}

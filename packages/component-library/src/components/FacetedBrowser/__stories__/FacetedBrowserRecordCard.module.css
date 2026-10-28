@@ -1,0 +1,92 @@
+.card {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  padding: 10px;
+  border: 1px solid var(--mantine-color-default-border);
+  border-radius: 9px;
+  background-color: var(--mantine-color-body);
+}
+
+.heading {
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  color: var(--mantine-color-text);
+  text-decoration: none;
+}
+
+.heading:focus-visible {
+  border-radius: 6px;
+  outline: 2px solid var(--mantine-primary-color-filled);
+  outline-offset: 2px;
+}
+
+.image,
+.imageFallback {
+  display: grid;
+  width: 48px;
+  height: 48px;
+  min-width: 48px;
+  place-items: center;
+  border-radius: 5px;
+  background-color: var(--mantine-color-default-hover);
+}
+
+.image {
+  background-color: transparent;
+  object-fit: contain;
+}
+
+.imageFallback {
+  color: light-dark(var(--mantine-color-gray-7), var(--mantine-color-dark-2));
+}
+
+.identity {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.name {
+  font-size: var(--mantine-font-size-md);
+  font-weight: 650;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+
+.group {
+  color: light-dark(var(--mantine-color-gray-7), var(--mantine-color-dark-2));
+  font-size: var(--mantine-font-size-xs);
+}
+
+.facts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px 8px;
+  min-width: 0;
+  margin: 0;
+}
+
+.facts > div {
+  min-width: 0;
+}
+
+.facts dt {
+  color: light-dark(var(--mantine-color-gray-7), var(--mantine-color-dark-2));
+  font-size: 0.7rem;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.facts dd {
+  min-width: 0;
+  margin: 2px 0 0;
+  font-size: 0.9375rem;
+  font-weight: 650;
+  line-height: 1.25;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
