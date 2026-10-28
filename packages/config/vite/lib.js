@@ -15,7 +15,15 @@ export function lib({ entry = ['src/index.ts'], formats = ['es'] } = {}) {
       dts({
         tsconfigPath: './tsconfig.json',
         entryRoot: 'src',
-        exclude: ['**/__tests__/**', '**/*.test.*'],
+        exclude: [
+          '**/__tests__/**',
+          '**/__stories__/**',
+          '**/.storybook/**',
+          '**/fixtures/**',
+          '**/*.test.*',
+          '**/*.stories.*',
+          '**/vitest.config.*',
+        ],
       }),
       externalizeDeps(),
     ],

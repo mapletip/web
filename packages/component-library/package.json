@@ -9,18 +9,23 @@
   },
   "scripts": {
     "build-storybook": "storybook build -o storybook-static --quiet",
-    "check-types": "tsc",
     "lint": "eslint . --max-warnings 0",
-    "storybook": "storybook dev -p 6006 --no-open",
+    "storybook": "storybook dev -p 6006 --host localhost --ci --no-open",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "typecheck": "tsc"
   },
   "dependencies": {
     "@mantine/core": "catalog:",
-    "@mantine/hooks": "catalog:"
+    "@mantine/hooks": "catalog:",
+    "@phosphor-icons/react": "catalog:",
+    "@tanstack/react-table": "catalog:",
+    "@tanstack/table-core": "catalog:",
+    "mantine-datatable": "catalog:"
   },
   "devDependencies": {
     "@mapletip/config": "workspace:*",
+    "@storybook/addon-a11y": "catalog:",
     "@storybook/addon-vitest": "catalog:",
     "@storybook/react-vite": "catalog:",
     "@types/react": "catalog:",

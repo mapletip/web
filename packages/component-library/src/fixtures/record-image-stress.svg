@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="2400" viewBox="0 0 800 1200">
+  <defs>
+    <linearGradient id="sky" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0" stop-color="#102c54" />
+      <stop offset="0.58" stop-color="#e8875b" />
+      <stop offset="1" stop-color="#f4c881" />
+    </linearGradient>
+    <linearGradient id="water" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0" stop-color="#285b73" />
+      <stop offset="1" stop-color="#102c54" />
+    </linearGradient>
+    <pattern id="ripples" width="84" height="48" patternUnits="userSpaceOnUse">
+      <path d="M8 20c14-8 28-8 42 0m12 16c8-4 14-4 22 0" fill="none" stroke="#b8d4d2" stroke-opacity=".42" stroke-width="3" />
+    </pattern>
+  </defs>
+  <rect width="800" height="1200" fill="url(#sky)" />
+  <circle cx="548" cy="344" r="112" fill="#ffe2a0" />
+  <path d="M0 690 178 430l122 170 154-270 231 362 115-132v281H0z" fill="#243d58" />
+  <path d="m0 746 186-188 143 152 185-253 286 302v134H0z" fill="#36576a" />
+  <path d="M0 706c166 35 280 26 408 2s242-27 392 8v484H0z" fill="url(#water)" />
+  <rect y="748" width="800" height="452" fill="url(#ripples)" />
+  <path d="M74 1000c110-28 223-28 336 0m68 76c83-21 166-21 249 0" fill="none" stroke="#f4c881" stroke-opacity=".74" stroke-width="8" />
+  <text x="64" y="1090" fill="#fff7e8" font-family="sans-serif" font-size="30" letter-spacing="8">RECORD 001</text>
+</svg>

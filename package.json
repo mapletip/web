@@ -4,14 +4,14 @@
   "type": "module",
   "scripts": {
     "build-storybook": "turbo run build-storybook",
-    "check-types": "turbo run check-types",
     "format": "turbo run format:root",
     "format:check": "turbo run format:check:root",
     "format:check:root": "prettier --check .",
     "format:root": "prettier --write .",
     "lint": "turbo run lint",
     "storybook": "turbo run storybook --filter=@mapletip/component-library",
-    "test": "turbo run test"
+    "test": "turbo run test",
+    "typecheck": "turbo run typecheck"
   },
   "prettier": "@mapletip/config/prettier",
   "devDependencies": {

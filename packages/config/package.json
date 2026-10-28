@@ -17,14 +17,15 @@
     "./vitest/react": "./vitest/react.js"
   },
   "scripts": {
-    "check-types": "tsc",
-    "test": "node scripts/smoke.mjs"
+    "test": "node scripts/smoke.mjs",
+    "typecheck": "tsc"
   },
   "dependencies": {
     "@eslint/js": "catalog:",
     "@vitest/eslint-plugin": "catalog:",
     "eslint-import-resolver-typescript": "catalog:",
     "eslint-plugin-import-x": "catalog:",
+    "eslint-plugin-react-hooks": "catalog:",
     "globals": "catalog:",
     "prettier-plugin-packagejson": "catalog:",
     "typescript-eslint": "catalog:"
@@ -37,6 +38,7 @@
     "eslint": "catalog:",
     "eslint-plugin-jsx-a11y": "catalog:",
     "eslint-plugin-react": "catalog:",
+    "eslint-plugin-react-hooks": "catalog:",
     "playwright": "catalog:",
     "prettier": "catalog:",
     "typescript": "catalog:",
@@ -51,6 +53,7 @@
     "eslint": ">=10",
     "eslint-plugin-jsx-a11y": ">=6",
     "eslint-plugin-react": ">=7.37",
+    "eslint-plugin-react-hooks": ">=7",
     "playwright": ">=1.50",
     "prettier": ">=3",
     "typescript": ">=5.9",
@@ -70,6 +73,9 @@
       "optional": true
     },
     "eslint-plugin-react": {
+      "optional": true
+    },
+    "eslint-plugin-react-hooks": {
       "optional": true
     },
     "playwright": {

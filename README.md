@@ -24,7 +24,7 @@ pnpm install
 | `pnpm build-storybook` | Static Storybook build                        |
 | `pnpm test`            | Config smoke tests + browser tests            |
 | `pnpm lint`            | ESLint (type-checked)                         |
-| `pnpm check-types`     | TypeScript                                    |
+| `pnpm typecheck`       | TypeScript                                    |
 | `pnpm format`          | Prettier via turbo (`format:check` to verify) |
 
 ## Tests
