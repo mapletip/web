@@ -105,3 +105,51 @@ jobs:
 
       - name: Test (config smoke, unit + Storybook browser tests)
         run: pnpm turbo run test
+
+  visual:
+    name: Visual regression
+    needs: [playwright-version, validate]
+    runs-on: ubuntu-26.04
+    container:
+      image: mcr.microsoft.com/playwright:v${{ needs.playwright-version.outputs.version }}-resolute
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # Reuse the Storybook build from `validate` instead of rebuilding it.
+      - name: Download Storybook
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+        with:
+          name: storybook
+          path: packages/component-library/storybook-static
+
+      # Read-only token, no secrets, no `pull_request_target`: fork PRs compare
+      # committed baselines only. The config pins `updateSnapshots: 'none'`, so a
+      # missing or different baseline fails instead of being written.
+      - name: Visual regression tests
+        run: pnpm --filter @mapletip/component-library test:visual
+
+      - name: Upload visual report
+        if: failure()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: visual-regression-report
+          path: |
+            packages/component-library/visual-report
+            packages/component-library/visual-results
+          retention-days: 5
+          if-no-files-found: ignore
