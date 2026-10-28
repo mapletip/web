@@ -2,9 +2,24 @@ import { browser } from '@mapletip/config/vitest/browser';
 import { storybookTest } from '@storybook/addon-vitest/vitest-plugin';
 import react from '@vitejs/plugin-react';
 import path from 'node:path';
+import process from 'node:process';
 import type { Page } from 'playwright';
 import { defineConfig, mergeConfig } from 'vitest/config';
 import type { BrowserCommand } from 'vitest/node';
+
+/**
+ * Approved visual baselines are reviewed artifacts. The visual command already
+ * passes `--update=none`; this guard rejects any other update flag in CI, so a
+ * workflow edit cannot turn the job into an approval step.
+ */
+if (
+  process.env['CI'] !== undefined &&
+  process.argv.some(
+    (argument) => argument === '-u' || /^--update(?!\.|=none)/u.test(argument),
+  )
+) {
+  throw new Error('Refusing to update visual regression baselines in CI.');
+}
 
 type EmulateMediaOptions = Parameters<Page['emulateMedia']>[0];
 
@@ -58,7 +73,10 @@ export default mergeConfig(
           test: {
             name: 'unit',
             include: ['src/**/__tests__/**/*.test.{ts,tsx}'],
-            exclude: ['src/**/__tests__/**/*.ssr.test.{ts,tsx}'],
+            exclude: [
+              'src/**/__tests__/**/*.ssr.test.{ts,tsx}',
+              'src/**/__tests__/**/*.visual.test.{ts,tsx}',
+            ],
           },
         },
         {
@@ -86,6 +104,21 @@ export default mergeConfig(
           ],
           test: {
             name: 'storybook',
+          },
+        },
+        {
+          // Opt-in screenshot comparisons: `pnpm test` runs `--project '!visual'`,
+          // `test:visual` runs `--project visual`. Visual tests are component
+          // tests, so they are discovered beside each component's other tests.
+          // Not a Storybook test project, so it never starts the Storybook server.
+          extends: true,
+          test: {
+            name: 'visual',
+            include: ['src/**/__tests__/**/*.visual.test.{ts,tsx}'],
+            setupFiles: ['.storybook/visual.setup.ts'],
+            browser: {
+              viewport: { width: 1366, height: 768 },
+            },
           },
         },
       ],

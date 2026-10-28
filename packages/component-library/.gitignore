@@ -1,2 +1,10 @@
 storybook-static
 *.log
+
+# Vitest writes failure screenshots/diffs here; only approved baselines are committed.
+.vitest
+
+# Approved baselines are authoritative only when rendered in the pinned Linux
+# container (see README). Host-generated references must not be committed.
+**/__screenshots__/**/*-darwin.png
+**/__screenshots__/**/*-win32.png
