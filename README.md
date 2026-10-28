@@ -23,6 +23,7 @@ pnpm install
 | `pnpm storybook`       | Storybook dev server on http://localhost:6006 |
 | `pnpm build-storybook` | Static Storybook build                        |
 | `pnpm test`            | Config smoke tests + browser tests            |
+| `pnpm test:visual`     | Storybook visual regression (opt-in)          |
 | `pnpm lint`            | ESLint (type-checked)                         |
 | `pnpm typecheck`       | TypeScript                                    |
 | `pnpm format`          | Prettier via turbo (`format:check` to verify) |
@@ -44,3 +45,12 @@ natively), set `PLAYWRIGHT_WS_ENDPOINT` to a Playwright server's WebSocket URL.
 
 CI runs the tests inside the `mcr.microsoft.com/playwright` image matching the
 `playwright` pin in `pnpm-workspace.yaml`.
+
+## Visual regression
+
+Selected stories are compared against committed PNG baselines with Vitest's native
+`toMatchScreenshot()`. The suite is opt-in (`pnpm test` excludes it) and runs in the
+same pinned Playwright Linux image as CI. See
+[`packages/component-library/README.md`](packages/component-library/README.md#visual-regression)
+for the commands, the baseline-regeneration container invocation and the review
+procedure.
