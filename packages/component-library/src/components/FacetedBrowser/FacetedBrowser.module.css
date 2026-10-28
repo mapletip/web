@@ -6,7 +6,7 @@
 
 @media (min-width: $mantine-breakpoint-md) {
   .root[data-has-rail] {
-    grid-template-columns: 240px minmax(0, 1fr);
+    grid-template-columns: 200px minmax(0, 1fr);
   }
 }
 
