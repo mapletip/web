@@ -1,2 +1,11 @@
 storybook-static
 *.log
+
+# Generated visual-regression output; only approved baselines are committed.
+visual-results
+visual-report
+
+# Approved baselines are authoritative only when rendered in the pinned Linux
+# container (see README). Host-generated references must not be committed.
+visual/__screenshots__/*-darwin.png
+visual/__screenshots__/*-win32.png

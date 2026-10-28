@@ -1,0 +1,19 @@
+/*
+ * Applied only while Playwright captures a screenshot.
+ *
+ * Chromium's overlay scrollbar paints at the viewport edge and its fade is not a
+ * CSS animation, so `animations: 'disabled'` does not make it deterministic.
+ * Scrollbar chrome is browser UI, not part of the approved component contract,
+ * so it is removed instead of masked.
+ */
+html {
+  scrollbar-width: none !important;
+}
+
+::-webkit-scrollbar {
+  display: none !important;
+}
+
+* {
+  caret-color: transparent !important;
+}
