@@ -95,6 +95,18 @@ const cases: readonly ContrastCase[] = [
     minimum: 4.5,
   },
   {
+    name: 'twilight filled primary label on hover shade',
+    foreground: twilightScheme.filledActionText,
+    background: maple[5],
+    minimum: 4.5,
+  },
+  {
+    name: 'parchment filled primary label on hover shade',
+    foreground: parchmentScheme.filledActionText,
+    background: maple[8],
+    minimum: 4.5,
+  },
+  {
     name: 'twilight placeholder on panel',
     foreground: twilight[3],
     background: twilightScheme.panel,
@@ -119,20 +131,27 @@ const cases: readonly ContrastCase[] = [
     minimum: 4.5,
   },
   ...(['forest', 'sky', 'grape', 'gold', 'danger'] as const).flatMap(
-    (role): ContrastCase[] => [
-      {
-        name: `twilight ${role} accent on panel`,
-        foreground: twilightScheme.accents[role],
-        background: twilightScheme.panel,
-        minimum: 4.5,
-      },
-      {
-        name: `parchment ${role} accent on panel`,
-        foreground: parchmentScheme.accents[role],
-        background: parchmentScheme.panel,
-        minimum: 4.5,
-      },
-    ],
+    (role): ContrastCase[] =>
+      (
+        [
+          ['panel', 'panel'],
+          ['canvas', 'canvas'],
+          ['raised', 'raised'],
+        ] as const
+      ).flatMap(([surfaceName, surfaceKey]): ContrastCase[] => [
+        {
+          name: `twilight ${role} accent on ${surfaceName}`,
+          foreground: twilightScheme.accents[role],
+          background: twilightScheme[surfaceKey],
+          minimum: 4.5,
+        },
+        {
+          name: `parchment ${role} accent on ${surfaceName}`,
+          foreground: parchmentScheme.accents[role],
+          background: parchmentScheme[surfaceKey],
+          minimum: 4.5,
+        },
+      ]),
   ),
 ];
 
