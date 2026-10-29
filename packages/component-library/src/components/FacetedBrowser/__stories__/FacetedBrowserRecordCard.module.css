@@ -3,9 +3,9 @@
   gap: 8px;
   min-width: 0;
   padding: 10px;
-  border: 1px solid var(--mantine-color-default-border);
+  border: 1px solid var(--mapletip-color-border-subtle);
   border-radius: 9px;
-  background-color: var(--mantine-color-body);
+  background-color: var(--mantine-color-default);
 }
 
 .heading {
@@ -16,12 +16,6 @@
   min-width: 0;
   color: var(--mantine-color-text);
   text-decoration: none;
-}
-
-.heading:focus-visible {
-  border-radius: 6px;
-  outline: 2px solid var(--mantine-primary-color-filled);
-  outline-offset: 2px;
 }
 
 .image,
@@ -41,7 +35,7 @@
 }
 
 .imageFallback {
-  color: light-dark(var(--mantine-color-gray-7), var(--mantine-color-dark-2));
+  color: var(--mantine-color-dimmed);
 }
 
 .identity {
@@ -58,7 +52,7 @@
 }
 
 .group {
-  color: light-dark(var(--mantine-color-gray-7), var(--mantine-color-dark-2));
+  color: var(--mantine-color-dimmed);
   font-size: var(--mantine-font-size-xs);
 }
 
@@ -75,7 +69,7 @@
 }
 
 .facts dt {
-  color: light-dark(var(--mantine-color-gray-7), var(--mantine-color-dark-2));
+  color: var(--mantine-color-dimmed);
   font-size: 0.7rem;
   font-weight: 600;
   line-height: 1.25;

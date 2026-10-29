@@ -1,4 +1,5 @@
 import { MantineProvider } from '@mantine/core';
+import { theme } from '@mapletip/theme';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { page } from 'vitest/browser';
 import { render } from 'vitest-browser-react';
@@ -6,7 +7,6 @@ import { render } from 'vitest-browser-react';
 import '../../../styles.css';
 import { Table } from '@/components/Table/Table';
 import { demoRecords, makeDemoColumns } from '@/fixtures/records';
-import { theme } from '@/theme';
 
 describe('Table accessibility exposure', () => {
   beforeEach(async () => {

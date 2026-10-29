@@ -9,8 +9,10 @@ import {
 } from '@/test-support/visual';
 import type { VisualCase } from '@/test-support/visual';
 
-/** Same stories, composed again with the dark scheme's preview globals. */
-const light = composeStories(stories);
+/** Stories composed with explicit scheme globals so the preview default cannot leak in. */
+const light = composeStories(stories, {
+  initialGlobals: { colorScheme: 'light' },
+});
 // Per-call annotations merge with the preview registered in the setup file.
 const dark = composeStories(stories, {
   initialGlobals: { colorScheme: 'dark' },
@@ -68,6 +70,24 @@ const visualCases: readonly VisualCase[] = [
     storyId: 'components-facetedbrowser--mobile-cards',
     width: 375,
     height: 812,
+    visible: [mobileCards],
+    hidden: [hiddenTable],
+  },
+  {
+    name: 'faceted-browser-mobile-cards-320-light',
+    story: light.MobileCards,
+    storyId: 'components-facetedbrowser--mobile-cards',
+    width: 320,
+    height: 640,
+    visible: [mobileCards],
+    hidden: [hiddenTable],
+  },
+  {
+    name: 'faceted-browser-mobile-cards-320-dark',
+    story: dark.MobileCards,
+    storyId: 'components-facetedbrowser--mobile-cards',
+    width: 320,
+    height: 640,
     visible: [mobileCards],
     hidden: [hiddenTable],
   },

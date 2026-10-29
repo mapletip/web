@@ -1,0 +1,67 @@
+/*
+ * Maple Twilight global treatments that Mantine cannot express as theme values.
+ * Import after Mantine's and Mantine DataTable's stylesheets.
+ */
+
+/*
+ * Plain `<a href>` record links (the component library's documented pattern)
+ * share the Anchor colour and stay distinguishable in body copy. Anchors with
+ * their own component classes (Anchor, NavLink, Pagination) keep their styles.
+ */
+a:not([class]) {
+  color: var(--mantine-color-anchor);
+  text-decoration: underline;
+}
+
+a {
+  text-underline-offset: 0.15em;
+}
+
+/*
+ * Focus styling uses `theme.focusClassName`, so Mantine focusable components and
+ * plain elements (record links, native controls) share one ring. The ring is
+ * offset from the element, which keeps it on the surrounding surface instead of
+ * on a filled orange action where blue-on-orange contrast fails.
+ */
+.mapletip-focus:focus-visible,
+:focus-visible {
+  outline: 2px solid var(--mapletip-color-focus);
+  outline-offset: 2px;
+}
+
+@media (forced-colors: active) {
+  .mapletip-focus:focus-visible,
+  :focus-visible {
+    outline-color: Highlight;
+  }
+}
+
+/*
+ * DataTable's documented CSS variables. Table separators are decorative, so they
+ * use the subtle border role instead of the functional control boundary that the
+ * dark palette's shade 4 must provide for inputs and checkboxes.
+ */
+[data-mantine-color-scheme='light'] .mantine-datatable {
+  --mantine-datatable-border-color-light: var(--mapletip-color-border-subtle);
+  --mantine-datatable-row-border-color-light: var(
+    --mapletip-color-border-subtle
+  );
+}
+
+[data-mantine-color-scheme='dark'] .mantine-datatable {
+  --mantine-datatable-border-color-dark: var(--mapletip-color-border-subtle);
+  --mantine-datatable-row-border-color-dark: var(
+    --mapletip-color-border-subtle
+  );
+}
+
+/* Mantine respects the preference for its own transitions; DataTable does not. */
+@media (prefers-reduced-motion: reduce) {
+  .mantine-datatable *,
+  .mantine-datatable *::before,
+  .mantine-datatable *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}

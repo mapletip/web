@@ -9,7 +9,13 @@ import {
 } from '@/test-support/visual';
 import type { VisualCase } from '@/test-support/visual';
 
-const light = composeStories(stories);
+const light = composeStories(stories, {
+  initialGlobals: { colorScheme: 'light' },
+});
+// Per-call annotations merge with the preview registered in the setup file.
+const dark = composeStories(stories, {
+  initialGlobals: { colorScheme: 'dark' },
+});
 
 const comparisonTable = page.getByRole('table', { name: 'Comparison records' });
 
@@ -71,6 +77,12 @@ const desktop: VisualCase = {
   element: comparisonTable,
 };
 
+const desktopDark: VisualCase = {
+  ...desktop,
+  name: 'comparison-table-desktop-dark',
+  story: dark.ComparisonTable,
+};
+
 const phoneOverflow: VisualCase = {
   name: 'comparison-table-mobile-overflow-light',
   story: light.ComparisonTable,
@@ -84,6 +96,11 @@ const phoneOverflow: VisualCase = {
 test('comparison-table-desktop-light', async () => {
   await openVisualCase(desktop);
   await expectApprovedScreenshot(desktop);
+});
+
+test('comparison-table-desktop-dark', async () => {
+  await openVisualCase(desktopDark);
+  await expectApprovedScreenshot(desktopDark);
 });
 
 test('comparison-table-mobile-overflow-light', async () => {

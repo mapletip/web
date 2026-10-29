@@ -1,4 +1,5 @@
 import { MantineProvider } from '@mantine/core';
+import { theme } from '@mapletip/theme';
 import { useState, type ReactElement } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { page, userEvent } from 'vitest/browser';
@@ -7,7 +8,6 @@ import { render } from 'vitest-browser-react';
 import '../../../styles.css';
 import { Table } from '@/components/Table/Table';
 import type { TableColumn } from '@/components/Table/types';
-import { theme } from '@/theme';
 
 interface DetailRecord extends Record<string, unknown> {
   id: string;

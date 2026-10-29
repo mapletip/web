@@ -1,4 +1,5 @@
 import { MantineProvider } from '@mantine/core';
+import { cssVariablesResolver, theme } from '@mapletip/theme';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { commands, page, server, userEvent } from 'vitest/browser';
 import { render } from 'vitest-browser-react';
@@ -6,7 +7,6 @@ import { render } from 'vitest-browser-react';
 import '../../../styles.css';
 import { ComparisonTable } from '@/components/Table/ComparisonTable';
 import { demoRecords, makeDemoColumns } from '@/fixtures/records';
-import { theme } from '@/theme';
 
 beforeEach(async () => {
   document.documentElement.setAttribute('data-mantine-color-scheme', 'light');
@@ -23,7 +23,7 @@ async function mount({
   const columns = makeDemoColumns();
   const rows = demoRecords.slice(0, 12);
   await render(
-    <MantineProvider theme={theme}>
+    <MantineProvider theme={theme} cssVariablesResolver={cssVariablesResolver}>
       <ComparisonTable
         ariaLabel="Sample comparison"
         records={rows}
@@ -105,7 +105,7 @@ describe('ComparisonTable', () => {
     expect(
       getComputedStyle(document.querySelector('tbody tr td:nth-child(3)')!)
         .textAlign,
-    ).toBe('end');
+    ).toBe('right');
   });
 
   it('keeps horizontal scrolling inside the table at 320 px and pins identity', async () => {
@@ -156,51 +156,7 @@ describe('ComparisonTable', () => {
     });
   });
 
-  it('highlights Record, Category and numeric body columns', async () => {
-    await mount();
-    const row = document.querySelector<HTMLTableRowElement>(
-      'tbody tr:nth-child(2)',
-    )!;
-    for (const columnIndex of [1, 2, 4]) {
-      const hovered = row.children[columnIndex - 1] as HTMLTableCellElement;
-      await userEvent.hover(hovered);
-      expect(getComputedStyle(row).backgroundColor).not.toBe('transparent');
-      expect(getComputedStyle(hovered, '::before').content).toBe('""');
-      expect(getComputedStyle(hovered, '::before').backgroundColor).not.toBe(
-        'transparent',
-      );
-    }
-  });
-
-  it('layers the full-height Record highlight above sibling pinned cells', async () => {
-    await mount();
-    const hovered = document.querySelector<HTMLTableCellElement>(
-      'tbody tr:first-child :first-child',
-    )!;
-    const sibling = document.querySelector<HTMLTableCellElement>(
-      'tbody tr:nth-child(2) :first-child',
-    )!;
-
-    await userEvent.hover(hovered);
-
-    expect(hovered.hasAttribute('data-pinned')).toBe(true);
-    expect(getComputedStyle(hovered).zIndex).toBe('3');
-    expect(getComputedStyle(sibling).zIndex).toBe('2');
-    const overlay = getComputedStyle(hovered, '::before');
-    expect(overlay.top).not.toBe('0px');
-    expect(overlay.bottom).not.toBe('0px');
-  });
-
-  it('keeps persistent emphasis on a sorted text column', async () => {
-    await mount({ field: 'group', direction: 'asc' });
-    const cell = document.querySelector<HTMLTableCellElement>(
-      'tbody tr:first-child td:nth-child(2)',
-    )!;
-    expect(cell.className).toContain('sortedCell');
-    expect(getComputedStyle(cell).fontWeight).toBe('600');
-  });
-
-  it('uses theme colors for highlights in the dark scheme', async () => {
+  it('uses the Twilight surfaces and native row hover in the dark scheme', async () => {
     document.documentElement.setAttribute('data-mantine-color-scheme', 'dark');
     await render(
       <MantineProvider theme={theme} forceColorScheme="dark">
@@ -216,22 +172,16 @@ describe('ComparisonTable', () => {
       </MantineProvider>,
     );
 
-    const bodyColor = getComputedStyle(document.body).backgroundColor;
-    const sortedCell = document.querySelector<HTMLTableCellElement>(
-      'tbody tr:first-child td:nth-child(3)',
-    )!;
     const row = document.querySelector<HTMLTableRowElement>(
       'tbody tr:first-child',
     )!;
     const numericCell =
       row.querySelector<HTMLTableCellElement>('td:nth-child(4)')!;
-    await userEvent.hover(numericCell);
-
-    expect(bodyColor).not.toBe('rgb(255, 255, 255)');
-    expect(getComputedStyle(sortedCell).backgroundColor).not.toBe(
-      'rgba(0, 0, 0, 0)',
+    expect(getComputedStyle(document.body).backgroundColor).toBe(
+      'rgb(15, 19, 23)',
     );
-    expect(getComputedStyle(row).backgroundColor).not.toBe('transparent');
+    await userEvent.hover(numericCell);
+    expect(getComputedStyle(row).backgroundColor).toBe('rgb(32, 40, 48)');
   });
 
   it('renders unknown values with the body text color and announces Unknown', async () => {
@@ -337,7 +287,6 @@ describe('ComparisonTable', () => {
         row.querySelector<HTMLTableCellElement>('td:nth-child(4)')!;
       await userEvent.hover(numeric);
       expect(getComputedStyle(row).outlineWidth).toBe('1px');
-      expect(getComputedStyle(numeric, '::before').outlineWidth).toBe('2px');
       await commands.emulateMedia({ forcedColors: 'none' });
     },
   );

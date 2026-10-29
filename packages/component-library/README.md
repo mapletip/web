@@ -8,18 +8,41 @@ Shared React components for MapleTip browse and comparison pages.
   facets, mobile filter drawer, results, status and pagination.
 - `useFacetedBrowser` — headless browse state and query handling for custom layouts.
 - `Table` / `ComparisonTable` — table renderers for records your application prepares.
-- `theme` — the shared Mantine theme.
 
-Anything else under `src/components/` is an internal detail of the features above.
+Anything else under `src/components/` is an internal detail of the features above. The
+shared Mantine theme is owned by `@mapletip/theme`, not by this package.
 
 ## Getting started
 
-Add the stylesheet and render inside `MantineProvider`. Choose the color scheme before
-first paint so the page does not flash the wrong theme:
+Add the stylesheet and render inside `MantineProvider` with the shared theme. The
+stylesheet imports Mantine, Mantine DataTable and the theme's global treatments in the
+required order:
 
 ```ts
 import '@mapletip/component-library/styles.css';
+import {
+  ColorSchemeScript,
+  localStorageColorSchemeManager,
+  MantineProvider,
+} from '@mantine/core';
+import { cssVariablesResolver, theme } from '@mapletip/theme';
+
+// In the document shell, before first paint:
+<ColorSchemeScript defaultColorScheme="dark" />;
+
+<MantineProvider
+  theme={theme}
+  cssVariablesResolver={cssVariablesResolver}
+  defaultColorScheme="dark"
+  colorSchemeManager={localStorageColorSchemeManager()}
+>
+  <App />
+</MantineProvider>;
 ```
+
+Dark is the default; a saved explicit light or dark choice and `auto` are honored by
+Mantine's color-scheme manager. See [`@mapletip/theme`](../theme/README.md) for the full
+host contract and semantic roles.
 
 The component library never owns navigation. For controlled browsing pass `state` and
 `onStateChange`; for self-managed browsing pass `defaultState`. Supply `getPageHref` so
@@ -44,15 +67,17 @@ library always supplies one.
   with Space; identity cells are `td`. These are accepted upstream limitations, not WCAG
   compliance.
 - Sticky headers apply within the table's scroll area, not the browser window.
+- DataTable has no whole-column hover; comparison tables use its native row hover and
+  sorting indicator instead of a bespoke column overlay.
 - A stale `-columns-toggle` entry in an existing width bucket can hide a column; delete the
   bucket to reset.
 - Manual screen-reader, forced-colors and touch-device review is still required.
 
 ## Visual regression
 
-Selected stories are compared against committed screenshots using the same browser test
-runner as the rest of the library, so a change in layout, theme or responsive behaviour
-fails the build.
+Selected stories are compared against committed screenshots in both dark and light,
+including 320 px mobile cases, using the same browser test runner as the rest of the
+library, so a change in layout, theme or responsive behaviour fails the build.
 
 ```bash
 pnpm --filter @mapletip/component-library test:visual

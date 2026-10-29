@@ -1,4 +1,5 @@
 import { MantineProvider } from '@mantine/core';
+import { theme } from '@mapletip/theme';
 import { act } from 'react';
 import { hydrateRoot } from 'react-dom/client';
 import { renderToString } from 'react-dom/server';
@@ -10,7 +11,6 @@ import { NeutralBrowserMarkup } from '@/components/FacetedBrowser/__tests__/fixt
 import { FacetedBrowser } from '@/components/FacetedBrowser/FacetedBrowser';
 import { ComparisonTable } from '@/components/Table/ComparisonTable';
 import { demoRecords, makeDemoColumns } from '@/fixtures/records';
-import { theme } from '@/theme';
 
 let cleanup: (() => void) | undefined;
 

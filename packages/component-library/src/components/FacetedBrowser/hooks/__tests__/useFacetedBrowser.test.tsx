@@ -1,4 +1,5 @@
 import { MantineProvider } from '@mantine/core';
+import { theme } from '@mapletip/theme';
 import { useEffect, useRef, useState } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 import { page, userEvent } from 'vitest/browser';
@@ -13,7 +14,6 @@ import {
   type UseFacetedBrowserOptions,
 } from '@/components/FacetedBrowser/hooks/useFacetedBrowser';
 import type { TableColumn } from '@/components/Table/types';
-import { theme } from '@/theme';
 
 interface TestItem extends Record<string, unknown> {
   readonly id: string;

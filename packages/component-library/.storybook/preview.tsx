@@ -1,7 +1,7 @@
 import { MantineProvider } from '@mantine/core';
+import { cssVariablesResolver, theme } from '@mapletip/theme';
 import type { Preview } from '@storybook/react-vite';
 
-import { theme } from '@/theme';
 import '@/styles.css';
 
 const preview: Preview = {
@@ -12,21 +12,22 @@ const preview: Preview = {
         title: 'Color scheme',
         icon: 'mirror',
         items: [
-          { value: 'light', title: 'Light', icon: 'sun' },
           { value: 'dark', title: 'Dark', icon: 'moon' },
+          { value: 'light', title: 'Light', icon: 'sun' },
         ],
         dynamicTitle: true,
       },
     },
   },
   initialGlobals: {
-    colorScheme: 'light',
+    colorScheme: 'dark',
     viewport: { value: 'desktop', isRotated: false },
   },
   decorators: [
     (Story, context) => (
       <MantineProvider
         theme={theme}
+        cssVariablesResolver={cssVariablesResolver}
         forceColorScheme={context.globals['colorScheme'] as 'light' | 'dark'}
       >
         <Story />

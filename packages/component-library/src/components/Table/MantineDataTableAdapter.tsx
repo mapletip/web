@@ -1,4 +1,4 @@
-import { Text } from '@mantine/core';
+import { ActionIcon, Text } from '@mantine/core';
 import {
   DataTable,
   type DataTableColumn,
@@ -162,14 +162,12 @@ export function MantineDataTableAdapter<TRow extends Record<string, unknown>>({
       const isIdentity =
         pinnedIdentity !== undefined && column.accessor === pinnedIdentity;
       const isPinned = isIdentity;
-      const isSorted = sortStatus?.field === column.accessor;
       const isExpansionColumn =
         rowExpansionContent !== undefined &&
         column.accessor === expansionAccessor;
       const cellsClassName = [
         column.cellClassName,
         column.numeric ? classes['numericCell'] : undefined,
-        isSorted ? classes['sortedCell'] : undefined,
       ]
         .filter(Boolean)
         .join(' ');
@@ -186,9 +184,11 @@ export function MantineDataTableAdapter<TRow extends Record<string, unknown>>({
           );
           return (
             <span className={classes['expansionCell']}>
-              <button
+              <ActionIcon
                 type="button"
-                className={classes['expansionControl']}
+                variant="default"
+                size={24}
+                radius="sm"
                 aria-expanded={expanded}
                 aria-controls={expansionIdFor(recordId)}
                 aria-label={`${expanded ? 'Collapse' : 'Expand'} details for ${String(record[column.accessor])}`}
@@ -198,7 +198,7 @@ export function MantineDataTableAdapter<TRow extends Record<string, unknown>>({
                 }}
               >
                 <span aria-hidden="true">{expanded ? '−' : '+'}</span>
-              </button>
+              </ActionIcon>
               {renderColumnContent(record)}
             </span>
           );
@@ -241,7 +241,6 @@ export function MantineDataTableAdapter<TRow extends Record<string, unknown>>({
     pinnedIdentity,
     resizable,
     rowExpansionContent,
-    sortStatus?.field,
     toggleExpandedRecord,
   ]);
 
