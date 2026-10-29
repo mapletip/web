@@ -231,6 +231,37 @@ describe('ComparisonTable', () => {
     }
   });
 
+  it('moves the column emphasis with the pointer and clears it on leave', async () => {
+    await mount();
+    const firstColumn = document.querySelector<HTMLTableCellElement>(
+      'tbody tr:nth-child(2) td:nth-child(2)',
+    )!;
+    const secondColumn = document.querySelector<HTMLTableCellElement>(
+      'tbody tr:nth-child(2) td:nth-child(4)',
+    )!;
+    const tableHeight = document
+      .querySelector('table')!
+      .getBoundingClientRect().height;
+
+    await userEvent.hover(firstColumn);
+    const firstOverlay = getComputedStyle(firstColumn, '::before');
+    expect(firstOverlay.content).toBe('""');
+    // The overlay is taller than the table, so the emphasis spans every row.
+    expect(
+      Math.abs(Number.parseFloat(firstOverlay.top)),
+    ).toBeGreaterThanOrEqual(tableHeight);
+    expect(
+      Math.abs(Number.parseFloat(firstOverlay.bottom)),
+    ).toBeGreaterThanOrEqual(tableHeight);
+
+    await userEvent.hover(secondColumn);
+    expect(getComputedStyle(secondColumn, '::before').content).toBe('""');
+    expect(getComputedStyle(firstColumn, '::before').content).toBe('none');
+
+    await userEvent.unhover(secondColumn);
+    expect(getComputedStyle(secondColumn, '::before').content).toBe('none');
+  });
+
   it('layers the full-height Record highlight above sibling pinned cells', async () => {
     await mount();
     const hovered = document.querySelector<HTMLTableCellElement>(
