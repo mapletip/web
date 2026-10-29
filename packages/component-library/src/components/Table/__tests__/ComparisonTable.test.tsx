@@ -140,6 +140,65 @@ describe('ComparisonTable', () => {
     ).toBeLessThanOrEqual(1);
   });
 
+  it('resizes columns while keeping the identity pinned and scrollable', async () => {
+    window.localStorage.clear();
+    await mount();
+
+    const header = document.querySelector<HTMLElement>(
+      'thead th[data-accessor="group"]',
+    )!;
+    const handle = header.querySelector<HTMLElement>(
+      '.mantine-datatable-header-resizable-handle',
+    );
+    expect(handle).not.toBeNull();
+    expect(
+      document
+        .querySelector('thead th[data-accessor="name"]')
+        ?.getAttribute('data-pinned'),
+    ).toBe('left');
+
+    const initialWidth = header.getBoundingClientRect().width;
+    handle!.dispatchEvent(
+      new MouseEvent('mousedown', {
+        bubbles: true,
+        clientX: header.getBoundingClientRect().right,
+      }),
+    );
+    document.dispatchEvent(
+      new MouseEvent('mousemove', {
+        bubbles: true,
+        clientX: header.getBoundingClientRect().right + 48,
+      }),
+    );
+    document.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }));
+    await vi.waitFor(
+      () => {
+        expect(header.getBoundingClientRect().width).toBeGreaterThan(
+          initialWidth,
+        );
+      },
+      { timeout: 5_000 },
+    );
+
+    await page.viewport(320, 640);
+    const scrollArea = document.querySelector<HTMLElement>(
+      '[data-scrollarea-viewport="true"]',
+    )!;
+    expect(scrollArea.scrollWidth).toBeGreaterThan(scrollArea.clientWidth);
+    scrollArea.scrollLeft = 120;
+    const identity = document.querySelector<HTMLTableCellElement>(
+      'tbody tr:first-child :first-child',
+    )!;
+    expect(
+      Math.abs(
+        identity.getBoundingClientRect().left -
+          scrollArea.getBoundingClientRect().left,
+      ),
+    ).toBeLessThanOrEqual(1);
+    expect(identity.getAttribute('data-pinned')).toBe('left');
+    window.localStorage.clear();
+  });
+
   it('keeps pinned identity cells opaque when another column is hovered', async () => {
     await mount();
     const identity = document.querySelector<HTMLTableCellElement>(
