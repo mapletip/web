@@ -13,25 +13,22 @@ a:not([class]) {
   text-decoration: underline;
 }
 
-a {
-  text-underline-offset: 0.15em;
-}
-
 /*
- * Focus styling uses `theme.focusClassName`, so Mantine focusable components and
- * plain elements (record links, native controls) share one ring. The ring is
- * offset from the element, which keeps it on the surrounding surface instead of
- * on a filled orange action where blue-on-orange contrast fails.
+ * Mantine focusable components receive `focusClassName`; native links/controls
+ * use the base rule. The two selectors are disjoint, and the ring is offset so
+ * it sits on the surrounding surface instead of a filled orange action where
+ * blue-on-orange contrast fails. Component focus styles (for example an input's
+ * border) remain more specific and are left intact.
  */
 .mapletip-focus:focus-visible,
-:focus-visible {
+:where(:not(.mapletip-focus)):focus-visible {
   outline: 2px solid var(--mapletip-color-focus);
   outline-offset: 2px;
 }
 
 @media (forced-colors: active) {
   .mapletip-focus:focus-visible,
-  :focus-visible {
+  :where(:not(.mapletip-focus)):focus-visible {
     outline-color: Highlight;
   }
 }
