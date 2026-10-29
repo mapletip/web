@@ -51,7 +51,6 @@ export const theme: MantineThemeOverride = createTheme({
   },
   white: parchmentScheme.panel,
   black: parchmentScheme.textPrimary,
-  defaultRadius: 'md',
   // Preserved from the pre-theme component library so existing responsive
   // contracts keep matching the PostCSS breakpoint variables.
   breakpoints: {

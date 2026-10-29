@@ -21,14 +21,22 @@ a:not([class]) {
  * border) remain more specific and are left intact.
  */
 .mapletip-focus:focus-visible,
-:where(:not(.mapletip-focus)):focus-visible {
+:where(
+  :is(a, button, input, select, textarea, summary, [tabindex]):not(
+    .mapletip-focus
+  )
+):focus-visible {
   outline: 2px solid var(--mapletip-color-focus);
   outline-offset: 2px;
 }
 
 @media (forced-colors: active) {
   .mapletip-focus:focus-visible,
-  :where(:not(.mapletip-focus)):focus-visible {
+  :where(
+    :is(a, button, input, select, textarea, summary, [tabindex]):not(
+      .mapletip-focus
+    )
+  ):focus-visible {
     outline-color: Highlight;
   }
 }

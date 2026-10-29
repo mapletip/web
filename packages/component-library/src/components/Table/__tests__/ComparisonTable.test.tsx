@@ -435,10 +435,12 @@ describe('ComparisonTable', () => {
     const firstLink = document.querySelector<HTMLAnchorElement>(
       'tbody tr:first-child a',
     )!;
-    firstLink.focus();
+    firstLink.focus({ focusVisible: true });
     expect(getComputedStyle(firstLink.closest('tr')!).outlineStyle).toBe(
       'solid',
     );
+    expect(getComputedStyle(firstLink).outlineStyle).toBe('solid');
+    expect(getComputedStyle(firstLink).outlineWidth).toBe('2px');
   });
 
   it('tabs through sortable headers and then record links in reading order', async () => {
