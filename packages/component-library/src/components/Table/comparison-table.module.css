@@ -2,6 +2,12 @@
  * DataTable 9.4.0 provides row hover and column class hooks but no whole-column
  * hover. ComparisonTable uses a translucent full-height overlay for column
  * emphasis; the native row hover underneath remains visible.
+ *
+ * A `:has()` implementation was prototyped: CSS has no column selector, so it
+ * needs one positional rule per column index
+ * (`tbody:has(td:nth-child(k):hover) td:nth-child(k)`), which imposes an
+ * arbitrary column cap on a runtime-configured table. The overlay is
+ * index-agnostic and works for any column count.
  */
 .comparison {
   --column-hover-color: color-mix(

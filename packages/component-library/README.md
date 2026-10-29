@@ -59,7 +59,8 @@ library always supplies one.
 - Sticky headers apply within the table's scroll area, not the browser window.
 - DataTable has no whole-column hover. `ComparisonTable` adds a translucent full-height
   column emphasis for comparison, layered over DataTable's native row hover; both remain
-  active.
+  active. A `:has()` implementation was evaluated but needs one positional rule per
+  column index, so the index-agnostic overlay is retained.
 - A stale `-columns-toggle` entry in an existing width bucket can hide a column; delete the
   bucket to reset.
 - Manual screen-reader, forced-colors and touch-device review is still required.
