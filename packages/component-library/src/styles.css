@@ -1,3 +1,5 @@
 @import '@mantine/core/styles.css';
 @import 'mantine-datatable/styles.css';
-@import '@mapletip/theme/theme.css';
+/* Relative workspace path: Vite's dev CSS resolver does not resolve the
+   package-export subpath for @import, while the production builder does. */
+@import '../../theme/src/theme.css';
