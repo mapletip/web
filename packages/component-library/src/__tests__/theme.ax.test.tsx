@@ -9,7 +9,6 @@ import {
 } from '@mantine/core';
 import {
   cssVariablesResolver,
-  maple,
   parchmentScheme,
   theme,
   twilightScheme,
@@ -138,16 +137,19 @@ afterEach(async () => {
   });
 });
 
+const maplePalette = theme.colors?.['maple'];
+if (maplePalette === undefined) throw new Error('Maple palette missing');
+
 describe.each([
   {
     scheme: 'light' as const,
     roles: parchmentScheme,
-    primaryFill: maple[7],
+    primaryFill: maplePalette[7],
   },
   {
     scheme: 'dark' as const,
     roles: twilightScheme,
-    primaryFill: maple[4],
+    primaryFill: maplePalette[4],
   },
 ])('$scheme scheme rendered styles', ({ scheme, roles, primaryFill }) => {
   it('renders text, links, control borders and filled actions with the themed roles', async () => {

@@ -2,15 +2,14 @@ import { DEFAULT_THEME, mergeMantineTheme } from '@mantine/core';
 import { describe, expect, it } from 'vitest';
 
 import {
-  cssVariablesResolver,
   maple,
   parchment,
   parchmentScheme,
-  theme,
   twilight,
   twilightScheme,
-} from '../index';
-import type { SchemeColors } from '../index';
+  type SchemeColors,
+} from '../colors';
+import { cssVariablesResolver, theme } from '../index';
 
 /** WCAG 2.2 relative luminance for an opaque sRGB hex colour. */
 function relativeLuminance(hex: string): number {
