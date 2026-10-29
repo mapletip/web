@@ -2,7 +2,7 @@ import { useMemo, type ReactElement } from 'react';
 
 import classes from '@/components/Table/comparison-table.module.css';
 import { Table } from '@/components/Table/Table';
-import type { TableProps } from '@/components/Table/types';
+import type { TableColumn, TableProps } from '@/components/Table/types';
 
 export type ComparisonTableProps<TRow extends Record<string, unknown>> =
   TableProps<TRow> & {
@@ -11,10 +11,10 @@ export type ComparisonTableProps<TRow extends Record<string, unknown>> =
   };
 
 /**
- * Comparison presentation over `Table`: pinned identity and DataTable's native row
- * hover. By default, the table grows to its records and the document scrolls;
- * callers can set maxHeight to opt into DataTable's bounded, locally sticky scroll
- * region.
+ * Comparison presentation over `Table`: pinned identity, whole-column hover emphasis and
+ * DataTable's native row hover. By default, the table grows to its records and the
+ * document scrolls; callers can set maxHeight to opt into DataTable's bounded, locally
+ * sticky scroll region.
  */
 export function ComparisonTable<TRow extends Record<string, unknown>>({
   identityField,
@@ -28,6 +28,27 @@ export function ComparisonTable<TRow extends Record<string, unknown>>({
   const hasIdentityColumn = columns.some(
     (column) => column.accessor === identityField,
   );
+
+  const comparisonColumns = useMemo<readonly TableColumn<TRow>[]>(
+    () =>
+      columns.map((column) => ({
+        ...column,
+        cellClassName: [column.cellClassName, classes['columnHoverCell']]
+          .filter(Boolean)
+          .join(' '),
+      })),
+    [columns],
+  );
+
+  const classNames = useMemo<TableProps<TRow>['classNames']>(() => {
+    const hostClassNames = tableProps.classNames;
+    return {
+      ...hostClassNames,
+      table: [hostClassNames?.table, classes['comparisonTable']]
+        .filter(Boolean)
+        .join(' '),
+    };
+  }, [tableProps.classNames]);
 
   const comparisonRowClassName = useMemo<
     TableProps<TRow>['rowClassName']
@@ -52,13 +73,14 @@ export function ComparisonTable<TRow extends Record<string, unknown>>({
   return (
     <Table<TRow>
       {...tableProps}
-      columns={columns}
+      classNames={classNames}
+      columns={comparisonColumns}
       identityColumnAccessor={identityField}
       highlightOnHover={highlightOnHover}
       {...(maxHeight !== undefined ? { maxHeight } : {})}
       resizable={resizable}
       rowClassName={comparisonRowClassName}
-      {...(className !== undefined ? { className } : {})}
+      className={[classes['comparison'], className].filter(Boolean).join(' ')}
     />
   );
 }

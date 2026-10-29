@@ -156,6 +156,41 @@ describe('ComparisonTable', () => {
     });
   });
 
+  it('highlights Record, Category and numeric body columns', async () => {
+    await mount();
+    const row = document.querySelector<HTMLTableRowElement>(
+      'tbody tr:nth-child(2)',
+    )!;
+    for (const columnIndex of [1, 2, 4]) {
+      const hovered = row.children[columnIndex - 1] as HTMLTableCellElement;
+      await userEvent.hover(hovered);
+      expect(getComputedStyle(row).backgroundColor).not.toBe('transparent');
+      expect(getComputedStyle(hovered, '::before').content).toBe('""');
+      expect(getComputedStyle(hovered, '::before').backgroundColor).not.toBe(
+        'transparent',
+      );
+    }
+  });
+
+  it('layers the full-height Record highlight above sibling pinned cells', async () => {
+    await mount();
+    const hovered = document.querySelector<HTMLTableCellElement>(
+      'tbody tr:first-child :first-child',
+    )!;
+    const sibling = document.querySelector<HTMLTableCellElement>(
+      'tbody tr:nth-child(2) :first-child',
+    )!;
+
+    await userEvent.hover(hovered);
+
+    expect(hovered.hasAttribute('data-pinned')).toBe(true);
+    expect(getComputedStyle(hovered).zIndex).toBe('3');
+    expect(getComputedStyle(sibling).zIndex).toBe('2');
+    const overlay = getComputedStyle(hovered, '::before');
+    expect(overlay.top).not.toBe('0px');
+    expect(overlay.bottom).not.toBe('0px');
+  });
+
   it('uses the Twilight surfaces and native row hover in the dark scheme', async () => {
     document.documentElement.setAttribute('data-mantine-color-scheme', 'dark');
     await render(
@@ -182,6 +217,9 @@ describe('ComparisonTable', () => {
     );
     await userEvent.hover(numericCell);
     expect(getComputedStyle(row).backgroundColor).toBe('rgb(32, 40, 48)');
+    expect(getComputedStyle(numericCell, '::before').backgroundColor).not.toBe(
+      'transparent',
+    );
   });
 
   it('renders unknown values with the body text color and announces Unknown', async () => {
@@ -287,6 +325,7 @@ describe('ComparisonTable', () => {
         row.querySelector<HTMLTableCellElement>('td:nth-child(4)')!;
       await userEvent.hover(numeric);
       expect(getComputedStyle(row).outlineWidth).toBe('1px');
+      expect(getComputedStyle(numeric, '::before').outlineWidth).toBe('2px');
       await commands.emulateMedia({ forcedColors: 'none' });
     },
   );

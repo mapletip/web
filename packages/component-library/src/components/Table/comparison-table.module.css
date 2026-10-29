@@ -1,6 +1,38 @@
+/*
+ * DataTable 9.4.0 provides row hover and column class hooks but no whole-column
+ * hover. ComparisonTable uses a translucent full-height overlay for column
+ * emphasis; the native row hover underneath remains visible.
+ */
+.comparison {
+  --column-hover-color: color-mix(
+    in srgb,
+    var(--mantine-color-text) 7%,
+    transparent
+  );
+}
+
 .row:focus-within {
   outline: 2px solid var(--mapletip-color-focus);
   outline-offset: -2px;
+}
+
+.columnHoverCell {
+  position: relative;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .columnHoverCell[data-pinned]:hover {
+    z-index: 3;
+  }
+
+  .columnHoverCell:hover::before {
+    position: absolute;
+    z-index: 1;
+    pointer-events: none;
+    content: '';
+    inset: -100vmax 0;
+    background-color: var(--column-hover-color);
+  }
 }
 
 @media (forced-colors: active) {
@@ -8,4 +40,15 @@
     outline: 1px solid Highlight;
     outline-offset: -1px;
   }
+
+  .columnHoverCell:hover::before {
+    background-color: transparent;
+    outline: 2px solid Highlight;
+    outline-offset: -2px;
+  }
+}
+
+/* Clip the taller column overlay so it cannot expand the scroll region. */
+.comparisonTable {
+  overflow-y: clip;
 }

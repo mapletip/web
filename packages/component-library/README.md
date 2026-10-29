@@ -57,8 +57,9 @@ library always supplies one.
   with Space; identity cells are `td`. These are accepted upstream limitations, not WCAG
   compliance.
 - Sticky headers apply within the table's scroll area, not the browser window.
-- DataTable has no whole-column hover; comparison tables use its native row hover and
-  sorting indicator instead of a bespoke column overlay.
+- DataTable has no whole-column hover. `ComparisonTable` adds a translucent full-height
+  column emphasis for comparison, layered over DataTable's native row hover; both remain
+  active.
 - A stale `-columns-toggle` entry in an existing width bucket can hide a column; delete the
   bucket to reset.
 - Manual screen-reader, forced-colors and touch-device review is still required.
