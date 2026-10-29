@@ -14,35 +14,25 @@ shared Mantine theme is owned by `@mapletip/theme`, not by this package.
 
 ## Getting started
 
-Add the stylesheet and render inside `MantineProvider` with the shared theme. The
-stylesheet imports Mantine, Mantine DataTable and the theme's global treatments in the
-required order:
+The visual identity is owned by `@mapletip/theme`. Add the stylesheet and pass the
+shared theme and resolver to `MantineProvider`:
 
 ```ts
 import '@mapletip/component-library/styles.css';
-import {
-  ColorSchemeScript,
-  localStorageColorSchemeManager,
-  MantineProvider,
-} from '@mantine/core';
+import { MantineProvider } from '@mantine/core';
 import { cssVariablesResolver, theme } from '@mapletip/theme';
-
-// In the document shell, before first paint:
-<ColorSchemeScript defaultColorScheme="dark" />;
 
 <MantineProvider
   theme={theme}
   cssVariablesResolver={cssVariablesResolver}
   defaultColorScheme="dark"
-  colorSchemeManager={localStorageColorSchemeManager()}
 >
   <App />
 </MantineProvider>;
 ```
 
-Dark is the default; a saved explicit light or dark choice and `auto` are honored by
-Mantine's color-scheme manager. See [`@mapletip/theme`](../theme/README.md) for the full
-host contract and semantic roles.
+Dark is the default color scheme. See [`@mapletip/theme`](../theme/README.md) for
+color-scheme persistence and first-paint setup.
 
 The component library never owns navigation. For controlled browsing pass `state` and
 `onStateChange`; for self-managed browsing pass `defaultState`. Supply `getPageHref` so
@@ -76,8 +66,8 @@ library always supplies one.
 ## Visual regression
 
 Selected stories are compared against committed screenshots in both dark and light,
-including 320 px mobile cases, using the same browser test runner as the rest of the
-library, so a change in layout, theme or responsive behaviour fails the build.
+using the same browser test runner as the rest of the library, so a change in layout,
+theme or responsive behaviour fails the build.
 
 ```bash
 pnpm --filter @mapletip/component-library test:visual
