@@ -1,6 +1,6 @@
 import { composeStories } from '@storybook/react-vite';
-import { test } from 'vitest';
-import { page } from 'vitest/browser';
+import { expect, test } from 'vitest';
+import { page, userEvent } from 'vitest/browser';
 
 import * as stories from '@/components/Table/__stories__/ComparisonTable.stories';
 import {
@@ -83,6 +83,116 @@ const desktopDark: VisualCase = {
   story: dark.ComparisonTable,
 };
 
+const hoverScrolledLight: VisualCase = {
+  name: 'comparison-table-hover-scrolled-light',
+  story: light.ComparisonTable,
+  storyId: 'components-table--comparison-table',
+  width: 1366,
+  height: 768,
+};
+
+const hoverScrolledDark: VisualCase = {
+  ...hoverScrolledLight,
+  name: 'comparison-table-hover-scrolled-dark',
+  story: dark.ComparisonTable,
+};
+
+const nextFrame = (): Promise<void> =>
+  new Promise((resolve) => {
+    requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
+  });
+
+/**
+ * Scroll a bounded comparison table to its bottom-right extent, then hover a
+ * non-pinned column. Asserts the painted state: the pinned identity stays at the
+ * scrollport edge, the hovered column has the full-height overlay, adjacent and
+ * pinned cells do not, and the overlay does not grow the scroll region.
+ */
+async function hoverColumnAfterScrolling(): Promise<void> {
+  const viewport = document.querySelector<HTMLElement>(
+    '[data-scrollarea-viewport="true"]',
+  );
+  const table = document.querySelector(
+    'table[aria-label="Comparison records"]',
+  );
+  if (viewport === null || table === null) {
+    throw new Error('Comparison table is not rendered');
+  }
+
+  viewport.scrollLeft = viewport.scrollWidth;
+  viewport.scrollTop = viewport.scrollHeight;
+  await nextFrame();
+
+  const row = document.querySelector<HTMLTableRowElement>(
+    'tbody tr:last-child',
+  );
+  if (row === null) throw new Error('Comparison table has no body rows');
+  const cells = [...row.querySelectorAll<HTMLTableCellElement>('td')];
+  const hovered = cells[4];
+  const previous = cells[3];
+  const following = cells[5];
+  const pinned = row.querySelector<HTMLTableCellElement>('td[data-pinned]');
+  const header = document.querySelector<HTMLElement>('thead');
+  if (
+    hovered === undefined ||
+    previous === undefined ||
+    following === undefined ||
+    pinned === null ||
+    header === null
+  ) {
+    throw new Error('Comparison table cells are incomplete');
+  }
+
+  const before = {
+    scrollLeft: viewport.scrollLeft,
+    scrollTop: viewport.scrollTop,
+    scrollWidth: viewport.scrollWidth,
+    scrollHeight: viewport.scrollHeight,
+  };
+  expect(before.scrollLeft).toBeGreaterThan(0);
+  expect(before.scrollTop).toBeGreaterThan(0);
+
+  await userEvent.hover(hovered);
+  await nextFrame();
+
+  expect(viewport.scrollLeft).toBeGreaterThan(0);
+  expect(viewport.scrollTop).toBeGreaterThan(0);
+  expect(getComputedStyle(row).backgroundColor).not.toBe('transparent');
+
+  const overlay = getComputedStyle(hovered, '::before');
+  expect(overlay.content).toBe('""');
+  expect(overlay.left).toBe('0px');
+  expect(overlay.right).toBe('0px');
+  expect(getComputedStyle(previous, '::before').content).toBe('none');
+  expect(getComputedStyle(following, '::before').content).toBe('none');
+  expect(getComputedStyle(pinned, '::before').content).toBe('none');
+
+  expect(
+    Math.abs(
+      pinned.getBoundingClientRect().left -
+        viewport.getBoundingClientRect().left,
+    ),
+  ).toBeLessThanOrEqual(1);
+  expect(
+    Math.abs(
+      header.getBoundingClientRect().top - viewport.getBoundingClientRect().top,
+    ),
+  ).toBeLessThanOrEqual(1);
+  expect(hovered.getBoundingClientRect().left).toBeGreaterThan(
+    pinned.getBoundingClientRect().right,
+  );
+
+  // overflow-y: clip must contain the taller column overlay, not grow the
+  // scrollport or introduce an inner horizontal scroll container.
+  expect({
+    scrollLeft: viewport.scrollLeft,
+    scrollTop: viewport.scrollTop,
+    scrollWidth: viewport.scrollWidth,
+    scrollHeight: viewport.scrollHeight,
+  }).toEqual(before);
+  expect(getComputedStyle(table).overflowX).toBe('visible');
+}
+
 const phoneOverflow: VisualCase = {
   name: 'comparison-table-mobile-overflow-light',
   story: light.ComparisonTable,
@@ -107,4 +217,16 @@ test('comparison-table-mobile-overflow-light', async () => {
   await openVisualCase(phoneOverflow);
   assertTableScrollsHorizontally();
   await expectApprovedScreenshot(phoneOverflow);
+});
+
+test('comparison-table-hover-scrolled-light', async () => {
+  await openVisualCase(hoverScrolledLight);
+  await hoverColumnAfterScrolling();
+  await expectApprovedScreenshot(hoverScrolledLight);
+});
+
+test('comparison-table-hover-scrolled-dark', async () => {
+  await openVisualCase(hoverScrolledDark);
+  await hoverColumnAfterScrolling();
+  await expectApprovedScreenshot(hoverScrolledDark);
 });

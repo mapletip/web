@@ -140,6 +140,59 @@ describe('ComparisonTable', () => {
     ).toBeLessThanOrEqual(1);
   });
 
+  it('scrolls a bounded maxHeight region with a sticky header and pinned identity', async () => {
+    await render(
+      <MantineProvider
+        theme={theme}
+        cssVariablesResolver={cssVariablesResolver}
+      >
+        <ComparisonTable
+          ariaLabel="Bounded comparison"
+          records={demoRecords.slice(0, 30)}
+          columns={makeDemoColumns()}
+          idAccessor="id"
+          identityField="name"
+          maxHeight={240}
+          onSortChange={() => undefined}
+        />
+      </MantineProvider>,
+    );
+
+    const viewport = document.querySelector<HTMLElement>(
+      '[data-scrollarea-viewport="true"]',
+    )!;
+    const table = document.querySelector('table')!;
+    const header = document.querySelector<HTMLElement>('thead')!;
+
+    expect(viewport.scrollHeight).toBeGreaterThan(viewport.clientHeight);
+    expect(getComputedStyle(table).overflowY).toBe('clip');
+    // clip must not turn the table into a second horizontal scroll container.
+    expect(getComputedStyle(table).overflowX).toBe('visible');
+
+    viewport.scrollTop = 160;
+    viewport.scrollLeft = 120;
+    await vi.waitFor(() => {
+      expect(viewport.scrollTop).toBeGreaterThan(0);
+      expect(viewport.scrollLeft).toBeGreaterThan(0);
+      expect(
+        Math.abs(
+          header.getBoundingClientRect().top -
+            viewport.getBoundingClientRect().top,
+        ),
+      ).toBeLessThanOrEqual(1);
+    });
+
+    const identity = document.querySelector<HTMLTableCellElement>(
+      'tbody tr td[data-pinned]',
+    )!;
+    expect(
+      Math.abs(
+        identity.getBoundingClientRect().left -
+          viewport.getBoundingClientRect().left,
+      ),
+    ).toBeLessThanOrEqual(1);
+  });
+
   it('resizes columns while keeping the identity pinned and scrollable', async () => {
     window.localStorage.clear();
     await mount();

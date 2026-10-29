@@ -366,7 +366,17 @@ export function MantineDataTableAdapter<TRow extends Record<string, unknown>>({
       {...(className !== undefined ? { className } : {})}
       {...(height !== undefined ? { height } : {})}
       {...(minHeight !== undefined ? { minHeight } : {})}
-      {...(maxHeight !== undefined ? { maxHeight } : {})}
+      {...(maxHeight !== undefined
+        ? {
+            maxHeight,
+            // DataTable 9.4's maxHeight caps the root but leaves the ScrollArea
+            // viewport at content height when the root has no definite height.
+            // Mirroring the cap on the viewport keeps maxHeight scrollable.
+            scrollAreaProps: {
+              viewportProps: { style: { maxHeight } },
+            },
+          }
+        : {})}
       styles={{
         table: {
           width: 'max-content',
