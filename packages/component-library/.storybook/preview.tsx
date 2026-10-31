@@ -10,15 +10,19 @@ const preview: Preview = {
     viewport: { value: 'desktop', isRotated: false },
   },
   decorators: [
-    (Story) => (
-      <MantineProvider
-        theme={theme}
-        cssVariablesResolver={cssVariablesResolver}
-        forceColorScheme="dark"
-      >
-        <Story />
-      </MantineProvider>
-    ),
+    (Story, context) => {
+      const colorScheme =
+        (context.globals['colorScheme'] as 'light' | 'dark') ?? 'dark';
+      return (
+        <MantineProvider
+          theme={theme}
+          cssVariablesResolver={cssVariablesResolver}
+          forceColorScheme={colorScheme}
+        >
+          <Story />
+        </MantineProvider>
+      );
+    },
   ],
   parameters: {
     a11y: { test: 'error' },
