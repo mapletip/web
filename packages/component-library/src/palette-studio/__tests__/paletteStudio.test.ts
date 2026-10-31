@@ -121,4 +121,27 @@ describe('MapleTip Palette Exploration Studio & Theme Adapter', () => {
     expect(vars.dark['--mapletip-color-link']).toBe('#F5BB7B');
     expect(vars.dark['--mantine-color-anchor']).toBe('#F5BB7B');
   });
+
+  it('correctly provides de-blued neutral tokens for Maple Twilight', () => {
+    const config = resolvePaletteTheme('maple-twilight-pr7');
+    expect(config.palette.name).toBe('Maple Twilight');
+    expect(config.palette.dark.canvas).toBe('#131315');
+    expect(config.palette.dark.panel).toBe('#1B1B1E');
+    expect(config.palette.dark.raised).toBe('#242427');
+    expect(config.palette.dark.borderSubtle).toBe('#2B2B2F');
+    expect(config.palette.dark.textPrimary).toBe('#F5F2EC');
+    expect(config.palette.dark.textSecondary).toBe('#C5C4C2');
+
+    expect(config.palette.light.canvas).toBe('#E8DEC8');
+    expect(config.palette.light.panel).toBe('#F5EFE4');
+    expect(config.palette.light.textPrimary).toBe('#262320');
+    expect(config.palette.light.textSecondary).toBe('#5F5B55');
+    expect(config.palette.light.link).toBe('#8A3E0C');
+
+    const vars = config.cssVariablesResolver(DEFAULT_THEME);
+    expect(vars.dark['--mapletip-color-canvas']).toBe('#131315');
+    expect(vars.dark['--mapletip-color-panel']).toBe('#1B1B1E');
+    expect(vars.light['--mapletip-color-canvas']).toBe('#E8DEC8');
+    expect(vars.light['--mapletip-color-panel']).toBe('#F5EFE4');
+  });
 });
