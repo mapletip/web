@@ -1,0 +1,108 @@
+import { DEFAULT_THEME } from '@mantine/core';
+import { describe, expect, it } from 'vitest';
+
+import { PALETTES } from '../palettes.data';
+import { getPalette, resolvePaletteTheme } from '../themeAdapter';
+
+describe('MapleTip Palette Exploration Studio & Theme Adapter', () => {
+  it('includes 45 complete palettes covering approved, new, regional, and historical directions', () => {
+    expect(PALETTES.length).toBe(45);
+
+    const approved = PALETTES.filter((p) => p.category === 'approved');
+    const newDirections = PALETTES.filter((p) => p.category === 'new-direction');
+    const regional = PALETTES.filter((p) => p.category === 'historical-regional');
+    const brandKits = PALETTES.filter((p) => p.category === 'historical-brand');
+    const orangeBrand5 = PALETTES.filter((p) => p.category === 'historical-orange-brand');
+    const complete10 = PALETTES.filter((p) => p.category === 'historical-complete');
+    const orange10 = PALETTES.filter((p) => p.category === 'historical-orange');
+
+    expect(approved.length).toBe(1);
+    expect(newDirections.length).toBe(10);
+    expect(regional.length).toBe(3);
+    expect(brandKits.length).toBe(6); // 5 early brand directions + 1 PR #7 original
+    expect(orangeBrand5.length).toBe(5);
+    expect(complete10.length).toBe(10);
+    expect(orange10.length).toBe(10);
+  });
+
+  it('classifies the 10 new directions with their designated review statuses', () => {
+    const newDirections = PALETTES.filter((p) => p.category === 'new-direction');
+    const shortlist = newDirections.filter((p) => p.reviewStatus === 'Shortlist');
+    const conditional = newDirections.filter((p) => p.reviewStatus === 'Conditional');
+    const challenges = newDirections.filter((p) => p.reviewStatus === 'Challenge');
+
+    expect(shortlist.length).toBe(4);
+    expect(conditional.length).toBe(2);
+    expect(challenges.length).toBe(4);
+
+    expect(shortlist.map((p) => p.id)).toEqual([
+      'signal-tangerine',
+      'lantern-noir',
+      'amber-wireframe',
+      'volcanic-stage',
+    ]);
+  });
+
+  it('calculates weighted rubric scores according to the 30/25/20/15/10 weight model', () => {
+    for (const palette of PALETTES) {
+      const s = palette.scores;
+      const expected =
+        s.identity * 0.3 +
+        s.legibility * 0.25 +
+        s.coherence * 0.2 +
+        s.states * 0.15 +
+        s.accessibility * 0.1;
+      expect(Math.abs(s.weighted - expected)).toBeLessThan(0.05);
+    }
+  });
+
+  it('safely falls back to approved-v7 for undefined or unknown palette IDs', () => {
+    const fallbackEmpty = getPalette(undefined);
+    expect(fallbackEmpty.id).toBe('approved-v7');
+
+    const fallbackUnknown = getPalette('non-existent-id');
+    expect(fallbackUnknown.id).toBe('approved-v7');
+  });
+
+  it('preserves production theme and CSS variable resolver untouched for approved-v7', () => {
+    const config = resolvePaletteTheme('approved-v7');
+    expect(config.palette.id).toBe('approved-v7');
+    const vars = config.cssVariablesResolver(DEFAULT_THEME);
+    expect(vars.light['--mapletip-color-canvas']).toBe('#FAFAFB');
+    expect(vars.dark['--mapletip-color-canvas']).toBe('#111114');
+  });
+
+  it('generates fully populated CSS variables for experimental palettes', () => {
+    const config = resolvePaletteTheme('signal-tangerine');
+    expect(config.palette.id).toBe('signal-tangerine');
+
+    const vars = config.cssVariablesResolver(DEFAULT_THEME);
+    expect(vars.light['--mapletip-color-canvas']).toBe('#F9FAFC');
+    expect(vars.light['--mapletip-color-brand']).toBe('#ED8127');
+    expect(vars.light['--mapletip-color-cta']).toBe('#B95016');
+    expect(vars.dark['--mapletip-color-canvas']).toBe('#111318');
+    expect(vars.dark['--mapletip-color-brand']).toBe('#FF9D4D');
+    expect(vars.dark['--mapletip-color-cta']).toBe('#D96820');
+  });
+
+  it('every palette specifies valid hex color tokens for both light and dark modes', () => {
+    const hexRegex = /^#[0-9A-Fa-f]{6}$/;
+    for (const p of PALETTES) {
+      expect(p.light.canvas).toMatch(hexRegex);
+      expect(p.light.panel).toMatch(hexRegex);
+      expect(p.light.raised).toMatch(hexRegex);
+      expect(p.light.brand).toMatch(hexRegex);
+      expect(p.light.link).toMatch(hexRegex);
+      expect(p.light.cta.background).toMatch(hexRegex);
+      expect(p.light.cta.foreground).toMatch(hexRegex);
+
+      expect(p.dark.canvas).toMatch(hexRegex);
+      expect(p.dark.panel).toMatch(hexRegex);
+      expect(p.dark.raised).toMatch(hexRegex);
+      expect(p.dark.brand).toMatch(hexRegex);
+      expect(p.dark.link).toMatch(hexRegex);
+      expect(p.dark.cta.background).toMatch(hexRegex);
+      expect(p.dark.cta.foreground).toMatch(hexRegex);
+    }
+  });
+});

@@ -1,6 +1,8 @@
 import { MantineProvider } from '@mantine/core';
-import { cssVariablesResolver, theme } from '@mapletip/theme';
 import type { Preview } from '@storybook/react-vite';
+
+import { PALETTES } from '@/palette-studio/palettes.data';
+import { resolvePaletteTheme } from '@/palette-studio/themeAdapter';
 
 import '@/styles.css';
 
@@ -18,21 +20,59 @@ const preview: Preview = {
         dynamicTitle: true,
       },
     },
+    brandPalette: {
+      description: 'MapleTip brand palette exploration',
+      toolbar: {
+        title: 'Palette',
+        icon: 'paintbrush',
+        items: PALETTES.map((p) => {
+          let prefix: string;
+          if (p.id === 'approved-v7') {
+            prefix = '★ ';
+          } else if (p.category === 'new-direction') {
+            if (p.reviewStatus === 'Shortlist') prefix = '✦ ';
+            else if (p.reviewStatus === 'Conditional') prefix = '◆ ';
+            else prefix = '▲ ';
+          } else if (p.category === 'historical-regional') {
+            prefix = '🗺 ';
+          } else {
+            prefix = '📜 ';
+          }
+          return {
+            value: p.id,
+            title: `${prefix}${p.name}${p.reviewStatus === 'Shortlist' ? ' [Shortlist]' : ''}`,
+          };
+        }),
+        dynamicTitle: true,
+      },
+    },
   },
   initialGlobals: {
     colorScheme: 'dark',
+    brandPalette: 'approved-v7',
     viewport: { value: 'desktop', isRotated: false },
   },
   decorators: [
-    (Story, context) => (
-      <MantineProvider
-        theme={theme}
-        cssVariablesResolver={cssVariablesResolver}
-        forceColorScheme={context.globals['colorScheme'] as 'light' | 'dark'}
-      >
-        <Story />
-      </MantineProvider>
-    ),
+    (Story, context) => {
+      const colorScheme =
+        (context.globals['colorScheme'] as 'light' | 'dark') ?? 'dark';
+      const brandPaletteId = context.globals['brandPalette'] as
+        | string
+        | undefined;
+      const { theme, cssVariablesResolver } =
+        resolvePaletteTheme(brandPaletteId);
+
+      return (
+        <MantineProvider
+          key={`${brandPaletteId ?? 'approved-v7'}-${colorScheme}`}
+          theme={theme}
+          cssVariablesResolver={cssVariablesResolver}
+          forceColorScheme={colorScheme}
+        >
+          <Story />
+        </MantineProvider>
+      );
+    },
   ],
   parameters: {
     a11y: { test: 'error' },
