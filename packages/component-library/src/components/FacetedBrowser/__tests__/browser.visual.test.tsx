@@ -1,6 +1,6 @@
 import { composeStories } from '@storybook/react-vite';
 import { describe, expect, test } from 'vitest';
-import { page } from 'vitest/browser';
+import { page, userEvent } from 'vitest/browser';
 
 import * as stories from '@/components/FacetedBrowser/__stories__/FacetedBrowser.stories';
 import {
@@ -54,6 +54,50 @@ const visualCases: readonly VisualCase[] = [
     height: 768,
     visible: [desktopTable],
     hidden: [hiddenCards],
+  },
+  {
+    name: 'faceted-browser-active-light',
+    story: light.Active,
+    storyId: 'components-facetedbrowser--active',
+    width: 1366,
+    height: 768,
+    visible: [desktopTable],
+    hidden: [hiddenCards],
+  },
+  {
+    name: 'faceted-browser-active-dark',
+    story: dark.Active,
+    storyId: 'components-facetedbrowser--active',
+    width: 1366,
+    height: 768,
+    visible: [desktopTable],
+    hidden: [hiddenCards],
+  },
+  {
+    name: 'faceted-browser-focus-light',
+    story: light.Default,
+    storyId: 'components-facetedbrowser--default',
+    width: 1366,
+    height: 768,
+    visible: [desktopTable],
+    hidden: [hiddenCards],
+    beforeScreenshot: async () => {
+      await userEvent.tab();
+      await userEvent.tab();
+    },
+  },
+  {
+    name: 'faceted-browser-focus-dark',
+    story: dark.Default,
+    storyId: 'components-facetedbrowser--default',
+    width: 1366,
+    height: 768,
+    visible: [desktopTable],
+    hidden: [hiddenCards],
+    beforeScreenshot: async () => {
+      await userEvent.tab();
+      await userEvent.tab();
+    },
   },
   {
     name: 'faceted-browser-mobile-cards-light',

@@ -62,6 +62,7 @@ export function OptionList({
         <Button
           type="button"
           variant="subtle"
+          color="maple"
           size="compact-sm"
           mt="xs"
           px={4}

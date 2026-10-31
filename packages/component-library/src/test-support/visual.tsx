@@ -21,6 +21,8 @@ export interface VisualCase {
   readonly hidden?: readonly Locator[];
   /** Capture one element instead of the whole viewport. */
   readonly element?: Locator;
+  /** Optional action to perform before capturing screenshot (e.g. keyboard navigation). */
+  readonly beforeScreenshot?: () => Promise<void>;
 }
 
 /**
@@ -67,6 +69,9 @@ export async function openVisualCase(visualCase: VisualCase): Promise<void> {
 export async function expectApprovedScreenshot(
   visualCase: VisualCase,
 ): Promise<void> {
+  if (visualCase.beforeScreenshot) {
+    await visualCase.beforeScreenshot();
+  }
   const target = visualCase.element ?? page;
   await expect(target).toMatchScreenshot(visualCase.name, SCREENSHOT_OPTIONS);
 }

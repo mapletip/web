@@ -70,6 +70,26 @@ const variantColorResolver: VariantColorsResolver = (input) => {
     }
   }
 
+  if (input.color === 'maple') {
+    if (input.variant === 'subtle') {
+      return {
+        background: 'transparent',
+        hover: 'var(--mapletip-color-brand-wash)',
+        color: 'var(--mapletip-color-link)',
+        border: '1px solid transparent',
+      };
+    }
+
+    if (input.variant === 'light') {
+      return {
+        background: 'var(--mapletip-color-brand-wash)',
+        hover: 'var(--mapletip-color-selection)',
+        color: 'var(--mapletip-color-link)',
+        border: '1px solid transparent',
+      };
+    }
+  }
+
   const resolved = defaultVariantColorsResolver(input);
   const isPrimaryFilled =
     input.variant === 'filled' &&

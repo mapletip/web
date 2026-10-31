@@ -339,6 +339,28 @@ describe('MapleTip approved theme foundation', () => {
     expect(resolved.color).toBe('light-dark(#2B2017, #211B15)');
   });
 
+  it('resolves subtle and light variants for maple with brand wash and link tokens', () => {
+    const resolvedTheme = mergeMantineTheme(DEFAULT_THEME, theme);
+
+    const subtle = resolvedTheme.variantColorResolver({
+      color: 'maple',
+      theme: resolvedTheme,
+      variant: 'subtle',
+    });
+    expect(subtle.background).toBe('transparent');
+    expect(subtle.hover).toBe('var(--mapletip-color-brand-wash)');
+    expect(subtle.color).toBe('var(--mapletip-color-link)');
+
+    const light = resolvedTheme.variantColorResolver({
+      color: 'maple',
+      theme: resolvedTheme,
+      variant: 'light',
+    });
+    expect(light.background).toBe('var(--mapletip-color-brand-wash)');
+    expect(light.hover).toBe('var(--mapletip-color-selection)');
+    expect(light.color).toBe('var(--mapletip-color-link)');
+  });
+
   it.each(cases)(
     '$name meets $minimum:1',
     ({ foreground, background, minimum }) => {

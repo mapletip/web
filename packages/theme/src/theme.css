@@ -15,13 +15,21 @@ a:not([class]) {
 
 /*
  * Mantine focusable components receive `focusClassName`; native links, buttons,
- * summaries and tabbable widgets use the base rule.
+ * checkboxes, summaries and tabbable widgets use the base rule.
  * The ring has a 2px offset with a focusGap shadow so it remains distinguishable
  * against filled Walnut actions, selection backgrounds, and adjacent surfaces.
  */
 .mapletip-focus:focus-visible,
 :where(
-  :is(a, button, summary, [role='button'], [tabindex]):not(.mapletip-focus)
+  :is(
+    a,
+    button,
+    input[type='checkbox'],
+    input[type='radio'],
+    summary,
+    [role='button'],
+    [tabindex]
+  ):not(.mapletip-focus)
 ):focus-visible {
   outline: 2px solid var(--mapletip-color-focus);
   outline-offset: 2px;
@@ -31,7 +39,15 @@ a:not([class]) {
 @media (forced-colors: active) {
   .mapletip-focus:focus-visible,
   :where(
-    :is(a, button, summary, [role='button'], [tabindex]):not(.mapletip-focus)
+    :is(
+      a,
+      button,
+      input[type='checkbox'],
+      input[type='radio'],
+      summary,
+      [role='button'],
+      [tabindex]
+    ):not(.mapletip-focus)
   ):focus-visible {
     outline-color: Highlight;
     box-shadow: none;
@@ -90,6 +106,16 @@ a:not([class]) {
 .mantine-datatable thead tr,
 .mantine-datatable thead th {
   background-color: var(--mapletip-color-raised);
+}
+
+/*
+ * Active sort direction indicator uses Maple Orange interactive token,
+ * while unsorted indicator remains subdued.
+ */
+.mantine-datatable-header-cell-sortable-icon:not(
+  .mantine-datatable-header-cell-sortable-unsorted-icon
+) {
+  color: var(--mapletip-color-link);
 }
 
 .mantine-datatable tbody td[data-pinned] {

@@ -469,6 +469,7 @@ export function FacetedBrowser<TRecord extends Record<string, unknown>>(
                   type="button"
                   size="compact-sm"
                   variant="light"
+                  color="maple"
                   aria-label={`Remove ${chip.label}`}
                   onClick={() => {
                     if (chip.removeValue === undefined) {
@@ -494,6 +495,7 @@ export function FacetedBrowser<TRecord extends Record<string, unknown>>(
                 type="button"
                 size="compact-sm"
                 variant="subtle"
+                color="gray"
                 onClick={browser.resetFilters}
               >
                 Clear filters
