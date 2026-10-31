@@ -65,7 +65,9 @@ export function MantineDataTableAdapter<TRow extends Record<string, unknown>>({
   withTableBorder = false,
   withColumnBorders = false,
   withRowBorders = true,
+  borderRadius,
   horizontalSpacing,
+  verticalSpacing,
   striped = false,
   highlightOnHover = false,
   fetching = false,
@@ -385,7 +387,9 @@ export function MantineDataTableAdapter<TRow extends Record<string, unknown>>({
       }}
       storeColumnsKey={effectiveStoreColumnsKey}
       {...(classNames !== undefined ? { classNames } : {})}
+      {...(borderRadius !== undefined ? { borderRadius } : {})}
       {...(horizontalSpacing !== undefined ? { horizontalSpacing } : {})}
+      {...(verticalSpacing !== undefined ? { verticalSpacing } : {})}
       {...(rowExpansion !== undefined ? { rowExpansion } : {})}
       {...(onRowClick !== undefined ? { onRowClick } : {})}
       {...(rowClassName !== undefined ? { rowClassName } : {})}

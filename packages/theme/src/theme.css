@@ -57,6 +57,7 @@ a:not([class]) {
  * DataTable's documented CSS variables for borders, selection, and row hover.
  */
 [data-mantine-color-scheme='light'] .mantine-datatable {
+  --mantine-datatable-background-color-light: var(--mapletip-color-panel);
   --mantine-datatable-border-color-light: var(--mapletip-color-border-subtle);
   --mantine-datatable-row-border-color-light: var(
     --mapletip-color-border-subtle
@@ -70,6 +71,7 @@ a:not([class]) {
 }
 
 [data-mantine-color-scheme='dark'] .mantine-datatable {
+  --mantine-datatable-background-color-dark: var(--mapletip-color-panel);
   --mantine-datatable-border-color-dark: var(--mapletip-color-border-subtle);
   --mantine-datatable-row-border-color-dark: var(
     --mapletip-color-border-subtle
@@ -80,6 +82,22 @@ a:not([class]) {
   --mantine-datatable-row-hover-background-color-dark: var(
     --mapletip-color-hover
   );
+}
+
+/*
+ * Table header and pinned identity column surface hierarchy.
+ */
+.mantine-datatable thead tr,
+.mantine-datatable thead th {
+  background-color: var(--mapletip-color-raised);
+}
+
+.mantine-datatable tbody td[data-pinned] {
+  background-color: var(--mapletip-color-panel);
+}
+
+.mantine-datatable tbody tr:hover td[data-pinned] {
+  background-color: var(--mapletip-color-hover);
 }
 
 /* Mantine respects the preference for its own transitions; DataTable does not. */

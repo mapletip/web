@@ -1,4 +1,4 @@
-import { Alert, Button, Text, Title } from '@mantine/core';
+import { Alert, Box, Button, Text, Title } from '@mantine/core';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { useMemo, useState } from 'react';
 import { expect, screen, userEvent, waitFor, within } from 'storybook/test';
@@ -24,6 +24,20 @@ import type { DemoRecord } from '@/fixtures/records';
 const meta = {
   title: 'Components/FacetedBrowser',
   parameters: { layout: 'fullscreen' },
+  decorators: [
+    (Story) => (
+      <Box
+        p={{ base: 'md', md: 'xl' }}
+        style={{
+          maxWidth: 1440,
+          margin: '0 auto',
+          boxSizing: 'border-box',
+        }}
+      >
+        <Story />
+      </Box>
+    ),
+  ],
 } satisfies Meta;
 export default meta;
 type Story = StoryObj<typeof meta>;

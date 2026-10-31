@@ -59,18 +59,23 @@ export function PageSizeSelect({
   );
 
   return (
-    <Select
-      aria-label={`${recordNoun} per page`}
-      size="sm"
-      checkIconPosition="left"
-      withAlignedLabels
-      value={String(pageSize)}
-      data={data}
-      onChange={(value) => {
-        if (value !== null) onChange(Number(value));
-      }}
-      w={90}
-    />
+    <Group gap={6} align="center">
+      <Text size="xs" c="dimmed">
+        Per page:
+      </Text>
+      <Select
+        aria-label={`${recordNoun} per page`}
+        size="sm"
+        checkIconPosition="left"
+        withAlignedLabels
+        value={String(pageSize)}
+        data={data}
+        onChange={(value) => {
+          if (value !== null) onChange(Number(value));
+        }}
+        w={76}
+      />
+    </Group>
   );
 }
 

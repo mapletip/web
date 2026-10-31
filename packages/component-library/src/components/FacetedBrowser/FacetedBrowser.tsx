@@ -1,4 +1,5 @@
 import { Button, Group, Stack, TextInput, Title } from '@mantine/core';
+import { MagnifyingGlass } from '@phosphor-icons/react';
 import type {
   MouseEvent as ReactMouseEvent,
   ReactElement,
@@ -418,9 +419,15 @@ export function FacetedBrowser<TRecord extends Record<string, unknown>>(
       <Layout
         title={title}
         search={
-          <form role="search" onSubmit={(event) => event.preventDefault()}>
+          <form
+            role="search"
+            onSubmit={(event) => event.preventDefault()}
+            className={classes['searchForm']}
+          >
             <TextInput
-              label={searchLabel}
+              aria-label={searchLabel}
+              placeholder={searchLabel}
+              leftSection={<MagnifyingGlass size={16} aria-hidden="true" />}
               value={browseState.search}
               onChange={(event) => browser.setSearch(event.currentTarget.value)}
             />
