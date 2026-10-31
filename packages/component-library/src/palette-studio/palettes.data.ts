@@ -246,6 +246,7 @@ export const PALETTES: readonly PaletteDefinition[] = [
       "linkHover": "#B11820",
       "linkDecorationThickness": "1px",
       "linkHoverDecoration": "none",
+      "tableTitleWeight": "600",
       "onBrand": "#FFFFFF",
       "cta": {
         "background": "#B15604",

@@ -44,6 +44,7 @@ export interface PaletteTokenSet {
   readonly linkWeight?: string;
   readonly linkDecorationThickness?: string;
   readonly linkHoverDecoration?: string;
+  readonly tableTitleWeight?: string;
   readonly onBrand: string;
   readonly cta: CtaTokens;
   readonly statuses: StatusTokens;

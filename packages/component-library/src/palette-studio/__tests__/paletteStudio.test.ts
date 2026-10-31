@@ -173,8 +173,10 @@ describe('MapleTip Palette Exploration Studio & Theme Adapter', () => {
     expect(vars.light['--mapletip-color-link-hover']).toBe('#B11820');
     expect(vars.light['--mapletip-link-hover-decoration']).toBe('none');
     expect(vars.light['--mapletip-color-cta']).toBe('#B15604');
+    expect(vars.light['--mapletip-table-title-weight']).toBe('600');
     expect(vars.dark['--mapletip-color-canvas']).toBe('#111417');
     expect(vars.dark['--mapletip-color-panel']).toBe('#1A1D20');
     expect(vars.dark['--mapletip-link-weight']).toBe('inherit');
+    expect(vars.dark['--mapletip-table-title-weight']).toBe('inherit');
   });
 });

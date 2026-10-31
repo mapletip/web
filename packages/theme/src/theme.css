@@ -84,6 +84,9 @@ a:not([class]) {
   --mantine-datatable-row-hover-background-color-light: var(
     --mapletip-color-hover
   );
+  --mantine-datatable-highlight-on-hover-color-light: var(
+    --mapletip-color-hover
+  );
 }
 
 [data-mantine-color-scheme='dark'] .mantine-datatable {
@@ -96,6 +99,9 @@ a:not([class]) {
     --mapletip-color-selection
   );
   --mantine-datatable-row-hover-background-color-dark: var(
+    --mapletip-color-hover
+  );
+  --mantine-datatable-highlight-on-hover-color-dark: var(
     --mapletip-color-hover
   );
 }

@@ -59,6 +59,7 @@ function resolveSchemeVariables(
       tokens.linkDecorationThickness ?? 'auto',
     '--mapletip-link-hover-decoration':
       tokens.linkHoverDecoration ?? 'underline',
+    '--mapletip-table-title-weight': tokens.tableTitleWeight ?? 'inherit',
     '--mapletip-color-cta': tokens.cta.background,
     '--mapletip-color-cta-fg': tokens.cta.foreground,
     '--mapletip-color-cta-hover': tokens.cta.hover,

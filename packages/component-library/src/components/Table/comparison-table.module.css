@@ -26,6 +26,10 @@
   position: relative;
 }
 
+.columnHoverCell[data-pinned] a {
+  font-weight: var(--mapletip-table-title-weight, inherit);
+}
+
 @media (hover: hover) and (pointer: fine) {
   .columnHoverCell[data-pinned]:hover {
     z-index: 3;
