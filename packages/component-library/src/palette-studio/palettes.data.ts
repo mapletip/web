@@ -206,6 +206,108 @@ export const PALETTES: readonly PaletteDefinition[] = [
     }
   },
   {
+    "id": "mapletip-2005-classic",
+    "name": "MapleTip 2005 Classic",
+    "category": "new-direction",
+    "tag": "Historical candidate",
+    "reviewStatus": "Shortlist",
+    "thesis": "Faithful color port of Flash's original 2005 MapleTip website, pairing nostalgic #BB6109 brand amber and cream #FAF7F3 with locked-in Maple Twilight dark mode.",
+    "distinctiveFeature": "Crisp white (#FFFFFF) tables, warm parchment zebra stripes (#F7EBDB), 2005 brand amber borders (#BB6109), and vibrant amber links (#A64B00).",
+    "bestCase": "Maximum MapleTip nostalgia with flawless WCAG AA compliance across both light mode and locked-in evening twilight dark mode.",
+    "adversarialRisk": "Slightly warmer off-white canvas (#FAF7F3) than modern pure-white SaaS tools, but preserves authentic 2005 MapleTip feel.",
+    "provenance": "Legacy mapletip master branch (templates/styles/default.css & Quest Finder) + locked-in Maple Twilight dark mode",
+    "scores": {
+      "identity": 4.8,
+      "legibility": 4.7,
+      "coherence": 4.6,
+      "states": 4.6,
+      "accessibility": 4.8,
+      "weighted": 4.71
+    },
+    "light": {
+      "canvas": "#FAF7F3",
+      "panel": "#FFFFFF",
+      "raised": "#F7EBDB",
+      "rail": "#FAF7F3",
+      "borderSubtle": "#E6E0D6",
+      "borderStrong": "#BB6109",
+      "textPrimary": "#1A1A1A",
+      "textSecondary": "#5A5A5A",
+      "hover": "#FFF8EE",
+      "brand": "#BB6109",
+      "brandText": "#A64B00",
+      "brandWash": "#FFF3DB",
+      "selection": "#FFF3DB",
+      "selectionEdge": "#BB6109",
+      "soft": "#FFF3DB",
+      "focus": "#BB6109",
+      "focusGap": "#FFFFFF",
+      "link": "#A64B00",
+      "onBrand": "#FFFFFF",
+      "cta": {
+        "background": "#B15604",
+        "foreground": "#FFFFFF",
+        "hover": "#984400",
+        "border": "#B15604"
+      },
+      "statuses": {
+        "success": "#008A00",
+        "successBg": "#E6F6EC",
+        "warning": "#855609",
+        "warningBg": "#FFF3DB",
+        "danger": "#C91A1A",
+        "dangerBg": "#FBE8EC",
+        "info": "#162642",
+        "infoBg": "#E8F1FB"
+      },
+      "disabled": {
+        "bg": "#E9E9E7",
+        "fg": "#64676A"
+      }
+    },
+    "dark": {
+      "canvas": "#111417",
+      "panel": "#1A1D20",
+      "raised": "#22262B",
+      "rail": "#1A1D20",
+      "borderSubtle": "#2C3137",
+      "borderStrong": "#788088",
+      "textPrimary": "#F4F1EA",
+      "textSecondary": "#C0C4C8",
+      "hover": "#22262B",
+      "brand": "#F0A456",
+      "brandText": "#F5BB7B",
+      "brandWash": "#261F1A",
+      "selection": "#3A2E24",
+      "selectionEdge": "#F0A456",
+      "soft": "#3A2E24",
+      "focus": "#F0A456",
+      "focusGap": "#1A1D20",
+      "link": "#F0A456",
+      "onBrand": "#111417",
+      "cta": {
+        "background": "#F4F1EA",
+        "foreground": "#111417",
+        "hover": "#E2E5E8",
+        "border": "#F4F1EA"
+      },
+      "statuses": {
+        "success": "#ACE0C2",
+        "successBg": "#20372B",
+        "warning": "#F4D397",
+        "warningBg": "#443524",
+        "danger": "#F8ADB8",
+        "dangerBg": "#46282F",
+        "info": "#B0D5F3",
+        "infoBg": "#26394A"
+      },
+      "disabled": {
+        "bg": "#313133",
+        "fg": "#B4B4B8"
+      }
+    }
+  },
+  {
     "id": "signal-tangerine",
     "name": "Signal Tangerine",
     "category": "new-direction",

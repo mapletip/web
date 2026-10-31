@@ -5,8 +5,8 @@ import { PALETTES } from '../palettes.data';
 import { getPalette, resolvePaletteTheme } from '../themeAdapter';
 
 describe('MapleTip Palette Exploration Studio & Theme Adapter', () => {
-  it('includes 46 complete palettes covering approved, new, regional, and historical directions', () => {
-    expect(PALETTES.length).toBe(46);
+  it('includes 47 complete palettes covering approved, new, regional, and historical directions', () => {
+    expect(PALETTES.length).toBe(47);
 
     const approved = PALETTES.filter((p) => p.category === 'approved');
     const newDirections = PALETTES.filter((p) => p.category === 'new-direction');
@@ -17,7 +17,7 @@ describe('MapleTip Palette Exploration Studio & Theme Adapter', () => {
     const orange10 = PALETTES.filter((p) => p.category === 'historical-orange');
 
     expect(approved.length).toBe(1);
-    expect(newDirections.length).toBe(11);
+    expect(newDirections.length).toBe(12);
     expect(regional.length).toBe(3);
     expect(brandKits.length).toBe(6); // 5 early brand directions + 1 PR #7 original
     expect(orangeBrand5.length).toBe(5);
@@ -25,18 +25,19 @@ describe('MapleTip Palette Exploration Studio & Theme Adapter', () => {
     expect(orange10.length).toBe(10);
   });
 
-  it('classifies new directions including Approved v7 (Twilight Links) into their designated review statuses', () => {
+  it('classifies new directions including Approved v7 (Twilight Links) and MapleTip 2005 Classic into their designated review statuses', () => {
     const newDirections = PALETTES.filter((p) => p.category === 'new-direction');
     const shortlist = newDirections.filter((p) => p.reviewStatus === 'Shortlist');
     const conditional = newDirections.filter((p) => p.reviewStatus === 'Conditional');
     const challenges = newDirections.filter((p) => p.reviewStatus === 'Challenge');
 
-    expect(shortlist.length).toBe(5);
+    expect(shortlist.length).toBe(6);
     expect(conditional.length).toBe(2);
     expect(challenges.length).toBe(4);
 
     expect(shortlist.map((p) => p.id)).toEqual([
       'approved-v7-twilight-links',
+      'mapletip-2005-classic',
       'signal-tangerine',
       'lantern-noir',
       'amber-wireframe',
@@ -143,5 +144,32 @@ describe('MapleTip Palette Exploration Studio & Theme Adapter', () => {
     expect(vars.dark['--mapletip-color-panel']).toBe('#1A1D20');
     expect(vars.light['--mapletip-color-canvas']).toBe('#E4D8C8');
     expect(vars.light['--mapletip-color-panel']).toBe('#F2E9DD');
+  });
+
+  it('correctly wires the MapleTip 2005 Classic theme', () => {
+    const config = resolvePaletteTheme('mapletip-2005-classic');
+    expect(config.palette.name).toBe('MapleTip 2005 Classic');
+    expect(config.palette.light.canvas).toBe('#FAF7F3');
+    expect(config.palette.light.panel).toBe('#FFFFFF');
+    expect(config.palette.light.raised).toBe('#F7EBDB');
+    expect(config.palette.light.borderStrong).toBe('#BB6109');
+    expect(config.palette.light.link).toBe('#A64B00');
+    expect(config.palette.light.cta.background).toBe('#B15604');
+    expect(config.palette.light.selection).toBe('#FFF3DB');
+
+    // Locked-in Maple Twilight dark mode
+    expect(config.palette.dark.canvas).toBe('#111417');
+    expect(config.palette.dark.panel).toBe('#1A1D20');
+    expect(config.palette.dark.raised).toBe('#22262B');
+    expect(config.palette.dark.link).toBe('#F0A456');
+
+    const vars = config.cssVariablesResolver(DEFAULT_THEME);
+    expect(vars.light['--mapletip-color-canvas']).toBe('#FAF7F3');
+    expect(vars.light['--mapletip-color-panel']).toBe('#FFFFFF');
+    expect(vars.light['--mapletip-color-link']).toBe('#A64B00');
+    expect(vars.light['--mantine-color-anchor']).toBe('#A64B00');
+    expect(vars.light['--mapletip-color-cta']).toBe('#B15604');
+    expect(vars.dark['--mapletip-color-canvas']).toBe('#111417');
+    expect(vars.dark['--mapletip-color-panel']).toBe('#1A1D20');
   });
 });
