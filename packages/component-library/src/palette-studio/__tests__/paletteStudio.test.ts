@@ -5,8 +5,8 @@ import { PALETTES } from '../palettes.data';
 import { getPalette, resolvePaletteTheme } from '../themeAdapter';
 
 describe('MapleTip Palette Exploration Studio & Theme Adapter', () => {
-  it('includes 45 complete palettes covering approved, new, regional, and historical directions', () => {
-    expect(PALETTES.length).toBe(45);
+  it('includes 46 complete palettes covering approved, new, regional, and historical directions', () => {
+    expect(PALETTES.length).toBe(46);
 
     const approved = PALETTES.filter((p) => p.category === 'approved');
     const newDirections = PALETTES.filter((p) => p.category === 'new-direction');
@@ -17,7 +17,7 @@ describe('MapleTip Palette Exploration Studio & Theme Adapter', () => {
     const orange10 = PALETTES.filter((p) => p.category === 'historical-orange');
 
     expect(approved.length).toBe(1);
-    expect(newDirections.length).toBe(10);
+    expect(newDirections.length).toBe(11);
     expect(regional.length).toBe(3);
     expect(brandKits.length).toBe(6); // 5 early brand directions + 1 PR #7 original
     expect(orangeBrand5.length).toBe(5);
@@ -25,17 +25,18 @@ describe('MapleTip Palette Exploration Studio & Theme Adapter', () => {
     expect(orange10.length).toBe(10);
   });
 
-  it('classifies the 10 new directions with their designated review statuses', () => {
+  it('classifies new directions including Approved v7 (Twilight Links) into their designated review statuses', () => {
     const newDirections = PALETTES.filter((p) => p.category === 'new-direction');
     const shortlist = newDirections.filter((p) => p.reviewStatus === 'Shortlist');
     const conditional = newDirections.filter((p) => p.reviewStatus === 'Conditional');
     const challenges = newDirections.filter((p) => p.reviewStatus === 'Challenge');
 
-    expect(shortlist.length).toBe(4);
+    expect(shortlist.length).toBe(5);
     expect(conditional.length).toBe(2);
     expect(challenges.length).toBe(4);
 
     expect(shortlist.map((p) => p.id)).toEqual([
+      'approved-v7-twilight-links',
       'signal-tangerine',
       'lantern-noir',
       'amber-wireframe',
@@ -104,5 +105,20 @@ describe('MapleTip Palette Exploration Studio & Theme Adapter', () => {
       expect(p.dark.cta.background).toMatch(hexRegex);
       expect(p.dark.cta.foreground).toMatch(hexRegex);
     }
+  });
+
+  it('correctly wires the new Approved v7 (Twilight Links) theme', () => {
+    const config = resolvePaletteTheme('approved-v7-twilight-links');
+    expect(config.palette.name).toBe('Approved v7 (Twilight Links)');
+    expect(config.palette.light.link).toBe('#8A3E0C');
+    expect(config.palette.dark.link).toBe('#F5BB7B');
+    expect(config.palette.light.canvas).toBe('#FAFAFB');
+    expect(config.palette.dark.canvas).toBe('#111114');
+
+    const vars = config.cssVariablesResolver(DEFAULT_THEME);
+    expect(vars.light['--mapletip-color-link']).toBe('#8A3E0C');
+    expect(vars.light['--mantine-color-anchor']).toBe('#8A3E0C');
+    expect(vars.dark['--mapletip-color-link']).toBe('#F5BB7B');
+    expect(vars.dark['--mantine-color-anchor']).toBe('#F5BB7B');
   });
 });

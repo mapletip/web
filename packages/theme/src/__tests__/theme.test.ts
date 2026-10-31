@@ -6,12 +6,17 @@ import {
   graphite,
   graphiteScheme,
   maple,
+  mapleTwilightLinks,
   porcelain,
   porcelainScheme,
   walnut,
   type SchemeColors,
 } from '../colors';
-import { cssVariablesResolver, theme } from '../index';
+import {
+  cssVariablesResolver,
+  theme,
+  twilightLinksCssVariablesResolver,
+} from '../index';
 
 /** WCAG 2.2 relative luminance for an opaque sRGB hex colour. */
 function relativeLuminance(hex: string): number {
@@ -386,4 +391,31 @@ describe('MapleTip approved theme foundation', () => {
       expect(contrast(foreground, background)).toBeLessThan(3);
     },
   );
+
+  it('resolves Maple Twilight link accents in twilightLinksCssVariablesResolver', () => {
+    const vars = twilightLinksCssVariablesResolver(DEFAULT_THEME);
+    expect(vars.light['--mapletip-color-link']).toBe(mapleTwilightLinks.light);
+    expect(vars.light['--mantine-color-anchor']).toBe(mapleTwilightLinks.light);
+    expect(vars.dark['--mapletip-color-link']).toBe(mapleTwilightLinks.dark);
+    expect(vars.dark['--mantine-color-anchor']).toBe(mapleTwilightLinks.dark);
+  });
+
+  it('meets WCAG AAA contrast for Maple Twilight link tokens across surfaces', () => {
+    // Light mode #8A3E0C meets >7:1 AAA
+    expect(contrast(mapleTwilightLinks.light, '#FFFFFF')).toBeGreaterThan(7.0);
+    expect(
+      contrast(mapleTwilightLinks.light, porcelainScheme.canvas),
+    ).toBeGreaterThan(7.0);
+    expect(
+      contrast(mapleTwilightLinks.light, porcelainScheme.raised),
+    ).toBeGreaterThan(6.8);
+
+    // Dark mode #F5BB7B meets >10:1 AAA
+    expect(
+      contrast(mapleTwilightLinks.dark, graphiteScheme.canvas),
+    ).toBeGreaterThan(10.0);
+    expect(
+      contrast(mapleTwilightLinks.dark, graphiteScheme.panel),
+    ).toBeGreaterThan(10.0);
+  });
 });

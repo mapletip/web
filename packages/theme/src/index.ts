@@ -3,10 +3,13 @@ export {
   graphite,
   graphiteScheme,
   graphiteScheme as twilightScheme,
+  graphiteTwilightLinksScheme,
   maple,
+  mapleTwilightLinks,
   porcelain,
   porcelainScheme,
   porcelainScheme as parchmentScheme,
+  porcelainTwilightLinksScheme,
   walnut,
 } from './colors';
 export type {
@@ -15,4 +18,8 @@ export type {
   SchemeColors,
   StatusColors,
 } from './colors';
-export { cssVariablesResolver, theme } from './theme';
+export {
+  cssVariablesResolver,
+  theme,
+  twilightLinksCssVariablesResolver,
+} from './theme';

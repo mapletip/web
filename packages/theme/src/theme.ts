@@ -9,9 +9,11 @@ import {
 import {
   graphite,
   graphiteScheme,
+  graphiteTwilightLinksScheme,
   maple,
   porcelain,
   porcelainScheme,
+  porcelainTwilightLinksScheme,
   walnut,
   type SchemeColors,
 } from './colors';
@@ -304,5 +306,21 @@ export const cssVariablesResolver: CSSVariablesResolver = () => ({
   dark: {
     ...schemeVariables(graphiteScheme),
     '--mantine-color-body': graphiteScheme.canvas,
+  },
+});
+
+/**
+ * Resolves scheme-specific CSS variables derived from canonical tokens with
+ * Maple Twilight high-contrast link accents (#8A3E0C light / #F5BB7B dark).
+ */
+export const twilightLinksCssVariablesResolver: CSSVariablesResolver = () => ({
+  variables: {},
+  light: {
+    ...schemeVariables(porcelainTwilightLinksScheme),
+    '--mantine-color-body': porcelainTwilightLinksScheme.canvas,
+  },
+  dark: {
+    ...schemeVariables(graphiteTwilightLinksScheme),
+    '--mantine-color-body': graphiteTwilightLinksScheme.canvas,
   },
 });

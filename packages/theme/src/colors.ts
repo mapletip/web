@@ -296,3 +296,25 @@ export const approvedColorTokens = {
     ctaBorder: graphiteScheme.cta.border,
   },
 } as const;
+
+/**
+ * Maple Twilight link colors (from the historical PR #7 theme):
+ * - Light (Parchment): #8A3E0C (deep amber-chestnut, 7.57:1 contrast on white)
+ * - Dark (Twilight): #F5BB7B (warm lantern-amber glow, 10.15:1 contrast on dark panel)
+ */
+export const mapleTwilightLinks = {
+  light: '#8A3E0C',
+  dark: '#F5BB7B',
+} as const;
+
+/** Clear Porcelain scheme with Maple Twilight link accent. */
+export const porcelainTwilightLinksScheme: SchemeColors = {
+  ...porcelainScheme,
+  link: mapleTwilightLinks.light,
+};
+
+/** Graphite scheme with Maple Twilight link accent. */
+export const graphiteTwilightLinksScheme: SchemeColors = {
+  ...graphiteScheme,
+  link: mapleTwilightLinks.dark,
+};

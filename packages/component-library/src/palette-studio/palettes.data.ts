@@ -104,6 +104,108 @@ export const PALETTES: readonly PaletteDefinition[] = [
     }
   },
   {
+    "id": "approved-v7-twilight-links",
+    "name": "Approved v7 (Twilight Links)",
+    "category": "new-direction",
+    "tag": "New design-studio proposal",
+    "reviewStatus": "Shortlist",
+    "thesis": "Approved Clear Porcelain & Walnut Glow with Maple Twilight's deep chestnut-amber light link (#8A3E0C) and luminous lantern-gold dark link (#F5BB7B).",
+    "distinctiveFeature": "Elevates link and interactive text visibility across tables and cards while preserving approved sober surfaces and Walnut CTA.",
+    "bestCase": "Directly resolves the neutral link complaint without altering background canvas, table densities, or primary buttons.",
+    "adversarialRisk": "Light-mode link has slightly higher contrast differential against secondary metadata text (7.6:1 vs 5.8:1).",
+    "provenance": "Approved v7 baseline + PR #7 Maple Twilight link tokens (#8A3E0C / #F5BB7B)",
+    "scores": {
+      "identity": 4.7,
+      "legibility": 4.8,
+      "coherence": 4.7,
+      "states": 4.7,
+      "accessibility": 5.0,
+      "weighted": 4.76
+    },
+    "light": {
+      "canvas": "#FAFAFB",
+      "panel": "#FFFFFF",
+      "raised": "#F5F5F6",
+      "rail": "#FFFFFF",
+      "borderSubtle": "#E8E8EA",
+      "borderStrong": "#ABB0B8",
+      "textPrimary": "#27272A",
+      "textSecondary": "#62636A",
+      "hover": "#F7F7F8",
+      "brand": "#DD9554",
+      "brandText": "#8A3E0C",
+      "brandWash": "#FFF6E8",
+      "selection": "#FFF2E2",
+      "selectionEdge": "#B97642",
+      "soft": "#FDF0E4",
+      "focus": "#B45B22",
+      "focusGap": "#FFFFFF",
+      "link": "#8A3E0C",
+      "onBrand": "#2B2017",
+      "cta": {
+        "background": "#3D332C",
+        "foreground": "#FFFFFF",
+        "hover": "#2D2621",
+        "border": "#3D332C"
+      },
+      "statuses": {
+        "success": "#176647",
+        "successBg": "#E6F6EC",
+        "warning": "#795514",
+        "warningBg": "#FFF3D5",
+        "danger": "#9A293B",
+        "dangerBg": "#FBE8EC",
+        "info": "#2A5878",
+        "infoBg": "#E8F1FB"
+      },
+      "disabled": {
+        "bg": "#E9E9E7",
+        "fg": "#64676A"
+      }
+    },
+    "dark": {
+      "canvas": "#111114",
+      "panel": "#1A1A1D",
+      "raised": "#242428",
+      "rail": "#151518",
+      "borderSubtle": "#39393E",
+      "borderStrong": "#929299",
+      "textPrimary": "#F5F5F5",
+      "textSecondary": "#C2C2C7",
+      "hover": "#242428",
+      "brand": "#EBA85F",
+      "brandText": "#F0BA82",
+      "brandWash": "#382B23",
+      "selection": "#4D382B",
+      "selectionEdge": "#D49B69",
+      "soft": "#3B2D26",
+      "focus": "#F4AD70",
+      "focusGap": "#1A1A1D",
+      "link": "#F5BB7B",
+      "onBrand": "#211B15",
+      "cta": {
+        "background": "#514039",
+        "foreground": "#F9EFE4",
+        "hover": "#604C42",
+        "border": "#8F7665"
+      },
+      "statuses": {
+        "success": "#ACE0C2",
+        "successBg": "#20372B",
+        "warning": "#F4D397",
+        "warningBg": "#443524",
+        "danger": "#F8ADB8",
+        "dangerBg": "#46282F",
+        "info": "#B0D5F3",
+        "infoBg": "#26394A"
+      },
+      "disabled": {
+        "bg": "#313133",
+        "fg": "#B4B4B8"
+      }
+    }
+  },
+  {
     "id": "signal-tangerine",
     "name": "Signal Tangerine",
     "category": "new-direction",
