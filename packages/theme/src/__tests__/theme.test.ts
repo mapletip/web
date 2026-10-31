@@ -2,11 +2,13 @@ import { DEFAULT_THEME, mergeMantineTheme } from '@mantine/core';
 import { describe, expect, it } from 'vitest';
 
 import {
+  approvedColorTokens,
+  graphite,
+  graphiteScheme,
   maple,
-  parchment,
-  parchmentScheme,
-  twilight,
-  twilightScheme,
+  porcelain,
+  porcelainScheme,
+  walnut,
   type SchemeColors,
 } from '../colors';
 import { cssVariablesResolver, theme } from '../index';
@@ -65,12 +67,6 @@ function surfaceCases(
       minimum: 4.5,
     },
     {
-      name: `${name} control boundary on ${surfaceName}`,
-      foreground: scheme.borderControl,
-      background: surface,
-      minimum: 3,
-    },
-    {
       name: `${name} focus ring on ${surfaceName}`,
       foreground: scheme.focus,
       background: surface,
@@ -80,146 +76,258 @@ function surfaceCases(
 }
 
 const cases: readonly ContrastCase[] = [
-  ...surfaceCases(twilightScheme, 'twilight'),
-  ...surfaceCases(parchmentScheme, 'parchment'),
+  ...surfaceCases(graphiteScheme, 'graphite (dark)'),
+  ...surfaceCases(porcelainScheme, 'porcelain (light)'),
   {
-    name: 'twilight filled primary label on primary shade',
-    foreground: twilightScheme.filledActionText,
-    background: maple[4],
+    name: 'graphite filled Walnut CTA label on CTA background',
+    foreground: graphiteScheme.cta.foreground,
+    background: graphiteScheme.cta.background,
     minimum: 4.5,
   },
   {
-    name: 'parchment filled primary label on primary shade',
-    foreground: parchmentScheme.filledActionText,
-    background: maple[7],
+    name: 'porcelain filled Walnut CTA label on CTA background',
+    foreground: porcelainScheme.cta.foreground,
+    background: porcelainScheme.cta.background,
     minimum: 4.5,
   },
   {
-    name: 'twilight filled primary label on hover shade',
-    foreground: twilightScheme.filledActionText,
-    background: maple[5],
+    name: 'graphite filled Walnut CTA label on hover background',
+    foreground: graphiteScheme.cta.foreground,
+    background: graphiteScheme.cta.hover,
     minimum: 4.5,
   },
   {
-    name: 'parchment filled primary label on hover shade',
-    foreground: parchmentScheme.filledActionText,
-    background: maple[8],
+    name: 'porcelain filled Walnut CTA label on hover background',
+    foreground: porcelainScheme.cta.foreground,
+    background: porcelainScheme.cta.hover,
     minimum: 4.5,
   },
   {
-    name: 'twilight placeholder on panel',
-    foreground: twilight[3],
-    background: twilightScheme.panel,
+    name: 'graphite Walnut CTA border on dark panel',
+    foreground: graphiteScheme.cta.border,
+    background: graphiteScheme.panel,
+    minimum: 3,
+  },
+  {
+    name: 'graphite onBrand text on dark brand primary',
+    foreground: graphiteScheme.onBrand,
+    background: graphiteScheme.brand,
     minimum: 4.5,
   },
   {
-    name: 'parchment placeholder on panel',
-    foreground: parchment[5],
-    background: parchmentScheme.panel,
+    name: 'porcelain onBrand text on light brand primary',
+    foreground: porcelainScheme.onBrand,
+    background: porcelainScheme.brand,
     minimum: 4.5,
   },
   {
-    name: 'twilight error text on canvas',
-    foreground: twilightScheme.accents.danger,
-    background: twilightScheme.canvas,
+    name: 'graphite primary text on selection background',
+    foreground: graphiteScheme.textPrimary,
+    background: graphiteScheme.selection,
     minimum: 4.5,
   },
   {
-    name: 'parchment error text on canvas',
-    foreground: parchmentScheme.accents.danger,
-    background: parchmentScheme.canvas,
+    name: 'porcelain primary text on selection background',
+    foreground: porcelainScheme.textPrimary,
+    background: porcelainScheme.selection,
     minimum: 4.5,
   },
-  ...(['forest', 'sky', 'grape', 'gold', 'danger'] as const).flatMap(
-    (role): ContrastCase[] =>
-      (
-        [
-          ['panel', 'panel'],
-          ['canvas', 'canvas'],
-          ['raised', 'raised'],
-        ] as const
-      ).flatMap(([surfaceName, surfaceKey]): ContrastCase[] => [
-        {
-          name: `twilight ${role} accent on ${surfaceName}`,
-          foreground: twilightScheme.accents[role],
-          background: twilightScheme[surfaceKey],
-          minimum: 4.5,
-        },
-        {
-          name: `parchment ${role} accent on ${surfaceName}`,
-          foreground: parchmentScheme.accents[role],
-          background: parchmentScheme[surfaceKey],
-          minimum: 4.5,
-        },
-      ]),
+  {
+    name: 'graphite link on selection background',
+    foreground: graphiteScheme.link,
+    background: graphiteScheme.selection,
+    minimum: 4.5,
+  },
+  {
+    name: 'porcelain link on selection background',
+    foreground: porcelainScheme.link,
+    background: porcelainScheme.selection,
+    minimum: 4.5,
+  },
+  // Clear Signals statuses on their own backgrounds and surfaces
+  ...(['success', 'warning', 'danger', 'info'] as const).flatMap(
+    (status): ContrastCase[] => [
+      {
+        name: `graphite ${status} text on its background`,
+        foreground: graphiteScheme.statuses[status],
+        background: graphiteScheme.statuses[`${status}Bg`],
+        minimum: 4.5,
+      },
+      {
+        name: `porcelain ${status} text on its background`,
+        foreground: porcelainScheme.statuses[status],
+        background: porcelainScheme.statuses[`${status}Bg`],
+        minimum: 4.5,
+      },
+      {
+        name: `graphite ${status} text on panel`,
+        foreground: graphiteScheme.statuses[status],
+        background: graphiteScheme.panel,
+        minimum: 4.5,
+      },
+      {
+        name: `porcelain ${status} text on panel`,
+        foreground: porcelainScheme.statuses[status],
+        background: porcelainScheme.panel,
+        minimum: 4.5,
+      },
+    ],
   ),
 ];
 
-describe('Maple Twilight theme', () => {
-  it('exposes the approved palettes and primary shades', () => {
+describe('MapleTip approved theme foundation', () => {
+  it('exposes the approved v7 tokens matching specification', () => {
+    expect(approvedColorTokens.locked.background).toBe('Clear Porcelain');
+    expect(approvedColorTokens.locked.cta).toBe('Walnut Glow');
+    expect(approvedColorTokens.locked.soft).toBe('#FDF0E4');
+    expect(approvedColorTokens.locked.selection).toBe('Maple Glow');
+    expect(approvedColorTokens.locked.identity).toBe('Classic Maple');
+    expect(approvedColorTokens.locked.linksAndFocus).toBe('Maple Orange');
+    expect(approvedColorTokens.locked.boundaries).toBe('Porcelain');
+    expect(approvedColorTokens.locked.statuses).toBe('Clear Signals');
+
+    expect(approvedColorTokens.light.canvas).toBe('#FAFAFB');
+    expect(approvedColorTokens.light.panel).toBe('#FFFFFF');
+    expect(approvedColorTokens.light.cta).toBe('#3D332C');
+    expect(approvedColorTokens.light.ctaFg).toBe('#FFFFFF');
+    expect(approvedColorTokens.light.ctaHover).toBe('#2D2621');
+    expect(approvedColorTokens.light.ctaBorder).toBe('#3D332C');
+    expect(approvedColorTokens.light.brand).toBe('#DD9554');
+    expect(approvedColorTokens.light.brandText).toBe('#995928');
+    expect(approvedColorTokens.light.link).toBe('#A34C16');
+    expect(approvedColorTokens.light.focus).toBe('#B45B22');
+    expect(approvedColorTokens.light.focusGap).toBe('#FFFFFF');
+    expect(approvedColorTokens.light.selection).toBe('#FFF2E2');
+    expect(approvedColorTokens.light.selectionEdge).toBe('#B97642');
+    expect(approvedColorTokens.light.soft).toBe('#FDF0E4');
+
+    expect(approvedColorTokens.dark.canvas).toBe('#111114');
+    expect(approvedColorTokens.dark.panel).toBe('#1A1A1D');
+    expect(approvedColorTokens.dark.cta).toBe('#514039');
+    expect(approvedColorTokens.dark.ctaFg).toBe('#F9EFE4');
+    expect(approvedColorTokens.dark.ctaHover).toBe('#604C42');
+    expect(approvedColorTokens.dark.ctaBorder).toBe('#8F7665');
+    expect(approvedColorTokens.dark.brand).toBe('#EBA85F');
+    expect(approvedColorTokens.dark.brandText).toBe('#F0BA82');
+    expect(approvedColorTokens.dark.link).toBe('#F6BE90');
+    expect(approvedColorTokens.dark.focus).toBe('#F4AD70');
+    expect(approvedColorTokens.dark.focusGap).toBe('#1A1A1D');
+    expect(approvedColorTokens.dark.selection).toBe('#4D382B');
+    expect(approvedColorTokens.dark.selectionEdge).toBe('#D49B69');
+    expect(approvedColorTokens.dark.soft).toBe('#3B2D26');
+  });
+
+  it('exposes the approved palettes, primary shades, and typography', () => {
     expect(maple).toHaveLength(10);
-    expect(twilight).toHaveLength(10);
-    expect(parchment).toHaveLength(10);
-    expect(maple[4]).toBe('#F0A456');
-    expect(maple[7]).toBe('#A34D16');
+    expect(walnut).toHaveLength(10);
+    expect(graphite).toHaveLength(10);
+    expect(porcelain).toHaveLength(10);
+
     expect(theme.primaryColor).toBe('maple');
-    expect(theme.primaryShade).toEqual({ dark: 4, light: 7 });
+    expect(theme.primaryShade).toEqual({ dark: 4, light: 5 });
+    expect(theme.defaultRadius).toBe('sm');
+    expect(theme.fontSizes?.sm).toBe('0.875rem');
+    expect(theme.fontSizes?.md).toBe('1rem');
+    expect(theme.radius?.sm).toBe('0.5rem');
+    expect(theme.radius?.md).toBe('0.75rem');
   });
 
   it('maps scheme roles onto Mantine neutral variables', () => {
     const resolvedTheme = mergeMantineTheme(DEFAULT_THEME, theme);
 
-    expect(resolvedTheme.colors.dark?.[0]).toBe(twilightScheme.textPrimary);
-    expect(resolvedTheme.colors.dark?.[2]).toBe(twilightScheme.textSecondary);
-    expect(resolvedTheme.colors.dark?.[4]).toBe(twilightScheme.borderControl);
-    expect(resolvedTheme.colors.dark?.[5]).toBe(twilightScheme.raised);
-    expect(resolvedTheme.colors.dark?.[6]).toBe(twilightScheme.panel);
-    expect(resolvedTheme.colors.dark?.[7]).toBe(twilightScheme.canvas);
-    expect(resolvedTheme.colors.gray?.[0]).toBe(parchmentScheme.raised);
-    expect(resolvedTheme.colors.gray?.[3]).toBe(parchmentScheme.borderSubtle);
-    expect(resolvedTheme.colors.gray?.[4]).toBe(parchmentScheme.borderControl);
-    expect(resolvedTheme.colors.gray?.[6]).toBe(parchmentScheme.textSecondary);
-    expect(resolvedTheme.colors.gray?.[9]).toBe(parchmentScheme.textPrimary);
-    expect(resolvedTheme.white).toBe(parchmentScheme.panel);
-    expect(resolvedTheme.black).toBe(parchmentScheme.textPrimary);
+    expect(resolvedTheme.colors.dark?.[0]).toBe(graphiteScheme.textPrimary);
+    expect(resolvedTheme.colors.dark?.[2]).toBe(graphiteScheme.textSecondary);
+    expect(resolvedTheme.colors.dark?.[4]).toBe(graphiteScheme.borderStrong);
+    expect(resolvedTheme.colors.dark?.[5]).toBe(graphiteScheme.raised);
+    expect(resolvedTheme.colors.dark?.[6]).toBe(graphiteScheme.panel);
+    expect(resolvedTheme.colors.dark?.[7]).toBe(graphiteScheme.canvas);
+
+    expect(resolvedTheme.colors.gray?.[0]).toBe(porcelainScheme.raised);
+    expect(resolvedTheme.colors.gray?.[2]).toBe(porcelainScheme.borderSubtle);
+    expect(resolvedTheme.colors.gray?.[3]).toBe(porcelainScheme.borderSubtle);
+    expect(resolvedTheme.colors.gray?.[4]).toBe(porcelainScheme.borderStrong);
+    expect(resolvedTheme.colors.gray?.[6]).toBe(porcelainScheme.textSecondary);
+    expect(resolvedTheme.colors.gray?.[9]).toBe(porcelainScheme.textPrimary);
+
+    expect(resolvedTheme.white).toBe(porcelainScheme.panel);
+    expect(resolvedTheme.black).toBe(porcelainScheme.textPrimary);
   });
 
-  it('resolves only the scheme roles Mantine cannot express', () => {
+  it('resolves semantic variables in cssVariablesResolver', () => {
     const variables = cssVariablesResolver(
       mergeMantineTheme(DEFAULT_THEME, theme),
     );
 
     expect(variables.light?.['--mantine-color-body']).toBe(
-      parchmentScheme.canvas,
+      porcelainScheme.canvas,
     );
     expect(variables.light?.['--mantine-color-anchor']).toBe(
-      parchmentScheme.link,
-    );
-    expect(variables.light?.['--mantine-color-error']).toBe(
-      parchmentScheme.accents.danger,
+      porcelainScheme.link,
     );
     expect(variables.light?.['--mapletip-color-focus']).toBe(
-      parchmentScheme.focus,
+      porcelainScheme.focus,
     );
-    expect(variables.light?.['--mapletip-color-border-subtle']).toBe(
-      parchmentScheme.borderSubtle,
+    expect(variables.light?.['--mapletip-color-focus-gap']).toBe(
+      porcelainScheme.focusGap,
     );
-    expect(variables.dark?.['--mantine-color-body']).toBeUndefined();
+    expect(variables.light?.['--mapletip-color-cta']).toBe(
+      porcelainScheme.cta.background,
+    );
+    expect(variables.light?.['--mapletip-color-cta-fg']).toBe(
+      porcelainScheme.cta.foreground,
+    );
+    expect(variables.light?.['--mapletip-color-selection']).toBe(
+      porcelainScheme.selection,
+    );
+    expect(variables.light?.['--mapletip-color-selection-edge']).toBe(
+      porcelainScheme.selectionEdge,
+    );
+    expect(variables.light?.['--mapletip-color-soft']).toBe(
+      porcelainScheme.soft,
+    );
+
+    expect(variables.dark?.['--mantine-color-body']).toBe(
+      graphiteScheme.canvas,
+    );
     expect(variables.dark?.['--mantine-color-anchor']).toBe(
-      twilightScheme.link,
-    );
-    expect(variables.dark?.['--mantine-color-error']).toBe(
-      twilightScheme.accents.danger,
+      graphiteScheme.link,
     );
     expect(variables.dark?.['--mapletip-color-focus']).toBe(
-      twilightScheme.focus,
+      graphiteScheme.focus,
     );
-    expect(variables.dark?.['--mapletip-color-border-subtle']).toBe(
-      twilightScheme.borderSubtle,
+    expect(variables.dark?.['--mapletip-color-focus-gap']).toBe(
+      graphiteScheme.focusGap,
     );
+    expect(variables.dark?.['--mapletip-color-cta']).toBe(
+      graphiteScheme.cta.background,
+    );
+    expect(variables.dark?.['--mapletip-color-cta-fg']).toBe(
+      graphiteScheme.cta.foreground,
+    );
+    expect(variables.dark?.['--mapletip-color-selection']).toBe(
+      graphiteScheme.selection,
+    );
+    expect(variables.dark?.['--mapletip-color-selection-edge']).toBe(
+      graphiteScheme.selectionEdge,
+    );
+    expect(variables.dark?.['--mapletip-color-soft']).toBe(graphiteScheme.soft);
   });
 
-  it('uses scheme-aware labels for filled primary actions', () => {
+  it('resolves Walnut CTA as default button action', () => {
+    const resolvedTheme = mergeMantineTheme(DEFAULT_THEME, theme);
+    const resolved = resolvedTheme.variantColorResolver({
+      color: 'walnut',
+      theme: resolvedTheme,
+      variant: 'filled',
+    });
+
+    expect(resolved.background).toBe('var(--mapletip-color-cta)');
+    expect(resolved.color).toBe('var(--mapletip-color-cta-fg)');
+    expect(resolved.hover).toBe('var(--mapletip-color-cta-hover)');
+    expect(resolved.border).toBe('1px solid var(--mapletip-color-cta-border)');
+  });
+
+  it('keeps scheme-aware labels for filled brand badges', () => {
     const resolvedTheme = mergeMantineTheme(DEFAULT_THEME, theme);
     const resolved = resolvedTheme.variantColorResolver({
       color: 'maple',
@@ -228,7 +336,7 @@ describe('Maple Twilight theme', () => {
     });
 
     expect(resolved.background).toBe('var(--mantine-color-maple-filled)');
-    expect(resolved.color).toBe('light-dark(#FFFFFF, #20140B)');
+    expect(resolved.color).toBe('light-dark(#2B2017, #211B15)');
   });
 
   it.each(cases)(
@@ -238,18 +346,17 @@ describe('Maple Twilight theme', () => {
     },
   );
 
-  // Recorded exclusion: these separators are decorative, so they are not a
-  // required control boundary and intentionally stay below 3:1.
+  // Recorded exclusion: decorative borders intentionally stay below 3:1
   it.each([
     {
-      name: 'twilight border-subtle on panel',
-      foreground: twilightScheme.borderSubtle,
-      background: twilightScheme.panel,
+      name: 'graphite border-subtle on panel',
+      foreground: graphiteScheme.borderSubtle,
+      background: graphiteScheme.panel,
     },
     {
-      name: 'parchment border-subtle on panel',
-      foreground: parchmentScheme.borderSubtle,
-      background: parchmentScheme.panel,
+      name: 'porcelain border-subtle on panel',
+      foreground: porcelainScheme.borderSubtle,
+      background: porcelainScheme.panel,
     },
   ])(
     '$name is a decorative, non-essential boundary',

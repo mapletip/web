@@ -7,50 +7,139 @@ import {
 } from '@mantine/core';
 
 import {
+  graphite,
+  graphiteScheme,
   maple,
-  parchment,
-  parchmentScheme,
-  twilight,
-  twilightScheme,
+  porcelain,
+  porcelainScheme,
+  walnut,
   type SchemeColors,
 } from './colors';
 
 /**
- * Filled primary actions need the opposite label colour in each scheme: the dark
- * scheme's primary shade is light orange, the light scheme's is dark orange.
- * `light-dark()` resolves from Mantine's `color-scheme`, so the label is decided
- * by the rendered scheme instead of Mantine's luminance heuristic.
+ * System sans-serif-first font stack for productive, readable information UI.
+ * No external webfont dependency.
+ */
+const SYSTEM_FONT_FAMILY =
+  '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji"';
+
+/**
+ * Custom variant resolver that maps Walnut Glow to primary action buttons
+ * without converting all primary-colored controls (Checkbox, Pagination, Tabs)
+ * to Walnut, and keeps scheme-aware high-contrast labels on Maple filled badges.
  */
 const variantColorResolver: VariantColorsResolver = (input) => {
+  if (input.color === 'walnut') {
+    if (input.variant === 'filled') {
+      return {
+        background: 'var(--mapletip-color-cta)',
+        hover: 'var(--mapletip-color-cta-hover)',
+        color: 'var(--mapletip-color-cta-fg)',
+        border: '1px solid var(--mapletip-color-cta-border)',
+      };
+    }
+
+    if (input.variant === 'outline') {
+      return {
+        background: 'transparent',
+        hover: 'var(--mapletip-color-hover)',
+        color:
+          'light-dark(var(--mapletip-color-cta), var(--mapletip-color-cta-fg))',
+        border: '1px solid var(--mapletip-color-cta-border)',
+      };
+    }
+
+    if (input.variant === 'light') {
+      return {
+        background: 'var(--mapletip-color-selection)',
+        hover: 'var(--mapletip-color-soft)',
+        color:
+          'light-dark(var(--mapletip-color-cta), var(--mapletip-color-cta-fg))',
+        border: '1px solid transparent',
+      };
+    }
+
+    if (input.variant === 'subtle') {
+      return {
+        background: 'transparent',
+        hover: 'var(--mapletip-color-hover)',
+        color:
+          'light-dark(var(--mapletip-color-cta), var(--mapletip-color-cta-fg))',
+        border: '1px solid transparent',
+      };
+    }
+  }
+
   const resolved = defaultVariantColorsResolver(input);
   const isPrimaryFilled =
     input.variant === 'filled' &&
     (input.color ?? input.theme.primaryColor) === input.theme.primaryColor;
 
-  if (!isPrimaryFilled) return resolved;
+  if (isPrimaryFilled) {
+    return {
+      ...resolved,
+      color: `light-dark(${porcelainScheme.onBrand}, ${graphiteScheme.onBrand})`,
+    };
+  }
 
-  return {
-    ...resolved,
-    color: `light-dark(${parchmentScheme.filledActionText}, ${twilightScheme.filledActionText})`,
-  };
+  return resolved;
 };
 
 /**
- * The shared MapleTip Mantine theme: Maple Twilight (dark) and Parchment (light).
- *
- * The forest/sky/grape/gold/danger accents are semantic CSS variables, not full
- * Mantine scales, because no shipped component needs shade variants yet.
+ * Shared MapleTip Mantine theme:
+ * - Clear Porcelain (light scheme)
+ * - Graphite / charcoal (dark scheme)
+ * - Walnut Glow primary actions
+ * - Classic Maple identity and selection
+ * - Productive typography and balanced-compact density
+ * - Softly rounded surfaces (~8px controls, ~12px panels)
  */
 export const theme: MantineThemeOverride = createTheme({
   primaryColor: 'maple',
-  primaryShade: { light: 7, dark: 4 },
+  primaryShade: { light: 5, dark: 4 },
   colors: {
     maple,
-    dark: twilight,
-    gray: parchment,
+    walnut,
+    dark: graphite,
+    gray: porcelain,
   },
-  white: parchmentScheme.panel,
-  black: parchmentScheme.textPrimary,
+  white: porcelainScheme.panel,
+  black: porcelainScheme.textPrimary,
+  fontFamily: SYSTEM_FONT_FAMILY,
+  // Productive typography scale: 12px metadata, 14px UI/data, 16px reading, 20px section, 24px entity
+  fontSizes: {
+    xs: '0.75rem', // 12px
+    sm: '0.875rem', // 14px
+    md: '1rem', // 16px
+    lg: '1.25rem', // 20px
+    xl: '1.5rem', // 24px
+  },
+  lineHeights: {
+    xs: '1rem', // 16px
+    sm: '1.25rem', // 20px
+    md: '1.5rem', // 24px
+    lg: '1.75rem', // 28px
+    xl: '2rem', // 32px
+  },
+  headings: {
+    fontFamily: SYSTEM_FONT_FAMILY,
+    fontWeight: '600',
+    sizes: {
+      h1: { fontSize: '1.75rem', lineHeight: '2.25rem', fontWeight: '600' }, // Page heading: 28 / 36px
+      h2: { fontSize: '1.5rem', lineHeight: '2rem', fontWeight: '600' }, // Entity heading: 24 / 32px
+      h3: { fontSize: '1.25rem', lineHeight: '1.75rem', fontWeight: '600' }, // Section heading: 20 / 28px
+      h4: { fontSize: '1rem', lineHeight: '1.5rem', fontWeight: '600' }, // Component heading: 16 / 24px
+    },
+  },
+  // Softly rounded radius scale: 8px controls, 12px outer panels/cards
+  radius: {
+    xs: '0.25rem', // 4px
+    sm: '0.5rem', // 8px (controls)
+    md: '0.75rem', // 12px (cards/panels)
+    lg: '1rem', // 16px
+    xl: '1.5rem', // 24px
+  },
+  defaultRadius: 'sm',
   // Preserved from the pre-theme component library so existing responsive
   // contracts keep matching the PostCSS breakpoint variables.
   breakpoints: {
@@ -61,24 +150,78 @@ export const theme: MantineThemeOverride = createTheme({
     xl: '88em',
   },
   respectReducedMotion: true,
-  // Inline links must not rely on colour alone (WCAG 1.4.1): the link role is
-  // lighter than primary text in the dark scheme.
   components: {
-    Anchor: { defaultProps: { underline: 'always' } },
-    // Mantine's Badge falls back to white label text when neither `color` nor
-    // `variant` is passed, bypassing `variantColorResolver`. Declaring the
-    // default variant keeps the resolved, scheme-aware label.
-    Badge: { defaultProps: { variant: 'filled' } },
-    // Mantine's Checkbox icon uses a scheme-agnostic contrast heuristic, which
-    // leaves a white tick on the dark scheme's light primary shade.
+    // Buttons default to Walnut Glow primary CTA with ~8px radius
+    Button: {
+      defaultProps: {
+        color: 'walnut',
+        radius: 'sm',
+      },
+    },
+    // Inline links must not rely on colour alone (WCAG 1.4.1)
+    Anchor: {
+      defaultProps: {
+        underline: 'always',
+      },
+    },
+    // Badges default to filled with 8px radius
+    Badge: {
+      defaultProps: {
+        variant: 'filled',
+        radius: 'sm',
+      },
+    },
+    // Checkboxes use onBrand tick color for contrast on orange fill
     Checkbox: {
       defaultProps: {
-        iconColor: `light-dark(${parchmentScheme.filledActionText}, ${twilightScheme.filledActionText})`,
+        iconColor: `light-dark(${porcelainScheme.onBrand}, ${graphiteScheme.onBrand})`,
+        radius: 'xs',
+      },
+    },
+    // Inputs and selects default to 8px radius
+    Input: {
+      defaultProps: {
+        radius: 'sm',
+      },
+    },
+    TextInput: {
+      defaultProps: {
+        radius: 'sm',
+      },
+    },
+    Select: {
+      defaultProps: {
+        radius: 'sm',
+      },
+    },
+    NativeSelect: {
+      defaultProps: {
+        radius: 'sm',
+      },
+    },
+    // Outer panels and cards default to 12px radius
+    Card: {
+      defaultProps: {
+        radius: 'md',
+      },
+    },
+    Paper: {
+      defaultProps: {
+        radius: 'md',
+      },
+    },
+    Drawer: {
+      defaultProps: {
+        radius: 'md',
+      },
+    },
+    Modal: {
+      defaultProps: {
+        radius: 'md',
       },
     },
   },
-  // Replaces Mantine's primary-coloured outline with the scheme's focus ring,
-  // which stays perceptible around filled orange actions.
+  // MapleTip warm focus ring class
   focusClassName: 'mapletip-focus',
   variantColorResolver,
 });
@@ -86,30 +229,60 @@ export const theme: MantineThemeOverride = createTheme({
 function schemeVariables(scheme: SchemeColors): Record<string, string> {
   return {
     '--mantine-color-anchor': scheme.link,
-    '--mantine-color-error': scheme.accents.danger,
-    // Mantine's Pagination falls back to white here instead of the variant
-    // resolver, which does not meet contrast on the dark primary shade.
-    '--pagination-active-color': scheme.filledActionText,
-    '--mapletip-color-focus': scheme.focus,
+    '--mantine-color-error': scheme.statuses.danger,
+    '--pagination-active-color': scheme.onBrand,
+    '--mapletip-color-canvas': scheme.canvas,
+    '--mapletip-color-panel': scheme.panel,
+    '--mapletip-color-raised': scheme.raised,
+    '--mapletip-color-rail': scheme.rail,
     '--mapletip-color-border-subtle': scheme.borderSubtle,
-    '--mapletip-color-accent-forest': scheme.accents.forest,
-    '--mapletip-color-accent-sky': scheme.accents.sky,
-    '--mapletip-color-accent-grape': scheme.accents.grape,
-    '--mapletip-color-accent-gold': scheme.accents.gold,
-    '--mapletip-color-accent-danger': scheme.accents.danger,
+    '--mapletip-color-border-strong': scheme.borderStrong,
+    '--mapletip-color-ink': scheme.textPrimary,
+    '--mapletip-color-muted': scheme.textSecondary,
+    '--mapletip-color-hover': scheme.hover,
+    '--mapletip-color-brand': scheme.brand,
+    '--mapletip-color-brand-text': scheme.brandText,
+    '--mapletip-color-brand-wash': scheme.brandWash,
+    '--mapletip-color-on-brand': scheme.onBrand,
+    '--mapletip-color-selection': scheme.selection,
+    '--mapletip-color-selection-edge': scheme.selectionEdge,
+    '--mapletip-color-soft': scheme.soft,
+    '--mapletip-color-focus': scheme.focus,
+    '--mapletip-color-focus-gap': scheme.focusGap,
+    '--mapletip-color-link': scheme.link,
+    '--mapletip-color-cta': scheme.cta.background,
+    '--mapletip-color-cta-fg': scheme.cta.foreground,
+    '--mapletip-color-cta-hover': scheme.cta.hover,
+    '--mapletip-color-cta-border': scheme.cta.border,
+    '--mapletip-color-status-success': scheme.statuses.success,
+    '--mapletip-color-status-success-bg': scheme.statuses.successBg,
+    '--mapletip-color-status-warning': scheme.statuses.warning,
+    '--mapletip-color-status-warning-bg': scheme.statuses.warningBg,
+    '--mapletip-color-status-danger': scheme.statuses.danger,
+    '--mapletip-color-status-danger-bg': scheme.statuses.dangerBg,
+    '--mapletip-color-status-info': scheme.statuses.info,
+    '--mapletip-color-status-info-bg': scheme.statuses.infoBg,
+    '--mapletip-color-disabled-bg': scheme.disabled.bg,
+    '--mapletip-color-disabled-fg': scheme.disabled.fg,
+    // Accent compatibility aliases
+    '--mapletip-color-accent-forest': scheme.statuses.success,
+    '--mapletip-color-accent-sky': scheme.statuses.info,
+    '--mapletip-color-accent-gold': scheme.statuses.warning,
+    '--mapletip-color-accent-danger': scheme.statuses.danger,
   };
 }
 
 /**
- * Adds only the scheme-specific roles Mantine cannot express through its own
- * variables: the parchment canvas, link colour, focus ring, decorative border
- * and the limited accent roles.
+ * Resolves scheme-specific CSS variables derived from canonical tokens.
  */
 export const cssVariablesResolver: CSSVariablesResolver = () => ({
   variables: {},
   light: {
-    ...schemeVariables(parchmentScheme),
-    '--mantine-color-body': parchmentScheme.canvas,
+    ...schemeVariables(porcelainScheme),
+    '--mantine-color-body': porcelainScheme.canvas,
   },
-  dark: schemeVariables(twilightScheme),
+  dark: {
+    ...schemeVariables(graphiteScheme),
+    '--mantine-color-body': graphiteScheme.canvas,
+  },
 });

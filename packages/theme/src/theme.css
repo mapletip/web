@@ -1,5 +1,5 @@
 /*
- * Maple Twilight global treatments that Mantine cannot express as theme values.
+ * MapleTip approved brand treatments that Mantine cannot express as theme values.
  * Import after Mantine's and Mantine DataTable's stylesheets.
  */
 
@@ -15,10 +15,9 @@ a:not([class]) {
 
 /*
  * Mantine focusable components receive `focusClassName`; native links, buttons,
- * summaries and tabbable widgets use the base rule. Inputs are deliberately not
- * matched: Mantine's input/switch controls and native inputs keep their own
- * focus treatment. The ring is offset so it sits on the surrounding surface
- * instead of a filled orange action where blue-on-orange contrast fails.
+ * summaries and tabbable widgets use the base rule.
+ * The ring has a 2px offset with a focusGap shadow so it remains distinguishable
+ * against filled Walnut actions, selection backgrounds, and adjacent surfaces.
  */
 .mapletip-focus:focus-visible,
 :where(
@@ -26,6 +25,7 @@ a:not([class]) {
 ):focus-visible {
   outline: 2px solid var(--mapletip-color-focus);
   outline-offset: 2px;
+  box-shadow: 0 0 0 2px var(--mapletip-color-focus-gap);
 }
 
 @media (forced-colors: active) {
@@ -34,18 +34,38 @@ a:not([class]) {
     :is(a, button, summary, [role='button'], [tabindex]):not(.mapletip-focus)
   ):focus-visible {
     outline-color: Highlight;
+    box-shadow: none;
   }
 }
 
 /*
- * DataTable's documented CSS variables. Table separators are decorative, so they
- * use the subtle border role instead of the functional control boundary that the
- * dark palette's shade 4 must provide for inputs and checkboxes.
+ * Inputs and native selects use Maple focus on active focus states.
+ */
+.mantine-Input-input:focus,
+.mantine-Input-input:focus-within {
+  border-color: var(--mapletip-color-focus) !important;
+}
+
+@media (forced-colors: active) {
+  .mantine-Input-input:focus,
+  .mantine-Input-input:focus-within {
+    border-color: Highlight !important;
+  }
+}
+
+/*
+ * DataTable's documented CSS variables for borders, selection, and row hover.
  */
 [data-mantine-color-scheme='light'] .mantine-datatable {
   --mantine-datatable-border-color-light: var(--mapletip-color-border-subtle);
   --mantine-datatable-row-border-color-light: var(
     --mapletip-color-border-subtle
+  );
+  --mantine-datatable-selection-background-color-light: var(
+    --mapletip-color-selection
+  );
+  --mantine-datatable-row-hover-background-color-light: var(
+    --mapletip-color-hover
   );
 }
 
@@ -53,6 +73,12 @@ a:not([class]) {
   --mantine-datatable-border-color-dark: var(--mapletip-color-border-subtle);
   --mantine-datatable-row-border-color-dark: var(
     --mapletip-color-border-subtle
+  );
+  --mantine-datatable-selection-background-color-dark: var(
+    --mapletip-color-selection
+  );
+  --mantine-datatable-row-hover-background-color-dark: var(
+    --mapletip-color-hover
   );
 }
 
