@@ -1,37 +1,28 @@
 import { MantineProvider } from '@mantine/core';
+import { cssVariablesResolver, theme } from '@mapletip/theme';
 import type { Preview } from '@storybook/react-vite';
 
-import { theme } from '@/theme';
 import '@/styles.css';
 
 const preview: Preview = {
-  globalTypes: {
-    colorScheme: {
-      description: 'Mantine color scheme',
-      toolbar: {
-        title: 'Color scheme',
-        icon: 'mirror',
-        items: [
-          { value: 'light', title: 'Light', icon: 'sun' },
-          { value: 'dark', title: 'Dark', icon: 'moon' },
-        ],
-        dynamicTitle: true,
-      },
-    },
-  },
   initialGlobals: {
-    colorScheme: 'light',
+    colorScheme: 'dark',
     viewport: { value: 'desktop', isRotated: false },
   },
   decorators: [
-    (Story, context) => (
-      <MantineProvider
-        theme={theme}
-        forceColorScheme={context.globals['colorScheme'] as 'light' | 'dark'}
-      >
-        <Story />
-      </MantineProvider>
-    ),
+    (Story, context) => {
+      const colorScheme =
+        (context.globals['colorScheme'] as 'light' | 'dark') ?? 'dark';
+      return (
+        <MantineProvider
+          theme={theme}
+          cssVariablesResolver={cssVariablesResolver}
+          forceColorScheme={colorScheme}
+        >
+          <Story />
+        </MantineProvider>
+      );
+    },
   ],
   parameters: {
     a11y: { test: 'error' },

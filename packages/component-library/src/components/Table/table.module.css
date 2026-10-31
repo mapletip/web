@@ -1,15 +1,5 @@
 .numericCell {
-  text-align: end;
   font-variant-numeric: tabular-nums;
-}
-
-.sortedCell {
-  font-weight: 600;
-  background-color: color-mix(
-    in srgb,
-    var(--mantine-primary-color-filled) 8%,
-    var(--mantine-color-body)
-  );
 }
 
 .expansionCell {
@@ -17,42 +7,4 @@
   align-items: center;
   min-width: 0;
   gap: var(--mantine-spacing-xs);
-}
-
-.expansionControl {
-  display: inline-flex;
-  flex: 0 0 auto;
-  align-items: center;
-  justify-content: center;
-  width: 1.5rem;
-  height: 1.5rem;
-  padding: 0;
-  border: 1px solid var(--mantine-color-default-border);
-  border-radius: var(--mantine-radius-sm);
-  color: var(--mantine-color-text);
-  background: var(--mantine-color-body);
-  cursor: pointer;
-  font: inherit;
-  line-height: 1;
-}
-
-.expansionControl:hover {
-  background: var(--mantine-color-default-hover);
-}
-
-.expansionControl:focus-visible {
-  outline: 2px solid var(--mantine-primary-color-filled);
-  outline-offset: 2px;
-}
-
-@media (forced-colors: active) {
-  .expansionControl {
-    border-color: ButtonText;
-    color: ButtonText;
-    background: ButtonFace;
-  }
-
-  .expansionControl:focus-visible {
-    outline-color: Highlight;
-  }
 }

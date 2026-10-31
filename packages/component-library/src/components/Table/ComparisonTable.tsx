@@ -11,9 +11,10 @@ export type ComparisonTableProps<TRow extends Record<string, unknown>> =
   };
 
 /**
- * Comparison presentation over `Table`: pinned identity and hover emphasis. By default,
- * the table grows to its records and the document scrolls; callers can set maxHeight to
- * opt into DataTable's bounded, locally sticky scroll region.
+ * Comparison presentation over `Table`: pinned identity, whole-column hover emphasis and
+ * DataTable's native row hover. By default, the table grows to its records and the
+ * document scrolls; callers can set maxHeight to opt into DataTable's bounded, locally
+ * sticky scroll region.
  */
 export function ComparisonTable<TRow extends Record<string, unknown>>({
   identityField,

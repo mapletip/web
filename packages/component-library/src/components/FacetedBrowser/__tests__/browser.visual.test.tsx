@@ -1,6 +1,6 @@
 import { composeStories } from '@storybook/react-vite';
 import { describe, expect, test } from 'vitest';
-import { page } from 'vitest/browser';
+import { page, userEvent } from 'vitest/browser';
 
 import * as stories from '@/components/FacetedBrowser/__stories__/FacetedBrowser.stories';
 import {
@@ -9,8 +9,10 @@ import {
 } from '@/test-support/visual';
 import type { VisualCase } from '@/test-support/visual';
 
-/** Same stories, composed again with the dark scheme's preview globals. */
-const light = composeStories(stories);
+/** Stories composed with explicit scheme globals so the preview default cannot leak in. */
+const light = composeStories(stories, {
+  initialGlobals: { colorScheme: 'light' },
+});
 // Per-call annotations merge with the preview registered in the setup file.
 const dark = composeStories(stories, {
   initialGlobals: { colorScheme: 'dark' },
@@ -54,6 +56,50 @@ const visualCases: readonly VisualCase[] = [
     hidden: [hiddenCards],
   },
   {
+    name: 'faceted-browser-active-light',
+    story: light.Active,
+    storyId: 'components-facetedbrowser--active',
+    width: 1366,
+    height: 768,
+    visible: [desktopTable],
+    hidden: [hiddenCards],
+  },
+  {
+    name: 'faceted-browser-active-dark',
+    story: dark.Active,
+    storyId: 'components-facetedbrowser--active',
+    width: 1366,
+    height: 768,
+    visible: [desktopTable],
+    hidden: [hiddenCards],
+  },
+  {
+    name: 'faceted-browser-focus-light',
+    story: light.Default,
+    storyId: 'components-facetedbrowser--default',
+    width: 1366,
+    height: 768,
+    visible: [desktopTable],
+    hidden: [hiddenCards],
+    beforeScreenshot: async () => {
+      await userEvent.tab();
+      await userEvent.tab();
+    },
+  },
+  {
+    name: 'faceted-browser-focus-dark',
+    story: dark.Default,
+    storyId: 'components-facetedbrowser--default',
+    width: 1366,
+    height: 768,
+    visible: [desktopTable],
+    hidden: [hiddenCards],
+    beforeScreenshot: async () => {
+      await userEvent.tab();
+      await userEvent.tab();
+    },
+  },
+  {
     name: 'faceted-browser-mobile-cards-light',
     story: light.MobileCards,
     storyId: 'components-facetedbrowser--mobile-cards',
@@ -68,6 +114,24 @@ const visualCases: readonly VisualCase[] = [
     storyId: 'components-facetedbrowser--mobile-cards',
     width: 375,
     height: 812,
+    visible: [mobileCards],
+    hidden: [hiddenTable],
+  },
+  {
+    name: 'faceted-browser-mobile-cards-320-light',
+    story: light.MobileCards,
+    storyId: 'components-facetedbrowser--mobile-cards',
+    width: 320,
+    height: 640,
+    visible: [mobileCards],
+    hidden: [hiddenTable],
+  },
+  {
+    name: 'faceted-browser-mobile-cards-320-dark',
+    story: dark.MobileCards,
+    storyId: 'components-facetedbrowser--mobile-cards',
+    width: 320,
+    height: 640,
     visible: [mobileCards],
     hidden: [hiddenTable],
   },

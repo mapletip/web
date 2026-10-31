@@ -1,4 +1,4 @@
-import { Alert, Button, Text, Title } from '@mantine/core';
+import { Alert, Box, Button, Text, Title } from '@mantine/core';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { useMemo, useState } from 'react';
 import { expect, screen, userEvent, waitFor, within } from 'storybook/test';
@@ -24,6 +24,20 @@ import type { DemoRecord } from '@/fixtures/records';
 const meta = {
   title: 'Components/FacetedBrowser',
   parameters: { layout: 'fullscreen' },
+  decorators: [
+    (Story) => (
+      <Box
+        p={{ base: 'md', md: 'xl' }}
+        style={{
+          maxWidth: 1440,
+          margin: '0 auto',
+          boxSizing: 'border-box',
+        }}
+      >
+        <Story />
+      </Box>
+    ),
+  ],
 } satisfies Meta;
 export default meta;
 type Story = StoryObj<typeof meta>;
@@ -112,13 +126,40 @@ function BrowserExample({
     pageSize: 50,
     hiddenColumns: [],
   };
-  const stateProps = state
-    ? { state, onStateChange: onStateChange! }
-    : { defaultState };
+  const [internalState, setInternalState] = useState<BrowseState>(
+    state ?? defaultState,
+  );
+  const effectiveState = state ?? internalState;
+  const handleStateChange = onStateChange ?? setInternalState;
+  const stateProps = {
+    state: effectiveState,
+    onStateChange: handleStateChange,
+  };
 
   return (
     <FacetedBrowser
-      title={<Title order={1}>Browse records</Title>}
+      title={
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 'var(--mantine-spacing-xs)',
+          }}
+        >
+          <span
+            style={{
+              display: 'inline-block',
+              width: 4,
+              height: 24,
+              backgroundColor: 'var(--mapletip-color-brand)',
+              borderRadius: 'var(--mantine-radius-xs)',
+              flexShrink: 0,
+            }}
+            aria-hidden="true"
+          />
+          <Title order={1}>Browse records</Title>
+        </div>
+      }
       records={records}
       idAccessor="id"
       identityField="name"
@@ -152,6 +193,33 @@ function BrowserExample({
 
 export const Default: Story = {
   render: () => <BrowserExample />,
+};
+
+export const Active: Story = {
+  name: 'Active filters and sort',
+  render: () => (
+    <BrowserExample
+      state={{
+        search: '',
+        filters: { group: ['Beta'], region: ['South'] },
+        sort: { field: 'value1', direction: 'desc' },
+        page: 1,
+        pageSize: 50,
+        hiddenColumns: [],
+      }}
+    />
+  ),
+};
+
+export const KeyboardFocus: Story = {
+  name: 'Keyboard focus',
+  render: () => <BrowserExample />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const checkbox = canvas.getByRole('checkbox', { name: /^Alpha \(/u });
+    checkbox.focus({ focusVisible: true });
+    await expect(checkbox).toHaveFocus();
+  },
 };
 
 export const CrossFacetFiltering: Story = {

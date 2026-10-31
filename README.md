@@ -4,6 +4,7 @@ pnpm + [Turborepo](https://turborepo.dev/) monorepo.
 
 ## Packages
 
+- `@mapletip/theme`: the shared Maple Twilight Mantine theme (dark default, Parchment light)
 - `@mapletip/component-library`: [Mantine](https://mantine.dev/)-based component library with [Storybook](https://storybook.js.org/)
 - `@mapletip/config`: shared eslint, prettier, tsconfig, lint-staged, vite and vitest configs
 
@@ -30,8 +31,8 @@ pnpm install
 
 ## Tests
 
-`pnpm test` runs the component library's browser tests (Vitest browser mode,
-headless Chromium via Playwright):
+`pnpm test` runs the theme package's contrast/configuration tests and the component
+library's browser tests (Vitest browser mode, headless Chromium via Playwright):
 
 - `unit`: `src/**/*.test.tsx` component tests using `vitest-browser-react`
 - `storybook`: every story rendered as a test, including `play` interactions

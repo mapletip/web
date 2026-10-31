@@ -1,4 +1,4 @@
-import { Text } from '@mantine/core';
+import { ActionIcon, Text } from '@mantine/core';
 import {
   DataTable,
   type DataTableColumn,
@@ -65,7 +65,9 @@ export function MantineDataTableAdapter<TRow extends Record<string, unknown>>({
   withTableBorder = false,
   withColumnBorders = false,
   withRowBorders = true,
+  borderRadius,
   horizontalSpacing,
+  verticalSpacing,
   striped = false,
   highlightOnHover = false,
   fetching = false,
@@ -162,14 +164,12 @@ export function MantineDataTableAdapter<TRow extends Record<string, unknown>>({
       const isIdentity =
         pinnedIdentity !== undefined && column.accessor === pinnedIdentity;
       const isPinned = isIdentity;
-      const isSorted = sortStatus?.field === column.accessor;
       const isExpansionColumn =
         rowExpansionContent !== undefined &&
         column.accessor === expansionAccessor;
       const cellsClassName = [
         column.cellClassName,
         column.numeric ? classes['numericCell'] : undefined,
-        isSorted ? classes['sortedCell'] : undefined,
       ]
         .filter(Boolean)
         .join(' ');
@@ -186,9 +186,11 @@ export function MantineDataTableAdapter<TRow extends Record<string, unknown>>({
           );
           return (
             <span className={classes['expansionCell']}>
-              <button
+              <ActionIcon
                 type="button"
-                className={classes['expansionControl']}
+                variant="default"
+                size={24}
+                radius="sm"
                 aria-expanded={expanded}
                 aria-controls={expansionIdFor(recordId)}
                 aria-label={`${expanded ? 'Collapse' : 'Expand'} details for ${String(record[column.accessor])}`}
@@ -198,7 +200,7 @@ export function MantineDataTableAdapter<TRow extends Record<string, unknown>>({
                 }}
               >
                 <span aria-hidden="true">{expanded ? '−' : '+'}</span>
-              </button>
+              </ActionIcon>
               {renderColumnContent(record)}
             </span>
           );
@@ -241,7 +243,6 @@ export function MantineDataTableAdapter<TRow extends Record<string, unknown>>({
     pinnedIdentity,
     resizable,
     rowExpansionContent,
-    sortStatus?.field,
     toggleExpandedRecord,
   ]);
 
@@ -367,7 +368,17 @@ export function MantineDataTableAdapter<TRow extends Record<string, unknown>>({
       {...(className !== undefined ? { className } : {})}
       {...(height !== undefined ? { height } : {})}
       {...(minHeight !== undefined ? { minHeight } : {})}
-      {...(maxHeight !== undefined ? { maxHeight } : {})}
+      {...(maxHeight !== undefined
+        ? {
+            maxHeight,
+            // DataTable 9.4's maxHeight caps the root but leaves the ScrollArea
+            // viewport at content height when the root has no definite height.
+            // Mirroring the cap on the viewport keeps maxHeight scrollable.
+            scrollAreaProps: {
+              viewportProps: { style: { maxHeight } },
+            },
+          }
+        : {})}
       styles={{
         table: {
           width: 'max-content',
@@ -376,7 +387,9 @@ export function MantineDataTableAdapter<TRow extends Record<string, unknown>>({
       }}
       storeColumnsKey={effectiveStoreColumnsKey}
       {...(classNames !== undefined ? { classNames } : {})}
+      {...(borderRadius !== undefined ? { borderRadius } : {})}
       {...(horizontalSpacing !== undefined ? { horizontalSpacing } : {})}
+      {...(verticalSpacing !== undefined ? { verticalSpacing } : {})}
       {...(rowExpansion !== undefined ? { rowExpansion } : {})}
       {...(onRowClick !== undefined ? { onRowClick } : {})}
       {...(rowClassName !== undefined ? { rowClassName } : {})}

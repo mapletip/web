@@ -1,0 +1,144 @@
+/*
+ * MapleTip approved brand treatments that Mantine cannot express as theme values.
+ * Import after Mantine's and Mantine DataTable's stylesheets.
+ */
+
+/*
+ * Plain `<a href>` record links (the component library's documented pattern)
+ * share the Anchor colour and stay distinguishable in body copy. Anchors with
+ * their own component classes (Anchor, NavLink, Pagination) keep their styles.
+ */
+a:not([class]) {
+  color: var(--mantine-color-anchor);
+  text-decoration: underline;
+}
+
+/*
+ * Mantine focusable components receive `focusClassName`; native links, buttons,
+ * checkboxes, summaries and tabbable widgets use the base rule.
+ * The ring has a 2px offset with a focusGap shadow so it remains distinguishable
+ * against filled Walnut actions, selection backgrounds, and adjacent surfaces.
+ */
+.mapletip-focus:focus-visible,
+:where(
+  :is(
+    a,
+    button,
+    input[type='checkbox'],
+    input[type='radio'],
+    summary,
+    [role='button'],
+    [tabindex]
+  ):not(.mapletip-focus)
+):focus-visible {
+  outline: 2px solid var(--mapletip-color-focus);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 2px var(--mapletip-color-focus-gap);
+}
+
+@media (forced-colors: active) {
+  .mapletip-focus:focus-visible,
+  :where(
+    :is(
+      a,
+      button,
+      input[type='checkbox'],
+      input[type='radio'],
+      summary,
+      [role='button'],
+      [tabindex]
+    ):not(.mapletip-focus)
+  ):focus-visible {
+    outline-color: Highlight;
+    box-shadow: none;
+  }
+}
+
+/*
+ * Inputs and native selects use Maple focus on active focus states.
+ */
+.mantine-Input-input:focus,
+.mantine-Input-input:focus-within {
+  border-color: var(--mapletip-color-focus) !important;
+}
+
+@media (forced-colors: active) {
+  .mantine-Input-input:focus,
+  .mantine-Input-input:focus-within {
+    border-color: Highlight !important;
+  }
+}
+
+/*
+ * DataTable's documented CSS variables for borders, selection, and row hover.
+ */
+[data-mantine-color-scheme='light'] .mantine-datatable {
+  --mantine-datatable-background-color-light: var(--mapletip-color-panel);
+  --mantine-datatable-border-color-light: var(--mapletip-color-border-subtle);
+  --mantine-datatable-row-border-color-light: var(
+    --mapletip-color-border-subtle
+  );
+  --mantine-datatable-selection-background-color-light: var(
+    --mapletip-color-selection
+  );
+  --mantine-datatable-row-hover-background-color-light: var(
+    --mapletip-color-hover
+  );
+  --mantine-datatable-highlight-on-hover-color-light: var(
+    --mapletip-color-hover
+  );
+}
+
+[data-mantine-color-scheme='dark'] .mantine-datatable {
+  --mantine-datatable-background-color-dark: var(--mapletip-color-panel);
+  --mantine-datatable-border-color-dark: var(--mapletip-color-border-subtle);
+  --mantine-datatable-row-border-color-dark: var(
+    --mapletip-color-border-subtle
+  );
+  --mantine-datatable-selection-background-color-dark: var(
+    --mapletip-color-selection
+  );
+  --mantine-datatable-row-hover-background-color-dark: var(
+    --mapletip-color-hover
+  );
+  --mantine-datatable-highlight-on-hover-color-dark: var(
+    --mapletip-color-hover
+  );
+}
+
+/*
+ * Table header and pinned identity column surface hierarchy.
+ */
+.mantine-datatable thead tr,
+.mantine-datatable thead th {
+  background-color: var(--mapletip-color-raised);
+}
+
+/*
+ * Active sort direction indicator uses Maple Orange interactive token,
+ * while unsorted indicator remains subdued.
+ */
+.mantine-datatable-header-cell-sortable-icon:not(
+  .mantine-datatable-header-cell-sortable-unsorted-icon
+) {
+  color: var(--mapletip-color-link);
+}
+
+.mantine-datatable tbody td[data-pinned] {
+  background-color: var(--mapletip-color-panel);
+}
+
+.mantine-datatable tbody tr:hover td[data-pinned] {
+  background-color: var(--mapletip-color-hover);
+}
+
+/* Mantine respects the preference for its own transitions; DataTable does not. */
+@media (prefers-reduced-motion: reduce) {
+  .mantine-datatable *,
+  .mantine-datatable *::before,
+  .mantine-datatable *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}

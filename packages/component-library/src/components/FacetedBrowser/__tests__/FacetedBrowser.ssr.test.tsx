@@ -1,4 +1,5 @@
 import { MantineProvider } from '@mantine/core';
+import { theme } from '@mapletip/theme';
 import { gzipSync } from 'node:zlib';
 import { renderToString } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
@@ -6,7 +7,6 @@ import { describe, expect, it } from 'vitest';
 import { NeutralBrowserMarkup } from '@/components/FacetedBrowser/__tests__/fixtures/NeutralBrowserMarkup';
 import { FacetedBrowser } from '@/components/FacetedBrowser/FacetedBrowser';
 import { demoRecords } from '@/fixtures/records';
-import { theme } from '@/theme';
 
 describe('FacetedBrowser server rendering', () => {
   it('renders result links in both presentations and real pagination links without a DOM', () => {

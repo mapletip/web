@@ -1,4 +1,5 @@
 import { MantineProvider } from '@mantine/core';
+import { cssVariablesResolver, theme } from '@mapletip/theme';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { commands, page, server, userEvent } from 'vitest/browser';
 import { render } from 'vitest-browser-react';
@@ -6,7 +7,6 @@ import { render } from 'vitest-browser-react';
 import '../../../styles.css';
 import { ComparisonTable } from '@/components/Table/ComparisonTable';
 import { demoRecords, makeDemoColumns } from '@/fixtures/records';
-import { theme } from '@/theme';
 
 beforeEach(async () => {
   document.documentElement.setAttribute('data-mantine-color-scheme', 'light');
@@ -23,7 +23,7 @@ async function mount({
   const columns = makeDemoColumns();
   const rows = demoRecords.slice(0, 12);
   await render(
-    <MantineProvider theme={theme}>
+    <MantineProvider theme={theme} cssVariablesResolver={cssVariablesResolver}>
       <ComparisonTable
         ariaLabel="Sample comparison"
         records={rows}
@@ -105,7 +105,7 @@ describe('ComparisonTable', () => {
     expect(
       getComputedStyle(document.querySelector('tbody tr td:nth-child(3)')!)
         .textAlign,
-    ).toBe('end');
+    ).toBe('right');
   });
 
   it('keeps horizontal scrolling inside the table at 320 px and pins identity', async () => {
@@ -140,6 +140,118 @@ describe('ComparisonTable', () => {
     ).toBeLessThanOrEqual(1);
   });
 
+  it('scrolls a bounded maxHeight region with a sticky header and pinned identity', async () => {
+    await render(
+      <MantineProvider
+        theme={theme}
+        cssVariablesResolver={cssVariablesResolver}
+      >
+        <ComparisonTable
+          ariaLabel="Bounded comparison"
+          records={demoRecords.slice(0, 30)}
+          columns={makeDemoColumns()}
+          idAccessor="id"
+          identityField="name"
+          maxHeight={240}
+          onSortChange={() => undefined}
+        />
+      </MantineProvider>,
+    );
+
+    const viewport = document.querySelector<HTMLElement>(
+      '[data-scrollarea-viewport="true"]',
+    )!;
+    const table = document.querySelector('table')!;
+    const header = document.querySelector<HTMLElement>('thead')!;
+
+    expect(viewport.scrollHeight).toBeGreaterThan(viewport.clientHeight);
+    expect(getComputedStyle(table).overflowY).toBe('clip');
+    // clip must not turn the table into a second horizontal scroll container.
+    expect(getComputedStyle(table).overflowX).toBe('visible');
+
+    viewport.scrollTop = 160;
+    viewport.scrollLeft = 120;
+    await vi.waitFor(() => {
+      expect(viewport.scrollTop).toBeGreaterThan(0);
+      expect(viewport.scrollLeft).toBeGreaterThan(0);
+      expect(
+        Math.abs(
+          header.getBoundingClientRect().top -
+            viewport.getBoundingClientRect().top,
+        ),
+      ).toBeLessThanOrEqual(1);
+    });
+
+    const identity = document.querySelector<HTMLTableCellElement>(
+      'tbody tr td[data-pinned]',
+    )!;
+    expect(
+      Math.abs(
+        identity.getBoundingClientRect().left -
+          viewport.getBoundingClientRect().left,
+      ),
+    ).toBeLessThanOrEqual(1);
+  });
+
+  it('resizes columns while keeping the identity pinned and scrollable', async () => {
+    window.localStorage.clear();
+    await mount();
+
+    const header = document.querySelector<HTMLElement>(
+      'thead th[data-accessor="group"]',
+    )!;
+    const handle = header.querySelector<HTMLElement>(
+      '.mantine-datatable-header-resizable-handle',
+    );
+    expect(handle).not.toBeNull();
+    expect(
+      document
+        .querySelector('thead th[data-accessor="name"]')
+        ?.getAttribute('data-pinned'),
+    ).toBe('left');
+
+    const initialWidth = header.getBoundingClientRect().width;
+    handle!.dispatchEvent(
+      new MouseEvent('mousedown', {
+        bubbles: true,
+        clientX: header.getBoundingClientRect().right,
+      }),
+    );
+    document.dispatchEvent(
+      new MouseEvent('mousemove', {
+        bubbles: true,
+        clientX: header.getBoundingClientRect().right + 48,
+      }),
+    );
+    document.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }));
+    await vi.waitFor(
+      () => {
+        expect(header.getBoundingClientRect().width).toBeGreaterThan(
+          initialWidth,
+        );
+      },
+      { timeout: 5_000 },
+    );
+
+    await page.viewport(320, 640);
+    const scrollArea = document.querySelector<HTMLElement>(
+      '[data-scrollarea-viewport="true"]',
+    )!;
+    expect(scrollArea.scrollWidth).toBeGreaterThan(scrollArea.clientWidth);
+    scrollArea.scrollLeft = 120;
+    const identity = document.querySelector<HTMLTableCellElement>(
+      'tbody tr:first-child :first-child',
+    )!;
+    expect(
+      Math.abs(
+        identity.getBoundingClientRect().left -
+          scrollArea.getBoundingClientRect().left,
+      ),
+    ).toBeLessThanOrEqual(1);
+    expect(identity.getAttribute('data-pinned')).toBe('left');
+    window.localStorage.clear();
+  });
+
   it('keeps pinned identity cells opaque when another column is hovered', async () => {
     await mount();
     const identity = document.querySelector<HTMLTableCellElement>(
@@ -172,6 +284,37 @@ describe('ComparisonTable', () => {
     }
   });
 
+  it('moves the column emphasis with the pointer and clears it on leave', async () => {
+    await mount();
+    const firstColumn = document.querySelector<HTMLTableCellElement>(
+      'tbody tr:nth-child(2) td:nth-child(2)',
+    )!;
+    const secondColumn = document.querySelector<HTMLTableCellElement>(
+      'tbody tr:nth-child(2) td:nth-child(4)',
+    )!;
+    const tableHeight = document
+      .querySelector('table')!
+      .getBoundingClientRect().height;
+
+    await userEvent.hover(firstColumn);
+    const firstOverlay = getComputedStyle(firstColumn, '::before');
+    expect(firstOverlay.content).toBe('""');
+    // The overlay is taller than the table, so the emphasis spans every row.
+    expect(
+      Math.abs(Number.parseFloat(firstOverlay.top)),
+    ).toBeGreaterThanOrEqual(tableHeight);
+    expect(
+      Math.abs(Number.parseFloat(firstOverlay.bottom)),
+    ).toBeGreaterThanOrEqual(tableHeight);
+
+    await userEvent.hover(secondColumn);
+    expect(getComputedStyle(secondColumn, '::before').content).toBe('""');
+    expect(getComputedStyle(firstColumn, '::before').content).toBe('none');
+
+    await userEvent.unhover(secondColumn);
+    expect(getComputedStyle(secondColumn, '::before').content).toBe('none');
+  });
+
   it('layers the full-height Record highlight above sibling pinned cells', async () => {
     await mount();
     const hovered = document.querySelector<HTMLTableCellElement>(
@@ -191,19 +334,14 @@ describe('ComparisonTable', () => {
     expect(overlay.bottom).not.toBe('0px');
   });
 
-  it('keeps persistent emphasis on a sorted text column', async () => {
-    await mount({ field: 'group', direction: 'asc' });
-    const cell = document.querySelector<HTMLTableCellElement>(
-      'tbody tr:first-child td:nth-child(2)',
-    )!;
-    expect(cell.className).toContain('sortedCell');
-    expect(getComputedStyle(cell).fontWeight).toBe('600');
-  });
-
-  it('uses theme colors for highlights in the dark scheme', async () => {
+  it('uses the approved dark surfaces and native row hover in the dark scheme', async () => {
     document.documentElement.setAttribute('data-mantine-color-scheme', 'dark');
     await render(
-      <MantineProvider theme={theme} forceColorScheme="dark">
+      <MantineProvider
+        theme={theme}
+        cssVariablesResolver={cssVariablesResolver}
+        forceColorScheme="dark"
+      >
         <ComparisonTable
           ariaLabel="Dark comparison"
           records={demoRecords.slice(0, 12)}
@@ -216,22 +354,19 @@ describe('ComparisonTable', () => {
       </MantineProvider>,
     );
 
-    const bodyColor = getComputedStyle(document.body).backgroundColor;
-    const sortedCell = document.querySelector<HTMLTableCellElement>(
-      'tbody tr:first-child td:nth-child(3)',
-    )!;
     const row = document.querySelector<HTMLTableRowElement>(
       'tbody tr:first-child',
     )!;
     const numericCell =
       row.querySelector<HTMLTableCellElement>('td:nth-child(4)')!;
-    await userEvent.hover(numericCell);
-
-    expect(bodyColor).not.toBe('rgb(255, 255, 255)');
-    expect(getComputedStyle(sortedCell).backgroundColor).not.toBe(
-      'rgba(0, 0, 0, 0)',
+    expect(getComputedStyle(document.body).backgroundColor).toBe(
+      'rgb(17, 20, 23)',
     );
-    expect(getComputedStyle(row).backgroundColor).not.toBe('transparent');
+    await userEvent.hover(numericCell);
+    expect(getComputedStyle(row).backgroundColor).toBe('rgb(34, 38, 43)');
+    expect(getComputedStyle(numericCell, '::before').backgroundColor).not.toBe(
+      'transparent',
+    );
   });
 
   it('renders unknown values with the body text color and announces Unknown', async () => {
@@ -304,10 +439,12 @@ describe('ComparisonTable', () => {
     const firstLink = document.querySelector<HTMLAnchorElement>(
       'tbody tr:first-child a',
     )!;
-    firstLink.focus();
+    firstLink.focus({ focusVisible: true });
     expect(getComputedStyle(firstLink.closest('tr')!).outlineStyle).toBe(
       'solid',
     );
+    expect(getComputedStyle(firstLink).outlineStyle).toBe('solid');
+    expect(getComputedStyle(firstLink).outlineWidth).toBe('2px');
   });
 
   it('tabs through sortable headers and then record links in reading order', async () => {

@@ -21,6 +21,8 @@ export interface VisualCase {
   readonly hidden?: readonly Locator[];
   /** Capture one element instead of the whole viewport. */
   readonly element?: Locator;
+  /** Optional action to perform before capturing screenshot (e.g. keyboard navigation). */
+  readonly beforeScreenshot?: () => Promise<void>;
 }
 
 /**
@@ -41,6 +43,10 @@ const SCREENSHOT_OPTIONS = {
 export async function openVisualCase(visualCase: VisualCase): Promise<void> {
   await page.viewport(visualCase.width, visualCase.height);
 
+  // DataTable persists column widths. A fresh storage state keeps one case's
+  // resized columns (or a previous run's leftovers) out of the next capture.
+  window.localStorage.clear();
+
   expect(
     visualCase.story.id,
     `"${visualCase.name}" no longer resolves to ${visualCase.storyId}`,
@@ -52,12 +58,20 @@ export async function openVisualCase(visualCase: VisualCase): Promise<void> {
   await Promise.all(
     [...document.images].map((image) => image.decode().catch(() => undefined)),
   );
+  // DataTable resolves column widths from measurements after mount. Let those
+  // layout effects settle so captures cannot catch two different width states.
+  await new Promise<void>((resolve) => {
+    requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
+  });
 }
 
 /** Compare the case's element, or the whole viewport, with its baseline. */
 export async function expectApprovedScreenshot(
   visualCase: VisualCase,
 ): Promise<void> {
+  if (visualCase.beforeScreenshot) {
+    await visualCase.beforeScreenshot();
+  }
   const target = visualCase.element ?? page;
   await expect(target).toMatchScreenshot(visualCase.name, SCREENSHOT_OPTIONS);
 }

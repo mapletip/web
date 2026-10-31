@@ -1,4 +1,3 @@
-export { theme } from '@/theme';
 export { Table } from '@/components/Table/Table';
 export type {
   SortIntent,

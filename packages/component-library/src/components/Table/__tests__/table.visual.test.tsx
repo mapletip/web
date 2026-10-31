@@ -9,7 +9,9 @@ import {
 } from '@/test-support/visual';
 import type { VisualCase } from '@/test-support/visual';
 
-const light = composeStories(stories);
+const light = composeStories(stories, {
+  initialGlobals: { colorScheme: 'light' },
+});
 // Per-call annotations merge with the preview registered in the setup file.
 const dark = composeStories(stories, {
   initialGlobals: { colorScheme: 'dark' },
