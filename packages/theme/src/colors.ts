@@ -169,7 +169,7 @@ export const porcelainScheme: SchemeColors = {
   },
 };
 
-/** Approved v7 Graphite dark scheme. */
+/** Approved v7 Graphite dark scheme (historical reference). */
 export const graphiteScheme: SchemeColors = {
   canvas: '#111114',
   panel: '#1A1A1D',
@@ -211,6 +211,99 @@ export const graphiteScheme: SchemeColors = {
     fg: '#B4B4B8',
   },
 };
+
+/**
+ * Canonical Maple Twilight dark scheme (Refined).
+ * Atmospheric twilight dusk neutrals (#111417 canvas, #1A1D20 panel, #22262B raised)
+ * paired with luminous warm amber links/branding (#F0A456) and warm off-white primary text (#F4F1EA).
+ */
+export const mapleTwilightScheme: SchemeColors = {
+  canvas: '#111417',
+  panel: '#1A1D20',
+  raised: '#22262B',
+  rail: '#111417',
+  borderSubtle: '#2C3137',
+  borderStrong: '#788088',
+  textPrimary: '#F4F1EA',
+  textSecondary: '#C0C4C8',
+  hover: '#22262B',
+  brand: '#F0A456',
+  brandText: '#F5BB7B',
+  brandWash: '#261F1A',
+  selection: '#3A2E24',
+  selectionEdge: '#F0A456',
+  soft: '#3A2E24',
+  focus: '#F0A456',
+  focusGap: '#1A1D20',
+  link: '#F0A456',
+  onBrand: '#111417',
+  cta: {
+    background: '#3A2312',
+    foreground: '#F0A456',
+    hover: '#4E2F18',
+    border: '#8F7665',
+  },
+  statuses: {
+    success: '#ACE0C2',
+    successBg: '#20372B',
+    warning: '#F4D397',
+    warningBg: '#443524',
+    danger: '#F8ADB8',
+    dangerBg: '#46282F',
+    info: '#B0D5F3',
+    infoBg: '#26394A',
+  },
+  disabled: {
+    bg: '#313133',
+    fg: '#B4B4B8',
+  },
+};
+
+/**
+ * Refined Maple Twilight dark neutrals tuple for Mantine.
+ * Indices: 0 textPrimary, 2 textSecondary (muted), 4 borderStrong,
+ * 5 raised / hover, 6 panel, 7 canvas.
+ */
+export const mapleTwilightDark = [
+  '#F4F1EA', // 0: ink / textPrimary
+  '#D8DCE0', // 1: secondary text
+  '#C0C4C8', // 2: muted / dimmed
+  '#A0A6AD', // 3: placeholder
+  '#788088', // 4: borderStrong
+  '#22262B', // 5: raised / hover
+  '#1A1D20', // 6: panel
+  '#111417', // 7: canvas
+  '#0B0D0F', // 8: deep surface
+  '#050607', // 9: deepest surface
+] as const satisfies MantineColorsTuple;
+
+/** Refined Maple Twilight brand ramp. */
+export const mapleTwilightBrand = [
+  '#261F1A', // 0: brandWash
+  '#3A2E24', // 1: selection
+  '#F0A456', // 2: link
+  '#F5BB7B', // 3: brandText
+  '#F0A456', // 4: brand (primary dark)
+  '#F0A456', // 5
+  '#F0A456', // 6: selectionEdge
+  '#F0A456', // 7
+  '#F5BB7B', // 8
+  '#57270F', // 9
+] as const satisfies MantineColorsTuple;
+
+/** Refined Maple Twilight Walnut Glow CTA ramp. */
+export const mapleTwilightWalnut = [
+  '#F0A456', // 0: ctaFg
+  '#E8DDD2', // 1
+  '#D3C4B7', // 2
+  '#BBA798', // 3
+  '#5A371C', // 4: ctaBorder
+  '#4E2F18', // 5: ctaHover
+  '#3A2312', // 6: cta
+  '#3A2312', // 7: cta
+  '#3A2312', // 8
+  '#241D18', // 9
+] as const satisfies MantineColorsTuple;
 
 /** Export approved tokens metadata for tests and contract verification. */
 export const approvedColorTokens = {

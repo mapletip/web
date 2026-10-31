@@ -9,11 +9,19 @@ describe('MapleTip Palette Exploration Studio & Theme Adapter', () => {
     expect(PALETTES.length).toBe(47);
 
     const approved = PALETTES.filter((p) => p.category === 'approved');
-    const newDirections = PALETTES.filter((p) => p.category === 'new-direction');
-    const regional = PALETTES.filter((p) => p.category === 'historical-regional');
+    const newDirections = PALETTES.filter(
+      (p) => p.category === 'new-direction',
+    );
+    const regional = PALETTES.filter(
+      (p) => p.category === 'historical-regional',
+    );
     const brandKits = PALETTES.filter((p) => p.category === 'historical-brand');
-    const orangeBrand5 = PALETTES.filter((p) => p.category === 'historical-orange-brand');
-    const complete10 = PALETTES.filter((p) => p.category === 'historical-complete');
+    const orangeBrand5 = PALETTES.filter(
+      (p) => p.category === 'historical-orange-brand',
+    );
+    const complete10 = PALETTES.filter(
+      (p) => p.category === 'historical-complete',
+    );
     const orange10 = PALETTES.filter((p) => p.category === 'historical-orange');
 
     expect(approved.length).toBe(1);
@@ -26,10 +34,18 @@ describe('MapleTip Palette Exploration Studio & Theme Adapter', () => {
   });
 
   it('classifies new directions including Approved v7 (Twilight Links) and MapleTip 2005 Classic into their designated review statuses', () => {
-    const newDirections = PALETTES.filter((p) => p.category === 'new-direction');
-    const shortlist = newDirections.filter((p) => p.reviewStatus === 'Shortlist');
-    const conditional = newDirections.filter((p) => p.reviewStatus === 'Conditional');
-    const challenges = newDirections.filter((p) => p.reviewStatus === 'Challenge');
+    const newDirections = PALETTES.filter(
+      (p) => p.category === 'new-direction',
+    );
+    const shortlist = newDirections.filter(
+      (p) => p.reviewStatus === 'Shortlist',
+    );
+    const conditional = newDirections.filter(
+      (p) => p.reviewStatus === 'Conditional',
+    );
+    const challenges = newDirections.filter(
+      (p) => p.reviewStatus === 'Challenge',
+    );
 
     expect(shortlist.length).toBe(6);
     expect(conditional.length).toBe(2);
@@ -72,6 +88,14 @@ describe('MapleTip Palette Exploration Studio & Theme Adapter', () => {
     const vars = config.cssVariablesResolver(DEFAULT_THEME);
     expect(vars.light['--mapletip-color-canvas']).toBe('#FAFAFB');
     expect(vars.dark['--mapletip-color-canvas']).toBe('#111114');
+  });
+
+  it('resolves canonical Maple Twilight production theme for maple-twilight-pr7', () => {
+    const config = resolvePaletteTheme('maple-twilight-pr7');
+    expect(config.palette.id).toBe('maple-twilight-pr7');
+    const vars = config.cssVariablesResolver(DEFAULT_THEME);
+    expect(vars.dark['--mapletip-color-canvas']).toBe('#111417');
+    expect(vars.dark['--mapletip-color-link']).toBe('#F0A456');
   });
 
   it('generates fully populated CSS variables for experimental palettes', () => {

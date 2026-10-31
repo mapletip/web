@@ -6,10 +6,7 @@ import {
   type MantineThemeOverride,
   type VariantColorsResolver,
 } from '@mantine/core';
-import {
-  cssVariablesResolver as baseCssVariablesResolver,
-  theme as baseTheme,
-} from '@mapletip/theme';
+import { theme as baseTheme } from '@mapletip/theme';
 
 import { PALETTES } from './palettes.data';
 import type { PaletteDefinition, PaletteTokenSet } from './types';
@@ -113,16 +110,7 @@ export function resolvePaletteTheme(paletteId?: string): {
 } {
   const palette = getPalette(paletteId);
 
-  // If approved-v7, strictly preserve production theme & resolver
-  if (palette.id === 'approved-v7') {
-    return {
-      palette,
-      theme: baseTheme,
-      cssVariablesResolver: baseCssVariablesResolver,
-    };
-  }
-
-  // Variant resolver for experimental palettes so buttons and filled controls
+  // Variant resolver for studio palettes so buttons and filled controls
   // read the active palette's dynamic variables
   const experimentalVariantResolver: VariantColorsResolver = (input) => {
     if (input.color === 'walnut') {
@@ -163,7 +151,16 @@ export function resolvePaletteTheme(paletteId?: string): {
       }
     }
 
-    if (input.color === 'maple') {
+    const effectiveColor = input.color ?? input.theme.primaryColor;
+    if (effectiveColor === 'maple') {
+      if (input.variant === 'outline') {
+        return {
+          background: 'transparent',
+          hover: 'var(--mapletip-color-brand-wash)',
+          color: 'var(--mapletip-color-link)',
+          border: '1px solid var(--mapletip-color-link)',
+        };
+      }
       if (input.variant === 'subtle') {
         return {
           background: 'transparent',
@@ -213,6 +210,9 @@ export function resolvePaletteTheme(paletteId?: string): {
     components: {
       ...baseTheme.components,
       Anchor: {
+        defaultProps: {
+          underline: 'always',
+        },
         styles: {
           root: {
             fontWeight: 'var(--mapletip-link-weight, inherit)',

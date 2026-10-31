@@ -33,22 +33,35 @@ export const PaletteStudio: React.FC<PaletteStudioProps> = ({
   initialPaletteId = 'approved-v7',
   initialColorScheme = 'dark',
 }) => {
-  const [selectedPaletteId, setSelectedPaletteId] = useState<string>(initialPaletteId);
-  const [specimenScheme, setSpecimenScheme] = useState<'light' | 'dark'>(initialColorScheme);
+  const [selectedPaletteId, setSelectedPaletteId] =
+    useState<string>(initialPaletteId);
+  const [specimenScheme, setSpecimenScheme] = useState<'light' | 'dark'>(
+    initialColorScheme,
+  );
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState<FilterCategory>('all');
-  const [sortBy, setSortBy] = useState<'weighted' | 'identity' | 'legibility' | 'name'>('weighted');
+  const [sortBy, setSortBy] = useState<
+    'weighted' | 'identity' | 'legibility' | 'name'
+  >('weighted');
 
   // Specimen theme resolution
-  const activePalette = useMemo(() => getPalette(selectedPaletteId), [selectedPaletteId]);
-  const activeThemeConfig = useMemo(() => resolvePaletteTheme(selectedPaletteId), [selectedPaletteId]);
+  const activePalette = useMemo(
+    () => getPalette(selectedPaletteId),
+    [selectedPaletteId],
+  );
+  const activeThemeConfig = useMemo(
+    () => resolvePaletteTheme(selectedPaletteId),
+    [selectedPaletteId],
+  );
 
   // Filtering and sorting
   const filteredPalettes = useMemo(() => {
     return PALETTES.filter((p) => {
       // Category filter
-      if (activeCategory === 'shortlist' && p.reviewStatus !== 'Shortlist') return false;
-      if (activeCategory === 'new-10' && p.category !== 'new-direction') return false;
+      if (activeCategory === 'shortlist' && p.reviewStatus !== 'Shortlist')
+        return false;
+      if (activeCategory === 'new-10' && p.category !== 'new-direction')
+        return false;
       if (
         activeCategory !== 'all' &&
         activeCategory !== 'shortlist' &&
@@ -72,7 +85,8 @@ export const PaletteStudio: React.FC<PaletteStudioProps> = ({
     }).sort((a, b) => {
       if (sortBy === 'weighted') return b.scores.weighted - a.scores.weighted;
       if (sortBy === 'identity') return b.scores.identity - a.scores.identity;
-      if (sortBy === 'legibility') return b.scores.legibility - a.scores.legibility;
+      if (sortBy === 'legibility')
+        return b.scores.legibility - a.scores.legibility;
       return a.name.localeCompare(b.name);
     });
   }, [activeCategory, searchQuery, sortBy]);
@@ -115,9 +129,10 @@ export const PaletteStudio: React.FC<PaletteStudioProps> = ({
           </Group>
         </div>
         <p className={classes['studioSubtitle']}>
-          Contracted Design Studio review matrix. Explore 45 brand palettes (1 approved baseline, 10
-          new strategic directions, 3 regional kits, and 31 historical studies) across light and dark
-          modes with live component specimens.
+          Contracted Design Studio review matrix. Explore 45 brand palettes (1
+          approved baseline, 10 new strategic directions, 3 regional kits, and
+          31 historical studies) across light and dark modes with live component
+          specimens.
         </p>
 
         {/* Rubric Weights Bar */}
@@ -127,22 +142,29 @@ export const PaletteStudio: React.FC<PaletteStudioProps> = ({
             Brand Identity: <span className={classes['rubricWeight']}>30%</span>
           </span>
           <span className={classes['rubricPill']}>
-            Data Legibility: <span className={classes['rubricWeight']}>25%</span>
+            Data Legibility:{' '}
+            <span className={classes['rubricWeight']}>25%</span>
           </span>
           <span className={classes['rubricPill']}>
-            Visual Coherence: <span className={classes['rubricWeight']}>20%</span>
+            Visual Coherence:{' '}
+            <span className={classes['rubricWeight']}>20%</span>
           </span>
           <span className={classes['rubricPill']}>
-            State Visibility: <span className={classes['rubricWeight']}>15%</span>
+            State Visibility:{' '}
+            <span className={classes['rubricWeight']}>15%</span>
           </span>
           <span className={classes['rubricPill']}>
-            WCAG AA Compliance: <span className={classes['rubricWeight']}>10%</span>
+            WCAG AA Compliance:{' '}
+            <span className={classes['rubricWeight']}>10%</span>
           </span>
         </div>
       </header>
 
       {/* Active Palette Live Specimen Sandbox */}
-      <section className={classes['specimenSection']} aria-label="Interactive Specimen Sandbox">
+      <section
+        className={classes['specimenSection']}
+        aria-label="Interactive Specimen Sandbox"
+      >
         <div className={classes['specimenHeader']}>
           <h2 className={classes['specimenTitle']}>
             <PaintBrush size={20} weight="bold" />
@@ -514,7 +536,9 @@ export const PaletteStudio: React.FC<PaletteStudioProps> = ({
                   </h3>
                   <div className={classes['cardTag']}>{palette.tag}</div>
                 </div>
-                <span className={`${classes['statusBadge']} ${getStatusClass(palette.reviewStatus)}`}>
+                <span
+                  className={`${classes['statusBadge']} ${getStatusClass(palette.reviewStatus)}`}
+                >
                   {palette.reviewStatus}
                 </span>
               </div>
@@ -609,51 +633,78 @@ export const PaletteStudio: React.FC<PaletteStudioProps> = ({
               {/* Rubric Scores Row */}
               <div className={classes['cardScoreRow']}>
                 <div>
-                  <span style={{ fontSize: '0.6875rem', color: 'var(--mapletip-color-muted)' }}>
+                  <span
+                    style={{
+                      fontSize: '0.6875rem',
+                      color: 'var(--mapletip-color-muted)',
+                    }}
+                  >
                     WEIGHTED SCORE
                   </span>
-                  <div className={classes['scoreTotal']}>{palette.scores.weighted.toFixed(2)} / 5.0</div>
+                  <div className={classes['scoreTotal']}>
+                    {palette.scores.weighted.toFixed(2)} / 5.0
+                  </div>
                 </div>
                 <div className={classes['scoresBreakdown']}>
                   <div className={classes['scoreItem']}>
                     <span>ID</span>
-                    <span className={classes['scoreItemVal']}>{palette.scores.identity.toFixed(1)}</span>
+                    <span className={classes['scoreItemVal']}>
+                      {palette.scores.identity.toFixed(1)}
+                    </span>
                   </div>
                   <div className={classes['scoreItem']}>
                     <span>LEG</span>
-                    <span className={classes['scoreItemVal']}>{palette.scores.legibility.toFixed(1)}</span>
+                    <span className={classes['scoreItemVal']}>
+                      {palette.scores.legibility.toFixed(1)}
+                    </span>
                   </div>
                   <div className={classes['scoreItem']}>
                     <span>COH</span>
-                    <span className={classes['scoreItemVal']}>{palette.scores.coherence.toFixed(1)}</span>
+                    <span className={classes['scoreItemVal']}>
+                      {palette.scores.coherence.toFixed(1)}
+                    </span>
                   </div>
                   <div className={classes['scoreItem']}>
                     <span>STA</span>
-                    <span className={classes['scoreItemVal']}>{palette.scores.states.toFixed(1)}</span>
+                    <span className={classes['scoreItemVal']}>
+                      {palette.scores.states.toFixed(1)}
+                    </span>
                   </div>
                   <div className={classes['scoreItem']}>
                     <span>A11Y</span>
-                    <span className={classes['scoreItemVal']}>{palette.scores.accessibility.toFixed(1)}</span>
+                    <span className={classes['scoreItemVal']}>
+                      {palette.scores.accessibility.toFixed(1)}
+                    </span>
                   </div>
                 </div>
               </div>
 
               {/* Design Details */}
               <p className={classes['cardThesis']}>«{palette.thesis}»</p>
-              <p className={classes['cardFeature']}>{palette.distinctiveFeature}</p>
+              <p className={classes['cardFeature']}>
+                {palette.distinctiveFeature}
+              </p>
 
               <div className={classes['cardDetails']}>
                 <div className={classes['detailRow']}>
                   <span className={classes['detailLabel']}>Best Case:</span>
-                  <span className={classes['detailValBest']}>{palette.bestCase}</span>
+                  <span className={classes['detailValBest']}>
+                    {palette.bestCase}
+                  </span>
                 </div>
                 <div className={classes['detailRow']}>
-                  <span className={classes['detailLabel']}>Adversarial Risk:</span>
-                  <span className={classes['detailValRisk']}>{palette.adversarialRisk}</span>
+                  <span className={classes['detailLabel']}>
+                    Adversarial Risk:
+                  </span>
+                  <span className={classes['detailValRisk']}>
+                    {palette.adversarialRisk}
+                  </span>
                 </div>
                 {palette.rejectionReason && (
                   <div className={classes['detailRow']}>
-                    <span className={classes['detailLabel']}>Historical / Archive Note:</span>
+                    <span className={classes['detailLabel']}>
+                      Historical / Archive Note:
+                    </span>
                     <span>{palette.rejectionReason}</span>
                   </div>
                 )}

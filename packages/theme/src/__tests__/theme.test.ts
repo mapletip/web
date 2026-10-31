@@ -6,7 +6,11 @@ import {
   graphite,
   graphiteScheme,
   maple,
+  mapleTwilightBrand,
+  mapleTwilightDark,
   mapleTwilightLinks,
+  mapleTwilightScheme,
+  mapleTwilightWalnut,
   porcelain,
   porcelainScheme,
   walnut,
@@ -81,8 +85,33 @@ function surfaceCases(
 }
 
 const cases: readonly ContrastCase[] = [
+  ...surfaceCases(mapleTwilightScheme, 'maple twilight (dark)'),
   ...surfaceCases(graphiteScheme, 'graphite (dark)'),
   ...surfaceCases(porcelainScheme, 'porcelain (light)'),
+  {
+    name: 'maple twilight filled Walnut CTA label on CTA background',
+    foreground: mapleTwilightScheme.cta.foreground,
+    background: mapleTwilightScheme.cta.background,
+    minimum: 4.5,
+  },
+  {
+    name: 'maple twilight filled Walnut CTA label on hover background',
+    foreground: mapleTwilightScheme.cta.foreground,
+    background: mapleTwilightScheme.cta.hover,
+    minimum: 4.5,
+  },
+  {
+    name: 'maple twilight Walnut CTA border on dark panel',
+    foreground: mapleTwilightScheme.cta.border,
+    background: mapleTwilightScheme.panel,
+    minimum: 3,
+  },
+  {
+    name: 'maple twilight onBrand text on dark brand primary',
+    foreground: mapleTwilightScheme.onBrand,
+    background: mapleTwilightScheme.brand,
+    minimum: 4.5,
+  },
   {
     name: 'graphite filled Walnut CTA label on CTA background',
     foreground: graphiteScheme.cta.foreground,
@@ -227,6 +256,9 @@ describe('MapleTip approved theme foundation', () => {
     expect(walnut).toHaveLength(10);
     expect(graphite).toHaveLength(10);
     expect(porcelain).toHaveLength(10);
+    expect(mapleTwilightBrand).toHaveLength(10);
+    expect(mapleTwilightDark).toHaveLength(10);
+    expect(mapleTwilightWalnut).toHaveLength(10);
 
     expect(theme.primaryColor).toBe('maple');
     expect(theme.primaryShade).toEqual({ dark: 4, light: 5 });
@@ -240,12 +272,18 @@ describe('MapleTip approved theme foundation', () => {
   it('maps scheme roles onto Mantine neutral variables', () => {
     const resolvedTheme = mergeMantineTheme(DEFAULT_THEME, theme);
 
-    expect(resolvedTheme.colors.dark?.[0]).toBe(graphiteScheme.textPrimary);
-    expect(resolvedTheme.colors.dark?.[2]).toBe(graphiteScheme.textSecondary);
-    expect(resolvedTheme.colors.dark?.[4]).toBe(graphiteScheme.borderStrong);
-    expect(resolvedTheme.colors.dark?.[5]).toBe(graphiteScheme.raised);
-    expect(resolvedTheme.colors.dark?.[6]).toBe(graphiteScheme.panel);
-    expect(resolvedTheme.colors.dark?.[7]).toBe(graphiteScheme.canvas);
+    expect(resolvedTheme.colors.dark?.[0]).toBe(
+      mapleTwilightScheme.textPrimary,
+    );
+    expect(resolvedTheme.colors.dark?.[2]).toBe(
+      mapleTwilightScheme.textSecondary,
+    );
+    expect(resolvedTheme.colors.dark?.[4]).toBe(
+      mapleTwilightScheme.borderStrong,
+    );
+    expect(resolvedTheme.colors.dark?.[5]).toBe(mapleTwilightScheme.raised);
+    expect(resolvedTheme.colors.dark?.[6]).toBe(mapleTwilightScheme.panel);
+    expect(resolvedTheme.colors.dark?.[7]).toBe(mapleTwilightScheme.canvas);
 
     expect(resolvedTheme.colors.gray?.[0]).toBe(porcelainScheme.raised);
     expect(resolvedTheme.colors.gray?.[2]).toBe(porcelainScheme.borderSubtle);
@@ -254,8 +292,8 @@ describe('MapleTip approved theme foundation', () => {
     expect(resolvedTheme.colors.gray?.[6]).toBe(porcelainScheme.textSecondary);
     expect(resolvedTheme.colors.gray?.[9]).toBe(porcelainScheme.textPrimary);
 
-    expect(resolvedTheme.white).toBe(porcelainScheme.panel);
-    expect(resolvedTheme.black).toBe(porcelainScheme.textPrimary);
+    expect(resolvedTheme.white).toBe(mapleTwilightScheme.panel);
+    expect(resolvedTheme.black).toBe(mapleTwilightScheme.textPrimary);
   });
 
   it('resolves semantic variables in cssVariablesResolver', () => {
@@ -292,30 +330,32 @@ describe('MapleTip approved theme foundation', () => {
     );
 
     expect(variables.dark?.['--mantine-color-body']).toBe(
-      graphiteScheme.canvas,
+      mapleTwilightScheme.canvas,
     );
     expect(variables.dark?.['--mantine-color-anchor']).toBe(
-      graphiteScheme.link,
+      mapleTwilightScheme.link,
     );
     expect(variables.dark?.['--mapletip-color-focus']).toBe(
-      graphiteScheme.focus,
+      mapleTwilightScheme.focus,
     );
     expect(variables.dark?.['--mapletip-color-focus-gap']).toBe(
-      graphiteScheme.focusGap,
+      mapleTwilightScheme.focusGap,
     );
     expect(variables.dark?.['--mapletip-color-cta']).toBe(
-      graphiteScheme.cta.background,
+      mapleTwilightScheme.cta.background,
     );
     expect(variables.dark?.['--mapletip-color-cta-fg']).toBe(
-      graphiteScheme.cta.foreground,
+      mapleTwilightScheme.cta.foreground,
     );
     expect(variables.dark?.['--mapletip-color-selection']).toBe(
-      graphiteScheme.selection,
+      mapleTwilightScheme.selection,
     );
     expect(variables.dark?.['--mapletip-color-selection-edge']).toBe(
-      graphiteScheme.selectionEdge,
+      mapleTwilightScheme.selectionEdge,
     );
-    expect(variables.dark?.['--mapletip-color-soft']).toBe(graphiteScheme.soft);
+    expect(variables.dark?.['--mapletip-color-soft']).toBe(
+      mapleTwilightScheme.soft,
+    );
   });
 
   it('resolves Walnut CTA as default button action', () => {
@@ -341,7 +381,9 @@ describe('MapleTip approved theme foundation', () => {
     });
 
     expect(resolved.background).toBe('var(--mantine-color-maple-filled)');
-    expect(resolved.color).toBe('light-dark(#2B2017, #211B15)');
+    expect(resolved.color).toBe(
+      `light-dark(${porcelainScheme.onBrand}, ${mapleTwilightScheme.onBrand})`,
+    );
   });
 
   it('resolves subtle and light variants for maple with brand wash and link tokens', () => {

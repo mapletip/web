@@ -7,14 +7,14 @@ import {
 } from '@mantine/core';
 
 import {
-  graphite,
-  graphiteScheme,
   graphiteTwilightLinksScheme,
-  maple,
+  mapleTwilightBrand,
+  mapleTwilightDark,
+  mapleTwilightScheme,
+  mapleTwilightWalnut,
   porcelain,
   porcelainScheme,
   porcelainTwilightLinksScheme,
-  walnut,
   type SchemeColors,
 } from './colors';
 
@@ -72,7 +72,17 @@ const variantColorResolver: VariantColorsResolver = (input) => {
     }
   }
 
-  if (input.color === 'maple') {
+  const effectiveColor = input.color ?? input.theme.primaryColor;
+  if (effectiveColor === 'maple') {
+    if (input.variant === 'outline') {
+      return {
+        background: 'transparent',
+        hover: 'var(--mapletip-color-brand-wash)',
+        color: 'var(--mapletip-color-link)',
+        border: '1px solid var(--mapletip-color-link)',
+      };
+    }
+
     if (input.variant === 'subtle') {
       return {
         background: 'transparent',
@@ -100,7 +110,7 @@ const variantColorResolver: VariantColorsResolver = (input) => {
   if (isPrimaryFilled) {
     return {
       ...resolved,
-      color: `light-dark(${porcelainScheme.onBrand}, ${graphiteScheme.onBrand})`,
+      color: `light-dark(${porcelainScheme.onBrand}, ${mapleTwilightScheme.onBrand})`,
     };
   }
 
@@ -109,10 +119,9 @@ const variantColorResolver: VariantColorsResolver = (input) => {
 
 /**
  * Shared MapleTip Mantine theme:
- * - Clear Porcelain (light scheme)
- * - Graphite / charcoal (dark scheme)
+ * - Maple Twilight canonical dark scheme
  * - Walnut Glow primary actions
- * - Classic Maple identity and selection
+ * - Luminous amber link and brand identity
  * - Productive typography and balanced-compact density
  * - Softly rounded surfaces (~8px controls, ~12px panels)
  */
@@ -120,13 +129,13 @@ export const theme: MantineThemeOverride = createTheme({
   primaryColor: 'maple',
   primaryShade: { light: 5, dark: 4 },
   colors: {
-    maple,
-    walnut,
-    dark: graphite,
+    maple: mapleTwilightBrand,
+    walnut: mapleTwilightWalnut,
+    dark: mapleTwilightDark,
     gray: porcelain,
   },
-  white: porcelainScheme.panel,
-  black: porcelainScheme.textPrimary,
+  white: mapleTwilightScheme.panel,
+  black: mapleTwilightScheme.textPrimary,
   fontFamily: SYSTEM_FONT_FAMILY,
   // Productive typography scale: 12px metadata, 14px UI/data, 16px reading, 20px section, 24px entity
   fontSizes: {
@@ -173,6 +182,14 @@ export const theme: MantineThemeOverride = createTheme({
   },
   respectReducedMotion: true,
   components: {
+    // Alerts default to light variant with maple brand wash and accessible link foreground
+    Alert: {
+      defaultProps: {
+        color: 'maple',
+        variant: 'light',
+        radius: 'sm',
+      },
+    },
     // Buttons default to Walnut Glow primary CTA with ~8px radius
     Button: {
       defaultProps: {
@@ -196,7 +213,7 @@ export const theme: MantineThemeOverride = createTheme({
     // Checkboxes use onBrand tick color for contrast on orange fill
     Checkbox: {
       defaultProps: {
-        iconColor: `light-dark(${porcelainScheme.onBrand}, ${graphiteScheme.onBrand})`,
+        iconColor: `light-dark(${porcelainScheme.onBrand}, ${mapleTwilightScheme.onBrand})`,
         radius: 'xs',
       },
     },
@@ -304,8 +321,8 @@ export const cssVariablesResolver: CSSVariablesResolver = () => ({
     '--mantine-color-body': porcelainScheme.canvas,
   },
   dark: {
-    ...schemeVariables(graphiteScheme),
-    '--mantine-color-body': graphiteScheme.canvas,
+    ...schemeVariables(mapleTwilightScheme),
+    '--mantine-color-body': mapleTwilightScheme.canvas,
   },
 });
 

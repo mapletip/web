@@ -49,7 +49,7 @@ const preview: Preview = {
   },
   initialGlobals: {
     colorScheme: 'dark',
-    brandPalette: 'approved-v7',
+    brandPalette: 'maple-twilight-pr7',
     viewport: { value: 'desktop', isRotated: false },
   },
   decorators: [
@@ -57,8 +57,7 @@ const preview: Preview = {
       const colorScheme =
         (context.globals['colorScheme'] as 'light' | 'dark') ?? 'dark';
       const brandPaletteId = context.globals['brandPalette'] as
-        | string
-        | undefined;
+        string | undefined;
       const { theme, cssVariablesResolver } =
         resolvePaletteTheme(brandPaletteId);
 

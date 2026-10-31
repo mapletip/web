@@ -337,7 +337,11 @@ describe('ComparisonTable', () => {
   it('uses the approved dark surfaces and native row hover in the dark scheme', async () => {
     document.documentElement.setAttribute('data-mantine-color-scheme', 'dark');
     await render(
-      <MantineProvider theme={theme} forceColorScheme="dark">
+      <MantineProvider
+        theme={theme}
+        cssVariablesResolver={cssVariablesResolver}
+        forceColorScheme="dark"
+      >
         <ComparisonTable
           ariaLabel="Dark comparison"
           records={demoRecords.slice(0, 12)}
@@ -356,10 +360,10 @@ describe('ComparisonTable', () => {
     const numericCell =
       row.querySelector<HTMLTableCellElement>('td:nth-child(4)')!;
     expect(getComputedStyle(document.body).backgroundColor).toBe(
-      'rgb(17, 17, 20)',
+      'rgb(17, 20, 23)',
     );
     await userEvent.hover(numericCell);
-    expect(getComputedStyle(row).backgroundColor).toBe('rgb(36, 36, 40)');
+    expect(getComputedStyle(row).backgroundColor).toBe('rgb(34, 38, 43)');
     expect(getComputedStyle(numericCell, '::before').backgroundColor).not.toBe(
       'transparent',
     );
