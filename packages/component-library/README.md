@@ -61,9 +61,22 @@ pnpm --filter @mapletip/component-library test:visual
 Tests live next to each component as `<name>.visual.test.tsx`, with their screenshots
 beside them. Ordinary `pnpm test` skips them.
 
-Screenshots only match when they are produced in the same environment CI uses, so regenerate
-them there rather than on a development machine, review every changed image, and commit it
-with the change that explains it. CI only compares the committed images and never writes them.
+Screenshots only match when they are produced in the same environment CI uses. Baselines
+are rendered in the pinned Playwright Linux image (`1.64.1`), which CI also uses.
+References are written only by running the suite with `--update=all` inside that
+authoritative container:
+
+```bash
+# from the repository root
+podman run --rm --init --ipc=host \
+  -e HOME=/tmp --userns=keep-id --security-opt label=disable \
+  -v "$PWD:$PWD" -w "$PWD/packages/component-library" \
+  mcr.microsoft.com/playwright:v1.64.1-resolute \
+  ./node_modules/.bin/vitest run --project visual --update=all
+```
+
+Review every generated PNG before committing it with the change that explains it.
+CI remains comparison-only and refuses baseline update flags.
 
 ## Development
 
