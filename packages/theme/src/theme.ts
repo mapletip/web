@@ -134,8 +134,8 @@ export const theme: MantineThemeOverride = createTheme({
     dark: mapleTwilightDark,
     gray: porcelain,
   },
-  white: mapleTwilightScheme.panel,
-  black: mapleTwilightScheme.textPrimary,
+  white: '#FFFFFF',
+  black: '#000000',
   fontFamily: SYSTEM_FONT_FAMILY,
   // Productive typography scale: 12px metadata, 14px UI/data, 16px reading, 20px section, 24px entity
   fontSizes: {

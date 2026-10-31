@@ -33,8 +33,8 @@ export const PrinciplesAndIdentity: Story = {
       <div>
         <Title order={1}>Brand Principles & Visual Identity</Title>
         <Text c="dimmed" size="sm" mt="xs">
-          Approved MapleTip design system foundation v7 (Clear Porcelain &
-          Graphite).
+          Approved MapleTip design system foundation (Dark Theme Only: Maple
+          Twilight).
         </Text>
       </div>
 
@@ -54,13 +54,14 @@ export const PrinciplesAndIdentity: Story = {
 
         <Paper p="md" withBorder>
           <Title order={2} size="h3">
-            2. One identity, two schemes
+            2. Dark Theme Only Architecture (Maple Twilight)
           </Title>
           <Text size="sm" mt="xs">
-            Light is <strong>Clear Porcelain</strong> (clean white and subtle
-            gray), dark is <strong>Graphite</strong> (charcoal neutral). Both
-            form a unified semantic system, not competing aesthetics. Dark
-            remains default; no runtime palette picker is shipped.
+            MapleTip delivers a dedicated, atmospheric{' '}
+            <strong>Maple Twilight</strong> dark experience (deep neutral
+            canvas, crisp charcoal panels, warm ivory typography, and luminous
+            amber links). Light scheme complexity is eliminated from runtime,
+            maintaining full accessibility and high information density.
           </Text>
         </Paper>
 

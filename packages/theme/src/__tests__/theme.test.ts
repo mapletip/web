@@ -292,8 +292,8 @@ describe('MapleTip approved theme foundation', () => {
     expect(resolvedTheme.colors.gray?.[6]).toBe(porcelainScheme.textSecondary);
     expect(resolvedTheme.colors.gray?.[9]).toBe(porcelainScheme.textPrimary);
 
-    expect(resolvedTheme.white).toBe(mapleTwilightScheme.panel);
-    expect(resolvedTheme.black).toBe(mapleTwilightScheme.textPrimary);
+    expect(resolvedTheme.white).toBe('#FFFFFF');
+    expect(resolvedTheme.black).toBe('#000000');
   });
 
   it('resolves semantic variables in cssVariablesResolver', () => {

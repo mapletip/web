@@ -9,7 +9,6 @@ import {
   Text,
   Title,
 } from '@mantine/core';
-import { approvedColorTokens } from '@mapletip/theme';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import type { ReactElement } from 'react';
 
@@ -70,16 +69,14 @@ function Swatch({
 }
 
 export const ApprovedFoundationV7: Story = {
-  name: 'Approved Color Tokens (v7)',
+  name: 'Approved Color Tokens (Maple Twilight)',
   render: (): ReactElement => {
-    const { locked } = approvedColorTokens;
-
     return (
       <Stack gap="xl" style={{ maxWidth: 960 }}>
         <div>
-          <Title order={1}>Approved Color Foundation v7</Title>
+          <Title order={1}>Approved Color Foundation: Maple Twilight</Title>
           <Text c="dimmed" size="sm" mt="xs">
-            Normative color contract from approved-color-tokens.json.
+            Canonical dark theme color contract.
           </Text>
         </div>
 
@@ -90,10 +87,10 @@ export const ApprovedFoundationV7: Story = {
           <Grid>
             <Grid.Col span={{ base: 6, sm: 3 }}>
               <Text size="xs" c="dimmed">
-                Background
+                Architecture
               </Text>
               <Text size="sm" fw={600}>
-                {locked.background}
+                Dark Theme Only
               </Text>
             </Grid.Col>
             <Grid.Col span={{ base: 6, sm: 3 }}>
@@ -101,7 +98,7 @@ export const ApprovedFoundationV7: Story = {
                 Primary CTA
               </Text>
               <Text size="sm" fw={600}>
-                {locked.cta}
+                Walnut Glow
               </Text>
             </Grid.Col>
             <Grid.Col span={{ base: 6, sm: 3 }}>
@@ -109,23 +106,15 @@ export const ApprovedFoundationV7: Story = {
                 Selection
               </Text>
               <Text size="sm" fw={600}>
-                {locked.selection}
+                Maple Selection
               </Text>
             </Grid.Col>
             <Grid.Col span={{ base: 6, sm: 3 }}>
               <Text size="xs" c="dimmed">
-                Identity
+                Identity & Links
               </Text>
               <Text size="sm" fw={600}>
-                {locked.identity}
-              </Text>
-            </Grid.Col>
-            <Grid.Col span={{ base: 6, sm: 3 }}>
-              <Text size="xs" c="dimmed">
-                Links & Focus
-              </Text>
-              <Text size="sm" fw={600}>
-                {locked.linksAndFocus}
+                Luminous Amber
               </Text>
             </Grid.Col>
             <Grid.Col span={{ base: 6, sm: 3 }}>
@@ -133,7 +122,7 @@ export const ApprovedFoundationV7: Story = {
                 Boundaries
               </Text>
               <Text size="sm" fw={600}>
-                {locked.boundaries}
+                Charcoal Steel
               </Text>
             </Grid.Col>
             <Grid.Col span={{ base: 6, sm: 3 }}>
@@ -141,15 +130,7 @@ export const ApprovedFoundationV7: Story = {
                 Statuses
               </Text>
               <Text size="sm" fw={600}>
-                {locked.statuses}
-              </Text>
-            </Grid.Col>
-            <Grid.Col span={{ base: 6, sm: 3 }}>
-              <Text size="xs" c="dimmed">
-                Heritage Soft
-              </Text>
-              <Text size="sm" fw={600}>
-                {locked.soft}
+                Clear Signals
               </Text>
             </Grid.Col>
           </Grid>
@@ -160,33 +141,39 @@ export const ApprovedFoundationV7: Story = {
             Primary Action vs Brand Accent
           </Title>
           <Text size="sm">
-            Walnut primary actions and Classic Maple identity orange are
+            Walnut primary actions and luminous Maple amber identity are
             separate semantic concepts:
           </Text>
           <Group gap="md">
             <Swatch
-              label="Walnut CTA (Light)"
-              hex="#3D332C"
-              fg="#FFFFFF"
+              label="Walnut CTA Background"
+              hex="#3A2312"
+              fg="#F0A456"
               roleDescription="Primary filled actions"
             />
             <Swatch
-              label="Walnut CTA (Dark)"
-              hex="#514039"
-              fg="#F9EFE4"
-              roleDescription="Dark primary filled action"
+              label="Walnut CTA Foreground"
+              hex="#F0A456"
+              fg="#111417"
+              roleDescription="CTA text & icon (7.95:1)"
             />
             <Swatch
-              label="Classic Maple (Light)"
-              hex="#DD9554"
-              fg="#2B2017"
-              roleDescription="Brand accent & badges"
+              label="Walnut CTA Border"
+              hex="#8F7665"
+              fg="#000000"
+              roleDescription="Essential boundary (3.86:1)"
             />
             <Swatch
-              label="Classic Maple (Dark)"
-              hex="#EBA85F"
-              fg="#211B15"
-              roleDescription="Dark brand accent"
+              label="Walnut CTA Hover"
+              hex="#4E2F18"
+              fg="#F0A456"
+              roleDescription="Primary button hover"
+            />
+            <Swatch
+              label="Maple Amber (Brand & Link)"
+              hex="#F0A456"
+              fg="#111417"
+              roleDescription="Brand accent & text links"
             />
           </Group>
         </Stack>
@@ -203,15 +190,13 @@ export const ApprovedFoundationV7: Story = {
             <Table.Thead>
               <Table.Tr>
                 <Table.Th>Role</Table.Th>
-                <Table.Th>Light (fg / bg)</Table.Th>
-                <Table.Th>Dark (fg / bg)</Table.Th>
+                <Table.Th>Tokens (fg / bg)</Table.Th>
                 <Table.Th>Preview</Table.Th>
               </Table.Tr>
             </Table.Thead>
             <Table.Tbody>
               <Table.Tr>
                 <Table.Td>Success</Table.Td>
-                <Table.Td>#176647 / #E6F6EC</Table.Td>
                 <Table.Td>#ACE0C2 / #20372B</Table.Td>
                 <Table.Td>
                   <Badge
@@ -227,7 +212,6 @@ export const ApprovedFoundationV7: Story = {
               </Table.Tr>
               <Table.Tr>
                 <Table.Td>Warning</Table.Td>
-                <Table.Td>#795514 / #FFF3D5</Table.Td>
                 <Table.Td>#F4D397 / #443524</Table.Td>
                 <Table.Td>
                   <Badge
@@ -243,7 +227,6 @@ export const ApprovedFoundationV7: Story = {
               </Table.Tr>
               <Table.Tr>
                 <Table.Td>Danger</Table.Td>
-                <Table.Td>#9A293B / #FBE8EC</Table.Td>
                 <Table.Td>#F8ADB8 / #46282F</Table.Td>
                 <Table.Td>
                   <Badge
@@ -258,7 +241,6 @@ export const ApprovedFoundationV7: Story = {
               </Table.Tr>
               <Table.Tr>
                 <Table.Td>Info</Table.Td>
-                <Table.Td>#2A5878 / #E8F1FB</Table.Td>
                 <Table.Td>#B0D5F3 / #26394A</Table.Td>
                 <Table.Td>
                   <Badge
@@ -277,46 +259,50 @@ export const ApprovedFoundationV7: Story = {
 
         <Stack gap="lg">
           <Title order={2} size="h3">
-            Surfaces & Boundaries
+            Maple Twilight Dark Surfaces & Boundaries
           </Title>
           <Group gap="md">
             <Swatch
-              label="Porcelain Canvas"
-              hex="#FAFAFB"
-              roleDescription="Light body background"
+              label="Canvas Background"
+              hex="#111417"
+              fg="#F4F1EA"
+              roleDescription="Deep neutral background"
             />
             <Swatch
-              label="Porcelain Panel"
-              hex="#FFFFFF"
-              roleDescription="Light cards and table"
+              label="Panel Surface"
+              hex="#1A1D20"
+              fg="#F4F1EA"
+              roleDescription="Cards, containers, headers"
             />
             <Swatch
-              label="Graphite Canvas"
-              hex="#111114"
-              fg="#F5F5F5"
-              roleDescription="Dark body background"
+              label="Raised / Hover"
+              hex="#22262B"
+              fg="#F4F1EA"
+              roleDescription="Raised surfaces & row hover"
             />
             <Swatch
-              label="Graphite Panel"
-              hex="#1A1A1D"
-              fg="#F5F5F5"
-              roleDescription="Dark cards and table"
+              label="Brand Wash"
+              hex="#261F1A"
+              fg="#F0A456"
+              roleDescription="Subtle brand / alert tint"
             />
             <Swatch
-              label="Maple Glow Selection"
-              hex="#FFF2E2"
-              roleDescription="Light selected row"
+              label="Selection Surface"
+              hex="#3A2E24"
+              fg="#F4F1EA"
+              roleDescription="Active / selected row"
             />
             <Swatch
-              label="Graphite Selection"
-              hex="#4D382B"
-              fg="#F5F5F5"
-              roleDescription="Dark selected row"
+              label="Border Strong"
+              hex="#788088"
+              fg="#111417"
+              roleDescription="Essential control boundary"
             />
             <Swatch
-              label="Heritage Soft"
-              hex="#FDF0E4"
-              roleDescription="Warm highlight (light)"
+              label="Border Subtle"
+              hex="#2C3137"
+              fg="#F4F1EA"
+              roleDescription="Decorative divider"
             />
           </Group>
         </Stack>
