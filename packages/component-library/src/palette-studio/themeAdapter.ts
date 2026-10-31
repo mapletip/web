@@ -53,6 +53,12 @@ function resolveSchemeVariables(
     '--mapletip-color-focus': tokens.focus,
     '--mapletip-color-focus-gap': tokens.focusGap,
     '--mapletip-color-link': tokens.link,
+    '--mapletip-color-link-hover': tokens.linkHover ?? tokens.link,
+    '--mapletip-link-weight': tokens.linkWeight ?? 'inherit',
+    '--mapletip-link-decoration-thickness':
+      tokens.linkDecorationThickness ?? 'auto',
+    '--mapletip-link-hover-decoration':
+      tokens.linkHoverDecoration ?? 'underline',
     '--mapletip-color-cta': tokens.cta.background,
     '--mapletip-color-cta-fg': tokens.cta.foreground,
     '--mapletip-color-cta-hover': tokens.cta.hover,
@@ -205,6 +211,21 @@ export function resolvePaletteTheme(paletteId?: string): {
     variantColorResolver: experimentalVariantResolver,
     components: {
       ...baseTheme.components,
+      Anchor: {
+        styles: {
+          root: {
+            fontWeight: 'var(--mapletip-link-weight, inherit)',
+            textDecorationThickness:
+              'var(--mapletip-link-decoration-thickness, auto)',
+            '&:hover': {
+              color:
+                'var(--mapletip-color-link-hover, var(--mantine-color-anchor))',
+              textDecoration:
+                'var(--mapletip-link-hover-decoration, underline)',
+            },
+          },
+        },
+      },
       Checkbox: {
         defaultProps: {
           iconColor: 'var(--mapletip-color-on-brand)',

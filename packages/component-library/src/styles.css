@@ -3,3 +3,17 @@
 /* Relative workspace path: Vite's dev CSS resolver does not resolve the
    package-export subpath for @import, while the production builder does. */
 @import '../../theme/src/theme.css';
+
+/*
+ * Experimental palette link customization (e.g. 2005 Classic bold crimson links).
+ * Uses inherit/auto fallbacks to ensure zero visual drift for approved baseline.
+ */
+a:not([class]) {
+  font-weight: var(--mapletip-link-weight, inherit);
+  text-decoration-thickness: var(--mapletip-link-decoration-thickness, auto);
+}
+
+a:not([class]):hover {
+  color: var(--mapletip-color-link-hover, var(--mantine-color-anchor));
+  text-decoration: var(--mapletip-link-hover-decoration, underline);
+}

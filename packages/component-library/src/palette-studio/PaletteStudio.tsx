@@ -263,7 +263,10 @@ export const PaletteStudio: React.FC<PaletteStudioProps> = ({
                   style={{
                     color: 'var(--mapletip-color-link)',
                     fontSize: '0.875rem',
+                    fontWeight: 'var(--mapletip-link-weight, inherit)',
                     textDecoration: 'underline',
+                    textDecorationThickness:
+                      'var(--mapletip-link-decoration-thickness, auto)',
                   }}
                 >
                   View full drop tables →

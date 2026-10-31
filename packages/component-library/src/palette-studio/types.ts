@@ -40,6 +40,10 @@ export interface PaletteTokenSet {
   readonly focus: string;
   readonly focusGap: string;
   readonly link: string;
+  readonly linkHover?: string;
+  readonly linkWeight?: string;
+  readonly linkDecorationThickness?: string;
+  readonly linkHoverDecoration?: string;
   readonly onBrand: string;
   readonly cta: CtaTokens;
   readonly statuses: StatusTokens;

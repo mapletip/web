@@ -153,7 +153,7 @@ describe('MapleTip Palette Exploration Studio & Theme Adapter', () => {
     expect(config.palette.light.panel).toBe('#FFFFFF');
     expect(config.palette.light.raised).toBe('#F7EBDB');
     expect(config.palette.light.borderStrong).toBe('#BB6109');
-    expect(config.palette.light.link).toBe('#A64B00');
+    expect(config.palette.light.link).toBe('#DF0E19');
     expect(config.palette.light.cta.background).toBe('#B15604');
     expect(config.palette.light.selection).toBe('#FFF3DB');
 
@@ -166,10 +166,15 @@ describe('MapleTip Palette Exploration Studio & Theme Adapter', () => {
     const vars = config.cssVariablesResolver(DEFAULT_THEME);
     expect(vars.light['--mapletip-color-canvas']).toBe('#FAF7F3');
     expect(vars.light['--mapletip-color-panel']).toBe('#FFFFFF');
-    expect(vars.light['--mapletip-color-link']).toBe('#A64B00');
-    expect(vars.light['--mantine-color-anchor']).toBe('#A64B00');
+    expect(vars.light['--mapletip-color-link']).toBe('#DF0E19');
+    expect(vars.light['--mantine-color-anchor']).toBe('#DF0E19');
+    expect(vars.light['--mapletip-link-weight']).toBe('inherit');
+    expect(vars.light['--mapletip-link-decoration-thickness']).toBe('1px');
+    expect(vars.light['--mapletip-color-link-hover']).toBe('#B11820');
+    expect(vars.light['--mapletip-link-hover-decoration']).toBe('none');
     expect(vars.light['--mapletip-color-cta']).toBe('#B15604');
     expect(vars.dark['--mapletip-color-canvas']).toBe('#111417');
     expect(vars.dark['--mapletip-color-panel']).toBe('#1A1D20');
+    expect(vars.dark['--mapletip-link-weight']).toBe('inherit');
   });
 });
