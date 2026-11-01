@@ -26,13 +26,15 @@ import { cssVariablesResolver, theme } from '@mapletip/theme';
   theme={theme}
   cssVariablesResolver={cssVariablesResolver}
   defaultColorScheme="dark"
+  forceColorScheme="dark"
 >
   <App />
 </MantineProvider>;
 ```
 
-Dark is the default color scheme. See [`@mapletip/theme`](../theme/README.md) for
-color-scheme persistence and first-paint setup.
+MapleTip is dark-only; hosts should set `forceColorScheme="dark"` so first paint,
+server rendering and hydrated UI stay on the Maple Twilight scheme. See
+[`@mapletip/theme`](../theme/README.md) for the host setup.
 
 The component library never owns navigation. For controlled browsing pass `state` and
 `onStateChange`; for self-managed browsing pass `defaultState`. Supply `getPageHref` so
@@ -67,9 +69,9 @@ library always supplies one.
 
 ## Visual regression
 
-Selected stories are compared against committed screenshots in both dark and light,
-using the same browser test runner as the rest of the library, so a change in layout,
-theme or responsive behaviour fails the build.
+Selected stories are compared against committed screenshots in the dark scheme, using the
+same browser test runner as the rest of the library, so a change in layout, theme or
+responsive behaviour fails the build.
 
 ```bash
 pnpm --filter @mapletip/component-library test:visual

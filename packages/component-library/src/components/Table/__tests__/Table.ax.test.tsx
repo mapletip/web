@@ -10,7 +10,7 @@ import { demoRecords, makeDemoColumns } from '@/fixtures/records';
 
 describe('Table accessibility exposure', () => {
   beforeEach(async () => {
-    document.documentElement.setAttribute('data-mantine-color-scheme', 'light');
+    document.documentElement.setAttribute('data-mantine-color-scheme', 'dark');
     await page.viewport(1440, 900);
   });
 

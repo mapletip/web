@@ -9,13 +9,8 @@ import {
 } from '@/test-support/visual';
 import type { VisualCase } from '@/test-support/visual';
 
-const light = composeStories(stories, {
-  initialGlobals: { colorScheme: 'light' },
-});
-// Per-call annotations merge with the preview registered in the setup file.
-const dark = composeStories(stories, {
-  initialGlobals: { colorScheme: 'dark' },
-});
+// The preview forces MapleTip's single shipped dark scheme.
+const dark = composeStories(stories);
 
 const comparisonTable = page.getByRole('table', { name: 'Comparison records' });
 
@@ -68,33 +63,21 @@ function assertTableScrollsHorizontally(): void {
   }
 }
 
-const desktop: VisualCase = {
-  name: 'comparison-table-desktop-light',
-  story: light.ComparisonTable,
+const desktopDark: VisualCase = {
+  name: 'comparison-table-desktop-dark',
+  story: dark.ComparisonTable,
   storyId: 'components-table--comparison-table',
   width: 1366,
   height: 768,
   element: comparisonTable,
 };
 
-const desktopDark: VisualCase = {
-  ...desktop,
-  name: 'comparison-table-desktop-dark',
+const hoverScrolledDark: VisualCase = {
+  name: 'comparison-table-hover-scrolled-dark',
   story: dark.ComparisonTable,
-};
-
-const hoverScrolledLight: VisualCase = {
-  name: 'comparison-table-hover-scrolled-light',
-  story: light.ComparisonTable,
   storyId: 'components-table--comparison-table',
   width: 1366,
   height: 768,
-};
-
-const hoverScrolledDark: VisualCase = {
-  ...hoverScrolledLight,
-  name: 'comparison-table-hover-scrolled-dark',
-  story: dark.ComparisonTable,
 };
 
 const nextFrame = (): Promise<void> =>
@@ -194,8 +177,8 @@ async function hoverColumnAfterScrolling(): Promise<void> {
 }
 
 const phoneOverflow: VisualCase = {
-  name: 'comparison-table-mobile-overflow-light',
-  story: light.ComparisonTable,
+  name: 'comparison-table-mobile-overflow-dark',
+  story: dark.ComparisonTable,
   storyId: 'components-table--comparison-table',
   width: 375,
   height: 812,
@@ -203,26 +186,15 @@ const phoneOverflow: VisualCase = {
 
 // Explicit tests rather than a case table: only the phone case also proves that
 // the clipped columns stay reachable by scrolling.
-test('comparison-table-desktop-light', async () => {
-  await openVisualCase(desktop);
-  await expectApprovedScreenshot(desktop);
-});
-
 test('comparison-table-desktop-dark', async () => {
   await openVisualCase(desktopDark);
   await expectApprovedScreenshot(desktopDark);
 });
 
-test('comparison-table-mobile-overflow-light', async () => {
+test('comparison-table-mobile-overflow-dark', async () => {
   await openVisualCase(phoneOverflow);
   assertTableScrollsHorizontally();
   await expectApprovedScreenshot(phoneOverflow);
-});
-
-test('comparison-table-hover-scrolled-light', async () => {
-  await openVisualCase(hoverScrolledLight);
-  await hoverColumnAfterScrolling();
-  await expectApprovedScreenshot(hoverScrolledLight);
 });
 
 test('comparison-table-hover-scrolled-dark', async () => {

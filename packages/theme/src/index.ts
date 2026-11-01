@@ -1,17 +1,9 @@
 export {
-  approvedColorTokens,
-  graphite,
-  graphiteScheme,
-  graphiteScheme as twilightScheme,
-  maple,
   mapleTwilightBrand,
   mapleTwilightDark,
   mapleTwilightScheme,
   mapleTwilightWalnut,
-  porcelain,
-  porcelainScheme,
-  porcelainScheme as parchmentScheme,
-  walnut,
+  neutral,
 } from './colors';
 export type {
   CtaColors,

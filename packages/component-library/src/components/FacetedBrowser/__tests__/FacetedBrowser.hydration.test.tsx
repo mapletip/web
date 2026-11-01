@@ -23,14 +23,14 @@ afterEach(() => {
 describe('FacetedBrowser hydration', () => {
   it('hydrates server markup without recoverable errors or a measurable layout shift', async () => {
     await page.viewport(1440, 900);
-    document.documentElement.setAttribute('data-mantine-color-scheme', 'light');
+    document.documentElement.setAttribute('data-mantine-color-scheme', 'dark');
     Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
     await new Promise<void>((resolve) =>
       requestAnimationFrame(() => resolve()),
     );
 
     const tree = (
-      <MantineProvider theme={theme} forceColorScheme="light">
+      <MantineProvider theme={theme} forceColorScheme="dark">
         <NeutralBrowserMarkup />
       </MantineProvider>
     );
@@ -77,12 +77,12 @@ describe('FacetedBrowser hydration', () => {
 
   it('hydrates DataTable with poisoned empty-string localStorage state', async () => {
     await page.viewport(1440, 900);
-    document.documentElement.setAttribute('data-mantine-color-scheme', 'light');
+    document.documentElement.setAttribute('data-mantine-color-scheme', 'dark');
     Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
     localStorage.setItem('', '[]');
 
     const tree = (
-      <MantineProvider theme={theme} forceColorScheme="light">
+      <MantineProvider theme={theme} forceColorScheme="dark">
         <NeutralBrowserMarkup />
       </MantineProvider>
     );
@@ -119,12 +119,12 @@ describe('FacetedBrowser hydration', () => {
 
   it('hydrates two expandable tables with instance-scoped control ids', async () => {
     await page.viewport(1440, 900);
-    document.documentElement.setAttribute('data-mantine-color-scheme', 'light');
+    document.documentElement.setAttribute('data-mantine-color-scheme', 'dark');
     Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
     const records = demoRecords.slice(0, 4);
     const columns = makeDemoColumns();
     const tree = (
-      <MantineProvider theme={theme} forceColorScheme="light">
+      <MantineProvider theme={theme} forceColorScheme="dark">
         <ComparisonTable
           ariaLabel="First expandable records"
           records={records}
@@ -198,7 +198,7 @@ describe('FacetedBrowser hydration', () => {
 
   it('hydrates an integrated card-only FacetedBrowser without errors', async () => {
     const tree = (
-      <MantineProvider theme={theme} forceColorScheme="light">
+      <MantineProvider theme={theme} forceColorScheme="dark">
         <FacetedBrowser
           title={<h1>Live Browser</h1>}
           records={demoRecords.slice(0, 10)}

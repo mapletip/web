@@ -11,8 +11,7 @@ import {
   mapleTwilightDark,
   mapleTwilightScheme,
   mapleTwilightWalnut,
-  porcelain,
-  porcelainScheme,
+  neutral,
   type SchemeColors,
 } from './colors';
 
@@ -43,8 +42,7 @@ const variantColorResolver: VariantColorsResolver = (input) => {
       return {
         background: 'transparent',
         hover: 'var(--mapletip-color-hover)',
-        color:
-          'light-dark(var(--mapletip-color-cta), var(--mapletip-color-cta-fg))',
+        color: 'var(--mapletip-color-cta-fg)',
         border: '1px solid var(--mapletip-color-cta-border)',
       };
     }
@@ -53,8 +51,7 @@ const variantColorResolver: VariantColorsResolver = (input) => {
       return {
         background: 'var(--mapletip-color-selection)',
         hover: 'var(--mapletip-color-soft)',
-        color:
-          'light-dark(var(--mapletip-color-cta), var(--mapletip-color-cta-fg))',
+        color: 'var(--mapletip-color-cta-fg)',
         border: '1px solid transparent',
       };
     }
@@ -63,8 +60,7 @@ const variantColorResolver: VariantColorsResolver = (input) => {
       return {
         background: 'transparent',
         hover: 'var(--mapletip-color-hover)',
-        color:
-          'light-dark(var(--mapletip-color-cta), var(--mapletip-color-cta-fg))',
+        color: 'var(--mapletip-color-cta-fg)',
         border: '1px solid transparent',
       };
     }
@@ -108,7 +104,7 @@ const variantColorResolver: VariantColorsResolver = (input) => {
   if (isPrimaryFilled) {
     return {
       ...resolved,
-      color: `light-dark(${porcelainScheme.onBrand}, ${mapleTwilightScheme.onBrand})`,
+      color: mapleTwilightScheme.onBrand,
     };
   }
 
@@ -125,12 +121,12 @@ const variantColorResolver: VariantColorsResolver = (input) => {
  */
 export const theme: MantineThemeOverride = createTheme({
   primaryColor: 'maple',
-  primaryShade: { light: 5, dark: 4 },
+  primaryShade: 4,
   colors: {
     maple: mapleTwilightBrand,
     walnut: mapleTwilightWalnut,
     dark: mapleTwilightDark,
-    gray: porcelain,
+    gray: neutral,
   },
   white: '#FFFFFF',
   black: '#000000',
@@ -211,7 +207,7 @@ export const theme: MantineThemeOverride = createTheme({
     // Checkboxes use onBrand tick color for contrast on orange fill
     Checkbox: {
       defaultProps: {
-        iconColor: `light-dark(${porcelainScheme.onBrand}, ${mapleTwilightScheme.onBrand})`,
+        iconColor: mapleTwilightScheme.onBrand,
         radius: 'xs',
       },
     },
@@ -310,14 +306,14 @@ function schemeVariables(scheme: SchemeColors): Record<string, string> {
 }
 
 /**
- * Resolves scheme-specific CSS variables derived from canonical tokens.
+ * Resolves the Maple Twilight CSS variables. MapleTip is dark-only, so the
+ * variables are supplied for the dark scheme and hosts force the dark scheme.
  */
 export const cssVariablesResolver: CSSVariablesResolver = () => ({
   variables: {},
-  light: {
-    ...schemeVariables(porcelainScheme),
-    '--mantine-color-body': porcelainScheme.canvas,
-  },
+  // Mantine's resolver shape requires a light key. MapleTip intentionally
+  // supplies no light-scheme variables because its runtime is dark-only.
+  light: {},
   dark: {
     ...schemeVariables(mapleTwilightScheme),
     '--mantine-color-body': mapleTwilightScheme.canvas,

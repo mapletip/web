@@ -9,7 +9,7 @@ import { ComparisonTable } from '@/components/Table/ComparisonTable';
 import { demoRecords, makeDemoColumns } from '@/fixtures/records';
 
 beforeEach(async () => {
-  document.documentElement.setAttribute('data-mantine-color-scheme', 'light');
+  document.documentElement.setAttribute('data-mantine-color-scheme', 'dark');
   await page.viewport(1024, 768);
 });
 
@@ -23,7 +23,11 @@ async function mount({
   const columns = makeDemoColumns();
   const rows = demoRecords.slice(0, 12);
   await render(
-    <MantineProvider theme={theme} cssVariablesResolver={cssVariablesResolver}>
+    <MantineProvider
+      theme={theme}
+      cssVariablesResolver={cssVariablesResolver}
+      forceColorScheme="dark"
+    >
       <ComparisonTable
         ariaLabel="Sample comparison"
         records={rows}

@@ -14,7 +14,7 @@ import {
 } from '@/fixtures/records';
 
 beforeEach(async () => {
-  document.documentElement.setAttribute('data-mantine-color-scheme', 'light');
+  document.documentElement.setAttribute('data-mantine-color-scheme', 'dark');
   await page.viewport(1024, 768);
 });
 

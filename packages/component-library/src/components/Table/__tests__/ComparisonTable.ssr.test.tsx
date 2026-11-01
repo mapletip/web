@@ -12,7 +12,7 @@ describe('ComparisonTable server rendering (Mantine DataTable)', () => {
     const records = demoRecords.slice(0, 100);
     const columns = makeDemoColumns();
     const html = renderToString(
-      <MantineProvider theme={theme} forceColorScheme="light">
+      <MantineProvider theme={theme} forceColorScheme="dark">
         <ComparisonTable
           ariaLabel="Server records"
           records={records}

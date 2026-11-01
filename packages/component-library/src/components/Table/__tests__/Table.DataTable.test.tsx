@@ -43,7 +43,7 @@ const columns: readonly TableColumn<DetailRecord>[] = [
 
 beforeEach(async () => {
   localStorage.clear();
-  document.documentElement.setAttribute('data-mantine-color-scheme', 'light');
+  document.documentElement.setAttribute('data-mantine-color-scheme', 'dark');
   await page.viewport(1024, 768);
 });
 
@@ -80,6 +80,7 @@ describe('Table DataTable mechanics', () => {
       <MantineProvider
         theme={theme}
         cssVariablesResolver={cssVariablesResolver}
+        forceColorScheme="dark"
       >
         <Table<DetailRecord>
           ariaLabel="Scrollable records"
@@ -114,6 +115,7 @@ describe('Table DataTable mechanics', () => {
       <MantineProvider
         theme={theme}
         cssVariablesResolver={cssVariablesResolver}
+        forceColorScheme="dark"
       >
         <Table<DetailRecord>
           ariaLabel="Resizable records"
@@ -186,6 +188,7 @@ describe('Table DataTable mechanics', () => {
         <MantineProvider
           theme={theme}
           cssVariablesResolver={cssVariablesResolver}
+          forceColorScheme="dark"
         >
           <Table<DetailRecord>
             ariaLabel={`Derived key records ${mount}`}
@@ -227,6 +230,7 @@ describe('Table DataTable mechanics', () => {
       <MantineProvider
         theme={theme}
         cssVariablesResolver={cssVariablesResolver}
+        forceColorScheme="dark"
       >
         <Table<DetailRecord>
           ariaLabel="First derived records"
@@ -270,6 +274,7 @@ describe('Table DataTable mechanics', () => {
         <MantineProvider
           theme={theme}
           cssVariablesResolver={cssVariablesResolver}
+          forceColorScheme="dark"
         >
           <Table<DetailRecord>
             ariaLabel="Scoped persistence, poisoned storage"
@@ -305,6 +310,7 @@ describe('Table DataTable mechanics', () => {
         <MantineProvider
           theme={theme}
           cssVariablesResolver={cssVariablesResolver}
+          forceColorScheme="dark"
         >
           <Table<DetailRecord>
             ariaLabel="Invalid key"
@@ -324,6 +330,7 @@ describe('Table DataTable mechanics', () => {
       <MantineProvider
         theme={theme}
         cssVariablesResolver={cssVariablesResolver}
+        forceColorScheme="dark"
       >
         <ControlledExpandableTable />
       </MantineProvider>,
@@ -367,6 +374,7 @@ describe('Table DataTable mechanics', () => {
       <MantineProvider
         theme={theme}
         cssVariablesResolver={cssVariablesResolver}
+        forceColorScheme="dark"
       >
         <Table<DetailRecord>
           ariaLabel="First records"
@@ -435,6 +443,7 @@ describe('Table DataTable mechanics', () => {
       <MantineProvider
         theme={theme}
         cssVariablesResolver={cssVariablesResolver}
+        forceColorScheme="dark"
       >
         <ControlledExpandableTable />
       </MantineProvider>,
@@ -470,6 +479,7 @@ describe('Table DataTable mechanics', () => {
       <MantineProvider
         theme={theme}
         cssVariablesResolver={cssVariablesResolver}
+        forceColorScheme="dark"
       >
         <ControlledExpandableTable />
       </MantineProvider>,

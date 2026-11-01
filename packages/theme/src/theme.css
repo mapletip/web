@@ -72,23 +72,6 @@ a:not([class]) {
 /*
  * DataTable's documented CSS variables for borders, selection, and row hover.
  */
-[data-mantine-color-scheme='light'] .mantine-datatable {
-  --mantine-datatable-background-color-light: var(--mapletip-color-panel);
-  --mantine-datatable-border-color-light: var(--mapletip-color-border-subtle);
-  --mantine-datatable-row-border-color-light: var(
-    --mapletip-color-border-subtle
-  );
-  --mantine-datatable-selection-background-color-light: var(
-    --mapletip-color-selection
-  );
-  --mantine-datatable-row-hover-background-color-light: var(
-    --mapletip-color-hover
-  );
-  --mantine-datatable-highlight-on-hover-color-light: var(
-    --mapletip-color-hover
-  );
-}
-
 [data-mantine-color-scheme='dark'] .mantine-datatable {
   --mantine-datatable-background-color-dark: var(--mapletip-color-panel);
   --mantine-datatable-border-color-dark: var(--mapletip-color-border-subtle);

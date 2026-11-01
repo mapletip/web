@@ -11,7 +11,7 @@ import {
 } from '@/components/FacetedBrowser/FilterDrawer/FilterDrawer';
 
 beforeEach(async () => {
-  document.documentElement.setAttribute('data-mantine-color-scheme', 'light');
+  document.documentElement.setAttribute('data-mantine-color-scheme', 'dark');
   await page.viewport(375, 640);
 });
 
