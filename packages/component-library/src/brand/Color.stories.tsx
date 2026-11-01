@@ -1,13 +1,4 @@
-import {
-  ColorSwatch,
-  Group,
-  Paper,
-  SimpleGrid,
-  Stack,
-  Table,
-  Text,
-  Title,
-} from '@mantine/core';
+import { Stack, Table, Text, Title } from '@mantine/core';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 
 import { colorGroups, contrastPairs, contrastRatio } from './color-foundation';
@@ -27,31 +18,33 @@ export const SemanticRoles: Story = {
       {colorGroups.map((group) => (
         <Stack key={group.title} gap="sm">
           <Title order={2}>{group.title}</Title>
-          <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }}>
-            {group.roles.map(([label, token, color]) => (
-              <Paper
-                key={token}
-                p="sm"
-                withBorder
-                style={{
-                  backgroundColor: 'var(--mapletip-color-panel)',
-                  borderColor: 'var(--mapletip-color-border-subtle)',
-                }}
-              >
-                <Group gap="sm" wrap="nowrap">
-                  <ColorSwatch color={color} size={36} aria-hidden="true" />
-                  <Stack gap={2}>
-                    <Text size="sm" fw={600}>
-                      {label}
-                    </Text>
-                    <Text size="xs" c="dimmed">
+          <Table
+            aria-label={`${group.title} color tokens`}
+            withTableBorder
+            withColumnBorders
+            style={{ backgroundColor: 'var(--mapletip-color-panel)' }}
+          >
+            <Table.Thead>
+              <Table.Tr>
+                <Table.Th scope="col">Role</Table.Th>
+                <Table.Th scope="col">Theme token</Table.Th>
+                <Table.Th scope="col">Value</Table.Th>
+              </Table.Tr>
+            </Table.Thead>
+            <Table.Tbody>
+              {group.roles.map(([label, token, color]) => (
+                <Table.Tr key={token}>
+                  <Table.Td>{label}</Table.Td>
+                  <Table.Td>
+                    <Text size="sm" style={{ overflowWrap: 'anywhere' }}>
                       {token}
                     </Text>
-                  </Stack>
-                </Group>
-              </Paper>
-            ))}
-          </SimpleGrid>
+                  </Table.Td>
+                  <Table.Td>{color}</Table.Td>
+                </Table.Tr>
+              ))}
+            </Table.Tbody>
+          </Table>
         </Stack>
       ))}
 
