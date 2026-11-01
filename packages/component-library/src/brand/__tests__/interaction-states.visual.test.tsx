@@ -39,7 +39,7 @@ const visualCases: readonly VisualCase[] = [
       await userEvent.hover(walnutAction);
     },
     afterScreenshot: async () => {
-      await commands.movePointer(window.innerWidth - 1, window.innerHeight - 1);
+      await commands.movePointer(-1, -1);
     },
   },
   {
