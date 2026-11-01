@@ -1,6 +1,6 @@
 import { composeStories } from '@storybook/react-vite';
 import { describe, test } from 'vitest';
-import { page, userEvent } from 'vitest/browser';
+import { commands, page, userEvent } from 'vitest/browser';
 
 import * as stories from '@/brand/InteractionStates.stories';
 import {
@@ -39,7 +39,7 @@ const visualCases: readonly VisualCase[] = [
       await userEvent.hover(walnutAction);
     },
     afterScreenshot: async () => {
-      await walnutAction.unhover();
+      await commands.movePointer(window.innerWidth - 1, window.innerHeight - 1);
     },
   },
   {
