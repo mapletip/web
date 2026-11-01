@@ -26,21 +26,38 @@ export const SemanticRoles: Story = {
           >
             <Table.Thead>
               <Table.Tr>
-                <Table.Th scope="col">Role</Table.Th>
-                <Table.Th scope="col">Theme token</Table.Th>
+                <Table.Th scope="col" style={{ width: 32 }}>
+                  Color
+                </Table.Th>
+                <Table.Th scope="col">Role / theme token</Table.Th>
                 <Table.Th scope="col">Value</Table.Th>
               </Table.Tr>
             </Table.Thead>
             <Table.Tbody>
               {group.roles.map(([label, token, color]) => (
                 <Table.Tr key={token}>
-                  <Table.Td>{label}</Table.Td>
-                  <Table.Td>
-                    <Text size="sm" style={{ overflowWrap: 'anywhere' }}>
-                      {token}
-                    </Text>
-                  </Table.Td>
-                  <Table.Td>{color}</Table.Td>
+                  <Table.Td
+                    aria-label={`${label} color sample`}
+                    title={color}
+                    style={{
+                      width: 32,
+                      padding: 0,
+                      backgroundColor: color,
+                    }}
+                  />
+                  <Table.Th scope="row">
+                    <Stack gap={0}>
+                      <Text size="sm">{label}</Text>
+                      <Text
+                        size="xs"
+                        c="dimmed"
+                        style={{ overflowWrap: 'anywhere' }}
+                      >
+                        {token}
+                      </Text>
+                    </Stack>
+                  </Table.Th>
+                  <Table.Td style={{ whiteSpace: 'nowrap' }}>{color}</Table.Td>
                 </Table.Tr>
               ))}
             </Table.Tbody>
