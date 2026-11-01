@@ -6,10 +6,7 @@ const config: StorybookConfig = {
     '../src/components/**/__stories__/**/*.stories.@(ts|tsx)',
     '../src/brand/**/*.stories.@(ts|tsx)',
   ],
-  addons: [
-    '@storybook/addon-a11y',
-    '@storybook/addon-vitest',
-  ],
+  addons: ['@storybook/addon-a11y', '@storybook/addon-vitest'],
   framework: {
     name: '@storybook/react-vite',
     options: {},
