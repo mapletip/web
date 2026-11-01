@@ -1,4 +1,5 @@
 import {
+  Box,
   Button,
   Group,
   Paper,
@@ -51,6 +52,9 @@ export const FoundationScale: Story = {
         >
           <Table.Thead>
             <Table.Tr>
+              <Table.Th scope="col" style={{ width: 64 }}>
+                Preview
+              </Table.Th>
               <Table.Th scope="col">Token</Table.Th>
               <Table.Th scope="col">Value</Table.Th>
             </Table.Tr>
@@ -58,6 +62,25 @@ export const FoundationScale: Story = {
           <Table.Tbody>
             {spacingScale.map(([token, value]) => (
               <Table.Tr key={token}>
+                <Table.Td
+                  style={{
+                    width: 64,
+                    textAlign: 'center',
+                  }}
+                >
+                  <Group gap={value} wrap="nowrap" aria-hidden="true">
+                    <Box
+                      w={6}
+                      h={16}
+                      style={{ backgroundColor: 'var(--mapletip-color-brand)' }}
+                    />
+                    <Box
+                      w={6}
+                      h={16}
+                      style={{ backgroundColor: 'var(--mapletip-color-brand)' }}
+                    />
+                  </Group>
+                </Table.Td>
                 <Table.Td>{token}</Table.Td>
                 <Table.Td>{value}</Table.Td>
               </Table.Tr>
@@ -76,6 +99,9 @@ export const FoundationScale: Story = {
         >
           <Table.Thead>
             <Table.Tr>
+              <Table.Th scope="col" style={{ width: 56 }}>
+                Preview
+              </Table.Th>
               <Table.Th scope="col">Token</Table.Th>
               <Table.Th scope="col">Value</Table.Th>
               <Table.Th scope="col">Use</Table.Th>
@@ -84,6 +110,24 @@ export const FoundationScale: Story = {
           <Table.Tbody>
             {radiusScale.map(([token, value]) => (
               <Table.Tr key={token}>
+                <Table.Td
+                  style={{
+                    width: 56,
+                    textAlign: 'center',
+                  }}
+                >
+                  <Box
+                    aria-hidden="true"
+                    w={36}
+                    h={24}
+                    mx="auto"
+                    style={{
+                      border: '1px solid var(--mapletip-color-border-strong)',
+                      borderRadius: value,
+                      backgroundColor: 'var(--mapletip-color-raised)',
+                    }}
+                  />
+                </Table.Td>
                 <Table.Td>{token}</Table.Td>
                 <Table.Td>{value}</Table.Td>
                 <Table.Td>{radiusUsage(token, value)}</Table.Td>
