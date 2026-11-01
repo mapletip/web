@@ -23,6 +23,8 @@ export interface VisualCase {
   readonly element?: Locator;
   /** Optional action to perform before capturing screenshot (e.g. keyboard navigation). */
   readonly beforeScreenshot?: () => Promise<void>;
+  /** Optional cleanup after capture (e.g. move the pointer out of a hovered control). */
+  readonly afterScreenshot?: () => Promise<void>;
 }
 
 /**
@@ -73,5 +75,9 @@ export async function expectApprovedScreenshot(
     await visualCase.beforeScreenshot();
   }
   const target = visualCase.element ?? page;
-  await expect(target).toMatchScreenshot(visualCase.name, SCREENSHOT_OPTIONS);
+  try {
+    await expect(target).toMatchScreenshot(visualCase.name, SCREENSHOT_OPTIONS);
+  } finally {
+    await visualCase.afterScreenshot?.();
+  }
 }
