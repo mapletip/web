@@ -8,14 +8,14 @@ import type {
 } from '@mapletip/component-library';
 import { createFileRoute, Link } from '@tanstack/react-router';
 
-import { DemoRecordCard } from '@/demo/DemoRecordCard';
+import { DemoRecordCard } from '#/demo/DemoRecordCard';
 import {
   demoCategories,
   demoRarities,
   demoRecords,
   demoRegions,
   type DemoRecord,
-} from '@/demo/records';
+} from '#/demo/records';
 
 import classes from './faceted-browser.module.css';
 
