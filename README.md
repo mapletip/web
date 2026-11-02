@@ -1,4 +1,4 @@
-# web
+# @mapletip/web
 
 pnpm + [Turborepo](https://turborepo.dev/) monorepo.
 
