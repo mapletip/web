@@ -3,13 +3,13 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { useMemo, useState } from 'react';
 import { expect, screen, userEvent, waitFor, within } from 'storybook/test';
 
-import { FacetedBrowserRecordCard } from '@/components/FacetedBrowser/__stories__/FacetedBrowserRecordCard';
-import { FacetedBrowser } from '@/components/FacetedBrowser/FacetedBrowser';
-import type { FacetDefinition } from '@/components/FacetedBrowser/FacetedBrowser';
+import { FacetedBrowser } from '@/components/FacetedBrowser';
 import type {
+  FacetDefinition,
   BrowseState,
   QueryFieldDefinition,
-} from '@/components/FacetedBrowser/hooks/useFacetedBrowser';
+} from '@/components/FacetedBrowser';
+import { FacetedBrowserRecordCard } from '@/components/FacetedBrowser/__stories__/FacetedBrowserRecordCard';
 import {
   demoGroupFacetOptions,
   demoRegionFacetOptions,

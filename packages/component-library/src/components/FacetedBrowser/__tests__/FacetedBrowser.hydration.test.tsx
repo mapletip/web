@@ -7,9 +7,9 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { page } from 'vitest/browser';
 
 import '@/styles.css';
+import { FacetedBrowser } from '@/components/FacetedBrowser';
 import { NeutralBrowserMarkup } from '@/components/FacetedBrowser/__tests__/fixtures/NeutralBrowserMarkup';
-import { FacetedBrowser } from '@/components/FacetedBrowser/FacetedBrowser';
-import { ComparisonTable } from '@/components/Table/ComparisonTable';
+import { ComparisonTable } from '@/components/Table';
 import { demoRecords, makeDemoColumns } from '@/fixtures/records';
 
 let cleanup: (() => void) | undefined;

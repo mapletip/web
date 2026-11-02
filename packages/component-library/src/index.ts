@@ -1,27 +1,23 @@
-export { Table } from '@/components/Table/Table';
+export { ComparisonTable, Table } from '@/components/Table';
 export type {
+  ComparisonTableProps,
   SortIntent,
   TableColumn,
   TableName,
   TableProps,
-} from '@/components/Table/Table';
-export { ComparisonTable } from '@/components/Table/ComparisonTable';
-export type { ComparisonTableProps } from '@/components/Table/ComparisonTable';
-export { FacetedBrowser } from '@/components/FacetedBrowser/FacetedBrowser';
-export type {
-  FacetControlContext,
-  FacetDefinition,
-  FacetOption,
-  FacetedBrowserProps,
-} from '@/components/FacetedBrowser/FacetedBrowser';
-export { useFacetedBrowser } from '@/components/FacetedBrowser/hooks/useFacetedBrowser';
+} from '@/components/Table';
+export { FacetedBrowser, useFacetedBrowser } from '@/components/FacetedBrowser';
 export type {
   BrowseState,
+  FacetControlContext,
+  FacetDefinition,
   FacetFilterValue,
+  FacetOption,
+  FacetedBrowserProps,
   NumericRangeFilter,
   QueryField,
   QueryFieldAccessor,
   QueryFieldDefinition,
   UseFacetedBrowserOptions,
   UseFacetedBrowserReturn,
-} from '@/components/FacetedBrowser/hooks/useFacetedBrowser';
+} from '@/components/FacetedBrowser';

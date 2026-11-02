@@ -1,6 +1,6 @@
 import type { ColumnFiltersState } from '@tanstack/react-table';
 
-import type { SortIntent } from '@/components/Table/types';
+import type { SortIntent } from '@/components/Table';
 
 import { isNumericRangeFilter, type FacetFilterValue } from './filterTypes';
 

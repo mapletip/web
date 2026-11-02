@@ -5,8 +5,8 @@ import {
   useFacetedBrowser,
   type UseFacetedBrowserOptions,
   type UseFacetedBrowserReturn,
-} from '@/components/FacetedBrowser/hooks/useFacetedBrowser';
-import type { TableColumn } from '@/components/Table/types';
+} from '@/components/FacetedBrowser';
+import type { TableColumn } from '@/components/Table';
 
 interface TestItem extends Record<string, unknown> {
   readonly id: string;

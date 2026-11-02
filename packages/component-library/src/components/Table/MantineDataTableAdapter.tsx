@@ -15,12 +15,12 @@ import {
   type ReactNode,
 } from 'react';
 
+import type { TableColumn, TableProps } from '@/components/Table';
 import classes from '@/components/Table/table.module.css';
 import {
   deriveTableStorageKey,
   resolveTableStorageKey,
 } from '@/components/Table/tableStorageKey';
-import type { TableColumn, TableProps } from '@/components/Table/types';
 
 function columnWrapProps<TRow extends Record<string, unknown>>(
   column: TableColumn<TRow>,

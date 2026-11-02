@@ -8,7 +8,7 @@ import {
   Layout,
   type LayoutProps,
 } from '@/components/FacetedBrowser/Layout/Layout';
-import { ComparisonTable } from '@/components/Table/ComparisonTable';
+import { ComparisonTable } from '@/components/Table';
 import { demoRecords, makeDemoColumns } from '@/fixtures/records';
 
 const required: LayoutProps = {

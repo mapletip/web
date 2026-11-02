@@ -11,7 +11,7 @@ import {
 import { Gear } from '@phosphor-icons/react';
 import { useMemo, type ReactElement } from 'react';
 
-import type { TableColumn } from '@/components/Table/types';
+import type { TableColumn } from '@/components/Table';
 
 function sameFields(
   left: readonly string[],

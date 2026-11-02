@@ -3,8 +3,8 @@ import { describe, expect, it, vi } from 'vitest';
 import { page, userEvent } from 'vitest/browser';
 import { render } from 'vitest-browser-react';
 
+import type { FacetFilterValue } from '@/components/FacetedBrowser';
 import { isInvalidNumericRange } from '@/components/FacetedBrowser/hooks/filterTypes';
-import type { FacetFilterValue } from '@/components/FacetedBrowser/hooks/useFacetedBrowser';
 import { useFacetedBrowserDrawer } from '@/components/FacetedBrowser/hooks/useFacetedBrowserDrawer';
 
 const committedState = {

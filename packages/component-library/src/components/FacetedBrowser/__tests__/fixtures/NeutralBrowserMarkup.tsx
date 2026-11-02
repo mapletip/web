@@ -1,6 +1,6 @@
 import type { ReactElement } from 'react';
 
-import { FacetedBrowser } from '@/components/FacetedBrowser/FacetedBrowser';
+import { FacetedBrowser } from '@/components/FacetedBrowser';
 import {
   demoRecords,
   demoRowsPerPage,

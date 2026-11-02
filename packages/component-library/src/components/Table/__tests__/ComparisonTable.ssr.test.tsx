@@ -4,7 +4,7 @@ import { gzipSync } from 'node:zlib';
 import { renderToString } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 
-import { ComparisonTable } from '@/components/Table/ComparisonTable';
+import { ComparisonTable } from '@/components/Table';
 import { demoRecords, makeDemoColumns } from '@/fixtures/records';
 
 describe('ComparisonTable server rendering (Mantine DataTable)', () => {

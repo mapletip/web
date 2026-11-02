@@ -5,7 +5,7 @@ import { commands, page, server, userEvent } from 'vitest/browser';
 import { render } from 'vitest-browser-react';
 
 import '../../../styles.css';
-import { ComparisonTable } from '@/components/Table/ComparisonTable';
+import { ComparisonTable } from '@/components/Table';
 import { demoRecords, makeDemoColumns } from '@/fixtures/records';
 
 beforeEach(async () => {

@@ -1,7 +1,7 @@
 import { Stack, Table, Text, Title } from '@mantine/core';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 
-import { colorGroups } from '@/components/Brand/Color/colorRoles';
+import { colorGroups } from '@/components/Brand/Color';
 
 const meta = {
   title: 'Brand/Color',

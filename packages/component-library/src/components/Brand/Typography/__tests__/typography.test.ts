@@ -1,7 +1,7 @@
 import { theme } from '@mapletip/theme';
 import { describe, expect, it } from 'vitest';
 
-import { numericTextStyle } from '@/components/Brand/Typography/typography';
+import { numericTextStyle } from '@/components/Brand/Typography';
 
 describe('typography', () => {
   it('keeps the semantic theme scale and tabular numeric specimen', () => {

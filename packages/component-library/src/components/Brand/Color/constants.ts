@@ -1,8 +1,6 @@
 import { mapleTwilightScheme as scheme } from '@mapletip/theme/colors';
 
-type ColorRole = [label: string, token: string, color: string];
-
-type ColorGroup = { title: string; roles: ColorRole[] };
+import type { ColorGroup } from '@/components/Brand/Color/types';
 
 export const colorGroups: ColorGroup[] = [
   {

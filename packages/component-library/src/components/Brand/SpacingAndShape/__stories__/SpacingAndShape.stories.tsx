@@ -16,7 +16,7 @@ import {
   radiusScale,
   spacingScale,
   toPixels,
-} from '@/components/Brand/SpacingAndShape/spacingAndShape';
+} from '@/components/Brand/SpacingAndShape';
 
 function radiusUsage(token: string, value: string): string {
   if (token === 'sm') return `Controls (${toPixels(value)})`;

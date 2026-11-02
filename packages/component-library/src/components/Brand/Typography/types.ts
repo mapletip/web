@@ -1,6 +1,5 @@
-import { theme } from '@mapletip/theme';
-
-type TypographyTheme = {
+/** The theme values the type scale documentation reads from the live theme. */
+export type TypographyTheme = {
   fontSizes: Record<'xs' | 'sm' | 'md', string>;
   lineHeights: Record<'xs' | 'sm' | 'md', string>;
   headings: {
@@ -10,9 +9,3 @@ type TypographyTheme = {
     >;
   };
 };
-
-export const typographyTheme = theme as TypographyTheme;
-
-export const numericTextStyle = {
-  fontVariantNumeric: 'tabular-nums',
-} as const;

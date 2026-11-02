@@ -4,7 +4,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import {
   numericTextStyle,
   typographyTheme,
-} from '@/components/Brand/Typography/typography';
+} from '@/components/Brand/Typography';
 
 const meta = {
   title: 'Brand/Typography',

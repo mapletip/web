@@ -4,8 +4,8 @@ import { gzipSync } from 'node:zlib';
 import { renderToString } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 
+import { FacetedBrowser } from '@/components/FacetedBrowser';
 import { NeutralBrowserMarkup } from '@/components/FacetedBrowser/__tests__/fixtures/NeutralBrowserMarkup';
-import { FacetedBrowser } from '@/components/FacetedBrowser/FacetedBrowser';
 import { demoRecords } from '@/fixtures/records';
 
 describe('FacetedBrowser server rendering', () => {

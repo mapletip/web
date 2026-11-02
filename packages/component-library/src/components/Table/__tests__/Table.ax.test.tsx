@@ -5,7 +5,7 @@ import { page } from 'vitest/browser';
 import { render } from 'vitest-browser-react';
 
 import '../../../styles.css';
-import { Table } from '@/components/Table/Table';
+import { Table } from '@/components/Table';
 import { demoRecords, makeDemoColumns } from '@/fixtures/records';
 
 describe('Table accessibility exposure', () => {

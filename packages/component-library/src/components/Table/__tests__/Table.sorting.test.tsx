@@ -5,9 +5,8 @@ import { page, userEvent } from 'vitest/browser';
 import { render } from 'vitest-browser-react';
 
 import '../../../styles.css';
-import { Table } from '@/components/Table/Table';
-import type { TableProps } from '@/components/Table/Table';
-import type { TableColumn } from '@/components/Table/types';
+import { Table } from '@/components/Table';
+import type { TableColumn, TableProps } from '@/components/Table';
 
 interface TestRecord extends Record<string, unknown> {
   id: string;

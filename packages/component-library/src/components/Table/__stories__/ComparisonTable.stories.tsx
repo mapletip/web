@@ -2,8 +2,8 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { useMemo, useState } from 'react';
 import { expect, userEvent, within } from 'storybook/test';
 
-import { ComparisonTable as ComparisonTableComponent } from '@/components/Table/ComparisonTable';
-import type { SortIntent } from '@/components/Table/types';
+import { ComparisonTable as ComparisonTableComponent } from '@/components/Table';
+import type { SortIntent } from '@/components/Table';
 import { demoRecords, makeDemoColumns } from '@/fixtures/records';
 
 function ComparisonTableExample() {

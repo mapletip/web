@@ -1,14 +1,7 @@
 import type { ReactElement } from 'react';
 
+import type { TableProps } from '@/components/Table';
 import { MantineDataTableAdapter } from '@/components/Table/MantineDataTableAdapter';
-import type { TableProps } from '@/components/Table/types';
-
-export type {
-  SortIntent,
-  TableColumn,
-  TableName,
-  TableProps,
-} from '@/components/Table/types';
 
 /**
  * Thin public composition over Mantine DataTable 9.x. TanStack (`useFacetedBrowser`)

@@ -34,18 +34,12 @@ import {
   PageSizeSelect,
   Toolbar,
 } from '@/components/FacetedBrowser/Toolbar/Toolbar';
-import { ComparisonTable } from '@/components/Table/ComparisonTable';
+import { ComparisonTable } from '@/components/Table';
+import type { TableColumn } from '@/components/Table';
 import {
   deriveTableStorageKey,
   resolveTableStorageKey,
 } from '@/components/Table/tableStorageKey';
-import type { TableColumn } from '@/components/Table/types';
-
-export type {
-  FacetControlContext,
-  FacetDefinition,
-  FacetOption,
-} from '@/components/FacetedBrowser/FacetControls/types';
 
 interface CommonProps<TRecord extends Record<string, unknown>> {
   readonly title: ReactNode;

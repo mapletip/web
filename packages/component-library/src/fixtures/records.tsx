@@ -1,7 +1,7 @@
 import { VisuallyHidden } from '@mantine/core';
 import type { ReactElement } from 'react';
 
-import type { TableColumn } from '@/components/Table/types';
+import type { TableColumn } from '@/components/Table';
 import recordImageStress from '@/fixtures/record-image-stress.svg?url';
 
 export interface DemoRecord extends Record<string, unknown> {
