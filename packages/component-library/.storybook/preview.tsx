@@ -25,14 +25,9 @@ const preview: Preview = {
     backgrounds: { disable: true },
     layout: 'centered',
     options: {
-      storySort: {
-        order: [
-          'Brand',
-          ['Color', 'Interaction States', 'Spacing and Shape', 'Typography'],
-          'Components',
-          ['Alert', 'FacetedBrowser', 'Table'],
-        ],
-      },
+      // Plain alphabetical order; no hand-maintained order list to keep in
+      // sync as components are added, renamed or regrouped.
+      storySort: { method: 'alphabetical' },
     },
     viewport: {
       options: {
