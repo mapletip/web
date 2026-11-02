@@ -17,11 +17,7 @@ import {
   useState,
 } from 'react';
 
-import type {
-  SortIntent,
-  TableColumn,
-  TableProps,
-} from '@/components/Table/types';
+import type { SortIntent, TableColumn, TableProps } from '@/components/Table';
 
 import {
   EMPTY_FILTERS,

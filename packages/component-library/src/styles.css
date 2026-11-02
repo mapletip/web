@@ -1,2 +1,20 @@
-@import '@mantine/core/styles.css';
-@import 'mantine-datatable/styles.css';
+/*
+ * Component library stylesheet entry.
+ *
+ * Mantine's stylesheet is a single layered bundle: one cacheable, shared
+ * vendor asset. Splitting it per component would mean owning a list of the
+ * components in use, and Mantine's own ordering guarantees go with it.
+ *
+ * Table-only stylesheets live with the table (`components/Table/styles.ts`)
+ * so bundles that never render one do not load them.
+ *
+ * Mantine and DataTable ship cascade-layer variants, so declaring the layer
+ * order here is what keeps MapleTip's rules on top without `!important` or
+ * specificity workarounds: later layers win, and unlayered component modules
+ * win over every layer. Declaring it up front also means a chunk that loads
+ * later still lands in the right layer.
+ */
+@layer mantine, mantine-datatable, mapletip;
+
+@import '@mantine/core/styles.layer.css';
+@import '@mapletip/theme/theme.css';

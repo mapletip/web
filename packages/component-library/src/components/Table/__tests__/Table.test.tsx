@@ -1,20 +1,20 @@
 import { MantineProvider } from '@mantine/core';
+import { theme } from '@mapletip/theme';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { page, userEvent } from 'vitest/browser';
 import { render } from 'vitest-browser-react';
 
-import '../../../styles.css';
-import { Table } from '@/components/Table/Table';
-import type { TableColumn } from '@/components/Table/types';
+import '@/styles.css';
+import { Table } from '@/components/Table';
+import type { TableColumn } from '@/components/Table';
 import {
   demoRecords,
   makeDemoColumns,
   type DemoRecord,
 } from '@/fixtures/records';
-import { theme } from '@/theme';
 
 beforeEach(async () => {
-  document.documentElement.setAttribute('data-mantine-color-scheme', 'light');
+  document.documentElement.setAttribute('data-mantine-color-scheme', 'dark');
   await page.viewport(1024, 768);
 });
 
@@ -96,25 +96,6 @@ describe('Table (Mantine DataTable)', () => {
     header.focus();
     await userEvent.keyboard(' ');
     expect(onSortChange).not.toHaveBeenCalled();
-  });
-
-  it('visually marks the sorted column', async () => {
-    await render(
-      <MantineProvider theme={theme}>
-        <Table
-          ariaLabel="Sorted"
-          records={demoRecords.slice(0, 2)}
-          columns={makeDemoColumns()}
-          idAccessor="id"
-          sortStatus={{ field: 'group', direction: 'asc' }}
-          onSortChange={() => undefined}
-        />
-      </MantineProvider>,
-    );
-    const cells = [...document.querySelectorAll('tbody tr:first-child td')];
-    expect(
-      cells.filter((cell) => cell.className.includes('sortedCell')),
-    ).toHaveLength(1);
   });
 
   it('renders the default and a custom empty state without stale rows', async () => {

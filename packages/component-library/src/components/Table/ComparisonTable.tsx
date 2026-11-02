@@ -1,8 +1,8 @@
 import { useMemo, type ReactElement } from 'react';
 
+import type { TableColumn, TableProps } from '@/components/Table';
 import classes from '@/components/Table/comparison-table.module.css';
 import { Table } from '@/components/Table/Table';
-import type { TableColumn, TableProps } from '@/components/Table/types';
 
 export type ComparisonTableProps<TRow extends Record<string, unknown>> =
   TableProps<TRow> & {
@@ -11,9 +11,10 @@ export type ComparisonTableProps<TRow extends Record<string, unknown>> =
   };
 
 /**
- * Comparison presentation over `Table`: pinned identity and hover emphasis. By default,
- * the table grows to its records and the document scrolls; callers can set maxHeight to
- * opt into DataTable's bounded, locally sticky scroll region.
+ * Comparison presentation over `Table`: pinned identity, whole-column hover emphasis and
+ * DataTable's native row hover. By default, the table grows to its records and the
+ * document scrolls; callers can set maxHeight to opt into DataTable's bounded, locally
+ * sticky scroll region.
  */
 export function ComparisonTable<TRow extends Record<string, unknown>>({
   identityField,

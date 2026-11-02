@@ -102,7 +102,7 @@ export function FilterDrawer({
                 Reset
               </Button>
             </div>
-            <Button color="indigo.7" disabled={applyDisabled} onClick={onApply}>
+            <Button disabled={applyDisabled} onClick={onApply}>
               {applyLabel}
             </Button>
           </div>

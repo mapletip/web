@@ -29,6 +29,7 @@ type EmulateMediaOptions = Parameters<Page['emulateMedia']>[0];
 declare module 'vitest/browser' {
   interface BrowserCommands {
     emulateMedia(options: EmulateMediaOptions): Promise<void>;
+    movePointer(x: number, y: number): Promise<void>;
   }
 }
 
@@ -37,6 +38,14 @@ const emulateMedia: BrowserCommand<[options: EmulateMediaOptions]> = async (
   options,
 ) => {
   await (context as unknown as { page: Page }).page.emulateMedia(options);
+};
+
+const movePointer: BrowserCommand<[x: number, y: number]> = async (
+  context,
+  x,
+  y,
+) => {
+  await (context as unknown as { page: Page }).page.mouse.move(x, y);
 };
 
 export default mergeConfig(
@@ -65,6 +74,7 @@ export default mergeConfig(
           // Playwright media emulation (forced colors, reduced motion) is not part of
           // vitest's `page` API; expose just the one Playwright call tests need.
           emulateMedia,
+          movePointer,
         },
       },
       projects: [

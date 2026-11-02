@@ -1,6 +1,6 @@
 import { composeStories } from '@storybook/react-vite';
 import { describe, expect, test } from 'vitest';
-import { page } from 'vitest/browser';
+import { page, userEvent } from 'vitest/browser';
 
 import * as stories from '@/components/FacetedBrowser/__stories__/FacetedBrowser.stories';
 import {
@@ -9,12 +9,8 @@ import {
 } from '@/test-support/visual';
 import type { VisualCase } from '@/test-support/visual';
 
-/** Same stories, composed again with the dark scheme's preview globals. */
-const light = composeStories(stories);
-// Per-call annotations merge with the preview registered in the setup file.
-const dark = composeStories(stories, {
-  initialGlobals: { colorScheme: 'dark' },
-});
+/** The preview forces MapleTip's single shipped dark scheme. */
+const dark = composeStories(stories);
 
 /** Desktop comparison table; the browser only renders it at 992px and wider. */
 const desktopTable = page.getByRole('table', { name: 'records comparison' });
@@ -36,15 +32,6 @@ const hiddenCards = page.getByRole('list', {
 
 const visualCases: readonly VisualCase[] = [
   {
-    name: 'faceted-browser-desktop-light',
-    story: light.Default,
-    storyId: 'components-facetedbrowser--default',
-    width: 1366,
-    height: 768,
-    visible: [desktopTable],
-    hidden: [hiddenCards],
-  },
-  {
     name: 'faceted-browser-desktop-dark',
     story: dark.Default,
     storyId: 'components-facetedbrowser--default',
@@ -54,13 +41,26 @@ const visualCases: readonly VisualCase[] = [
     hidden: [hiddenCards],
   },
   {
-    name: 'faceted-browser-mobile-cards-light',
-    story: light.MobileCards,
-    storyId: 'components-facetedbrowser--mobile-cards',
-    width: 375,
-    height: 812,
-    visible: [mobileCards],
-    hidden: [hiddenTable],
+    name: 'faceted-browser-active-dark',
+    story: dark.Active,
+    storyId: 'components-facetedbrowser--active',
+    width: 1366,
+    height: 768,
+    visible: [desktopTable],
+    hidden: [hiddenCards],
+  },
+  {
+    name: 'faceted-browser-focus-dark',
+    story: dark.Default,
+    storyId: 'components-facetedbrowser--default',
+    width: 1366,
+    height: 768,
+    visible: [desktopTable],
+    hidden: [hiddenCards],
+    beforeScreenshot: async () => {
+      await userEvent.tab();
+      await userEvent.tab();
+    },
   },
   {
     name: 'faceted-browser-mobile-cards-dark',
@@ -72,12 +72,13 @@ const visualCases: readonly VisualCase[] = [
     hidden: [hiddenTable],
   },
   {
-    name: 'faceted-browser-filter-drawer-light',
-    story: light.DrawerOpen,
-    storyId: 'components-facetedbrowser--drawer-open',
-    width: 500,
-    height: 800,
-    visible: [filterDrawer],
+    name: 'faceted-browser-mobile-cards-320-dark',
+    story: dark.MobileCards,
+    storyId: 'components-facetedbrowser--mobile-cards',
+    width: 320,
+    height: 640,
+    visible: [mobileCards],
+    hidden: [hiddenTable],
   },
   {
     name: 'faceted-browser-filter-drawer-dark',
@@ -88,22 +89,22 @@ const visualCases: readonly VisualCase[] = [
     visible: [filterDrawer],
   },
   {
-    name: 'faceted-browser-empty-light',
-    story: light.Empty,
+    name: 'faceted-browser-empty-dark',
+    story: dark.Empty,
     storyId: 'components-facetedbrowser--empty',
     width: 900,
     height: 768,
   },
   {
-    name: 'faceted-browser-loading-light',
-    story: light.Loading,
+    name: 'faceted-browser-loading-dark',
+    story: dark.Loading,
     storyId: 'components-facetedbrowser--loading',
     width: 1366,
     height: 768,
   },
   {
     name: 'faceted-browser-breakpoint-992',
-    story: light.Default,
+    story: dark.Default,
     storyId: 'components-facetedbrowser--default',
     width: 992,
     height: 768,
@@ -112,7 +113,7 @@ const visualCases: readonly VisualCase[] = [
   },
   {
     name: 'faceted-browser-breakpoint-991',
-    story: light.Default,
+    story: dark.Default,
     storyId: 'components-facetedbrowser--default',
     width: 991,
     height: 768,

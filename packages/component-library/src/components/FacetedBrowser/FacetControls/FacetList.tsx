@@ -1,3 +1,4 @@
+import { Divider } from '@mantine/core';
 import type { ReactElement } from 'react';
 
 import type { FacetFilterValue } from '@/components/FacetedBrowser/hooks/filterTypes';
@@ -25,16 +26,20 @@ export function FacetList<TRecord extends Record<string, unknown>>({
 }: FacetListProps<TRecord>): ReactElement {
   return (
     <>
-      {facets.map((facet) => (
-        <FacetControl
-          key={`${surface}-${facet.id}`}
-          facet={facet}
-          value={values[facet.field]}
-          counts={getCounts(facet.field)}
-          records={records}
-          surface={surface}
-          onChange={(value) => onChange(facet.field, value)}
-        />
+      {facets.map((facet, index) => (
+        <div key={`${surface}-${facet.id}`}>
+          {index > 0 ? (
+            <Divider my="sm" color="var(--mapletip-color-border-subtle)" />
+          ) : null}
+          <FacetControl
+            facet={facet}
+            value={values[facet.field]}
+            counts={getCounts(facet.field)}
+            records={records}
+            surface={surface}
+            onChange={(value) => onChange(facet.field, value)}
+          />
+        </div>
       ))}
     </>
   );

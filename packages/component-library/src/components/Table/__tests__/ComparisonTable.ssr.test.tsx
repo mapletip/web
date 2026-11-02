@@ -1,18 +1,18 @@
 import { MantineProvider } from '@mantine/core';
+import { theme } from '@mapletip/theme';
 import { gzipSync } from 'node:zlib';
 import { renderToString } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 
-import { ComparisonTable } from '@/components/Table/ComparisonTable';
+import { ComparisonTable } from '@/components/Table';
 import { demoRecords, makeDemoColumns } from '@/fixtures/records';
-import { theme } from '@/theme';
 
 describe('ComparisonTable server rendering (Mantine DataTable)', () => {
   it('renders every record, entity href and header of a 100-record page in order', () => {
     const records = demoRecords.slice(0, 100);
     const columns = makeDemoColumns();
     const html = renderToString(
-      <MantineProvider theme={theme} forceColorScheme="light">
+      <MantineProvider theme={theme} forceColorScheme="dark">
         <ComparisonTable
           ariaLabel="Server records"
           records={records}

@@ -1,17 +1,17 @@
 import { MantineProvider } from '@mantine/core';
+import { theme } from '@mapletip/theme';
 import { gzipSync } from 'node:zlib';
 import { renderToString } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 
+import { FacetedBrowser } from '@/components/FacetedBrowser';
 import { NeutralBrowserMarkup } from '@/components/FacetedBrowser/__tests__/fixtures/NeutralBrowserMarkup';
-import { FacetedBrowser } from '@/components/FacetedBrowser/FacetedBrowser';
 import { demoRecords } from '@/fixtures/records';
-import { theme } from '@/theme';
 
 describe('FacetedBrowser server rendering', () => {
   it('renders result links in both presentations and real pagination links without a DOM', () => {
     const html = renderToString(
-      <MantineProvider theme={theme} forceColorScheme="light">
+      <MantineProvider theme={theme} forceColorScheme="dark">
         <NeutralBrowserMarkup />
       </MantineProvider>,
     );
@@ -35,7 +35,7 @@ describe('FacetedBrowser server rendering', () => {
 
   it('renders an integrated card-only browser without dummy columns in Node', () => {
     const html = renderToString(
-      <MantineProvider theme={theme} forceColorScheme="light">
+      <MantineProvider theme={theme} forceColorScheme="dark">
         <FacetedBrowser
           title={<h1>Live Browser</h1>}
           records={demoRecords.slice(0, 10)}
@@ -62,7 +62,7 @@ describe('FacetedBrowser server rendering', () => {
   it('fails clearly when a typed facet uses an unregistered query field', () => {
     expect(() =>
       renderToString(
-        <MantineProvider theme={theme} forceColorScheme="light">
+        <MantineProvider theme={theme} forceColorScheme="dark">
           <FacetedBrowser
             title={<h1>Invalid browser</h1>}
             records={demoRecords.slice(0, 10)}

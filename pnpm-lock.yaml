@@ -313,6 +313,9 @@ importers:
       '@mantine/hooks':
         specifier: 'catalog:'
         version: 9.7.3(react@19.3.1)
+      '@mapletip/theme':
+        specifier: workspace:*
+        version: link:../theme
       '@phosphor-icons/react':
         specifier: 'catalog:'
         version: 2.1.10(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
@@ -453,6 +456,25 @@ importers:
       vite-plugin-externalize-deps:
         specifier: 'catalog:'
         version: 0.10.0(vite@8.3.5(@types/node@26.6.5)(esbuild@0.28.2)(sugarss@5.0.2(postcss@8.5.31)))
+      vitest:
+        specifier: 'catalog:'
+        version: 5.0.5(@types/node@26.6.5)(@vitest/browser-playwright@5.0.5)(@vitest/ui@5.0.5)(vite@8.3.5(@types/node@26.6.5)(esbuild@0.28.2)(sugarss@5.0.2(postcss@8.5.31)))
+
+  packages/theme:
+    dependencies:
+      '@mantine/core':
+        specifier: 'catalog:'
+        version: 9.7.3(@mantine/hooks@9.7.3(react@19.3.1))(@types/react@19.3.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
+    devDependencies:
+      '@mapletip/config':
+        specifier: workspace:*
+        version: link:../config
+      eslint:
+        specifier: 'catalog:'
+        version: 10.13.0(supports-color@7.2.0)
+      typescript:
+        specifier: 'catalog:'
+        version: 6.0.3
       vitest:
         specifier: 'catalog:'
         version: 5.0.5(@types/node@26.6.5)(@vitest/browser-playwright@5.0.5)(@vitest/ui@5.0.5)(vite@8.3.5(@types/node@26.6.5)(esbuild@0.28.2)(sugarss@5.0.2(postcss@8.5.31)))

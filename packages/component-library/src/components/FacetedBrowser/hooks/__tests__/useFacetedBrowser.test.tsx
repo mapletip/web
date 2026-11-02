@@ -1,19 +1,19 @@
 import { MantineProvider } from '@mantine/core';
+import { theme } from '@mapletip/theme';
 import { useEffect, useRef, useState } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 import { page, userEvent } from 'vitest/browser';
 import { render } from 'vitest-browser-react';
 
-import { normalizeFilters } from '@/components/FacetedBrowser/hooks/browseState';
-import { isInvalidNumericRange } from '@/components/FacetedBrowser/hooks/filterTypes';
 import {
   useFacetedBrowser,
   type BrowseState,
   type FacetFilterValue,
   type UseFacetedBrowserOptions,
-} from '@/components/FacetedBrowser/hooks/useFacetedBrowser';
-import type { TableColumn } from '@/components/Table/types';
-import { theme } from '@/theme';
+} from '@/components/FacetedBrowser';
+import { normalizeFilters } from '@/components/FacetedBrowser/hooks/browseState';
+import { isInvalidNumericRange } from '@/components/FacetedBrowser/hooks/filterTypes';
+import type { TableColumn } from '@/components/Table';
 
 interface TestItem extends Record<string, unknown> {
   readonly id: string;

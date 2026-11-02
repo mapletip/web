@@ -25,6 +25,14 @@ export function BooleanControl({
       withAlignedLabels
       value={typeof value === 'boolean' ? String(value) : null}
       w={200}
+      styles={{
+        label: {
+          fontWeight: 600,
+          fontSize: 'var(--mantine-font-size-sm)',
+          color: 'var(--mantine-color-text)',
+          marginBottom: 'var(--mantine-spacing-xs)',
+        },
+      }}
       data={[
         { value: 'true', label: `Yes (${counts.get('true') ?? 0})` },
         { value: 'false', label: `No (${counts.get('false') ?? 0})` },

@@ -1,3 +1,14 @@
+/*
+ * DataTable 9.4.0 provides row hover and column class hooks but no whole-column
+ * hover. ComparisonTable uses a translucent full-height overlay for column
+ * emphasis; the native row hover underneath remains visible.
+ *
+ * A `:has()` implementation was prototyped: CSS has no column selector, so it
+ * needs one positional rule per column index
+ * (`tbody:has(td:nth-child(k):hover) td:nth-child(k)`), which imposes an
+ * arbitrary column cap on a runtime-configured table. The overlay is
+ * index-agnostic and works for any column count.
+ */
 .comparison {
   --column-hover-color: color-mix(
     in srgb,
@@ -7,12 +18,27 @@
 }
 
 .row:focus-within {
-  outline: 2px solid var(--mantine-primary-color-filled);
+  outline: 2px solid var(--mapletip-color-focus);
   outline-offset: -2px;
+}
+
+/*
+ * Sortable header cells are focusable and sit flush against the table's clipped
+ * top edge (`.comparisonTable`, and DataTable's scroll viewport when bounded).
+ * The brand ring's 2px offset and 2px gap shadow would be cut in half there, so
+ * header focus is drawn inside the cell like `.row:focus-within`.
+ */
+.comparison thead th:focus-visible {
+  outline-offset: -2px;
+  box-shadow: none;
 }
 
 .columnHoverCell {
   position: relative;
+}
+
+.columnHoverCell[data-pinned] a {
+  font-weight: var(--mapletip-table-title-weight, inherit);
 }
 
 @media (hover: hover) and (pointer: fine) {
@@ -43,6 +69,7 @@
   }
 }
 
+/* Clip the taller column overlay so it cannot expand the scroll region. */
 .comparisonTable {
   overflow-y: clip;
 }

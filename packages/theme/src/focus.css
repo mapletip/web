@@ -1,0 +1,42 @@
+@layer mapletip.focus {
+  /*
+   * Mantine focusable components receive `focusClassName`; native links, buttons,
+   * checkboxes, summaries and tabbable widgets use the base rule.
+   * The ring has a 2px offset with a focusGap shadow so it remains distinguishable
+   * against filled Walnut actions, selection backgrounds, and adjacent surfaces.
+   */
+  .mapletip-focus:focus-visible,
+  :where(
+    :is(
+      a,
+      button,
+      input[type='checkbox'],
+      input[type='radio'],
+      summary,
+      [role='button'],
+      [tabindex]
+    ):not(.mapletip-focus)
+  ):focus-visible {
+    outline: 2px solid var(--mapletip-color-focus);
+    outline-offset: 2px;
+    box-shadow: 0 0 0 2px var(--mapletip-color-focus-gap);
+  }
+
+  @media (forced-colors: active) {
+    .mapletip-focus:focus-visible,
+    :where(
+      :is(
+        a,
+        button,
+        input[type='checkbox'],
+        input[type='radio'],
+        summary,
+        [role='button'],
+        [tabindex]
+      ):not(.mapletip-focus)
+    ):focus-visible {
+      outline-color: Highlight;
+      box-shadow: none;
+    }
+  }
+}

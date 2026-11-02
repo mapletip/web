@@ -8,7 +8,7 @@ import {
   type Row,
 } from '@tanstack/react-table';
 
-import type { TableColumn } from '@/components/Table/types';
+import type { TableColumn } from '@/components/Table';
 
 import {
   isInvalidNumericRange,

@@ -1,13 +1,12 @@
 import { MantineProvider } from '@mantine/core';
+import { theme } from '@mapletip/theme';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { page, userEvent } from 'vitest/browser';
 import { render } from 'vitest-browser-react';
 
-import '../../../styles.css';
-import { Table } from '@/components/Table/Table';
-import type { TableProps } from '@/components/Table/Table';
-import type { TableColumn } from '@/components/Table/types';
-import { theme } from '@/theme';
+import '@/styles.css';
+import { Table } from '@/components/Table';
+import type { TableColumn, TableProps } from '@/components/Table';
 
 interface TestRecord extends Record<string, unknown> {
   id: string;
@@ -43,7 +42,7 @@ const sampleColumns: readonly TableColumn<TestRecord>[] = [
 ];
 
 beforeEach(async () => {
-  document.documentElement.setAttribute('data-mantine-color-scheme', 'light');
+  document.documentElement.setAttribute('data-mantine-color-scheme', 'dark');
   await page.viewport(1024, 768);
 });
 

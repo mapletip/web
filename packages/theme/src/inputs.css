@@ -1,0 +1,18 @@
+@layer mapletip.inputs {
+  /*
+   * Inputs and native selects use Maple focus on active focus states. Mantine
+   * styles inputs through hashed component classes, so this worked only behind
+   * `!important`; sitting in a later layer removes the need.
+   */
+  .mantine-Input-input:focus,
+  .mantine-Input-input:focus-within {
+    border-color: var(--mapletip-color-focus);
+  }
+
+  @media (forced-colors: active) {
+    .mantine-Input-input:focus,
+    .mantine-Input-input:focus-within {
+      border-color: Highlight;
+    }
+  }
+}

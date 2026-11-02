@@ -2,7 +2,7 @@ import { MantineProvider } from '@mantine/core';
 import { describe, expect, it, vi } from 'vitest';
 import { render } from 'vitest-browser-react';
 
-import { FacetedBrowser } from '@/components/FacetedBrowser/FacetedBrowser';
+import { FacetedBrowser } from '@/components/FacetedBrowser';
 
 const { evaluateDraft } = vi.hoisted(() => ({
   evaluateDraft: vi.fn(() => ({

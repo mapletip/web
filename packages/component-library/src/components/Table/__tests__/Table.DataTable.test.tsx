@@ -1,13 +1,13 @@
 import { MantineProvider } from '@mantine/core';
+import { cssVariablesResolver, theme } from '@mapletip/theme';
 import { useState, type ReactElement } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { page, userEvent } from 'vitest/browser';
 import { render } from 'vitest-browser-react';
 
-import '../../../styles.css';
-import { Table } from '@/components/Table/Table';
-import type { TableColumn } from '@/components/Table/types';
-import { theme } from '@/theme';
+import '@/styles.css';
+import { Table } from '@/components/Table';
+import type { TableColumn } from '@/components/Table';
 
 interface DetailRecord extends Record<string, unknown> {
   id: string;
@@ -43,7 +43,7 @@ const columns: readonly TableColumn<DetailRecord>[] = [
 
 beforeEach(async () => {
   localStorage.clear();
-  document.documentElement.setAttribute('data-mantine-color-scheme', 'light');
+  document.documentElement.setAttribute('data-mantine-color-scheme', 'dark');
   await page.viewport(1024, 768);
 });
 
@@ -77,7 +77,11 @@ describe('Table DataTable mechanics', () => {
     }));
 
     await render(
-      <MantineProvider theme={theme}>
+      <MantineProvider
+        theme={theme}
+        cssVariablesResolver={cssVariablesResolver}
+        forceColorScheme="dark"
+      >
         <Table<DetailRecord>
           ariaLabel="Scrollable records"
           records={tallRecords}
@@ -108,7 +112,11 @@ describe('Table DataTable mechanics', () => {
 
   it('exposes upstream resize handles and persists widths under a namespaced key', async () => {
     await render(
-      <MantineProvider theme={theme}>
+      <MantineProvider
+        theme={theme}
+        cssVariablesResolver={cssVariablesResolver}
+        forceColorScheme="dark"
+      >
         <Table<DetailRecord>
           ariaLabel="Resizable records"
           records={records}
@@ -177,7 +185,11 @@ describe('Table DataTable mechanics', () => {
 
     for (let mount = 0; mount < 3; mount += 1) {
       const view = await render(
-        <MantineProvider theme={theme}>
+        <MantineProvider
+          theme={theme}
+          cssVariablesResolver={cssVariablesResolver}
+          forceColorScheme="dark"
+        >
           <Table<DetailRecord>
             ariaLabel={`Derived key records ${mount}`}
             records={records}
@@ -215,7 +227,11 @@ describe('Table DataTable mechanics', () => {
       { accessor: 'value', title: 'Value', numeric: true },
     ];
     await render(
-      <MantineProvider theme={theme}>
+      <MantineProvider
+        theme={theme}
+        cssVariablesResolver={cssVariablesResolver}
+        forceColorScheme="dark"
+      >
         <Table<DetailRecord>
           ariaLabel="First derived records"
           records={records}
@@ -255,7 +271,11 @@ describe('Table DataTable mechanics', () => {
     localStorage.setItem('', '[]');
     try {
       await render(
-        <MantineProvider theme={theme}>
+        <MantineProvider
+          theme={theme}
+          cssVariablesResolver={cssVariablesResolver}
+          forceColorScheme="dark"
+        >
           <Table<DetailRecord>
             ariaLabel="Scoped persistence, poisoned storage"
             records={records}
@@ -287,7 +307,11 @@ describe('Table DataTable mechanics', () => {
   it('rejects an empty persistence key instead of using DataTable issue #845 key collisions', async () => {
     await expect(
       render(
-        <MantineProvider theme={theme}>
+        <MantineProvider
+          theme={theme}
+          cssVariablesResolver={cssVariablesResolver}
+          forceColorScheme="dark"
+        >
           <Table<DetailRecord>
             ariaLabel="Invalid key"
             records={records}
@@ -303,7 +327,11 @@ describe('Table DataTable mechanics', () => {
 
   it('controls expansion through DataTable and keeps detail links ordinary', async () => {
     await render(
-      <MantineProvider theme={theme}>
+      <MantineProvider
+        theme={theme}
+        cssVariablesResolver={cssVariablesResolver}
+        forceColorScheme="dark"
+      >
         <ControlledExpandableTable />
       </MantineProvider>,
     );
@@ -343,7 +371,11 @@ describe('Table DataTable mechanics', () => {
 
   it('scopes expansion control ids to each table instance', async () => {
     const markup = (
-      <MantineProvider theme={theme}>
+      <MantineProvider
+        theme={theme}
+        cssVariablesResolver={cssVariablesResolver}
+        forceColorScheme="dark"
+      >
         <Table<DetailRecord>
           ariaLabel="First records"
           records={records}
@@ -408,7 +440,11 @@ describe('Table DataTable mechanics', () => {
 
   it('expands and collapses from the keyboard expansion control', async () => {
     await render(
-      <MantineProvider theme={theme}>
+      <MantineProvider
+        theme={theme}
+        cssVariablesResolver={cssVariablesResolver}
+        forceColorScheme="dark"
+      >
         <ControlledExpandableTable />
       </MantineProvider>,
     );
@@ -416,7 +452,9 @@ describe('Table DataTable mechanics', () => {
     const expandButton = page.getByRole('button', {
       name: 'Expand details for One',
     });
-    expandButton.element().focus();
+    expandButton.element().focus({ focusVisible: true });
+    expect(getComputedStyle(expandButton.element()).outlineStyle).toBe('solid');
+    expect(getComputedStyle(expandButton.element()).outlineWidth).toBe('2px');
     await userEvent.keyboard('{Enter}');
     await vi.waitFor(() =>
       expect(
@@ -438,7 +476,11 @@ describe('Table DataTable mechanics', () => {
 
   it('does not expand when activating an ordinary link inside a row', async () => {
     await render(
-      <MantineProvider theme={theme}>
+      <MantineProvider
+        theme={theme}
+        cssVariablesResolver={cssVariablesResolver}
+        forceColorScheme="dark"
+      >
         <ControlledExpandableTable />
       </MantineProvider>,
     );

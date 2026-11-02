@@ -1,7 +1,7 @@
 .root {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  gap: 16px;
+  gap: 24px;
 }
 
 @media (min-width: $mantine-breakpoint-md) {
@@ -15,12 +15,16 @@
   max-width: 100%;
   min-width: 0;
   align-self: start;
+  background-color: var(--mapletip-color-rail);
+  border: 1px solid var(--mapletip-color-border-subtle);
+  border-radius: var(--mantine-radius-md);
+  padding: var(--mantine-spacing-md);
 }
 
 .results {
   display: flex;
   flex-direction: column;
-  gap: var(--mantine-spacing-sm);
+  gap: var(--mantine-spacing-md);
   min-width: 0;
 }
 
@@ -50,7 +54,27 @@
 .header {
   display: flex;
   flex-direction: column;
-  gap: var(--mantine-spacing-xs);
+  gap: var(--mantine-spacing-sm);
+}
+
+@media (min-width: $mantine-breakpoint-sm) {
+  .header {
+    flex-direction: row;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: var(--mantine-spacing-md);
+  }
+}
+
+.searchForm {
+  width: 100%;
+}
+
+@media (min-width: $mantine-breakpoint-sm) {
+  .searchForm {
+    width: 320px;
+    max-width: 100%;
+  }
 }
 
 .bar {
@@ -59,4 +83,5 @@
   gap: var(--mantine-spacing-xs);
   align-items: center;
   justify-content: space-between;
+  min-height: 36px;
 }

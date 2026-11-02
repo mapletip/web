@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { useMemo, useState } from 'react';
 
-import { Table as TableComponent } from '@/components/Table/Table';
-import type { SortIntent } from '@/components/Table/types';
+import { Table as TableComponent } from '@/components/Table';
+import type { SortIntent } from '@/components/Table';
 import { demoRecords, makeDemoColumns } from '@/fixtures/records';
 
 function TableExample() {

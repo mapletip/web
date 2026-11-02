@@ -6,12 +6,12 @@ import { page, userEvent } from 'vitest/browser';
 import { render } from 'vitest-browser-react';
 
 import '@/styles.css';
-import { FacetedBrowser } from '@/components/FacetedBrowser/FacetedBrowser';
-import type { FacetDefinition } from '@/components/FacetedBrowser/FacetedBrowser';
+import { FacetedBrowser } from '@/components/FacetedBrowser';
 import type {
+  FacetDefinition,
   BrowseState,
   QueryFieldDefinition,
-} from '@/components/FacetedBrowser/hooks/useFacetedBrowser';
+} from '@/components/FacetedBrowser';
 import { demoGroupFacetOptions } from '@/fixtures/facetOptions';
 import type { DemoRecord } from '@/fixtures/records';
 import { demoRecords, makeDemoColumns } from '@/fixtures/records';

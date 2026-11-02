@@ -1,0 +1,7 @@
+{
+  "extends": "@mapletip/config/typescript/vite-react",
+  "include": ["src", "vitest.config.ts"],
+  "compilerOptions": {
+    "types": []
+  }
+}

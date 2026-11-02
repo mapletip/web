@@ -16,7 +16,7 @@ export function Summary({ text }: SummaryProps): ReactElement {
 
   return (
     <>
-      <Text size="sm" aria-hidden="true">
+      <Text size="sm" c="dimmed" fw={500} aria-hidden="true">
         {text}
       </Text>
       <VisuallyHidden aria-live="polite" aria-atomic="true">

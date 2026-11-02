@@ -33,13 +33,28 @@ export function OptionList({
       label={label}
       value={[...value]}
       onChange={(next) => onChange(next)}
+      styles={{
+        label: {
+          fontWeight: 600,
+          fontSize: 'var(--mantine-font-size-sm)',
+          color: 'var(--mantine-color-text)',
+          marginBottom: 'var(--mantine-spacing-xs)',
+        },
+      }}
     >
       <Stack gap="xs" mt="xs">
         {visibleOptions.map((option) => (
           <Checkbox
             key={option.value}
             value={option.value}
-            label={`${option.label} (${option.count})`}
+            label={
+              <span>
+                {option.label}{' '}
+                <span style={{ color: 'var(--mantine-color-dimmed)' }}>
+                  ({option.count})
+                </span>
+              </span>
+            }
           />
         ))}
       </Stack>
@@ -47,9 +62,10 @@ export function OptionList({
         <Button
           type="button"
           variant="subtle"
+          color="maple"
           size="compact-sm"
           mt="xs"
-          px={0}
+          px={4}
           aria-expanded={showAllOptions}
           onClick={() => setShowAllOptions((expanded) => !expanded)}
         >

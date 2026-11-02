@@ -69,7 +69,9 @@ export type TableProps<TRow extends Record<string, unknown>> = {
   readonly withTableBorder?: boolean;
   readonly withColumnBorders?: boolean;
   readonly withRowBorders?: boolean;
-  readonly horizontalSpacing?: DataTableProps['horizontalSpacing'];
+  readonly borderRadius?: DataTableProps<TRow>['borderRadius'];
+  readonly horizontalSpacing?: DataTableProps<TRow>['horizontalSpacing'];
+  readonly verticalSpacing?: DataTableProps<TRow>['verticalSpacing'];
   readonly striped?: boolean;
   readonly highlightOnHover?: boolean;
 

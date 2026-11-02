@@ -1,0 +1,14 @@
+/*
+ * MapleTip stylesheet entry: one module per treatment, imported here so
+ * consumers have a single file to load.
+ *
+ * The layer order is declared up front, so these rules win over Mantine's
+ * whatever the import order and without `!important` or specificity
+ * workarounds. MapleTip components that need to override a layer rule live in
+ * unlayered CSS modules, which take precedence over every layer.
+ */
+@layer mantine, mapletip;
+
+@import './links.css';
+@import './focus.css';
+@import './inputs.css';

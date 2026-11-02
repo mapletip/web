@@ -1,6 +1,6 @@
 import { composeStories } from '@storybook/react-vite';
-import { test } from 'vitest';
-import { page } from 'vitest/browser';
+import { expect, test } from 'vitest';
+import { page, userEvent } from 'vitest/browser';
 
 import * as stories from '@/components/Table/__stories__/ComparisonTable.stories';
 import {
@@ -9,7 +9,8 @@ import {
 } from '@/test-support/visual';
 import type { VisualCase } from '@/test-support/visual';
 
-const light = composeStories(stories);
+// The preview forces MapleTip's single shipped dark scheme.
+const dark = composeStories(stories);
 
 const comparisonTable = page.getByRole('table', { name: 'Comparison records' });
 
@@ -62,18 +63,150 @@ function assertTableScrollsHorizontally(): void {
   }
 }
 
-const desktop: VisualCase = {
-  name: 'comparison-table-desktop-light',
-  story: light.ComparisonTable,
+const desktopDark: VisualCase = {
+  name: 'comparison-table-desktop-dark',
+  story: dark.ComparisonTable,
   storyId: 'components-table--comparison-table',
   width: 1366,
   height: 768,
   element: comparisonTable,
 };
 
+const hoverScrolledDark: VisualCase = {
+  name: 'comparison-table-hover-scrolled-dark',
+  story: dark.ComparisonTable,
+  storyId: 'components-table--comparison-table',
+  width: 1366,
+  height: 768,
+};
+
+const nextFrame = (): Promise<void> =>
+  new Promise((resolve) => {
+    requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
+  });
+
+/**
+ * Scroll a bounded comparison table to its bottom-right extent, then hover a
+ * non-pinned column. Asserts the painted state: the pinned identity stays at the
+ * scrollport edge, the hovered column has the full-height overlay, adjacent and
+ * pinned cells do not, and the overlay does not grow the scroll region.
+ */
+async function hoverColumnAfterScrolling(): Promise<void> {
+  const viewport = document.querySelector<HTMLElement>(
+    '[data-scrollarea-viewport="true"]',
+  );
+  const table = document.querySelector(
+    'table[aria-label="Comparison records"]',
+  );
+  if (viewport === null || table === null) {
+    throw new Error('Comparison table is not rendered');
+  }
+
+  viewport.scrollLeft = viewport.scrollWidth;
+  viewport.scrollTop = viewport.scrollHeight;
+  await nextFrame();
+
+  const row = document.querySelector<HTMLTableRowElement>(
+    'tbody tr:last-child',
+  );
+  if (row === null) throw new Error('Comparison table has no body rows');
+  const cells = [...row.querySelectorAll<HTMLTableCellElement>('td')];
+  const hovered = cells[4];
+  const previous = cells[3];
+  const following = cells[5];
+  const pinned = row.querySelector<HTMLTableCellElement>('td[data-pinned]');
+  const header = document.querySelector<HTMLElement>('thead');
+  if (
+    hovered === undefined ||
+    previous === undefined ||
+    following === undefined ||
+    pinned === null ||
+    header === null
+  ) {
+    throw new Error('Comparison table cells are incomplete');
+  }
+
+  const before = {
+    scrollLeft: viewport.scrollLeft,
+    scrollTop: viewport.scrollTop,
+    scrollWidth: viewport.scrollWidth,
+    scrollHeight: viewport.scrollHeight,
+  };
+  expect(before.scrollLeft).toBeGreaterThan(0);
+  expect(before.scrollTop).toBeGreaterThan(0);
+
+  await userEvent.hover(hovered);
+  await nextFrame();
+
+  expect(viewport.scrollLeft).toBeGreaterThan(0);
+  expect(viewport.scrollTop).toBeGreaterThan(0);
+  expect(getComputedStyle(row).backgroundColor).not.toBe('transparent');
+
+  const overlay = getComputedStyle(hovered, '::before');
+  expect(overlay.content).toBe('""');
+  expect(overlay.left).toBe('0px');
+  expect(overlay.right).toBe('0px');
+  expect(getComputedStyle(previous, '::before').content).toBe('none');
+  expect(getComputedStyle(following, '::before').content).toBe('none');
+  expect(getComputedStyle(pinned, '::before').content).toBe('none');
+
+  expect(
+    Math.abs(
+      pinned.getBoundingClientRect().left -
+        viewport.getBoundingClientRect().left,
+    ),
+  ).toBeLessThanOrEqual(1);
+  expect(
+    Math.abs(
+      header.getBoundingClientRect().top - viewport.getBoundingClientRect().top,
+    ),
+  ).toBeLessThanOrEqual(1);
+  expect(hovered.getBoundingClientRect().left).toBeGreaterThan(
+    pinned.getBoundingClientRect().right,
+  );
+
+  // overflow-y: clip must contain the taller column overlay, not grow the
+  // scrollport or introduce an inner horizontal scroll container.
+  expect({
+    scrollLeft: viewport.scrollLeft,
+    scrollTop: viewport.scrollTop,
+    scrollWidth: viewport.scrollWidth,
+    scrollHeight: viewport.scrollHeight,
+  }).toEqual(before);
+  expect(getComputedStyle(table).overflowX).toBe('visible');
+}
+
+/**
+ * Regression coverage for the focus ring on the header row. Header cells sit
+ * flush with the table's clipped top edge, so the brand ring's 2px offset used
+ * to be cut in half. Focus arrives by Tab, so the captured ring is a genuine
+ * keyboard `:focus-visible` state rather than a scripted focus.
+ */
+async function focusFirstHeaderByKeyboard(): Promise<void> {
+  await userEvent.tab();
+  const focused = document.activeElement;
+  if (
+    !(focused instanceof HTMLTableCellElement) ||
+    focused.getAttribute('role') !== 'button' ||
+    !/^Record\b/u.test(focused.textContent ?? '')
+  ) {
+    throw new Error('Tab did not move focus to the first sortable header cell');
+  }
+}
+
+const headerFocusDark: VisualCase = {
+  name: 'comparison-table-header-focus-dark',
+  story: dark.ComparisonTable,
+  storyId: 'components-table--comparison-table',
+  width: 1366,
+  height: 768,
+  element: comparisonTable,
+  beforeScreenshot: focusFirstHeaderByKeyboard,
+};
+
 const phoneOverflow: VisualCase = {
-  name: 'comparison-table-mobile-overflow-light',
-  story: light.ComparisonTable,
+  name: 'comparison-table-mobile-overflow-dark',
+  story: dark.ComparisonTable,
   storyId: 'components-table--comparison-table',
   width: 375,
   height: 812,
@@ -81,13 +214,24 @@ const phoneOverflow: VisualCase = {
 
 // Explicit tests rather than a case table: only the phone case also proves that
 // the clipped columns stay reachable by scrolling.
-test('comparison-table-desktop-light', async () => {
-  await openVisualCase(desktop);
-  await expectApprovedScreenshot(desktop);
+test('comparison-table-desktop-dark', async () => {
+  await openVisualCase(desktopDark);
+  await expectApprovedScreenshot(desktopDark);
 });
 
-test('comparison-table-mobile-overflow-light', async () => {
+test('comparison-table-mobile-overflow-dark', async () => {
   await openVisualCase(phoneOverflow);
   assertTableScrollsHorizontally();
   await expectApprovedScreenshot(phoneOverflow);
+});
+
+test('comparison-table-header-focus-dark', async () => {
+  await openVisualCase(headerFocusDark);
+  await expectApprovedScreenshot(headerFocusDark);
+});
+
+test('comparison-table-hover-scrolled-dark', async () => {
+  await openVisualCase(hoverScrolledDark);
+  await hoverColumnAfterScrolling();
+  await expectApprovedScreenshot(hoverScrolledDark);
 });
