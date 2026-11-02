@@ -176,6 +176,34 @@ async function hoverColumnAfterScrolling(): Promise<void> {
   expect(getComputedStyle(table).overflowX).toBe('visible');
 }
 
+/**
+ * Regression coverage for the focus ring on the header row. Header cells sit
+ * flush with the table's clipped top edge, so the brand ring's 2px offset used
+ * to be cut in half. Focus arrives by Tab, so the captured ring is a genuine
+ * keyboard `:focus-visible` state rather than a scripted focus.
+ */
+async function focusFirstHeaderByKeyboard(): Promise<void> {
+  await userEvent.tab();
+  const focused = document.activeElement;
+  if (
+    !(focused instanceof HTMLTableCellElement) ||
+    focused.getAttribute('role') !== 'button' ||
+    !/^Record\b/u.test(focused.textContent ?? '')
+  ) {
+    throw new Error('Tab did not move focus to the first sortable header cell');
+  }
+}
+
+const headerFocusDark: VisualCase = {
+  name: 'comparison-table-header-focus-dark',
+  story: dark.ComparisonTable,
+  storyId: 'components-table--comparison-table',
+  width: 1366,
+  height: 768,
+  element: comparisonTable,
+  beforeScreenshot: focusFirstHeaderByKeyboard,
+};
+
 const phoneOverflow: VisualCase = {
   name: 'comparison-table-mobile-overflow-dark',
   story: dark.ComparisonTable,
@@ -195,6 +223,11 @@ test('comparison-table-mobile-overflow-dark', async () => {
   await openVisualCase(phoneOverflow);
   assertTableScrollsHorizontally();
   await expectApprovedScreenshot(phoneOverflow);
+});
+
+test('comparison-table-header-focus-dark', async () => {
+  await openVisualCase(headerFocusDark);
+  await expectApprovedScreenshot(headerFocusDark);
 });
 
 test('comparison-table-hover-scrolled-dark', async () => {

@@ -22,6 +22,17 @@
   outline-offset: -2px;
 }
 
+/*
+ * Sortable header cells are focusable and sit flush against the table's clipped
+ * top edge (`.comparisonTable`, and DataTable's scroll viewport when bounded).
+ * The brand ring's 2px offset and 2px gap shadow would be cut in half there, so
+ * header focus is drawn inside the cell like `.row:focus-within`.
+ */
+.comparison thead th:focus-visible {
+  outline-offset: -2px;
+  box-shadow: none;
+}
+
 .columnHoverCell {
   position: relative;
 }
