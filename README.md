@@ -4,7 +4,7 @@ pnpm + [Turborepo](https://turborepo.dev/) monorepo.
 
 ## Packages
 
-- `@mapletip/web`: TanStack Start app in `apps/web`
+- `@mapletip/web-app`: TanStack Start app in `apps/web`
 - `@mapletip/theme`: shared Maple Twilight Mantine theme
 - `@mapletip/component-library`: Mantine components and Storybook
 - `@mapletip/config`: shared tooling configs

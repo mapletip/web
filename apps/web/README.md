@@ -1,4 +1,4 @@
-# `@mapletip/web`
+# `@mapletip/web-app`
 
 TanStack Start website foundation.
 
