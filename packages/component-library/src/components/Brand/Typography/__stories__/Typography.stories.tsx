@@ -1,10 +1,13 @@
 import { Table, Text, Title } from '@mantine/core';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 
-import { numericTextStyle, typographyTheme } from './typography';
+import {
+  numericTextStyle,
+  typographyTheme,
+} from '@/components/Brand/Typography/typography';
 
 const meta = {
-  title: 'Brand/Foundations/Typography',
+  title: 'Brand/Typography',
   parameters: { layout: 'padded' },
 } satisfies Meta;
 

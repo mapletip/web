@@ -16,7 +16,7 @@ import {
   radiusScale,
   spacingScale,
   toPixels,
-} from './spacing-foundation';
+} from '@/components/Brand/SpacingAndShape/spacingAndShape';
 
 function radiusUsage(token: string, value: string): string {
   if (token === 'sm') return `Controls (${toPixels(value)})`;
@@ -25,7 +25,7 @@ function radiusUsage(token: string, value: string): string {
 }
 
 const meta = {
-  title: 'Brand/Foundations/Spacing and Shape',
+  title: 'Brand/Spacing and Shape',
   parameters: { layout: 'padded' },
 } satisfies Meta;
 

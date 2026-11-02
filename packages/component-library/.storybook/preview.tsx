@@ -27,18 +27,10 @@ const preview: Preview = {
     options: {
       storySort: {
         order: [
-          'Components',
           'Brand',
-          [
-            'Foundations',
-            [
-              'Color',
-              'Typography',
-              'Spacing and Shape',
-              'Interaction States',
-              'Status Signals',
-            ],
-          ],
+          ['Color', 'Interaction States', 'Spacing and Shape', 'Typography'],
+          'Components',
+          ['Alert', 'FacetedBrowser', 'Table'],
         ],
       },
     },

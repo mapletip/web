@@ -44,7 +44,7 @@ const statuses = [
 ];
 
 const meta = {
-  title: 'Brand/Foundations/Status Signals',
+  title: 'Components/Alert',
   parameters: { layout: 'padded' },
 } satisfies Meta;
 

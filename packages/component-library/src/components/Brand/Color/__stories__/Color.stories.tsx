@@ -1,10 +1,10 @@
 import { Stack, Table, Text, Title } from '@mantine/core';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 
-import { colorGroups } from './color-foundation';
+import { colorGroups } from '@/components/Brand/Color/colorRoles';
 
 const meta = {
-  title: 'Brand/Foundations/Color',
+  title: 'Brand/Color',
   parameters: { layout: 'padded' },
 } satisfies Meta;
 

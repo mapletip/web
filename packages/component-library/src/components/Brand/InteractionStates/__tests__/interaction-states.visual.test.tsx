@@ -2,7 +2,7 @@ import { composeStories } from '@storybook/react-vite';
 import { describe, test } from 'vitest';
 import { commands, page, userEvent } from 'vitest/browser';
 
-import * as stories from '@/brand/InteractionStates.stories';
+import * as stories from '@/components/Brand/InteractionStates/__stories__/InteractionStates.stories';
 import {
   expectApprovedScreenshot,
   openVisualCase,
@@ -21,17 +21,17 @@ const pressedAction = page.getByRole('button', {
 
 const visualCases: readonly VisualCase[] = [
   {
-    name: 'brand-control-default',
+    name: 'control-default',
     story: ControlStates,
-    storyId: 'brand-foundations-interaction-states--control-states',
+    storyId: 'brand-interaction-states--control-states',
     width: 900,
     height: 720,
     element: walnutAction,
   },
   {
-    name: 'brand-control-hover',
+    name: 'control-hover',
     story: ControlStates,
-    storyId: 'brand-foundations-interaction-states--control-states',
+    storyId: 'brand-interaction-states--control-states',
     width: 900,
     height: 720,
     element: walnutAction,
@@ -43,9 +43,9 @@ const visualCases: readonly VisualCase[] = [
     },
   },
   {
-    name: 'brand-control-focus-visible',
+    name: 'control-focus-visible',
     story: ControlStates,
-    storyId: 'brand-foundations-interaction-states--control-states',
+    storyId: 'brand-interaction-states--control-states',
     width: 900,
     height: 720,
     element: walnutAction,
@@ -63,17 +63,17 @@ const visualCases: readonly VisualCase[] = [
     },
   },
   {
-    name: 'brand-control-pressed',
+    name: 'control-pressed',
     story: ControlStates,
-    storyId: 'brand-foundations-interaction-states--control-states',
+    storyId: 'brand-interaction-states--control-states',
     width: 900,
     height: 720,
     element: pressedAction,
   },
   {
-    name: 'brand-control-disabled',
+    name: 'control-disabled',
     story: ControlStates,
-    storyId: 'brand-foundations-interaction-states--control-states',
+    storyId: 'brand-interaction-states--control-states',
     width: 900,
     height: 720,
     element: page.getByRole('button', {
@@ -82,9 +82,9 @@ const visualCases: readonly VisualCase[] = [
     }),
   },
   {
-    name: 'brand-record-selected',
+    name: 'record-selected',
     story: ControlStates,
-    storyId: 'brand-foundations-interaction-states--control-states',
+    storyId: 'brand-interaction-states--control-states',
     width: 900,
     height: 720,
     element: page.getByRole('row', {

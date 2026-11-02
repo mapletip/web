@@ -12,7 +12,7 @@ import {
 import type { Meta, StoryObj } from '@storybook/react-vite';
 
 const meta = {
-  title: 'Brand/Foundations/Interaction States',
+  title: 'Brand/Interaction States',
   parameters: { layout: 'padded' },
 } satisfies Meta;
 

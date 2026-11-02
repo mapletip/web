@@ -1,9 +1,9 @@
 import { theme } from '@mapletip/theme';
 import { describe, expect, it } from 'vitest';
 
-import { numericTextStyle } from '../typography';
+import { numericTextStyle } from '@/components/Brand/Typography/typography';
 
-describe('brand typography foundation', () => {
+describe('typography', () => {
   it('keeps the semantic theme scale and tabular numeric specimen', () => {
     expect(theme.fontSizes).toMatchObject({
       xs: '0.75rem',
