@@ -8,19 +8,14 @@ import {
   Text,
   TextInput,
   Title,
+  px,
+  useMantineTheme,
 } from '@mantine/core';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 
-import {
-  mapleRadius,
-  radiusScale,
-  spacingScale,
-  toPixels,
-} from '@/components/Brand/SpacingAndShape';
-
-function radiusUsage(token: string, value: string): string {
-  if (token === 'sm') return `Controls (${toPixels(value)})`;
-  if (token === 'md') return `Panels (${toPixels(value)})`;
+function radiusUsage(token: string): string {
+  if (token === 'sm') return 'Controls';
+  if (token === 'md') return 'Panels';
   return 'Contextual';
 }
 
@@ -32,9 +27,14 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const FoundationScale: Story = {
-  name: 'Foundation Scale',
-  render: () => (
+function FoundationScaleExample() {
+  // The resolved theme, so the tables follow the theme in effect rather than
+  // the library defaults.
+  const theme = useMantineTheme();
+  const spacingScale = Object.entries(theme.spacing);
+  const radiusScale = Object.entries(theme.radius);
+
+  return (
     <Stack gap="xl" maw={1000}>
       <Text>
         Use the spacing scale for rhythm. Controls use the small radius, outer
@@ -82,7 +82,7 @@ export const FoundationScale: Story = {
                   </Group>
                 </Table.Td>
                 <Table.Td>{token}</Table.Td>
-                <Table.Td>{value}</Table.Td>
+                <Table.Td>{`${px(value)}px`}</Table.Td>
               </Table.Tr>
             ))}
           </Table.Tbody>
@@ -129,8 +129,8 @@ export const FoundationScale: Story = {
                   />
                 </Table.Td>
                 <Table.Td>{token}</Table.Td>
-                <Table.Td>{value}</Table.Td>
-                <Table.Td>{radiusUsage(token, value)}</Table.Td>
+                <Table.Td>{`${px(value)}px`}</Table.Td>
+                <Table.Td>{radiusUsage(token)}</Table.Td>
               </Table.Tr>
             ))}
           </Table.Tbody>
@@ -144,7 +144,7 @@ export const FoundationScale: Story = {
           style={{
             backgroundColor: 'var(--mapletip-color-panel)',
             borderColor: 'var(--mapletip-color-border-subtle)',
-            borderRadius: mapleRadius.md,
+            borderRadius: theme.radius['md'],
           }}
         >
           <Text fw={600}>Subtle divider</Text>
@@ -158,7 +158,7 @@ export const FoundationScale: Story = {
           style={{
             backgroundColor: 'var(--mapletip-color-panel)',
             borderColor: 'var(--mapletip-color-border-strong)',
-            borderRadius: mapleRadius.md,
+            borderRadius: theme.radius['md'],
           }}
         >
           <Text fw={600}>Strong boundary</Text>
@@ -205,5 +205,10 @@ export const FoundationScale: Story = {
         </Table>
       </Stack>
     </Stack>
-  ),
+  );
+}
+
+export const FoundationScale: Story = {
+  name: 'Foundation Scale',
+  render: () => <FoundationScaleExample />,
 };
