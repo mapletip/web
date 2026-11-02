@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { page, userEvent } from 'vitest/browser';
 import { render } from 'vitest-browser-react';
 
-import '../../../styles.css';
+import '@/styles.css';
 import { Table } from '@/components/Table';
 import type { TableColumn, TableProps } from '@/components/Table';
 
