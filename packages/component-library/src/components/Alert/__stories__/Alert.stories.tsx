@@ -8,35 +8,35 @@ import {
 } from '@phosphor-icons/react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 
-const statuses = [
+const alerts = [
   {
     name: 'Success',
-    label: 'Verified',
-    detail: 'The record is confirmed in the selected build.',
+    label: 'Done',
+    detail: 'The change was applied.',
     color: scheme.statuses.success,
     background: scheme.statuses.successBg,
     Icon: CheckCircle,
   },
   {
     name: 'Warning',
-    label: 'Uncertain',
-    detail: 'The source does not settle this detail.',
+    label: 'Check this',
+    detail: 'Something needs attention before you continue.',
     color: scheme.statuses.warning,
     background: scheme.statuses.warningBg,
     Icon: WarningCircle,
   },
   {
     name: 'Danger',
-    label: 'Unavailable',
-    detail: 'This record cannot be loaded for the selected build.',
+    label: 'Failed',
+    detail: 'The action could not be completed.',
     color: scheme.statuses.danger,
     background: scheme.statuses.dangerBg,
     Icon: XCircle,
   },
   {
     name: 'Information',
-    label: 'Build context',
-    detail: 'The visible values use the selected historical build.',
+    label: 'Note',
+    detail: 'Additional context about this page.',
     color: scheme.statuses.info,
     background: scheme.statuses.infoBg,
     Icon: Info,
@@ -54,7 +54,7 @@ type Story = StoryObj<typeof meta>;
 export const SemanticStatuses: Story = {
   render: () => (
     <Stack gap="md" maw={720}>
-      {statuses.map(({ name, label, detail, color, background, Icon }) => (
+      {alerts.map(({ name, label, detail, color, background, Icon }) => (
         <Stack key={name} gap="xs">
           <Badge
             leftSection={<Icon size={14} weight="bold" aria-hidden="true" />}
