@@ -138,28 +138,7 @@ function BrowserExample({
 
   return (
     <FacetedBrowser
-      title={
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 'var(--mantine-spacing-xs)',
-          }}
-        >
-          <span
-            style={{
-              display: 'inline-block',
-              width: 4,
-              height: 24,
-              backgroundColor: 'var(--mapletip-color-brand)',
-              borderRadius: 'var(--mantine-radius-xs)',
-              flexShrink: 0,
-            }}
-            aria-hidden="true"
-          />
-          <Title order={1}>Browse records</Title>
-        </div>
-      }
+      title={<Title order={1}>Browse records</Title>}
       records={records}
       idAccessor="id"
       identityField="name"
