@@ -76,8 +76,7 @@ export const ControlStates: Story = {
       </Table>
 
       <Text id="interaction-help" size="xs" c="dimmed">
-        Focus uses the Maple Twilight focus token and remains distinct from
-        selection.
+        Focus uses the theme's focus token and remains distinct from selection.
       </Text>
     </Stack>
   ),
