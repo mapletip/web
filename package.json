@@ -4,6 +4,7 @@
   "type": "module",
   "scripts": {
     "build-storybook": "turbo run build-storybook",
+    "dev": "pnpm --filter @mapletip/web-app dev",
     "format": "turbo run format:root",
     "format:check": "turbo run format:check:root",
     "format:check:root": "prettier --check .",

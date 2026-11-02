@@ -1,8 +1,10 @@
 packages:
+  - apps/*
   - packages/*
 
 allowBuilds:
   esbuild: true
+  lightningcss: true
   unrs-resolver: true
 
 catalog:
@@ -45,6 +47,8 @@ catalog:
   react-dom: ^19.2.8
   # ui
   '@phosphor-icons/react': ^2.1.10
+  '@tanstack/react-router': ^1.170.46
+  '@tanstack/react-start': ^1.169.4
   '@tanstack/react-table': ^9.3.1
   '@tanstack/table-core': ^9.3.1
   '@mantine/core': ^9.7.3

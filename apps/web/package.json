@@ -1,0 +1,39 @@
+{
+  "name": "@mapletip/web-app",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "imports": {
+    "#/*": "./src/*"
+  },
+  "scripts": {
+    "build": "vite build",
+    "dev": "vite dev --port 3000",
+    "generate-routes": "vite build",
+    "lint": "eslint . --max-warnings 0",
+    "preview": "vite preview",
+    "typecheck": "tsc"
+  },
+  "dependencies": {
+    "@mantine/core": "catalog:",
+    "@mapletip/component-library": "workspace:*",
+    "@mapletip/theme": "workspace:*",
+    "@tanstack/react-router": "catalog:",
+    "@tanstack/react-start": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:"
+  },
+  "devDependencies": {
+    "@mapletip/config": "workspace:*",
+    "@types/node": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "@vitejs/plugin-react": "catalog:",
+    "eslint": "catalog:",
+    "postcss": "catalog:",
+    "postcss-preset-mantine": "catalog:",
+    "postcss-simple-vars": "catalog:",
+    "typescript": "catalog:",
+    "vite": "catalog:"
+  }
+}

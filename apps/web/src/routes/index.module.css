@@ -1,0 +1,19 @@
+.page {
+  display: grid;
+  min-height: 100vh;
+  padding: var(--mantine-spacing-xl);
+  place-items: center;
+}
+
+.panel {
+  width: min(42rem, 100%);
+  border: 1px solid var(--mapletip-color-border-subtle);
+  background-color: var(--mapletip-color-panel);
+}
+
+.eyebrow {
+  color: var(--mapletip-color-link);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}

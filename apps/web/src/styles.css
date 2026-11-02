@@ -1,0 +1,16 @@
+@import '@mapletip/component-library/styles.css';
+
+html,
+body {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  background-color: var(--mantine-color-body);
+  color: var(--mantine-color-text);
+}
+
+#app {
+  min-height: 100vh;
+}

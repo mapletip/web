@@ -4,6 +4,7 @@ pnpm + [Turborepo](https://turborepo.dev/) monorepo.
 
 ## Packages
 
+- `@mapletip/web-app`: TanStack Start website foundation in `apps/web`
 - `@mapletip/theme`: the shared Maple Twilight Mantine theme
 - `@mapletip/component-library`: [Mantine](https://mantine.dev/)-based component library with [Storybook](https://storybook.js.org/)
 - `@mapletip/config`: shared eslint, prettier, tsconfig, lint-staged, vite and vitest configs
@@ -19,15 +20,33 @@ pnpm install
 
 ## Commands
 
-| Command                | What it does                                  |
-| ---------------------- | --------------------------------------------- |
-| `pnpm storybook`       | Storybook dev server on http://localhost:6006 |
-| `pnpm build-storybook` | Static Storybook build                        |
-| `pnpm test`            | Runs each package's tests                     |
-| `pnpm test:visual`     | Storybook visual regression (opt-in)          |
-| `pnpm lint`            | ESLint (type-checked)                         |
-| `pnpm typecheck`       | TypeScript                                    |
-| `pnpm format`          | Prettier via turbo (`format:check` to verify) |
+| Command                | What it does                                    |
+| ---------------------- | ----------------------------------------------- |
+| `pnpm dev`             | TanStack Start website on http://localhost:3000 |
+| `pnpm storybook`       | Storybook dev server on http://localhost:6006   |
+| `pnpm build-storybook` | Static Storybook build                          |
+| `pnpm test`            | Runs each package's tests                       |
+| `pnpm test:visual`     | Storybook visual regression (opt-in)            |
+| `pnpm lint`            | ESLint (type-checked)                           |
+| `pnpm typecheck`       | TypeScript                                      |
+| `pnpm format`          | Prettier via turbo (`format:check` to verify)   |
+
+## Website foundation
+
+`pnpm dev` starts only `apps/web` (TanStack Start, SSR) at
+<http://localhost:3000>. Running `pnpm dev` from `apps/web` starts the same
+server. The current routes are `/` and `/demo/faceted-browser`.
+
+The demo document is server-rendered, so the FacetedBrowser rows, labels and
+controls are present before JavaScript runs. Inspect the initial document with:
+
+```sh
+curl -s http://localhost:3000/demo/faceted-browser | grep -o 'Demo [A-Za-z]* [0-9]\{3\}' | head
+```
+
+Storybook remains independent: `pnpm storybook` is the only command that starts
+Storybook. See [`apps/web/README.md`](apps/web/README.md) for local acceptance
+details.
 
 ## Tests
 

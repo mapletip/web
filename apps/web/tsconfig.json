@@ -1,0 +1,13 @@
+{
+  "extends": "@mapletip/config/typescript/vite-react",
+  "include": ["src", "vite.config.ts"],
+  "compilerOptions": {
+    "allowImportingTsExtensions": true,
+    "paths": {
+      "#/*": ["./src/*"],
+      "@/*": ["../../packages/component-library/src/*"]
+    },
+    "types": ["vite/client", "node"],
+    "verbatimModuleSyntax": true
+  }
+}
