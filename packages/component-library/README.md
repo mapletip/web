@@ -32,6 +32,11 @@ import { cssVariablesResolver, theme } from '@mapletip/theme';
 </MantineProvider>;
 ```
 
+`styles.css` is the only required entry: it loads the Mantine component stylesheets this
+library renders, not the whole library, and declares the cascade-layer order everything
+else slots into. Table styles are not part of it — they load with `Table`, so a route that
+renders no table ships none of them.
+
 MapleTip is dark-only; hosts should set `forceColorScheme="dark"` so first paint,
 server rendering and hydrated UI stay on the Maple Twilight scheme. See
 [`@mapletip/theme`](../theme/README.md) for the host setup.

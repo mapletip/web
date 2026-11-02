@@ -1,14 +1,54 @@
 /*
  * Component library stylesheet entry.
  *
+ * Mantine ships one stylesheet per component, so only the components this
+ * library renders are imported. The order is Mantine's own: components share
+ * specificity, and rules inside one layer resolve by source order, so
+ * `UnstyledButton` has to precede `Button`. `src/__tests__/styles.ssr.test.ts`
+ * enforces both the list and the order.
+ *
+ * Table-only stylesheets live with the table (`components/Table/table-styles.ts`)
+ * so bundles that never render one do not load them.
+ *
  * Mantine and DataTable ship cascade-layer variants, so declaring the layer
  * order here is what keeps MapleTip's rules on top without `!important` or
  * specificity workarounds: later layers win, and unlayered component modules
- * win over every layer.
+ * win over every layer. Declaring it up front also means a chunk that loads
+ * later still lands in the right layer.
  */
 @layer mantine, mantine-datatable, mapletip;
 
-@import '@mantine/core/styles.layer.css';
-@import 'mantine-datatable/styles.layer.css';
-@import './components/Table/datatable.css';
+@import '@mantine/core/styles/baseline.layer.css';
+@import '@mantine/core/styles/default-css-variables.layer.css';
+@import '@mantine/core/styles/global.layer.css';
+@import '@mantine/core/styles/ScrollArea.layer.css';
+@import '@mantine/core/styles/UnstyledButton.layer.css';
+@import '@mantine/core/styles/VisuallyHidden.layer.css';
+@import '@mantine/core/styles/Paper.layer.css';
+@import '@mantine/core/styles/Overlay.layer.css';
+@import '@mantine/core/styles/Popover.layer.css';
+@import '@mantine/core/styles/ActionIcon.layer.css';
+@import '@mantine/core/styles/CloseButton.layer.css';
+@import '@mantine/core/styles/Group.layer.css';
+@import '@mantine/core/styles/ModalBase.layer.css';
+@import '@mantine/core/styles/Input.layer.css';
+@import '@mantine/core/styles/Flex.layer.css';
+@import '@mantine/core/styles/Alert.layer.css';
+@import '@mantine/core/styles/Text.layer.css';
+@import '@mantine/core/styles/Anchor.layer.css';
+@import '@mantine/core/styles/Combobox.layer.css';
+@import '@mantine/core/styles/InlineInput.layer.css';
+@import '@mantine/core/styles/Checkbox.layer.css';
+@import '@mantine/core/styles/Badge.layer.css';
+@import '@mantine/core/styles/Button.layer.css';
+@import '@mantine/core/styles/Center.layer.css';
+@import '@mantine/core/styles/Divider.layer.css';
+@import '@mantine/core/styles/Drawer.layer.css';
+@import '@mantine/core/styles/EmptyState.layer.css';
+@import '@mantine/core/styles/NumberInput.layer.css';
+@import '@mantine/core/styles/Pagination.layer.css';
+@import '@mantine/core/styles/Scroller.layer.css';
+@import '@mantine/core/styles/Stack.layer.css';
+@import '@mantine/core/styles/Table.layer.css';
+@import '@mantine/core/styles/Title.layer.css';
 @import '@mapletip/theme/theme.css';
