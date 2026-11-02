@@ -5,7 +5,12 @@
     "allowImportingTsExtensions": true,
     "paths": {
       "#/*": ["./src/*"],
-      "@/*": ["../../packages/component-library/src/*"]
+      "@/components/*": ["../../packages/component-library/src/components/*"],
+      "@/fixtures/*": ["../../packages/component-library/src/fixtures/*"],
+      "@/test-support/*": [
+        "../../packages/component-library/src/test-support/*"
+      ],
+      "@/*": ["./src/*"]
     },
     "types": ["vite/client", "node"],
     "verbatimModuleSyntax": true

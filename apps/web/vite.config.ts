@@ -5,15 +5,20 @@ import { defineConfig } from 'vite';
 
 const config = defineConfig({
   resolve: {
-    alias: {
+    alias: [
       // The component library is consumed from source, so its internal `@/`
-      // imports must resolve against the package rather than this app.
-      '@': path.resolve(
-        import.meta.dirname,
-        '../../packages/component-library/src',
-      ),
-      '#': path.resolve(import.meta.dirname, 'src'),
-    },
+      // imports for these package-owned directories must resolve against the
+      // package rather than this app.
+      {
+        find: /^@\/(components|fixtures|test-support)(?=\/|$)/,
+        replacement: path.resolve(
+          import.meta.dirname,
+          '../../packages/component-library/src/$1',
+        ),
+      },
+      { find: '@', replacement: path.resolve(import.meta.dirname, 'src') },
+      { find: '#', replacement: path.resolve(import.meta.dirname, 'src') },
+    ],
     tsconfigPaths: true,
   },
   plugins: [tanstackStart(), viteReact()],
