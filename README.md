@@ -4,7 +4,7 @@ pnpm + [Turborepo](https://turborepo.dev/) monorepo.
 
 ## Packages
 
-- `@mapletip/web-app`: TanStack Start website foundation in `apps/web`
+- `@mapletip/web`: TanStack Start website foundation in `apps/web`
 - `@mapletip/theme`: the shared Maple Twilight Mantine theme
 - `@mapletip/component-library`: [Mantine](https://mantine.dev/)-based component library with [Storybook](https://storybook.js.org/)
 - `@mapletip/config`: shared eslint, prettier, tsconfig, lint-staged, vite and vitest configs

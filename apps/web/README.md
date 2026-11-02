@@ -1,4 +1,4 @@
-# `@mapletip/web-app`
+# `@mapletip/web`
 
 The MapleTip website foundation: a minimal TanStack Start application with
 server rendering, the shared Maple Twilight theme, and a real public
