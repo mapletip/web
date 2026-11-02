@@ -170,7 +170,7 @@ function FacetedBrowserDemo() {
         pageSizeOptions={[10, 25, 50]}
         presentation="comparison"
         tableMaxHeight={560}
-        tableStorageKey="mapletip:web-app:demo-faceted-browser:v1"
+        tableStorageKey="mapletip:web:demo-faceted-browser:v1"
         renderCard={(record) => <DemoRecordCard record={record} />}
         defaultState={defaultState}
       />
