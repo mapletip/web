@@ -37,15 +37,15 @@ export const FoundationScale: Story = {
   render: () => (
     <Stack gap="xl" maw={1000}>
       <Text>
-        Use Mantine's spacing scale for rhythm. Controls use the small radius,
-        outer panels use the medium radius, and internal table cells stay square
-        so their column boundaries line up.
+        Use the spacing scale for rhythm. Controls use the small radius, outer
+        panels use the medium radius, and internal table cells stay square so
+        their column boundaries line up.
       </Text>
 
       <Stack gap="sm">
         <Title order={2}>Spacing scale</Title>
         <Table
-          aria-label="Mantine spacing scale"
+          aria-label="Spacing scale"
           withTableBorder
           withColumnBorders
           style={{ backgroundColor: 'var(--mapletip-color-panel)' }}
@@ -92,7 +92,7 @@ export const FoundationScale: Story = {
       <Stack gap="sm">
         <Title order={2}>Radius and boundaries</Title>
         <Table
-          aria-label="Mantine radius scale"
+          aria-label="Radius scale"
           withTableBorder
           withColumnBorders
           style={{ backgroundColor: 'var(--mapletip-color-panel)' }}
