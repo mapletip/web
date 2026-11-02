@@ -23,5 +23,6 @@ import { cssVariablesResolver, theme } from '@mapletip/theme';
 ```
 
 Hosts own scheme ownership and must force dark, so first paint, server rendering and hydrated
-UI agree. Without the component library, import `@mapletip/theme/theme.css` after Mantine's
-stylesheets; `@mapletip/component-library/styles.css` already does that.
+UI agree. Without the component library, import `@mantine/core/styles.layer.css` and then
+`@mapletip/theme/theme.css`. That file declares its own layer order, so the import order does
+not matter, but Mantine must come from its layer variant or its unlayered rules would win.

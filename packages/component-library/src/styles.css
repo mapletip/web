@@ -1,3 +1,14 @@
-@import '@mantine/core/styles.css';
-@import 'mantine-datatable/styles.css';
+/*
+ * Component library stylesheet entry.
+ *
+ * Mantine and DataTable ship cascade-layer variants, so declaring the layer
+ * order here is what keeps MapleTip's rules on top without `!important` or
+ * specificity workarounds: later layers win, and unlayered component modules
+ * win over every layer.
+ */
+@layer mantine, mantine-datatable, mapletip;
+
+@import '@mantine/core/styles.layer.css';
+@import 'mantine-datatable/styles.layer.css';
+@import './components/Table/datatable.css';
 @import '@mapletip/theme/theme.css';

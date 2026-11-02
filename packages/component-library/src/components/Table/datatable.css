@@ -1,0 +1,60 @@
+/*
+ * DataTable skin: the component library owns how the table looks, so these
+ * overrides live next to the table rather than in the theme package. They sit
+ * in a sublayer after `mantine-datatable`, which is what lets them win without
+ * `!important` or specificity workarounds.
+ */
+@layer mapletip.datatable {
+  /* DataTable's documented CSS variables for borders, selection, and row hover. */
+  [data-mantine-color-scheme='dark'] .mantine-datatable {
+    --mantine-datatable-background-color-dark: var(--mapletip-color-panel);
+    --mantine-datatable-border-color-dark: var(--mapletip-color-border-subtle);
+    --mantine-datatable-row-border-color-dark: var(
+      --mapletip-color-border-subtle
+    );
+    --mantine-datatable-selection-background-color-dark: var(
+      --mapletip-color-selection
+    );
+    --mantine-datatable-row-hover-background-color-dark: var(
+      --mapletip-color-hover
+    );
+    --mantine-datatable-highlight-on-hover-color-dark: var(
+      --mapletip-color-hover
+    );
+  }
+
+  /* Table header and pinned identity column surface hierarchy. */
+  .mantine-datatable thead tr,
+  .mantine-datatable thead th {
+    background-color: var(--mapletip-color-raised);
+  }
+
+  /*
+   * Active sort direction indicator uses Maple Orange interactive token,
+   * while unsorted indicator remains subdued.
+   */
+  .mantine-datatable-header-cell-sortable-icon:not(
+    .mantine-datatable-header-cell-sortable-unsorted-icon
+  ) {
+    color: var(--mapletip-color-link);
+  }
+
+  .mantine-datatable tbody td[data-pinned] {
+    background-color: var(--mapletip-color-panel);
+  }
+
+  .mantine-datatable tbody tr:hover td[data-pinned] {
+    background-color: var(--mapletip-color-hover);
+  }
+
+  /* Mantine respects the preference for its own transitions; DataTable does not. */
+  @media (prefers-reduced-motion: reduce) {
+    .mantine-datatable *,
+    .mantine-datatable *::before,
+    .mantine-datatable *::after {
+      transition-duration: 0.01ms;
+      animation-duration: 0.01ms;
+      animation-iteration-count: 1;
+    }
+  }
+}

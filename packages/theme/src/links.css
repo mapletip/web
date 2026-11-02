@@ -1,0 +1,11 @@
+@layer mapletip.links {
+  /*
+   * Plain `<a href>` record links (the component library's documented pattern)
+   * share the Anchor colour and stay distinguishable in body copy. Anchors with
+   * their own component classes (Anchor, NavLink, Pagination) keep their styles.
+   */
+  a:not([class]) {
+    color: var(--mantine-color-anchor);
+    text-decoration: underline;
+  }
+}
