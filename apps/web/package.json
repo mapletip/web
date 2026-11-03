@@ -8,8 +8,8 @@
   },
   "scripts": {
     "build": "vite build",
-    "predev": "turbo run build --filter=@mapletip/component-library",
-    "dev": "vite dev --port 3000",
+    "dev": "turbo run dev:app --filter=@mapletip/web",
+    "dev:app": "vite dev --port 3000",
     "generate-routes": "vite build",
     "lint": "eslint . --max-warnings 0",
     "preview": "vite preview",
