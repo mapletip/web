@@ -3,7 +3,6 @@ import { useDisclosure } from '@mantine/hooks';
 import { CaretDown } from '@phosphor-icons/react';
 import {
   useId,
-  useRef,
   useState,
   type KeyboardEvent,
   type ReactElement,
@@ -19,9 +18,6 @@ import type {
   HeaderProps,
   HeaderSubLink,
 } from '@/components/Header/types';
-
-/** Mirrors the CSS breakpoint used by the responsive header. */
-const DESKTOP_MEDIA_QUERY = '(min-width: 62em)';
 
 function isGroupLink(link: HeaderLink): link is HeaderGroupLink {
   return link.children !== undefined && link.children.length > 0;
@@ -263,7 +259,6 @@ export function Header({
   const [drawerOpened, drawer] = useDisclosure();
   const [utilityInDrawer, setUtilityInDrawer] = useState(false);
   const drawerId = useId();
-  const brandRef = useRef<HTMLDivElement>(null);
   const hasNavigation = navigation.length > 0;
   const hasUtility =
     utility !== null && utility !== undefined && utility !== false;
@@ -273,13 +268,6 @@ export function Header({
   const openDrawer = () => {
     setUtilityInDrawer(true);
     drawer.open();
-  };
-
-  const handleDrawerExit = () => {
-    setUtilityInDrawer(false);
-    if (window.matchMedia(DESKTOP_MEDIA_QUERY).matches) {
-      brandRef.current?.querySelector<HTMLElement>('a[href], button')?.focus();
-    }
   };
 
   return (
@@ -299,9 +287,7 @@ export function Header({
             size="sm"
           />
         ) : null}
-        <div ref={brandRef} className={classes['brand']}>
-          {brand}
-        </div>
+        <div className={classes['brand']}>{brand}</div>
         {hasNavigation ? (
           <DesktopNavigation
             navigation={navigation}
@@ -320,7 +306,7 @@ export function Header({
         <Drawer.Root
           opened={drawerOpened}
           onClose={drawer.close}
-          onExitTransitionEnd={handleDrawerExit}
+          onExitTransitionEnd={() => setUtilityInDrawer(false)}
           position="left"
           size="100%"
         >

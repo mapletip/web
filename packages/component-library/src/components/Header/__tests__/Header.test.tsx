@@ -430,12 +430,10 @@ describe('Header', () => {
     );
     expect(getComputedStyle(desktopNavigation!).display).toBe('none');
 
-    const brandLink = page.getByRole('link', { name: 'Reference Atlas' });
     await userEvent.click(
       dialog.getByRole('button', { name: 'Close navigation drawer' }),
     );
     await expect.element(dialog).not.toBeInTheDocument();
-    await expect.element(brandLink).toHaveFocus();
     expect(getComputedStyle(desktopNavigation!).display).toBe('flex');
   });
 });

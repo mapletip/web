@@ -47,49 +47,6 @@ The component library never owns application navigation content. For controlled 
 pass `state` and `onStateChange`; for self-managed browsing pass `defaultState`. Supply `getPageHref` so
 pagination renders real links, and keep entity names as ordinary `<a href>` links.
 
-## Header integration
-
-`Header` is also content-free: the host supplies the brand element, destinations, active and
-current state, and optional utility content. Ordinary anchors are the default. A TanStack
-Router host can pass `renderLink` and forward the supplied presentation props to its `Link`.
-Split the built `href` so search, hash and preloading stay with the router:
-
-```tsx
-<Header
-  brand={<Link to="/">Reference Atlas</Link>}
-  navigation={navigation}
-  utility={<BuildSelector />}
-  renderLink={(link, props) => {
-    const { href, ...anchorProps } = props;
-    const url = new URL(href, 'https://example.invalid');
-    return (
-      <Link
-        to={url.pathname}
-        search={Object.fromEntries(url.searchParams)}
-        hash={url.hash.slice(1)}
-        {...anchorProps}
-      >
-        {link.label}
-      </Link>
-    );
-  }}
-/>
-```
-
-Route-specific search parsing stays with the host; `href` contains the already-built
-destination, including path parameters.
-
-Grouped items can omit `href` when the group is only a category: the label becomes a
-disclosure button on desktop and a section label in the mobile drawer. When `href` is present,
-the parent link and its separate disclosure button remain distinct controls.
-The optional utility node is mounted only once: in the desktop header, or in the mobile drawer
-while it is open. It may remount when moving between those locations, so persistent state
-belongs to the host.
-
-Server-rendered desktop navigation is ordinary anchor markup. The compact/mobile drawer is a
-client-side Mantine disclosure, so opening it requires hydration; Header itself fetches no
-data and does not depend on the router at runtime.
-
 ## Persistence
 
 Table column widths are remembered per table shape in one stable bucket, derived from the
