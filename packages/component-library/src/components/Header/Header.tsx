@@ -5,12 +5,14 @@ import {
   useId,
   useRef,
   useState,
+  type KeyboardEvent,
   type ReactElement,
   type ReactNode,
 } from 'react';
 
 import classes from '@/components/Header/Header.module.css';
 import type {
+  HeaderGroupLink,
   HeaderLink,
   HeaderLinkRenderer,
   HeaderLinkRenderProps,
@@ -21,8 +23,16 @@ import type {
 /** Mirrors the CSS breakpoint used by the responsive header. */
 const DESKTOP_MEDIA_QUERY = '(min-width: 62em)';
 
+function isGroupLink(link: HeaderLink): link is HeaderGroupLink {
+  return link.children !== undefined && link.children.length > 0;
+}
+
+function navigableLink(link: HeaderLink): HeaderSubLink | undefined {
+  return link.href === undefined ? undefined : { ...link, href: link.href };
+}
+
 function renderNavigationLink(
-  link: HeaderLink | HeaderSubLink,
+  link: HeaderSubLink,
   className: string,
   onActivate: (() => void) | undefined,
   linkRenderer: HeaderLinkRenderer | undefined,
@@ -47,12 +57,20 @@ function DesktopGroup({
   link,
   linkRenderer,
 }: {
-  readonly link: HeaderLink;
+  readonly link: HeaderGroupLink;
   readonly linkRenderer: HeaderLinkRenderer | undefined;
 }): ReactElement {
   const [opened, disclosure] = useDisclosure();
   const dropdownId = useId();
-  const children = link.children ?? [];
+  const parentLink = navigableLink(link);
+  const children = link.children;
+  const handleDisclosureKeyDown = (event: KeyboardEvent<HTMLButtonElement>) => {
+    // Popover handles Escape inside the panel; mirror it on the trigger.
+    if (event.key === 'Escape' && opened) {
+      event.preventDefault();
+      disclosure.close();
+    }
+  };
 
   return (
     <li className={classes['desktopItem']}>
@@ -60,12 +78,14 @@ function DesktopGroup({
         className={classes['group']}
         data-expanded={opened ? 'true' : undefined}
       >
-        {renderNavigationLink(
-          link,
-          classes['desktopLink'] ?? '',
-          undefined,
-          linkRenderer,
-        )}
+        {parentLink
+          ? renderNavigationLink(
+              parentLink,
+              classes['desktopLink'] ?? '',
+              undefined,
+              linkRenderer,
+            )
+          : null}
         {/* A portal would move the links to the end of the document and break Tab order. */}
         <Popover
           opened={opened}
@@ -78,8 +98,10 @@ function DesktopGroup({
           <Popover.Target>
             <button
               type="button"
-              className={classes['disclosure']}
-              aria-label={`Show ${link.label} links`}
+              className={
+                parentLink ? classes['disclosure'] : classes['groupTrigger']
+              }
+              aria-label={parentLink ? `Show ${link.label} links` : undefined}
               aria-expanded={opened}
               aria-controls={opened ? dropdownId : undefined}
               data-active={
@@ -88,14 +110,9 @@ function DesktopGroup({
                   : undefined
               }
               onClick={disclosure.toggle}
-              onKeyDown={(event) => {
-                // Popover handles Escape inside the panel; mirror it on the trigger.
-                if (event.key === 'Escape' && opened) {
-                  event.preventDefault();
-                  disclosure.close();
-                }
-              }}
+              onKeyDown={handleDisclosureKeyDown}
             >
+              {parentLink ? null : <span>{link.label}</span>}
               <CaretDown size={14} aria-hidden="true" />
             </button>
           </Popover.Target>
@@ -132,23 +149,27 @@ function DesktopNavigation({
     <nav aria-label={navigationLabel} className={classes['desktopNavigation']}>
       <ul className={classes['desktopList']}>
         {navigation.map((link) => {
-          const children = link.children ?? [];
-          return children.length > 0 ? (
-            <DesktopGroup
-              key={link.id}
-              link={link}
-              linkRenderer={linkRenderer}
-            />
-          ) : (
+          if (isGroupLink(link)) {
+            return (
+              <DesktopGroup
+                key={link.id}
+                link={link}
+                linkRenderer={linkRenderer}
+              />
+            );
+          }
+
+          const parentLink = navigableLink(link);
+          return parentLink ? (
             <li key={link.id} className={classes['desktopItem']}>
               {renderNavigationLink(
-                link,
+                parentLink,
                 classes['desktopLink'] ?? '',
                 undefined,
                 linkRenderer,
               )}
             </li>
-          );
+          ) : null;
         })}
       </ul>
     </nav>
@@ -164,15 +185,20 @@ function MobileNavigationLink({
   readonly linkRenderer: HeaderLinkRenderer | undefined;
   readonly onNavigate: () => void;
 }): ReactElement {
+  const parentLink = navigableLink(link);
   const children = link.children ?? [];
 
   return (
     <li>
-      {renderNavigationLink(
-        link,
-        classes['mobileLink'] ?? '',
-        onNavigate,
-        linkRenderer,
+      {parentLink ? (
+        renderNavigationLink(
+          parentLink,
+          classes['mobileLink'] ?? '',
+          onNavigate,
+          linkRenderer,
+        )
+      ) : (
+        <span className={classes['mobileGroupLabel']}>{link.label}</span>
       )}
       {children.length > 0 ? (
         <ul

@@ -79,7 +79,9 @@ Split the built `href` so search, hash and preloading stay with the router:
 Route-specific search parsing stays with the host; `href` contains the already-built
 destination, including path parameters.
 
-Grouped items keep the parent destination as a link and use a separate disclosure button.
+Grouped items can omit `href` when the group is only a category: the label becomes a
+disclosure button on desktop and a section label in the mobile drawer. When `href` is present,
+the parent link and its separate disclosure button remain distinct controls.
 The optional utility node is mounted only once: in the desktop header, or in the mobile drawer
 while it is open. It may remount when moving between those locations, so persistent state
 belongs to the host.

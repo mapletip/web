@@ -20,7 +20,6 @@ const defaultNavigation = [
   {
     id: 'collections',
     label: 'Collections',
-    href: '/collections',
     children: [
       { id: 'maps', label: 'Maps', href: '/collections/maps' },
       { id: 'specimens', label: 'Specimens', href: '/collections/specimens' },
@@ -38,7 +37,6 @@ const longNavigation = [
   {
     id: 'collections',
     label: 'Collections and long-term archive',
-    href: '/collections',
     children: [
       {
         id: 'maps',
@@ -106,11 +104,11 @@ describe('Header', () => {
     await expect
       .element(page.getByRole('link', { name: 'Overview' }))
       .toHaveAttribute('href', '/overview');
+    expect(
+      page.getByRole('link', { name: 'Collections' }).elements(),
+    ).toHaveLength(0);
     await expect
-      .element(page.getByRole('link', { name: 'Collections' }))
-      .toHaveAttribute('href', '/collections');
-    await expect
-      .element(page.getByRole('button', { name: 'Show Collections links' }))
+      .element(page.getByRole('button', { name: 'Collections' }))
       .toBeVisible();
     await expect
       .element(page.getByRole('button', { name: 'Account' }))
@@ -130,7 +128,6 @@ describe('Header', () => {
         {
           id: 'collections',
           label: 'Collections',
-          href: '/collections',
           active: true,
           children: [
             {
@@ -146,15 +143,13 @@ describe('Header', () => {
     });
 
     const overview = page.getByRole('link', { name: 'Overview' });
-    const collections = page.getByRole('link', { name: 'Collections' });
+    const collections = page.getByRole('button', { name: 'Collections' });
     await expect.element(overview).not.toHaveAttribute('aria-current');
     await expect.element(overview).toHaveAttribute('data-active', 'true');
     await expect.element(collections).not.toHaveAttribute('aria-current');
     await expect.element(collections).toHaveAttribute('data-active', 'true');
 
-    await userEvent.click(
-      page.getByRole('button', { name: 'Show Collections links' }),
-    );
+    await userEvent.click(collections);
     const maps = page.getByRole('link', { name: 'Maps' });
     await expect.element(maps).toHaveAttribute('aria-current', 'page');
     await expect.element(maps).toHaveAttribute('data-active', 'true');
@@ -176,10 +171,17 @@ describe('Header', () => {
     expect(document.querySelectorAll('[role="dialog"]')).toHaveLength(0);
   });
 
-  it('keeps a grouped parent link separate from its disclosure button', async () => {
+  it('keeps an optional navigable group parent separate from its disclosure button', async () => {
     await renderHeader({
       brand: brand(),
-      navigation: defaultNavigation,
+      navigation: [
+        {
+          id: 'collections',
+          label: 'Collections',
+          href: '/collections',
+          children: [{ id: 'maps', label: 'Maps', href: '/collections/maps' }],
+        },
+      ],
     });
 
     const parent = page.getByRole('link', { name: 'Collections' });
@@ -207,9 +209,7 @@ describe('Header', () => {
       navigation: defaultNavigation,
     });
 
-    await userEvent.click(
-      page.getByRole('button', { name: 'Show Collections links' }),
-    );
+    await userEvent.click(page.getByRole('button', { name: 'Collections' }));
     const maps = page.getByRole('link', { name: 'Maps' });
     await expect.element(maps).toBeVisible();
 
@@ -261,6 +261,10 @@ describe('Header', () => {
     await expect
       .element(dialog.getByRole('link', { name: 'Maps' }))
       .toBeVisible();
+    await expect.element(dialog.getByText('Collections')).toBeVisible();
+    expect(
+      dialog.getByRole('link', { name: 'Collections' }).elements(),
+    ).toHaveLength(0);
     await expect
       .element(dialog.getByRole('button', { name: 'Account' }))
       .toBeVisible();

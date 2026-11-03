@@ -11,7 +11,6 @@ const defaultNavigation = [
   {
     id: 'collections',
     label: 'Collections',
-    href: '/collections',
     children: [
       { id: 'maps', label: 'Maps', href: '/collections/maps' },
       { id: 'specimens', label: 'Specimens', href: '/collections/specimens' },
@@ -32,7 +31,6 @@ const activeNavigation = [
   {
     id: 'collections',
     label: 'Collections',
-    href: '/collections',
     active: true,
     children: [
       {
@@ -58,7 +56,6 @@ const longNavigation = [
   {
     id: 'collections',
     label: 'Collections and long-term archive',
-    href: '/collections',
     children: [
       {
         id: 'maps',
@@ -159,9 +156,7 @@ export const GroupedNavigationOpen: Story = {
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await userEvent.click(
-      canvas.getByRole('button', { name: 'Show Collections links' }),
-    );
+    await userEvent.click(canvas.getByRole('button', { name: 'Collections' }));
     await waitFor(async () => {
       await expect(canvas.getByRole('link', { name: 'Maps' })).toBeVisible();
     });

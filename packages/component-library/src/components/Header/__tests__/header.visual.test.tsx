@@ -24,9 +24,7 @@ const openNavigation = page.getByRole('button', {
   name: 'Open navigation',
   includeHidden: true,
 });
-const showCollections = page.getByRole('button', {
-  name: 'Show Collections links',
-});
+const showCollections = page.getByRole('button', { name: 'Collections' });
 const maps = page.getByRole('link', { name: 'Maps' });
 const drawer = page.getByRole('dialog', { name: 'Navigation' });
 

@@ -8,6 +8,8 @@ export type {
 } from '@/components/Table';
 export { Header } from '@/components/Header';
 export type {
+  HeaderGroupLink,
+  HeaderLeafLink,
   HeaderLink,
   HeaderLinkRenderer,
   HeaderLinkRenderProps,

@@ -1,20 +1,35 @@
 import type { ReactNode } from 'react';
 
-/** A destination rendered below a top-level navigation item. */
-export interface HeaderSubLink {
+interface HeaderLinkBase {
   readonly id: string;
   readonly label: string;
-  readonly href: string;
   /** The host marks the section containing the current destination. */
   readonly active?: boolean;
   /** The host marks the exact current page. */
   readonly current?: boolean;
 }
 
-/** A top-level navigation destination, optionally with one level of children. */
-export interface HeaderLink extends HeaderSubLink {
-  readonly children?: readonly HeaderSubLink[];
+/** A destination rendered below a top-level navigation item. */
+export interface HeaderSubLink extends HeaderLinkBase {
+  readonly href: string;
 }
+
+/** A directly navigable top-level destination. */
+export interface HeaderLeafLink extends HeaderSubLink {
+  readonly children?: never;
+}
+
+/** A top-level disclosure group with one level of child destinations. */
+export interface HeaderGroupLink extends HeaderLinkBase {
+  /**
+   * Optional parent destination. Omit it when the group label should only
+   * disclose children, as in a category that has no landing page.
+   */
+  readonly href?: string;
+  readonly children: readonly HeaderSubLink[];
+}
+
+export type HeaderLink = HeaderLeafLink | HeaderGroupLink;
 
 /**
  * Presentation props the Header would apply to an ordinary anchor. A host
@@ -31,7 +46,7 @@ export interface HeaderLinkRenderProps {
 }
 
 export type HeaderLinkRenderer = (
-  link: HeaderLink | HeaderSubLink,
+  link: HeaderSubLink,
   props: HeaderLinkRenderProps,
 ) => ReactNode;
 

@@ -16,7 +16,6 @@ const navigation = [
   {
     id: 'collections',
     label: 'Collections',
-    href: '/collections',
     active: true,
     children: [
       {
@@ -44,11 +43,10 @@ describe('Header server rendering', () => {
     expect(html).toContain('<header');
     expect(html).toContain('aria-label="Primary navigation"');
     expect(html).toContain('href="/overview"');
-    expect(html).toContain('href="/collections"');
+    expect(html).toContain('Collections');
     expect(html).toContain('data-active="true"');
     expect(html).toContain('aria-current="page"');
     expect(html.match(/aria-current="page"/gu)).toHaveLength(1);
-    expect(html).toContain('Show Collections links');
     expect(html).toContain('Account');
   });
 
