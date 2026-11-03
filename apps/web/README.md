@@ -11,16 +11,5 @@ pnpm dev
 ```
 
 The app starts at <http://localhost:3000>. Storybook remains separate:
-`pnpm storybook` at <http://localhost:6006>.
-
-## Routes
-
-- `/` — Coming soon.
-- `/demo/faceted-browser` — server-rendered FacetedBrowser demo with local mock
-  records.
-
-SSR check:
-
-```sh
-curl -s http://localhost:3000/demo/faceted-browser | grep -o 'Demo [A-Za-z]* [0-9]\{3\}'
-```
+`pnpm storybook` at <http://localhost:6006>. Use the root `pnpm dev` command
+while editing the component library; it keeps the library build watching.
