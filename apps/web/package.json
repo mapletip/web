@@ -8,11 +8,12 @@
   },
   "scripts": {
     "build": "vite build",
-    "dev": "vite dev --port 3000",
+    "dev": "turbo run dev:web --filter=@mapletip/web",
+    "dev:web": "vite dev --port 3000",
     "generate-routes": "vite build",
     "lint": "eslint . --max-warnings 0",
     "preview": "vite preview",
-    "typecheck": "tsc -p tsconfig.typecheck.json"
+    "typecheck": "tsc"
   },
   "dependencies": {
     "@mantine/core": "catalog:",
@@ -30,9 +31,6 @@
     "@types/react-dom": "catalog:",
     "@vitejs/plugin-react": "catalog:",
     "eslint": "catalog:",
-    "postcss": "catalog:",
-    "postcss-preset-mantine": "catalog:",
-    "postcss-simple-vars": "catalog:",
     "typescript": "catalog:",
     "vite": "catalog:"
   }

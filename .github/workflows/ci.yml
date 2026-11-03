@@ -43,8 +43,8 @@ jobs:
         with:
           use-relative-cache-path: true
 
-      - name: Format check, lint, typecheck, build Storybook
-        run: pnpm turbo run format:check:root lint typecheck build-storybook
+      - name: Format check, lint, typecheck, build, build Storybook
+        run: pnpm turbo run format:check:root lint typecheck build build-storybook
 
       - name: Upload Storybook
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7

@@ -20,12 +20,13 @@ pnpm install
 
 ## Commands
 
-| Command                | What it does                                |
-| ---------------------- | ------------------------------------------- |
-| `pnpm dev`             | TanStack Start app on http://localhost:3000 |
-| `pnpm storybook`       | Storybook on http://localhost:6006          |
-| `pnpm build-storybook` | Static Storybook build                      |
-| `pnpm test`            | Tests                                       |
-| `pnpm lint`            | ESLint                                      |
-| `pnpm typecheck`       | TypeScript                                  |
-| `pnpm format`          | Prettier                                    |
+| Command                | What it does                                 |
+| ---------------------- | -------------------------------------------- |
+| `pnpm dev`             | TanStack Start app on http://localhost:3000  |
+| `pnpm build`           | Component library and Start production build |
+| `pnpm storybook`       | Storybook on http://localhost:6006           |
+| `pnpm build-storybook` | Static Storybook build                       |
+| `pnpm test`            | Tests                                        |
+| `pnpm lint`            | ESLint                                       |
+| `pnpm typecheck`       | TypeScript                                   |
+| `pnpm format`          | Prettier                                     |

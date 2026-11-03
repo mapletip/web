@@ -3,14 +3,29 @@
   "ui": "tui",
   "globalDependencies": [".nvmrc"],
   "tasks": {
-    "lint": {
-      "dependsOn": ["^lint"]
+    "//#format:check:root": {},
+    "//#format:root": {
+      "cache": false
     },
-    "typecheck": {
-      "dependsOn": ["^typecheck"]
+    "build": {
+      "dependsOn": ["^build"],
+      "outputs": ["dist/**"]
     },
     "build-storybook": {
       "outputs": ["storybook-static/**"]
+    },
+    "dev": {
+      "cache": false,
+      "persistent": true
+    },
+    "dev:web": {
+      "cache": false,
+      "persistent": true,
+      "dependsOn": ["^build"],
+      "with": ["@mapletip/component-library#dev"]
+    },
+    "lint": {
+      "dependsOn": ["^lint", "^build"]
     },
     "storybook": {
       "cache": false,
@@ -20,9 +35,8 @@
     "test": {
       "passThroughEnv": ["PLAYWRIGHT_BROWSERS_PATH", "PLAYWRIGHT_WS_ENDPOINT"]
     },
-    "//#format:root": {
-      "cache": false
-    },
-    "//#format:check:root": {}
+    "typecheck": {
+      "dependsOn": ["^typecheck", "^build"]
+    }
   }
 }

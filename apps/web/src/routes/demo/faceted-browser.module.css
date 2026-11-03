@@ -6,7 +6,7 @@
   padding: var(--mantine-spacing-md);
 }
 
-@media (min-width: $mantine-breakpoint-md) {
+@media (min-width: 62em) {
   .page {
     padding: var(--mantine-spacing-xl);
   }

@@ -1,7 +1,5 @@
 import type { ReactElement } from 'react';
 
-import '@/components/Table/styles';
-
 import type { TableProps } from '@/components/Table';
 import { MantineDataTableAdapter } from '@/components/Table/MantineDataTableAdapter';
 
