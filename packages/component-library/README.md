@@ -4,6 +4,8 @@ Shared React components for MapleTip browse and comparison pages.
 
 ## What's included
 
+- `Header` — a generic, host-configured global header with desktop navigation,
+  one-level groups and a mobile drawer.
 - `FacetedBrowser` — a complete browse surface: search, facets, filter rail, quick
   facets, mobile filter drawer, results, status and pagination.
 - `useFacetedBrowser` — headless browse state and query handling for custom layouts.
@@ -41,9 +43,50 @@ MapleTip is dark-only; hosts should set `forceColorScheme="dark"` so first paint
 server rendering and hydrated UI stay on the Maple Twilight scheme. See
 [`@mapletip/theme`](../theme/README.md) for the host setup.
 
-The component library never owns navigation. For controlled browsing pass `state` and
-`onStateChange`; for self-managed browsing pass `defaultState`. Supply `getPageHref` so
+The component library never owns application navigation content. For controlled browsing
+pass `state` and `onStateChange`; for self-managed browsing pass `defaultState`. Supply `getPageHref` so
 pagination renders real links, and keep entity names as ordinary `<a href>` links.
+
+## Header integration
+
+`Header` is also content-free: the host supplies the brand element, destinations, active and
+current state, and optional utility content. Ordinary anchors are the default. A TanStack
+Router host can pass `renderLink` and forward the supplied presentation props to its `Link`.
+Split the built `href` so search, hash and preloading stay with the router:
+
+```tsx
+<Header
+  brand={<Link to="/">Reference Atlas</Link>}
+  navigation={navigation}
+  utility={<BuildSelector />}
+  renderLink={(link, props) => {
+    const { href, ...anchorProps } = props;
+    const url = new URL(href, 'https://example.invalid');
+    return (
+      <Link
+        to={url.pathname}
+        search={Object.fromEntries(url.searchParams)}
+        hash={url.hash.slice(1)}
+        {...anchorProps}
+      >
+        {link.label}
+      </Link>
+    );
+  }}
+/>
+```
+
+Route-specific search parsing stays with the host; `href` contains the already-built
+destination, including path parameters.
+
+Grouped items keep the parent destination as a link and use a separate disclosure button.
+The optional utility node is mounted only once: in the desktop header, or in the mobile drawer
+while it is open. It may remount when moving between those locations, so persistent state
+belongs to the host.
+
+Server-rendered desktop navigation is ordinary anchor markup. The compact/mobile drawer is a
+client-side Mantine disclosure, so opening it requires hydration; Header itself fetches no
+data and does not depend on the router at runtime.
 
 ## Persistence
 

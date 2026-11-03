@@ -62,6 +62,7 @@ export default mergeConfig(
     optimizeDeps: {
       include: [
         '@mantine/core',
+        '@mantine/hooks',
         '@tanstack/react-table',
         'react-dom/client',
         'react-dom/server',

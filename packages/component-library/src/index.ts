@@ -6,6 +6,14 @@ export type {
   TableName,
   TableProps,
 } from '@/components/Table';
+export { Header } from '@/components/Header';
+export type {
+  HeaderLink,
+  HeaderLinkRenderer,
+  HeaderLinkRenderProps,
+  HeaderProps,
+  HeaderSubLink,
+} from '@/components/Header';
 export { FacetedBrowser, useFacetedBrowser } from '@/components/FacetedBrowser';
 export type {
   BrowseState,
