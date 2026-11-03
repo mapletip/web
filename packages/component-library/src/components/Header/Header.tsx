@@ -322,7 +322,7 @@ export function Header({
           onClose={drawer.close}
           onExitTransitionEnd={handleDrawerExit}
           position="left"
-          size="min(22rem, 88vw)"
+          size="100%"
         >
           <Drawer.Overlay backgroundOpacity={0.65} />
           <Drawer.Content id={drawerId} className={classes['drawerContent']}>
