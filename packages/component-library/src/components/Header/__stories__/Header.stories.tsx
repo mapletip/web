@@ -21,12 +21,7 @@ const defaultNavigation = [
 ] satisfies readonly HeaderLink[];
 
 const activeNavigation = [
-  {
-    id: 'overview',
-    label: 'Overview',
-    href: '/overview',
-    active: true,
-  },
+  { id: 'overview', label: 'Overview', href: '/overview' },
   { id: 'field-guide', label: 'Field guide', href: '/field-guide' },
   {
     id: 'collections',
