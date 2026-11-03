@@ -54,7 +54,23 @@
 
 .group {
   position: relative;
-  gap: 2px;
+  gap: 0;
+}
+
+.group > .desktopLink {
+  border-start-end-radius: 0;
+  border-end-end-radius: 0;
+}
+
+.group > .disclosure {
+  margin-inline-start: -1px;
+  border-start-start-radius: 0;
+  border-end-start-radius: 0;
+}
+
+.group[data-expanded='true'] > .desktopLink {
+  color: var(--mapletip-color-ink);
+  background: var(--mapletip-color-hover);
 }
 
 .desktopLink,

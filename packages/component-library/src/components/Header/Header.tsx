@@ -56,7 +56,10 @@ function DesktopGroup({
 
   return (
     <li className={classes['desktopItem']}>
-      <div className={classes['group']}>
+      <div
+        className={classes['group']}
+        data-expanded={opened ? 'true' : undefined}
+      >
         {renderNavigationLink(
           link,
           classes['desktopLink'] ?? '',
