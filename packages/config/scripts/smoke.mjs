@@ -115,8 +115,8 @@ const checks = [
       assert.ok(config.build.lib);
       const entry = config.build.lib.entry;
       assert.ok(Array.isArray(entry) && entry.length > 0);
-      assert.ok(config.build.rollupOptions);
-      const output = config.build.rollupOptions.output;
+      assert.ok(config.build.rolldownOptions);
+      const output = config.build.rolldownOptions.output;
       assert.ok(Array.isArray(output) && output.length === 1);
     },
   ],

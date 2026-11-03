@@ -7,9 +7,13 @@ import { externalizeDeps } from 'vite-plugin-externalize-deps';
  * per-module output preserving the src/ layout. ESM-only by default; pass
  * `formats: ['es', 'cjs']` for dual output.
  *
- * @param {{ entry?: string[], formats?: ('es' | 'cjs')[] }} [options]
+ * @param {{ entry?: string[], formats?: ('es' | 'cjs')[], cssFileName?: string }} [options]
  */
-export function lib({ entry = ['src/index.ts'], formats = ['es'] } = {}) {
+export function lib({
+  entry = ['src/index.ts'],
+  formats = ['es'],
+  cssFileName,
+} = {}) {
   return defineConfig({
     plugins: [
       dts({
@@ -20,17 +24,23 @@ export function lib({ entry = ['src/index.ts'], formats = ['es'] } = {}) {
           '**/__stories__/**',
           '**/.storybook/**',
           '**/fixtures/**',
+          '**/test-support/**',
           '**/*.test.*',
           '**/*.stories.*',
           '**/vitest.config.*',
+          '**/vite*.config.*',
+          '**/styles.ts',
         ],
       }),
       externalizeDeps(),
     ],
     build: {
       sourcemap: true,
-      lib: { entry },
-      rollupOptions: {
+      lib: {
+        entry,
+        ...(cssFileName !== undefined ? { cssFileName } : {}),
+      },
+      rolldownOptions: {
         output: formats.map((format) => ({
           format,
           exports: 'auto',

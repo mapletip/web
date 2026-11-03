@@ -1,9 +1,10 @@
 {
-  "name": "@mapletip/web",
   "private": true,
   "type": "module",
   "scripts": {
+    "build": "turbo run build",
     "build-storybook": "turbo run build-storybook",
+    "dev": "turbo run dev:app --filter=@mapletip/web",
     "format": "turbo run format:root",
     "format:check": "turbo run format:check:root",
     "format:check:root": "prettier --check .",

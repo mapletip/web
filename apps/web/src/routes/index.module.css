@@ -1,0 +1,10 @@
+.page {
+  display: grid;
+  min-height: 100vh;
+  align-content: center;
+  justify-items: start;
+  gap: var(--mantine-spacing-sm);
+  width: min(42rem, 100%);
+  margin: 0 auto;
+  padding: var(--mantine-spacing-xl);
+}

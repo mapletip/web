@@ -12,7 +12,10 @@
     "./prettier": "./prettier/index.js",
     "./typescript/node": "./typescript/node.json",
     "./typescript/vite-react": "./typescript/vite-react.json",
-    "./vite/lib": "./vite/lib.js",
+    "./vite/lib": {
+      "types": "./vite/lib.d.ts",
+      "default": "./vite/lib.js"
+    },
     "./vitest/browser": "./vitest/browser.js",
     "./vitest/react": "./vitest/react.js"
   },
