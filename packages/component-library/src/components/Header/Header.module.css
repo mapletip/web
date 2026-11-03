@@ -1,0 +1,292 @@
+.header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--mantine-spacing-sm);
+  width: 100%;
+  min-height: 4rem;
+  padding: var(--mantine-spacing-xs) 1rem;
+  color: var(--mapletip-color-ink);
+  background: var(--mapletip-color-panel);
+  border-bottom: 1px solid var(--mapletip-color-border-subtle);
+}
+
+.brand {
+  display: flex;
+  flex: 0 1 auto;
+  align-items: center;
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+
+.burger {
+  display: none;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+}
+
+.desktopNavigation {
+  display: flex;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.desktopList,
+.subList,
+.mobileList,
+.mobileSubList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.desktopItem,
+.group {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.group {
+  position: relative;
+  gap: 0;
+}
+
+.group > .desktopLink {
+  border-start-end-radius: 0;
+  border-end-end-radius: 0;
+}
+
+.group > .disclosure {
+  margin-inline-start: -1px;
+  border-start-start-radius: 0;
+  border-end-start-radius: 0;
+}
+
+.group[data-expanded='true'] > .desktopLink,
+.group[data-expanded='true'] > .groupTrigger {
+  color: var(--mapletip-color-ink);
+  background: var(--mapletip-color-hover);
+}
+
+.desktopLink,
+.groupTrigger,
+.subLink,
+.mobileLink,
+.mobileSubLink {
+  color: var(--mapletip-color-muted);
+  font-weight: 600;
+  line-height: 1.25;
+  text-decoration: none;
+  overflow-wrap: anywhere;
+  border: 1px solid transparent;
+  border-radius: var(--mantine-radius-sm);
+}
+
+.desktopLink,
+.groupTrigger {
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+  padding: 0 var(--mantine-spacing-sm);
+  font-size: var(--mantine-font-size-sm);
+}
+
+.groupTrigger {
+  gap: 4px;
+  font-family: inherit;
+  background: transparent;
+  cursor: pointer;
+}
+
+.disclosure {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  min-height: 40px;
+  padding: 0;
+  color: var(--mapletip-color-muted);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--mantine-radius-sm);
+  cursor: pointer;
+}
+
+.dropdown {
+  min-width: 12rem;
+  max-width: min(22rem, calc(100vw - 2rem));
+  padding: var(--mantine-spacing-xs);
+  background: var(--mapletip-color-panel);
+  border: 1px solid var(--mapletip-color-border-subtle);
+  border-radius: var(--mantine-radius-md);
+  box-shadow: var(--mantine-shadow-md);
+}
+
+.subList {
+  flex-direction: column;
+  flex-wrap: nowrap;
+  min-width: 12rem;
+}
+
+.subLink {
+  display: flex;
+  align-items: center;
+  min-height: 40px;
+  padding: var(--mantine-spacing-xs) var(--mantine-spacing-sm);
+  font-size: var(--mantine-font-size-sm);
+}
+
+.mobileList,
+.mobileSubList {
+  flex-direction: column;
+  flex-wrap: nowrap;
+}
+
+.mobileSubList {
+  margin-block-start: 2px;
+  padding-inline-start: var(--mantine-spacing-md);
+}
+
+.mobileLink,
+.mobileSubLink {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  padding: var(--mantine-spacing-xs) var(--mantine-spacing-sm);
+  font-size: var(--mantine-font-size-sm);
+}
+
+.mobileGroupLabel {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  padding: var(--mantine-spacing-xs) var(--mantine-spacing-sm);
+  color: var(--mapletip-color-ink);
+  font-size: var(--mantine-font-size-sm);
+  font-weight: 700;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.mobileSubLink {
+  font-weight: 500;
+}
+
+.desktopLink:not([data-active='true']):hover,
+.groupTrigger:not([data-active='true']):hover,
+.subLink:not([data-active='true']):hover,
+.mobileLink:not([data-active='true']):hover,
+.mobileSubLink:not([data-active='true']):hover {
+  color: var(--mapletip-color-ink);
+  background: var(--mapletip-color-hover);
+}
+
+.disclosure:not([data-active='true']):hover,
+.disclosure:not([data-active='true'])[aria-expanded='true'] {
+  color: var(--mapletip-color-ink);
+  background: var(--mapletip-color-hover);
+}
+
+.desktopLink[data-active='true'],
+.groupTrigger[data-active='true'],
+.subLink[data-active='true'],
+.mobileLink[data-active='true'],
+.mobileSubLink[data-active='true'] {
+  color: var(--mapletip-color-brand-text);
+  background: var(--mapletip-color-selection);
+  border-color: var(--mapletip-color-selection-edge);
+}
+
+.disclosure[data-active='true'] {
+  color: var(--mapletip-color-brand-text);
+  background: var(--mapletip-color-selection);
+  border-color: var(--mapletip-color-selection-edge);
+}
+
+.disclosure[aria-expanded='true'] svg,
+.groupTrigger[aria-expanded='true'] svg {
+  transform: rotate(180deg);
+}
+
+.utility {
+  display: flex;
+  flex: 0 1 auto;
+  align-items: center;
+  min-width: 0;
+  max-width: 100%;
+  margin-inline-start: auto;
+}
+
+.drawerContent {
+  background: var(--mapletip-color-panel);
+}
+
+.drawerHeader {
+  border-bottom: 1px solid var(--mapletip-color-border-subtle);
+}
+
+.drawerBody {
+  padding: var(--mantine-spacing-md);
+}
+
+.drawerUtility {
+  min-width: 0;
+  max-width: 100%;
+  margin-block-start: var(--mantine-spacing-md);
+  padding-block-start: var(--mantine-spacing-md);
+  border-top: 1px solid var(--mapletip-color-border-subtle);
+}
+
+.drawerBody > .drawerUtility:first-child {
+  margin-block-start: 0;
+  padding-block-start: 0;
+  border-top: 0;
+}
+
+@media (max-width: 61.99em) {
+  .header {
+    gap: var(--mantine-spacing-xs);
+  }
+
+  .desktopNavigation,
+  .utility {
+    display: none;
+  }
+
+  .burger {
+    display: inline-flex;
+  }
+}
+
+/* Keep an already-open drawer dismissible if the viewport grows. */
+.header[data-mobile-navigation-open='true'] .desktopNavigation {
+  display: none;
+}
+
+.header[data-mobile-navigation-open='true'] .burger {
+  display: inline-flex;
+}
+
+@media (forced-colors: active) {
+  .desktopLink[data-active='true'],
+  .groupTrigger[data-active='true'],
+  .subLink[data-active='true'],
+  .mobileLink[data-active='true'],
+  .mobileSubLink[data-active='true'],
+  .disclosure[data-active='true'],
+  .disclosure[aria-expanded='true'],
+  .groupTrigger[data-active='true'],
+  .groupTrigger[aria-expanded='true'],
+  .dropdown {
+    border-color: Highlight;
+  }
+}

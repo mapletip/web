@@ -4,6 +4,8 @@ Shared React components for MapleTip browse and comparison pages.
 
 ## What's included
 
+- `Header` — a generic, host-configured global header with desktop navigation,
+  one-level groups and a mobile drawer.
 - `FacetedBrowser` — a complete browse surface: search, facets, filter rail, quick
   facets, mobile filter drawer, results, status and pagination.
 - `useFacetedBrowser` — headless browse state and query handling for custom layouts.
@@ -41,8 +43,8 @@ MapleTip is dark-only; hosts should set `forceColorScheme="dark"` so first paint
 server rendering and hydrated UI stay on the Maple Twilight scheme. See
 [`@mapletip/theme`](../theme/README.md) for the host setup.
 
-The component library never owns navigation. For controlled browsing pass `state` and
-`onStateChange`; for self-managed browsing pass `defaultState`. Supply `getPageHref` so
+The component library never owns application navigation content. For controlled browsing
+pass `state` and `onStateChange`; for self-managed browsing pass `defaultState`. Supply `getPageHref` so
 pagination renders real links, and keep entity names as ordinary `<a href>` links.
 
 ## Persistence
