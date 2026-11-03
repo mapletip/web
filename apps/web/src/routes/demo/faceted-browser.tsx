@@ -151,7 +151,7 @@ const defaultState: BrowseState = {
 
 function FacetedBrowserDemo() {
   return (
-    <main className={classes['page']}>
+    <main id="main-content" tabIndex={-1} className={classes['page']}>
       <Link className={classes['backLink']} to="/">
         ← Back to home
       </Link>

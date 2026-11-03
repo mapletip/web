@@ -20,7 +20,7 @@ export const Route = createFileRoute('/')({
 
 function Home() {
   return (
-    <main className={classes['page']}>
+    <main id="main-content" tabIndex={-1} className={classes['page']}>
       <Title order={1}>Coming soon</Title>
       <Text c="dimmed">MapleTip is still under construction.</Text>
     </main>

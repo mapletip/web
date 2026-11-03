@@ -14,3 +14,19 @@ body {
 #app {
   min-height: 100vh;
 }
+
+.skip-to-main {
+  position: fixed;
+  inset-block-start: 0;
+  inset-inline-start: 0;
+  z-index: 1000;
+  padding: var(--mantine-spacing-xs) var(--mantine-spacing-md);
+  color: var(--mapletip-color-on-brand);
+  background: var(--mapletip-color-brand);
+  border-radius: 0 0 var(--mantine-radius-sm) 0;
+  transform: translateY(-150%);
+}
+
+.skip-to-main:focus-visible {
+  transform: translateY(0);
+}
