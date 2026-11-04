@@ -8,7 +8,7 @@ import classes from './AppHeader.module.css';
 function navigationIcon(file: string) {
   return (
     <img
-      src={`/maplestory/navigation/${file}`}
+      src={`/assets/maplestory/navigation/${file}`}
       alt=""
       width={22}
       height={22}
