@@ -138,6 +138,51 @@ const detailedLongNavigation = [
   },
 ] satisfies readonly HeaderLink[];
 
+const twoDetailedGroups = [
+  {
+    id: 'library',
+    label: 'Library',
+    description: 'Browse reference materials',
+    children: [
+      {
+        id: 'all-materials',
+        label: 'All materials',
+        description: 'Browse every reference item',
+        icon: <SquaresFour />,
+        href: '/library',
+      },
+      {
+        id: 'field-guides',
+        label: 'Field guides',
+        description: 'Regional reference volumes',
+        icon: <BookOpen />,
+        href: '/library/field-guides',
+      },
+    ],
+  },
+  {
+    id: 'atlas',
+    label: 'Atlas',
+    description: 'Browse geographic sheets',
+    children: [
+      {
+        id: 'regional-sheets',
+        label: 'Regional sheets',
+        description: 'Regional cartographic plates',
+        icon: <MapTrifold />,
+        href: '/atlas/regional',
+      },
+      {
+        id: 'world-sheets',
+        label: 'World sheets',
+        description: 'Global cartographic plates',
+        icon: <FolderOpen />,
+        href: '/atlas/world',
+      },
+    ],
+  },
+] satisfies readonly HeaderLink[];
+
 const longNavigation = [
   {
     id: 'regional-field-guide',
@@ -320,10 +365,13 @@ export const DetailedMobileNavigationOpen: Story = {
       canvas.getByRole('button', { name: 'Open navigation' }),
     );
     const dialog = await screen.findByRole('dialog', { name: 'Navigation' });
+    await userEvent.click(
+      within(dialog).getByRole('button', { name: 'Library' }),
+    );
     await waitFor(async () => {
       await expect(dialog).toBeVisible();
       await expect(
-        within(dialog).getByRole('link', { name: 'Field guides' }),
+        within(dialog).getByRole('link', { name: /Field guides/ }),
       ).toBeVisible();
     });
   },
@@ -392,6 +440,144 @@ export const MobileNavigationOpen: Story = {
         within(dialog).getByRole('link', { name: 'Field guide' }),
       ).toBeVisible();
       await expect(within(dialog).getByText('Account')).toBeVisible();
+    });
+  },
+};
+
+export const MobileGroupCollapsed: Story = {
+  name: 'Mobile group collapsed',
+  args: {
+    brand: <ReferenceBrand />,
+    navigation: detailedNavigation,
+  },
+  globals: { viewport: { value: 'phone', isRotated: false } },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(
+      canvas.getByRole('button', { name: 'Open navigation' }),
+    );
+    const dialog = await screen.findByRole('dialog', { name: 'Navigation' });
+    await waitFor(async () => {
+      await expect(dialog).toBeVisible();
+      await expect(
+        within(dialog).getByRole('button', { name: 'Library' }),
+      ).toHaveAttribute('aria-expanded', 'false');
+      await expect(
+        within(dialog).queryAllByRole('link', { name: /Field guides/ }),
+      ).toHaveLength(0);
+    });
+  },
+};
+
+export const MobileGroupExpanded: Story = {
+  name: 'Mobile group expanded',
+  args: {
+    brand: <ReferenceBrand />,
+    navigation: detailedNavigation,
+  },
+  globals: { viewport: { value: 'phone', isRotated: false } },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(
+      canvas.getByRole('button', { name: 'Open navigation' }),
+    );
+    const dialog = await screen.findByRole('dialog', { name: 'Navigation' });
+    await userEvent.click(
+      within(dialog).getByRole('button', { name: 'Library' }),
+    );
+    await waitFor(async () => {
+      await expect(
+        within(dialog).getByRole('link', { name: /Field guides/ }),
+      ).toBeVisible();
+      await expect(
+        within(dialog).getByText('Regional reference volumes'),
+      ).toBeVisible();
+    });
+  },
+};
+
+export const MobileGroupSwitch: Story = {
+  name: 'Mobile group switch',
+  args: {
+    brand: <ReferenceBrand />,
+    navigation: twoDetailedGroups,
+  },
+  globals: { viewport: { value: 'phone', isRotated: false } },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(
+      canvas.getByRole('button', { name: 'Open navigation' }),
+    );
+    const dialog = await screen.findByRole('dialog', { name: 'Navigation' });
+    await userEvent.click(
+      within(dialog).getByRole('button', { name: 'Library' }),
+    );
+    await waitFor(async () => {
+      await expect(
+        within(dialog).getByRole('link', { name: /All materials/ }),
+      ).toBeVisible();
+    });
+
+    await userEvent.click(
+      within(dialog).getByRole('button', { name: 'Atlas' }),
+    );
+    await waitFor(async () => {
+      await expect(
+        within(dialog).getByRole('link', { name: /Regional sheets/ }),
+      ).toBeVisible();
+      await expect(
+        within(dialog).queryAllByRole('link', { name: /All materials/ }),
+      ).toHaveLength(0);
+    });
+  },
+};
+
+export const MobileCompactGroup: Story = {
+  name: 'Mobile compact group',
+  args: {
+    brand: <ReferenceBrand />,
+    navigation: defaultNavigation,
+  },
+  globals: { viewport: { value: 'phone', isRotated: false } },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(
+      canvas.getByRole('button', { name: 'Open navigation' }),
+    );
+    const dialog = await screen.findByRole('dialog', { name: 'Navigation' });
+    await userEvent.click(
+      within(dialog).getByRole('button', { name: 'Collections' }),
+    );
+    await waitFor(async () => {
+      await expect(
+        within(dialog).getByRole('link', { name: 'Maps' }),
+      ).toBeVisible();
+    });
+  },
+};
+
+export const MobileLongLabels: Story = {
+  name: 'Mobile long labels',
+  args: {
+    brand: <ReferenceBrand />,
+    navigation: detailedLongNavigation,
+  },
+  globals: { viewport: { value: 'phone', isRotated: false } },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(
+      canvas.getByRole('button', { name: 'Open navigation' }),
+    );
+    const dialog = await screen.findByRole('dialog', { name: 'Navigation' });
+    await userEvent.click(
+      within(dialog).getByRole('button', {
+        name: 'Library and special collections',
+      }),
+    );
+    await waitFor(async () => {
+      await expect(
+        within(dialog).getByRole('link', { name: /Field guides and regional/ }),
+      ).toBeVisible();
     });
   },
 };

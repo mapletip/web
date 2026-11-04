@@ -1,15 +1,21 @@
 import { Header } from '@mapletip/component-library';
 import type { HeaderLink } from '@mapletip/component-library';
-import {
-  Backpack,
-  Package,
-  Shield,
-  SquaresFour,
-  Sword,
-} from '@phosphor-icons/react';
 import { Link } from '@tanstack/react-router';
 
 import classes from './AppHeader.module.css';
+
+/** Nexon sprite artwork is decorative; the adjacent label names the destination. */
+function sprite(file: string) {
+  return (
+    <img
+      src={`/navigation/${file}`}
+      alt=""
+      width={22}
+      height={22}
+      decoding="async"
+    />
+  );
+}
 
 const navigation: readonly HeaderLink[] = [
   {
@@ -26,28 +32,28 @@ const navigation: readonly HeaderLink[] = [
         id: 'all-equipment',
         label: 'All Equipment',
         description: 'Browse every equipment type',
-        icon: <SquaresFour />,
+        icon: sprite('equipment-all-maple-shield.avif'),
         href: '/maplestory/equipment',
       },
       {
         id: 'armor-accessories',
         label: 'Armor & accessories',
         description: 'Hats, clothing, accessories',
-        icon: <Shield />,
+        icon: sprite('equipment-armor-zakum-helmet.avif'),
         href: '/maplestory/equipment?scope=armor-accessories',
       },
       {
         id: 'weapons',
         label: 'Weapons',
         description: 'Explore weapons by family',
-        icon: <Sword />,
+        icon: sprite('equipment-weapons-maple-sword.avif'),
         href: '/maplestory/equipment?scope=weapons',
       },
       {
         id: 'other-equipment',
         label: 'Other equipment',
         description: 'Mounts and additional equipment',
-        icon: <Backpack />,
+        icon: sprite('equipment-other-hog.avif'),
         href: '/maplestory/equipment?scope=other',
       },
     ],
@@ -61,35 +67,35 @@ const navigation: readonly HeaderLink[] = [
         id: 'all-items',
         label: 'All Items',
         description: 'Browse every non-equipment item',
-        icon: <Package />,
+        icon: sprite('items-all-meso-pouch.avif'),
         href: '/maplestory/items',
       },
       {
         id: 'use-items',
         label: 'Use',
         description: 'Browse Use items',
-        icon: <Package />,
+        icon: sprite('items-use-red-potion.avif'),
         href: '/maplestory/items/use',
       },
       {
         id: 'etc-items',
         label: 'ETC',
         description: 'Browse ETC items',
-        icon: <Package />,
+        icon: sprite('items-etc-snail-shell.avif'),
         href: '/maplestory/items/etc',
       },
       {
         id: 'setup-items',
         label: 'Set-up',
         description: 'Browse Set-up items',
-        icon: <Package />,
+        icon: sprite('items-setup-blue-chair.avif'),
         href: '/maplestory/items/setup',
       },
       {
         id: 'cash-items',
         label: 'Cash/Pet',
         description: 'Browse Cash items and Pets',
-        icon: <Package />,
+        icon: sprite('items-cash-pet-brown-puppy.avif'),
         href: '/maplestory/items/cash',
       },
     ],
@@ -108,6 +114,12 @@ const navigation: readonly HeaderLink[] = [
     id: 'npcs',
     label: 'NPCs',
     href: '/maplestory/npcs',
+  },
+  {
+    id: 'forums',
+    label: 'Forums',
+    // The historical forum has shown a retirement notice since January 2022.
+    href: 'https://forums.mapletip.com',
   },
 ];
 
