@@ -2,7 +2,7 @@ MapleTip is licensed under the GNU General Public License v3.0, reproduced in
 full below. That licence covers this repository's source code.
 
 It does not cover MapleStory game assets redistributed here for identification,
-which live under `apps/web/public/assets/maplestory/`. MapleStory and related game
+which live under `apps/web/src/assets/maplestory/`. MapleStory and related game
 content are property of NEXON and/or their respective rights holders.
 
 ----------------------------------------------------------------------
