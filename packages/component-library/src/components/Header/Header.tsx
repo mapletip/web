@@ -19,6 +19,8 @@ import type {
   HeaderSubLink,
 } from '@/components/Header/types';
 
+const popoverTransition = { duration: 75 };
+
 function isGroupLink(link: HeaderLink): link is HeaderGroupLink {
   return link.children !== undefined && link.children.length > 0;
 }
@@ -77,11 +79,16 @@ function renderNavigationLink(
 function DesktopGroup({
   link,
   linkRenderer,
+  opened,
+  onOpenChange,
+  returnFocus,
 }: {
   readonly link: HeaderGroupLink;
   readonly linkRenderer: HeaderLinkRenderer | undefined;
+  readonly opened: boolean;
+  readonly onOpenChange: (opened: boolean) => void;
+  readonly returnFocus: boolean;
 }): ReactElement {
-  const [opened, disclosure] = useDisclosure();
   const dropdownId = useId();
   const parentLink = navigableLink(link);
   const children = link.children;
@@ -92,7 +99,7 @@ function DesktopGroup({
     // Popover handles Escape inside the panel; mirror it on the trigger.
     if (event.key === 'Escape' && opened) {
       event.preventDefault();
-      disclosure.close();
+      onOpenChange(false);
     }
   };
 
@@ -113,12 +120,13 @@ function DesktopGroup({
         {/* A portal would move the links to the end of the document and break Tab order. */}
         <Popover
           opened={opened}
-          onChange={disclosure.set}
+          onChange={onOpenChange}
           position="bottom-start"
+          transitionProps={popoverTransition}
           width={detailed ? '27rem' : undefined}
           withinPortal={false}
           withRoles={false}
-          returnFocus
+          returnFocus={returnFocus}
         >
           <Popover.Target>
             <button
@@ -134,7 +142,7 @@ function DesktopGroup({
                   ? 'true'
                   : undefined
               }
-              onClick={disclosure.toggle}
+              onClick={() => onOpenChange(!opened)}
               onKeyDown={handleDisclosureKeyDown}
             >
               {parentLink ? null : <span>{link.label}</span>}
@@ -164,7 +172,7 @@ function DesktopGroup({
                   size="xl"
                   className={classes['panelClose']}
                   aria-label={`Close ${link.label} navigation`}
-                  onClick={disclosure.close}
+                  onClick={() => onOpenChange(false)}
                 />
               </div>
             ) : null}
@@ -182,7 +190,7 @@ function DesktopGroup({
                     detailed
                       ? `${classes['subLink']} ${classes['richLink']}`
                       : (classes['subLink'] ?? ''),
-                    disclosure.close,
+                    () => onOpenChange(false),
                     linkRenderer,
                     detailed,
                   )}
@@ -205,6 +213,8 @@ function DesktopNavigation({
   readonly navigationLabel: string;
   readonly linkRenderer: HeaderLinkRenderer | undefined;
 }): ReactElement {
+  const [openGroupId, setOpenGroupId] = useState<string | null>(null);
+
   return (
     <nav aria-label={navigationLabel} className={classes['desktopNavigation']}>
       <ul className={classes['desktopList']}>
@@ -215,6 +225,11 @@ function DesktopNavigation({
                 key={link.id}
                 link={link}
                 linkRenderer={linkRenderer}
+                opened={openGroupId === link.id}
+                onOpenChange={(opened) =>
+                  setOpenGroupId(opened ? link.id : null)
+                }
+                returnFocus={openGroupId === null || openGroupId === link.id}
               />
             );
           }

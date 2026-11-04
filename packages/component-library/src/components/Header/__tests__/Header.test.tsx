@@ -25,6 +25,14 @@ const defaultNavigation = [
       { id: 'specimens', label: 'Specimens', href: '/collections/specimens' },
     ],
   },
+  {
+    id: 'reference',
+    label: 'Reference',
+    children: [
+      { id: 'glossary', label: 'Glossary', href: '/reference/glossary' },
+      { id: 'indices', label: 'Indices', href: '/reference/indices' },
+    ],
+  },
   { id: 'journal', label: 'Journal', href: '/journal' },
 ] satisfies readonly HeaderLink[];
 
@@ -66,6 +74,20 @@ const detailedNavigation = [
         label: 'Specimens',
         description: 'Catalogued observations',
         href: '/collections/specimens',
+      },
+    ],
+  },
+  {
+    id: 'reference',
+    label: 'Reference',
+    description: 'Browse reference material',
+    children: [
+      {
+        id: 'glossary',
+        label: 'Glossary',
+        description: 'Terms and definitions',
+        icon: <svg aria-hidden="true" />,
+        href: '/reference/glossary',
       },
     ],
   },
@@ -275,6 +297,93 @@ describe('Header', () => {
       .element(page.getByRole('link', { name: /Specimens/ }))
       .toHaveAttribute('href', '/collections/specimens');
     expect(document.querySelectorAll('a a')).toHaveLength(0);
+  });
+
+  it('keeps the focused control above an adjacent hovered group', async () => {
+    await renderHeader({
+      brand: brand(),
+      navigation: defaultNavigation,
+    });
+
+    await userEvent.tab();
+    await userEvent.tab();
+    await userEvent.tab();
+    const focusedLink = document.activeElement;
+    expect(focusedLink?.textContent).toBe('Field guide');
+
+    await userEvent.hover(page.getByRole('button', { name: 'Collections' }));
+    expect(
+      focusedLink instanceof HTMLElement
+        ? getComputedStyle(focusedLink).zIndex
+        : null,
+    ).toBe('1');
+
+    await userEvent.tab();
+    const focusedGroup = document.activeElement;
+    expect(focusedGroup?.textContent).toBe('Collections');
+    await userEvent.hover(page.getByRole('link', { name: 'Journal' }));
+    expect(
+      focusedGroup instanceof HTMLElement
+        ? getComputedStyle(focusedGroup).zIndex
+        : null,
+    ).toBe('1');
+  });
+
+  it('keeps compact groups exclusive when keyboard switching', async () => {
+    await renderHeader({
+      brand: brand(),
+      navigation: defaultNavigation,
+    });
+
+    const collections = page.getByRole('button', { name: 'Collections' });
+    const reference = page.getByRole('button', { name: 'Reference' });
+
+    await userEvent.click(collections);
+    await expect.element(collections).toHaveAttribute('aria-expanded', 'true');
+
+    await userEvent.keyboard('{Tab}');
+    await userEvent.keyboard('{Tab}');
+    await userEvent.keyboard('{Tab}');
+    await expect.element(reference).toHaveFocus();
+    await userEvent.keyboard('{Enter}');
+
+    await expect.element(collections).toHaveAttribute('aria-expanded', 'false');
+    await expect.element(reference).toHaveAttribute('aria-expanded', 'true');
+    await expect.element(reference).toHaveFocus();
+    expect(
+      document.querySelectorAll('button[aria-expanded="true"]'),
+    ).toHaveLength(1);
+
+    await userEvent.click(collections);
+    await expect.element(collections).toHaveAttribute('aria-expanded', 'true');
+    await expect.element(reference).toHaveAttribute('aria-expanded', 'false');
+    await expect.element(collections).toHaveFocus();
+  });
+
+  it('keeps detailed panels exclusive and does not steal focus on switch', async () => {
+    await renderHeader({
+      brand: brand(),
+      navigation: detailedNavigation,
+    });
+
+    const collections = page.getByRole('button', { name: 'Collections' });
+    const reference = page.getByRole('button', { name: 'Reference' });
+
+    await userEvent.click(collections);
+    await expect
+      .element(page.getByRole('heading', { name: 'Collections' }))
+      .toBeVisible();
+
+    await userEvent.click(reference);
+    await expect.element(collections).toHaveAttribute('aria-expanded', 'false');
+    await expect.element(reference).toHaveAttribute('aria-expanded', 'true');
+    await expect
+      .element(page.getByRole('heading', { name: 'Reference' }))
+      .toBeVisible();
+    await expect
+      .element(page.getByRole('heading', { name: 'Collections' }))
+      .not.toBeInTheDocument();
+    await expect.element(reference).toHaveFocus();
   });
 
   it('closes a detailed group from its CloseButton and returns focus', async () => {

@@ -99,6 +99,14 @@
   font-size: var(--mantine-font-size-sm);
 }
 
+/* Keep the focused control's ring above an adjacent item's hover fill. */
+.desktopLink:focus-visible,
+.groupTrigger:focus-visible,
+.disclosure:focus-visible {
+  position: relative;
+  z-index: 1;
+}
+
 .groupTrigger {
   gap: 4px;
   font-family: inherit;

@@ -1,6 +1,6 @@
 import { composeStories } from '@storybook/react-vite';
 import { describe, expect, test } from 'vitest';
-import { page, userEvent } from 'vitest/browser';
+import { commands, page, userEvent } from 'vitest/browser';
 
 import * as stories from '@/components/Header/__stories__/Header.stories';
 import {
@@ -38,6 +38,47 @@ const visualCases: readonly VisualCase[] = [
     element: header,
     visible: [desktopNavigation],
     hidden: [openNavigation],
+  },
+  {
+    name: 'header-focus-adjacent-hover-dark',
+    story: dark.Default,
+    storyId: 'components-header--default',
+    width: 1366,
+    height: 768,
+    element: header,
+    beforeScreenshot: async () => {
+      await userEvent.tab();
+      await userEvent.tab();
+      await userEvent.tab();
+      if (document.activeElement?.textContent !== 'Field guide') {
+        throw new Error('Field guide did not receive keyboard focus');
+      }
+      await userEvent.hover(page.getByRole('button', { name: 'Collections' }));
+    },
+    afterScreenshot: async () => {
+      await commands.movePointer(-1, -1);
+    },
+  },
+  {
+    name: 'header-group-focus-adjacent-hover-dark',
+    story: dark.Default,
+    storyId: 'components-header--default',
+    width: 1366,
+    height: 768,
+    element: header,
+    beforeScreenshot: async () => {
+      await userEvent.tab();
+      await userEvent.tab();
+      await userEvent.tab();
+      await userEvent.tab();
+      if (document.activeElement?.textContent !== 'Collections') {
+        throw new Error('Collections trigger did not receive keyboard focus');
+      }
+      await userEvent.hover(page.getByRole('link', { name: 'Journal' }));
+    },
+    afterScreenshot: async () => {
+      await commands.movePointer(-1, -1);
+    },
   },
   {
     name: 'header-active-dark',
