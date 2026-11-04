@@ -118,7 +118,6 @@ const navigation: readonly HeaderLink[] = [
   {
     id: 'forums',
     label: 'Forums',
-    // The historical forum has shown a retirement notice since January 2022.
     href: 'https://forums.mapletip.com',
   },
 ];
