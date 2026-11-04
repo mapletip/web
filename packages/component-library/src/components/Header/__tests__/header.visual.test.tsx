@@ -1,6 +1,6 @@
 import { composeStories } from '@storybook/react-vite';
 import { describe, expect, test } from 'vitest';
-import { page, userEvent } from 'vitest/browser';
+import { commands, page, userEvent } from 'vitest/browser';
 
 import * as stories from '@/components/Header/__stories__/Header.stories';
 import {
@@ -40,6 +40,47 @@ const visualCases: readonly VisualCase[] = [
     hidden: [openNavigation],
   },
   {
+    name: 'header-focus-adjacent-hover-dark',
+    story: dark.Default,
+    storyId: 'components-header--default',
+    width: 1366,
+    height: 768,
+    element: header,
+    beforeScreenshot: async () => {
+      await userEvent.tab();
+      await userEvent.tab();
+      await userEvent.tab();
+      if (document.activeElement?.textContent !== 'Field guide') {
+        throw new Error('Field guide did not receive keyboard focus');
+      }
+      await userEvent.hover(page.getByRole('button', { name: 'Collections' }));
+    },
+    afterScreenshot: async () => {
+      await commands.movePointer(-1, -1);
+    },
+  },
+  {
+    name: 'header-group-focus-adjacent-hover-dark',
+    story: dark.Default,
+    storyId: 'components-header--default',
+    width: 1366,
+    height: 768,
+    element: header,
+    beforeScreenshot: async () => {
+      await userEvent.tab();
+      await userEvent.tab();
+      await userEvent.tab();
+      await userEvent.tab();
+      if (document.activeElement?.textContent !== 'Collections') {
+        throw new Error('Collections trigger did not receive keyboard focus');
+      }
+      await userEvent.hover(page.getByRole('link', { name: 'Journal' }));
+    },
+    afterScreenshot: async () => {
+      await commands.movePointer(-1, -1);
+    },
+  },
+  {
     name: 'header-active-dark',
     story: dark.ActiveDestination,
     storyId: 'components-header--active-destination',
@@ -58,6 +99,79 @@ const visualCases: readonly VisualCase[] = [
       await userEvent.click(showCollections);
     },
     visible: [maps],
+  },
+  {
+    name: 'header-detailed-open-dark',
+    story: dark.DetailedNavigationOpen,
+    storyId: 'components-header--detailed-navigation-open',
+    width: 1366,
+    height: 768,
+    beforeScreenshot: async () => {
+      await userEvent.click(page.getByRole('button', { name: 'Library' }));
+    },
+    visible: [
+      page.getByRole('heading', { name: 'Library' }),
+      page.getByRole('button', { name: 'Close Library navigation' }),
+    ],
+  },
+  {
+    name: 'header-detailed-open-1080-dark',
+    story: dark.DetailedNavigationOpen,
+    storyId: 'components-header--detailed-navigation-open',
+    width: 1080,
+    height: 768,
+    beforeScreenshot: async () => {
+      await userEvent.click(page.getByRole('button', { name: 'Library' }));
+    },
+    visible: [page.getByRole('heading', { name: 'Library' })],
+  },
+  {
+    name: 'header-detailed-partial-dark',
+    story: dark.DetailedPartialMetadata,
+    storyId: 'components-header--detailed-partial-metadata',
+    width: 1080,
+    height: 768,
+    beforeScreenshot: async () => {
+      await userEvent.click(page.getByRole('button', { name: 'Library' }));
+    },
+    visible: [page.getByRole('heading', { name: 'Library' })],
+  },
+  {
+    name: 'header-detailed-long-dark',
+    story: dark.DetailedLongLabels,
+    storyId: 'components-header--detailed-long-labels',
+    width: 1080,
+    height: 768,
+    beforeScreenshot: async () => {
+      await userEvent.click(
+        page.getByRole('button', { name: 'Library and special collections' }),
+      );
+    },
+    visible: [
+      page.getByRole('heading', { name: 'Library and special collections' }),
+    ],
+  },
+  {
+    name: 'header-detailed-phone-drawer-open-dark',
+    story: dark.DetailedMobileNavigationOpen,
+    storyId: 'components-header--detailed-mobile-navigation-open',
+    width: 375,
+    height: 812,
+    beforeScreenshot: async () => {
+      await userEvent.click(openNavigation);
+    },
+    visible: [drawer],
+  },
+  {
+    name: 'header-detailed-320-drawer-open-dark',
+    story: dark.DetailedMobileNavigationOpen,
+    storyId: 'components-header--detailed-mobile-navigation-open',
+    width: 320,
+    height: 640,
+    beforeScreenshot: async () => {
+      await userEvent.click(openNavigation);
+    },
+    visible: [drawer],
   },
   {
     name: 'header-long-labels-dark',

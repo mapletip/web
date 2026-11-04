@@ -1,4 +1,4 @@
-import { Burger, Drawer, Popover } from '@mantine/core';
+import { Burger, CloseButton, Drawer, Popover } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import { CaretDown } from '@phosphor-icons/react';
 import {
@@ -19,6 +19,8 @@ import type {
   HeaderSubLink,
 } from '@/components/Header/types';
 
+const popoverTransition = { duration: 75 };
+
 function isGroupLink(link: HeaderLink): link is HeaderGroupLink {
   return link.children !== undefined && link.children.length > 0;
 }
@@ -27,44 +29,77 @@ function navigableLink(link: HeaderLink): HeaderSubLink | undefined {
   return link.href === undefined ? undefined : { ...link, href: link.href };
 }
 
+function renderLinkContent(link: HeaderSubLink, detailed: boolean): ReactNode {
+  if (!detailed) return link.label;
+
+  return (
+    <>
+      {link.icon ? (
+        <span className={classes['linkIcon']} aria-hidden="true">
+          {link.icon}
+        </span>
+      ) : null}
+      <span className={classes['linkCopy']}>
+        <span className={classes['linkLabel']}>{link.label}</span>
+        {link.description ? (
+          <span className={classes['linkDescription']}>{link.description}</span>
+        ) : null}
+      </span>
+    </>
+  );
+}
+
 function renderNavigationLink(
   link: HeaderSubLink,
   className: string,
   onActivate: (() => void) | undefined,
   linkRenderer: HeaderLinkRenderer | undefined,
+  detailed = false,
 ): ReactNode {
-  const props: HeaderLinkRenderProps = {
+  const content = renderLinkContent(link, detailed);
+  const anchorProps = {
     href: link.href,
     className,
-    'aria-current': link.current === true ? 'page' : undefined,
+    'aria-current': link.current === true ? ('page' as const) : undefined,
     'data-active':
-      link.active === true || link.current === true ? 'true' : undefined,
+      link.active === true || link.current === true
+        ? ('true' as const)
+        : undefined,
     onClick: onActivate,
   };
+  const props: HeaderLinkRenderProps = { ...anchorProps, children: content };
 
   return linkRenderer ? (
     linkRenderer(link, props)
   ) : (
-    <a {...props}>{link.label}</a>
+    <a {...anchorProps}>{content}</a>
   );
 }
 
 function DesktopGroup({
   link,
   linkRenderer,
+  opened,
+  onOpenChange,
+  returnFocus,
 }: {
   readonly link: HeaderGroupLink;
   readonly linkRenderer: HeaderLinkRenderer | undefined;
+  readonly opened: boolean;
+  readonly onOpenChange: (opened: boolean) => void;
+  readonly returnFocus: boolean;
 }): ReactElement {
-  const [opened, disclosure] = useDisclosure();
   const dropdownId = useId();
   const parentLink = navigableLink(link);
   const children = link.children;
+  const detailed =
+    Boolean(link.description) ||
+    children.some((child) => Boolean(child.description || child.icon));
   const handleDisclosureKeyDown = (event: KeyboardEvent<HTMLButtonElement>) => {
     // Popover handles Escape inside the panel; mirror it on the trigger.
     if (event.key === 'Escape' && opened) {
       event.preventDefault();
-      disclosure.close();
+      onOpenChange(false);
     }
   };
 
@@ -85,11 +120,13 @@ function DesktopGroup({
         {/* A portal would move the links to the end of the document and break Tab order. */}
         <Popover
           opened={opened}
-          onChange={disclosure.set}
+          onChange={onOpenChange}
           position="bottom-start"
+          transitionProps={popoverTransition}
+          width={detailed ? '27rem' : undefined}
           withinPortal={false}
           withRoles={false}
-          returnFocus
+          returnFocus={returnFocus}
         >
           <Popover.Target>
             <button
@@ -105,22 +142,57 @@ function DesktopGroup({
                   ? 'true'
                   : undefined
               }
-              onClick={disclosure.toggle}
+              onClick={() => onOpenChange(!opened)}
               onKeyDown={handleDisclosureKeyDown}
             >
               {parentLink ? null : <span>{link.label}</span>}
               <CaretDown size={14} aria-hidden="true" />
             </button>
           </Popover.Target>
-          <Popover.Dropdown id={dropdownId} className={classes['dropdown']}>
-            <ul className={classes['subList']}>
+          <Popover.Dropdown
+            id={dropdownId}
+            className={
+              detailed
+                ? `${classes['dropdown']} ${classes['richDropdown']}`
+                : classes['dropdown']
+            }
+          >
+            {detailed ? (
+              <div className={classes['panelHeader']}>
+                <div className={classes['panelCopy']}>
+                  <h2 className={classes['panelTitle']}>{link.label}</h2>
+                  {link.description ? (
+                    <p className={classes['panelDescription']}>
+                      {link.description}
+                    </p>
+                  ) : null}
+                </div>
+                <CloseButton
+                  type="button"
+                  size="xl"
+                  className={classes['panelClose']}
+                  aria-label={`Close ${link.label} navigation`}
+                  onClick={() => onOpenChange(false)}
+                />
+              </div>
+            ) : null}
+            <ul
+              className={
+                detailed
+                  ? `${classes['subList']} ${classes['richList']}`
+                  : classes['subList']
+              }
+            >
               {children.map((child) => (
                 <li key={child.id}>
                   {renderNavigationLink(
                     child,
-                    classes['subLink'] ?? '',
-                    disclosure.close,
+                    detailed
+                      ? `${classes['subLink']} ${classes['richLink']}`
+                      : (classes['subLink'] ?? ''),
+                    () => onOpenChange(false),
                     linkRenderer,
+                    detailed,
                   )}
                 </li>
               ))}
@@ -141,6 +213,8 @@ function DesktopNavigation({
   readonly navigationLabel: string;
   readonly linkRenderer: HeaderLinkRenderer | undefined;
 }): ReactElement {
+  const [openGroupId, setOpenGroupId] = useState<string | null>(null);
+
   return (
     <nav aria-label={navigationLabel} className={classes['desktopNavigation']}>
       <ul className={classes['desktopList']}>
@@ -151,6 +225,11 @@ function DesktopNavigation({
                 key={link.id}
                 link={link}
                 linkRenderer={linkRenderer}
+                opened={openGroupId === link.id}
+                onOpenChange={(opened) =>
+                  setOpenGroupId(opened ? link.id : null)
+                }
+                returnFocus={openGroupId === null || openGroupId === link.id}
               />
             );
           }

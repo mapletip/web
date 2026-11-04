@@ -25,6 +25,14 @@ const defaultNavigation = [
       { id: 'specimens', label: 'Specimens', href: '/collections/specimens' },
     ],
   },
+  {
+    id: 'reference',
+    label: 'Reference',
+    children: [
+      { id: 'glossary', label: 'Glossary', href: '/reference/glossary' },
+      { id: 'indices', label: 'Indices', href: '/reference/indices' },
+    ],
+  },
   { id: 'journal', label: 'Journal', href: '/journal' },
 ] satisfies readonly HeaderLink[];
 
@@ -41,6 +49,66 @@ const longNavigation = [
       {
         id: 'maps',
         label: 'Maps and geographic reference material',
+        href: '/collections/maps',
+      },
+    ],
+  },
+] satisfies readonly HeaderLink[];
+
+const detailedNavigation = [
+  { id: 'overview', label: 'Overview', href: '/overview' },
+  {
+    id: 'collections',
+    label: 'Collections',
+    description: 'Browse reference collections',
+    children: [
+      {
+        id: 'maps',
+        label: 'Maps',
+        description: 'Geographic overview',
+        icon: <svg aria-hidden="true" />,
+        href: '/collections/maps',
+      },
+      {
+        id: 'specimens',
+        label: 'Specimens',
+        description: 'Catalogued observations',
+        href: '/collections/specimens',
+      },
+    ],
+  },
+  {
+    id: 'reference',
+    label: 'Reference',
+    description: 'Browse reference material',
+    children: [
+      {
+        id: 'glossary',
+        label: 'Glossary',
+        description: 'Terms and definitions',
+        icon: <svg aria-hidden="true" />,
+        href: '/reference/glossary',
+      },
+    ],
+  },
+] satisfies readonly HeaderLink[];
+
+const partialNavigation = [
+  {
+    id: 'collections',
+    label: 'Collections',
+    children: [
+      { id: 'all', label: 'All collections', href: '/collections' },
+      {
+        id: 'field-guides',
+        label: 'Field guides',
+        description: 'Regional volumes',
+        href: '/collections/field-guides',
+      },
+      {
+        id: 'maps',
+        label: 'Maps',
+        icon: <svg aria-hidden="true" />,
         href: '/collections/maps',
       },
     ],
@@ -201,6 +269,263 @@ describe('Header', () => {
     await userEvent.keyboard('{Escape}');
     await expect.element(disclosure).toHaveAttribute('aria-expanded', 'false');
     await expect.element(disclosure).toHaveFocus();
+  });
+
+  it('renders a detailed group with heading, subtitle, close control and rich rows', async () => {
+    await renderHeader({
+      brand: brand(),
+      navigation: detailedNavigation,
+    });
+
+    await userEvent.click(page.getByRole('button', { name: 'Collections' }));
+
+    await expect
+      .element(page.getByRole('heading', { name: 'Collections' }))
+      .toBeVisible();
+    await expect
+      .element(page.getByText('Browse reference collections'))
+      .toBeVisible();
+    await expect
+      .element(
+        page.getByRole('button', { name: 'Close Collections navigation' }),
+      )
+      .toBeVisible();
+    await expect
+      .element(page.getByRole('link', { name: /Maps/ }))
+      .toHaveAttribute('href', '/collections/maps');
+    await expect
+      .element(page.getByRole('link', { name: /Specimens/ }))
+      .toHaveAttribute('href', '/collections/specimens');
+    expect(document.querySelectorAll('a a')).toHaveLength(0);
+  });
+
+  it('keeps the focused control above an adjacent hovered group', async () => {
+    await renderHeader({
+      brand: brand(),
+      navigation: defaultNavigation,
+    });
+
+    await userEvent.tab();
+    await userEvent.tab();
+    await userEvent.tab();
+    const focusedLink = document.activeElement;
+    expect(focusedLink?.textContent).toBe('Field guide');
+
+    await userEvent.hover(page.getByRole('button', { name: 'Collections' }));
+    expect(
+      focusedLink instanceof HTMLElement
+        ? getComputedStyle(focusedLink).zIndex
+        : null,
+    ).toBe('1');
+
+    await userEvent.tab();
+    const focusedGroup = document.activeElement;
+    expect(focusedGroup?.textContent).toBe('Collections');
+    await userEvent.hover(page.getByRole('link', { name: 'Journal' }));
+    expect(
+      focusedGroup instanceof HTMLElement
+        ? getComputedStyle(focusedGroup).zIndex
+        : null,
+    ).toBe('1');
+  });
+
+  it('keeps compact groups exclusive when keyboard switching', async () => {
+    await renderHeader({
+      brand: brand(),
+      navigation: defaultNavigation,
+    });
+
+    const collections = page.getByRole('button', { name: 'Collections' });
+    const reference = page.getByRole('button', { name: 'Reference' });
+
+    await userEvent.click(collections);
+    await expect.element(collections).toHaveAttribute('aria-expanded', 'true');
+
+    await userEvent.keyboard('{Tab}');
+    await userEvent.keyboard('{Tab}');
+    await userEvent.keyboard('{Tab}');
+    await expect.element(reference).toHaveFocus();
+    await userEvent.keyboard('{Enter}');
+
+    await expect.element(collections).toHaveAttribute('aria-expanded', 'false');
+    await expect.element(reference).toHaveAttribute('aria-expanded', 'true');
+    await expect.element(reference).toHaveFocus();
+    expect(
+      document.querySelectorAll('button[aria-expanded="true"]'),
+    ).toHaveLength(1);
+
+    await userEvent.click(collections);
+    await expect.element(collections).toHaveAttribute('aria-expanded', 'true');
+    await expect.element(reference).toHaveAttribute('aria-expanded', 'false');
+    await expect.element(collections).toHaveFocus();
+  });
+
+  it('keeps detailed panels exclusive and does not steal focus on switch', async () => {
+    await renderHeader({
+      brand: brand(),
+      navigation: detailedNavigation,
+    });
+
+    const collections = page.getByRole('button', { name: 'Collections' });
+    const reference = page.getByRole('button', { name: 'Reference' });
+
+    await userEvent.click(collections);
+    await expect
+      .element(page.getByRole('heading', { name: 'Collections' }))
+      .toBeVisible();
+
+    await userEvent.click(reference);
+    await expect.element(collections).toHaveAttribute('aria-expanded', 'false');
+    await expect.element(reference).toHaveAttribute('aria-expanded', 'true');
+    await expect
+      .element(page.getByRole('heading', { name: 'Reference' }))
+      .toBeVisible();
+    await expect
+      .element(page.getByRole('heading', { name: 'Collections' }))
+      .not.toBeInTheDocument();
+    await expect.element(reference).toHaveFocus();
+  });
+
+  it('closes a detailed group from its CloseButton and returns focus', async () => {
+    await renderHeader({
+      brand: brand(),
+      navigation: detailedNavigation,
+    });
+
+    const trigger = page.getByRole('button', { name: 'Collections' });
+    await userEvent.click(trigger);
+    await userEvent.click(
+      page.getByRole('button', { name: 'Close Collections navigation' }),
+    );
+
+    await expect
+      .element(page.getByRole('heading', { name: 'Collections' }))
+      .not.toBeInTheDocument();
+    await expect.element(trigger).toHaveAttribute('aria-expanded', 'false');
+    await expect.element(trigger).toHaveFocus();
+  });
+
+  it('moves focus from the detailed trigger through close and link controls', async () => {
+    await renderHeader({
+      brand: brand(),
+      navigation: detailedNavigation,
+    });
+
+    const trigger = page.getByRole('button', { name: 'Collections' });
+    await userEvent.click(trigger);
+    await userEvent.keyboard('{Tab}');
+    await expect
+      .element(
+        page.getByRole('button', { name: 'Close Collections navigation' }),
+      )
+      .toHaveFocus();
+    await userEvent.keyboard('{Tab}');
+    await expect
+      .element(page.getByRole('link', { name: /Maps/ }))
+      .toHaveFocus();
+    await userEvent.keyboard('{Shift>}{Tab}{/Shift}');
+    await expect
+      .element(
+        page.getByRole('button', { name: 'Close Collections navigation' }),
+      )
+      .toHaveFocus();
+    await userEvent.keyboard('{Shift>}{Tab}{/Shift}');
+    await expect.element(trigger).toHaveFocus();
+  });
+
+  it('dismisses a detailed disclosure with Escape and returns focus', async () => {
+    await renderHeader({
+      brand: brand(),
+      navigation: detailedNavigation,
+    });
+
+    const trigger = page.getByRole('button', { name: 'Collections' });
+    await userEvent.click(trigger);
+    await userEvent.keyboard('{Tab}');
+    await expect
+      .element(
+        page.getByRole('button', { name: 'Close Collections navigation' }),
+      )
+      .toHaveFocus();
+    await userEvent.keyboard('{Escape}');
+
+    await expect.element(trigger).toHaveAttribute('aria-expanded', 'false');
+    await expect.element(trigger).toHaveFocus();
+  });
+
+  it('renders partial child metadata without empty subtitle or icon slots', async () => {
+    await renderHeader({
+      brand: brand(),
+      navigation: partialNavigation,
+    });
+
+    await userEvent.click(page.getByRole('button', { name: 'Collections' }));
+
+    await expect
+      .element(page.getByRole('heading', { name: 'Collections' }))
+      .toBeVisible();
+    expect(
+      page.getByText('Browse reference collections').elements(),
+    ).toHaveLength(0);
+    await expect
+      .element(page.getByRole('link', { name: /All collections/ }))
+      .toBeVisible();
+    await expect
+      .element(page.getByRole('link', { name: /Field guides/ }))
+      .toBeVisible();
+    await expect
+      .element(page.getByRole('link', { name: /Maps/ }))
+      .toBeVisible();
+  });
+
+  it('passes constructed rich content to a host renderLink adapter', async () => {
+    const renderLink: HeaderLinkRenderer = (_link, props) => {
+      const { href, children, onClick } = props;
+      return (
+        <a
+          href={href}
+          data-router-link="true"
+          onClick={(event) => {
+            event.preventDefault();
+            onClick?.();
+          }}
+        >
+          {children}
+        </a>
+      );
+    };
+
+    await renderHeader({
+      brand: brand(),
+      navigation: detailedNavigation,
+      renderLink,
+    });
+
+    await userEvent.click(page.getByRole('button', { name: 'Collections' }));
+    const maps = page.getByRole('link', { name: /Maps/ });
+    await expect.element(maps).toHaveAttribute('data-router-link', 'true');
+    await expect.element(maps).toHaveAttribute('href', '/collections/maps');
+    await userEvent.click(maps);
+    await expect.element(maps).not.toBeInTheDocument();
+  });
+
+  it('keeps detailed metadata coherent in the mobile drawer', async () => {
+    await page.viewport(375, 812);
+    await renderHeader({
+      brand: brand(),
+      navigation: detailedNavigation,
+    });
+
+    await userEvent.click(
+      page.getByRole('button', { name: 'Open navigation' }),
+    );
+    const dialog = page.getByRole('dialog', { name: 'Navigation' });
+    await expect.element(dialog).toBeVisible();
+    await expect
+      .element(dialog.getByRole('link', { name: 'Maps' }))
+      .toBeVisible();
+    expect(dialog.getByText('Geographic overview').elements()).toHaveLength(0);
+    expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(375);
   });
 
   it('dismisses a desktop disclosure on outside click', async () => {

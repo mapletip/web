@@ -1,8 +1,14 @@
 import { ColorSchemeScript, MantineProvider } from '@mantine/core';
 import { cssVariablesResolver, theme } from '@mapletip/theme';
-import { HeadContent, Scripts, createRootRoute } from '@tanstack/react-router';
+import {
+  HeadContent,
+  Outlet,
+  Scripts,
+  createRootRoute,
+} from '@tanstack/react-router';
 import type { ReactNode } from 'react';
 
+import { AppHeader } from '../components/AppHeader/AppHeader';
 import appCss from '../styles.css?url';
 
 export const Route = createRootRoute({
@@ -27,7 +33,20 @@ export const Route = createRootRoute({
     ],
   }),
   shellComponent: RootDocument,
+  component: RootLayout,
 });
+
+function RootLayout() {
+  return (
+    <>
+      <a className="skip-to-main" href="#main-content">
+        Skip to content
+      </a>
+      <AppHeader />
+      <Outlet />
+    </>
+  );
+}
 
 function RootDocument({ children }: { readonly children: ReactNode }) {
   return (

@@ -1,6 +1,6 @@
 .page {
   display: grid;
-  min-height: 100vh;
+  min-height: calc(100vh - 4rem);
   align-content: center;
   justify-items: start;
   gap: var(--mantine-spacing-sm);
