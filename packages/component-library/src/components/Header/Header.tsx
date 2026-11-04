@@ -467,7 +467,12 @@ export function Header({
           size="22rem"
         >
           <Drawer.Overlay backgroundOpacity={0.65} />
-          <Drawer.Content id={drawerId} className={classes['drawerContent']}>
+          {/* `className` would also land on Mantine's full-width inner
+              positioning wrapper and paint the panel over the overlay. */}
+          <Drawer.Content
+            id={drawerId}
+            classNames={{ content: classes['drawerContent'] ?? '' }}
+          >
             <Drawer.Header component="div" className={classes['drawerHeader']}>
               <Drawer.Title>{drawerTitle}</Drawer.Title>
               <Drawer.CloseButton aria-label="Close navigation drawer" />

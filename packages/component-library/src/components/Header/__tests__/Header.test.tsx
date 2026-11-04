@@ -1030,6 +1030,36 @@ describe('Header', () => {
     expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(320);
   });
 
+  it('leaves the backdrop visible beside the drawer panel', async () => {
+    await page.viewport(768, 1024);
+    await renderHeader({
+      brand: brand(),
+      navigation: defaultNavigation,
+    });
+
+    await userEvent.click(
+      page.getByRole('button', { name: 'Open navigation' }),
+    );
+    const dialog = page.getByRole('dialog', { name: 'Navigation' });
+    await expect.element(dialog).toBeVisible();
+
+    // Mantine passes Drawer.Content's `className` to its full-width inner
+    // positioning wrapper too, which would paint the panel over the overlay.
+    const inner = document.querySelector<HTMLElement>('.mantine-Drawer-inner');
+    expect(inner).not.toBeNull();
+    expect(getComputedStyle(inner!).backgroundColor).toBe('rgba(0, 0, 0, 0)');
+
+    const panelWidth = dialog.element().getBoundingClientRect().width;
+    expect(panelWidth).toBeLessThan(window.innerWidth);
+    const besidePanel = document.elementFromPoint(
+      Math.round(panelWidth + (window.innerWidth - panelWidth) / 2),
+      Math.round(window.innerHeight / 2),
+    );
+    expect(besidePanel?.classList.contains('mantine-Drawer-overlay')).toBe(
+      true,
+    );
+  });
+
   it('starts with the current group expanded', async () => {
     await page.viewport(375, 812);
     await renderHeader({
