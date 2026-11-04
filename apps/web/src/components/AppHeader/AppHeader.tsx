@@ -5,7 +5,7 @@ import { Link } from '@tanstack/react-router';
 import classes from './AppHeader.module.css';
 
 /** Nexon sprite artwork is decorative; the adjacent label names the destination. */
-function sprite(file: string) {
+function navigationIcon(file: string) {
   return (
     <img
       src={`/navigation/${file}`}
@@ -32,28 +32,28 @@ const navigation: readonly HeaderLink[] = [
         id: 'all-equipment',
         label: 'All Equipment',
         description: 'Browse every equipment type',
-        icon: sprite('equipment-all-maple-shield.avif'),
+        icon: navigationIcon('equipment-all-maple-shield.avif'),
         href: '/maplestory/equipment',
       },
       {
         id: 'armor-accessories',
         label: 'Armor & accessories',
         description: 'Hats, clothing, accessories',
-        icon: sprite('equipment-armor-zakum-helmet.avif'),
+        icon: navigationIcon('equipment-armor-zakum-helmet.avif'),
         href: '/maplestory/equipment?scope=armor-accessories',
       },
       {
         id: 'weapons',
         label: 'Weapons',
         description: 'Explore weapons by family',
-        icon: sprite('equipment-weapons-maple-sword.avif'),
+        icon: navigationIcon('equipment-weapons-maple-sword.avif'),
         href: '/maplestory/equipment?scope=weapons',
       },
       {
         id: 'other-equipment',
         label: 'Other equipment',
         description: 'Mounts and additional equipment',
-        icon: sprite('equipment-other-hog.avif'),
+        icon: navigationIcon('equipment-other-hog.avif'),
         href: '/maplestory/equipment?scope=other',
       },
     ],
@@ -67,35 +67,35 @@ const navigation: readonly HeaderLink[] = [
         id: 'all-items',
         label: 'All Items',
         description: 'Browse every non-equipment item',
-        icon: sprite('items-all-meso-pouch.avif'),
+        icon: navigationIcon('items-all-meso-pouch.avif'),
         href: '/maplestory/items',
       },
       {
         id: 'use-items',
         label: 'Use',
         description: 'Browse Use items',
-        icon: sprite('items-use-red-potion.avif'),
+        icon: navigationIcon('items-use-red-potion.avif'),
         href: '/maplestory/items/use',
       },
       {
         id: 'etc-items',
         label: 'ETC',
         description: 'Browse ETC items',
-        icon: sprite('items-etc-snail-shell.avif'),
+        icon: navigationIcon('items-etc-snail-shell.avif'),
         href: '/maplestory/items/etc',
       },
       {
         id: 'setup-items',
         label: 'Set-up',
         description: 'Browse Set-up items',
-        icon: sprite('items-setup-blue-chair.avif'),
+        icon: navigationIcon('items-setup-blue-chair.avif'),
         href: '/maplestory/items/setup',
       },
       {
         id: 'cash-items',
         label: 'Cash/Pet',
         description: 'Browse Cash items and Pets',
-        icon: sprite('items-cash-pet-brown-puppy.avif'),
+        icon: navigationIcon('items-cash-pet-brown-puppy.avif'),
         href: '/maplestory/items/cash',
       },
     ],
