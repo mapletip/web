@@ -115,6 +115,40 @@ const partialNavigation = [
   },
 ] satisfies readonly HeaderLink[];
 
+const decorativeIconNavigation = [
+  {
+    id: 'collections',
+    label: 'Collections',
+    description: 'Browse reference collections',
+    children: [
+      {
+        id: 'field-guides',
+        label: 'Field guides',
+        description: 'Regional volumes',
+        icon: (
+          <img
+            src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=="
+            alt=""
+            width={22}
+            height={22}
+          />
+        ),
+        href: '/collections/field-guides',
+      },
+    ],
+  },
+] satisfies readonly HeaderLink[];
+
+const currentGroupNavigation = [
+  { id: 'overview', label: 'Overview', href: '/overview' },
+  {
+    id: 'collections',
+    label: 'Collections',
+    current: true,
+    children: [{ id: 'maps', label: 'Maps', href: '/collections/maps' }],
+  },
+] satisfies readonly HeaderLink[];
+
 function renderHeader(props: HeaderProps) {
   return render(
     <MantineProvider
@@ -521,10 +555,19 @@ describe('Header', () => {
     );
     const dialog = page.getByRole('dialog', { name: 'Navigation' });
     await expect.element(dialog).toBeVisible();
+    expect(dialog.getByRole('link', { name: /Maps/ }).elements()).toHaveLength(
+      0,
+    );
+
+    const collections = dialog.getByRole('button', { name: 'Collections' });
+    await expect.element(collections).toHaveAttribute('aria-expanded', 'false');
+    await userEvent.click(collections);
+    await expect.element(collections).toHaveAttribute('aria-expanded', 'true');
+
     await expect
-      .element(dialog.getByRole('link', { name: 'Maps' }))
+      .element(dialog.getByRole('link', { name: /Maps\s+Geographic overview/ }))
       .toBeVisible();
-    expect(dialog.getByText('Geographic overview').elements()).toHaveLength(0);
+    await expect.element(dialog.getByText('Geographic overview')).toBeVisible();
     expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(375);
   });
 
@@ -583,9 +626,12 @@ describe('Header', () => {
     await expect
       .element(dialog.getByRole('link', { name: 'Field guide' }))
       .toBeVisible();
-    await expect
-      .element(dialog.getByRole('link', { name: 'Maps' }))
-      .toBeVisible();
+    const collections = dialog.getByRole('button', { name: 'Collections' });
+    await expect.element(collections).toBeVisible();
+    await expect.element(collections).toHaveAttribute('aria-expanded', 'false');
+    expect(dialog.getByRole('link', { name: /Maps/ }).elements()).toHaveLength(
+      0,
+    );
     await expect.element(dialog.getByText('Collections')).toBeVisible();
     expect(
       dialog.getByRole('link', { name: 'Collections' }).elements(),
@@ -730,6 +776,23 @@ describe('Header', () => {
     expect(dialog.element().scrollWidth).toBeLessThanOrEqual(
       dialog.element().clientWidth,
     );
+
+    const collections = dialog.getByRole('button', {
+      name: 'Collections and long-term archive',
+    });
+    await userEvent.click(collections);
+    await expect.element(collections).toHaveAttribute('aria-expanded', 'true');
+    await expect
+      .element(
+        dialog.getByRole('link', {
+          name: 'Maps and geographic reference material',
+        }),
+      )
+      .toBeVisible();
+    expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(320);
+    expect(dialog.element().scrollWidth).toBeLessThanOrEqual(
+      dialog.element().clientWidth,
+    );
   });
 
   it('keeps an open drawer dismissible when the viewport grows', async () => {
@@ -760,5 +823,278 @@ describe('Header', () => {
     );
     await expect.element(dialog).not.toBeInTheDocument();
     expect(getComputedStyle(desktopNavigation!).display).toBe('flex');
+  });
+
+  it('discloses a mobile group with the keyboard and collapses it again', async () => {
+    await page.viewport(375, 812);
+    await renderHeader({
+      brand: brand(),
+      navigation: detailedNavigation,
+    });
+
+    await userEvent.click(
+      page.getByRole('button', { name: 'Open navigation' }),
+    );
+    const dialog = page.getByRole('dialog', { name: 'Navigation' });
+    await expect.element(dialog).toBeVisible();
+
+    // Wait for the drawer's focus trap to place focus before tabbing from it.
+    await expect
+      .element(dialog.getByRole('button', { name: 'Close navigation drawer' }))
+      .toHaveFocus();
+
+    const collections = dialog.getByRole('button', { name: 'Collections' });
+    const control = collections.element();
+    for (
+      let step = 0;
+      step < 4 && document.activeElement !== control;
+      step += 1
+    ) {
+      await userEvent.tab();
+    }
+    await expect.element(collections).toHaveFocus();
+    await expect.element(collections).toHaveAttribute('aria-expanded', 'false');
+
+    await userEvent.keyboard('{Enter}');
+    await expect.element(collections).toHaveAttribute('aria-expanded', 'true');
+
+    await userEvent.tab();
+    await expect
+      .element(dialog.getByRole('link', { name: /Maps\s+Geographic overview/ }))
+      .toHaveFocus();
+
+    control.focus();
+    await userEvent.keyboard(' ');
+    await expect.element(collections).toHaveAttribute('aria-expanded', 'false');
+  });
+
+  it('keeps one mobile group open at a time', async () => {
+    await page.viewport(375, 812);
+    await renderHeader({
+      brand: brand(),
+      navigation: defaultNavigation,
+    });
+
+    await userEvent.click(
+      page.getByRole('button', { name: 'Open navigation' }),
+    );
+    const dialog = page.getByRole('dialog', { name: 'Navigation' });
+    await expect.element(dialog).toBeVisible();
+
+    await userEvent.click(dialog.getByRole('button', { name: 'Collections' }));
+    await expect
+      .element(dialog.getByRole('link', { name: 'Maps' }))
+      .toBeVisible();
+
+    await userEvent.click(dialog.getByRole('button', { name: 'Reference' }));
+    await expect
+      .element(dialog.getByRole('link', { name: 'Glossary' }))
+      .toBeVisible();
+    await expect
+      .element(dialog.getByRole('link', { name: 'Maps' }))
+      .not.toBeInTheDocument();
+    await expect
+      .element(dialog.getByRole('button', { name: 'Collections' }))
+      .toHaveAttribute('aria-expanded', 'false');
+  });
+
+  it('keeps collapsed mobile children out of the tab order', async () => {
+    await page.viewport(375, 812);
+    await renderHeader({
+      brand: brand(),
+      navigation: detailedNavigation,
+    });
+
+    await userEvent.click(
+      page.getByRole('button', { name: 'Open navigation' }),
+    );
+    const dialog = page.getByRole('dialog', { name: 'Navigation' });
+    await expect.element(dialog).toBeVisible();
+
+    expect(dialog.getByRole('link', { name: /Maps/ }).elements()).toHaveLength(
+      0,
+    );
+
+    // The drawer's focus trap settles asynchronously; wait for it before moving focus.
+    await expect
+      .element(dialog.getByRole('button', { name: 'Close navigation drawer' }))
+      .toHaveFocus();
+
+    const collections = dialog.getByRole('button', { name: 'Collections' });
+    await expect.element(collections).toHaveAttribute('aria-expanded', 'false');
+    collections.element().focus();
+    expect(document.activeElement).toBe(collections.element());
+
+    await userEvent.tab();
+    expect(document.activeElement?.textContent).toBe('Reference');
+    // The collapsed group never contributes a focusable destination.
+    expect(dialog.getByRole('link', { name: /Maps/ }).elements()).toHaveLength(
+      0,
+    );
+  });
+
+  it('renders the same rich child content on desktop and mobile', async () => {
+    await renderHeader({
+      brand: brand(),
+      navigation: detailedNavigation,
+    });
+
+    const desktopTrigger = page.getByRole('button', { name: 'Collections' });
+    await userEvent.click(desktopTrigger);
+    const desktopLink = page.getByRole('link', {
+      name: /Maps\s+Geographic overview/,
+    });
+    await expect.element(desktopLink).toBeVisible();
+    const desktopText = desktopLink.element().textContent;
+    const desktopHref = desktopLink.element().getAttribute('href');
+    expect(desktopLink.element().querySelector('svg, img')).not.toBeNull();
+    expect(
+      document.querySelectorAll('a[href="/collections/maps"]'),
+    ).toHaveLength(1);
+
+    // Close the desktop panel so its rows are not counted alongside the drawer.
+    await userEvent.click(desktopTrigger);
+    await expect.element(desktopLink).not.toBeInTheDocument();
+
+    await page.viewport(375, 812);
+    await userEvent.click(
+      page.getByRole('button', { name: 'Open navigation' }),
+    );
+    const dialog = page.getByRole('dialog', { name: 'Navigation' });
+    await expect.element(dialog).toBeVisible();
+    await userEvent.click(dialog.getByRole('button', { name: 'Collections' }));
+
+    const mobileLink = dialog.getByRole('link', {
+      name: /Maps\s+Geographic overview/,
+    });
+    await expect.element(mobileLink).toBeVisible();
+    expect(mobileLink.element().textContent).toBe(desktopText);
+    expect(mobileLink.element().getAttribute('href')).toBe(desktopHref);
+    expect(mobileLink.element().querySelector('svg, img')).not.toBeNull();
+    expect(
+      document.querySelectorAll('a[href="/collections/maps"]'),
+    ).toHaveLength(1);
+  });
+
+  it('does not announce a decorative child icon', async () => {
+    await page.viewport(375, 812);
+    await renderHeader({
+      brand: brand(),
+      navigation: decorativeIconNavigation,
+    });
+
+    await userEvent.click(
+      page.getByRole('button', { name: 'Open navigation' }),
+    );
+    const dialog = page.getByRole('dialog', { name: 'Navigation' });
+    await expect.element(dialog).toBeVisible();
+    await userEvent.click(dialog.getByRole('button', { name: 'Collections' }));
+
+    const link = dialog.getByRole('link', {
+      name: 'Field guides Regional volumes',
+    });
+    await expect.element(link).toBeVisible();
+    const image = link.element().querySelector('img');
+    expect(image).not.toBeNull();
+    expect(image?.getAttribute('alt')).toBe('');
+    expect(
+      link.element().querySelector('[aria-hidden="true"] img'),
+    ).not.toBeNull();
+  });
+
+  it('dismisses the mobile drawer from its backdrop', async () => {
+    await page.viewport(375, 812);
+    await renderHeader({
+      brand: brand(),
+      navigation: defaultNavigation,
+    });
+
+    const burger = page.getByRole('button', { name: 'Open navigation' });
+    await userEvent.click(burger);
+    const dialog = page.getByRole('dialog', { name: 'Navigation' });
+    await expect.element(dialog).toBeVisible();
+
+    await expect
+      .element(dialog.getByRole('button', { name: 'Close navigation drawer' }))
+      .toHaveFocus();
+
+    const overlay = document.querySelector<HTMLElement>(
+      '.mantine-Drawer-overlay',
+    );
+    expect(overlay).not.toBeNull();
+    overlay!.click();
+
+    await expect.element(dialog).not.toBeInTheDocument();
+    await expect.element(burger).toHaveFocus();
+  });
+
+  it('keeps the drawer narrower than a 320px viewport', async () => {
+    await page.viewport(320, 640);
+    await renderHeader({
+      brand: brand(),
+      navigation: defaultNavigation,
+    });
+
+    await userEvent.click(
+      page.getByRole('button', { name: 'Open navigation' }),
+    );
+    const dialog = page.getByRole('dialog', { name: 'Navigation' });
+    await expect.element(dialog).toBeVisible();
+
+    const drawerWidth = dialog.element().getBoundingClientRect().width;
+    expect(drawerWidth).toBeGreaterThan(0);
+    expect(drawerWidth).toBeLessThan(window.innerWidth);
+    expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(320);
+  });
+
+  it('leaves the backdrop visible beside the drawer panel', async () => {
+    await page.viewport(768, 1024);
+    await renderHeader({
+      brand: brand(),
+      navigation: defaultNavigation,
+    });
+
+    await userEvent.click(
+      page.getByRole('button', { name: 'Open navigation' }),
+    );
+    const dialog = page.getByRole('dialog', { name: 'Navigation' });
+    await expect.element(dialog).toBeVisible();
+
+    // Mantine passes Drawer.Content's `className` to its full-width inner
+    // positioning wrapper too, which would paint the panel over the overlay.
+    const inner = document.querySelector<HTMLElement>('.mantine-Drawer-inner');
+    expect(inner).not.toBeNull();
+    expect(getComputedStyle(inner!).backgroundColor).toBe('rgba(0, 0, 0, 0)');
+
+    const panelWidth = dialog.element().getBoundingClientRect().width;
+    expect(panelWidth).toBeLessThan(window.innerWidth);
+    const besidePanel = document.elementFromPoint(
+      Math.round(panelWidth + (window.innerWidth - panelWidth) / 2),
+      Math.round(window.innerHeight / 2),
+    );
+    expect(besidePanel?.classList.contains('mantine-Drawer-overlay')).toBe(
+      true,
+    );
+  });
+
+  it('starts with the current group expanded', async () => {
+    await page.viewport(375, 812);
+    await renderHeader({
+      brand: brand(),
+      navigation: currentGroupNavigation,
+    });
+
+    await userEvent.click(
+      page.getByRole('button', { name: 'Open navigation' }),
+    );
+    const dialog = page.getByRole('dialog', { name: 'Navigation' });
+    await expect.element(dialog).toBeVisible();
+
+    await expect
+      .element(dialog.getByRole('button', { name: 'Collections' }))
+      .toHaveAttribute('aria-expanded', 'true');
+    await expect
+      .element(dialog.getByRole('link', { name: 'Maps' }))
+      .toBeVisible();
   });
 });

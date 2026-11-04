@@ -1,4 +1,4 @@
-import { Burger, CloseButton, Drawer, Popover } from '@mantine/core';
+import { Accordion, Burger, CloseButton, Drawer, Popover } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import { CaretDown } from '@phosphor-icons/react';
 import {
@@ -23,6 +23,13 @@ const popoverTransition = { duration: 75 };
 
 function isGroupLink(link: HeaderLink): link is HeaderGroupLink {
   return link.children !== undefined && link.children.length > 0;
+}
+
+function isDetailedGroup(link: HeaderGroupLink): boolean {
+  return (
+    Boolean(link.description) ||
+    link.children.some((child) => Boolean(child.description || child.icon))
+  );
 }
 
 function navigableLink(link: HeaderLink): HeaderSubLink | undefined {
@@ -92,9 +99,7 @@ function DesktopGroup({
   const dropdownId = useId();
   const parentLink = navigableLink(link);
   const children = link.children;
-  const detailed =
-    Boolean(link.description) ||
-    children.some((child) => Boolean(child.description || child.icon));
+  const detailed = isDetailedGroup(link);
   const handleDisclosureKeyDown = (event: KeyboardEvent<HTMLButtonElement>) => {
     // Popover handles Escape inside the panel; mirror it on the trigger.
     if (event.key === 'Escape' && opened) {
@@ -251,7 +256,7 @@ function DesktopNavigation({
   );
 }
 
-function MobileNavigationLink({
+function MobileLeaf({
   link,
   linkRenderer,
   onNavigate,
@@ -261,7 +266,6 @@ function MobileNavigationLink({
   readonly onNavigate: () => void;
 }): ReactElement {
   const parentLink = navigableLink(link);
-  const children = link.children ?? [];
 
   return (
     <li>
@@ -275,23 +279,71 @@ function MobileNavigationLink({
       ) : (
         <span className={classes['mobileGroupLabel']}>{link.label}</span>
       )}
-      {children.length > 0 ? (
-        <ul
-          aria-label={`${link.label} links`}
-          className={classes['mobileSubList']}
-        >
-          {children.map((child) => (
-            <li key={child.id}>
-              {renderNavigationLink(
-                child,
-                classes['mobileSubLink'] ?? '',
+    </li>
+  );
+}
+
+function MobileGroup({
+  link,
+  linkRenderer,
+  onNavigate,
+}: {
+  readonly link: HeaderGroupLink;
+  readonly linkRenderer: HeaderLinkRenderer | undefined;
+  readonly onNavigate: () => void;
+}): ReactElement {
+  const parentLink = navigableLink(link);
+  const detailed = isDetailedGroup(link);
+
+  return (
+    <li>
+      <Accordion.Item value={link.id}>
+        <div className={classes['mobileGroupRow']}>
+          {parentLink
+            ? renderNavigationLink(
+                parentLink,
+                classes['mobileLink'] ?? '',
                 onNavigate,
                 linkRenderer,
-              )}
-            </li>
-          ))}
-        </ul>
-      ) : null}
+              )
+            : null}
+          {/* An icon-only control keeps the parent destination a sibling link, never nested in a button. */}
+          <Accordion.Control
+            className={
+              parentLink
+                ? (classes['mobileDisclosure'] ?? '')
+                : (classes['mobileGroupControl'] ?? '')
+            }
+            aria-label={parentLink ? `Show ${link.label} links` : undefined}
+            // Mantine owns data-active for the expanded state on its control.
+            data-current={
+              link.active === true || link.current === true ? 'true' : undefined
+            }
+          >
+            {parentLink ? null : link.label}
+          </Accordion.Control>
+        </div>
+        <Accordion.Panel>
+          <ul
+            aria-label={`${link.label} links`}
+            className={classes['mobileSubList']}
+          >
+            {link.children.map((child) => (
+              <li key={child.id}>
+                {renderNavigationLink(
+                  child,
+                  detailed
+                    ? `${classes['mobileSubLink']} ${classes['mobileRichLink']}`
+                    : (classes['mobileSubLink'] ?? ''),
+                  onNavigate,
+                  linkRenderer,
+                  detailed,
+                )}
+              </li>
+            ))}
+          </ul>
+        </Accordion.Panel>
+      </Accordion.Item>
     </li>
   );
 }
@@ -307,18 +359,43 @@ function MobileNavigation({
   readonly linkRenderer: HeaderLinkRenderer | undefined;
   readonly onNavigate: () => void;
 }): ReactElement {
+  const initialGroup = navigation.find(
+    (link) =>
+      isGroupLink(link) && (link.active === true || link.current === true),
+  );
+
   return (
     <nav aria-label={navigationLabel}>
-      <ul className={classes['mobileList']}>
-        {navigation.map((link) => (
-          <MobileNavigationLink
-            key={link.id}
-            link={link}
-            linkRenderer={linkRenderer}
-            onNavigate={onNavigate}
-          />
-        ))}
-      </ul>
+      {/* One collection keeps a single group open at a time without extra state. */}
+      <Accordion
+        defaultValue={initialGroup?.id ?? null}
+        chevron={<CaretDown size={16} aria-hidden="true" />}
+        unstyled
+        classNames={{
+          chevron: classes['mobileChevron'] ?? '',
+          label: classes['mobileGroupLabelText'] ?? '',
+        }}
+      >
+        <ul className={classes['mobileList']}>
+          {navigation.map((link) =>
+            isGroupLink(link) ? (
+              <MobileGroup
+                key={link.id}
+                link={link}
+                linkRenderer={linkRenderer}
+                onNavigate={onNavigate}
+              />
+            ) : (
+              <MobileLeaf
+                key={link.id}
+                link={link}
+                linkRenderer={linkRenderer}
+                onNavigate={onNavigate}
+              />
+            ),
+          )}
+        </ul>
+      </Accordion>
     </nav>
   );
 }
@@ -387,10 +464,15 @@ export function Header({
           onClose={drawer.close}
           onExitTransitionEnd={() => setUtilityInDrawer(false)}
           position="left"
-          size="100%"
+          size="22rem"
         >
           <Drawer.Overlay backgroundOpacity={0.65} />
-          <Drawer.Content id={drawerId} className={classes['drawerContent']}>
+          {/* `className` would also land on Mantine's full-width inner
+              positioning wrapper and paint the panel over the overlay. */}
+          <Drawer.Content
+            id={drawerId}
+            classNames={{ content: classes['drawerContent'] ?? '' }}
+          >
             <Drawer.Header component="div" className={classes['drawerHeader']}>
               <Drawer.Title>{drawerTitle}</Drawer.Title>
               <Drawer.CloseButton aria-label="Close navigation drawer" />

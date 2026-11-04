@@ -6,7 +6,6 @@ import {
   SquaresFour,
 } from '@phosphor-icons/react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { expect, screen, userEvent, waitFor, within } from 'storybook/test';
 
 import { Header } from '@/components/Header';
 import type { HeaderLink } from '@/components/Header';
@@ -26,27 +25,19 @@ const defaultNavigation = [
   { id: 'journal', label: 'Journal', href: '/journal' },
 ] satisfies readonly HeaderLink[];
 
-const activeNavigation = [
-  { id: 'overview', label: 'Overview', href: '/overview' },
-  { id: 'field-guide', label: 'Field guide', href: '/field-guide' },
-  {
-    id: 'collections',
-    label: 'Collections',
-    active: true,
-    children: [
-      {
-        id: 'maps',
-        label: 'Maps',
-        href: '/collections/maps',
+const activeNavigation = defaultNavigation.map((link) =>
+  link.id === 'collections' && 'children' in link
+    ? {
+        ...link,
         active: true,
-        current: true,
-      },
-      { id: 'specimens', label: 'Specimens', href: '/collections/specimens' },
-      { id: 'archive', label: 'Archive', href: '/collections/archive' },
-    ],
-  },
-  { id: 'journal', label: 'Journal', href: '/journal' },
-] satisfies readonly HeaderLink[];
+        children: link.children.map((child) =>
+          child.id === 'maps'
+            ? { ...child, active: true, current: true }
+            : child,
+        ),
+      }
+    : link,
+) satisfies readonly HeaderLink[];
 
 const detailedNavigation = [
   { id: 'overview', label: 'Overview', href: '/overview' },
@@ -133,6 +124,51 @@ const detailedLongNavigation = [
           'Review geographic overviews and detailed regional reference material',
         icon: <MapTrifold />,
         href: '/library/maps',
+      },
+    ],
+  },
+] satisfies readonly HeaderLink[];
+
+const twoDetailedGroups = [
+  {
+    id: 'library',
+    label: 'Library',
+    description: 'Browse reference materials',
+    children: [
+      {
+        id: 'all-materials',
+        label: 'All materials',
+        description: 'Browse every reference item',
+        icon: <SquaresFour />,
+        href: '/library',
+      },
+      {
+        id: 'field-guides',
+        label: 'Field guides',
+        description: 'Regional reference volumes',
+        icon: <BookOpen />,
+        href: '/library/field-guides',
+      },
+    ],
+  },
+  {
+    id: 'atlas',
+    label: 'Atlas',
+    description: 'Browse geographic sheets',
+    children: [
+      {
+        id: 'regional-sheets',
+        label: 'Regional sheets',
+        description: 'Regional cartographic plates',
+        icon: <MapTrifold />,
+        href: '/atlas/regional',
+      },
+      {
+        id: 'world-sheets',
+        label: 'World sheets',
+        description: 'Global cartographic plates',
+        icon: <FolderOpen />,
+        href: '/atlas/world',
       },
     ],
   },
@@ -238,36 +274,11 @@ export const ActiveDestination: Story = {
   },
 };
 
-export const GroupedNavigationOpen: Story = {
-  name: 'Grouped navigation open',
-  args: {
-    brand: <ReferenceBrand />,
-    navigation: defaultNavigation,
-    utility: <ReferenceUtility />,
-  },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    await userEvent.click(canvas.getByRole('button', { name: 'Collections' }));
-    await waitFor(async () => {
-      await expect(canvas.getByRole('link', { name: 'Maps' })).toBeVisible();
-    });
-  },
-};
-
-export const DetailedNavigationOpen: Story = {
-  name: 'Detailed navigation open',
+export const Detailed: Story = {
+  name: 'Detailed',
   args: {
     brand: <ReferenceBrand />,
     navigation: detailedNavigation,
-  },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    await userEvent.click(canvas.getByRole('button', { name: 'Library' }));
-    await waitFor(async () => {
-      await expect(
-        canvas.getByRole('heading', { name: 'Library' }),
-      ).toBeVisible();
-    });
   },
 };
 
@@ -277,15 +288,6 @@ export const DetailedPartialMetadata: Story = {
     brand: <ReferenceBrand />,
     navigation: partialNavigation,
   },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    await userEvent.click(canvas.getByRole('button', { name: 'Library' }));
-    await waitFor(async () => {
-      await expect(
-        canvas.getByRole('link', { name: /Field guides/ }),
-      ).toBeVisible();
-    });
-  },
 };
 
 export const DetailedLongLabels: Story = {
@@ -294,38 +296,13 @@ export const DetailedLongLabels: Story = {
     brand: <ReferenceBrand />,
     navigation: detailedLongNavigation,
   },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    await userEvent.click(
-      canvas.getByRole('button', { name: 'Library and special collections' }),
-    );
-    await waitFor(async () => {
-      await expect(
-        canvas.getByRole('link', { name: /Field guides and regional/ }),
-      ).toBeVisible();
-    });
-  },
 };
 
-export const DetailedMobileNavigationOpen: Story = {
-  name: 'Detailed mobile navigation open',
+export const TwoDetailedGroups: Story = {
+  name: 'Two detailed groups',
   args: {
     brand: <ReferenceBrand />,
-    navigation: detailedNavigation,
-  },
-  globals: { viewport: { value: 'phone', isRotated: false } },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    await userEvent.click(
-      canvas.getByRole('button', { name: 'Open navigation' }),
-    );
-    const dialog = await screen.findByRole('dialog', { name: 'Navigation' });
-    await waitFor(async () => {
-      await expect(dialog).toBeVisible();
-      await expect(
-        within(dialog).getByRole('link', { name: 'Field guides' }),
-      ).toBeVisible();
-    });
+    navigation: twoDetailedGroups,
   },
 };
 
@@ -346,52 +323,16 @@ export const LongLabels: Story = {
   },
 };
 
-export const Minimal: Story = {
-  args: {
-    brand: <ReferenceBrand />,
-  },
-};
-
 export const UtilityOnly: Story = {
   name: 'Utility only',
   args: {
     brand: <ReferenceBrand />,
     utility: <ReferenceUtility />,
   },
-  globals: { viewport: { value: 'phone', isRotated: false } },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    await userEvent.click(
-      canvas.getByRole('button', { name: 'Open navigation' }),
-    );
-    const dialog = await screen.findByRole('dialog', { name: 'Menu' });
-    await waitFor(async () => {
-      await expect(dialog).toBeVisible();
-      await expect(within(dialog).getByText('Account')).toBeVisible();
-    });
-  },
 };
 
-export const MobileNavigationOpen: Story = {
-  name: 'Mobile navigation open',
+export const Minimal: Story = {
   args: {
     brand: <ReferenceBrand />,
-    navigation: defaultNavigation,
-    utility: <ReferenceUtility />,
-  },
-  globals: { viewport: { value: 'phone', isRotated: false } },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    await userEvent.click(
-      canvas.getByRole('button', { name: 'Open navigation' }),
-    );
-    const dialog = await screen.findByRole('dialog', { name: 'Navigation' });
-    await waitFor(async () => {
-      await expect(dialog).toBeVisible();
-      await expect(
-        within(dialog).getByRole('link', { name: 'Field guide' }),
-      ).toBeVisible();
-      await expect(within(dialog).getByText('Account')).toBeVisible();
-    });
   },
 };

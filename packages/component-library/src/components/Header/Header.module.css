@@ -195,7 +195,8 @@
   font-size: var(--mantine-font-size-sm);
 }
 
-.richLink {
+.richLink,
+.mobileRichLink {
   gap: var(--mantine-spacing-sm);
   min-height: 0;
   padding: 0.7rem var(--mantine-spacing-sm);
@@ -213,6 +214,12 @@
 .linkIcon > svg {
   width: 1.375rem;
   height: 1.375rem;
+}
+
+.linkIcon > img {
+  width: 1.375rem;
+  height: 1.375rem;
+  object-fit: contain;
 }
 
 .linkCopy {
@@ -242,6 +249,7 @@
 }
 
 .mobileSubList {
+  gap: 0.2rem;
   margin-block-start: 2px;
   padding-inline-start: var(--mantine-spacing-md);
 }
@@ -271,11 +279,83 @@
   font-weight: 500;
 }
 
+.mobileRichLink {
+  align-items: flex-start;
+  min-height: 44px;
+  padding: 0.6rem var(--mantine-spacing-sm);
+}
+
+.mobileGroupRow {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  min-width: 0;
+}
+
+.mobileGroupRow > .mobileLink {
+  flex: 1 1 auto;
+}
+
+.mobileGroupControl,
+.mobileDisclosure {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  padding: var(--mantine-spacing-xs) var(--mantine-spacing-sm);
+  color: var(--mapletip-color-muted);
+  font-family: inherit;
+  font-size: var(--mantine-font-size-sm);
+  font-weight: 600;
+  line-height: 1.25;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--mantine-radius-sm);
+}
+
+.mobileGroupControl {
+  gap: var(--mantine-spacing-sm);
+  width: 100%;
+  cursor: pointer;
+}
+
+.mobileDisclosure {
+  flex: 0 0 auto;
+  justify-content: center;
+  width: 44px;
+  padding: 0;
+  cursor: pointer;
+}
+
+/* Mantine renders the chevron before the label; keep it at the row's end. */
+.mobileChevron {
+  display: inline-flex;
+  order: 1;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  color: inherit;
+}
+
+.mobileGroupControl:not([data-current='true'])[data-active],
+.mobileDisclosure:not([data-current='true'])[data-active] {
+  color: var(--mapletip-color-ink);
+  background: var(--mapletip-color-hover);
+}
+
+.mobileGroupLabelText {
+  flex: 1 1 auto;
+  min-width: 0;
+  text-align: start;
+  overflow-wrap: anywhere;
+}
+
 .desktopLink:not([data-active='true']):hover,
 .groupTrigger:not([data-active='true']):hover,
 .subLink:not([data-active='true']):hover,
 .mobileLink:not([data-active='true']):hover,
-.mobileSubLink:not([data-active='true']):hover {
+.mobileSubLink:not([data-active='true']):hover,
+.mobileGroupControl:not([data-current='true']):hover,
+.mobileDisclosure:not([data-current='true']):hover {
   color: var(--mapletip-color-ink);
   background: var(--mapletip-color-hover);
 }
@@ -290,7 +370,9 @@
 .groupTrigger[data-active='true'],
 .subLink[data-active='true'],
 .mobileLink[data-active='true'],
-.mobileSubLink[data-active='true'] {
+.mobileSubLink[data-active='true'],
+.mobileGroupControl[data-current='true'],
+.mobileDisclosure[data-current='true'] {
   color: var(--mapletip-color-brand-text);
   background: var(--mapletip-color-selection);
   border-color: var(--mapletip-color-selection-edge);
@@ -303,7 +385,8 @@
 }
 
 .disclosure[aria-expanded='true'] svg,
-.groupTrigger[aria-expanded='true'] svg {
+.groupTrigger[aria-expanded='true'] svg,
+.mobileChevron[data-rotate] svg {
   transform: rotate(180deg);
 }
 
@@ -317,6 +400,7 @@
 }
 
 .drawerContent {
+  max-width: calc(100vw - 2.5rem);
   background: var(--mapletip-color-panel);
 }
 
@@ -372,6 +456,8 @@
   .subLink[data-active='true'],
   .mobileLink[data-active='true'],
   .mobileSubLink[data-active='true'],
+  .mobileGroupControl[data-current='true'],
+  .mobileDisclosure[data-current='true'],
   .disclosure[data-active='true'],
   .disclosure[aria-expanded='true'],
   .groupTrigger[data-active='true'],

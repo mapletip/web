@@ -1,15 +1,26 @@
 import { Header } from '@mapletip/component-library';
 import type { HeaderLink } from '@mapletip/component-library';
-import {
-  Backpack,
-  Package,
-  Shield,
-  SquaresFour,
-  Sword,
-} from '@phosphor-icons/react';
 import { Link } from '@tanstack/react-router';
 
+// `?no-inline` keeps these out of the JS bundle: they are all under Vite's 4 KB
+// inline threshold and would otherwise ship as base64. Importing them lets the
+// bundler resolve and content-hash each one, so a missing file fails the build.
+import allEquipment from '@/assets/maplestory/navigation/equipment-all-maple-shield.png?no-inline';
+import armorAccessories from '@/assets/maplestory/navigation/equipment-armor-zakum-helmet.png?no-inline';
+import otherEquipment from '@/assets/maplestory/navigation/equipment-other-hog.png?no-inline';
+import weapons from '@/assets/maplestory/navigation/equipment-weapons-maple-sword.png?no-inline';
+import allItems from '@/assets/maplestory/navigation/items-all-meso-pouch.png?no-inline';
+import cashItems from '@/assets/maplestory/navigation/items-cash-pet-brown-puppy.png?no-inline';
+import etcItems from '@/assets/maplestory/navigation/items-etc-snail-shell.png?no-inline';
+import setupItems from '@/assets/maplestory/navigation/items-setup-blue-chair.png?no-inline';
+import useItems from '@/assets/maplestory/navigation/items-use-red-potion.png?no-inline';
+
 import classes from './AppHeader.module.css';
+
+/** Nexon sprite artwork is decorative; the adjacent label names the destination. */
+function navigationIcon(src: string) {
+  return <img src={src} alt="" width={22} height={22} decoding="async" />;
+}
 
 const navigation: readonly HeaderLink[] = [
   {
@@ -26,28 +37,28 @@ const navigation: readonly HeaderLink[] = [
         id: 'all-equipment',
         label: 'All Equipment',
         description: 'Browse every equipment type',
-        icon: <SquaresFour />,
+        icon: navigationIcon(allEquipment),
         href: '/maplestory/equipment',
       },
       {
         id: 'armor-accessories',
         label: 'Armor & accessories',
         description: 'Hats, clothing, accessories',
-        icon: <Shield />,
+        icon: navigationIcon(armorAccessories),
         href: '/maplestory/equipment?scope=armor-accessories',
       },
       {
         id: 'weapons',
         label: 'Weapons',
         description: 'Explore weapons by family',
-        icon: <Sword />,
+        icon: navigationIcon(weapons),
         href: '/maplestory/equipment?scope=weapons',
       },
       {
         id: 'other-equipment',
         label: 'Other equipment',
         description: 'Mounts and additional equipment',
-        icon: <Backpack />,
+        icon: navigationIcon(otherEquipment),
         href: '/maplestory/equipment?scope=other',
       },
     ],
@@ -61,35 +72,35 @@ const navigation: readonly HeaderLink[] = [
         id: 'all-items',
         label: 'All Items',
         description: 'Browse every non-equipment item',
-        icon: <Package />,
+        icon: navigationIcon(allItems),
         href: '/maplestory/items',
       },
       {
         id: 'use-items',
         label: 'Use',
         description: 'Browse Use items',
-        icon: <Package />,
+        icon: navigationIcon(useItems),
         href: '/maplestory/items/use',
       },
       {
         id: 'etc-items',
         label: 'ETC',
         description: 'Browse ETC items',
-        icon: <Package />,
+        icon: navigationIcon(etcItems),
         href: '/maplestory/items/etc',
       },
       {
         id: 'setup-items',
         label: 'Set-up',
         description: 'Browse Set-up items',
-        icon: <Package />,
+        icon: navigationIcon(setupItems),
         href: '/maplestory/items/setup',
       },
       {
         id: 'cash-items',
         label: 'Cash/Pet',
         description: 'Browse Cash items and Pets',
-        icon: <Package />,
+        icon: navigationIcon(cashItems),
         href: '/maplestory/items/cash',
       },
     ],
@@ -108,6 +119,11 @@ const navigation: readonly HeaderLink[] = [
     id: 'npcs',
     label: 'NPCs',
     href: '/maplestory/npcs',
+  },
+  {
+    id: 'forums',
+    label: 'Forums',
+    href: 'https://forums.mapletip.com',
   },
 ];
 
