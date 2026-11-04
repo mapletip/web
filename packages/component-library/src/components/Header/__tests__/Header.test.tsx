@@ -776,6 +776,23 @@ describe('Header', () => {
     expect(dialog.element().scrollWidth).toBeLessThanOrEqual(
       dialog.element().clientWidth,
     );
+
+    const collections = dialog.getByRole('button', {
+      name: 'Collections and long-term archive',
+    });
+    await userEvent.click(collections);
+    await expect.element(collections).toHaveAttribute('aria-expanded', 'true');
+    await expect
+      .element(
+        dialog.getByRole('link', {
+          name: 'Maps and geographic reference material',
+        }),
+      )
+      .toBeVisible();
+    expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(320);
+    expect(dialog.element().scrollWidth).toBeLessThanOrEqual(
+      dialog.element().clientWidth,
+    );
   });
 
   it('keeps an open drawer dismissible when the viewport grows', async () => {

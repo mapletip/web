@@ -91,8 +91,8 @@ const visualCases: readonly VisualCase[] = [
   },
   {
     name: 'header-grouped-open-dark',
-    story: dark.GroupedNavigationOpen,
-    storyId: 'components-header--grouped-navigation-open',
+    story: dark.Default,
+    storyId: 'components-header--default',
     width: 1080,
     height: 768,
     beforeScreenshot: async () => {
@@ -102,8 +102,8 @@ const visualCases: readonly VisualCase[] = [
   },
   {
     name: 'header-detailed-open-dark',
-    story: dark.DetailedNavigationOpen,
-    storyId: 'components-header--detailed-navigation-open',
+    story: dark.Detailed,
+    storyId: 'components-header--detailed',
     width: 1366,
     height: 768,
     beforeScreenshot: async () => {
@@ -113,17 +113,6 @@ const visualCases: readonly VisualCase[] = [
       page.getByRole('heading', { name: 'Library' }),
       page.getByRole('button', { name: 'Close Library navigation' }),
     ],
-  },
-  {
-    name: 'header-detailed-open-1080-dark',
-    story: dark.DetailedNavigationOpen,
-    storyId: 'components-header--detailed-navigation-open',
-    width: 1080,
-    height: 768,
-    beforeScreenshot: async () => {
-      await userEvent.click(page.getByRole('button', { name: 'Library' }));
-    },
-    visible: [page.getByRole('heading', { name: 'Library' })],
   },
   {
     name: 'header-detailed-partial-dark',
@@ -153,8 +142,8 @@ const visualCases: readonly VisualCase[] = [
   },
   {
     name: 'header-detailed-phone-drawer-open-dark',
-    story: dark.DetailedMobileNavigationOpen,
-    storyId: 'components-header--detailed-mobile-navigation-open',
+    story: dark.Detailed,
+    storyId: 'components-header--detailed',
     width: 375,
     height: 812,
     beforeScreenshot: async () => {
@@ -164,8 +153,8 @@ const visualCases: readonly VisualCase[] = [
   },
   {
     name: 'header-detailed-320-drawer-open-dark',
-    story: dark.DetailedMobileNavigationOpen,
-    storyId: 'components-header--detailed-mobile-navigation-open',
+    story: dark.Detailed,
+    storyId: 'components-header--detailed',
     width: 320,
     height: 640,
     beforeScreenshot: async () => {
@@ -215,49 +204,9 @@ const visualCases: readonly VisualCase[] = [
     visible: [drawer],
   },
   {
-    name: 'header-breakpoint-991-dark',
-    story: dark.Default,
-    storyId: 'components-header--default',
-    width: 991,
-    height: 768,
-    element: header,
-    visible: [openNavigation],
-    hidden: [hiddenDesktopNavigation],
-  },
-  {
-    name: 'header-breakpoint-992-dark',
-    story: dark.Default,
-    storyId: 'components-header--default',
-    width: 992,
-    height: 768,
-    element: header,
-    visible: [desktopNavigation],
-    hidden: [openNavigation],
-  },
-  {
-    name: 'header-wide-dark',
-    story: dark.Default,
-    storyId: 'components-header--default',
-    width: 1920,
-    height: 1080,
-    element: header,
-    visible: [desktopNavigation],
-  },
-  {
-    name: 'header-mobile-group-collapsed-dark',
-    story: dark.MobileGroupCollapsed,
-    storyId: 'components-header--mobile-group-collapsed',
-    width: 375,
-    height: 812,
-    beforeScreenshot: async () => {
-      await userEvent.click(openNavigation);
-    },
-    visible: [drawer],
-  },
-  {
     name: 'header-mobile-group-expanded-dark',
-    story: dark.MobileGroupExpanded,
-    storyId: 'components-header--mobile-group-expanded',
+    story: dark.Detailed,
+    storyId: 'components-header--detailed',
     width: 375,
     height: 812,
     beforeScreenshot: async () => {
@@ -268,8 +217,8 @@ const visualCases: readonly VisualCase[] = [
   },
   {
     name: 'header-mobile-group-expanded-320-dark',
-    story: dark.MobileGroupExpanded,
-    storyId: 'components-header--mobile-group-expanded',
+    story: dark.Detailed,
+    storyId: 'components-header--detailed',
     width: 320,
     height: 640,
     beforeScreenshot: async () => {
@@ -280,8 +229,8 @@ const visualCases: readonly VisualCase[] = [
   },
   {
     name: 'header-mobile-compact-group-dark',
-    story: dark.MobileCompactGroup,
-    storyId: 'components-header--mobile-compact-group',
+    story: dark.NoUtility,
+    storyId: 'components-header--no-utility',
     width: 375,
     height: 812,
     beforeScreenshot: async () => {
