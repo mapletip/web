@@ -1,4 +1,4 @@
-import { Burger, Drawer, Popover } from '@mantine/core';
+import { Burger, CloseButton, Drawer, Popover } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import { CaretDown } from '@phosphor-icons/react';
 import {
@@ -27,25 +27,50 @@ function navigableLink(link: HeaderLink): HeaderSubLink | undefined {
   return link.href === undefined ? undefined : { ...link, href: link.href };
 }
 
+function renderLinkContent(link: HeaderSubLink, detailed: boolean): ReactNode {
+  if (!detailed) return link.label;
+
+  return (
+    <>
+      {link.icon ? (
+        <span className={classes['linkIcon']} aria-hidden="true">
+          {link.icon}
+        </span>
+      ) : null}
+      <span className={classes['linkCopy']}>
+        <span className={classes['linkLabel']}>{link.label}</span>
+        {link.description ? (
+          <span className={classes['linkDescription']}>{link.description}</span>
+        ) : null}
+      </span>
+    </>
+  );
+}
+
 function renderNavigationLink(
   link: HeaderSubLink,
   className: string,
   onActivate: (() => void) | undefined,
   linkRenderer: HeaderLinkRenderer | undefined,
+  detailed = false,
 ): ReactNode {
-  const props: HeaderLinkRenderProps = {
+  const content = renderLinkContent(link, detailed);
+  const anchorProps = {
     href: link.href,
     className,
-    'aria-current': link.current === true ? 'page' : undefined,
+    'aria-current': link.current === true ? ('page' as const) : undefined,
     'data-active':
-      link.active === true || link.current === true ? 'true' : undefined,
+      link.active === true || link.current === true
+        ? ('true' as const)
+        : undefined,
     onClick: onActivate,
   };
+  const props: HeaderLinkRenderProps = { ...anchorProps, children: content };
 
   return linkRenderer ? (
     linkRenderer(link, props)
   ) : (
-    <a {...props}>{link.label}</a>
+    <a {...anchorProps}>{content}</a>
   );
 }
 
@@ -60,6 +85,9 @@ function DesktopGroup({
   const dropdownId = useId();
   const parentLink = navigableLink(link);
   const children = link.children;
+  const detailed =
+    Boolean(link.description) ||
+    children.some((child) => Boolean(child.description || child.icon));
   const handleDisclosureKeyDown = (event: KeyboardEvent<HTMLButtonElement>) => {
     // Popover handles Escape inside the panel; mirror it on the trigger.
     if (event.key === 'Escape' && opened) {
@@ -87,6 +115,7 @@ function DesktopGroup({
           opened={opened}
           onChange={disclosure.set}
           position="bottom-start"
+          width={detailed ? '27rem' : undefined}
           withinPortal={false}
           withRoles={false}
           returnFocus
@@ -112,15 +141,50 @@ function DesktopGroup({
               <CaretDown size={14} aria-hidden="true" />
             </button>
           </Popover.Target>
-          <Popover.Dropdown id={dropdownId} className={classes['dropdown']}>
-            <ul className={classes['subList']}>
+          <Popover.Dropdown
+            id={dropdownId}
+            className={
+              detailed
+                ? `${classes['dropdown']} ${classes['richDropdown']}`
+                : classes['dropdown']
+            }
+          >
+            {detailed ? (
+              <div className={classes['panelHeader']}>
+                <div className={classes['panelCopy']}>
+                  <h2 className={classes['panelTitle']}>{link.label}</h2>
+                  {link.description ? (
+                    <p className={classes['panelDescription']}>
+                      {link.description}
+                    </p>
+                  ) : null}
+                </div>
+                <CloseButton
+                  type="button"
+                  size="xl"
+                  className={classes['panelClose']}
+                  aria-label={`Close ${link.label} navigation`}
+                  onClick={disclosure.close}
+                />
+              </div>
+            ) : null}
+            <ul
+              className={
+                detailed
+                  ? `${classes['subList']} ${classes['richList']}`
+                  : classes['subList']
+              }
+            >
               {children.map((child) => (
                 <li key={child.id}>
                   {renderNavigationLink(
                     child,
-                    classes['subLink'] ?? '',
+                    detailed
+                      ? `${classes['subLink']} ${classes['richLink']}`
+                      : (classes['subLink'] ?? ''),
                     disclosure.close,
                     linkRenderer,
+                    detailed,
                   )}
                 </li>
               ))}

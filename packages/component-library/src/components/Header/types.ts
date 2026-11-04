@@ -12,6 +12,10 @@ interface HeaderLinkBase {
 /** A destination rendered below a top-level navigation item. */
 export interface HeaderSubLink extends HeaderLinkBase {
   readonly href: string;
+  /** Optional supporting text shown in detailed desktop panels. */
+  readonly description?: string;
+  /** Optional decorative icon shown in detailed desktop panels. */
+  readonly icon?: ReactNode;
 }
 
 /** A directly navigable top-level destination. */
@@ -27,6 +31,8 @@ export interface HeaderGroupLink extends HeaderLinkBase {
    */
   readonly href?: string;
   readonly children: readonly HeaderSubLink[];
+  /** Optional supporting text shown below the group label in detailed panels. */
+  readonly description?: string;
 }
 
 export type HeaderLink = HeaderLeafLink | HeaderGroupLink;
@@ -43,6 +49,11 @@ export interface HeaderLinkRenderProps {
   readonly 'aria-current': 'page' | undefined;
   readonly 'data-active': 'true' | undefined;
   readonly onClick: (() => void) | undefined;
+  /**
+   * Library-constructed link contents. Render this rather than rebuilding the
+   * label, icon and description layout in a host router adapter.
+   */
+  readonly children?: ReactNode;
 }
 
 export type HeaderLinkRenderer = (
@@ -68,9 +79,9 @@ export interface HeaderProps {
   readonly navigationLabel?: string;
   /**
    * Optional router-aware replacement for the default anchor. Forward every
-   * supplied prop, including `onClick`, so disclosures and the drawer close on
-   * navigation. TanStack Router hosts should split the built `href` into
-   * `Link`'s `to`, `search` and `hash` options.
+   * supplied prop, including `children` and `onClick`, so disclosures and the
+   * drawer close on navigation. TanStack Router hosts should split the built
+   * `href` into `Link`'s `to`, `search` and `hash` options.
    */
   readonly renderLink?: HeaderLinkRenderer;
 }

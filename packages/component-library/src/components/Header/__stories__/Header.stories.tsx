@@ -1,4 +1,10 @@
 import { Button } from '@mantine/core';
+import {
+  BookOpen,
+  FolderOpen,
+  MapTrifold,
+  SquaresFour,
+} from '@phosphor-icons/react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, screen, userEvent, waitFor, within } from 'storybook/test';
 
@@ -40,6 +46,96 @@ const activeNavigation = [
     ],
   },
   { id: 'journal', label: 'Journal', href: '/journal' },
+] satisfies readonly HeaderLink[];
+
+const detailedNavigation = [
+  { id: 'overview', label: 'Overview', href: '/overview' },
+  {
+    id: 'library',
+    label: 'Library',
+    description: 'Browse reference materials',
+    children: [
+      {
+        id: 'all-materials',
+        label: 'All materials',
+        description: 'Browse every reference item',
+        icon: <SquaresFour />,
+        href: '/library',
+      },
+      {
+        id: 'field-guides',
+        label: 'Field guides',
+        description: 'Regional reference volumes',
+        icon: <BookOpen />,
+        href: '/library/field-guides',
+      },
+      {
+        id: 'maps',
+        label: 'Maps',
+        description: 'Geographic overview',
+        icon: <MapTrifold />,
+        href: '/library/maps',
+      },
+      {
+        id: 'archives',
+        label: 'Archives',
+        description: 'Historical records',
+        icon: <FolderOpen />,
+        href: '/library/archives',
+      },
+    ],
+  },
+  { id: 'journal', label: 'Journal', href: '/journal' },
+] satisfies readonly HeaderLink[];
+
+const partialNavigation = [
+  {
+    id: 'library',
+    label: 'Library',
+    description: 'Browse reference materials',
+    children: [
+      { id: 'all-materials', label: 'All materials', href: '/library' },
+      {
+        id: 'field-guides',
+        label: 'Field guides',
+        description: 'Regional reference volumes',
+        href: '/library/field-guides',
+      },
+      {
+        id: 'maps',
+        label: 'Maps',
+        icon: <MapTrifold />,
+        href: '/library/maps',
+      },
+    ],
+  },
+] satisfies readonly HeaderLink[];
+
+const detailedLongNavigation = [
+  {
+    id: 'library',
+    label: 'Library and special collections',
+    description:
+      'Browse field guides, maps, archives, and supporting reference materials for regional study',
+    children: [
+      {
+        id: 'field-guides',
+        label: 'Field guides and regional reference volumes',
+        description:
+          'Browse every long-form field guide and regional reference volume in the collection',
+        icon: <BookOpen />,
+        href: '/library/field-guides',
+      },
+      {
+        id: 'maps',
+        label: 'Maps and geographic reference material',
+        description:
+          'Review geographic overviews and detailed regional reference material',
+        icon: <MapTrifold />,
+        href: '/library/maps',
+      },
+    ],
+  },
 ] satisfies readonly HeaderLink[];
 
 const longNavigation = [
@@ -154,6 +250,81 @@ export const GroupedNavigationOpen: Story = {
     await userEvent.click(canvas.getByRole('button', { name: 'Collections' }));
     await waitFor(async () => {
       await expect(canvas.getByRole('link', { name: 'Maps' })).toBeVisible();
+    });
+  },
+};
+
+export const DetailedNavigationOpen: Story = {
+  name: 'Detailed navigation open',
+  args: {
+    brand: <ReferenceBrand />,
+    navigation: detailedNavigation,
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(canvas.getByRole('button', { name: 'Library' }));
+    await waitFor(async () => {
+      await expect(
+        canvas.getByRole('heading', { name: 'Library' }),
+      ).toBeVisible();
+    });
+  },
+};
+
+export const DetailedPartialMetadata: Story = {
+  name: 'Detailed partial metadata',
+  args: {
+    brand: <ReferenceBrand />,
+    navigation: partialNavigation,
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(canvas.getByRole('button', { name: 'Library' }));
+    await waitFor(async () => {
+      await expect(
+        canvas.getByRole('link', { name: /Field guides/ }),
+      ).toBeVisible();
+    });
+  },
+};
+
+export const DetailedLongLabels: Story = {
+  name: 'Detailed long labels',
+  args: {
+    brand: <ReferenceBrand />,
+    navigation: detailedLongNavigation,
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(
+      canvas.getByRole('button', { name: 'Library and special collections' }),
+    );
+    await waitFor(async () => {
+      await expect(
+        canvas.getByRole('link', { name: /Field guides and regional/ }),
+      ).toBeVisible();
+    });
+  },
+};
+
+export const DetailedMobileNavigationOpen: Story = {
+  name: 'Detailed mobile navigation open',
+  args: {
+    brand: <ReferenceBrand />,
+    navigation: detailedNavigation,
+  },
+  globals: { viewport: { value: 'phone', isRotated: false } },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(
+      canvas.getByRole('button', { name: 'Open navigation' }),
+    );
+    const dialog = await screen.findByRole('dialog', { name: 'Navigation' });
+    await waitFor(async () => {
+      await expect(dialog).toBeVisible();
+      await expect(
+        within(dialog).getByRole('link', { name: 'Field guides' }),
+      ).toBeVisible();
     });
   },
 };
