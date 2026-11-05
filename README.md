@@ -12,10 +12,16 @@ pnpm + [Turborepo](https://turborepo.dev/) monorepo.
 ## Setup
 
 Install the Node version in `.nvmrc` with your version manager, then install
-pnpm with npm:
+pnpm with the official installer:
 
 ```sh
-npm install --global pnpm
+npx get-pnpm
+```
+
+Open a new terminal or source the shell config the installer names, then install
+dependencies:
+
+```sh
 pnpm install --frozen-lockfile
 ```
 
