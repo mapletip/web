@@ -11,11 +11,18 @@ pnpm + [Turborepo](https://turborepo.dev/) monorepo.
 
 ## Setup
 
-Requires Node (see `.nvmrc`) and pnpm via corepack:
+Install the Node version in `.nvmrc` with your version manager, then install
+pnpm with the official installer:
 
 ```sh
-corepack enable pnpm
-pnpm install
+npx get-pnpm
+```
+
+Open a new terminal or source the shell config the installer names, then install
+dependencies:
+
+```sh
+pnpm install --frozen-lockfile
 ```
 
 ## Commands

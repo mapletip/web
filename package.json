@@ -21,9 +21,9 @@
     "turbo": "catalog:",
     "typescript": "catalog:"
   },
-  "packageManager": "pnpm@12.15.0",
+  "packageManager": "pnpm@12.16.1",
   "engines": {
-    "node": ">=24",
+    "node": ">=26 <27",
     "npm": "please-use-pnpm",
     "yarn": "please-use-pnpm"
   }
