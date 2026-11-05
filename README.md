@@ -11,11 +11,12 @@ pnpm + [Turborepo](https://turborepo.dev/) monorepo.
 
 ## Setup
 
-Requires Node (see `.nvmrc`) and pnpm via corepack:
+Install Node.js 26.13.0 (see `.nvmrc`) with your version manager. Node 26 no
+longer bundles Corepack, so install the pinned pnpm release directly with npm:
 
 ```sh
-corepack enable pnpm
-pnpm install
+npm install --global pnpm@12.15.0
+pnpm install --frozen-lockfile
 ```
 
 ## Commands

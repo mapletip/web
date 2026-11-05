@@ -9,6 +9,7 @@
     "format:check": "turbo run format:check:root",
     "format:check:root": "prettier --check .",
     "format:root": "prettier --write .",
+    "preinstall": "node scripts/check-node.mjs",
     "lint": "turbo run lint",
     "storybook": "turbo run storybook --filter=@mapletip/component-library",
     "test": "turbo run test",
@@ -23,7 +24,7 @@
   },
   "packageManager": "pnpm@12.15.0",
   "engines": {
-    "node": ">=24",
+    "node": ">=26 <27",
     "npm": "please-use-pnpm",
     "yarn": "please-use-pnpm"
   }
