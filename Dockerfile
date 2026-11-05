@@ -9,7 +9,7 @@ ENV PATH=$PNPM_HOME/bin:$PATH
 
 WORKDIR /app
 
-# get-pnpm@0.0.11 installs the pnpm version from the repository's packageManager pin.
+# Reviewed installer version; pnpm itself comes from the repository packageManager pin.
 COPY package.json ./
 RUN npx --yes get-pnpm@0.0.11 --no-modify-path
 
@@ -19,6 +19,7 @@ WORKDIR /app
 
 COPY . .
 
+# Matches the root lockfile resolution; turbo prune runs before workspace dependencies are installed.
 RUN pnpm dlx turbo@2.11.10 prune @mapletip/web --docker
 
 FROM base AS installer

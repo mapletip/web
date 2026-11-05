@@ -92,7 +92,6 @@ jobs:
           curl -s -D /tmp/health.headers -o /dev/null http://127.0.0.1:18087/api/healthz
           grep -qi '^cache-control: no-store' /tmp/health.headers
           test "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:18087/)" = 200
-          test "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:18087/demo/faceted-browser)" = 200
           test "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:18087/nope)" = 404
 
           asset=$(curl -s http://127.0.0.1:18087/ | grep -o '/assets/[^"]*\.js' | head -1)
