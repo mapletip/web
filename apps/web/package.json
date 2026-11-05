@@ -13,6 +13,7 @@
     "generate-routes": "vite build",
     "lint": "eslint . --max-warnings 0",
     "preview": "vite preview",
+    "start": "node .output/server/index.mjs",
     "typecheck": "tsc"
   },
   "dependencies": {
@@ -22,6 +23,7 @@
     "@phosphor-icons/react": "catalog:",
     "@tanstack/react-router": "catalog:",
     "@tanstack/react-start": "catalog:",
+    "nitro": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:"
   },

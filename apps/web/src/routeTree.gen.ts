@@ -10,11 +10,17 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as HealthzRouteImport } from './routes/healthz'
 import { Route as DemoFacetedBrowserRouteImport } from './routes/demo/faceted-browser'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HealthzRoute = HealthzRouteImport.update({
+  id: '/healthz',
+  path: '/healthz',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DemoFacetedBrowserRoute = DemoFacetedBrowserRouteImport.update({
@@ -25,27 +31,31 @@ const DemoFacetedBrowserRoute = DemoFacetedBrowserRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/healthz': typeof HealthzRoute
   '/demo/faceted-browser': typeof DemoFacetedBrowserRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/healthz': typeof HealthzRoute
   '/demo/faceted-browser': typeof DemoFacetedBrowserRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/healthz': typeof HealthzRoute
   '/demo/faceted-browser': typeof DemoFacetedBrowserRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/demo/faceted-browser'
+  fullPaths: '/' | '/healthz' | '/demo/faceted-browser'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/demo/faceted-browser'
-  id: '__root__' | '/' | '/demo/faceted-browser'
+  to: '/' | '/healthz' | '/demo/faceted-browser'
+  id: '__root__' | '/' | '/healthz' | '/demo/faceted-browser'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  HealthzRoute: typeof HealthzRoute
   DemoFacetedBrowserRoute: typeof DemoFacetedBrowserRoute
 }
 
@@ -56,6 +66,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/healthz': {
+      id: '/healthz'
+      path: '/healthz'
+      fullPath: '/healthz'
+      preLoaderRoute: typeof HealthzRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/demo/faceted-browser': {
@@ -70,6 +87,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  HealthzRoute: HealthzRoute,
   DemoFacetedBrowserRoute: DemoFacetedBrowserRoute,
 }
 export const routeTree = rootRouteImport
