@@ -55,6 +55,10 @@ jobs:
 
   container:
     name: Smoke Test Container (${{ matrix.arch }})
+    # On a canonical main push, `publish` builds, pushes, pulls and smoke
+    # tests the real digests; a second local-only build of the same image
+    # here would just duplicate that work.
+    if: github.event_name != 'push' || github.ref != 'refs/heads/main'
     strategy:
       fail-fast: false
       matrix:
@@ -217,6 +221,7 @@ jobs:
           labels: |
             org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
             org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.licenses=GPL-3.0-or-later
           provenance: false
           sbom: false
           outputs: type=image,name=ghcr.io/mapletip/web,push-by-digest=true,name-canonical=true,push=true
@@ -299,12 +304,30 @@ jobs:
           inspect=$(docker buildx imagetools inspect "ghcr.io/mapletip/web:${tag}" --raw)
           digest=$(docker buildx imagetools inspect "ghcr.io/mapletip/web:${tag}" --format '{{json .Manifest.digest}}' | tr -d '"')
 
-          platforms=$(echo "$inspect" | jq -r '.manifests[].platform.architecture' | sort | tr '\n' ' ')
-          test "$platforms" = "amd64 arm64 "
+          # Reject a malformed index digest before it can reach the release
+          # payload.
+          [[ "$digest" =~ ^sha256:[a-f0-9]{64}$ ]]
 
+          revision=$(echo "$inspect" | jq -r '.annotations["org.opencontainers.image.revision"] // ""')
+          test "$revision" = "$GITHUB_SHA"
+
+          # Exactly the two tested platforms, exactly once each, no extra
+          # or substitute manifests (attestations, duplicate arches, etc).
+          manifest_count=$(echo "$inspect" | jq '.manifests | length')
+          test "$manifest_count" = 2
+
+          for arch in amd64 arm64; do
+            count=$(echo "$inspect" | jq --arg arch "$arch" \
+              '[.manifests[] | select(.platform.os == "linux" and .platform.architecture == $arch)] | length')
+            test "$count" = 1
+          done
+
+          # The index references exactly the two already-tested digests,
+          # not a substituted one.
           for image in "${images[@]}"; do
             tested_digest="${image#*@}"
-            echo "$inspect" | jq -e --arg digest "$tested_digest" '.manifests[] | select(.digest == $digest)' > /dev/null
+            count=$(echo "$inspect" | jq --arg digest "$tested_digest" '[.manifests[] | select(.digest == $digest)] | length')
+            test "$count" = 1
           done
 
           echo "digest=${digest}" >> "$GITHUB_OUTPUT"
@@ -335,6 +358,8 @@ jobs:
 
       - name: Install flux
         uses: fluxcd/flux2/action@03cd91fc037a0004d59c196777c5fdf2f5dc3b9d # v2.10.0
+        with:
+          version: '2.10.0'
 
       # Only the Kustomization + single-key ConfigMap Flux's existing
       # consumer contract expects; nothing else is permitted into this
@@ -382,7 +407,11 @@ jobs:
       # Phase 3: drop all registry credentials and independently verify the
       # signature's actual certificate identity/issuer and the payload's
       # anonymous retrievability, rather than assuming the signer matches
-      # what we asked for.
+      # what we asked for. A new GHCR package defaults to private visibility
+      # regardless of this repo's own visibility; ghcr.io/mapletip/web must
+      # be switched to public in its package settings (Package settings ->
+      # Danger Zone -> Change visibility) after the first push creates it,
+      # or every step below fails closed with a permission/not-found error.
       - name: Log out of GHCR
         run: docker logout ghcr.io
 
@@ -425,13 +454,39 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Attach production release tag
+        env:
+          CANDIDATE_DIGEST: ${{ steps.candidate.outputs.digest }}
         run: |
           set -euo pipefail
           production_tag="0.${GITHUB_RUN_NUMBER}.${GITHUB_RUN_ATTEMPT}"
-          existing_digest=$(oras resolve "ghcr.io/mapletip/web:${production_tag}" 2>/dev/null || true)
-          if [ -n "$existing_digest" ]; then
-            test "$existing_digest" = "${{ steps.candidate.outputs.digest }}"
+          ref="ghcr.io/mapletip/web:${production_tag}"
+
+          # A nonzero exit from `oras resolve` means either "no such tag"
+          # (expected on a first publish) or an unrelated failure (auth,
+          # connectivity, timeout, 5xx). Only the former is safe to treat as
+          # "create the tag"; anything else must fail closed rather than
+          # risk a duplicate or missing promotion.
+          set +e
+          resolved=$(oras resolve "$ref" 2>&1)
+          resolve_status=$?
+          set -e
+
+          if [ "$resolve_status" -eq 0 ]; then
+            if [ "$resolved" != "$CANDIDATE_DIGEST" ]; then
+              echo "Release ${production_tag} already exists and points at a different digest (${resolved}); refusing to overwrite it." >&2
+              exit 1
+            fi
             echo "Release ${production_tag} already points at the verified digest; nothing to do."
+          elif [[ "$resolved" == *"${ref}: not found"* ]]; then
+            echo "$resolved"
+            oras tag "ghcr.io/mapletip/web@${CANDIDATE_DIGEST}" "${production_tag}"
           else
-            oras tag "ghcr.io/mapletip/web@${{ steps.candidate.outputs.digest }}" "${production_tag}"
+            echo "$resolved" >&2
+            echo "Could not determine whether ${production_tag} already exists; refusing to publish." >&2
+            exit 1
           fi
+
+          # Confirm the tag actually landed on the expected digest, rather
+          # than assuming an ambiguous network outcome succeeded.
+          final_digest=$(oras resolve "$ref")
+          test "$final_digest" = "$CANDIDATE_DIGEST"
