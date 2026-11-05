@@ -53,6 +53,54 @@ jobs:
           path: packages/component-library/storybook-static
           retention-days: 14
 
+  container:
+    name: Smoke Test Container (${{ matrix.arch }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: amd64
+            runner: ubuntu-26.04
+          - arch: arm64
+            runner: ubuntu-26.04-arm
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+
+      - name: Build image
+        run: docker build --tag mapletip-web:${{ matrix.arch }} .
+
+      - name: Smoke test
+        run: |
+          docker run --detach --name web \
+            --read-only --cap-drop=ALL --security-opt=no-new-privileges \
+            --user 1000:1000 -e PORT=8087 -p 18087:8087 \
+            mapletip-web:${{ matrix.arch }}
+          trap 'docker logs web; docker rm -f web' EXIT
+
+          for attempt in $(seq 1 30); do
+            if [ "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:18087/api/healthz)" = 200 ]; then
+              break
+            fi
+            sleep 1
+          done
+
+          test "$(curl -s http://127.0.0.1:18087/api/healthz)" = ok
+          curl -s -D /tmp/health.headers -o /dev/null http://127.0.0.1:18087/api/healthz
+          grep -qi '^cache-control: no-store' /tmp/health.headers
+          test "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:18087/)" = 200
+          test "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:18087/nope)" = 404
+
+          asset=$(curl -s http://127.0.0.1:18087/ | grep -o '/assets/[^"]*\.js' | head -1)
+          test -n "$asset"
+          test "$(curl -s -o /dev/null -w '%{http_code}' "http://127.0.0.1:18087$asset")" = 200
+
+          docker stop --timeout 10 web
+          test "$(docker inspect --format '{{.State.ExitCode}}' web)" = 0
+
   playwright-version:
     name: Resolve Playwright version
     runs-on: ubuntu-26.04

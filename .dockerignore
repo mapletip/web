@@ -1,0 +1,57 @@
+# Version control, CI and local agent/worktree metadata
+.git
+.gitignore
+.github
+.claude
+.vscode
+.idea
+
+# Installed dependencies and caches
+node_modules
+**/node_modules
+.turbo
+**/.turbo
+
+# Local build output
+out
+dist
+**/dist
+.output
+**/.output
+storybook-static
+**/storybook-static
+
+# Test and coverage output
+coverage
+**/coverage
+.vitest
+**/.vitest
+playwright-report
+**/playwright-report
+test-results
+**/test-results
+
+# Environment files, credentials and local package-manager configuration
+.env
+.env.*
+**/.env
+**/.env.*
+*.pem
+**/*.pem
+*.key
+**/*.key
+*.p12
+**/*.p12
+.npmrc
+**/.npmrc
+
+# Logs and OS metadata
+*.log
+**/*.log
+.DS_Store
+**/.DS_Store
+
+# Repository documentation and release tooling not needed for the build
+README.md
+LICENSE
+renovate.json5

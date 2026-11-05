@@ -13,6 +13,7 @@
     "generate-routes": "vite build",
     "lint": "eslint . --max-warnings 0",
     "preview": "vite preview",
+    "start": "node .output/server/index.mjs",
     "typecheck": "tsc"
   },
   "dependencies": {
@@ -32,6 +33,7 @@
     "@types/react-dom": "catalog:",
     "@vitejs/plugin-react": "catalog:",
     "eslint": "catalog:",
+    "nitro": "catalog:",
     "typescript": "catalog:",
     "vite": "catalog:"
   }
