@@ -9,9 +9,9 @@ ENV PATH=$PNPM_HOME/bin:$PATH
 
 WORKDIR /app
 
-# get-pnpm installs the pnpm version from the repository's packageManager pin.
+# get-pnpm@0.0.11 installs the pnpm version from the repository's packageManager pin.
 COPY package.json ./
-RUN npx --yes get-pnpm --no-modify-path
+RUN npx --yes get-pnpm@0.0.11 --no-modify-path
 
 FROM base AS pruner
 

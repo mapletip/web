@@ -6,7 +6,7 @@ import { defineConfig } from 'vite';
 const config = defineConfig({
   resolve: { tsconfigPaths: true },
   server: { host: '127.0.0.1' },
-  plugins: [nitro(), tanstackStart(), viteReact()],
+  plugins: [tanstackStart(), nitro(), viteReact()],
 });
 
 export default config;
