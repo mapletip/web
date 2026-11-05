@@ -231,6 +231,7 @@ jobs:
           DIGEST: ${{ steps.build.outputs.digest }}
         run: |
           set -euo pipefail
+          [[ "$DIGEST" =~ ^sha256:[a-f0-9]{64}$ ]]
           docker pull "ghcr.io/mapletip/web@${DIGEST}"
           scripts/ci/smoke-test.sh "ghcr.io/mapletip/web@${DIGEST}"
           actual=$(docker inspect --format '{{ index .Config.Labels "org.opencontainers.image.revision" }}' "ghcr.io/mapletip/web@${DIGEST}")
@@ -241,6 +242,7 @@ jobs:
           DIGEST: ${{ steps.build.outputs.digest }}
         run: |
           set -euo pipefail
+          [[ "$DIGEST" =~ ^sha256:[a-f0-9]{64}$ ]]
           mkdir -p "${RUNNER_TEMP}/digests"
           touch "${RUNNER_TEMP}/digests/${DIGEST#sha256:}"
 
@@ -397,6 +399,7 @@ jobs:
             --source="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}" \
             --revision="${GITHUB_REF_NAME}@sha1:${GITHUB_SHA}" \
             --output json | jq -r '.digest')
+          [[ "$digest" =~ ^sha256:[a-f0-9]{64}$ ]]
           echo "tag=${candidate_tag}" >> "$GITHUB_OUTPUT"
           echo "digest=${digest}" >> "$GITHUB_OUTPUT"
 
