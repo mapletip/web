@@ -9,9 +9,10 @@ ENV PATH=$PNPM_HOME/bin:$PATH
 
 WORKDIR /app
 
-# get-pnpm reads the pnpm version from the repository packageManager pin.
+# npx ships with the official Node image; get-pnpm@0.0.11 then installs
+# the pnpm version from the repository packageManager pin.
 COPY package.json ./
-RUN npx --yes get-pnpm --no-modify-path
+RUN npx --yes get-pnpm@0.0.11 --no-modify-path
 
 FROM base AS pruner
 
