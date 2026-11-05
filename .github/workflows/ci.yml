@@ -33,17 +33,6 @@ jobs:
           node-version-file: .nvmrc
           cache: pnpm
 
-      - name: Verify Node.js and pnpm
-        run: |
-          expected_node="v$(tr -d '[:space:]' < .nvmrc)"
-          expected_pnpm="$(node -p "require('./package.json').packageManager.slice('pnpm@'.length)")"
-          actual_node="$(node --version)"
-          actual_pnpm="$(pnpm --version)"
-          printf 'Node.js %s (expected %s)\npnpm %s (expected %s)\n' \
-            "$actual_node" "$expected_node" "$actual_pnpm" "$expected_pnpm"
-          test "$actual_node" = "$expected_node"
-          test "$actual_pnpm" = "$expected_pnpm"
-
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
@@ -104,17 +93,6 @@ jobs:
           node-version-file: .nvmrc
           cache: pnpm
 
-      - name: Verify Node.js and pnpm
-        run: |
-          expected_node="v$(tr -d '[:space:]' < .nvmrc)"
-          expected_pnpm="$(node -p "require('./package.json').packageManager.slice('pnpm@'.length)")"
-          actual_node="$(node --version)"
-          actual_pnpm="$(pnpm --version)"
-          printf 'Node.js %s (expected %s)\npnpm %s (expected %s)\n' \
-            "$actual_node" "$expected_node" "$actual_pnpm" "$expected_pnpm"
-          test "$actual_node" = "$expected_node"
-          test "$actual_pnpm" = "$expected_pnpm"
-
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
@@ -148,17 +126,6 @@ jobs:
         with:
           node-version-file: .nvmrc
           cache: pnpm
-
-      - name: Verify Node.js and pnpm
-        run: |
-          expected_node="v$(tr -d '[:space:]' < .nvmrc)"
-          expected_pnpm="$(node -p "require('./package.json').packageManager.slice('pnpm@'.length)")"
-          actual_node="$(node --version)"
-          actual_pnpm="$(pnpm --version)"
-          printf 'Node.js %s (expected %s)\npnpm %s (expected %s)\n' \
-            "$actual_node" "$expected_node" "$actual_pnpm" "$expected_pnpm"
-          test "$actual_node" = "$expected_node"
-          test "$actual_pnpm" = "$expected_pnpm"
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile

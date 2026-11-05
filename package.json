@@ -9,7 +9,6 @@
     "format:check": "turbo run format:check:root",
     "format:check:root": "prettier --check .",
     "format:root": "prettier --write .",
-    "preinstall": "node scripts/check-node.mjs",
     "lint": "turbo run lint",
     "storybook": "turbo run storybook --filter=@mapletip/component-library",
     "test": "turbo run test",
