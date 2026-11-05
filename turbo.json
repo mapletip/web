@@ -23,6 +23,7 @@
       "passThroughEnv": ["PLAYWRIGHT_BROWSERS_PATH", "PLAYWRIGHT_WS_ENDPOINT"]
     },
     "test": {
+      "dependsOn": ["^build"],
       "passThroughEnv": ["PLAYWRIGHT_BROWSERS_PATH", "PLAYWRIGHT_WS_ENDPOINT"]
     },
     "typecheck": {

@@ -1,7 +1,7 @@
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { useState } from 'react';
 import { describe, expect, it, vi } from 'vitest';
-import { page, userEvent } from 'vitest/browser';
-import { render } from 'vitest-browser-react';
 
 import type { FacetFilterValue } from '@/components/FacetedBrowser';
 import { isInvalidNumericRange } from '@/components/FacetedBrowser/hooks/filterTypes';
@@ -93,50 +93,52 @@ function DrawerHarness({
 describe('FacetedBrowser drawer actions', () => {
   it('applies the draft written earlier in the same event', async () => {
     const commitFilters = vi.fn();
-    await render(<DrawerHarness commitFilters={commitFilters} />);
+    render(<DrawerHarness commitFilters={commitFilters} />);
 
-    await userEvent.click(page.getByRole('button', { name: 'Set and apply' }));
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Set and apply' }),
+    );
     expect(commitFilters).toHaveBeenCalledWith({ group: ['Beta'] });
   });
 
   it('does not apply after a close in the same event', async () => {
     const commitFilters = vi.fn();
-    await render(<DrawerHarness commitFilters={commitFilters} />);
+    render(<DrawerHarness commitFilters={commitFilters} />);
 
     await userEvent.click(
-      page.getByRole('button', { name: 'Close and apply' }),
+      screen.getByRole('button', { name: 'Close and apply' }),
     );
     expect(commitFilters).not.toHaveBeenCalled();
   });
 
   it('does not resurrect a closed session when set and apply follow close', async () => {
     const commitFilters = vi.fn();
-    await render(<DrawerHarness commitFilters={commitFilters} />);
+    render(<DrawerHarness commitFilters={commitFilters} />);
 
     await userEvent.click(
-      page.getByRole('button', { name: 'Close set and apply' }),
+      screen.getByRole('button', { name: 'Close set and apply' }),
     );
     expect(commitFilters).not.toHaveBeenCalled();
   });
 
   it('applies a session opened earlier in the same event', async () => {
     const commitFilters = vi.fn();
-    await render(
+    render(
       <DrawerHarness commitFilters={commitFilters} initiallyOpened={false} />,
     );
 
     await userEvent.click(
-      page.getByRole('button', { name: 'Open set and apply' }),
+      screen.getByRole('button', { name: 'Open set and apply' }),
     );
     expect(commitFilters).toHaveBeenCalledWith({ group: ['Beta'] });
   });
 
   it('does not apply an invalid draft written in the same event', async () => {
     const commitFilters = vi.fn();
-    await render(<DrawerHarness commitFilters={commitFilters} />);
+    render(<DrawerHarness commitFilters={commitFilters} />);
 
     await userEvent.click(
-      page.getByRole('button', { name: 'Invalid and apply' }),
+      screen.getByRole('button', { name: 'Invalid and apply' }),
     );
     expect(commitFilters).not.toHaveBeenCalled();
   });

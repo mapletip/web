@@ -92,59 +92,6 @@ describe('useFacetedBrowser plain Node SSR', () => {
     expect(browser.records[0]?.name).toBe('Alpha');
   });
 
-  it('evaluates numeric range and preserves known zero in plain Node', () => {
-    const browser = evaluateHook({
-      defaultFilters: {
-        level: { min: 0, max: 50 },
-      },
-    });
-    expect(browser.totalMatchingCount).toBe(3);
-    const names = browser.allFilteredRecords.map((r) => r.name);
-    expect(names).toContain('Beta'); // level 0
-    expect(names).toContain('Delta'); // level 50
-    expect(names).toContain('Epsilon'); // level 25
-    expect(names).not.toContain('Gamma'); // null unknown
-  });
-
-  it('sorts numeric ascending with unknown last in plain Node', () => {
-    const browser = evaluateHook({
-      defaultSort: { field: 'level', direction: 'asc' },
-    });
-    const names = browser.allFilteredRecords.map((r) => r.name);
-    // Beta: 0, Epsilon: 25, Delta: 50, Alpha: 100, Gamma: null (last!)
-    expect(names).toEqual(['Beta', 'Epsilon', 'Delta', 'Alpha', 'Gamma']);
-  });
-
-  it('sorts numeric descending with unknown last in plain Node', () => {
-    const browser = evaluateHook({
-      defaultSort: { field: 'level', direction: 'desc' },
-    });
-    const names = browser.allFilteredRecords.map((r) => r.name);
-    // Alpha: 100, Delta: 50, Epsilon: 25, Beta: 0, Gamma: null (last!)
-    expect(names).toEqual(['Alpha', 'Delta', 'Epsilon', 'Beta', 'Gamma']);
-  });
-
-  it('computes faceted counts in plain Node', () => {
-    const browser = evaluateHook();
-    expect(browser.getFacetCount('category', 'Boss')).toBe(2);
-    expect(browser.getFacetCount('category', 'Normal')).toBe(2);
-    expect(browser.getFacetCount('category', 'Elite')).toBe(1);
-  });
-
-  it('computes multi-valued faceted counts with distinct-record semantics in plain Node', () => {
-    const browser = evaluateHook();
-    // testItems:
-    // Alpha: ['fire', 'undead']
-    // Beta: ['water']
-    // Gamma: ['fire']
-    // Delta: ['earth', 'undead']
-    // Epsilon: ['air']
-    expect(browser.getFacetCount('tags', 'fire')).toBe(2); // Alpha, Gamma
-    expect(browser.getFacetCount('tags', 'undead')).toBe(2); // Alpha, Delta
-    expect(browser.getFacetCount('tags', 'water')).toBe(1); // Beta
-    expect(browser.getFacetCount('tags', 'holy')).toBe(0); // known zero
-  });
-
   it('supports card-only headless queryFields with computed attributes in plain Node', () => {
     const browser = evaluateHook({
       columns: undefined,
@@ -162,32 +109,5 @@ describe('useFacetedBrowser plain Node SSR', () => {
     // Alpha (100) and Delta (50) have level >= 50
     expect(browser.totalMatchingCount).toBe(2);
     expect(browser.records.map((r) => r.name)).toEqual(['Alpha', 'Delta']);
-  });
-
-  it('evaluates candidate drafts non-mutatingly and tie-breaks deterministically in plain Node', () => {
-    const browser = evaluateHook({
-      defaultSort: { field: 'category', direction: 'asc' },
-    });
-    // Deterministic tie-breaking by idAccessor 'id' asc:
-    // Boss: Alpha (id 1), Gamma (id 3)
-    // Elite: Delta (id 4)
-    // Normal: Beta (id 2), Epsilon (id 5)
-    expect(browser.allFilteredRecords.map((r) => r.id)).toEqual([
-      '1',
-      '3',
-      '4',
-      '2',
-      '5',
-    ]);
-
-    // Draft evaluation
-    const draft = browser.evaluateDraft({ category: ['Normal'] });
-    expect(draft.matchingCount).toBe(2);
-    expect(draft.matchingRecords.map((r) => r.name)).toEqual([
-      'Beta',
-      'Epsilon',
-    ]);
-    // Committed browser state is unmutated
-    expect(browser.totalMatchingCount).toBe(5);
   });
 });

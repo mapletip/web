@@ -37,7 +37,8 @@ const emulateMedia: BrowserCommand<[options: EmulateMediaOptions]> = async (
   context,
   options,
 ) => {
-  await (context as unknown as { page: Page }).page.emulateMedia(options);
+  const { page } = context as unknown as { page: Page };
+  await page.emulateMedia(options);
 };
 
 const movePointer: BrowserCommand<[x: number, y: number]> = async (
@@ -45,94 +46,109 @@ const movePointer: BrowserCommand<[x: number, y: number]> = async (
   x,
   y,
 ) => {
-  await (context as unknown as { page: Page }).page.mouse.move(x, y);
+  const { page } = context as unknown as { page: Page };
+  await page.mouse.move(x, y);
 };
 
-export default mergeConfig(
-  browser(),
-  defineConfig({
-    resolve: {
-      alias: {
-        '@': path.join(import.meta.dirname, 'src'),
-      },
-    },
-    // Pre-bundle everything tests import so Vite never re-optimises (and reloads)
-    // mid-run, which otherwise surfaces as a duplicate-React "useState of null" error
-    // on a cold cache.
-    optimizeDeps: {
-      include: [
-        '@mantine/core',
-        '@mantine/hooks',
-        '@tanstack/react-table',
-        'react-dom/client',
-        'react-dom/server',
-        'vitest-browser-react',
-      ],
-    },
-    test: {
-      browser: {
-        commands: {
-          // Playwright media emulation (forced colors, reduced motion) is not part of
-          // vitest's `page` API; expose just the one Playwright call tests need.
-          emulateMedia,
-          movePointer,
+const browserCommands = { emulateMedia, movePointer };
+
+/**
+ * Projects are split by the boundary a test exercises, not by fashion:
+ *
+ * - `unit`      Node, no DOM: pure algorithms, range membership, comparisons.
+ * - `component` jsdom + RTL: React rendering, state and semantic interaction.
+ * - `browser`   real Chromium: layout, focus, portals, scrolling, storage.
+ * - `ssr`       Node: renders without browser globals.
+ * - `storybook` story documentation and play interactions.
+ * - `visual`    approved screenshot baselines.
+ *
+ * Each project composes the shared Vitest/Browser factory it needs rather than
+ * depending on a root project being in browser mode.
+ */
+const sourceAlias = { '@': path.join(import.meta.dirname, 'src') };
+
+function nodeProject(name: string, include: string[]) {
+  return {
+    extends: false,
+    plugins: [react()],
+    resolve: { alias: sourceAlias },
+    test: { name, environment: 'node', include },
+  };
+}
+
+function browserProject(name: string, options: Record<string, unknown>) {
+  return mergeConfig(
+    browser(),
+    defineConfig({
+      resolve: { alias: sourceAlias },
+      test: { name, ...options },
+    }),
+  );
+}
+
+export default defineConfig({
+  // Pre-bundle everything tests import so Vite never re-optimises (and reloads)
+  // mid-run, which otherwise surfaces as a duplicate-React error.
+  optimizeDeps: {
+    include: [
+      '@mantine/core',
+      '@mantine/hooks',
+      '@tanstack/react-table',
+      'react-dom/client',
+      'react-dom/server',
+      'vitest-browser-react',
+    ],
+  },
+  test: {
+    projects: [
+      nodeProject('unit', ['src/**/__tests__/**/*.test.ts']),
+      {
+        extends: false,
+        plugins: [react()],
+        resolve: { alias: sourceAlias },
+        test: {
+          name: 'component',
+          environment: 'jsdom',
+          globals: true,
+          include: ['src/**/__tests__/**/*.test.tsx'],
+          exclude: [
+            'src/**/__tests__/**/*.browser.test.tsx',
+            'src/**/__tests__/**/*.ssr.test.tsx',
+            'src/**/__tests__/**/*.visual.test.tsx',
+          ],
+          setupFiles: [
+            path.join(import.meta.dirname, 'src/test-support/jsdom.setup.ts'),
+          ],
         },
       },
-      projects: [
-        {
-          extends: true,
-          test: {
-            name: 'unit',
-            include: ['src/**/__tests__/**/*.test.{ts,tsx}'],
-            exclude: [
-              'src/**/__tests__/**/*.ssr.test.{ts,tsx}',
-              'src/**/__tests__/**/*.visual.test.{ts,tsx}',
-            ],
-          },
-        },
-        {
-          // Real server rendering: plain Node, no DOM, so browser-only APIs fail loudly.
-          extends: false,
-          plugins: [react()],
-          resolve: {
-            alias: {
-              '@': path.join(import.meta.dirname, 'src'),
-            },
-          },
-          test: {
-            name: 'ssr',
-            environment: 'node',
-            include: ['src/**/__tests__/**/*.ssr.test.{ts,tsx}'],
-          },
-        },
-        {
-          extends: true,
+      browserProject('browser', {
+        include: ['src/**/__tests__/**/*.browser.test.{ts,tsx}'],
+        browser: { commands: browserCommands },
+      }),
+      nodeProject('ssr', ['src/**/__tests__/**/*.ssr.test.tsx']),
+      mergeConfig(
+        browserProject('storybook', { browser: { commands: browserCommands } }),
+        defineConfig({
           plugins: [
             storybookTest({
               configDir: path.join(import.meta.dirname, '.storybook'),
               storybookScript: 'pnpm storybook',
             }),
           ],
-          test: {
-            name: 'storybook',
-          },
+        }),
+      ),
+      // Opt-in screenshot comparisons: `pnpm test` runs `--project '!visual'`,
+      // `test:visual` runs `--project visual`. Visual tests are component tests,
+      // so they are discovered beside each component's other tests. Not a
+      // Storybook test project, so it never starts the Storybook server.
+      browserProject('visual', {
+        include: ['src/**/__tests__/**/*.visual.test.tsx'],
+        setupFiles: ['.storybook/visual.setup.ts'],
+        browser: {
+          commands: browserCommands,
+          viewport: { width: 1366, height: 768 },
         },
-        {
-          // Opt-in screenshot comparisons: `pnpm test` runs `--project '!visual'`,
-          // `test:visual` runs `--project visual`. Visual tests are component
-          // tests, so they are discovered beside each component's other tests.
-          // Not a Storybook test project, so it never starts the Storybook server.
-          extends: true,
-          test: {
-            name: 'visual',
-            include: ['src/**/__tests__/**/*.visual.test.{ts,tsx}'],
-            setupFiles: ['.storybook/visual.setup.ts'],
-            browser: {
-              viewport: { width: 1366, height: 768 },
-            },
-          },
-        },
-      ],
-    },
-  }),
-);
+      }),
+    ],
+  },
+});

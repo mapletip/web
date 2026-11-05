@@ -4,6 +4,7 @@ import type { FacetFilterValue } from '@/components/FacetedBrowser/hooks/filterT
 
 import { BooleanControl } from './BooleanControl';
 import { OptionList } from './OptionList';
+import { RangeBucketControl } from './RangeBucketControl';
 import { RangeControl } from './RangeControl';
 import type {
   FacetControlContext,
@@ -63,6 +64,21 @@ export function FacetControl<TRecord extends Record<string, unknown>>({
   }
 
   if (facet.kind === 'range') {
+    // FacetedBrowser resolves 'quantile' into concrete buckets before rendering.
+    const buckets =
+      typeof facet.buckets === 'string' ? undefined : facet.buckets;
+    if (buckets !== undefined && buckets.length > 0) {
+      return (
+        <RangeBucketControl
+          label={facet.label}
+          buckets={buckets}
+          counts={counts}
+          value={value}
+          onChange={onChange}
+        />
+      );
+    }
+
     return (
       <RangeControl label={facet.label} value={value} onChange={onChange} />
     );

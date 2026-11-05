@@ -34,6 +34,12 @@ export interface LayoutProps {
   readonly results?: ReactNode;
   readonly children?: ReactNode;
   readonly pagination?: ReactNode;
+  /**
+   * Opt-in: let the results area hand its leftover height to the table wrapper, so a
+   * host that bounds the overall height gets the table's own scroll region instead of
+   * a growing document. Inert unless an ancestor gives this layout a definite height.
+   */
+  readonly fillHeight?: boolean;
 }
 
 function ResultsContent({
@@ -41,21 +47,29 @@ function ResultsContent({
   children,
   table,
   cards,
-}: Pick<
-  LayoutProps,
-  'results' | 'children' | 'table' | 'cards'
->): ReactElement | null {
+  tableRegionClassName,
+}: Pick<LayoutProps, 'results' | 'children' | 'table' | 'cards'> & {
+  readonly tableRegionClassName?: string;
+}): ReactElement | null {
   const custom = results ?? children;
   if (custom !== undefined && custom !== null) return <>{custom}</>;
+  const tableRegion = (
+    <Box
+      visibleFrom="md"
+      {...(tableRegionClassName ? { className: tableRegionClassName } : {})}
+    >
+      {table}
+    </Box>
+  );
   if (table && cards) {
     return (
       <>
-        <Box visibleFrom="md">{table}</Box>
+        {tableRegion}
         <Box hiddenFrom="md">{cards}</Box>
       </>
     );
   }
-  if (table) return <Box visibleFrom="md">{table}</Box>;
+  if (table) return tableRegion;
   return cards ? <>{cards}</> : null;
 }
 
@@ -75,9 +89,14 @@ export function Layout({
   results,
   children,
   pagination,
+  fillHeight = false,
 }: LayoutProps): ReactElement {
   return (
-    <div className={classes['root']} {...(rail ? { 'data-has-rail': '' } : {})}>
+    <div
+      className={classes['root']}
+      {...(rail ? { 'data-has-rail': '' } : {})}
+      {...(fillHeight ? { 'data-fill-height': '' } : {})}
+    >
       {rail ? (
         <Box
           component="aside"
@@ -105,7 +124,14 @@ export function Layout({
           <div className={classes['status']}>{status}</div>
         ) : (
           <>
-            <ResultsContent results={results} table={table} cards={cards}>
+            <ResultsContent
+              results={results}
+              table={table}
+              cards={cards}
+              {...(fillHeight
+                ? { tableRegionClassName: classes['tableRegion'] }
+                : {})}
+            >
               {children}
             </ResultsContent>
             {pagination}

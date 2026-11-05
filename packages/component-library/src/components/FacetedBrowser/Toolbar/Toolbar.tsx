@@ -140,7 +140,9 @@ export function Toolbar<TRecord extends Record<string, unknown>>({
               return (
                 <Checkbox
                   key={column.accessor}
-                  label={column.title}
+                  // Abbreviated headers stay in the table; the picker uses the
+                  // full name so a choice does not read as a second abbreviation.
+                  label={column.fullLabel ?? column.title}
                   checked={visible}
                   disabled={
                     visible &&

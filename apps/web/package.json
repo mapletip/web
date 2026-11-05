@@ -3,9 +3,6 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "imports": {
-    "#/*": "./src/*"
-  },
   "scripts": {
     "build": "vite build",
     "dev": "turbo run dev:app --filter=@mapletip/web",
@@ -14,11 +11,13 @@
     "lint": "eslint . --max-warnings 0",
     "preview": "vite preview",
     "start": "node .output/server/index.mjs",
+    "test": "vitest run",
     "typecheck": "tsc"
   },
   "dependencies": {
     "@mantine/core": "catalog:",
     "@mapletip/component-library": "workspace:*",
+    "@mapletip/data": "0.1.0",
     "@mapletip/theme": "workspace:*",
     "@phosphor-icons/react": "catalog:",
     "@tanstack/react-router": "catalog:",
@@ -28,13 +27,18 @@
   },
   "devDependencies": {
     "@mapletip/config": "workspace:*",
+    "@testing-library/jest-dom": "catalog:",
+    "@testing-library/react": "catalog:",
+    "@testing-library/user-event": "catalog:",
     "@types/node": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "@vitejs/plugin-react": "catalog:",
     "eslint": "catalog:",
+    "jsdom": "catalog:",
     "nitro": "catalog:",
     "typescript": "catalog:",
-    "vite": "catalog:"
+    "vite": "catalog:",
+    "vitest": "catalog:"
   }
 }

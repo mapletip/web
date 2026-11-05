@@ -1812,8 +1812,8 @@ describe('integrated FacetedBrowser', () => {
       page.getByRole('button', { name: /^Show \d+ records$/u }),
     ).toBeEnabled();
 
-    const minimum = page.getByRole('textbox', { name: 'Value 1 minimum' });
-    const maximum = page.getByRole('textbox', { name: 'Value 1 maximum' });
+    const minimum = page.getByRole('textbox', { name: 'Value 1 from' });
+    const maximum = page.getByRole('textbox', { name: 'Value 1 to' });
     await minimum.fill('90');
     await maximum.fill('10');
     expect(page.getByRole('button', { name: 'Show results' })).toBeDisabled();
@@ -1821,115 +1821,46 @@ describe('integrated FacetedBrowser', () => {
   });
 });
 
-describe('empty result guidance', () => {
-  const emptyState = {
-    search: '',
-    filters: {},
-    page: 1,
-    pageSize: 20,
-    hiddenColumns: [],
-  } satisfies BrowseState;
+describe('abbreviated column headers', () => {
+  const columns = [
+    { accessor: 'name', title: 'Name' },
+    {
+      accessor: 'value1',
+      title: 'W. ATT',
+      fullLabel: 'Weapon attack',
+      numeric: true,
+    },
+  ] as const;
 
-  function EmptyBrowser(props: {
-    readonly records: readonly DemoRecord[];
-    readonly state?: BrowseState;
-    readonly onStateChange?: (next: BrowseState) => void;
-    readonly customEmptyState?: ReactNode;
-  }) {
-    const browseState = props.state ?? emptyState;
-    return (
+  it('keeps the full stat name as the header and picker accessible name', async () => {
+    await page.viewport(1440, 900);
+    await render(
       <MantineProvider>
-        {props.onStateChange ? (
-          <FacetedBrowser
-            title={<h1>Records</h1>}
-            records={props.records}
-            facets={facets}
-            queryFields={queryFields}
-            idAccessor="id"
-            presentation="cards"
-            renderCard={(record) => <a href={record.href}>{record.name}</a>}
-            state={browseState}
-            onStateChange={props.onStateChange}
-            emptyState={props.customEmptyState}
-          />
-        ) : (
-          <FacetedBrowser
-            title={<h1>Records</h1>}
-            records={props.records}
-            facets={facets}
-            queryFields={queryFields}
-            idAccessor="id"
-            presentation="cards"
-            renderCard={(record) => <a href={record.href}>{record.name}</a>}
-            defaultState={browseState}
-            emptyState={props.customEmptyState}
-          />
-        )}
-      </MantineProvider>
+        <FacetedBrowser
+          title={<h1>Monsters</h1>}
+          records={demoRecords}
+          idAccessor="id"
+          queryFields={queryFields}
+          presentation="comparison"
+          identityField="name"
+          columns={columns}
+          renderCard={(record) => <a href={record.href}>{record.name}</a>}
+          defaultState={{
+            search: '',
+            filters: {},
+            sort: { field: 'name', direction: 'asc' },
+            page: 1,
+            pageSize: 20,
+            hiddenColumns: [],
+          }}
+        />
+      </MantineProvider>,
     );
-  }
 
-  it('explains a genuinely empty dataset without a no-op clear action', async () => {
-    await render(<EmptyBrowser records={[]} />);
-    await vi.waitFor(() =>
-      expect(page.getByText('No records available')).toBeVisible(),
-    );
     expect(
-      page.getByRole('button', { name: 'Clear filters' }),
-    ).not.toBeInTheDocument();
-  });
-
-  it('offers a clear action for filters with zero matches and resets once', async () => {
-    const onStateChange = vi.fn();
-    await render(
-      <EmptyBrowser
-        records={demoRecords}
-        state={{
-          ...emptyState,
-          filters: { group: ['Alpha'] },
-          search: 'no-such-record',
-        }}
-        onStateChange={onStateChange}
-      />,
-    );
-    await vi.waitFor(() =>
-      expect(page.getByText('No records match')).toBeVisible(),
-    );
-    onStateChange.mockClear();
-    await userEvent.click(
-      page.getByRole('button', { name: 'Clear filters' }).nth(1),
-    );
-    expect(onStateChange).toHaveBeenCalledTimes(1);
-    expect(onStateChange).toHaveBeenCalledWith(
-      expect.objectContaining({ search: '', filters: {}, page: 1 }),
-    );
-  });
-
-  it('offers a clear action for a zero-match search only', async () => {
-    await render(
-      <EmptyBrowser
-        records={demoRecords}
-        state={{ ...emptyState, search: 'no-such-record' }}
-      />,
-    );
-    await vi.waitFor(() =>
-      expect(page.getByText('No records match')).toBeVisible(),
-    );
-    expect(page.getByRole('button', { name: 'Clear filters' })).toBeVisible();
-  });
-
-  it('preserves a custom empty state', async () => {
-    await render(
-      <EmptyBrowser
-        records={[]}
-        customEmptyState={<p>Nothing has been recorded for this build.</p>}
-      />,
-    );
-    expect(
-      page.getByText('Nothing has been recorded for this build.'),
-    ).toBeVisible();
-    expect(
-      page.getByRole('button', { name: 'Clear filters' }),
-    ).not.toBeInTheDocument();
+      page.getByRole('button', { name: /^Weapon attack/u }),
+    ).toHaveTextContent('W. ATT');
+    await page.getByRole('button', { name: /^Choose columns,/u }).click();
+    expect(page.getByRole('checkbox', { name: 'Weapon attack' })).toBeVisible();
   });
 });

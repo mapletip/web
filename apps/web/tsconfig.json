@@ -1,10 +1,9 @@
 {
   "extends": "@mapletip/config/typescript/vite-react",
-  "include": ["src", "vite.config.ts"],
+  "include": ["src", "vite.config.ts", "vitest.config.ts", "vitest.setup.ts"],
   "compilerOptions": {
     "allowImportingTsExtensions": true,
     "paths": {
-      "#/*": ["./src/*"],
       "@/*": ["./src/*"]
     },
     "types": ["vite/client", "node"],

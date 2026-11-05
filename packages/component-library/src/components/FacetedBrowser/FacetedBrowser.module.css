@@ -28,6 +28,39 @@
   min-width: 0;
 }
 
+/*
+ * Opt-in height fill (`fillHeight`). The host bounds the overall height; the results
+ * column then passes its leftover space to the comparison table, so the table's own
+ * scroll region absorbs the overflow instead of the document. Scoped to `md` and up
+ * because that is where the table replaces the cards, and it only applies when the
+ * host opts in, so the default layout is untouched.
+ */
+@media (min-width: $mantine-breakpoint-md) {
+  .root[data-fill-height] {
+    height: 100%;
+    /* One definite row: the results column must not be sized by its own content. */
+    grid-template-rows: minmax(0, 1fr);
+  }
+
+  /* A flex child will not shrink below its content height without this, which is what
+     would otherwise push the page taller than the viewport. */
+  .root[data-fill-height] .results {
+    min-height: 0;
+  }
+
+  .root[data-fill-height] .tableRegion {
+    flex: 1 1 0;
+    min-height: 0;
+  }
+
+  /* A facet rail taller than the bounded area would otherwise re-introduce the
+     page-level scrollbar this mode exists to remove; it scrolls on its own instead. */
+  .root[data-fill-height] .rail {
+    max-height: 100%;
+    overflow-y: auto;
+  }
+}
+
 .status {
   display: flex;
   flex-direction: column;
@@ -44,10 +77,6 @@
 
 .cards > * {
   max-width: 100%;
-  min-width: 0;
-}
-
-.activeFilters {
   min-width: 0;
 }
 

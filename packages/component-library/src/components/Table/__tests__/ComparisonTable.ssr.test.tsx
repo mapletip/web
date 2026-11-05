@@ -1,6 +1,5 @@
 import { MantineProvider } from '@mantine/core';
 import { theme } from '@mapletip/theme';
-import { gzipSync } from 'node:zlib';
 import { renderToString } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 
@@ -25,9 +24,6 @@ describe('ComparisonTable server rendering (Mantine DataTable)', () => {
       </MantineProvider>,
     );
 
-    console.log(
-      `[DataTable SSR measurement] raw: ${Buffer.byteLength(html)} B | gzip: ${gzipSync(html).byteLength} B`,
-    );
     expect(html).toContain('mantine-datatable');
     expect(html).toContain('aria-label="Server records"');
     for (const column of columns) {

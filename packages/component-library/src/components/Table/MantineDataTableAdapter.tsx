@@ -368,17 +368,21 @@ export function MantineDataTableAdapter<TRow extends Record<string, unknown>>({
       {...(className !== undefined ? { className } : {})}
       {...(height !== undefined ? { height } : {})}
       {...(minHeight !== undefined ? { minHeight } : {})}
-      {...(maxHeight !== undefined
-        ? {
-            maxHeight,
-            // DataTable 9.4's maxHeight caps the root but leaves the ScrollArea
-            // viewport at content height when the root has no definite height.
-            // Mirroring the cap on the viewport keeps maxHeight scrollable.
-            scrollAreaProps: {
+      {...(maxHeight !== undefined ? { maxHeight } : {})}
+      scrollAreaProps={{
+        // DataTable's ScrollArea defaults to `type="hover"`, which hides the
+        // scrollbars entirely while a comparison table overflows. `auto` shows
+        // a track only when the content actually overflows.
+        type: 'auto',
+        ...(maxHeight !== undefined
+          ? {
+              // DataTable 9.4's maxHeight caps the root but leaves the ScrollArea
+              // viewport at content height when the root has no definite height.
+              // Mirroring the cap on the viewport keeps maxHeight scrollable.
               viewportProps: { style: { maxHeight } },
-            },
-          }
-        : {})}
+            }
+          : {}),
+      }}
       styles={{
         table: {
           width: 'max-content',

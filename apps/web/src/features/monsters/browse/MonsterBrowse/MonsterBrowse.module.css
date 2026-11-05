@@ -1,0 +1,23 @@
+.page {
+  display: grid;
+  gap: var(--mantine-spacing-md);
+  width: min(90rem, 100%);
+  margin: 0 auto;
+  padding: var(--mantine-spacing-md);
+}
+
+@media (min-width: 62em) {
+  .page {
+    padding: var(--mantine-spacing-xl);
+  }
+
+  /*
+   * Opt-in viewport fill: the shell gives this page a definite height from `md` up, so
+   * the browser row takes it and the table's own scroll region absorbs the overflow
+   * instead of the document. Below `md` the cards render and the page scrolls normally.
+   */
+  .page[data-fill-viewport] {
+    grid-template-rows: minmax(0, 1fr);
+    min-height: 0;
+  }
+}
