@@ -31,8 +31,8 @@ catalog:
   typescript: ^6.0.3
   # bundling
   '@vitejs/plugin-react': ^6.1.2
-  vite: ^8.3.6
-  nitro: 3.0.260610-beta
+  vite: ^8.3.5
+  nitro: 3.0.261103-rc
   vite-plugin-dts: ^5.1.2
   vite-plugin-externalize-deps: ^0.10.0
   # testing
@@ -63,6 +63,3 @@ catalog:
   '@storybook/addon-vitest': ^10.6.3
   '@storybook/react-vite': ^10.6.3
   storybook: ^10.6.3
-
-minimumReleaseAgeExclude:
-  - vite@8.3.6

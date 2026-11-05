@@ -13,6 +13,7 @@ node_modules
 **/.turbo
 
 # Local build output
+out
 dist
 **/dist
 .output

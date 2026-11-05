@@ -10,7 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as HealthzRouteImport } from './routes/healthz'
+import { Route as ApiHealthzRouteImport } from './routes/api/healthz'
 import { Route as DemoFacetedBrowserRouteImport } from './routes/demo/faceted-browser'
 
 const IndexRoute = IndexRouteImport.update({
@@ -18,9 +18,9 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const HealthzRoute = HealthzRouteImport.update({
-  id: '/healthz',
-  path: '/healthz',
+const ApiHealthzRoute = ApiHealthzRouteImport.update({
+  id: '/api/healthz',
+  path: '/api/healthz',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DemoFacetedBrowserRoute = DemoFacetedBrowserRouteImport.update({
@@ -31,31 +31,31 @@ const DemoFacetedBrowserRoute = DemoFacetedBrowserRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/healthz': typeof HealthzRoute
+  '/api/healthz': typeof ApiHealthzRoute
   '/demo/faceted-browser': typeof DemoFacetedBrowserRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/healthz': typeof HealthzRoute
+  '/api/healthz': typeof ApiHealthzRoute
   '/demo/faceted-browser': typeof DemoFacetedBrowserRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/healthz': typeof HealthzRoute
+  '/api/healthz': typeof ApiHealthzRoute
   '/demo/faceted-browser': typeof DemoFacetedBrowserRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/healthz' | '/demo/faceted-browser'
+  fullPaths: '/' | '/api/healthz' | '/demo/faceted-browser'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/healthz' | '/demo/faceted-browser'
-  id: '__root__' | '/' | '/healthz' | '/demo/faceted-browser'
+  to: '/' | '/api/healthz' | '/demo/faceted-browser'
+  id: '__root__' | '/' | '/api/healthz' | '/demo/faceted-browser'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  HealthzRoute: typeof HealthzRoute
+  ApiHealthzRoute: typeof ApiHealthzRoute
   DemoFacetedBrowserRoute: typeof DemoFacetedBrowserRoute
 }
 
@@ -68,11 +68,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/healthz': {
-      id: '/healthz'
-      path: '/healthz'
-      fullPath: '/healthz'
-      preLoaderRoute: typeof HealthzRouteImport
+    '/api/healthz': {
+      id: '/api/healthz'
+      path: '/api/healthz'
+      fullPath: '/api/healthz'
+      preLoaderRoute: typeof ApiHealthzRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/demo/faceted-browser': {
@@ -87,7 +87,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  HealthzRoute: HealthzRoute,
+  ApiHealthzRoute: ApiHealthzRoute,
   DemoFacetedBrowserRoute: DemoFacetedBrowserRoute,
 }
 export const routeTree = rootRouteImport
