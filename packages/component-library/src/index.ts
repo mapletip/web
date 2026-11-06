@@ -6,6 +6,14 @@ export type {
   TableName,
   TableProps,
 } from '@/components/Table';
+export { Footer } from '@/components/Footer';
+export type {
+  FooterGroup,
+  FooterLink,
+  FooterLinkRenderer,
+  FooterLinkRenderProps,
+  FooterProps,
+} from '@/components/Footer';
 export { Header } from '@/components/Header';
 export type {
   HeaderGroupLink,

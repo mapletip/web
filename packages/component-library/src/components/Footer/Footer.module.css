@@ -1,0 +1,119 @@
+.footer {
+  color: var(--mapletip-color-ink);
+  background: var(--mapletip-color-panel);
+  border-top: 1px solid var(--mapletip-color-border-subtle);
+}
+
+.inner {
+  box-sizing: border-box;
+  width: min(100%, 70rem);
+  padding: var(--mantine-spacing-xl) var(--mantine-spacing-md)
+    var(--mantine-spacing-lg);
+  margin-inline: auto;
+}
+
+.upper {
+  display: grid;
+  gap: var(--mantine-spacing-xl);
+}
+
+.brandBlock,
+.group {
+  min-width: 0;
+}
+
+.brandBlock {
+  overflow-wrap: anywhere;
+}
+
+.description {
+  max-width: 24rem;
+  margin-block-start: var(--mantine-spacing-xs);
+  color: var(--mapletip-color-muted);
+  font-size: var(--mantine-font-size-sm);
+  line-height: 1.5;
+}
+
+.navigation {
+  min-width: 0;
+}
+
+.groups {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr));
+  gap: var(--mantine-spacing-lg) var(--mantine-spacing-xl);
+}
+
+.groupTitle {
+  margin: 0 0 var(--mantine-spacing-xs);
+  color: var(--mapletip-color-ink);
+  font-size: var(--mantine-font-size-sm);
+  font-weight: 700;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.linkList {
+  display: grid;
+  justify-items: start;
+  gap: 0.125rem;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.link {
+  display: inline-flex;
+  align-items: center;
+  max-width: 100%;
+  min-height: 2rem;
+  color: var(--mapletip-color-muted);
+  font-size: var(--mantine-font-size-sm);
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+  text-decoration: none;
+  border-radius: var(--mantine-radius-xs);
+}
+
+.link:hover,
+.link:focus-visible {
+  color: var(--mapletip-color-ink);
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+}
+
+.upper + .legal {
+  padding-block-start: var(--mantine-spacing-md);
+  margin-block-start: var(--mantine-spacing-xl);
+  border-top: 1px solid var(--mapletip-color-border-subtle);
+}
+
+.legal {
+  color: var(--mapletip-color-muted);
+  font-size: var(--mantine-font-size-xs);
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+
+.legal :where(p) {
+  margin: 0;
+}
+
+.legal :where(p + p) {
+  margin-block-start: var(--mantine-spacing-xs);
+}
+
+@media (min-width: 48em) {
+  .upper {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+  }
+
+  .groups {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 9rem), 1fr));
+  }
+
+  .upper[data-has-brand='false'],
+  .upper[data-has-groups='false'] {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
