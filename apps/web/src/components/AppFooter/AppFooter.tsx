@@ -15,6 +15,11 @@ const groups = [
       { id: 'maps', label: 'Maps', href: '/maplestory/maps' },
       { id: 'quests', label: 'Quests', href: '/maplestory/quests' },
       { id: 'npcs', label: 'NPCs', href: '/maplestory/npcs' },
+      {
+        id: 'music',
+        label: 'MapleStory Music',
+        href: '/maplestory/music',
+      },
       { id: 'forums', label: 'Forums', href: 'https://forums.mapletip.com' },
     ],
   },
@@ -37,6 +42,11 @@ const groups = [
         href: '/maplestory/items/cash',
       },
     ],
+  },
+  {
+    id: 'legal',
+    title: 'Legal',
+    links: [{ id: 'privacy', label: 'Privacy Policy', href: '/privacy' }],
   },
 ] satisfies readonly FooterGroup[];
 
@@ -74,26 +84,19 @@ function OfficialLink({
 }
 
 const legal = (
-  <>
-    <p>
-      MapleTip is a free, unofficial{' '}
-      <OfficialLink href={officialMapleStoryUrl}>MapleStory</OfficialLink> fan
-      resource and is not affiliated with, endorsed by, or sponsored by{' '}
-      <span className={classes['nowrap']}>
-        <OfficialLink href={officialNexonUrl}>NEXON</OfficialLink>.
-      </span>{' '}
-      MapleStory and related game content are property of NEXON and/or their
-      respective rights holders.{' '}
-      <OfficialLink href={officialMapleStoryYouTubeUrl}>
-        Official MapleStory YouTube
-      </OfficialLink>
-    </p>
-    <p>
-      <Link className={classes['privacyLink']} to="/privacy">
-        Privacy Policy
-      </Link>
-    </p>
-  </>
+  <p>
+    MapleTip is a free, unofficial{' '}
+    <OfficialLink href={officialMapleStoryUrl}>MapleStory</OfficialLink> fan
+    resource and is not affiliated with, endorsed by, or sponsored by{' '}
+    <span className={classes['nowrap']}>
+      <OfficialLink href={officialNexonUrl}>NEXON</OfficialLink>.
+    </span>{' '}
+    MapleStory and related game content are property of NEXON and/or their
+    respective rights holders.{' '}
+    <OfficialLink href={officialMapleStoryYouTubeUrl}>
+      Official MapleStory YouTube
+    </OfficialLink>
+  </p>
 );
 
 export function AppFooter() {

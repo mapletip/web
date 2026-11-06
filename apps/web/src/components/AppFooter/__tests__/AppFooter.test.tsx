@@ -17,6 +17,7 @@ const expectedNavigation = [
   ['Maps', '/maplestory/maps'],
   ['Quests', '/maplestory/quests'],
   ['NPCs', '/maplestory/npcs'],
+  ['MapleStory Music', '/maplestory/music'],
   ['Forums', 'https://forums.mapletip.com'],
   ['Equipment', '/maplestory/equipment'],
   ['All Items', '/maplestory/items'],
@@ -24,6 +25,7 @@ const expectedNavigation = [
   ['ETC Items', '/maplestory/items/etc'],
   ['Set-up Items', '/maplestory/items/setup'],
   ['Cash Items & Pets', '/maplestory/items/cash'],
+  ['Privacy Policy', '/privacy'],
 ] as const;
 
 async function renderAppFooter() {
@@ -87,7 +89,7 @@ describe('AppFooter', () => {
       within(navigation)
         .getAllByRole('heading', { level: 2 })
         .map((heading) => heading.textContent),
-    ).toEqual(['Explore', 'Items']);
+    ).toEqual(['Explore', 'Items', 'Legal']);
 
     const links = within(navigation).getAllByRole('link');
     expect(links.map((link) => link.textContent)).toEqual(
