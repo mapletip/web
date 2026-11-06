@@ -92,7 +92,7 @@ export function Status({
     return (
       <EmptyState title={`No ${recordNoun} available`}>
         <EmptyState.Description style={{ color: 'var(--mantine-color-text)' }}>
-          This build does not contain any {recordNoun} yet.
+          {"There's nothing to show here yet."}
         </EmptyState.Description>
       </EmptyState>
     );

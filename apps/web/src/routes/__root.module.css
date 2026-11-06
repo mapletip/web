@@ -1,0 +1,26 @@
+/*
+ * Height-bounding shell. Only pages that opt in by marking their `main` with
+ * `data-fill-viewport` (the Monster comparison browser) get a definite viewport
+ * height, and only from `md` up where the comparison table replaces the cards.
+ * Every other page keeps the plain block flow and normal document scrolling.
+ *
+ * `dvh` rather than `vh` so mobile browser chrome cannot clip the layout, and the
+ * header row stays `auto` so a wrapped header shrinks the browser row instead of
+ * pushing the page taller than the viewport.
+ */
+@media (min-width: 62em) {
+  .shell:has(> main[data-fill-viewport]) {
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
+    height: 100dvh;
+  }
+}
+
+.notFound {
+  display: grid;
+  gap: var(--mantine-spacing-sm);
+  align-content: start;
+  max-width: 42rem;
+  margin-inline: auto;
+  padding: var(--mantine-spacing-xl) var(--mantine-spacing-md);
+}

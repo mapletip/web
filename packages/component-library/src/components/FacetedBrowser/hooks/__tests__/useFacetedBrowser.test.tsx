@@ -1,9 +1,9 @@
 import { MantineProvider } from '@mantine/core';
 import { theme } from '@mapletip/theme';
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { useEffect, useRef, useState } from 'react';
 import { describe, expect, it, vi } from 'vitest';
-import { page, userEvent } from 'vitest/browser';
-import { render } from 'vitest-browser-react';
 
 import {
   useFacetedBrowser,
@@ -273,7 +273,7 @@ function BrowserTestHarness(props: {
   );
 }
 
-async function mountHarness(
+function mountHarness(
   props: {
     readonly options?: Partial<UseFacetedBrowserOptions<TestItem>>;
     readonly onPageChangeSpy?: (page: number) => void;
@@ -286,7 +286,7 @@ async function mountHarness(
     ) => void;
   } = {},
 ) {
-  await render(
+  render(
     <MantineProvider theme={theme}>
       <BrowserTestHarness {...props} />
     </MantineProvider>,
@@ -298,8 +298,8 @@ const text = (testId: string) =>
 
 describe('useFacetedBrowser', () => {
   describe('Row processing & pagination', () => {
-    it('processes records into paginated slices and calculates counts', async () => {
-      await mountHarness();
+    it('processes records into paginated slices and calculates counts', () => {
+      mountHarness();
       expect(text('total-records')).toBe('5');
       expect(text('matching-count')).toBe('5');
       expect(text('page-count')).toBe('3');
@@ -311,9 +311,9 @@ describe('useFacetedBrowser', () => {
 
     it('navigates pages and slices correctly', async () => {
       const onPageChange = vi.fn();
-      await mountHarness({ onPageChangeSpy: onPageChange });
+      mountHarness({ onPageChangeSpy: onPageChange });
 
-      await userEvent.click(page.getByRole('button', { name: 'Page 2' }));
+      await userEvent.click(screen.getByRole('button', { name: 'Page 2' }));
       expect(onPageChange).toHaveBeenCalledWith(2);
       expect(text('page')).toBe('2');
       expect(text('page-start')).toBe('3');
@@ -322,12 +322,14 @@ describe('useFacetedBrowser', () => {
     });
 
     it('clamps page when filter reduces total pages below current page', async () => {
-      await mountHarness();
-      await userEvent.click(page.getByRole('button', { name: 'Page 3' }));
+      mountHarness();
+      await userEvent.click(screen.getByRole('button', { name: 'Page 3' }));
       expect(text('page')).toBe('3');
 
       // Boss has 2 items -> 1 page total
-      await userEvent.click(page.getByRole('button', { name: 'Filter Boss' }));
+      await userEvent.click(
+        screen.getByRole('button', { name: 'Filter Boss' }),
+      );
       expect(text('matching-count')).toBe('2');
       expect(text('page-count')).toBe('1');
       expect(text('page')).toBe('1');
@@ -336,66 +338,68 @@ describe('useFacetedBrowser', () => {
 
   describe('Filtering and faceting semantics', () => {
     it('imposes no restriction when facet filter is empty', async () => {
-      await mountHarness();
+      mountHarness();
       await userEvent.click(
-        page.getByRole('button', { name: 'Clear Category' }),
+        screen.getByRole('button', { name: 'Clear Category' }),
       );
       expect(text('matching-count')).toBe('5');
     });
 
     it('applies OR semantics for multiple selections within one facet', async () => {
-      await mountHarness();
+      mountHarness();
       await userEvent.click(
-        page.getByRole('button', { name: 'Filter Boss or Elite' }),
+        screen.getByRole('button', { name: 'Filter Boss or Elite' }),
       );
       expect(text('matching-count')).toBe('3');
       expect(text('all-filtered')).toBe('Alpha,Gamma,Delta');
     });
 
     it('composes multiple filter updates made in one event', async () => {
-      await mountHarness();
+      mountHarness();
       await userEvent.click(
-        page.getByRole('button', { name: 'Filter Boss And Level' }),
+        screen.getByRole('button', { name: 'Filter Boss And Level' }),
       );
       expect(text('matching-count')).toBe('1');
       expect(text('all-filtered')).toBe('Alpha');
     });
 
     it('combines independent facets with AND semantics', async () => {
-      await mountHarness();
-      await userEvent.click(page.getByRole('button', { name: 'Filter Boss' }));
+      mountHarness();
       await userEvent.click(
-        page.getByRole('button', { name: 'Filter Undead' }),
+        screen.getByRole('button', { name: 'Filter Boss' }),
+      );
+      await userEvent.click(
+        screen.getByRole('button', { name: 'Filter Undead' }),
       );
       expect(text('matching-count')).toBe('1');
       expect(text('all-filtered')).toBe('Alpha');
     });
 
     it('rejects nonfinite numeric range endpoints instead of dropping them', async () => {
-      await mountHarness();
+      mountHarness();
       await userEvent.click(
-        page.getByRole('button', { name: 'Filter Infinite Range' }),
+        screen.getByRole('button', { name: 'Filter Infinite Range' }),
       );
       expect(text('matching-count')).toBe('0');
       await userEvent.click(
-        page.getByRole('button', { name: 'Filter NaN Range' }),
+        screen.getByRole('button', { name: 'Filter NaN Range' }),
       );
       expect(text('matching-count')).toBe('0');
     });
 
     it('rejects an inverted numeric range instead of swapping its endpoints', async () => {
-      await mountHarness();
+      mountHarness();
       await userEvent.click(
-        page.getByRole('button', { name: 'Filter Invalid Range' }),
+        screen.getByRole('button', { name: 'Filter Invalid Range' }),
       );
       expect(text('matching-count')).toBe('0');
       expect(text('records')).toBe('');
     });
 
     it('evaluates numeric ranges correctly at both boundaries and distinguishes known zero and unknown', async () => {
-      await mountHarness();
+      mountHarness();
       await userEvent.click(
-        page.getByRole('button', { name: 'Filter Level 0-50' }),
+        screen.getByRole('button', { name: 'Filter Level 0-50' }),
       );
       expect(text('matching-count')).toBe('3');
       const matches = text('all-filtered').split(',');
@@ -407,27 +411,31 @@ describe('useFacetedBrowser', () => {
     });
 
     it('filters multi-valued attributes correctly', async () => {
-      await mountHarness();
-      await userEvent.click(page.getByRole('button', { name: 'Filter Fire' }));
+      mountHarness();
+      await userEvent.click(
+        screen.getByRole('button', { name: 'Filter Fire' }),
+      );
       expect(text('matching-count')).toBe('2');
       expect(text('all-filtered')).toBe('Alpha,Gamma');
     });
 
     it('combines text search with facet filters', async () => {
-      await mountHarness();
-      const searchInput = page.getByRole('textbox', { name: 'Search items' });
+      mountHarness();
+      const searchInput = screen.getByRole('textbox', { name: 'Search items' });
       await userEvent.type(searchInput, 'al');
       expect(text('matching-count')).toBe('3'); // Alpha (name), Beta (category Normal), Epsilon (category Normal)
 
-      await userEvent.click(page.getByRole('button', { name: 'Filter Boss' }));
+      await userEvent.click(
+        screen.getByRole('button', { name: 'Filter Boss' }),
+      );
       expect(text('matching-count')).toBe('1');
       expect(text('records')).toBe('Alpha');
     });
 
     it('returns 0 matches when nothing matches', async () => {
-      await mountHarness();
+      mountHarness();
       await userEvent.click(
-        page.getByRole('button', { name: 'Filter NonExistent' }),
+        screen.getByRole('button', { name: 'Filter NonExistent' }),
       );
       expect(text('matching-count')).toBe('0');
       expect(text('records')).toBe('');
@@ -435,8 +443,8 @@ describe('useFacetedBrowser', () => {
       expect(text('page-end')).toBe('0');
     });
 
-    it('computes faceted counts without eliminating alternatives within the facet', async () => {
-      await mountHarness();
+    it('computes faceted counts without eliminating alternatives within the facet', () => {
+      mountHarness();
       expect(text('facet-boss')).toBe('2');
       expect(text('facet-normal')).toBe('2');
       expect(text('facet-elite')).toBe('1');
@@ -454,29 +462,29 @@ describe('useFacetedBrowser', () => {
     });
 
     it('uses exact equality for scalar categorical filters instead of substring matching', async () => {
-      await mountHarness();
+      mountHarness();
       await userEvent.click(
-        page.getByRole('button', { name: 'Filter Category Prefix' }),
+        screen.getByRole('button', { name: 'Filter Category Prefix' }),
       );
       expect(text('matching-count')).toBe('0');
     });
 
     it('treats reordered selections as the same filter and ignores empty values', async () => {
       const onFiltersChange = vi.fn();
-      await mountHarness({ onFiltersChangeSpy: onFiltersChange });
+      mountHarness({ onFiltersChangeSpy: onFiltersChange });
 
       await userEvent.click(
-        page.getByRole('button', { name: 'Filter Boss or Elite' }),
+        screen.getByRole('button', { name: 'Filter Boss or Elite' }),
       );
       expect(onFiltersChange).toHaveBeenCalledTimes(1);
 
       await userEvent.click(
-        page.getByRole('button', { name: 'Filter Elite or Boss' }),
+        screen.getByRole('button', { name: 'Filter Elite or Boss' }),
       );
       expect(onFiltersChange).toHaveBeenCalledTimes(1);
 
       await userEvent.click(
-        page.getByRole('button', { name: 'Filter Empty Range' }),
+        screen.getByRole('button', { name: 'Filter Empty Range' }),
       );
       expect(onFiltersChange).toHaveBeenCalledTimes(1);
       expect(text('matching-count')).toBe('3');
@@ -484,10 +492,10 @@ describe('useFacetedBrowser', () => {
 
     it('does not emit when resetting an already-empty filter set', async () => {
       const onFiltersChange = vi.fn();
-      await mountHarness({ onFiltersChangeSpy: onFiltersChange });
+      mountHarness({ onFiltersChangeSpy: onFiltersChange });
 
       await userEvent.click(
-        page.getByRole('button', { name: 'Clear Category' }),
+        screen.getByRole('button', { name: 'Clear Category' }),
       );
       expect(onFiltersChange).not.toHaveBeenCalled();
     });
@@ -495,33 +503,33 @@ describe('useFacetedBrowser', () => {
     it('does not emit or reset when the requested page and sort already match', async () => {
       const onPageChange = vi.fn();
       const onSortChange = vi.fn();
-      await mountHarness({
+      mountHarness({
         onPageChangeSpy: onPageChange,
         onSortChangeSpy: onSortChange,
       });
 
-      await userEvent.click(page.getByRole('button', { name: 'Page 2' }));
+      await userEvent.click(screen.getByRole('button', { name: 'Page 2' }));
       expect(onPageChange).toHaveBeenLastCalledWith(2);
       const pageCalls = onPageChange.mock.calls.length;
-      await userEvent.click(page.getByRole('button', { name: 'Page 2' }));
+      await userEvent.click(screen.getByRole('button', { name: 'Page 2' }));
       expect(onPageChange).toHaveBeenCalledTimes(pageCalls);
 
       await userEvent.click(
-        page.getByRole('button', { name: 'Sort Name Asc' }),
+        screen.getByRole('button', { name: 'Sort Name Asc' }),
       );
       expect(onSortChange).toHaveBeenCalledTimes(1);
       await userEvent.click(
-        page.getByRole('button', { name: 'Sort Name Asc' }),
+        screen.getByRole('button', { name: 'Sort Name Asc' }),
       );
       expect(onSortChange).toHaveBeenCalledTimes(1);
     });
 
     it('floors positive fractional page inputs to a valid page', async () => {
-      await mountHarness();
-      await userEvent.click(page.getByRole('button', { name: 'Page 2' }));
+      mountHarness();
+      await userEvent.click(screen.getByRole('button', { name: 'Page 2' }));
       expect(text('page')).toBe('2');
       await userEvent.click(
-        page.getByRole('button', { name: 'Fractional Page' }),
+        screen.getByRole('button', { name: 'Fractional Page' }),
       );
       expect(text('page')).toBe('1');
     });
@@ -529,34 +537,34 @@ describe('useFacetedBrowser', () => {
 
   describe('Deterministic sorting', () => {
     it('sorts text ascending and descending', async () => {
-      await mountHarness();
+      mountHarness();
 
       await userEvent.click(
-        page.getByRole('button', { name: 'Sort Name Asc' }),
+        screen.getByRole('button', { name: 'Sort Name Asc' }),
       );
       expect(text('all-filtered')).toBe('Alpha,Beta,Delta,Epsilon,Gamma');
 
       await userEvent.click(
-        page.getByRole('button', { name: 'Sort Name Desc' }),
+        screen.getByRole('button', { name: 'Sort Name Desc' }),
       );
       expect(text('all-filtered')).toBe('Gamma,Epsilon,Delta,Beta,Alpha');
     });
 
     it('sorts numeric ascending with unknown last and known zero preserved', async () => {
-      await mountHarness();
+      mountHarness();
 
       await userEvent.click(
-        page.getByRole('button', { name: 'Sort Level Asc' }),
+        screen.getByRole('button', { name: 'Sort Level Asc' }),
       );
       // Beta (0), Epsilon (25), Delta (50), Alpha (100), Gamma (null - last!)
       expect(text('all-filtered')).toBe('Beta,Epsilon,Delta,Alpha,Gamma');
     });
 
     it('sorts numeric descending with unknown last', async () => {
-      await mountHarness();
+      mountHarness();
 
       await userEvent.click(
-        page.getByRole('button', { name: 'Sort Level Desc' }),
+        screen.getByRole('button', { name: 'Sort Level Desc' }),
       );
       // Alpha (100), Delta (50), Epsilon (25), Beta (0), Gamma (null - last!)
       expect(text('all-filtered')).toBe('Alpha,Delta,Epsilon,Beta,Gamma');
@@ -564,7 +572,7 @@ describe('useFacetedBrowser', () => {
 
     it('projects query-field sortability onto table headers and guards disabled requests', async () => {
       const onSortChange = vi.fn();
-      await mountHarness({
+      mountHarness({
         onSortChangeSpy: onSortChange,
         options: {
           queryFields: [{ id: 'category', sortable: false }],
@@ -572,14 +580,14 @@ describe('useFacetedBrowser', () => {
       });
       expect(text('table-category-sortable')).toBe('false');
       await userEvent.click(
-        page.getByRole('button', { name: 'Table Sort Category' }),
+        screen.getByRole('button', { name: 'Table Sort Category' }),
       );
       expect(onSortChange).not.toHaveBeenCalled();
     });
 
     it('lets a query-field direction override an inherited column default', async () => {
       const onSortChange = vi.fn();
-      await mountHarness({
+      mountHarness({
         onSortChangeSpy: onSortChange,
         options: {
           queryFields: [
@@ -593,7 +601,7 @@ describe('useFacetedBrowser', () => {
       });
 
       await userEvent.click(
-        page.getByRole('button', { name: 'Toggle Level Sort' }),
+        screen.getByRole('button', { name: 'Toggle Level Sort' }),
       );
       expect(onSortChange).toHaveBeenLastCalledWith({
         field: 'level',
@@ -603,10 +611,10 @@ describe('useFacetedBrowser', () => {
 
     it('uses firstSortDirection from column config on first toggle', async () => {
       const onSortChange = vi.fn();
-      await mountHarness({ onSortChangeSpy: onSortChange });
+      mountHarness({ onSortChangeSpy: onSortChange });
 
       await userEvent.click(
-        page.getByRole('button', { name: 'Toggle Level Sort' }),
+        screen.getByRole('button', { name: 'Toggle Level Sort' }),
       );
       expect(onSortChange).toHaveBeenCalledWith({
         field: 'level',
@@ -617,26 +625,26 @@ describe('useFacetedBrowser', () => {
 
   describe('Column visibility', () => {
     it('prevents hiding the identity column', async () => {
-      await mountHarness();
-      await userEvent.click(page.getByRole('button', { name: 'Hide Name' }));
+      mountHarness();
+      await userEvent.click(screen.getByRole('button', { name: 'Hide Name' }));
       expect(text('visible-columns')).toContain('name');
     });
 
     it('hides non-identity column and restores in original order', async () => {
-      await mountHarness();
+      mountHarness();
 
-      await userEvent.click(page.getByRole('button', { name: 'Hide Level' }));
+      await userEvent.click(screen.getByRole('button', { name: 'Hide Level' }));
       expect(text('visible-columns')).toBe('name,category,tags');
 
-      await userEvent.click(page.getByRole('button', { name: 'Show Level' }));
+      await userEvent.click(screen.getByRole('button', { name: 'Show Level' }));
       expect(text('visible-columns')).toBe('name,category,level,tags');
     });
 
     it('ensures at least one data column remains visible', async () => {
-      await mountHarness();
+      mountHarness();
 
       await userEvent.click(
-        page.getByRole('button', { name: 'Hide All Data Columns' }),
+        screen.getByRole('button', { name: 'Hide All Data Columns' }),
       );
       // Attempting to hide tags as last data column was rejected
       expect(text('visible-columns')).toBe('name,tags');
@@ -669,17 +677,17 @@ describe('useFacetedBrowser', () => {
         );
       }
 
-      await render(<StandaloneSearchHarness />);
+      render(<StandaloneSearchHarness />);
       expect(text('standalone-page')).toBe('1');
       expect(text('standalone-records')).toBe('Alpha,Beta');
 
       await userEvent.click(
-        page.getByRole('button', { name: 'Standalone Page 3' }),
+        screen.getByRole('button', { name: 'Standalone Page 3' }),
       );
       expect(text('standalone-page')).toBe('3');
 
       await userEvent.click(
-        page.getByRole('button', { name: 'Standalone Search Epsilon' }),
+        screen.getByRole('button', { name: 'Standalone Search Epsilon' }),
       );
       expect(text('standalone-page')).toBe('1');
       expect(text('standalone-records')).toBe('Epsilon');
@@ -694,11 +702,13 @@ describe('useFacetedBrowser', () => {
         pageSize: 2,
         hiddenColumns: [],
       };
-      await mountHarness({
+      mountHarness({
         options: { browseState: canonical, onBrowseStateChange },
       });
 
-      await userEvent.click(page.getByRole('button', { name: 'Filter Boss' }));
+      await userEvent.click(
+        screen.getByRole('button', { name: 'Filter Boss' }),
+      );
       expect(onBrowseStateChange).toHaveBeenLastCalledWith(
         expect.objectContaining({ filters: { category: ['Boss'] } }),
       );
@@ -706,7 +716,7 @@ describe('useFacetedBrowser', () => {
         expect(onBrowseStateChange).toHaveBeenCalledTimes(1),
       );
 
-      await userEvent.click(page.getByRole('button', { name: 'Page 2' }));
+      await userEvent.click(screen.getByRole('button', { name: 'Page 2' }));
       expect(onBrowseStateChange).toHaveBeenLastCalledWith(
         expect.objectContaining({ filters: {}, page: 2 }),
       );
@@ -748,9 +758,9 @@ describe('useFacetedBrowser', () => {
         );
       }
 
-      await render(<SameEventHarness />);
+      render(<SameEventHarness />);
       await userEvent.click(
-        page.getByRole('button', { name: 'Compose filters' }),
+        screen.getByRole('button', { name: 'Compose filters' }),
       );
       expect(text('same-event-filters')).toBe(
         JSON.stringify({ category: ['Boss'], tags: ['fire'] }),
@@ -794,9 +804,9 @@ describe('useFacetedBrowser', () => {
         );
       }
 
-      await render(<DelayedHarness />);
+      render(<DelayedHarness />);
       await userEvent.click(
-        page.getByRole('button', { name: 'Delayed filter' }),
+        screen.getByRole('button', { name: 'Delayed filter' }),
       );
       await vi.waitFor(() =>
         expect(text('delayed-filters')).toBe(
@@ -804,7 +814,7 @@ describe('useFacetedBrowser', () => {
         ),
       );
       await userEvent.click(
-        page.getByRole('button', { name: 'Delayed page 2' }),
+        screen.getByRole('button', { name: 'Delayed page 2' }),
       );
       await vi.waitFor(() => expect(text('delayed-page')).toBe('2'));
       expect(text('delayed-filters')).toBe(
@@ -860,11 +870,11 @@ describe('useFacetedBrowser', () => {
         );
       }
 
-      await render(<RestoreHarness />);
+      render(<RestoreHarness />);
       await userEvent.click(
-        page.getByRole('button', { name: 'Rejected filter' }),
+        screen.getByRole('button', { name: 'Rejected filter' }),
       );
-      await userEvent.click(page.getByRole('button', { name: 'Restore' }));
+      await userEvent.click(screen.getByRole('button', { name: 'Restore' }));
       await vi.waitFor(() =>
         expect(text('restore-filters')).toBe(JSON.stringify({})),
       );
@@ -896,16 +906,18 @@ describe('useFacetedBrowser', () => {
         );
       }
 
-      await render(<InvalidPaginationHarness />);
-      await userEvent.click(page.getByRole('button', { name: 'Invalid Page' }));
+      render(<InvalidPaginationHarness />);
       await userEvent.click(
-        page.getByRole('button', { name: 'Invalid Page Size' }),
+        screen.getByRole('button', { name: 'Invalid Page' }),
+      );
+      await userEvent.click(
+        screen.getByRole('button', { name: 'Invalid Page Size' }),
       );
       expect(text('invalid-page')).toBe('1');
       expect(text('invalid-page-size')).toBe('2');
     });
 
-    it('registers explicit search-only fields without adding visual columns', async () => {
+    it('registers explicit search-only fields without adding visual columns', () => {
       function SearchOnlyFieldHarness() {
         const browser = useFacetedBrowser({
           records: testItems,
@@ -929,12 +941,12 @@ describe('useFacetedBrowser', () => {
         );
       }
 
-      await render(<SearchOnlyFieldHarness />);
+      render(<SearchOnlyFieldHarness />);
       expect(text('search-only-records')).toBe('Alpha,Gamma');
       expect(text('search-only-columns')).toBe('');
     });
 
-    it('keeps an explicit empty searchFields list as search nowhere', async () => {
+    it('keeps an explicit empty searchFields list as search nowhere', () => {
       function NoSearchFieldsHarness() {
         const browser = useFacetedBrowser({
           records: testItems,
@@ -951,19 +963,21 @@ describe('useFacetedBrowser', () => {
         );
       }
 
-      await render(<NoSearchFieldsHarness />);
+      render(<NoSearchFieldsHarness />);
       expect(text('no-search-fields-records')).toBe('');
     });
 
     it('clears filters with an empty controlled search and no search callback', async () => {
-      await mountHarness({
+      mountHarness({
         options: {
           search: '',
           defaultFilters: { category: ['Boss'] },
         },
       });
       expect(text('matching-count')).toBe('2');
-      await userEvent.click(page.getByRole('button', { name: 'Clear Query' }));
+      await userEvent.click(
+        screen.getByRole('button', { name: 'Clear Query' }),
+      );
       expect(text('matching-count')).toBe('5');
     });
 
@@ -992,10 +1006,12 @@ describe('useFacetedBrowser', () => {
         );
       }
 
-      await render(<ControlledClearHarness />);
+      render(<ControlledClearHarness />);
       expect(text('clear-search')).toBe('Alpha');
       expect(text('clear-records')).toBe('Alpha');
-      await userEvent.click(page.getByRole('button', { name: 'Clear Query' }));
+      await userEvent.click(
+        screen.getByRole('button', { name: 'Clear Query' }),
+      );
       expect(text('clear-search')).toBe('');
       expect(text('clear-records')).toBe('Alpha,Beta');
     });
@@ -1025,10 +1041,10 @@ describe('useFacetedBrowser', () => {
         );
       }
 
-      await render(<ControlledSearchHarness />);
+      render(<ControlledSearchHarness />);
       expect(text('controlled-search-records')).toBe('Alpha,Beta');
       await userEvent.click(
-        page.getByRole('button', { name: 'Controlled Search Gamma' }),
+        screen.getByRole('button', { name: 'Controlled Search Gamma' }),
       );
       expect(text('controlled-search')).toBe('Gamma');
       expect(text('controlled-search-records')).toBe('Gamma');
@@ -1077,25 +1093,23 @@ describe('useFacetedBrowser', () => {
         );
       }
 
-      const browser = await render(
+      const browser = render(
         <StableDraftHarness records={testItems} label="first" />,
       );
       await expect.poll(() => text('callback-changes')).toBe('0');
       expect(text('draft-count')).toBe('5');
 
-      await browser.rerender(
+      browser.rerender(
         <StableDraftHarness records={testItems} label="second" />,
       );
       expect(text('stable-label')).toBe('second');
       await expect.poll(() => text('callback-changes')).toBe('0');
 
-      await browser.rerender(
-        <StableDraftHarness records={recordsB} label="third" />,
-      );
+      browser.rerender(<StableDraftHarness records={recordsB} label="third" />);
       await expect.poll(() => text('callback-changes')).toBe('1');
       expect(text('draft-count')).toBe('2');
 
-      await browser.rerender(
+      browser.rerender(
         <StableDraftHarness records={recordsB} label="fourth" />,
       );
       await expect.poll(() => text('callback-changes')).toBe('1');
@@ -1133,18 +1147,18 @@ describe('useFacetedBrowser', () => {
         );
       }
 
-      await render(<CardOnlyHarness />);
+      render(<CardOnlyHarness />);
       expect(text('card-count')).toBe('2');
       expect(text('card-names')).toBe('Alpha,Beta');
       expect(text('total-pages')).toBe('3');
 
       await userEvent.click(
-        page.getByRole('button', { name: 'Next Card Page' }),
+        screen.getByRole('button', { name: 'Next Card Page' }),
       );
       expect(text('card-names')).toBe('Gamma,Delta');
 
       await userEvent.type(
-        page.getByRole('textbox', { name: 'Search cards' }),
+        screen.getByRole('textbox', { name: 'Search cards' }),
         'Eps',
       );
       expect(text('card-names')).toBe('Epsilon');
@@ -1264,7 +1278,7 @@ describe('useFacetedBrowser', () => {
         );
       }
 
-      await render(<MapCardBrowserHarness />);
+      render(<MapCardBrowserHarness />);
       // Initial mobCount desc: Orbis Cloud Park (30), Henesys Hunting Ground (24) on page 1
       expect(text('card-results')).toBe(
         'Orbis Cloud Park,Henesys Hunting Ground',
@@ -1277,7 +1291,7 @@ describe('useFacetedBrowser', () => {
 
       // Filter Victoria
       await userEvent.click(
-        page.getByRole('button', { name: 'Filter Victoria' }),
+        screen.getByRole('button', { name: 'Filter Victoria' }),
       );
       expect(text('card-total-matches')).toBe('2');
       expect(text('card-results')).toBe(
@@ -1292,7 +1306,7 @@ describe('useFacetedBrowser', () => {
 
       // Sort mob count asc
       await userEvent.click(
-        page.getByRole('button', { name: 'Sort Mob Count Asc' }),
+        screen.getByRole('button', { name: 'Sort Mob Count Asc' }),
       );
       expect(text('card-results')).toBe(
         'Ellinia Forest Path,Henesys Hunting Ground',
@@ -1421,8 +1435,8 @@ describe('useFacetedBrowser', () => {
       );
     }
 
-    it('uses getUniqueValues so a multi-valued record contributes to each distinct facet count', async () => {
-      await render(<MultiValueHarness />);
+    it('uses getUniqueValues so a multi-valued record contributes to each distinct facet count', () => {
+      render(<MultiValueHarness />);
       // fire: m1 (Fire Boar), m2 (Crimson Balrog), m4 (Zakum) = 3
       expect(text('count-fire')).toBe('3');
       // poison: m2 (Crimson Balrog), m4 (Zakum) = 2
@@ -1433,14 +1447,14 @@ describe('useFacetedBrowser', () => {
       expect(text('count-lightning')).toBe('1');
     });
 
-    it('enforces distinct-record semantics so duplicate values in a single record do not double count', async () => {
-      await render(<MultiValueHarness />);
+    it('enforces distinct-record semantics so duplicate values in a single record do not double count', () => {
+      render(<MultiValueHarness />);
       // m1 has dropSources: ['Perion', 'Perion'] -> should count as 1 distinct record
       expect(text('count-drop-perion')).toBe('1');
     });
 
-    it('distinguishes known zero from unknown facet values', async () => {
-      await render(<MultiValueHarness />);
+    it('distinguishes known zero from unknown facet values', () => {
+      render(<MultiValueHarness />);
       // 'holy' is an element not present in any record -> 0
       expect(text('count-holy')).toBe('0');
       // unknown column -> 0
@@ -1448,27 +1462,29 @@ describe('useFacetedBrowser', () => {
     });
 
     it('supports OR within a multi-valued facet and AND across multiple facets', async () => {
-      await render(<MultiValueHarness />);
+      render(<MultiValueHarness />);
 
       // OR within facet: 'fire' OR 'ice' matches m1, m2, m3, m4 (all 4)
       await userEvent.click(
-        page.getByRole('button', { name: 'Filter Fire Or Ice' }),
+        screen.getByRole('button', { name: 'Filter Fire Or Ice' }),
       );
       expect(text('mv-matches')).toBe('4');
 
       // AND across facets: Boss AND poison matches m2 (Crimson Balrog) and m4 (Zakum)
       await userEvent.click(
-        page.getByRole('button', { name: 'Filter Boss And Poison' }),
+        screen.getByRole('button', { name: 'Filter Boss And Poison' }),
       );
       expect(text('mv-matches')).toBe('2');
       expect(text('mv-records')).toBe('Crimson Balrog,Zakum');
     });
 
     it('provides contextual facet counts excluding the current facet own filter while respecting other facets', async () => {
-      await render(<MultiValueHarness />);
+      render(<MultiValueHarness />);
 
       // Apply category = Boss
-      await userEvent.click(page.getByRole('button', { name: 'Filter Boss' }));
+      await userEvent.click(
+        screen.getByRole('button', { name: 'Filter Boss' }),
+      );
       expect(text('mv-matches')).toBe('2'); // Crimson Balrog and Zakum
 
       // Among Bosses: fire=2, poison=2, ice=1, lightning=0 (known zero in this context)
@@ -1480,7 +1496,9 @@ describe('useFacetedBrowser', () => {
       // Now add filter elements = ['fire'].
       // Contextual faceting: elements' own filter is excluded when querying elements facet counts,
       // so we still see poison=2, ice=1 available among Bosses!
-      await userEvent.click(page.getByRole('button', { name: 'Filter Fire' }));
+      await userEvent.click(
+        screen.getByRole('button', { name: 'Filter Fire' }),
+      );
       expect(text('mv-matches')).toBe('2');
       expect(text('count-poison')).toBe('2');
       expect(text('count-ice')).toBe('1');
@@ -1537,17 +1555,17 @@ describe('useFacetedBrowser', () => {
         );
       }
 
-      await render(<DraftEvalHarness />);
+      render(<DraftEvalHarness />);
       expect(text('browser-matches')).toBe('5');
       expect(text('draft-matches')).toBe('null');
 
       // Go to page 2 first
-      await userEvent.click(page.getByRole('button', { name: 'Go Page 2' }));
+      await userEvent.click(screen.getByRole('button', { name: 'Go Page 2' }));
       expect(text('browser-page')).toBe('2');
 
       // Preview draft: category=Boss AND tags=undead -> only Alpha matches (1)
       await userEvent.click(
-        page.getByRole('button', { name: 'Preview Draft' }),
+        screen.getByRole('button', { name: 'Preview Draft' }),
       );
       // Non-mutating: browser state is completely untouched!
       expect(text('draft-matches')).toBe('1');
@@ -1555,7 +1573,9 @@ describe('useFacetedBrowser', () => {
       expect(text('browser-page')).toBe('2');
 
       // Apply draft atomically: totalMatchingCount becomes 1, page resets to 1 in one transition
-      await userEvent.click(page.getByRole('button', { name: 'Apply Draft' }));
+      await userEvent.click(
+        screen.getByRole('button', { name: 'Apply Draft' }),
+      );
       expect(text('browser-matches')).toBe('1');
       expect(text('browser-page')).toBe('1');
       expect(text('browser-matches')).toBe(text('draft-matches'));
@@ -1563,7 +1583,7 @@ describe('useFacetedBrowser', () => {
   });
 
   describe('Draft facet counts', () => {
-    it('uses contextual TanStack facet counts for the candidate draft', async () => {
+    it('uses contextual TanStack facet counts for the candidate draft', () => {
       function DraftFacetHarness() {
         const browser = useFacetedBrowser({
           records: testItems,
@@ -1595,7 +1615,7 @@ describe('useFacetedBrowser', () => {
         );
       }
 
-      await render(<DraftFacetHarness />);
+      render(<DraftFacetHarness />);
       expect(text('draft-category-boss')).toBe('1');
       expect(text('draft-category-elite')).toBe('1');
       expect(text('draft-category-normal')).toBe('0');
@@ -1664,12 +1684,12 @@ describe('useFacetedBrowser', () => {
     }
 
     it('uses the same TanStack filter callbacks for draft preview and commit', async () => {
-      await render(<CustomFilterDraftHarness />);
+      render(<CustomFilterDraftHarness />);
       expect(text('custom-draft')).toBe('Beta,Delta');
       expect(text('custom-committed')).toBe('0');
 
       await userEvent.click(
-        page.getByRole('button', { name: 'Apply Custom Draft' }),
+        screen.getByRole('button', { name: 'Apply Custom Draft' }),
       );
       expect(text('custom-committed')).toBe('2');
       expect(text('custom-record-names')).toBe('Beta,Delta');
@@ -1678,7 +1698,7 @@ describe('useFacetedBrowser', () => {
   });
 
   describe('Deterministic sorting and identity tie-breaking', () => {
-    it('breaks ties deterministically using idAccessor when primary sort values are identical', async () => {
+    it('breaks ties deterministically using idAccessor when primary sort values are identical', () => {
       interface ItemWithDuplicates extends Record<string, unknown> {
         readonly id: string;
         readonly name: string;
@@ -1709,7 +1729,7 @@ describe('useFacetedBrowser', () => {
         );
       }
 
-      await render(<TieBreakHarness />);
+      render(<TieBreakHarness />);
       // Primary sort priority: all 10. Secondary tie-breaker id asc: item-1, item-2, item-3
       expect(text('sorted-ids')).toBe('item-1,item-2,item-3');
     });
@@ -1744,13 +1764,15 @@ describe('useFacetedBrowser', () => {
         );
       }
 
-      await render(<ScopeHarness />);
+      render(<ScopeHarness />);
       expect(text('scope-total')).toBe('5');
-      await userEvent.click(page.getByRole('button', { name: 'Go Page 3' }));
+      await userEvent.click(screen.getByRole('button', { name: 'Go Page 3' }));
       expect(text('scope-page')).toBe('3');
 
       // Switch scope to 1 record: page clamps to 1, counts update immediately
-      await userEvent.click(page.getByRole('button', { name: 'Switch Scope' }));
+      await userEvent.click(
+        screen.getByRole('button', { name: 'Switch Scope' }),
+      );
       expect(text('scope-total')).toBe('1');
       expect(text('scope-matches')).toBe('1');
       expect(text('scope-page')).toBe('1');

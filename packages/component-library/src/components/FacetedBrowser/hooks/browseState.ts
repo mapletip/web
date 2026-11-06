@@ -205,3 +205,15 @@ export function toColumnFilters(
     value,
   }));
 }
+
+/** Visible one-based slice for a page, clamped to the matching count. */
+export function pageWindow(
+  page: number,
+  pageSize: number,
+  total: number,
+): { readonly pageStart: number; readonly pageEnd: number } {
+  return {
+    pageStart: total === 0 ? 0 : (page - 1) * pageSize + 1,
+    pageEnd: Math.min(page * pageSize, total),
+  };
+}

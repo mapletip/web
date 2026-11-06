@@ -54,7 +54,11 @@ function buildFacetChips<TRecord extends Record<string, unknown>>(
       (entry): entry is string => typeof entry === 'string',
     );
     return selections.map((selected) => {
-      const option = facet.options?.find((entry) => entry.value === selected);
+      const buckets =
+        typeof facet.buckets === 'string' ? undefined : facet.buckets;
+      const option =
+        facet.options?.find((entry) => entry.value === selected) ??
+        buckets?.find((entry) => entry.value === selected);
       return {
         key: `${facet.id}:${selected}`,
         label: `${facet.label}: ${option?.label ?? selected}`,

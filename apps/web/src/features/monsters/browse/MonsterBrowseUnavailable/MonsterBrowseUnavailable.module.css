@@ -1,6 +1,7 @@
 .page {
   display: grid;
-  gap: var(--mantine-spacing-md);
+  justify-items: start;
+  gap: var(--mantine-spacing-sm);
   width: min(90rem, 100%);
   margin: 0 auto;
   padding: var(--mantine-spacing-md);
@@ -12,7 +13,6 @@
   }
 }
 
-.backLink {
-  justify-self: start;
-  min-height: 24px;
+.retry {
+  margin-top: var(--mantine-spacing-sm);
 }

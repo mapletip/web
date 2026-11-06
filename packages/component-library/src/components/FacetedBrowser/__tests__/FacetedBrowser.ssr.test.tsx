@@ -1,6 +1,5 @@
 import { MantineProvider } from '@mantine/core';
 import { theme } from '@mapletip/theme';
-import { gzipSync } from 'node:zlib';
 import { renderToString } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 
@@ -14,13 +13,6 @@ describe('FacetedBrowser server rendering', () => {
       <MantineProvider theme={theme} forceColorScheme="dark">
         <NeutralBrowserMarkup />
       </MantineProvider>,
-    );
-
-    const rawBytes = Buffer.byteLength(html, 'utf8');
-    const gzipBytes = gzipSync(Buffer.from(html, 'utf8')).length;
-    const tagCount = (html.match(/<[a-zA-Z0-9-]+/gu) ?? []).length;
-    console.log(
-      `[SSR Performance Measurement] HTML raw: ${(rawBytes / 1024).toFixed(1)} KB (${rawBytes} B) | gzip: ${(gzipBytes / 1024).toFixed(1)} KB (${gzipBytes} B) | DOM elements: ${tagCount}`,
     );
 
     expect(html).toContain('<h1>Browse records</h1>');

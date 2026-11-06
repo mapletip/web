@@ -1,4 +1,4 @@
-import { Group, NumberInput, Stack, Text } from '@mantine/core';
+import { NumberInput, Stack, Text } from '@mantine/core';
 import type { ReactElement } from 'react';
 
 import {
@@ -18,6 +18,12 @@ export interface RangeControlProps {
   readonly label: string;
   readonly value: FacetFilterValue;
   readonly onChange: (value: FacetFilterValue) => void;
+  /**
+   * Suppress the visible facet heading. Parents that already show the facet
+   * name (e.g. a bucketed control nesting these inputs under `Custom`) opt out;
+   * standalone range facets keep it so the facet stays identifiable.
+   */
+  readonly hideLabel?: boolean;
 }
 
 /** Bounded numeric facet renderer shared by rail and drawer surfaces. */
@@ -25,6 +31,7 @@ export function RangeControl({
   label,
   value,
   onChange,
+  hideLabel = false,
 }: RangeControlProps): ReactElement {
   const range: NumericRangeFilter = isNumericRangeFilter(value) ? value : {};
   const invalid = isInvalidNumericRange(value);
@@ -52,25 +59,31 @@ export function RangeControl({
 
   return (
     <Stack gap="xs">
-      <Text size="sm" fw={600} component="p" m={0}>
-        {label}
-      </Text>
-      <Group grow>
+      {hideLabel ? null : (
+        <Text size="sm" fw={600} component="p" m={0}>
+          {label}
+        </Text>
+      )}
+      {/* Visible labels are short ("From"/"To"); the facet name stays in the
+          accessible name so several range facets on one page stay distinct. */}
+      <Stack gap="xs">
         <NumberInput
-          label={`${label} minimum`}
+          label="From"
+          aria-label={`${label} from`}
           value={minValue}
           hideControls
           onChange={(next) => updatePart('min', next)}
           error={invalid ? 'Minimum must not exceed maximum.' : undefined}
         />
         <NumberInput
-          label={`${label} maximum`}
+          label="To"
+          aria-label={`${label} to`}
           value={maxValue}
           hideControls
           onChange={(next) => updatePart('max', next)}
           error={invalid ? 'Maximum must be at least the minimum.' : undefined}
         />
-      </Group>
+      </Stack>
     </Stack>
   );
 }

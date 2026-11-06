@@ -6,6 +6,7 @@ import {
   filterFn_equals,
   filterFn_includesString,
   type Row,
+  type SortingState,
 } from '@tanstack/react-table';
 
 import type { TableColumn } from '@/components/Table';
@@ -321,4 +322,55 @@ export function resolveSearchFieldIds<TRecord extends Record<string, unknown>>({
       ),
     ],
   );
+}
+
+/** Canonical sort intent expressed as TanStack sorting state. */
+export function sortingFromSort(
+  sort:
+    { readonly field: string; readonly direction: 'asc' | 'desc' } | undefined,
+): SortingState {
+  return sort ? [{ id: sort.field, desc: sort.direction === 'desc' }] : [];
+}
+
+/** TanStack sorting state back to the single canonical sort intent. */
+export function sortFromSorting(
+  sorting: SortingState,
+): { readonly field: string; readonly direction: 'asc' | 'desc' } | undefined {
+  const first = sorting[0];
+  return first
+    ? { field: first.id, direction: first.desc ? 'desc' : 'asc' }
+    : undefined;
+}
+
+/**
+ * Next direction for a header toggle: an explicit host request wins, a click on
+ * the active field flips, and a new field starts from its declared preference.
+ */
+export function nextSortDirection(
+  current:
+    { readonly field: string; readonly direction: 'asc' | 'desc' } | undefined,
+  field: string,
+  fieldSortDescFirst: boolean | undefined,
+  direction: 'asc' | 'desc' | undefined,
+): 'asc' | 'desc' {
+  if (direction !== undefined) return direction;
+  if (current?.field === field) {
+    return current.direction === 'asc' ? 'desc' : 'asc';
+  }
+  return fieldSortDescFirst ? 'desc' : 'asc';
+}
+
+/** Identity columns always stay visible; duplicates collapse. */
+export function withoutIdentityColumns(
+  hiddenColumns: readonly string[],
+  idAccessor: string,
+  identityField: string | undefined,
+): readonly string[] {
+  return [
+    ...new Set(
+      hiddenColumns.filter(
+        (field) => field !== idAccessor && field !== identityField,
+      ),
+    ),
+  ];
 }

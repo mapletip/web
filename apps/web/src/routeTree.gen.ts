@@ -11,7 +11,8 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApiHealthzRouteImport } from './routes/api/healthz'
-import { Route as DemoFacetedBrowserRouteImport } from './routes/demo/faceted-browser'
+import { Route as MaplestoryMonstersRouteImport } from './routes/maplestory/monsters'
+import { Route as MaplestoryBuildIdMonstersRouteImport } from './routes/maplestory/$buildId/monsters'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -23,40 +24,63 @@ const ApiHealthzRoute = ApiHealthzRouteImport.update({
   path: '/api/healthz',
   getParentRoute: () => rootRouteImport,
 } as any)
-const DemoFacetedBrowserRoute = DemoFacetedBrowserRouteImport.update({
-  id: '/demo/faceted-browser',
-  path: '/demo/faceted-browser',
+const MaplestoryMonstersRoute = MaplestoryMonstersRouteImport.update({
+  id: '/maplestory/monsters',
+  path: '/maplestory/monsters',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MaplestoryBuildIdMonstersRoute =
+  MaplestoryBuildIdMonstersRouteImport.update({
+    id: '/maplestory/$buildId/monsters',
+    path: '/maplestory/$buildId/monsters',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/api/healthz': typeof ApiHealthzRoute
-  '/demo/faceted-browser': typeof DemoFacetedBrowserRoute
+  '/maplestory/monsters': typeof MaplestoryMonstersRoute
+  '/maplestory/$buildId/monsters': typeof MaplestoryBuildIdMonstersRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/api/healthz': typeof ApiHealthzRoute
-  '/demo/faceted-browser': typeof DemoFacetedBrowserRoute
+  '/maplestory/monsters': typeof MaplestoryMonstersRoute
+  '/maplestory/$buildId/monsters': typeof MaplestoryBuildIdMonstersRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/api/healthz': typeof ApiHealthzRoute
-  '/demo/faceted-browser': typeof DemoFacetedBrowserRoute
+  '/maplestory/monsters': typeof MaplestoryMonstersRoute
+  '/maplestory/$buildId/monsters': typeof MaplestoryBuildIdMonstersRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/api/healthz' | '/demo/faceted-browser'
+  fullPaths:
+    | '/'
+    | '/api/healthz'
+    | '/maplestory/monsters'
+    | '/maplestory/$buildId/monsters'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/api/healthz' | '/demo/faceted-browser'
-  id: '__root__' | '/' | '/api/healthz' | '/demo/faceted-browser'
+  to:
+    | '/'
+    | '/api/healthz'
+    | '/maplestory/monsters'
+    | '/maplestory/$buildId/monsters'
+  id:
+    | '__root__'
+    | '/'
+    | '/api/healthz'
+    | '/maplestory/monsters'
+    | '/maplestory/$buildId/monsters'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ApiHealthzRoute: typeof ApiHealthzRoute
-  DemoFacetedBrowserRoute: typeof DemoFacetedBrowserRoute
+  MaplestoryMonstersRoute: typeof MaplestoryMonstersRoute
+  MaplestoryBuildIdMonstersRoute: typeof MaplestoryBuildIdMonstersRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -75,11 +99,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiHealthzRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/demo/faceted-browser': {
-      id: '/demo/faceted-browser'
-      path: '/demo/faceted-browser'
-      fullPath: '/demo/faceted-browser'
-      preLoaderRoute: typeof DemoFacetedBrowserRouteImport
+    '/maplestory/monsters': {
+      id: '/maplestory/monsters'
+      path: '/maplestory/monsters'
+      fullPath: '/maplestory/monsters'
+      preLoaderRoute: typeof MaplestoryMonstersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/maplestory/$buildId/monsters': {
+      id: '/maplestory/$buildId/monsters'
+      path: '/maplestory/$buildId/monsters'
+      fullPath: '/maplestory/$buildId/monsters'
+      preLoaderRoute: typeof MaplestoryBuildIdMonstersRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -88,7 +119,8 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ApiHealthzRoute: ApiHealthzRoute,
-  DemoFacetedBrowserRoute: DemoFacetedBrowserRoute,
+  MaplestoryMonstersRoute: MaplestoryMonstersRoute,
+  MaplestoryBuildIdMonstersRoute: MaplestoryBuildIdMonstersRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

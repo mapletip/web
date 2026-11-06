@@ -1,20 +1,19 @@
-import { Button, Group, Stack, TextInput, Title } from '@mantine/core';
+import { Stack, TextInput, Title } from '@mantine/core';
 import { MagnifyingGlass } from '@phosphor-icons/react';
-import type {
-  MouseEvent as ReactMouseEvent,
-  ReactElement,
-  ReactNode,
-} from 'react';
+import type { MouseEvent as ReactMouseEvent, ReactElement } from 'react';
 import { useCallback, useMemo, useRef, useState } from 'react';
 
+import { ActiveFilters } from '@/components/FacetedBrowser/ActiveFilters/ActiveFilters';
+import type { ActiveFacetChip } from '@/components/FacetedBrowser/ActiveFilters/facetChips';
 import {
   activeValueCount,
-  buildActiveChips,
   countActiveFilters,
-} from '@/components/FacetedBrowser/facetChips';
+} from '@/components/FacetedBrowser/ActiveFilters/facetChips';
 import { FacetList } from '@/components/FacetedBrowser/FacetControls/FacetList';
+import { resolveFacets } from '@/components/FacetedBrowser/FacetControls/resolveFacets';
 import type { FacetDefinition } from '@/components/FacetedBrowser/FacetControls/types';
 import classes from '@/components/FacetedBrowser/FacetedBrowser.module.css';
+import type { FacetedBrowserProps } from '@/components/FacetedBrowser/FacetedBrowser.types';
 import { FilterDrawer } from '@/components/FacetedBrowser/FilterDrawer/FilterDrawer';
 import {
   createBrowseState,
@@ -22,112 +21,32 @@ import {
 } from '@/components/FacetedBrowser/hooks/browseState';
 import { isInvalidNumericRange } from '@/components/FacetedBrowser/hooks/filterTypes';
 import type { FacetFilterValue } from '@/components/FacetedBrowser/hooks/filterTypes';
-import type { QueryFieldDefinition } from '@/components/FacetedBrowser/hooks/querySemantics';
+import { resolveFields } from '@/components/FacetedBrowser/hooks/querySemantics';
 import { useFacetedBrowser } from '@/components/FacetedBrowser/hooks/useFacetedBrowser';
 import { useFacetedBrowserDrawer } from '@/components/FacetedBrowser/hooks/useFacetedBrowserDrawer';
 import { Layout } from '@/components/FacetedBrowser/Layout/Layout';
 import { Pagination } from '@/components/FacetedBrowser/Pagination/Pagination';
 import { QuickFacets } from '@/components/FacetedBrowser/QuickFacets/QuickFacets';
 import { Status, hasStatus } from '@/components/FacetedBrowser/Status/Status';
-import { Summary } from '@/components/FacetedBrowser/Summary/Summary';
+import {
+  formatSummaryText,
+  Summary,
+} from '@/components/FacetedBrowser/Summary/Summary';
 import {
   PageSizeSelect,
   Toolbar,
 } from '@/components/FacetedBrowser/Toolbar/Toolbar';
 import { ComparisonTable } from '@/components/Table';
-import type { TableColumn } from '@/components/Table';
 import {
   deriveTableStorageKey,
   resolveTableStorageKey,
 } from '@/components/Table/tableStorageKey';
 
-interface CommonProps<TRecord extends Record<string, unknown>> {
-  readonly title: ReactNode;
-  readonly records: readonly TRecord[];
-  readonly idAccessor: keyof TRecord & string;
-  readonly queryFields?: readonly QueryFieldDefinition<TRecord>[];
-  readonly searchFields?: readonly (keyof TRecord & string)[];
-  readonly facets?: readonly FacetDefinition<TRecord>[];
-  readonly recordNoun?: string;
-  readonly resultsLabel?: string;
-  readonly searchLabel?: string;
-  readonly pageSizeOptions?: readonly number[];
-  /** Replaces result presentation while loading or displaying an error/unavailable state. */
-  readonly status?: ReactNode;
-  readonly loading?: boolean;
-  readonly error?: ReactNode;
-  readonly unavailable?: ReactNode;
-  readonly onRetry?: () => void;
-  readonly emptyState?: ReactNode;
-  readonly drawerContent?: ReactNode;
-  readonly getPageHref?: (page: number, nextState: BrowseState) => string;
-  /**
-   * Optional stable host/domain namespace for persisted DataTable widths.
-   * Omit for the derived per-table-schema bucket.
-   */
-  readonly tableStorageKey?: string;
-}
-
-type StateProps =
-  | {
-      readonly state: BrowseState;
-      readonly onStateChange: (nextState: BrowseState) => void;
-      readonly defaultState?: never;
-    }
-  | {
-      readonly state?: never;
-      readonly onStateChange?: (nextState: BrowseState) => void;
-      readonly defaultState?: BrowseState;
-    };
-
-type DrawerStateProps =
-  | {
-      readonly drawerOpened: boolean;
-      readonly onDrawerOpenedChange: (opened: boolean) => void;
-    }
-  | {
-      readonly drawerOpened?: never;
-      readonly onDrawerOpenedChange?: never;
-    };
-
-type PresentationProps<TRecord extends Record<string, unknown>> =
-  | {
-      readonly presentation: 'comparison';
-      readonly columns: readonly TableColumn<TRecord>[];
-      readonly identityField: keyof TRecord & string;
-      readonly renderCard: (record: TRecord) => ReactNode;
-      readonly tableLabel?: string;
-      /** Optional maximum height for DataTable's internal table scroll area. */
-      readonly tableMaxHeight?: number | string;
-      readonly rowExpansionContent?: (record: TRecord) => ReactNode;
-    }
-  | {
-      readonly presentation: 'cards';
-      readonly renderCard: (record: TRecord) => ReactNode;
-      readonly columns?: never;
-      readonly identityField?: never;
-    }
-  | {
-      readonly presentation: 'custom';
-      readonly renderResults: (args: {
-        readonly records: readonly TRecord[];
-        readonly state: BrowseState;
-      }) => ReactNode;
-      readonly columns?: never;
-      readonly identityField?: never;
-      readonly renderCard?: never;
-    };
-
-export type FacetedBrowserProps<TRecord extends Record<string, unknown>> =
-  CommonProps<TRecord> &
-    StateProps &
-    DrawerStateProps &
-    PresentationProps<TRecord>;
-
 const EMPTY_FACETS: readonly never[] = [];
 const DEFAULT_PAGE_SIZE_OPTIONS = [25, 50, 100] as const;
 const EMPTY_COLUMNS: readonly never[] = [];
 const EMPTY_HIDDEN_COLUMNS: readonly never[] = [];
+const EMPTY_QUERY_FIELDS: readonly never[] = [];
 
 function fallbackPageSize(pageSizeOptions: readonly number[]): number {
   const preferred = pageSizeOptions.includes(50)
@@ -146,31 +65,6 @@ function invalidDraftFilter<TRecord extends Record<string, unknown>>(
   });
 }
 
-function validateFacets<TRecord extends Record<string, unknown>>(
-  facets: readonly FacetDefinition<TRecord>[],
-  registeredFields: ReadonlySet<string>,
-): void {
-  const facetIds = new Set<string>();
-  const facetFields = new Set<string>();
-  for (const facet of facets) {
-    if (facetIds.has(facet.id)) {
-      throw new Error(`FacetedBrowser: duplicate facet ID "${facet.id}".`);
-    }
-    if (facetFields.has(facet.field)) {
-      throw new Error(
-        `FacetedBrowser: multiple facets use query field "${facet.field}".`,
-      );
-    }
-    if (!registeredFields.has(facet.field)) {
-      throw new Error(
-        `FacetedBrowser: facet "${facet.id}" refers to unregistered query field "${facet.field}".`,
-      );
-    }
-    facetIds.add(facet.id);
-    facetFields.add(facet.field);
-  }
-}
-
 export function FacetedBrowser<TRecord extends Record<string, unknown>>(
   props: FacetedBrowserProps<TRecord>,
 ): ReactElement {
@@ -180,8 +74,10 @@ export function FacetedBrowser<TRecord extends Record<string, unknown>>(
     idAccessor,
     queryFields,
     searchFields,
-    facets = EMPTY_FACETS,
+    facets: facetDefinitions = EMPTY_FACETS,
     recordNoun = 'records',
+    summaryNoun,
+    summaryMode = 'page-window',
     resultsLabel = `${recordNoun} results`,
     searchLabel = `Search ${recordNoun}`,
     pageSizeOptions = DEFAULT_PAGE_SIZE_OPTIONS,
@@ -194,6 +90,7 @@ export function FacetedBrowser<TRecord extends Record<string, unknown>>(
     drawerContent,
     getPageHref,
     tableStorageKey,
+    fillHeight = false,
     state: controlledState,
     onStateChange,
     defaultState,
@@ -236,24 +133,39 @@ export function FacetedBrowser<TRecord extends Record<string, unknown>>(
     [controlled, onStateChange],
   );
 
-  const registeredFields = useMemo(() => {
-    const ids = new Set<string>([
-      idAccessor,
-      ...(identityField ? [identityField] : []),
-      ...columns.map((column) => column.accessor),
-      ...(searchFields ?? []),
-      ...(queryFields ?? []).map((field) =>
-        typeof field === 'string' ? field : field.id,
-      ),
-    ]);
-    return ids;
-  }, [idAccessor, identityField, columns, queryFields, searchFields]);
-  validateFacets(facets, registeredFields);
+  // Field semantics are resolved once here: quantile buckets read the same
+  // accessors the hook uses, and the resolved facets are the single source for
+  // rendering, chips, counts and filter registration.
+  const resolvedFields = useMemo(
+    () =>
+      resolveFields({
+        columns,
+        queryFields: queryFields ?? EMPTY_QUERY_FIELDS,
+        idAccessor,
+        identityField,
+        searchFields,
+      }),
+    [columns, queryFields, idAccessor, identityField, searchFields],
+  );
+  const resolved = useMemo(
+    () =>
+      resolveFacets({
+        facets: facetDefinitions,
+        queryFields: queryFields ?? EMPTY_QUERY_FIELDS,
+        records,
+        fieldAccessors: resolvedFields,
+      }),
+    [facetDefinitions, queryFields, records, resolvedFields],
+  );
+  const facets = resolved.facets;
+  const resolvedQueryFields = resolved.queryFields;
 
   const browser = useFacetedBrowser({
     records,
     ...(columns.length > 0 ? { columns } : {}),
-    ...(queryFields ? { queryFields } : {}),
+    ...(resolvedQueryFields.length > 0
+      ? { queryFields: resolvedQueryFields }
+      : {}),
     idAccessor,
     ...(identityField ? { identityField } : {}),
     ...(searchFields ? { searchFields } : {}),
@@ -305,6 +217,49 @@ export function FacetedBrowser<TRecord extends Record<string, unknown>>(
   );
   const drawerFacets = shownDrawerFacet ? [shownDrawerFacet] : facets;
 
+  // Facet controls keep local UI state that is not part of canonical filter state
+  // (an opened-but-empty Custom range, for example). A deliberate reset must clear
+  // that too, including when the facet's own filter was already empty; remounting
+  // the facet list is the smallest boundary that guarantees it.
+  const [facetResetEpoch, setFacetResetEpoch] = useState(0);
+  const resetFacetUi = useCallback(() => {
+    setFacetResetEpoch((epoch) => epoch + 1);
+  }, []);
+  const { resetFilters: resetBrowserFilters, clearQuery: clearBrowserQuery } =
+    browser;
+  const { reset: resetDrawerDraft } = drawer;
+  const clearAllFilters = useCallback(() => {
+    resetFacetUi();
+    resetBrowserFilters();
+  }, [resetBrowserFilters, resetFacetUi]);
+  const clearQuery = useCallback(() => {
+    resetFacetUi();
+    clearBrowserQuery();
+  }, [clearBrowserQuery, resetFacetUi]);
+  const drawerReset = useCallback(() => {
+    resetFacetUi();
+    resetDrawerDraft();
+  }, [resetDrawerDraft, resetFacetUi]);
+  const removeChip = useCallback(
+    (chip: ActiveFacetChip) => {
+      if (chip.removeValue === undefined) {
+        browser.setFilter(chip.field, undefined);
+        return;
+      }
+      browser.setFilters((previous) => {
+        const value = previous[chip.field];
+        if (!Array.isArray(value)) return previous;
+        return {
+          ...previous,
+          [chip.field]: value.filter(
+            (candidate) => candidate !== chip.removeValue,
+          ),
+        };
+      });
+    },
+    [browser],
+  );
+
   const closeDrawer = drawer.close;
   const handleDrawerContentClick = useCallback(
     (event: ReactMouseEvent<HTMLDivElement>) => {
@@ -336,7 +291,6 @@ export function FacetedBrowser<TRecord extends Record<string, unknown>>(
     browseState.search.trim().length > 0 ||
     Object.keys(browseState.filters).length > 0;
 
-  const activeChips = buildActiveChips(facets, browseState.filters);
   const activeFilterCount = countActiveFilters(browseState.filters);
   const quickFacets = facets
     .filter((facet) => facet.quick)
@@ -391,7 +345,17 @@ export function FacetedBrowser<TRecord extends Record<string, unknown>>(
       ? props.renderResults({ records: browser.records, state: browseState })
       : undefined;
 
-  const summaryText = `${browser.pageStart}–${browser.pageEnd} of ${browser.totalMatchingCount} ${recordNoun}`;
+  // A short noun may replace the descriptive `recordNoun` in the summary only.
+  const summaryText = formatSummaryText({
+    mode: summaryMode,
+    pageStart: browser.pageStart,
+    pageEnd: browser.pageEnd,
+    total: browser.totalMatchingCount,
+    noun:
+      browser.totalMatchingCount === 1
+        ? (summaryNoun?.one ?? recordNoun)
+        : (summaryNoun?.other ?? recordNoun),
+  });
   const statusContent =
     statusActive || browser.totalMatchingCount === 0 ? (
       <Status
@@ -404,7 +368,7 @@ export function FacetedBrowser<TRecord extends Record<string, unknown>>(
         hasActiveQuery={hasActiveQuery}
         recordNoun={recordNoun}
         onRetry={onRetry}
-        onClearFilters={browser.clearQuery}
+        onClearFilters={clearQuery}
       />
     ) : undefined;
 
@@ -434,6 +398,7 @@ export function FacetedBrowser<TRecord extends Record<string, unknown>>(
                 Filters
               </Title>
               <FacetList
+                key={facetResetEpoch}
                 facets={facets}
                 values={browseState.filters}
                 records={records}
@@ -455,47 +420,12 @@ export function FacetedBrowser<TRecord extends Record<string, unknown>>(
           ) : undefined
         }
         activeFilters={
-          activeChips.length > 0 ? (
-            <Group gap={12} className={classes['activeFilters']}>
-              {activeChips.map((chip) => (
-                <Button
-                  key={chip.key}
-                  type="button"
-                  size="compact-sm"
-                  variant="light"
-                  color="maple"
-                  aria-label={`Remove ${chip.label}`}
-                  onClick={() => {
-                    if (chip.removeValue === undefined) {
-                      browser.setFilter(chip.field, undefined);
-                      return;
-                    }
-                    browser.setFilters((previous) => {
-                      const value = previous[chip.field];
-                      if (!Array.isArray(value)) return previous;
-                      return {
-                        ...previous,
-                        [chip.field]: value.filter(
-                          (candidate) => candidate !== chip.removeValue,
-                        ),
-                      };
-                    });
-                  }}
-                >
-                  {chip.label} ×
-                </Button>
-              ))}
-              <Button
-                type="button"
-                size="compact-sm"
-                variant="subtle"
-                color="gray"
-                onClick={browser.resetFilters}
-              >
-                Clear filters
-              </Button>
-            </Group>
-          ) : undefined
+          <ActiveFilters
+            facets={facets}
+            filters={browseState.filters}
+            onRemove={removeChip}
+            onClear={clearAllFilters}
+          />
         }
         summary={<Summary text={summaryText} />}
         toolbar={
@@ -524,6 +454,7 @@ export function FacetedBrowser<TRecord extends Record<string, unknown>>(
         }
         status={statusContent}
         resultsLabel={resultsLabel}
+        fillHeight={fillHeight}
         {...(table ? { table } : {})}
         {...(cardResults ? { cards: cardResults } : {})}
         {...(customResults !== undefined ? { results: customResults } : {})}
@@ -549,7 +480,7 @@ export function FacetedBrowser<TRecord extends Record<string, unknown>>(
         applyDisabled={drawer.invalidDraft}
         onApply={drawer.apply}
         onCancel={drawer.close}
-        onReset={drawer.reset}
+        onReset={drawerReset}
         titleRef={drawerTitleRef}
         onEnterTransitionEnd={() =>
           drawerTitleRef.current?.focus({ preventScroll: true })
@@ -572,6 +503,7 @@ export function FacetedBrowser<TRecord extends Record<string, unknown>>(
             </div>
           ) : null}
           <FacetList
+            key={facetResetEpoch}
             facets={drawerFacets}
             values={drawer.draftFilters}
             records={records}

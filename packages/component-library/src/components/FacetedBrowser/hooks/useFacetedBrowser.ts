@@ -26,21 +26,27 @@ import {
   filtersEqual,
   normalizeFilters,
   normalizePageSize,
+  pageWindow,
   toColumnFilters,
   type BrowseState,
 } from './browseState';
 import type { FacetFilterValue } from './filterTypes';
 import {
   disabledSearchFilterFn,
+  nextSortDirection,
   resolveFields,
   resolveSearchFieldIds,
   searchFilterFn,
+  sortFromSorting,
+  sortingFromSort,
+  withoutIdentityColumns,
   type QueryFieldDefinition,
 } from './querySemantics';
 import { draftTableFeatures, facetedBrowserFeatures } from './tableFeatures';
 
 export type { BrowseState } from './browseState';
 export type {
+  FieldFilterFn,
   QueryField,
   QueryFieldAccessor,
   QueryFieldDefinition,
@@ -169,44 +175,6 @@ export interface UseFacetedBrowserReturn<
   };
 }
 
-function withoutIdentityColumns(
-  hiddenColumns: readonly string[],
-  idAccessor: string,
-  identityField: string | undefined,
-): readonly string[] {
-  return [
-    ...new Set(
-      hiddenColumns.filter(
-        (field) => field !== idAccessor && field !== identityField,
-      ),
-    ),
-  ];
-}
-
-function sortFromState(sort: SortIntent | undefined): SortingState {
-  return sort ? [{ id: sort.field, desc: sort.direction === 'desc' }] : [];
-}
-
-function sortFromSorting(sorting: SortingState): SortIntent | undefined {
-  const first = sorting[0];
-  return first
-    ? { field: first.id, direction: first.desc ? 'desc' : 'asc' }
-    : undefined;
-}
-
-function nextSortDirection(
-  current: SortIntent | undefined,
-  field: string,
-  fieldSortDescFirst: boolean | undefined,
-  direction: 'asc' | 'desc' | undefined,
-): 'asc' | 'desc' {
-  if (direction !== undefined) return direction;
-  if (current?.field === field) {
-    return current.direction === 'asc' ? 'desc' : 'asc';
-  }
-  return fieldSortDescFirst ? 'desc' : 'asc';
-}
-
 export function useFacetedBrowser<TRecord extends Record<string, unknown>>({
   records,
   columns = EMPTY_COLUMNS,
@@ -289,7 +257,7 @@ export function useFacetedBrowser<TRecord extends Record<string, unknown>>({
     [canonicalState.hiddenColumns, idAccessor, identityField],
   );
   const sorting = useMemo(
-    () => sortFromState(canonicalState.sort),
+    () => sortingFromSort(canonicalState.sort),
     [canonicalState.sort],
   );
   const pagination = useMemo<PaginationState>(
@@ -632,7 +600,7 @@ export function useFacetedBrowser<TRecord extends Record<string, unknown>>({
   const handleSortingChange = useCallback(
     (updater: SortingState | ((old: SortingState) => SortingState)) => {
       const current = latestStateRef.current;
-      const currentSorting = sortFromState(current.sort);
+      const currentSorting = sortingFromSort(current.sort);
       const next =
         typeof updater === 'function' ? updater(currentSorting) : updater;
       const nextSort = sortFromSorting(next);
@@ -786,9 +754,11 @@ export function useFacetedBrowser<TRecord extends Record<string, unknown>>({
 
   const totalMatchingCount = allFilteredRecords.length;
   const page = canonicalState.page;
-  const pageStart =
-    totalMatchingCount === 0 ? 0 : (page - 1) * canonicalState.pageSize + 1;
-  const pageEnd = Math.min(page * canonicalState.pageSize, totalMatchingCount);
+  const { pageStart, pageEnd } = pageWindow(
+    page,
+    canonicalState.pageSize,
+    totalMatchingCount,
+  );
 
   const visibleColumns = useMemo(
     () =>

@@ -36,9 +36,13 @@ catalog:
   vite-plugin-dts: ^5.1.2
   vite-plugin-externalize-deps: ^0.10.0
   # testing
+  '@testing-library/jest-dom': ^7.0.1
+  '@testing-library/react': ^16.3.3
+  '@testing-library/user-event': ^14.6.8
   '@vitest/browser-playwright': ^5.0.5
   # exact pin: CI's mcr.microsoft.com/playwright image tag is derived from it
   playwright: 1.64.1
+  jsdom: ^30.1.3
   vitest: ^5.0.5
   vitest-browser-react: ^2.3.0
   # react
@@ -63,3 +67,9 @@ catalog:
   '@storybook/addon-vitest': ^10.6.3
   '@storybook/react-vite': ^10.6.3
   storybook: ^10.6.3
+
+# First-party packages: this org owns their publisher, so the third-party
+# supply-chain cool-off does not apply. Exact version pins and the lockfile still
+# decide what installs.
+minimumReleaseAgeExclude:
+  - '@mapletip/*'

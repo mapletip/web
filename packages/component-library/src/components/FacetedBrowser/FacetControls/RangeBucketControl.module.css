@@ -1,0 +1,8 @@
+/*
+ * Indent the Custom From/To block under the `Custom` label text rather than
+ * under its checkbox box: Mantine's `sm` checkbox is 1.25rem wide and the
+ * inline label adds `--mantine-spacing-sm` of start offset.
+ */
+.customRange {
+  padding-inline-start: calc(1.25rem + var(--mantine-spacing-sm));
+}

@@ -1,15 +1,18 @@
-import { ColorSchemeScript, MantineProvider } from '@mantine/core';
+import { ColorSchemeScript, MantineProvider, Text, Title } from '@mantine/core';
 import { cssVariablesResolver, theme } from '@mapletip/theme';
 import {
   HeadContent,
+  Link,
   Outlet,
   Scripts,
   createRootRoute,
 } from '@tanstack/react-router';
 import type { ReactNode } from 'react';
 
-import { AppHeader } from '../components/AppHeader/AppHeader';
-import appCss from '../styles.css?url';
+import { AppHeader } from '@/components/AppHeader/AppHeader';
+import appCss from '@/styles.css?url';
+
+import shellClasses from './__root.module.css';
 
 export const Route = createRootRoute({
   head: () => ({
@@ -34,17 +37,30 @@ export const Route = createRootRoute({
   }),
   shellComponent: RootDocument,
   component: RootLayout,
+  notFoundComponent: NotFoundPage,
 });
 
 function RootLayout() {
   return (
-    <>
+    <div className={shellClasses['shell']}>
       <a className="skip-to-main" href="#main-content">
         Skip to content
       </a>
       <AppHeader />
       <Outlet />
-    </>
+    </div>
+  );
+}
+
+function NotFoundPage() {
+  return (
+    <main id="main-content" tabIndex={-1} className={shellClasses['notFound']}>
+      <Title order={1}>Page not found</Title>
+      <Text>{"We couldn't find the page you're looking for!"}</Text>
+      <Text>
+        <Link to="/">Back to the MapleTip home page</Link>
+      </Text>
+    </main>
   );
 }
 

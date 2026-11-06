@@ -133,14 +133,16 @@ export function Toolbar<TRecord extends Record<string, unknown>>({
               Choose columns
             </Text>
             <Text size="xs" c="dimmed" component="p" m={0}>
-              The record identity column is always shown.
+              The first column is always visible.
             </Text>
             {dataColumns.map((column) => {
               const visible = !hiddenColumns.includes(column.accessor);
               return (
                 <Checkbox
                   key={column.accessor}
-                  label={column.title}
+                  // Abbreviated headers stay in the table; the picker uses the
+                  // full name so a choice does not read as a second abbreviation.
+                  label={column.fullLabel ?? column.title}
                   checked={visible}
                   disabled={
                     visible &&

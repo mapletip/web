@@ -256,6 +256,41 @@ describe('ComparisonTable', () => {
     window.localStorage.clear();
   });
 
+  it('paints the whole-column overlay inside a bounded maxHeight scroll region', async () => {
+    await render(
+      <MantineProvider theme={theme}>
+        <ComparisonTable
+          ariaLabel="Bounded hover comparison"
+          records={demoRecords.slice(0, 30)}
+          columns={makeDemoColumns()}
+          idAccessor="id"
+          identityField="name"
+          maxHeight={240}
+          onSortChange={() => undefined}
+        />
+      </MantineProvider>,
+    );
+
+    const viewport = document.querySelector<HTMLElement>(
+      '[data-scrollarea-viewport="true"]',
+    )!;
+    const table = document.querySelector<HTMLElement>('table')!;
+    const cell = document.querySelector<HTMLElement>(
+      'tbody tr:nth-child(2) td:nth-child(3)',
+    )!;
+
+    await userEvent.hover(cell);
+
+    const overlay = getComputedStyle(cell, '::before');
+    expect(overlay.content).toBe('""');
+    expect(overlay.backgroundColor).not.toBe('transparent');
+    // The overlay spans the whole column but is clipped by the table itself.
+    expect(Number.parseFloat(overlay.top)).toBeLessThanOrEqual(
+      -viewport.clientHeight,
+    );
+    expect(getComputedStyle(table).overflowY).toBe('clip');
+  });
+
   it('keeps pinned identity cells opaque when another column is hovered', async () => {
     await mount();
     const identity = document.querySelector<HTMLTableCellElement>(

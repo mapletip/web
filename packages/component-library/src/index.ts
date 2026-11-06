@@ -16,18 +16,14 @@ export type {
   HeaderProps,
   HeaderSubLink,
 } from '@/components/Header';
-export { FacetedBrowser, useFacetedBrowser } from '@/components/FacetedBrowser';
+export { FacetedBrowser } from '@/components/FacetedBrowser';
 export type {
   BrowseState,
   FacetControlContext,
   FacetDefinition,
   FacetFilterValue,
   FacetOption,
+  FacetRangeBucket,
   FacetedBrowserProps,
-  NumericRangeFilter,
-  QueryField,
-  QueryFieldAccessor,
   QueryFieldDefinition,
-  UseFacetedBrowserOptions,
-  UseFacetedBrowserReturn,
 } from '@/components/FacetedBrowser';

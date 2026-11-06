@@ -29,6 +29,12 @@ test "$(curl -s "http://127.0.0.1:$port/api/healthz")" = ok
 curl -s -D "/tmp/smoke-health-headers-$$" -o /dev/null "http://127.0.0.1:$port/api/healthz"
 grep -qi '^cache-control: no-store' "/tmp/smoke-health-headers-$$"
 test "$(curl -s -o /dev/null -w '%{http_code}' "http://127.0.0.1:$port/nope")" = 404
+# Rejected Monster build slugs and the removed demo route are deterministic and
+# never touch the network; valid catalog pages need the live pinned release, so
+# those are verified in the explicit integration step instead.
+test "$(curl -s -o /dev/null -w '%{http_code}' "http://127.0.0.1:$port/maplestory/unknown/monsters")" = 404
+test "$(curl -s -o /dev/null -w '%{http_code}' "http://127.0.0.1:$port/maplestory/cw-launch/monsters")" = 404
+test "$(curl -s -o /dev/null -w '%{http_code}' "http://127.0.0.1:$port/demo/faceted-browser")" = 404
 
 # Bash pattern matching rather than a pipe into grep -q, since grep -q can
 # close its end early and SIGPIPE the writer under pipefail.
