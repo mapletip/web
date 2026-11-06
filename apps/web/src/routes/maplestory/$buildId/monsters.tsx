@@ -19,7 +19,6 @@ import {
  */
 function supportedBuild(slug: string): MonsterBuild {
   if (slug === 'cw-launch' || !isMonsterBuildId(slug)) {
-    // TanStack Router's control-flow sentinel, not an Error object.
     // eslint-disable-next-line @typescript-eslint/only-throw-error
     throw notFound();
   }

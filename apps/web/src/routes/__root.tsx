@@ -56,7 +56,7 @@ function NotFoundPage() {
   return (
     <main id="main-content" tabIndex={-1} className={shellClasses['notFound']}>
       <Title order={1}>Page not found</Title>
-      <Text>There is nothing at this address.</Text>
+      <Text>{"We couldn't find the page you're looking for!"}</Text>
       <Text>
         <Link to="/">Back to the MapleTip home page</Link>
       </Text>
