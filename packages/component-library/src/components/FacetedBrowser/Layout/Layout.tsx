@@ -108,10 +108,8 @@ export function Layout({
         </Box>
       ) : null}
       <section className={classes['results']} aria-label={resultsLabel}>
-        <div className={classes['header']}>
-          {title}
-          {search}
-        </div>
+        <div className={classes['header']}>{title}</div>
+        {search}
         {quickFacets ? <Box hiddenFrom="md">{quickFacets}</Box> : null}
         {activeFilters}
         {summary || toolbar ? (

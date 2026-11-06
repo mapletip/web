@@ -48,6 +48,12 @@
     min-height: 0;
   }
 
+  /* Fixed rows (heading, search, summary, pagination) keep their natural height;
+     only the table yields, so pagination can never be pushed below the fold. */
+  .root[data-fill-height] .results > * {
+    flex: 0 0 auto;
+  }
+
   .root[data-fill-height] .tableRegion {
     flex: 1 1 0;
     min-height: 0;
@@ -86,24 +92,11 @@
   gap: var(--mantine-spacing-sm);
 }
 
-@media (min-width: $mantine-breakpoint-sm) {
-  .header {
-    flex-direction: row;
-    align-items: flex-end;
-    justify-content: space-between;
-    gap: var(--mantine-spacing-md);
-  }
-}
-
+/* Search is a full-width row of its own, bounded by the results column (and so
+   by the data table), never a compact control beside the heading. */
 .searchForm {
   width: 100%;
-}
-
-@media (min-width: $mantine-breakpoint-sm) {
-  .searchForm {
-    width: 320px;
-    max-width: 100%;
-  }
+  max-width: 100%;
 }
 
 .bar {

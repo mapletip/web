@@ -29,6 +29,7 @@ const meta = {
       <Box
         p={{ base: 'md', md: 'xl' }}
         style={{
+          height: '100dvh',
           maxWidth: 1440,
           margin: '0 auto',
           boxSizing: 'border-box',
@@ -48,10 +49,12 @@ function BrowserExample({
   variant,
   state,
   onStateChange,
+  fillHeight = true,
 }: {
   readonly variant?: Variant;
   readonly state?: BrowseState;
   readonly onStateChange?: (nextState: BrowseState) => void;
+  readonly fillHeight?: boolean;
 }) {
   const records = demoRecords;
   const columns = useMemo(
@@ -146,7 +149,7 @@ function BrowserExample({
       queryFields={queryFields}
       facets={facets}
       presentation="comparison"
-      tableMaxHeight={560}
+      {...(fillHeight ? { fillHeight: true } : { tableMaxHeight: 560 })}
       renderCard={(record) => <FacetedBrowserRecordCard record={record} />}
       {...stateProps}
       drawerOpened={drawerOpened}
@@ -353,7 +356,11 @@ export const Controlled: Story = {
             Restore URL state
           </Button>
         </Alert>
-        <BrowserExample state={state} onStateChange={setState} />
+        <BrowserExample
+          state={state}
+          onStateChange={setState}
+          fillHeight={false}
+        />
       </>
     );
   },

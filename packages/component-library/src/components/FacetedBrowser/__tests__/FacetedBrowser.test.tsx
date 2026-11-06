@@ -75,6 +75,30 @@ describe('optional regions', () => {
     expect(results(root).querySelector('ul')).toBeNull();
   });
 
+  it('places search below the heading and above the result count', () => {
+    const root = mount({
+      search: (
+        <form role="search">
+          <input aria-label="Search records" />
+        </form>
+      ),
+      summary: <p>1–5 of 5 results</p>,
+    });
+    const header =
+      results(root).querySelector<HTMLElement>('[class*="header"]')!;
+    const search = results(root).querySelector<HTMLElement>('[role="search"]')!;
+    const bar = results(root).querySelector<HTMLElement>('[class*="bar"]')!;
+
+    // Search is its own row, not a compact control inside the heading row.
+    expect(header.contains(search)).toBe(false);
+    expect(
+      header.compareDocumentPosition(search) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    expect(
+      search.compareDocumentPosition(bar) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+  });
+
   it('shows the summary as polite text and preserves real links in slots', () => {
     const root = mount({
       search: (

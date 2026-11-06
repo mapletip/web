@@ -1211,6 +1211,68 @@ describe('integrated FacetedBrowser', () => {
     expect(document.body.textContent).toContain('Category: Alpha');
   });
 
+  it('keeps pagination inside the viewport when the host opts into fillHeight', async () => {
+    await page.viewport(1366, 768);
+    await render(
+      <MantineProvider>
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            display: 'grid',
+            gridTemplateRows: 'auto minmax(0, 1fr)',
+          }}
+        >
+          <header style={{ height: 64 }}>Site header</header>
+          <main style={{ minHeight: 0 }}>
+            <FacetedBrowser
+              title={<h1>Records</h1>}
+              records={demoRecords}
+              columns={makeDemoColumns()}
+              idAccessor="id"
+              identityField="name"
+              presentation="comparison"
+              facets={facets}
+              queryFields={queryFields}
+              fillHeight
+              renderCard={(record) => <a href={record.href}>{record.name}</a>}
+              defaultState={{
+                search: '',
+                filters: {},
+                page: 1,
+                pageSize: 25,
+                hiddenColumns: [],
+              }}
+            />
+          </main>
+        </div>
+      </MantineProvider>,
+    );
+
+    const pagination = document.querySelector<HTMLElement>(
+      '[aria-label$="pages"]',
+    )!;
+    const tableRegion = document.querySelector<HTMLElement>(
+      '[class*="tableRegion"]',
+    )!;
+    const scrollArea = document.querySelector<HTMLElement>(
+      '.mantine-datatable [data-scrollarea-viewport="true"]',
+    )!;
+
+    expect(pagination).not.toBeNull();
+    expect(pagination.getBoundingClientRect().bottom).toBeLessThanOrEqual(
+      window.innerHeight,
+    );
+    expect(tableRegion.getBoundingClientRect().bottom).toBeLessThanOrEqual(
+      pagination.getBoundingClientRect().top,
+    );
+    // The table, not the document, absorbs the overflow.
+    expect(scrollArea.scrollHeight).toBeGreaterThan(scrollArea.clientHeight);
+    expect(document.documentElement.scrollHeight).toBeLessThanOrEqual(
+      window.innerHeight,
+    );
+  });
+
   it('keeps the rail in normal page flow inside a realistic page', async () => {
     await page.viewport(1440, 900);
     await render(

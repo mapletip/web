@@ -47,4 +47,29 @@ describe('FacetedBrowser layout in a real browser', () => {
     expect(cards.getClientRects()).toHaveLength(0);
     expect(getComputedStyle(component).gridTemplateColumns).toContain('240px');
   });
+
+  it('gives search the full width of the results column', async () => {
+    const component = await mount({
+      rail: <p>Facets</p>,
+      railLabel: 'Filters',
+      search: (
+        <form role="search">
+          <input aria-label="Search records" />
+        </form>
+      ),
+    });
+    await page.viewport(992, 768);
+
+    const results = component.querySelector<HTMLElement>(
+      'section[aria-label="Results"]',
+    )!;
+    const search = component.querySelector<HTMLElement>('[role="search"]')!;
+    const resultsWidth = results.getBoundingClientRect().width;
+    const searchWidth = search.getBoundingClientRect().width;
+
+    // The results column is the data table's width; search must not be capped
+    // to a compact control narrower than it.
+    expect(searchWidth).toBeCloseTo(resultsWidth, 0);
+    expect(searchWidth).toBeGreaterThan(320);
+  });
 });
