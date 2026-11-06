@@ -5,24 +5,17 @@ import type { ReactElement } from 'react';
 import classes from './MonsterBrowseUnavailable.module.css';
 
 /**
- * Honest unavailable state for a failed verified-release read. It says what
- * happened and offers a retry; it never renders raw SDK messages, paths, digests
- * or stacks, because those are not a visitor-facing contract.
- *
- * This is distinct from a valid zero-result filter, which the FacetedBrowser
- * renders itself.
+ * Generic user-facing error state for this route. It offers a retry and never
+ * renders raw SDK messages, paths, digests or stacks, because those are not a
+ * visitor-facing contract.
  */
 export function MonsterBrowseUnavailable(): ReactElement {
   const router = useRouter();
 
   return (
     <main id="main-content" tabIndex={-1} className={classes['page']}>
-      <Title order={1}>Monster data is unavailable</Title>
-      <Text>
-        The pinned MapleKit release could not be read or verified, so this page
-        cannot show monster records. Nothing has been substituted for the real
-        data.
-      </Text>
+      <Title order={1}>Something went wrong</Title>
+      <Text>Sorry, something went wrong while loading this page.</Text>
       <Button
         className={classes['retry']}
         onClick={() => {

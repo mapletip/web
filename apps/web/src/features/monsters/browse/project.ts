@@ -3,11 +3,8 @@
  * JSON-serializable browse rows.
  *
  * The mapping is deliberately explicit: contract-2 tuples are positional, so
- * every projected slot is named here by a documented index constant. The source
- * of truth for the order is the MapleKit Rust emitter
- * (`crates/maplekit-public/src/readers/catalog_2.rs::read_monster_catalog_2_inner`)
- * and the `MonsterCatalogStatsV2` / `MonsterCatalogTraitsV2` doc comments in
- * `crates/maplekit-public/src/monster_catalog_2.rs`.
+ * every projected slot is named here by an index constant that mirrors the
+ * published contract order.
  */
 import type { StaticMonsterCatalog } from '@mapletip/data/monsters';
 

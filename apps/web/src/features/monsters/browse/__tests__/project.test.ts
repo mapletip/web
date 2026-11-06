@@ -7,6 +7,7 @@ import {
   type MonsterBrowseRow,
   type MonsterFactId,
 } from '../project';
+
 import {
   ABSENT_FACT,
   fixtureCatalog,
@@ -15,7 +16,7 @@ import {
   UNKNOWN_FACT,
   UNSUPPORTED_FACT,
   type FixtureRecordInput,
-} from '../test-support/monsterCatalogFixture';
+} from './monsterCatalogFixture';
 
 function firstRow(rows: readonly MonsterBrowseRow[]): MonsterBrowseRow {
   const [row] = rows;

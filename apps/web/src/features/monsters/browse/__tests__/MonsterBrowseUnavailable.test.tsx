@@ -14,10 +14,10 @@ import { describe, expect, it, vi } from 'vitest';
 import { MonsterBrowseUnavailable } from '../MonsterBrowseUnavailable';
 
 /**
- * The route error boundary is a real UI contract: honest copy, a reference only
- * for typed SDK codes the app recognises, no leaked diagnostics, and a working
- * retry. It reads the router context, so it is exercised through a real router
- * whose loader fails rather than being called as a plain component.
+ * The route error boundary is a real UI contract: a generic user-facing message,
+ * no leaked diagnostics, and a working retry. It reads the router context, so it
+ * is exercised through a real router whose loader fails rather than being called
+ * as a plain component.
  */
 async function renderFailedRoute(error: unknown) {
   const rootRoute = createRootRoute({ component: () => <Outlet /> });
@@ -39,12 +39,12 @@ async function renderFailedRoute(error: unknown) {
       <RouterProvider router={router} />
     </MantineProvider>,
   );
-  await screen.findByRole('heading', { name: 'Monster data is unavailable' });
+  await screen.findByRole('heading', { name: 'Something went wrong' });
   return router;
 }
 
 describe('MonsterBrowseUnavailable', () => {
-  it('explains an unavailable verified release without substituting data', async () => {
+  it('shows a generic user-facing message with a retry', async () => {
     await renderFailedRoute(
       Object.assign(new Error('internal detail'), {
         code: 'INTEGRITY_ERROR',
@@ -52,10 +52,10 @@ describe('MonsterBrowseUnavailable', () => {
     );
 
     expect(
-      screen.getByRole('heading', { name: 'Monster data is unavailable' }),
+      screen.getByRole('heading', { name: 'Something went wrong' }),
     ).toBeVisible();
     expect(
-      screen.getByText(/Nothing has been substituted for the real data/u),
+      screen.getByText(/something went wrong while loading this page/u),
     ).toBeVisible();
     expect(screen.getByRole('button', { name: 'Try again' })).toBeVisible();
   });
@@ -68,7 +68,7 @@ describe('MonsterBrowseUnavailable', () => {
     );
 
     expect(
-      screen.getByRole('heading', { name: 'Monster data is unavailable' }),
+      screen.getByRole('heading', { name: 'Something went wrong' }),
     ).toBeVisible();
     expect(screen.queryByText(/release\.json/u)).not.toBeInTheDocument();
     expect(screen.queryByText(/sha256/u)).not.toBeInTheDocument();

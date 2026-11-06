@@ -6,11 +6,12 @@ import { describe, expect, it } from 'vitest';
 import { MonsterBrowse, monsterBrowseColumns } from '../MonsterBrowse';
 import { projectMonsterBrowseRows } from '../project';
 import { MONSTER_BUILDS } from '../release';
+
 import {
   fixtureCatalog,
   fixtureRecord,
   knownFact,
-} from '../test-support/monsterCatalogFixture';
+} from './monsterCatalogFixture';
 
 /**
  * App-level wiring: the column table, the opt-in total summary and the query

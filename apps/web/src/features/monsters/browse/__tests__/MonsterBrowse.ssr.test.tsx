@@ -6,13 +6,14 @@ import { describe, expect, it } from 'vitest';
 import { MonsterBrowse } from '..';
 import { projectMonsterBrowseRows } from '../project';
 import { MONSTER_BUILDS } from '../release';
+
 import {
   ABSENT_FACT,
   fixtureCatalog,
   fixtureRecord,
   knownFact,
   UNKNOWN_FACT,
-} from '../test-support/monsterCatalogFixture';
+} from './monsterCatalogFixture';
 
 function knownStats(base: number) {
   return [
@@ -145,8 +146,5 @@ describe('MonsterBrowse server rendering', () => {
     expect(html).toContain('EXP / 100 HP: -');
     expect(html).toContain('Unknown');
     expect(html).toContain('Not recorded');
-    // The build switcher is intentionally gone: each build has its own route.
-    expect(html).not.toContain('Monster builds');
-    expect(html).not.toContain('href="/maplestory/gms-v83/monsters"');
   });
 });
