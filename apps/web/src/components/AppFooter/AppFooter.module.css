@@ -1,0 +1,35 @@
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 2.5rem;
+  color: var(--mapletip-color-ink);
+  text-decoration: none;
+}
+
+.mark {
+  display: block;
+  flex: 0 0 auto;
+}
+
+.wordmark {
+  font-size: 1.25rem;
+  font-weight: 800;
+  line-height: 1.25rem;
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+}
+
+.tip {
+  color: var(--mapletip-color-brand-text);
+}
+
+.nowrap {
+  white-space: nowrap;
+}
+
+.externalIcon {
+  display: inline-block;
+  margin-inline-start: 0.15em;
+  vertical-align: -0.1em;
+}

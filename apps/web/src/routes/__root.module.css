@@ -1,3 +1,25 @@
+.document {
+  display: flex;
+  min-height: 100dvh;
+  flex-direction: column;
+}
+
+.shell {
+  display: flex;
+  flex: 1 0 auto;
+  flex-direction: column;
+  min-width: 0;
+}
+
+/*
+ * Short routes fill the space above the Footer, so it rests at the viewport
+ * bottom instead of following a second full-height block. Long routes simply
+ * grow the shell and scroll normally.
+ */
+.shell > main {
+  flex: 1 0 auto;
+}
+
 /*
  * Height-bounding shell. Only pages that opt in by marking their `main` with
  * `data-fill-viewport` (the Monster comparison browser) get a definite viewport
@@ -6,13 +28,15 @@
  *
  * `dvh` rather than `vh` so mobile browser chrome cannot clip the layout, and the
  * header row stays `auto` so a wrapped header shrinks the browser row instead of
- * pushing the page taller than the viewport.
+ * pushing the page taller than the viewport. The Footer is a sibling of this
+ * shell, so the fixed height still ends before it in document flow.
  */
 @media (min-width: 62em) {
   .shell:has(> main[data-fill-viewport]) {
     display: grid;
     grid-template-rows: auto minmax(0, 1fr);
     height: 100dvh;
+    flex: 0 0 auto;
   }
 }
 

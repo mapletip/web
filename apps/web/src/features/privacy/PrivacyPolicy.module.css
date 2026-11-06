@@ -1,0 +1,82 @@
+.policy {
+  box-sizing: border-box;
+  width: min(100% - 2 * var(--mantine-spacing-md), 48rem);
+  padding: clamp(1.5rem, 4vw, 2.5rem) 0 3rem;
+  margin-inline: auto;
+  color: var(--mapletip-color-ink);
+  font-size: var(--mantine-font-size-md);
+  line-height: 1.7;
+  overflow-wrap: anywhere;
+}
+
+.policy h1 {
+  margin: 0 0 0.55rem;
+  font-size: clamp(1.75rem, 4vw, 2.25rem);
+  line-height: 1.2;
+  text-wrap: balance;
+}
+
+.policy :global(.privacy-policy-effective-date) {
+  margin: 0 0 1.5rem;
+  color: var(--mapletip-color-muted);
+  font-size: var(--mantine-font-size-sm);
+}
+
+.policy p {
+  margin: 0 0 1rem;
+}
+
+.policy section {
+  margin-top: 2rem;
+}
+
+.policy h2 {
+  margin: 0 0 0.75rem;
+  padding-top: 1.15rem;
+  border-top: 1px solid var(--mapletip-color-border-subtle);
+  font-size: 1.3rem;
+  line-height: 1.35;
+  text-wrap: pretty;
+}
+
+.policy h3 {
+  margin: 1.5rem 0 0.45rem;
+  font-size: 1.05rem;
+  line-height: 1.4;
+}
+
+.policy ul {
+  padding-inline-start: 1.4rem;
+  margin: 0 0 1rem;
+}
+
+.policy li {
+  padding-inline-start: 0.2rem;
+  margin-block: 0.35rem;
+}
+
+.policy li::marker {
+  color: var(--mapletip-color-brand);
+}
+
+.policy a {
+  color: var(--mapletip-color-link);
+  text-decoration: underline;
+  text-decoration-thickness: 0.08em;
+  text-underline-offset: 0.18em;
+  overflow-wrap: anywhere;
+}
+
+.policy a:hover {
+  color: var(--mapletip-color-brand-text);
+}
+
+.policy address {
+  font-style: normal;
+}
+
+@media (max-width: 30em) {
+  .policy {
+    width: min(100% - 2 * var(--mantine-spacing-sm), 48rem);
+  }
+}

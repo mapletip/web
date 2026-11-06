@@ -9,6 +9,7 @@ import {
 } from '@tanstack/react-router';
 import type { ReactNode } from 'react';
 
+import { AppFooter } from '@/components/AppFooter/AppFooter';
 import { AppHeader } from '@/components/AppHeader/AppHeader';
 import appCss from '@/styles.css?url';
 
@@ -42,12 +43,15 @@ export const Route = createRootRoute({
 
 function RootLayout() {
   return (
-    <div className={shellClasses['shell']}>
-      <a className="skip-to-main" href="#main-content">
-        Skip to content
-      </a>
-      <AppHeader />
-      <Outlet />
+    <div className={shellClasses['document']}>
+      <div className={shellClasses['shell']}>
+        <a className="skip-to-main" href="#main-content">
+          Skip to content
+        </a>
+        <AppHeader />
+        <Outlet />
+      </div>
+      <AppFooter />
     </div>
   );
 }
