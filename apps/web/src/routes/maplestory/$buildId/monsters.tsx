@@ -1,6 +1,6 @@
 import { createFileRoute, notFound } from '@tanstack/react-router';
 
-import { isBuildId, type BuildId } from '@/config/maplekit';
+import { DEFAULT_BUILD_ID, isBuildId, type BuildId } from '@/config/maplekit';
 import {
   MonsterBrowse,
   MonsterBrowseUnavailable,
@@ -10,12 +10,12 @@ import { monsterPageMetadata } from '@/features/monsters/browse/metadata';
 
 /**
  * One parameterized version route for every explicitly supported build. The
- * canonical Classic World page has its own unversioned URL, so that slug is
- * refused here to avoid duplicate content; anything else unknown is a genuine
- * not-found before any SDK work happens.
+ * canonical build has its own unversioned URL, so that slug is refused here to
+ * avoid duplicate content; anything else unknown is a genuine not-found before
+ * any SDK work happens.
  */
 function supportedBuild(slug: string): BuildId {
-  if (slug === 'cw-launch' || !isBuildId(slug)) {
+  if (slug === DEFAULT_BUILD_ID || !isBuildId(slug)) {
     // eslint-disable-next-line @typescript-eslint/only-throw-error
     throw notFound();
   }
