@@ -7,18 +7,19 @@ import type {
 } from '@mapletip/component-library';
 import type { ReactElement } from 'react';
 
+import { BUILDS, type BuildId } from '@/config/maplekit';
+
 import { MonsterBrowseCard } from '../MonsterBrowseCard';
 import {
   formatMonsterFact,
   type MonsterBrowseRow,
   type MonsterFactId,
 } from '../project';
-import type { MonsterBuild } from '../release';
 
 import classes from './MonsterBrowse.module.css';
 
 export interface MonsterBrowseProps {
-  readonly build: MonsterBuild;
+  readonly buildId: BuildId;
   readonly rows: readonly MonsterBrowseRow[];
 }
 
@@ -150,9 +151,10 @@ const defaultState: BrowseState = {
 };
 
 export function MonsterBrowse({
-  build,
+  buildId,
   rows,
 }: MonsterBrowseProps): ReactElement {
+  const label = BUILDS[buildId].label;
   return (
     <main
       id="main-content"
@@ -161,14 +163,14 @@ export function MonsterBrowse({
       data-fill-viewport=""
     >
       <FacetedBrowser
-        title={<Title order={1}>{`MapleStory ${build.label} Monsters`}</Title>}
+        title={<Title order={1}>{`MapleStory ${label} Monsters`}</Title>}
         records={rows}
         idAccessor="key"
         identityField="name"
         columns={monsterBrowseColumns}
         searchFields={['name']}
         facets={facets}
-        recordNoun={`MapleStory ${build.label} Monsters`}
+        recordNoun={`MapleStory ${label} Monsters`}
         summaryMode="total"
         summaryNoun={SUMMARY_NOUN}
         pageSizeOptions={[25, 50, 100]}
@@ -176,7 +178,7 @@ export function MonsterBrowse({
         // No `tableMaxHeight`: the table fills the height this page hands it, so its own
         // scroll region is the page's vertical scroll region on desktop.
         fillHeight
-        tableStorageKey={`mapletip:web:monsters:${build.buildId}:v1`}
+        tableStorageKey={`mapletip:web:monsters:${buildId}:v1`}
         renderCard={(record) => <MonsterBrowseCard record={record} />}
         defaultState={defaultState}
       />

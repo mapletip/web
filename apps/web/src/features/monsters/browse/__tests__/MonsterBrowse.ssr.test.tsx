@@ -3,9 +3,10 @@ import { theme } from '@mapletip/theme';
 import { renderToString } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 
+import { DEFAULT_BUILD_ID } from '@/config/maplekit';
+
 import { MonsterBrowse } from '..';
 import { projectMonsterBrowseRows } from '../project';
-import { MONSTER_BUILDS } from '../release';
 
 import {
   ABSENT_FACT,
@@ -103,7 +104,7 @@ function renderBrowseHtml(): string {
   // rendering is the whole contract; no router scaffolding is needed.
   return renderToString(
     <MantineProvider theme={theme} forceColorScheme="dark">
-      <MonsterBrowse build={MONSTER_BUILDS['cw-launch']} rows={rows} />
+      <MonsterBrowse buildId={DEFAULT_BUILD_ID} rows={rows} />
     </MantineProvider>,
   );
 }

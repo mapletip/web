@@ -9,16 +9,17 @@
  */
 import { getMonsterBrowse } from '@mapletip/data/monsters';
 
+import { MAPLEKIT_RELEASE, type BuildId } from '@/config/maplekit';
+
 import { projectMonsterBrowseRows, type MonsterBrowseRow } from './project';
-import { releaseBaseUrl, releasePin, type MonsterBuildId } from './release';
 
 export async function loadMonsterBrowse(
-  buildId: MonsterBuildId,
+  buildId: BuildId,
   signal?: AbortSignal,
 ): Promise<readonly MonsterBrowseRow[]> {
   const catalog = await getMonsterBrowse({
-    baseUrl: releaseBaseUrl,
-    pin: releasePin,
+    baseUrl: MAPLEKIT_RELEASE.baseUrl,
+    pin: MAPLEKIT_RELEASE.pin,
     buildId,
     ...(signal === undefined ? {} : { signal }),
   });

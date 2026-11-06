@@ -1,15 +1,12 @@
 import { createFileRoute, notFound } from '@tanstack/react-router';
 
+import { isBuildId, type BuildId } from '@/config/maplekit';
 import {
   MonsterBrowse,
   MonsterBrowseUnavailable,
 } from '@/features/monsters/browse';
 import { loadMonsterBrowse } from '@/features/monsters/browse/load';
-import {
-  isMonsterBuildId,
-  MONSTER_BUILDS,
-  type MonsterBuild,
-} from '@/features/monsters/browse/release';
+import { monsterPageMetadata } from '@/features/monsters/browse/metadata';
 
 /**
  * One parameterized version route for every explicitly supported build. The
@@ -17,12 +14,12 @@ import {
  * refused here to avoid duplicate content; anything else unknown is a genuine
  * not-found before any SDK work happens.
  */
-function supportedBuild(slug: string): MonsterBuild {
-  if (slug === 'cw-launch' || !isMonsterBuildId(slug)) {
+function supportedBuild(slug: string): BuildId {
+  if (slug === 'cw-launch' || !isBuildId(slug)) {
     // eslint-disable-next-line @typescript-eslint/only-throw-error
     throw notFound();
   }
-  return MONSTER_BUILDS[slug];
+  return slug;
 }
 
 export const Route = createFileRoute('/maplestory/$buildId/monsters')({
@@ -30,16 +27,13 @@ export const Route = createFileRoute('/maplestory/$buildId/monsters')({
     supportedBuild(params.buildId);
   },
   loader: ({ params, abortController }) =>
-    loadMonsterBrowse(
-      supportedBuild(params.buildId).buildId,
-      abortController.signal,
-    ),
+    loadMonsterBrowse(supportedBuild(params.buildId), abortController.signal),
   head: ({ params }) => {
-    const build = supportedBuild(params.buildId);
+    const metadata = monsterPageMetadata(supportedBuild(params.buildId));
     return {
       meta: [
-        { title: build.title },
-        { name: 'description', content: build.description },
+        { title: metadata.title },
+        { name: 'description', content: metadata.description },
       ],
     };
   },
@@ -49,8 +43,7 @@ export const Route = createFileRoute('/maplestory/$buildId/monsters')({
 
 function VersionedMonsters() {
   const { buildId } = Route.useParams();
-  const build = supportedBuild(buildId);
   const rows = Route.useLoaderData();
 
-  return <MonsterBrowse build={build} rows={rows} />;
+  return <MonsterBrowse buildId={supportedBuild(buildId)} rows={rows} />;
 }
