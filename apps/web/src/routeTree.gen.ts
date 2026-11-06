@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as ApiHealthzRouteImport } from './routes/api/healthz'
 import { Route as MaplestoryMonstersRouteImport } from './routes/maplestory/monsters'
 import { Route as MaplestoryBuildIdMonstersRouteImport } from './routes/maplestory/$buildId/monsters'
@@ -17,6 +18,11 @@ import { Route as MaplestoryBuildIdMonstersRouteImport } from './routes/maplesto
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiHealthzRoute = ApiHealthzRouteImport.update({
@@ -38,12 +44,14 @@ const MaplestoryBuildIdMonstersRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/privacy': typeof PrivacyRoute
   '/api/healthz': typeof ApiHealthzRoute
   '/maplestory/monsters': typeof MaplestoryMonstersRoute
   '/maplestory/$buildId/monsters': typeof MaplestoryBuildIdMonstersRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/privacy': typeof PrivacyRoute
   '/api/healthz': typeof ApiHealthzRoute
   '/maplestory/monsters': typeof MaplestoryMonstersRoute
   '/maplestory/$buildId/monsters': typeof MaplestoryBuildIdMonstersRoute
@@ -51,6 +59,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/privacy': typeof PrivacyRoute
   '/api/healthz': typeof ApiHealthzRoute
   '/maplestory/monsters': typeof MaplestoryMonstersRoute
   '/maplestory/$buildId/monsters': typeof MaplestoryBuildIdMonstersRoute
@@ -59,18 +68,21 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/privacy'
     | '/api/healthz'
     | '/maplestory/monsters'
     | '/maplestory/$buildId/monsters'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/privacy'
     | '/api/healthz'
     | '/maplestory/monsters'
     | '/maplestory/$buildId/monsters'
   id:
     | '__root__'
     | '/'
+    | '/privacy'
     | '/api/healthz'
     | '/maplestory/monsters'
     | '/maplestory/$buildId/monsters'
@@ -78,6 +90,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  PrivacyRoute: typeof PrivacyRoute
   ApiHealthzRoute: typeof ApiHealthzRoute
   MaplestoryMonstersRoute: typeof MaplestoryMonstersRoute
   MaplestoryBuildIdMonstersRoute: typeof MaplestoryBuildIdMonstersRoute
@@ -90,6 +103,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/healthz': {
@@ -118,6 +138,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  PrivacyRoute: PrivacyRoute,
   ApiHealthzRoute: ApiHealthzRoute,
   MaplestoryMonstersRoute: MaplestoryMonstersRoute,
   MaplestoryBuildIdMonstersRoute: MaplestoryBuildIdMonstersRoute,
