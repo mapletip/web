@@ -107,7 +107,7 @@ describe('MonsterBrowseCard', () => {
       '-',
       'Unknown',
       'Not recorded',
-      'Not supported',
+      'Unavailable',
     ]);
   });
 

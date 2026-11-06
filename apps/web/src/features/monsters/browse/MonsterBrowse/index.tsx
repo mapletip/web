@@ -170,7 +170,7 @@ export function MonsterBrowse({
         columns={monsterBrowseColumns}
         searchFields={['name']}
         facets={facets}
-        recordNoun={`MapleStory ${label} Monsters`}
+        recordNoun={`${label} monsters`}
         summaryMode="total"
         summaryNoun={SUMMARY_NOUN}
         pageSizeOptions={[25, 50, 100]}

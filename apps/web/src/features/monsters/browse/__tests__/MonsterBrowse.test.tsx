@@ -87,7 +87,9 @@ const summaryText = () =>
 
 /** Cards are the presentation that renders real DOM in jsdom. */
 function cards() {
-  return screen.getByRole('list', { name: /Monsters cards/u });
+  return screen.getByRole('list', {
+    name: 'Classic World monsters cards',
+  });
 }
 
 function column(accessor: string) {
@@ -141,6 +143,14 @@ describe('MonsterBrowse', () => {
 
     expect(summaryText()).toBe('4 Monsters');
     expect(screen.queryByText(/\d+–\d+ of/u)).not.toBeInTheDocument();
+    // Interactive language keeps the family/version context; the heading above
+    // already names the game, so controls do not repeat "MapleStory".
+    expect(
+      screen.getByRole('textbox', { name: 'Search Classic World monsters' }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('table', { name: 'Classic World monsters comparison' }),
+    ).toBeInTheDocument();
   });
 
   it('applies search, a rail preset and clear to the result set', async () => {

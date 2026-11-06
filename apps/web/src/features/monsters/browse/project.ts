@@ -119,7 +119,7 @@ export const UNNAMED_MONSTER_LABEL = 'Unnamed monster';
 const UNKNOWN_FACT_LABELS: Readonly<Record<UnknownFactState, string>> = {
   unknown: 'Unknown',
   absent: 'Not recorded',
-  unsupported: 'Not supported',
+  unsupported: 'Unavailable',
 };
 
 /**

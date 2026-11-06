@@ -164,7 +164,7 @@ describe('monster fact states', () => {
     const expectations: readonly [MonsterFactId, string, string][] = [
       ['hp', 'unknown', 'Unknown'],
       ['mp', 'absent', 'Not recorded'],
-      ['exp', 'unsupported', 'Not supported'],
+      ['exp', 'unsupported', 'Unavailable'],
       // Derived from the two above, so it cannot be known either. Its
       // unavailable state renders as a dash, not a word.
       ['expPer100Hp', 'unknown', '-'],
@@ -186,7 +186,7 @@ describe('monster fact states', () => {
           formatMonsterFact(row, factId),
         ),
       ),
-    ).toEqual(new Set(['Unknown', 'Not recorded', 'Not supported']));
+    ).toEqual(new Set(['Unknown', 'Not recorded', 'Unavailable']));
   });
 
   it('falls back to an honest label when the name is not known', () => {

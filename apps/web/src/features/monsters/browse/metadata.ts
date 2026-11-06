@@ -7,7 +7,7 @@ export function monsterPageMetadata(buildId: BuildId): {
 } {
   const { label } = BUILDS[buildId];
   return {
-    title: `${label} monsters — MapleTip`,
-    description: `Browse every ${label} monster in the verified MapleKit release, with authoritative stats and honest unknown states.`,
+    title: `MapleStory ${label} Monsters – MapleTip`,
+    description: `Browse ${label} monsters in MapleStory. Compare levels, HP, EXP, attack, defense, and other stats.`,
   };
 }
