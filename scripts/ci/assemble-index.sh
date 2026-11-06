@@ -22,8 +22,12 @@ docker buildx imagetools create \
   --annotation "index:org.opencontainers.image.revision=${sha}" \
   "${images[@]}"
 
-inspect=$(docker buildx imagetools inspect "ghcr.io/mapletip/web:${tag}" --raw)
-digest=$(docker buildx imagetools inspect "ghcr.io/mapletip/web:${tag}" --format '{{json .Manifest.digest}}' | tr -d '"')
+# `--format '{{.Manifest.Digest}}'` silently falls back to buildx's
+# default multi-line text instead of erroring, so it can't be trusted to
+# yield a bare digest; `{{json .}}` into jq gives both the digest and the
+# same manifest content `--raw` would, in one call.
+inspect=$(docker buildx imagetools inspect "ghcr.io/mapletip/web:${tag}" --format '{{json .}}' | jq '.manifest')
+digest=$(echo "$inspect" | jq -r '.digest')
 
 # Reject a malformed index digest before it can reach the release payload.
 [[ "$digest" =~ ^sha256:[a-f0-9]{64}$ ]]
