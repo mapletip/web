@@ -44,15 +44,14 @@ const groups = [
     ],
   },
   {
-    id: 'legal',
-    title: 'Legal',
+    id: 'about',
+    title: 'About',
     links: [{ id: 'privacy', label: 'Privacy Policy', href: '/privacy' }],
   },
 ] satisfies readonly FooterGroup[];
 
 const officialMapleStoryUrl = 'https://www.nexon.com/maplestory/';
 const officialNexonUrl = 'https://www.nexon.com/main/en';
-const officialMapleStoryYouTubeUrl = 'https://www.youtube.com/@MapleStory';
 
 /**
  * The three official attribution links share an intentional new-tab decision
@@ -92,10 +91,7 @@ const legal = (
       <OfficialLink href={officialNexonUrl}>NEXON</OfficialLink>.
     </span>{' '}
     MapleStory and related game content are property of NEXON and/or their
-    respective rights holders.{' '}
-    <OfficialLink href={officialMapleStoryYouTubeUrl}>
-      Official MapleStory YouTube
-    </OfficialLink>
+    respective rights holders.
   </p>
 );
 

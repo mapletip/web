@@ -89,7 +89,7 @@ describe('AppFooter', () => {
       within(navigation)
         .getAllByRole('heading', { level: 2 })
         .map((heading) => heading.textContent),
-    ).toEqual(['Explore', 'Items', 'Legal']);
+    ).toEqual(['Explore', 'Items', 'About']);
 
     const links = within(navigation).getAllByRole('link');
     expect(links.map((link) => link.textContent)).toEqual(
@@ -104,12 +104,14 @@ describe('AppFooter', () => {
     await renderAppFooter();
 
     const links = officialLinks();
-    expect(links).toHaveLength(3);
+    expect(links).toHaveLength(2);
     expect(links.map((link) => link.getAttribute('href'))).toEqual([
       'https://www.nexon.com/maplestory/',
       'https://www.nexon.com/main/en',
-      'https://www.youtube.com/@MapleStory',
     ]);
+    expect(
+      screen.queryByRole('link', { name: /YouTube/u }),
+    ).not.toBeInTheDocument();
 
     for (const link of links) {
       expect(link).toHaveAttribute('rel', 'noopener noreferrer');
