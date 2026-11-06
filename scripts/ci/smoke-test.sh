@@ -36,10 +36,19 @@ home_status=$(curl -s -o "/tmp/smoke-home-body-$$" -w '%{http_code}' "http://127
 test "$home_status" = 200
 home_page=$(</tmp/smoke-home-body-$$)
 rm -f "/tmp/smoke-home-body-$$"
-[[ "$home_page" == *'<title>MapleTip — Coming soon</title>'* ]]
-[[ "$home_page" == *'Coming soon'* ]]
 
-asset=$(printf '%s' "$home_page" | grep -o '/assets/[^"]*\.js' | head -1)
+# Root-layout structure shared by every route (skip link + its target, and
+# the header's brand mark), not page-specific copy that will change.
+[[ "$home_page" == *'<a class="skip-to-main" href="#main-content">Skip to content</a>'* ]]
+[[ "$home_page" == *'id="main-content"'* ]]
+[[ "$home_page" == *'/brand/mapletip-mark.svg'* ]]
+
+# A herestring avoids piping between two processes, so there's nothing to
+# SIGPIPE under pipefail. `-m1` only caps matching *lines*, and this HTML is
+# one line, so take the first match with bash parameter expansion instead
+# of piping grep's (possibly multi-match) output into `head -1`.
+assets=$(grep -o '/assets/[^"]*\.js' <<<"$home_page")
+asset=${assets%%$'\n'*}
 test -n "$asset"
 test "$(curl -s -o /dev/null -w '%{http_code}' "http://127.0.0.1:$port$asset")" = 200
 
