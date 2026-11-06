@@ -267,6 +267,13 @@ jobs:
     outputs:
       digest: ${{ steps.index.outputs.digest }}
     steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+          sparse-checkout: scripts/ci
+          sparse-checkout-cone-mode: false
+
       - name: Download digests
         uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
@@ -284,57 +291,12 @@ jobs:
       - name: Set up Buildx
         uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
 
-      # Assembles the index from the two already-verified per-platform
-      # digests only (never a mutable tag), then re-reads it back from the
-      # registry to confirm the descriptors it actually contains match.
       - name: Assemble and verify index
         id: index
         working-directory: ${{ runner.temp }}/digests
         run: |
           set -euo pipefail
-          tag="sha-${GITHUB_SHA:0:12}"
-
-          images=()
-          for digest in *; do
-            [[ "$digest" =~ ^[a-f0-9]{64}$ ]]
-            images+=("ghcr.io/mapletip/web@sha256:${digest}")
-          done
-          test "${#images[@]}" = 2
-
-          docker buildx imagetools create \
-            --tag "ghcr.io/mapletip/web:${tag}" \
-            --annotation "index:org.opencontainers.image.revision=${GITHUB_SHA}" \
-            "${images[@]}"
-
-          inspect=$(docker buildx imagetools inspect "ghcr.io/mapletip/web:${tag}" --raw)
-          digest=$(docker buildx imagetools inspect "ghcr.io/mapletip/web:${tag}" --format '{{json .Manifest.digest}}' | tr -d '"')
-
-          # Reject a malformed index digest before it can reach the release
-          # payload.
-          [[ "$digest" =~ ^sha256:[a-f0-9]{64}$ ]]
-
-          revision=$(echo "$inspect" | jq -r '.annotations["org.opencontainers.image.revision"] // ""')
-          test "$revision" = "$GITHUB_SHA"
-
-          # Exactly the two tested platforms, exactly once each, no extra
-          # or substitute manifests (attestations, duplicate arches, etc).
-          manifest_count=$(echo "$inspect" | jq '.manifests | length')
-          test "$manifest_count" = 2
-
-          for arch in amd64 arm64; do
-            count=$(echo "$inspect" | jq --arg arch "$arch" \
-              '[.manifests[] | select(.platform.os == "linux" and .platform.architecture == $arch)] | length')
-            test "$count" = 1
-          done
-
-          # The index references exactly the two already-tested digests,
-          # not a substituted one.
-          for image in "${images[@]}"; do
-            tested_digest="${image#*@}"
-            count=$(echo "$inspect" | jq --arg digest "$tested_digest" '[.manifests[] | select(.digest == $digest)] | length')
-            test "$count" = 1
-          done
-
+          digest=$("${GITHUB_WORKSPACE}/scripts/ci/assemble-index.sh" "${GITHUB_SHA}")
           echo "digest=${digest}" >> "$GITHUB_OUTPUT"
 
   release:
@@ -348,6 +310,13 @@ jobs:
     env:
       IMAGE_DIGEST: ${{ needs.publish-index.outputs.digest }}
     steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+          sparse-checkout: scripts/ci
+          sparse-checkout-cone-mode: false
+
       - name: Log in to GHCR
         uses: docker/login-action@8aa5831fb8d48d8f76594c7ddde61ae58019f550 # v4.8.0
         with:
@@ -460,39 +429,9 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Attach production release tag
-        env:
-          CANDIDATE_DIGEST: ${{ steps.candidate.outputs.digest }}
         run: |
           set -euo pipefail
           production_tag="0.${GITHUB_RUN_NUMBER}.${GITHUB_RUN_ATTEMPT}"
-          ref="ghcr.io/mapletip/web:${production_tag}"
-
-          # A nonzero exit from `oras resolve` means either "no such tag"
-          # (expected on a first publish) or an unrelated failure (auth,
-          # connectivity, timeout, 5xx). Only the former is safe to treat as
-          # "create the tag"; anything else must fail closed rather than
-          # risk a duplicate or missing promotion.
-          set +e
-          resolved=$(oras resolve "$ref" 2>&1)
-          resolve_status=$?
-          set -e
-
-          if [ "$resolve_status" -eq 0 ]; then
-            if [ "$resolved" != "$CANDIDATE_DIGEST" ]; then
-              echo "Release ${production_tag} already exists and points at a different digest (${resolved}); refusing to overwrite it." >&2
-              exit 1
-            fi
-            echo "Release ${production_tag} already points at the verified digest; nothing to do."
-          elif [[ "$resolved" == *"${ref}: not found"* ]]; then
-            echo "$resolved"
-            oras tag "ghcr.io/mapletip/web@${CANDIDATE_DIGEST}" "${production_tag}"
-          else
-            echo "$resolved" >&2
-            echo "Could not determine whether ${production_tag} already exists; refusing to publish." >&2
-            exit 1
-          fi
-
-          # Confirm the tag actually landed on the expected digest, rather
-          # than assuming an ambiguous network outcome succeeded.
-          final_digest=$(oras resolve "$ref")
-          test "$final_digest" = "$CANDIDATE_DIGEST"
+          "${GITHUB_WORKSPACE}/scripts/ci/attach-release-tag.sh" \
+            "ghcr.io/mapletip/web:${production_tag}" \
+            "${{ steps.candidate.outputs.digest }}"
