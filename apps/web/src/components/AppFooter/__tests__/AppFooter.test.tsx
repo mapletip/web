@@ -100,7 +100,7 @@ describe('AppFooter', () => {
     );
   });
 
-  it('uses safe, disclosed new-tab links for the three official sources', async () => {
+  it('uses safe, disclosed new-tab links for the two official sources', async () => {
     await renderAppFooter();
 
     const links = officialLinks();

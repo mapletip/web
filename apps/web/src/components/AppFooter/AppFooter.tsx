@@ -54,8 +54,8 @@ const officialMapleStoryUrl = 'https://www.nexon.com/maplestory/';
 const officialNexonUrl = 'https://www.nexon.com/main/en';
 
 /**
- * The three official attribution links share an intentional new-tab decision
- * and its disclosure. Everything else in the legal copy is plain text.
+ * The two official attribution links share an intentional new-tab decision and
+ * its disclosure. Everything else in the legal copy is plain text.
  */
 function OfficialLink({
   href,
