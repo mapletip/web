@@ -54,8 +54,10 @@
     flex: 0 0 auto;
   }
 
-  .root[data-fill-height] .tableRegion {
-    flex: 1 1 0;
+  /* The table grows to its content and only shrinks when the bounded area cannot
+     hold it, so a short result set is not padded out with empty rows. */
+  .root[data-fill-height] .results > .tableRegion {
+    flex: 0 1 auto;
     min-height: 0;
   }
 

@@ -1273,6 +1273,69 @@ describe('integrated FacetedBrowser', () => {
     );
   });
 
+  it('does not stretch the table when a page of results is shorter than the space', async () => {
+    await page.viewport(1366, 768);
+    await render(
+      <MantineProvider>
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            display: 'grid',
+            gridTemplateRows: 'auto minmax(0, 1fr)',
+          }}
+        >
+          <header style={{ height: 64 }}>Site header</header>
+          <main style={{ minHeight: 0 }}>
+            <FacetedBrowser
+              title={<h1>Records</h1>}
+              records={demoRecords.slice(0, 8)}
+              columns={makeDemoColumns()}
+              idAccessor="id"
+              identityField="name"
+              presentation="comparison"
+              facets={facets}
+              queryFields={queryFields}
+              fillHeight
+              renderCard={(record) => <a href={record.href}>{record.name}</a>}
+              defaultState={{
+                search: '',
+                filters: {},
+                page: 1,
+                pageSize: 5,
+                hiddenColumns: [],
+              }}
+            />
+          </main>
+        </div>
+      </MantineProvider>,
+    );
+
+    const tableRegion = document.querySelector<HTMLElement>(
+      '[class*="tableRegion"]',
+    )!;
+    const table = document.querySelector<HTMLElement>(
+      '.mantine-datatable table',
+    )!;
+    const pagination = document.querySelector<HTMLElement>(
+      '[aria-label$="pages"]',
+    )!;
+
+    // Five rows do not fill the bounded area, so the region must hug the table
+    // instead of being padded out with empty space.
+    expect(tableRegion.getBoundingClientRect().height).toBeLessThanOrEqual(
+      table.getBoundingClientRect().height + 1,
+    );
+    // Pagination follows the table rather than being pinned to the viewport floor.
+    expect(
+      pagination.getBoundingClientRect().top -
+        tableRegion.getBoundingClientRect().bottom,
+    ).toBeLessThanOrEqual(32);
+    expect(document.documentElement.scrollHeight).toBeLessThanOrEqual(
+      window.innerHeight,
+    );
+  });
+
   it('keeps the rail in normal page flow inside a realistic page', async () => {
     await page.viewport(1440, 900);
     await render(
