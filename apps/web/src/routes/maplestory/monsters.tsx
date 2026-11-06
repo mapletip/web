@@ -8,6 +8,8 @@ import {
 import { loadMonsterBrowse } from '@/features/monsters/browse/load';
 import { monsterPageMetadata } from '@/features/monsters/browse/metadata';
 
+// The canonical URL is build-agnostic: it renders whichever build the shared
+// configuration designates as the default, so nothing here is named after one.
 const metadata = monsterPageMetadata(DEFAULT_BUILD_ID);
 
 export const Route = createFileRoute('/maplestory/monsters')({
@@ -19,11 +21,11 @@ export const Route = createFileRoute('/maplestory/monsters')({
       { name: 'description', content: metadata.description },
     ],
   }),
-  component: ClassicWorldMonsters,
+  component: MonsterBrowsePage,
   errorComponent: MonsterBrowseUnavailable,
 });
 
-function ClassicWorldMonsters() {
+function MonsterBrowsePage() {
   const rows = Route.useLoaderData();
 
   return <MonsterBrowse buildId={DEFAULT_BUILD_ID} rows={rows} />;
