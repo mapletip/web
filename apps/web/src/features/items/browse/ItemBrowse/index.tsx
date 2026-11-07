@@ -10,9 +10,9 @@ import { getCategoryRows } from '../categories';
 import { ItemBrowseCard } from '../ItemBrowseCard';
 import { itemPageMetadata } from '../metadata';
 import {
+  findItemNavNode,
   getItemNavTree,
   itemNavId,
-  itemScopeIcon,
   renderItemNavLink,
 } from '../navigation';
 import type { ItemRow } from '../project';
@@ -68,8 +68,9 @@ export function ItemBrowse({
   const navTree = useMemo(() => getItemNavTree(rows, buildId), [rows, buildId]);
 
   const currentId = itemNavId(category);
-  const currentCategoryLabel = category.child?.label ?? category.scope.label;
-  const currentScopeIcon = itemScopeIcon(category.scope.slug);
+  const currentNode = findItemNavNode(navTree, currentId) ?? navTree;
+  const currentCategoryLabel = currentNode.label;
+  const currentIcon = currentNode.icon;
 
   return (
     <BrowsePageShell>
@@ -78,7 +79,7 @@ export function ItemBrowse({
         navigation={{
           label: 'Item categories',
           currentLabel: currentCategoryLabel,
-          currentIcon: currentScopeIcon,
+          ...(currentIcon ? { currentIcon } : {}),
           render: ({ onNavigate }) => (
             <DrillDownNav
               root={navTree}

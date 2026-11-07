@@ -1,15 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
-import {
-  getCategoryCounts,
-  ITEM_SCOPES,
-  ITEM_SCOPE_SLUGS,
-} from '../categories';
+import { getCategoryCounts, ITEM_SCOPES } from '../categories';
 import {
   buildItemNavHref,
+  findItemNavNode,
   getItemNavTree,
   itemNavId,
-  itemScopeIcon,
 } from '../navigation';
 import type { ItemRow } from '../project';
 
@@ -199,16 +195,37 @@ describe('navigation', () => {
     });
   });
 
-  describe('itemScopeIcon', () => {
-    it('returns an img element with 20x20 sizing for each scope', () => {
-      for (const slug of ITEM_SCOPE_SLUGS) {
-        const icon = itemScopeIcon(slug);
-        expect(icon.type).toBe('img');
-        expect(icon.props.width).toBe(20);
-        expect(icon.props.height).toBe(20);
-        expect(icon.props.alt).toBe('');
-        expect(icon.props.src).toBeDefined();
-      }
+  describe('findItemNavNode', () => {
+    it('locates root node by id and provides its icon', () => {
+      const tree = getItemNavTree(dummyRows, 'cw-launch');
+      const node = findItemNavNode(tree, 'all');
+      expect(node).toBeDefined();
+      expect(node?.id).toBe('all');
+      expect(node?.label).toBe('All Items');
+      expect(node?.icon).toBeDefined();
+    });
+
+    it('locates scope node by id and provides its icon', () => {
+      const tree = getItemNavTree(dummyRows, 'cw-launch');
+      const node = findItemNavNode(tree, 'use');
+      expect(node).toBeDefined();
+      expect(node?.id).toBe('use');
+      expect(node?.label).toBe('Use');
+      expect(node?.icon).toBeDefined();
+    });
+
+    it('locates child node by id without icon', () => {
+      const tree = getItemNavTree(dummyRows, 'cw-launch');
+      const node = findItemNavNode(tree, 'use/recovery');
+      expect(node).toBeDefined();
+      expect(node?.id).toBe('use/recovery');
+      expect(node?.label).toBe('Recovery');
+      expect(node?.icon).toBeUndefined();
+    });
+
+    it('returns undefined for nonexistent id', () => {
+      const tree = getItemNavTree(dummyRows, 'cw-launch');
+      expect(findItemNavNode(tree, 'nonexistent')).toBeUndefined();
     });
   });
 });

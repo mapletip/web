@@ -42,9 +42,30 @@ const SCOPE_ICONS: Readonly<Record<ItemScopeSlug, string>> = {
 };
 
 /**
+ * Recursively locates a node by id in a DrillDownNode tree.
+ */
+export function findItemNavNode<TMeta = ItemNavRouteParams>(
+  root: DrillDownNode<TMeta>,
+  targetId: string,
+): DrillDownNode<TMeta> | undefined {
+  if (root.id === targetId) {
+    return root;
+  }
+  if (root.children) {
+    for (const child of root.children) {
+      const match = findItemNavNode(child, targetId);
+      if (match) {
+        return match;
+      }
+    }
+  }
+  return undefined;
+}
+
+/**
  * Renders the decorative icon for an item category scope.
  */
-export function itemScopeIcon(
+function itemScopeIcon(
   scopeSlug: ItemScopeSlug,
 ): ReactElement<ComponentProps<'img'>> {
   return (
