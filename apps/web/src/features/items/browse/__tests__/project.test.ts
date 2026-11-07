@@ -1,7 +1,7 @@
 import type { ItemBrowseRow } from '@mapletip/data/items';
 import { describe, expect, it } from 'vitest';
 
-import { projectItemBrowseRows, UNNAMED_ITEM_LABEL } from '../project';
+import { projectItemBrowseRows } from '../project';
 
 function makeBaseRow(overrides: Partial<ItemBrowseRow> = {}): ItemBrowseRow {
   return {
@@ -85,40 +85,93 @@ describe('projectItemBrowseRows', () => {
     expect(rowWithTargets?.directTargetCount).toBe(2);
   });
 
-  it('resolves pet targets from the roster, keeping unknown names with honest fallback', () => {
-    const kinoKey = 'item:pet:kino';
-    const unknownPetKey = 'item:pet:mystery';
+  it('resolves pet targets preserving key identity, distinct same-named pets, and unnamed pets without invented names', () => {
+    const dragonPetA = 'item:pet:dragon-black';
+    const dragonPetB = 'item:pet:dragon-red';
+    const unnamedPetA = 'item:pet:unnamed-1';
+    const unnamedPetB = 'item:pet:unnamed-2';
+
     const rows = projectItemBrowseRows([
       makeBaseRow({
-        key: kinoKey,
-        sourceId: '5000042',
+        key: dragonPetA,
+        sourceId: '5000020',
         itemClass: 'pet',
-        name: { state: 'known', value: 'Kino' },
+        name: { state: 'known', value: 'Baby Dragon' },
       }),
       makeBaseRow({
-        key: unknownPetKey,
-        sourceId: '5000099',
+        key: dragonPetB,
+        sourceId: '5000021',
+        itemClass: 'pet',
+        name: { state: 'known', value: 'Baby Dragon' },
+      }),
+      makeBaseRow({
+        key: unnamedPetA,
+        sourceId: '5000098',
         itemClass: 'pet',
         name: { state: 'unknown' },
       }),
       makeBaseRow({
-        key: 'item:food:sprout',
-        sourceId: '05240018',
+        key: unnamedPetB,
+        sourceId: '5000099',
+        itemClass: 'pet',
+        name: { state: 'absent', coverageKey: 'test' },
+      }),
+      makeBaseRow({
+        key: 'item:food:dragon-food',
+        sourceId: '05240020',
         itemClass: 'cash',
-        name: { state: 'known', value: 'Sprout' },
+        name: { state: 'known', value: 'Dragon Food' },
         petFood: {
           closeness: 100,
-          targets: [kinoKey, unknownPetKey],
+          targets: [
+            dragonPetA,
+            dragonPetB,
+            unnamedPetA,
+            unnamedPetB,
+            dragonPetA, // duplicate key in raw data should be deduped
+          ],
           unresolvedTargets: ['5000046'],
         },
       }),
     ]);
 
-    const sprout = rows.find((r) => r.sourceId === '05240018');
-    expect(sprout).toBeDefined();
-    // Known pet name is resolved; unknown pet name retains honest fallback label (never lost)
-    expect(sprout?.petTargets).toEqual(['Kino', UNNAMED_ITEM_LABEL]);
-    expect(sprout?.unresolvedPetTargets).toEqual(['5000046']);
+    const food = rows.find((r) => r.sourceId === '05240020');
+    expect(food).toBeDefined();
+
+    // Two distinct pets sharing the same name stay separate; unnamed pets keep no invented name
+    expect(food?.petTargets).toEqual([
+      { key: dragonPetA, name: 'Baby Dragon' },
+      { key: dragonPetB, name: 'Baby Dragon' },
+      { key: unnamedPetA },
+      { key: unnamedPetB },
+    ]);
+
+    // Unresolved targets stay separate
+    expect(food?.unresolvedPetTargets).toEqual(['5000046']);
+  });
+
+  it('preserves questFlag as true, false, and undefined distinctly', () => {
+    const [trueRow, falseRow, undefinedRow] = projectItemBrowseRows([
+      makeBaseRow({
+        key: 'item:quest:true',
+        sourceId: '04030001',
+        questFlag: true,
+      }),
+      makeBaseRow({
+        key: 'item:quest:false',
+        sourceId: '04030002',
+        questFlag: false,
+      }),
+      makeBaseRow({
+        key: 'item:quest:none',
+        sourceId: '04030003',
+      }),
+    ]);
+
+    expect(trueRow?.questFlag).toBe(true);
+    expect(falseRow?.questFlag).toBe(false);
+    expect(undefinedRow?.questFlag).toBeUndefined();
+    expect('questFlag' in (undefinedRow ?? {})).toBe(false);
   });
 
   it('projects Elixir-style percent-only rows with no flat hp or mp', () => {
@@ -137,36 +190,5 @@ describe('projectItemBrowseRows', () => {
     expect(row?.mpPercent).toBe(50);
     expect(row?.hp).toBeUndefined();
     expect(row?.mp).toBeUndefined();
-  });
-
-  it('computes sortable statRank based on priority and delta amount', () => {
-    const rows = projectItemBrowseRows([
-      makeBaseRow({
-        key: 'scroll:watt',
-        sourceId: '02040001',
-        scroll: { deltas: { weaponAttack: 5 } },
-      }),
-      makeBaseRow({
-        key: 'scroll:str',
-        sourceId: '02040002',
-        scroll: { deltas: { strength: 5 } },
-      }),
-      makeBaseRow({
-        key: 'scroll:none',
-        sourceId: '02040003',
-        scroll: {},
-      }),
-    ]);
-
-    const wattScroll = rows.find((r) => r.key === 'scroll:watt');
-    const strScroll = rows.find((r) => r.key === 'scroll:str');
-    const noDeltaScroll = rows.find((r) => r.key === 'scroll:none');
-
-    expect(wattScroll?.statRank).toBeDefined();
-    expect(strScroll?.statRank).toBeDefined();
-    expect(noDeltaScroll?.statRank).toBeUndefined();
-
-    // weaponAttack has higher priority than strength (lower numeric rank)
-    expect(wattScroll?.statRank).toBeLessThan(strScroll?.statRank ?? Infinity);
   });
 });

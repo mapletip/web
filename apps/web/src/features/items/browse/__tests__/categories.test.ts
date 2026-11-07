@@ -31,11 +31,24 @@ describe('category model and predicates', () => {
     expect(isItemScope('cash')).toBe(true);
     expect(isItemScope('invalid')).toBe(false);
 
-    expect(ITEM_SCOPES.use.children.some((c) => c.slug === 'upgrade-scrolls')).toBe(true);
-    expect(ITEM_SCOPES.use.children.some((c) => c.slug === 'other-use-items')).toBe(true);
-    expect(ITEM_SCOPES.use.children.some((c) => c.slug === 'chairs')).toBe(false);
-    expect(ITEM_SCOPES.etc.children.some((c) => c.slug === 'quest-items')).toBe(true);
-    expect(ITEM_SCOPES.setup.children.some((c) => c.slug === 'chairs')).toBe(true);
+    expect(
+      ITEM_SCOPES.use.children.some((c) => c.slug === 'upgrade-scrolls'),
+    ).toBe(true);
+    expect(ITEM_SCOPES.use.children.some((c) => c.slug === 'skill-items')).toBe(
+      true,
+    );
+    expect(
+      ITEM_SCOPES.use.children.some((c) => c.slug === 'other-use-items'),
+    ).toBe(true);
+    expect(ITEM_SCOPES.use.children.some((c) => c.slug === 'chairs')).toBe(
+      false,
+    );
+    expect(ITEM_SCOPES.etc.children.some((c) => c.slug === 'quest-items')).toBe(
+      true,
+    );
+    expect(ITEM_SCOPES.setup.children.some((c) => c.slug === 'chairs')).toBe(
+      true,
+    );
     expect(ITEM_SCOPES.cash.children.some((c) => c.slug === 'pets')).toBe(true);
   });
 
@@ -117,6 +130,19 @@ describe('category model and predicates', () => {
     expect(potionRows).toHaveLength(1);
     expect(foodBuffRows).toHaveLength(1);
     expect(recoveryRows).toHaveLength(1);
+  });
+
+  it('matches skill items by the skill function', () => {
+    const skillItem = makeRow({
+      key: 'item:skill:1',
+      sourceId: '02280000',
+      itemClass: 'consume',
+      functions: ['skill'],
+    });
+    const child = findChild(ITEM_SCOPES.use, 'skill-items');
+    expect(child).toBeDefined();
+    expect(child?.label).toBe('Skill Items');
+    expect(child?.kind === 'positive' && child.matches(skillItem)).toBe(true);
   });
 
   it('computes Other as the complement of the union of positive children', () => {
