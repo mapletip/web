@@ -1,0 +1,104 @@
+.nav {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.item {
+  display: flex;
+  width: 100%;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: 28px;
+  padding-block: 4px;
+  padding-inline: var(--mantine-spacing-sm);
+  border-radius: var(--mantine-radius-sm);
+  color: var(--mapletip-color-ink);
+  text-decoration: none;
+  font-size: var(--mantine-font-size-sm);
+  line-height: 1.4;
+  transition:
+    background-color 150ms ease,
+    color 150ms ease;
+}
+
+.row:hover {
+  background-color: var(--mapletip-color-hover);
+}
+
+.rowContent {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  gap: var(--mantine-spacing-xs);
+}
+
+.backArrow {
+  display: inline-flex;
+  flex: none;
+  color: var(--mapletip-color-muted);
+}
+
+.icon {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+}
+
+.label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.count {
+  flex: none;
+  font-size: var(--mantine-font-size-xs);
+  color: var(--mapletip-color-muted);
+}
+
+.countDimmed {
+  flex: none;
+  font-size: var(--mantine-font-size-xs);
+  color: var(--mantine-color-dimmed);
+}
+
+.currentRow {
+  background-color: var(--mapletip-color-selection) !important;
+  color: var(--mapletip-color-brand-text) !important;
+  font-weight: 600;
+}
+
+.currentRow .count,
+.currentRow .label {
+  color: var(--mapletip-color-brand-text) !important;
+}
+
+.childRow {
+  padding-inline-start: calc(var(--mantine-spacing-sm) + 16px);
+  color: var(--mapletip-color-muted);
+}
+
+.childRow:hover {
+  color: var(--mapletip-color-ink);
+}
+
+.ancestorRow {
+  color: var(--mapletip-color-ink);
+}

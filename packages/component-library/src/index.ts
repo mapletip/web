@@ -24,6 +24,13 @@ export type {
   HeaderProps,
   HeaderSubLink,
 } from '@/components/Header';
+export { DrillDownNav } from '@/components/DrillDownNav';
+export type {
+  DrillDownLinkRenderer,
+  DrillDownLinkRenderProps,
+  DrillDownNavProps,
+  DrillDownNode,
+} from '@/components/DrillDownNav';
 export { FacetedBrowser } from '@/components/FacetedBrowser';
 export type {
   BrowseState,
