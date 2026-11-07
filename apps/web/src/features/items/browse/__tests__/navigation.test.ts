@@ -1,7 +1,16 @@
 import { describe, expect, it } from 'vitest';
 
-import { getCategoryCounts, ITEM_SCOPES } from '../categories';
-import { buildItemNavHref, getItemNavTree, itemNavId } from '../navigation';
+import {
+  getCategoryCounts,
+  ITEM_SCOPES,
+  ITEM_SCOPE_SLUGS,
+} from '../categories';
+import {
+  buildItemNavHref,
+  getItemNavTree,
+  itemNavId,
+  itemScopeIcon,
+} from '../navigation';
 import type { ItemRow } from '../project';
 
 describe('navigation', () => {
@@ -187,6 +196,19 @@ describe('navigation', () => {
         scope: 'use',
         child: 'bullets',
       });
+    });
+  });
+
+  describe('itemScopeIcon', () => {
+    it('returns an img element with 20x20 sizing for each scope', () => {
+      for (const slug of ITEM_SCOPE_SLUGS) {
+        const icon = itemScopeIcon(slug);
+        expect(icon.type).toBe('img');
+        expect(icon.props.width).toBe(20);
+        expect(icon.props.height).toBe(20);
+        expect(icon.props.alt).toBe('');
+        expect(icon.props.src).toBeDefined();
+      }
     });
   });
 });

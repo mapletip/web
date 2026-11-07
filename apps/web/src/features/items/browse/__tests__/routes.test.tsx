@@ -8,6 +8,7 @@ import { render, screen } from '@testing-library/react';
 import { renderToString } from 'react-dom/server';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import useIcon from '@/assets/maplestory/navigation/items-use-red-potion.png?no-inline';
 import { routeTree } from '@/routeTree.gen';
 
 import { ITEM_SCOPES } from '../categories';
@@ -277,6 +278,7 @@ describe('Items Browse route integration', () => {
       });
       expect(navChip).toBeVisible();
       expect(navChip.textContent).toContain(currentLabel);
+      expect(navChip.querySelector('img')).not.toBeNull();
 
       // Verify "Filters" button is absent when facets are empty
       expect(
@@ -284,6 +286,29 @@ describe('Items Browse route integration', () => {
       ).not.toBeInTheDocument();
     });
   }
+
+  it('renders the mobile navigation chip with the Use icon in SSR for /maplestory/items/use/recovery', async () => {
+    const history = createMemoryHistory({
+      initialEntries: ['/maplestory/items/use/recovery'],
+    });
+    const router = createRouter({ routeTree, history });
+    await router.load();
+
+    const html = renderToString(
+      <MantineProvider>
+        <RouterProvider router={router} />
+      </MantineProvider>,
+    );
+
+    // Verify the chip button exists with Recovery accessible name
+    expect(html).toContain('Item categories: Recovery. Open Item categories');
+    // Verify the chip button includes the Use scope icon
+    const chipMatch = html.match(
+      /<button[^>]*aria-label="Item categories: Recovery\. Open Item categories"[^>]*>([\s\S]*?)<\/button>/,
+    );
+    expect(chipMatch).not.toBeNull();
+    expect(chipMatch?.[1]).toContain(useIcon);
+  });
 
   it('CW /maplestory/items/use/bullets renders 200 with Bullets as current (0) plus ← All Items, ← Use', async () => {
     const url = '/maplestory/items/use/bullets';

@@ -1,4 +1,5 @@
 import { Alert, Box, Button, Text, Title } from '@mantine/core';
+import { Sparkle } from '@phosphor-icons/react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { useMemo, useState } from 'react';
 import { expect, screen, userEvent, waitFor, within } from 'storybook/test';
@@ -382,6 +383,7 @@ const demoNavTree: DrillDownNode = {
       id: 'featured',
       label: 'Featured',
       href: '#featured',
+      icon: <Sparkle size={20} aria-hidden="true" />,
       count: 8,
       children: [
         { id: 'spotlight', label: 'Spotlight', href: '#spotlight', count: 3 },
@@ -403,6 +405,7 @@ export const RailNavigationSlot: Story = {
       navigation={{
         label: 'Categories',
         currentLabel: 'Featured',
+        currentIcon: <Sparkle size={20} aria-hidden="true" />,
         render: ({ onNavigate }) => (
           <DrillDownNav
             root={demoNavTree}

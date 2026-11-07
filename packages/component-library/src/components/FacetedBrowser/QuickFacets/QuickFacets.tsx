@@ -1,6 +1,6 @@
 import { Button, Scroller } from '@mantine/core';
 import { CaretDown } from '@phosphor-icons/react';
-import type { ReactElement } from 'react';
+import type { ReactElement, ReactNode } from 'react';
 
 import classes from '@/components/FacetedBrowser/QuickFacets/QuickFacets.module.css';
 
@@ -13,6 +13,7 @@ export interface QuickFacet {
 export interface QuickFacetsNavigation {
   readonly label: string;
   readonly currentLabel: string;
+  readonly currentIcon?: ReactNode;
   readonly onOpen: () => void;
 }
 
@@ -41,6 +42,15 @@ export function QuickFacets({
       {navigation ? (
         <Button
           variant="default"
+          {...(navigation.currentIcon
+            ? {
+                leftSection: (
+                  <span className={classes['icon']} aria-hidden="true">
+                    {navigation.currentIcon}
+                  </span>
+                ),
+              }
+            : {})}
           rightSection={<CaretDown size={14} aria-hidden="true" />}
           aria-label={`${navigation.label}: ${navigation.currentLabel}. Open ${navigation.label}`}
           onClick={navigation.onOpen}

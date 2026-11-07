@@ -432,6 +432,9 @@ export function FacetedBrowser<TRecord extends Record<string, unknown>>(
                     navigation: {
                       label: navigation.label,
                       currentLabel: navigation.currentLabel,
+                      ...(navigation.currentIcon
+                        ? { currentIcon: navigation.currentIcon }
+                        : {}),
                       onOpen: openNavDrawer,
                     },
                   }

@@ -9,7 +9,12 @@ import { BUILDS, type BuildId } from '@/config/maplekit';
 import { getCategoryRows } from '../categories';
 import { ItemBrowseCard } from '../ItemBrowseCard';
 import { itemPageMetadata } from '../metadata';
-import { getItemNavTree, itemNavId, renderItemNavLink } from '../navigation';
+import {
+  getItemNavTree,
+  itemNavId,
+  itemScopeIcon,
+  renderItemNavLink,
+} from '../navigation';
 import type { ItemRow } from '../project';
 import type { ItemCategorySelection } from '../routing';
 
@@ -64,6 +69,7 @@ export function ItemBrowse({
 
   const currentId = itemNavId(category);
   const currentCategoryLabel = category.child?.label ?? category.scope.label;
+  const currentScopeIcon = itemScopeIcon(category.scope.slug);
 
   return (
     <BrowsePageShell>
@@ -72,6 +78,7 @@ export function ItemBrowse({
         navigation={{
           label: 'Item categories',
           currentLabel: currentCategoryLabel,
+          currentIcon: currentScopeIcon,
           render: ({ onNavigate }) => (
             <DrillDownNav
               root={navTree}

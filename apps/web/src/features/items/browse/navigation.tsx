@@ -6,7 +6,7 @@ import type {
   DrillDownNode,
 } from '@mapletip/component-library';
 import { Link } from '@tanstack/react-router';
-import type { ReactElement, ReactNode } from 'react';
+import type { ComponentProps, ReactElement, ReactNode } from 'react';
 
 import allItemsIcon from '@/assets/maplestory/navigation/items-all-meso-pouch.png?no-inline';
 import cashIcon from '@/assets/maplestory/navigation/items-cash-pet-brown-puppy.png?no-inline';
@@ -41,10 +41,15 @@ const SCOPE_ICONS: Readonly<Record<ItemScopeSlug, string>> = {
   cash: cashIcon,
 };
 
-function renderScopeIcon(src: string): ReactElement {
+/**
+ * Renders the decorative icon for an item category scope.
+ */
+export function itemScopeIcon(
+  scopeSlug: ItemScopeSlug,
+): ReactElement<ComponentProps<'img'>> {
   return (
     <img
-      src={src}
+      src={SCOPE_ICONS[scopeSlug]}
       alt=""
       width={20}
       height={20}
@@ -127,7 +132,7 @@ export function getItemNavTree(
         id: scopeSlug,
         label: scopeObj.label,
         href: buildItemNavHref(scopeParams),
-        icon: renderScopeIcon(SCOPE_ICONS[scopeSlug]),
+        icon: itemScopeIcon(scopeSlug),
         count: scopeCounts.total,
         meta: scopeParams,
         children: childNodes,
@@ -143,7 +148,7 @@ export function getItemNavTree(
     id: 'all',
     label: ITEM_SCOPES.all.label,
     href: buildItemNavHref(rootParams),
-    icon: renderScopeIcon(SCOPE_ICONS.all),
+    icon: itemScopeIcon('all'),
     count: counts.all.total,
     meta: rootParams,
     children: scopeNodes,

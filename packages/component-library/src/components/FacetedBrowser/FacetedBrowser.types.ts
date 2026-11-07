@@ -8,6 +8,10 @@ import type { TableColumn } from '@/components/Table';
 export interface FacetedBrowserNavigation {
   readonly label: string;
   readonly currentLabel: string;
+  /**
+   * Decorative icon for the current navigation node, shown on the mobile chip.
+   */
+  readonly currentIcon?: ReactNode;
   readonly render: (context: {
     readonly onNavigate: (() => void) | undefined;
   }) => ReactNode;

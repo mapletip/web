@@ -467,6 +467,78 @@ describe('responsive navigation slot', () => {
     ).not.toBeInTheDocument();
   });
 
+  it('renders navigation chip with decorative currentIcon when given, keeping accessible name unchanged', () => {
+    render(
+      <MantineProvider>
+        <FacetedBrowser
+          title={<h1>Catalog</h1>}
+          records={demoRecords}
+          idAccessor="id"
+          facets={[]}
+          navigation={{
+            label: genericNavigation.label,
+            currentLabel: genericNavigation.subCategoryLabel,
+            currentIcon: <span data-testid="chip-icon">custom-icon</span>,
+            render: () => <div>Nav Body</div>,
+          }}
+          presentation="cards"
+          renderCard={(record) => <div>{record.name}</div>}
+          defaultState={{
+            search: '',
+            filters: {},
+            page: 1,
+            pageSize: 20,
+            hiddenColumns: [],
+          }}
+        />
+      </MantineProvider>,
+    );
+
+    const navChip = screen.getByRole('button', {
+      name: `${genericNavigation.label}: ${genericNavigation.subCategoryLabel}. Open ${genericNavigation.label}`,
+    });
+    expect(navChip).toBeVisible();
+    expect(navChip.textContent).toContain(genericNavigation.subCategoryLabel);
+
+    const iconWrapper = navChip.querySelector('[class*="icon"]');
+    expect(iconWrapper).toBeInTheDocument();
+    expect(iconWrapper).toHaveAttribute('aria-hidden', 'true');
+    expect(screen.getByTestId('chip-icon')).toBeInTheDocument();
+  });
+
+  it('renders navigation chip without icon when currentIcon is omitted', () => {
+    render(
+      <MantineProvider>
+        <FacetedBrowser
+          title={<h1>Catalog</h1>}
+          records={demoRecords}
+          idAccessor="id"
+          facets={[]}
+          navigation={{
+            label: genericNavigation.label,
+            currentLabel: genericNavigation.subCategoryLabel,
+            render: () => <div>Nav Body</div>,
+          }}
+          presentation="cards"
+          renderCard={(record) => <div>{record.name}</div>}
+          defaultState={{
+            search: '',
+            filters: {},
+            page: 1,
+            pageSize: 20,
+            hiddenColumns: [],
+          }}
+        />
+      </MantineProvider>,
+    );
+
+    const navChip = screen.getByRole('button', {
+      name: `${genericNavigation.label}: ${genericNavigation.subCategoryLabel}. Open ${genericNavigation.label}`,
+    });
+    expect(navChip).toBeVisible();
+    expect(navChip.querySelector('[class*="icon"]')).toBeNull();
+  });
+
   it('renders Filters button when facets are present but none are quick', () => {
     const nonQuickFacets = facets.map((f) => ({ ...f, quick: false }));
     render(
