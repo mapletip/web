@@ -1,0 +1,68 @@
+.railNav {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+}
+
+.childrenContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.navLink {
+  padding-top: 4px;
+  padding-bottom: 4px;
+  min-height: 28px;
+  border-radius: var(--mantine-radius-sm);
+  color: var(--mapletip-color-ink);
+  transition:
+    background-color 150ms ease,
+    color 150ms ease;
+}
+
+.navLink:hover {
+  background-color: var(--mapletip-color-hover);
+}
+
+.navLink[data-active='true'],
+.navLink[aria-current='page'] {
+  background-color: var(--mapletip-color-selection) !important;
+  color: var(--mapletip-color-brand-text) !important;
+  font-weight: 600;
+}
+
+.navLink[data-active='true'] span,
+.navLink[aria-current='page'] span {
+  color: var(--mapletip-color-brand-text) !important;
+}
+
+.childNavLink {
+  padding-top: 2px;
+  padding-bottom: 2px;
+  padding-left: calc(var(--mantine-spacing-md) + 16px);
+  min-height: 24px;
+  border-radius: var(--mantine-radius-sm);
+  color: var(--mapletip-color-muted);
+  transition:
+    background-color 150ms ease,
+    color 150ms ease;
+}
+
+.childNavLink:hover {
+  background-color: var(--mapletip-color-hover);
+  color: var(--mapletip-color-ink);
+}
+
+.childNavLink[data-active='true'],
+.childNavLink[aria-current='page'] {
+  background-color: var(--mapletip-color-selection) !important;
+  color: var(--mapletip-color-brand-text) !important;
+  font-weight: 600;
+}
+
+.childNavLink[data-active='true'] span,
+.childNavLink[aria-current='page'] span {
+  color: var(--mapletip-color-brand-text) !important;
+}
