@@ -80,3 +80,15 @@ export function parseItemRouteParams(params: ItemRouteParams): ParsedItemRoute {
 
   return { buildId, category: { scope: scopeObj } };
 }
+
+/**
+ * Shared category context key function used by facet and column tables.
+ * Returns `${scope.slug}:${child.slug}` for child categories or `${scope.slug}` for scope-level views.
+ */
+export function itemCategoryContextKey(
+  category: ItemCategorySelection,
+): string {
+  return category.child
+    ? `${category.scope.slug}:${category.child.slug}`
+    : category.scope.slug;
+}

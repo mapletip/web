@@ -1,0 +1,17 @@
+.box {
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  min-height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.icon {
+  width: 32px;
+  height: 32px;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}

@@ -32,6 +32,7 @@ export interface UseItemBrowseUrlStateResult {
 }
 
 const SEARCH_DEBOUNCE_MS = 150;
+const EMPTY_HIDDEN_COLUMNS: readonly string[] = [];
 
 export function useItemBrowseUrlState({
   searchProp,
@@ -46,9 +47,19 @@ export function useItemBrowseUrlState({
     [urlSearch, browseContext],
   );
 
+  const defaultHidden =
+    browseContext.defaultHiddenColumns ?? EMPTY_HIDDEN_COLUMNS;
+  const [prevDefaultHidden, setPrevDefaultHidden] = useState(defaultHidden);
+  const [hiddenColumns, setHiddenColumns] =
+    useState<readonly string[]>(defaultHidden);
+
+  if (prevDefaultHidden !== defaultHidden) {
+    setPrevDefaultHidden(defaultHidden);
+    setHiddenColumns(defaultHidden);
+  }
+
   const [prevUrlSearch, setPrevUrlSearch] = useState(urlDerivedState.search);
   const [localSearch, setLocalSearch] = useState(urlDerivedState.search);
-  const [hiddenColumns, setHiddenColumns] = useState<readonly string[]>([]);
   const debounceRef = useRef<NodeJS.Timeout | undefined>(undefined);
 
   if (prevUrlSearch !== urlDerivedState.search) {

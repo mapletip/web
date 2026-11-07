@@ -14,6 +14,11 @@ export const Route = createFileRoute('/maplestory/{-$buildId}/items')({
   },
   staleTime: Infinity,
   errorComponent: BrowseUnavailable,
+  pendingComponent: () => (
+    <div role="status" style={{ padding: '2rem', textAlign: 'center' }}>
+      Loading items…
+    </div>
+  ),
   component: ItemsLayout,
 });
 

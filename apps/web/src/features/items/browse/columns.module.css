@@ -1,0 +1,27 @@
+.identity {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.identityText {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.identityName {
+  font-weight: 600;
+  line-height: 1.3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.identityId {
+  font-size: 0.75rem;
+  color: var(--mantine-color-dimmed);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+}
