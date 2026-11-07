@@ -129,7 +129,7 @@ export function SortSelect({
             onChange(opt.field, opt.direction);
           }
         }}
-        w={170}
+        w={{ base: '100%', md: 230 }}
       />
     </Group>
   );
