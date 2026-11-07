@@ -3,9 +3,11 @@ import { describe, expect, it } from 'vitest';
 import {
   getCategoryCounts,
   getCategoryRows,
+  getItemScope,
   getScopeRows,
   isItemScope,
   isItemScopeChild,
+  matchesCategory,
 } from '../categories';
 import type { ItemRow } from '../project';
 
@@ -70,7 +72,11 @@ describe('category model and predicates', () => {
       types: ['pet-food'],
     });
 
-    const petFoodRows = getCategoryRows([cashPetFood, usePetFood], 'use', 'pet-food');
+    const petFoodRows = getCategoryRows(
+      [cashPetFood, usePetFood],
+      'use',
+      'pet-food',
+    );
     expect(petFoodRows).toHaveLength(1);
     expect(petFoodRows[0]?.key).toBe('item:use:petfood');
   });
@@ -127,6 +133,34 @@ describe('category model and predicates', () => {
     for (const r of [...positivePotions, ...positiveScrolls]) {
       expect(otherKeys.has(r.key)).toBe(false);
     }
+  });
+
+  it('verifies single membership predicate matchesCategory handles positive and other children', () => {
+    const scope = getItemScope('use');
+    const potion = makeRow({
+      key: 'p1',
+      itemClass: 'consume',
+      types: ['potion'],
+    });
+    const misc = makeRow({ key: 'm1', itemClass: 'consume' });
+    const nonConsume = makeRow({
+      key: 'nc1',
+      itemClass: 'etc',
+      types: ['potion'],
+    });
+
+    const potionChild = scope.children.find((c) => c.slug === 'potions');
+    const otherChild = scope.children.find((c) => c.slug === 'other-use-items');
+
+    expect(matchesCategory(potion, scope, potionChild)).toBe(true);
+    expect(matchesCategory(potion, scope, otherChild)).toBe(false);
+
+    expect(matchesCategory(misc, scope, potionChild)).toBe(false);
+    expect(matchesCategory(misc, scope, otherChild)).toBe(true);
+
+    // Wrong item class never matches
+    expect(matchesCategory(nonConsume, scope, potionChild)).toBe(false);
+    expect(matchesCategory(nonConsume, scope, otherChild)).toBe(false);
   });
 
   it('returns an empty array for recognized zero-member children without failing', () => {

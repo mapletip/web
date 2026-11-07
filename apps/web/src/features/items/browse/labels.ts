@@ -33,28 +33,30 @@ export const ITEM_TYPE_LABELS: Readonly<Record<ItemBrowseType, string>> = {
   'meso-pouch': 'Meso Pouch',
 };
 
-export const ITEM_FUNCTION_LABELS: Readonly<Record<ItemBrowseFunction, string>> =
-  {
-    upgrade: 'Upgrade',
-    skill: 'Skill & Mastery',
-    summon: 'Summon',
-    'reward-container': 'Reward Container',
-    'monster-card': 'Monster Card',
-    readable: 'Book & Scroll',
-    pet: 'Pet',
-    recovery: 'Recovery',
-  };
+export const ITEM_FUNCTION_LABELS: Readonly<
+  Record<ItemBrowseFunction, string>
+> = {
+  upgrade: 'Upgrade',
+  skill: 'Skill & Mastery',
+  summon: 'Summon',
+  'reward-container': 'Reward Container',
+  'monster-card': 'Monster Card',
+  readable: 'Book & Scroll',
+  pet: 'Pet',
+  recovery: 'Recovery',
+};
 
-export const RELATIONSHIP_LABELS: Readonly<Record<ItemRelationshipKind, string>> =
-  {
-    'cash-shop-listing': 'Cash Shop Listing',
-    'found-in-container': 'Found in Container',
-    'made-by-recipe': 'Made by Recipe',
-    'monster-drop': 'Monster Drop',
-    'needed-for-quest': 'Needed for Quest',
-    'quest-reward': 'Quest Reward',
-    'used-in-recipe': 'Used in Recipe',
-  };
+export const RELATIONSHIP_LABELS: Readonly<
+  Record<ItemRelationshipKind, string>
+> = {
+  'cash-shop-listing': 'Cash Shop Listing',
+  'found-in-container': 'Found in Container',
+  'made-by-recipe': 'Made by Recipe',
+  'monster-drop': 'Monster Drop',
+  'needed-for-quest': 'Needed for Quest',
+  'quest-reward': 'Quest Reward',
+  'used-in-recipe': 'Used in Recipe',
+};
 
 export const UPGRADE_TARGET_LABELS: Readonly<
   Record<ItemBrowseUpgradeTarget, string>
@@ -92,13 +94,14 @@ export const UPGRADE_TARGET_LABELS: Readonly<
   wand: 'Wand',
 };
 
-export const UPGRADE_TIER_LABELS: Readonly<Record<ItemBrowseUpgradeTier, string>> =
-  {
-    lesser: 'Lesser',
-    intermediate: 'Intermediate',
-    greater: 'Greater',
-    chaos: 'Chaos',
-  };
+export const UPGRADE_TIER_LABELS: Readonly<
+  Record<ItemBrowseUpgradeTier, string>
+> = {
+  lesser: 'Lesser',
+  intermediate: 'Intermediate',
+  greater: 'Greater',
+  chaos: 'Chaos',
+};
 
 export const UPGRADE_SPECIAL_LABELS: Readonly<
   Record<ItemBrowseUpgradeSpecial, string>
@@ -130,33 +133,3 @@ export const SCROLL_STAT_LABELS: Readonly<Record<string, string>> = {
   craft: 'Craft',
   swim: 'Swim',
 };
-
-export function formatItemType(type: ItemBrowseType): string {
-  return ITEM_TYPE_LABELS[type] ?? type;
-}
-
-export function formatItemFunction(fn: ItemBrowseFunction): string {
-  return ITEM_FUNCTION_LABELS[fn] ?? fn;
-}
-
-export function formatRelationshipKind(kind: ItemRelationshipKind): string {
-  return RELATIONSHIP_LABELS[kind] ?? kind;
-}
-
-export function formatUpgradeTarget(target: ItemBrowseUpgradeTarget): string {
-  return UPGRADE_TARGET_LABELS[target] ?? target;
-}
-
-export function formatUpgradeTier(tier: ItemBrowseUpgradeTier): string {
-  return UPGRADE_TIER_LABELS[tier] ?? tier;
-}
-
-export function formatUpgradeSpecial(
-  special: ItemBrowseUpgradeSpecial,
-): string {
-  return UPGRADE_SPECIAL_LABELS[special] ?? special;
-}
-
-export function formatScrollStat(stat: string): string {
-  return SCROLL_STAT_LABELS[stat] ?? stat;
-}

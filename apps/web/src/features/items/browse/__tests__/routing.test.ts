@@ -1,20 +1,19 @@
 import { describe, expect, it } from 'vitest';
 
-import { ITEM_SCOPES } from '../categories';
 import { parseItemRouteParams } from '../routing';
 
 describe('parseItemRouteParams', () => {
   it('parses unversioned root route params to default build and all items', () => {
     expect(parseItemRouteParams({})).toEqual({
       buildId: 'cw-launch',
-      category: { scope: ITEM_SCOPES.all },
+      category: { scope: 'all' },
     });
   });
 
   it('parses valid versioned root route params', () => {
     expect(parseItemRouteParams({ buildId: 'gms-v83' })).toEqual({
       buildId: 'gms-v83',
-      category: { scope: ITEM_SCOPES.all },
+      category: { scope: 'all' },
     });
   });
 
@@ -23,14 +22,11 @@ describe('parseItemRouteParams', () => {
       parseItemRouteParams({
         buildId: 'gms-v83',
         scope: 'use',
-        child: 'buffs',
+        child: 'potions',
       }),
     ).toEqual({
       buildId: 'gms-v83',
-      category: {
-        scope: ITEM_SCOPES.use,
-        child: ITEM_SCOPES.use.children.find((c) => c.slug === 'buffs'),
-      },
+      category: { scope: 'use', childSlug: 'potions' },
     });
 
     expect(
@@ -40,10 +36,7 @@ describe('parseItemRouteParams', () => {
       }),
     ).toEqual({
       buildId: 'cw-launch',
-      category: {
-        scope: ITEM_SCOPES.setup,
-        child: ITEM_SCOPES.setup.children.find((c) => c.slug === 'chairs'),
-      },
+      category: { scope: 'setup', childSlug: 'chairs' },
     });
   });
 
@@ -66,16 +59,7 @@ describe('parseItemRouteParams', () => {
     ).toThrow();
   });
 
-  it('throws notFound for deprecated category slugs', () => {
-    expect(() =>
-      parseItemRouteParams({ scope: 'use', child: 'upgrade-scrolls' }),
-    ).toThrow();
-    expect(() =>
-      parseItemRouteParams({ scope: 'etc', child: 'monster-materials' }),
-    ).toThrow();
-  });
-
   it('throws notFound for child without scope', () => {
-    expect(() => parseItemRouteParams({ child: 'buffs' })).toThrow();
+    expect(() => parseItemRouteParams({ child: 'potions' })).toThrow();
   });
 });

@@ -6,20 +6,16 @@ import { useMemo, type ReactElement } from 'react';
 import { BrowsePageShell } from '@/components/BrowsePageShell';
 import { BUILDS, type BuildId } from '@/config/maplekit';
 
-import {
-  getCategoryRows,
-  getItemScope,
-  getItemScopeChild,
-  type ItemScopeSlug,
-} from '../categories';
+import { getCategoryRows } from '../categories';
 import { ItemBrowseCard } from '../ItemBrowseCard';
+import { itemPageMetadata } from '../metadata';
 import type { ItemRow } from '../project';
+import type { ItemCategorySelection } from '../routing';
 
 export interface ItemBrowseProps {
   readonly buildId: BuildId;
   readonly rows: readonly ItemRow[];
-  readonly scope?: ItemScopeSlug;
-  readonly childSlug?: string;
+  readonly category: ItemCategorySelection;
 }
 
 export const itemBrowseColumns: readonly TableColumn<ItemRow>[] = [
@@ -44,48 +40,29 @@ const defaultState: BrowseState = {
   filters: {},
   sort: { field: 'name', direction: 'asc' },
   page: 1,
-  pageSize: 25,
+  pageSize: 50,
   hiddenColumns: [],
 };
 
 const SUMMARY_NOUN = { one: 'Item', other: 'Items' } as const;
 
-export function computeItemBrowseTitle(
-  buildLabel: string,
-  scope?: ItemScopeSlug,
-  childSlug?: string,
-): string {
-  if (scope && childSlug) {
-    const child = getItemScopeChild(scope, childSlug);
-    if (child) {
-      return `MapleStory ${buildLabel} ${child.label}`;
-    }
-  }
-  if (scope && scope !== 'all') {
-    const sc = getItemScope(scope);
-    return `MapleStory ${buildLabel} ${sc.label} Items`;
-  }
-  return `MapleStory ${buildLabel} Items`;
-}
-
 export function ItemBrowse({
   buildId,
   rows,
-  scope,
-  childSlug,
+  category,
 }: ItemBrowseProps): ReactElement {
   const label = BUILDS[buildId].label;
-  const title = computeItemBrowseTitle(label, scope, childSlug);
+  const { heading } = itemPageMetadata(buildId, category);
 
   const scopedRows = useMemo(
-    () => getCategoryRows(rows, scope ?? 'all', childSlug),
-    [rows, scope, childSlug],
+    () => getCategoryRows(rows, category.scope, category.childSlug),
+    [rows, category.scope, category.childSlug],
   );
 
   return (
     <BrowsePageShell>
       <FacetedBrowser
-        title={<Title order={1}>{title}</Title>}
+        title={<Title order={1}>{heading}</Title>}
         records={scopedRows}
         idAccessor="key"
         identityField="name"
@@ -95,7 +72,7 @@ export function ItemBrowse({
         recordNoun={`${label} items`}
         summaryMode="total"
         summaryNoun={SUMMARY_NOUN}
-        pageSizeOptions={[25, 50, 100]}
+        pageSizeOptions={[25, 50, 75, 100]}
         presentation="comparison"
         fillHeight
         tableStorageKey={`mapletip:web:items:${buildId}:v1`}

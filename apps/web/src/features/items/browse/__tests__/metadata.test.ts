@@ -1,11 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
-import { ITEM_SCOPES } from '../categories';
 import { itemPageMetadata } from '../metadata';
 
 describe('itemPageMetadata', () => {
   it('generates canonical all items metadata', () => {
-    const meta = itemPageMetadata('cw-launch', { scope: ITEM_SCOPES.all });
+    const meta = itemPageMetadata('cw-launch', { scope: 'all' });
     expect(meta).toEqual({
       heading: 'MapleStory Classic World Items',
       title: 'MapleStory Classic World Items – MapleTip',
@@ -14,7 +13,7 @@ describe('itemPageMetadata', () => {
   });
 
   it('generates versioned scope metadata', () => {
-    const meta = itemPageMetadata('gms-v83', { scope: ITEM_SCOPES.use });
+    const meta = itemPageMetadata('gms-v83', { scope: 'use' });
     expect(meta).toEqual({
       heading: 'MapleStory GMS v83 Use Items',
       title: 'MapleStory GMS v83 Use Items – MapleTip',
@@ -23,27 +22,21 @@ describe('itemPageMetadata', () => {
   });
 
   it('generates versioned child metadata', () => {
-    const child = ITEM_SCOPES.use.children.find((c) => c.slug === 'buffs');
-    expect(child).toBeDefined();
-    if (!child) return;
     const meta = itemPageMetadata('gms-v83', {
-      scope: ITEM_SCOPES.use,
-      child,
+      scope: 'use',
+      childSlug: 'potions',
     });
     expect(meta).toEqual({
-      heading: 'MapleStory GMS v83 Buffs',
-      title: 'MapleStory GMS v83 Buffs – MapleTip',
-      description: 'Browse GMS v83 buffs in MapleStory.',
+      heading: 'MapleStory GMS v83 Potions',
+      title: 'MapleStory GMS v83 Potions – MapleTip',
+      description: 'Browse GMS v83 potions in MapleStory.',
     });
   });
 
   it('generates canonical child metadata', () => {
-    const child = ITEM_SCOPES.setup.children.find((c) => c.slug === 'chairs');
-    expect(child).toBeDefined();
-    if (!child) return;
     const meta = itemPageMetadata('cw-launch', {
-      scope: ITEM_SCOPES.setup,
-      child,
+      scope: 'setup',
+      childSlug: 'chairs',
     });
     expect(meta).toEqual({
       heading: 'MapleStory Classic World Chairs',

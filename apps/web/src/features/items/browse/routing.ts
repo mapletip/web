@@ -9,11 +9,10 @@ import {
   type BuildId,
 } from '@/config/maplekit';
 
-import { isItemScope } from './assignment';
 import {
-  ITEM_SCOPES,
-  type ItemCategoryChild,
-  type ItemCategoryScope,
+  isItemScope,
+  isItemScopeChild,
+  type ItemScopeSlug,
 } from './categories';
 
 export interface ItemRouteParams {
@@ -23,8 +22,8 @@ export interface ItemRouteParams {
 }
 
 export interface ItemCategorySelection {
-  readonly scope: ItemCategoryScope;
-  readonly child?: ItemCategoryChild | undefined;
+  readonly scope: ItemScopeSlug;
+  readonly childSlug?: string;
 }
 
 export interface ParsedItemRoute {
@@ -54,7 +53,7 @@ export function parseItemRouteParams(params: ItemRouteParams): ParsedItemRoute {
       // eslint-disable-next-line @typescript-eslint/only-throw-error
       throw notFound();
     }
-    return { buildId, category: { scope: ITEM_SCOPES.all } };
+    return { buildId, category: { scope: 'all' } };
   }
 
   if (scope === 'all') {
@@ -67,16 +66,13 @@ export function parseItemRouteParams(params: ItemRouteParams): ParsedItemRoute {
     throw notFound();
   }
 
-  const scopeObj = ITEM_SCOPES[scope];
-
   if (child !== undefined) {
-    const childObj = scopeObj.children.find((c) => c.slug === child);
-    if (!childObj) {
+    if (!isItemScopeChild(scope, child)) {
       // eslint-disable-next-line @typescript-eslint/only-throw-error
       throw notFound();
     }
-    return { buildId, category: { scope: scopeObj, child: childObj } };
+    return { buildId, category: { scope, childSlug: child } };
   }
 
-  return { buildId, category: { scope: scopeObj } };
+  return { buildId, category: { scope } };
 }
