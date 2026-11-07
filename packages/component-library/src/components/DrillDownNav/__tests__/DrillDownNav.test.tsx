@@ -166,7 +166,7 @@ describe('DrillDownNav component', () => {
 
     const links = screen.getAllByRole('link');
     expect(links.map((link) => link.textContent)).toEqual([
-      expect.stringContaining('← All Items'),
+      expect.stringMatching(/←.*All Items/),
       expect.stringContaining('Use'),
       expect.stringContaining('Upgrade Scrolls'),
       expect.stringContaining('Recovery'),
@@ -198,8 +198,8 @@ describe('DrillDownNav component', () => {
 
     const links = screen.getAllByRole('link');
     expect(links.map((link) => link.textContent)).toEqual([
-      expect.stringContaining('← All Items'),
-      expect.stringContaining('← Use'),
+      expect.stringMatching(/←.*All Items/),
+      expect.stringMatching(/←.*Use/),
       expect.stringContaining('Recovery'),
     ]);
 
@@ -215,7 +215,7 @@ describe('DrillDownNav component', () => {
     expect(currentLinks[0]).toHaveAttribute('href', '/items/use/recovery');
   });
 
-  it('back rows link to ancestors and show arrow + label only without icon or count', () => {
+  it('ancestor with icon renders the icon and no count', () => {
     render(
       <DrillDownNav root={demoTree} currentId="use" label="Item categories" />,
     );
@@ -228,10 +228,57 @@ describe('DrillDownNav component', () => {
     expect(arrow?.textContent).toBe('←');
     expect(screen.queryByRole('link', { name: /←/ })).not.toBeInTheDocument();
 
-    // Ancestor row must NOT render the icon or count defined on root
-    expect(backLink.querySelector('[data-testid="icon-all"]')).toBeNull();
+    // Ancestor row renders the icon defined on root and reuses icon wrapper
+    const icon = backLink.querySelector('[data-testid="icon-all"]');
+    expect(icon).toBeInTheDocument();
+    const iconWrapper = backLink.querySelector('[class*="icon"]');
+    expect(iconWrapper).toBeInTheDocument();
+    expect(iconWrapper).toHaveAttribute('aria-hidden', 'true');
+
+    // Ancestor row must NOT render count
     expect(backLink.textContent).not.toContain('100');
-    expect(backLink.textContent).toMatch(/←\s*All Items$/);
+    expect(backLink.querySelector('[class*="count"]')).toBeNull();
+    expect(backLink.querySelector('[class*="countDimmed"]')).toBeNull();
+  });
+
+  it('ancestor without icon unchanged (arrow + label only, no icon, no count)', () => {
+    render(
+      <DrillDownNav
+        root={demoTree}
+        currentId="etc/quest-items"
+        label="Item categories"
+      />,
+    );
+
+    const backLink = screen.getByRole('link', { name: 'ETC' });
+    expect(backLink).toHaveAttribute('href', '/items/etc');
+    const arrow = backLink.querySelector('[class*="backArrow"]');
+    expect(arrow).toHaveAttribute('aria-hidden', 'true');
+    expect(arrow?.textContent).toBe('←');
+
+    // Node without icon does NOT render icon wrapper
+    expect(backLink.querySelector('[class*="icon"]')).toBeNull();
+
+    // Node does NOT render count
+    expect(backLink.textContent).not.toContain('30');
+    expect(backLink.querySelector('[class*="count"]')).toBeNull();
+
+    // Rendered text is exactly arrow + label
+    expect(backLink.textContent).toMatch(/←\s*ETC$/);
+  });
+
+  it('accessible name stays exactly the label for ancestor rows with and without icons', () => {
+    render(
+      <DrillDownNav
+        root={demoTree}
+        currentId="etc/quest-items"
+        label="Item categories"
+      />,
+    );
+
+    expect(screen.getByRole('link', { name: 'All Items' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'ETC' })).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: /←/ })).not.toBeInTheDocument();
   });
 
   it('renders zero counts dimmed while keeping the row an interactive link', () => {

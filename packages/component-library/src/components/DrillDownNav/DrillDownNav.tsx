@@ -14,12 +14,19 @@ function renderRowContent<TMeta>(
   node: DrillDownNode<TMeta>,
   kind: RowKind,
 ): ReactNode {
+  const iconElement = node.icon ? (
+    <span className={classes['icon']} aria-hidden="true">
+      {node.icon}
+    </span>
+  ) : null;
+
   if (kind === 'ancestor') {
     return (
       <span className={classes['rowContent']}>
         <span className={classes['backArrow']} aria-hidden="true">
           ←
         </span>{' '}
+        {iconElement}
         <span className={classes['label']}>{node.label}</span>
       </span>
     );
@@ -37,7 +44,7 @@ function renderRowContent<TMeta>(
 
   return (
     <span className={classes['rowContent']}>
-      {node.icon ? <span className={classes['icon']}>{node.icon}</span> : null}
+      {iconElement}
       <span className={classes['label']}>{node.label}</span>
       {countElement}
     </span>
