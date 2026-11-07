@@ -15,9 +15,7 @@ export function itemPageMetadata(
   const { label: buildLabel } = BUILDS[buildId];
   const topic =
     category.child?.label ??
-    (category.scope.slug === 'all'
-      ? 'Items'
-      : `${category.scope.label} Items`);
+    (category.scope.slug === 'all' ? 'Items' : `${category.scope.label} Items`);
 
   return {
     heading: `MapleStory ${buildLabel} ${topic}`,

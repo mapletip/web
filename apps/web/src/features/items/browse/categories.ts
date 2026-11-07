@@ -88,7 +88,7 @@ export const ITEM_SCOPES: Readonly<Record<ItemScopeSlug, ItemCategoryScope>> = {
       byType('potions', 'Potions', 'potion'),
       byType('food-buffs', 'Food & Buffs', 'food-buff'),
       byFunction('monster-cards', 'Monster Cards', 'monster-card'),
-      byFunction('skill-books', 'Skill & Mastery Books', 'skill'),
+      byFunction('skill-items', 'Skill Items', 'skill'),
       byType('meso-pouches', 'Meso Pouches', 'meso-pouch'),
       otherChild('other-use-items', 'Other Use Items'),
     ],

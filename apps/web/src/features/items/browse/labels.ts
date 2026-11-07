@@ -37,7 +37,7 @@ export const ITEM_FUNCTION_LABELS: Readonly<
   Record<ItemBrowseFunction, string>
 > = {
   upgrade: 'Upgrade',
-  skill: 'Skill & Mastery',
+  skill: 'Skill',
   summon: 'Summon',
   'reward-container': 'Reward Container',
   'monster-card': 'Monster Card',

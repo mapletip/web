@@ -6,6 +6,7 @@
  */
 import type { ItemBrowseRecord, ItemBrowseRow } from '@mapletip/data/items';
 
+type Fact = ItemBrowseRow['name'];
 type Scroll = NonNullable<ItemBrowseRecord['scroll']>;
 export type ItemBrowseClass = ItemBrowseRecord['itemClass'];
 export type ItemBrowseType = NonNullable<ItemBrowseRecord['types']>[number];
@@ -19,6 +20,11 @@ export type ItemBrowseUpgradeSpecial = NonNullable<Scroll['specials']>[number];
 export type ItemRelationshipKind = keyof NonNullable<
   ItemBrowseRecord['relationships']
 >;
+
+export interface ItemPetTarget {
+  readonly key: string;
+  readonly name?: string;
+}
 
 export type ItemRow = {
   readonly key: string;
@@ -45,7 +51,7 @@ export type ItemRow = {
   readonly closeness?: number;
   readonly fullness?: number;
   readonly tameness?: number;
-  readonly petTargets?: readonly string[];
+  readonly petTargets?: readonly ItemPetTarget[];
   readonly unresolvedPetTargets?: readonly string[];
   readonly seatHp?: number;
   readonly seatMp?: number;
@@ -55,70 +61,77 @@ export type ItemRow = {
   readonly tier?: ItemBrowseUpgradeTier;
   readonly specials?: readonly ItemBrowseUpgradeSpecial[];
   readonly stats?: Readonly<ItemBrowseScrollDeltas>;
-  readonly statRank?: number;
   readonly directTargetCount?: number;
 };
 
 type WritableItemRow = { -readonly [K in keyof ItemRow]: ItemRow[K] };
 
-function put<K extends keyof ItemRow>(
+function setField<K extends keyof ItemRow>(
   row: WritableItemRow,
   key: K,
-  val: ItemRow[K] | null | undefined,
+  value: ItemRow[K] | null | undefined,
 ): void {
-  if (val != null) row[key] = val;
+  if (value != null) {
+    row[key] = value;
+  }
 }
 
-export const UNNAMED_ITEM_LABEL = 'Unnamed item';
-
-// prettier-ignore
-export const SCROLL_STAT_PRIORITY = [
-  'weaponAttack', 'magicAttack', 'strength', 'dexterity', 'intelligence', 'luck',
-  'maxHp', 'maxMp', 'weaponDefense', 'magicDefense', 'accuracy', 'avoidability',
-  'speed', 'jump', 'criticalRate', 'criticalDamage', 'craft', 'swim',
-] as const satisfies readonly (keyof ItemBrowseScrollDeltas)[];
-
-function computeStatRank(
-  deltas?: ItemBrowseScrollDeltas | null,
-): number | undefined {
-  if (!deltas) return undefined;
-  for (const [i, key] of SCROLL_STAT_PRIORITY.entries()) {
-    const val = deltas[key];
-    if (typeof val === 'number') return (i + 1) * 10000 - val;
+function extractKnownFact(fact: Fact): string | undefined {
+  if (fact.state === 'known') {
+    return fact.value;
   }
   return undefined;
 }
 
-// prettier-ignore
-const RELATIONSHIP_COUNT_FIELDS = [
-  ['cash-shop-listing', 'cashShopListingCount'], ['found-in-container', 'foundInContainerCount'],
-  ['made-by-recipe', 'madeByRecipeCount'], ['monster-drop', 'monsterDropCount'],
-  ['needed-for-quest', 'neededForQuestCount'], ['quest-reward', 'questRewardCount'],
-  ['used-in-recipe', 'usedInRecipeCount'],
-] as const;
+function filterNonEmptyArray<T>(
+  array: readonly T[] | undefined,
+): readonly T[] | undefined {
+  if (array && array.length > 0) {
+    return array;
+  }
+  return undefined;
+}
 
-const knownVal = (f: { state: string; value?: string }) =>
-  f.state === 'known' ? f.value : undefined;
-const nonEmpty = <T>(arr?: readonly T[]) => (arr?.length ? arr : undefined);
-const resolveTargets = (
-  targets?: readonly string[],
-  names?: Map<string, string>,
-) =>
-  targets?.length
-    ? Array.from(
-        new Set(targets.map((t) => names?.get(t) ?? UNNAMED_ITEM_LABEL)),
-      )
-    : undefined;
+function resolvePetTargets(
+  targets: readonly string[] | undefined,
+  petNamesByKey: ReadonlyMap<string, string>,
+): readonly ItemPetTarget[] | undefined {
+  if (!targets || targets.length === 0) {
+    return undefined;
+  }
+
+  const distinctKeys = Array.from(new Set(targets));
+  return distinctKeys.map((targetKey) => {
+    const knownName = petNamesByKey.get(targetKey);
+    if (knownName !== undefined) {
+      return { key: targetKey, name: knownName };
+    }
+    return { key: targetKey };
+  });
+}
+
+const RELATIONSHIP_COUNT_FIELDS = [
+  ['cash-shop-listing', 'cashShopListingCount'],
+  ['found-in-container', 'foundInContainerCount'],
+  ['made-by-recipe', 'madeByRecipeCount'],
+  ['monster-drop', 'monsterDropCount'],
+  ['needed-for-quest', 'neededForQuestCount'],
+  ['quest-reward', 'questRewardCount'],
+  ['used-in-recipe', 'usedInRecipeCount'],
+] as const satisfies readonly (readonly [
+  ItemRelationshipKind,
+  keyof ItemRow,
+])[];
 
 export function projectItemBrowseRows(
   records: readonly ItemBrowseRow[],
 ): readonly ItemRow[] {
-  const names = new Map(
-    records.map((r) => [
-      r.key,
-      r.name.state === 'known' ? r.name.value : UNNAMED_ITEM_LABEL,
-    ]),
-  );
+  const petNamesByKey = new Map<string, string>();
+  for (const record of records) {
+    if (record.name.state === 'known') {
+      petNamesByKey.set(record.key, record.name.value);
+    }
+  }
 
   return records.map((record) => {
     const row: WritableItemRow = {
@@ -127,46 +140,57 @@ export function projectItemBrowseRows(
       itemClass: record.itemClass,
     };
 
-    put(row, 'name', knownVal(record.name));
-    put(row, 'icon', knownVal(record.icon));
-    put(row, 'types', nonEmpty(record.types));
-    put(row, 'functions', nonEmpty(record.functions));
+    setField(row, 'name', extractKnownFact(record.name));
+    setField(row, 'icon', extractKnownFact(record.icon));
+    setField(row, 'types', filterNonEmptyArray(record.types));
+    setField(row, 'functions', filterNonEmptyArray(record.functions));
 
-    for (const [kind, field] of RELATIONSHIP_COUNT_FIELDS) {
-      put(row, field, record.relationships?.[kind]);
+    if (record.relationships) {
+      for (const [relationshipKind, fieldKey] of RELATIONSHIP_COUNT_FIELDS) {
+        setField(row, fieldKey, record.relationships[relationshipKind]);
+      }
     }
 
-    put(row, 'questFlag', record.questFlag === true ? true : undefined);
-    put(row, 'family', record.family || undefined);
-    put(row, 'attack', record.projectileAttack);
-    put(row, 'hp', record.recovery?.hp);
-    put(row, 'mp', record.recovery?.mp);
-    put(row, 'hpPercent', record.recovery?.hpPercent);
-    put(row, 'mpPercent', record.recovery?.mpPercent);
+    setField(row, 'questFlag', record.questFlag);
+    setField(row, 'family', record.family || undefined);
+    setField(row, 'attack', record.projectileAttack);
+    setField(row, 'hp', record.recovery?.hp);
+    setField(row, 'mp', record.recovery?.mp);
+    setField(row, 'hpPercent', record.recovery?.hpPercent);
+    setField(row, 'mpPercent', record.recovery?.mpPercent);
 
-    const pf = record.petFood;
-    put(row, 'closeness', pf?.closeness);
-    put(row, 'fullness', pf?.fullness);
-    put(row, 'tameness', pf?.tameness);
-    put(row, 'petTargets', resolveTargets(pf?.targets, names));
-    put(row, 'unresolvedPetTargets', nonEmpty(pf?.unresolvedTargets));
+    const petFood = record.petFood;
+    setField(row, 'closeness', petFood?.closeness);
+    setField(row, 'fullness', petFood?.fullness);
+    setField(row, 'tameness', petFood?.tameness);
+    setField(
+      row,
+      'petTargets',
+      resolvePetTargets(petFood?.targets, petNamesByKey),
+    );
+    setField(
+      row,
+      'unresolvedPetTargets',
+      filterNonEmptyArray(petFood?.unresolvedTargets),
+    );
 
-    put(row, 'seatHp', record.seatingRecovery?.hp);
-    put(row, 'seatMp', record.seatingRecovery?.mp);
+    setField(row, 'seatHp', record.seatingRecovery?.hp);
+    setField(row, 'seatMp', record.seatingRecovery?.mp);
 
-    const sc = record.scroll;
-    put(row, 'success', sc?.success);
-    put(row, 'cursed', sc?.cursed);
-    put(row, 'targetLabel', sc?.targetLabel);
-    put(row, 'tier', sc?.tier);
-    put(row, 'specials', nonEmpty(sc?.specials));
-    put(
+    const scroll = record.scroll;
+    setField(row, 'success', scroll?.success);
+    setField(row, 'cursed', scroll?.cursed);
+    setField(row, 'targetLabel', scroll?.targetLabel);
+    setField(row, 'tier', scroll?.tier);
+    setField(row, 'specials', filterNonEmptyArray(scroll?.specials));
+    setField(
       row,
       'stats',
-      sc?.deltas && Object.keys(sc.deltas).length ? sc.deltas : undefined,
+      scroll?.deltas && Object.keys(scroll.deltas).length > 0
+        ? scroll.deltas
+        : undefined,
     );
-    put(row, 'statRank', computeStatRank(sc?.deltas));
-    put(row, 'directTargetCount', sc?.targets?.length || undefined);
+    setField(row, 'directTargetCount', scroll?.targets?.length || undefined);
 
     return row;
   });
