@@ -29,10 +29,10 @@ const { mockRows } = vi.hoisted(() => {
     },
     {
       key: 'item:use:recovery',
-      sourceId: '02000002',
+      sourceId: '02000004',
       itemClass: 'consume',
       functions: ['recovery'],
-      icon: '182b52bbd81a4baeff46af86ad8317adfad729e10e78e4c5cb41c46a7263d5f6',
+      icon: '07c090345b4e437b6204eb7e234119d7709846f6b263712c7df5121add2bdc71',
     },
     {
       key: 'item:use:stars',
@@ -53,20 +53,20 @@ const { mockRows } = vi.hoisted(() => {
       sourceId: '04031001',
       itemClass: 'etc',
       neededForQuestCount: 1,
-      icon: 'bb3f67112d67a4593cd7865dbd98cbd765ba9002860259ebec5a8d0494d20978',
+      icon: '63df4ceb3580419b2ae1db57f001573eac4fe068edfe5aeea17c4ce734de0f7a',
     },
     {
       key: 'item:setup:chair',
       sourceId: '03010007',
       itemClass: 'setup',
       types: ['chair'],
-      icon: 'e9a7ddb8d65561a0709fcfab637a242c38dc9c09c3fe80a06144e545e8f4ca6a',
+      icon: '15ceb9596a6bdc8f61f8aa1382292f3b428a30281315b83ed0499c5d0492e120',
     },
     {
       key: 'item:cash:pet',
       sourceId: '5000002',
       itemClass: 'pet',
-      icon: 'b6a3972dcd2035e0f2bc062d4ea6016671534b5059f8772ddf72f07fc853320e',
+      icon: '7cb4e8cd5e402cc35d7bd6d51dafb1800670816463425b50525f091accdde43e',
     },
   ];
   return { mockRows: rows };
@@ -349,7 +349,7 @@ describe('Items Browse route integration', () => {
     expect(chipMatch).not.toBeNull();
     const recoveryIcon = itemIconUrl(
       MAPLEKIT_RELEASE.baseUrl,
-      '182b52bbd81a4baeff46af86ad8317adfad729e10e78e4c5cb41c46a7263d5f6',
+      '07c090345b4e437b6204eb7e234119d7709846f6b263712c7df5121add2bdc71',
     );
     expect(chipMatch?.[1]).toContain(recoveryIcon);
     expect(chipMatch?.[1]).toContain('Recovery');
@@ -374,7 +374,7 @@ describe('Items Browse route integration', () => {
     );
     const recoveryIcon = itemIconUrl(
       MAPLEKIT_RELEASE.baseUrl,
-      '182b52bbd81a4baeff46af86ad8317adfad729e10e78e4c5cb41c46a7263d5f6',
+      '07c090345b4e437b6204eb7e234119d7709846f6b263712c7df5121add2bdc71',
     );
     const starsIcon = itemIconUrl(
       MAPLEKIT_RELEASE.baseUrl,

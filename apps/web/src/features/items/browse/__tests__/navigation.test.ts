@@ -228,11 +228,11 @@ describe('navigation', () => {
       const rowsWithIcon: readonly ItemRow[] = [
         ...dummyRows,
         {
-          key: 'consume:02000002:icon',
-          sourceId: '02000002',
+          key: 'consume:02000004:icon',
+          sourceId: '02000004',
           itemClass: 'consume',
           functions: ['recovery'],
-          icon: '182b52bbd81a4baeff46af86ad8317adfad729e10e78e4c5cb41c46a7263d5f6',
+          icon: '07c090345b4e437b6204eb7e234119d7709846f6b263712c7df5121add2bdc71',
         },
       ];
       const tree = getItemNavTree(rowsWithIcon, 'cw-launch');
@@ -248,26 +248,27 @@ describe('navigation', () => {
       expect(findItemNavNode(tree, 'nonexistent')).toBeUndefined();
     });
 
-    it('yields no icon when preferred IDs are missing or have no icon', () => {
-      // Rows contain members of recovery, but neither has sourceId in iconSourceIds or an icon
-      const rowsWithoutPreferred: readonly ItemRow[] = [
+    it('yields no icon when a content ID is not carried by any member of the child', () => {
+      // Case 1: Member of recovery has an unlisted icon
+      // Case 2: Another category member carries recovery's preferred icon
+      const rows: readonly ItemRow[] = [
         {
-          key: 'other-recovery',
-          sourceId: '02999999',
+          key: 'recovery-unknown-icon',
+          sourceId: '02000000',
           itemClass: 'consume',
           functions: ['recovery'],
-          icon: '3e6f5119559b88de2f712dc0bf15ede726d2db79649e96a0a46c57c72fea0559',
+          icon: 'ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff',
         },
         {
-          key: 'recovery-no-icon',
-          sourceId: '02000002',
-          itemClass: 'consume',
-          functions: ['recovery'],
-          // icon is omitted
+          key: 'etc-item-with-elixir-icon',
+          sourceId: '04000000',
+          itemClass: 'etc',
+          types: ['monster-material'],
+          icon: '07c090345b4e437b6204eb7e234119d7709846f6b263712c7df5121add2bdc71',
         },
       ];
 
-      const tree = getItemNavTree(rowsWithoutPreferred, 'cw-launch');
+      const tree = getItemNavTree(rows, 'cw-launch');
       const useScope = tree.children?.find((c) => c.id === 'use');
       const recoveryNode = useScope?.children?.find(
         (c) => c.id === 'use/recovery',
@@ -280,16 +281,14 @@ describe('navigation', () => {
       expect(otherEtcNode?.icon).toBeUndefined();
     });
 
-    it('resolves the first preferred source ID with a known icon', () => {
-      // 02000003 (second preference) is present with an icon,
-      // but 02000002 (first preference) is missing.
+    it('resolves the icon when a member carries a preferred content ID', () => {
       const rows: readonly ItemRow[] = [
         {
-          key: 'blue-pot',
-          sourceId: '02000003',
+          key: 'elixir-item',
+          sourceId: '02000004',
           itemClass: 'consume',
           functions: ['recovery'],
-          icon: '34676be30fc0eaecf46f3531bcf91c49df5ef12574e92ebef3a9fa05f42ba794',
+          icon: '07c090345b4e437b6204eb7e234119d7709846f6b263712c7df5121add2bdc71',
         },
       ];
 
@@ -302,7 +301,48 @@ describe('navigation', () => {
       expect(recoveryNode?.icon).toBeDefined();
       const iconElement = recoveryNode?.icon as ReactElement<{ src: string }>;
       expect(iconElement.props.src).toContain(
-        '34676be30fc0eaecf46f3531bcf91c49df5ef12574e92ebef3a9fa05f42ba794',
+        '07c090345b4e437b6204eb7e234119d7709846f6b263712c7df5121add2bdc71',
+      );
+    });
+
+    it('respects preference order when resolving icons', () => {
+      const powerElixirOnly: readonly ItemRow[] = [
+        {
+          key: 'power-elixir-item',
+          sourceId: '02000005',
+          itemClass: 'consume',
+          functions: ['recovery'],
+          icon: '5aae760b2488feb48104655227f9faf80f84691197b940ab44775f8f2a0c3965',
+        },
+      ];
+
+      const tree1 = getItemNavTree(powerElixirOnly, 'cw-launch');
+      const node1 = findItemNavNode(tree1, 'use/recovery');
+      expect(node1?.icon).toBeDefined();
+      const iconElement1 = node1?.icon as ReactElement<{ src: string }>;
+      expect(iconElement1.props.src).toContain(
+        '5aae760b2488feb48104655227f9faf80f84691197b940ab44775f8f2a0c3965',
+      );
+
+      // When both first (Elixir) and second (Power Elixir) preferences are present,
+      // first preference wins
+      const bothPresent: readonly ItemRow[] = [
+        ...powerElixirOnly,
+        {
+          key: 'elixir-item',
+          sourceId: '02000004',
+          itemClass: 'consume',
+          functions: ['recovery'],
+          icon: '07c090345b4e437b6204eb7e234119d7709846f6b263712c7df5121add2bdc71',
+        },
+      ];
+
+      const tree2 = getItemNavTree(bothPresent, 'cw-launch');
+      const node2 = findItemNavNode(tree2, 'use/recovery');
+      expect(node2?.icon).toBeDefined();
+      const iconElement2 = node2?.icon as ReactElement<{ src: string }>;
+      expect(iconElement2.props.src).toContain(
+        '07c090345b4e437b6204eb7e234119d7709846f6b263712c7df5121add2bdc71',
       );
     });
   });

@@ -494,7 +494,7 @@ describe('category model and predicates', () => {
     expect(scopeRows[0]?.key).toBe('item:consume');
   });
 
-  it('ensures every listed iconSourceId in ITEM_SCOPES is an actual member of its category in a fixture', () => {
+  it('ensures every listed iconContentId in ITEM_SCOPES is an actual member of its category in a fixture', () => {
     const fixtureRows: readonly ItemRow[] = [
       // Use
       {
@@ -502,350 +502,208 @@ describe('category model and predicates', () => {
         sourceId: '02040000',
         itemClass: 'consume',
         types: ['upgrade-scroll'],
+        icon: '3a453e4e40b44d9358f9348abdda896b64ecc046a52e5b07a2388bdbd7dc8601',
       },
       {
-        key: '02040001',
-        sourceId: '02040001',
-        itemClass: 'consume',
-        types: ['upgrade-scroll'],
-      },
-      {
-        key: '02000000',
-        sourceId: '02000000',
+        key: '02000004',
+        sourceId: '02000004',
         itemClass: 'consume',
         functions: ['recovery'],
-        types: ['potion'],
+        icon: '07c090345b4e437b6204eb7e234119d7709846f6b263712c7df5121add2bdc71',
       },
       {
-        key: '02000002',
-        sourceId: '02000002',
+        key: '02000005',
+        sourceId: '02000005',
         itemClass: 'consume',
         functions: ['recovery'],
-        types: ['potion'],
-      },
-      {
-        key: '02000003',
-        sourceId: '02000003',
-        itemClass: 'consume',
-        functions: ['recovery'],
-        types: ['potion'],
+        icon: '5aae760b2488feb48104655227f9faf80f84691197b940ab44775f8f2a0c3965',
       },
       {
         key: '02012000',
         sourceId: '02012000',
         itemClass: 'consume',
         types: ['potion'],
-      },
-      {
-        key: '02022002',
-        sourceId: '02022002',
-        itemClass: 'consume',
-        types: ['food-buff'],
+        icon: '1cb0671554c0cb6eb6a95aca81a1cc52d11b5853a371741cf790463c0dccccb1',
       },
       {
         key: '02070000',
         sourceId: '02070000',
         itemClass: 'consume',
         types: ['throwing-star'],
-      },
-      {
-        key: '02070006',
-        sourceId: '02070006',
-        itemClass: 'consume',
-        types: ['throwing-star'],
-      },
-      {
-        key: '02070005',
-        sourceId: '02070005',
-        itemClass: 'consume',
-        types: ['throwing-star'],
+        icon: 'f77172ea2f08e2e8586c8d2a208c3614cbf112a09796609f9b4fc5c8affb5e0e',
       },
       {
         key: '02060000',
         sourceId: '02060000',
         itemClass: 'consume',
         types: ['arrow'],
-      },
-      {
-        key: '02061000',
-        sourceId: '02061000',
-        itemClass: 'consume',
-        types: ['arrow'],
-      },
-      {
-        key: '02060001',
-        sourceId: '02060001',
-        itemClass: 'consume',
-        types: ['arrow'],
+        icon: '752f72ebcb3fc70ea7ec797e483280480a569ab2b7cf98330710adb097f51e98',
       },
       {
         key: '02330000',
         sourceId: '02330000',
         itemClass: 'consume',
         types: ['bullet'],
-      },
-      {
-        key: '02330001',
-        sourceId: '02330001',
-        itemClass: 'consume',
-        types: ['bullet'],
-      },
-      {
-        key: '02330002',
-        sourceId: '02330002',
-        itemClass: 'consume',
-        types: ['bullet'],
+        icon: 'b220c978f7d9a1afbaca42e4e49fbaa682b02abe412e11711ddec6116e6ede4a',
       },
       {
         key: '02120000',
         sourceId: '02120000',
         itemClass: 'consume',
         types: ['pet-food'],
+        icon: '48bbbec3311d822c327cfc030c8d5a2d5f0c726a263356c40c02af0f125aac7c',
       },
       {
         key: '02100000',
         sourceId: '02100000',
         itemClass: 'consume',
         functions: ['summon'],
-      },
-      {
-        key: '02100007',
-        sourceId: '02100007',
-        itemClass: 'consume',
-        functions: ['summon'],
+        icon: '6c254da1ae5e2f8294a162a86622807c3c45d1bcb123660e17ebdd1739174357',
       },
       {
         key: '02022428',
         sourceId: '02022428',
         itemClass: 'consume',
         functions: ['reward-container'],
-      },
-      {
-        key: '02022336',
-        sourceId: '02022336',
-        itemClass: 'consume',
-        functions: ['reward-container'],
+        icon: 'cc78d2418978f78394df682664352ee29cb05c6eab276916eea5bb829fe4a595',
       },
       {
         key: '02380001',
         sourceId: '02380001',
         itemClass: 'consume',
         functions: ['monster-card'],
-      },
-      {
-        key: '02380007',
-        sourceId: '02380007',
-        itemClass: 'consume',
-        functions: ['monster-card'],
-      },
-      {
-        key: '02380005',
-        sourceId: '02380005',
-        itemClass: 'consume',
-        functions: ['monster-card'],
+        icon: 'a8ecbc24e9b7659ec44e8281bd630a7280a35580d5aac3e0ada70ab6718b1735',
       },
       {
         key: '02290053',
         sourceId: '02290053',
         itemClass: 'consume',
         functions: ['skill'],
-      },
-      {
-        key: '02290084',
-        sourceId: '02290084',
-        itemClass: 'consume',
-        functions: ['skill'],
-      },
-      {
-        key: '02280010',
-        sourceId: '02280010',
-        itemClass: 'consume',
-        functions: ['skill'],
+        icon: '147e22281aa79e799cb16f38bcf9685bede7679e0132fde589b6d8e24185e10b',
       },
       {
         key: '02028000',
         sourceId: '02028000',
         itemClass: 'consume',
         types: ['meso-pouch'],
+        icon: '1a1202deec7cf17c8aec33e32c120f44e2cb7d2a1c9c4951ba9aa9f8093fcd24',
       },
-      {
-        key: '02028001',
-        sourceId: '02028001',
-        itemClass: 'consume',
-        types: ['meso-pouch'],
-      },
-      { key: '02030000', sourceId: '02030000', itemClass: 'consume' },
-      { key: '02030004', sourceId: '02030004', itemClass: 'consume' },
 
       // ETC
-      {
-        key: '04031001',
-        sourceId: '04031001',
-        itemClass: 'etc',
-        neededForQuestCount: 1,
-      },
-      {
-        key: '04031077',
-        sourceId: '04031077',
-        itemClass: 'etc',
-        neededForQuestCount: 1,
-      },
-      {
-        key: '04020000',
-        sourceId: '04020000',
-        itemClass: 'etc',
-        usedInRecipeCount: 1,
-        types: ['ore'],
-      },
-      {
-        key: '04020007',
-        sourceId: '04020007',
-        itemClass: 'etc',
-        usedInRecipeCount: 1,
-        types: ['ore'],
-      },
       {
         key: '04010006',
         sourceId: '04010006',
         itemClass: 'etc',
         types: ['ore'],
-      },
-      {
-        key: '04010001',
-        sourceId: '04010001',
-        itemClass: 'etc',
-        types: ['ore'],
-      },
-      {
-        key: '04010000',
-        sourceId: '04010000',
-        itemClass: 'etc',
-        types: ['ore'],
+        icon: '9bc102b58369315c30222c8c54107371efd84b875e76d5c83665c42428049cf4',
       },
       {
         key: '04020107',
         sourceId: '04020107',
         itemClass: 'etc',
         types: ['gem'],
-      },
-      {
-        key: '04021007',
-        sourceId: '04021007',
-        itemClass: 'etc',
-        types: ['gem'],
+        icon: '365ff7564302e01a8ca13a94f63ff05adc0b318a9c44dc8a69506e52300b4874',
       },
       {
         key: '04010101',
         sourceId: '04010101',
         itemClass: 'etc',
         types: ['refined-material'],
+        icon: '75d29c88a2df6716e8452fdcd5e2de63a2cfbc587f9537ec3706b02639f5d4aa',
       },
       {
-        key: '04011001',
-        sourceId: '04011001',
-        itemClass: 'etc',
-        types: ['refined-material'],
-      },
-      {
-        key: '04001000',
-        sourceId: '04001000',
+        key: '04000009',
+        sourceId: '04000009',
         itemClass: 'etc',
         types: ['monster-material'],
+        icon: '752e1848b26d249f7728fa2b290b6077872e79dea71db2d18aea20c8605889e5',
+      },
+      {
+        key: '04000010',
+        sourceId: '04000010',
+        itemClass: 'etc',
+        types: ['monster-material'],
+        icon: 'a17e4c3ad5053c275a4f791c71f0707e2e0e6b02b056f0892e4a221df76bd57d',
+      },
+      {
+        key: '04031001',
+        sourceId: '04031001',
+        itemClass: 'etc',
+        neededForQuestCount: 1,
+        icon: '63df4ceb3580419b2ae1db57f001573eac4fe068edfe5aeea17c4ce734de0f7a',
       },
 
       // Set-up
-      {
-        key: '03010000',
-        sourceId: '03010000',
-        itemClass: 'setup',
-        types: ['chair'],
-      },
-      {
-        key: '03010008',
-        sourceId: '03010008',
-        itemClass: 'setup',
-        types: ['chair'],
-      },
       {
         key: '03010007',
         sourceId: '03010007',
         itemClass: 'setup',
         types: ['chair'],
+        icon: '15ceb9596a6bdc8f61f8aa1382292f3b428a30281315b83ed0499c5d0492e120',
       },
       {
         key: '03992024',
         sourceId: '03992024',
         itemClass: 'setup',
         types: ['holiday-ornament'],
-      },
-      {
-        key: '03992021',
-        sourceId: '03992021',
-        itemClass: 'setup',
-        types: ['holiday-ornament'],
-      },
-      {
-        key: '03992026',
-        sourceId: '03992026',
-        itemClass: 'setup',
-        types: ['holiday-ornament'],
+        icon: '96287ff70fcacc9d152b5e2382d3c7c274cbac08230d0c879c6d760dd8bbb5a8',
       },
       {
         key: '03000005',
         sourceId: '03000005',
         itemClass: 'setup',
         types: ['furniture'],
-      },
-      {
-        key: '03000006',
-        sourceId: '03000006',
-        itemClass: 'setup',
-        types: ['furniture'],
+        icon: '30653202898033325e7bdf8080b52b5b4025df895da27ac1e6e7b213f72e87e1',
       },
       {
         key: '03030000',
         sourceId: '03030000',
         itemClass: 'setup',
         types: ['crafting-station'],
-      },
-      {
-        key: '03030001',
-        sourceId: '03030001',
-        itemClass: 'setup',
-        types: ['crafting-station'],
+        icon: 'b7d62c62b03503e04609501b97cb8ce7349cfadec38b3e8d01d7eae524355051',
       },
 
       // Cash/Pet
-      { key: '5000002', sourceId: '5000002', itemClass: 'pet' },
-      { key: '5000008', sourceId: '5000008', itemClass: 'pet' },
-      { key: '05070001', sourceId: '05070001', itemClass: 'cash' },
-      { key: '05072000', sourceId: '05072000', itemClass: 'cash' },
+      {
+        key: '5000002',
+        sourceId: '5000002',
+        itemClass: 'pet',
+        icon: '7cb4e8cd5e402cc35d7bd6d51dafb1800670816463425b50525f091accdde43e',
+      },
+      {
+        key: '05070001',
+        sourceId: '05070001',
+        itemClass: 'cash',
+        icon: 'e92811536cb6820a65eafaea2452b94161951361e5ed35b16035f0207d8939f0',
+      },
     ];
 
-    const fixtureBySourceId = new Map(fixtureRows.map((r) => [r.sourceId, r]));
+    const fixtureByIcon = new Map(
+      fixtureRows.filter((r) => r.icon).map((r) => [r.icon as string, r]),
+    );
 
     let checkedCategories = 0;
     for (const scope of Object.values(ITEM_SCOPES)) {
       for (const child of scope.children) {
-        if (!child.iconSourceIds) {
+        if (!child.iconContentIds) {
           continue;
         }
         checkedCategories++;
-        for (const sourceId of child.iconSourceIds) {
-          const row = fixtureBySourceId.get(sourceId);
+        for (const contentId of child.iconContentIds) {
+          const row = fixtureByIcon.get(contentId);
           expect(
             row,
-            `Row with sourceId ${sourceId} must exist in fixture`,
+            `Row with icon ${contentId} must exist in fixture`,
           ).toBeDefined();
           const isMember = row ? matchesCategory(row, scope, child) : false;
           expect(
             isMember,
-            `sourceId ${sourceId} must be a member of category ${scope.slug}/${child.slug}`,
+            `icon ${contentId} must be carried by a member of category ${scope.slug}/${child.slug}`,
           ).toBe(true);
         }
       }
     }
-    // 23 categories define iconSourceIds (all except other-use-items, other-etc-items, and other-setup-items)
+    // 23 categories define iconContentIds (all except other-use-items, other-etc-items, and other-setup-items)
     expect(checkedCategories).toBe(23);
   });
 });

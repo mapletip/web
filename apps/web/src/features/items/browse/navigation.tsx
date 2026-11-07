@@ -21,6 +21,7 @@ import {
 } from '@/config/maplekit';
 
 import {
+  assignChild,
   getCategoryCounts,
   ITEM_SCOPES,
   ITEM_SCOPE_SLUGS,
@@ -126,10 +127,26 @@ export function getItemNavTree(
   const counts = getCategoryCounts(rows);
   const buildParam = buildId === DEFAULT_BUILD_ID ? undefined : buildId;
 
-  const iconBySourceId = new Map<string, string>();
+  const childMemberIcons = new Map<string, Set<string>>();
   for (const row of rows) {
-    if (row.icon && !iconBySourceId.has(row.sourceId)) {
-      iconBySourceId.set(row.sourceId, row.icon);
+    if (!row.icon) {
+      continue;
+    }
+    for (const scopeSlug of NON_ALL_SCOPES) {
+      const scope = ITEM_SCOPES[scopeSlug];
+      if (scope.itemClasses.includes(row.itemClass)) {
+        const child = assignChild(row, scope);
+        if (child) {
+          const key = `${scopeSlug}/${child.slug}`;
+          let set = childMemberIcons.get(key);
+          if (!set) {
+            set = new Set<string>();
+            childMemberIcons.set(key, set);
+          }
+          set.add(row.icon);
+        }
+        break;
+      }
     }
   }
 
@@ -151,14 +168,18 @@ export function getItemNavTree(
             child: child.slug,
           };
           let childIcon: ReactElement<ComponentProps<'img'>> | undefined;
-          if (child.iconSourceIds) {
-            for (const sourceId of child.iconSourceIds) {
-              const contentId = iconBySourceId.get(sourceId);
-              if (contentId) {
-                childIcon = renderItemNavIcon(
-                  itemIconUrl(MAPLEKIT_RELEASE.baseUrl, contentId),
-                );
-                break;
+          if (child.iconContentIds) {
+            const memberIcons = childMemberIcons.get(
+              `${scopeSlug}/${child.slug}`,
+            );
+            if (memberIcons) {
+              for (const contentId of child.iconContentIds) {
+                if (memberIcons.has(contentId)) {
+                  childIcon = renderItemNavIcon(
+                    itemIconUrl(MAPLEKIT_RELEASE.baseUrl, contentId),
+                  );
+                  break;
+                }
               }
             }
           }

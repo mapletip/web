@@ -24,14 +24,14 @@ export interface ItemPositiveChild {
   readonly slug: string;
   readonly label: string;
   readonly matches: (row: ItemRow) => boolean;
-  readonly iconSourceIds?: readonly string[];
+  readonly iconContentIds?: readonly string[];
 }
 
 export interface ItemOtherChild {
   readonly kind: 'other';
   readonly slug: string;
   readonly label: string;
-  readonly iconSourceIds?: readonly string[];
+  readonly iconContentIds?: readonly string[];
 }
 
 export type ItemCategoryChild = ItemPositiveChild | ItemOtherChild;
@@ -47,37 +47,37 @@ const byType = (
   slug: string,
   label: string,
   type: ItemBrowseType,
-  iconSourceIds?: readonly string[],
+  iconContentIds?: readonly string[],
 ): ItemPositiveChild => ({
   kind: 'positive',
   slug,
   label,
   matches: (row) => row.types?.includes(type) ?? false,
-  ...(iconSourceIds ? { iconSourceIds } : {}),
+  ...(iconContentIds ? { iconContentIds } : {}),
 });
 
 const byFunction = (
   slug: string,
   label: string,
   fn: ItemBrowseFunction,
-  iconSourceIds?: readonly string[],
+  iconContentIds?: readonly string[],
 ): ItemPositiveChild => ({
   kind: 'positive',
   slug,
   label,
   matches: (row) => row.functions?.includes(fn) ?? false,
-  ...(iconSourceIds ? { iconSourceIds } : {}),
+  ...(iconContentIds ? { iconContentIds } : {}),
 });
 
 const otherChild = (
   slug: string,
   label: string,
-  iconSourceIds?: readonly string[],
+  iconContentIds?: readonly string[],
 ): ItemOtherChild => ({
   kind: 'other',
   slug,
   label,
-  ...(iconSourceIds ? { iconSourceIds } : {}),
+  ...(iconContentIds ? { iconContentIds } : {}),
 });
 
 export const ITEM_SCOPES: Readonly<Record<ItemScopeSlug, ItemCategoryScope>> = {
@@ -93,10 +93,12 @@ export const ITEM_SCOPES: Readonly<Record<ItemScopeSlug, ItemCategoryScope>> = {
     itemClasses: ['consume'],
     children: [
       byType('upgrade-scrolls', 'Upgrade Scrolls', 'upgrade-scroll', [
-        '02040000',
-        '02040001',
+        '3a453e4e40b44d9358f9348abdda896b64ecc046a52e5b07a2388bdbd7dc8601', // Scroll for Helmet for DEF 100%
       ]),
-      byFunction('recovery', 'Recovery', 'recovery', ['02000002', '02000003']),
+      byFunction('recovery', 'Recovery', 'recovery', [
+        '07c090345b4e437b6204eb7e234119d7709846f6b263712c7df5121add2bdc71', // Elixir
+        '5aae760b2488feb48104655227f9faf80f84691197b940ab44775f8f2a0c3965', // Power Elixir
+      ]),
       {
         kind: 'positive',
         slug: 'buffs',
@@ -105,41 +107,36 @@ export const ITEM_SCOPES: Readonly<Record<ItemScopeSlug, ItemCategoryScope>> = {
           Boolean(
             row.types?.includes('potion') || row.types?.includes('food-buff'),
           ),
-        iconSourceIds: ['02012000', '02022002'],
+        iconContentIds: [
+          '1cb0671554c0cb6eb6a95aca81a1cc52d11b5853a371741cf790463c0dccccb1', // Drake's Blood
+        ],
       },
       byType('throwing-stars', 'Throwing Stars', 'throwing-star', [
-        '02070000',
-        '02070006',
-        '02070005',
+        'f77172ea2f08e2e8586c8d2a208c3614cbf112a09796609f9b4fc5c8affb5e0e', // Subi Throwing-Stars
       ]),
-      byType('arrows', 'Arrows', 'arrow', ['02060000', '02061000', '02060001']),
+      byType('arrows', 'Arrows', 'arrow', [
+        '752f72ebcb3fc70ea7ec797e483280480a569ab2b7cf98330710adb097f51e98', // Arrow for Bow
+      ]),
       byType('bullets', 'Bullets', 'bullet', [
-        '02330000',
-        '02330001',
-        '02330002',
+        'b220c978f7d9a1afbaca42e4e49fbaa682b02abe412e11711ddec6116e6ede4a', // Bullet
       ]),
-      byType('pet-food', 'Pet Food', 'pet-food', ['02120000']),
+      byType('pet-food', 'Pet Food', 'pet-food', [
+        '48bbbec3311d822c327cfc030c8d5a2d5f0c726a263356c40c02af0f125aac7c', // Pet Food
+      ]),
       byFunction('summoning-items', 'Summoning Items', 'summon', [
-        '02100000',
-        '02100007',
+        '6c254da1ae5e2f8294a162a86622807c3c45d1bcb123660e17ebdd1739174357', // Black Sack
       ]),
       byFunction('reward-containers', 'Reward Containers', 'reward-container', [
-        '02022428',
-        '02022336',
+        'cc78d2418978f78394df682664352ee29cb05c6eab276916eea5bb829fe4a595', // Mysterious Box
       ]),
       byFunction('monster-cards', 'Monster Cards', 'monster-card', [
-        '02380001',
-        '02380007',
-        '02380005',
+        'a8ecbc24e9b7659ec44e8281bd630a7280a35580d5aac3e0ada70ab6718b1735', // Blue Snail Card
       ]),
       byFunction('skill-items', 'Skill Items', 'skill', [
-        '02290053',
-        '02290084',
-        '02280010',
+        '147e22281aa79e799cb16f38bcf9685bede7679e0132fde589b6d8e24185e10b', // [Mastery Book] Sharp Eyes
       ]),
       byType('meso-pouches', 'Meso Pouches', 'meso-pouch', [
-        '02028000',
-        '02028001',
+        '1a1202deec7cf17c8aec33e32c120f44e2cb7d2a1c9c4951ba9aa9f8093fcd24', // Mysterious Meso Pouch
       ]),
       otherChild('other-use-items', 'Other Use Items'),
     ],
@@ -149,21 +146,27 @@ export const ITEM_SCOPES: Readonly<Record<ItemScopeSlug, ItemCategoryScope>> = {
     label: 'ETC',
     itemClasses: ['etc'],
     children: [
-      byType('ores', 'Ores', 'ore', ['04010006', '04010001', '04010000']),
-      byType('gems', 'Gems & Jewels', 'gem', ['04020107', '04021007']),
+      byType('ores', 'Ores', 'ore', [
+        '9bc102b58369315c30222c8c54107371efd84b875e76d5c83665c42428049cf4', // Gold Ore
+      ]),
+      byType('gems', 'Gems & Jewels', 'gem', [
+        '365ff7564302e01a8ca13a94f63ff05adc0b318a9c44dc8a69506e52300b4874', // Diamond
+      ]),
       byType('refined-materials', 'Refined Materials', 'refined-material', [
-        '04010101',
-        '04011001',
+        '75d29c88a2df6716e8452fdcd5e2de63a2cfbc587f9537ec3706b02639f5d4aa', // Steel Plate / Iron Ingot
       ]),
       byType('monster-materials', 'Monster Materials', 'monster-material', [
-        '04001000',
+        '752e1848b26d249f7728fa2b290b6077872e79dea71db2d18aea20c8605889e5', // Orange Mushroom Cap
+        'a17e4c3ad5053c275a4f791c71f0707e2e0e6b02b056f0892e4a221df76bd57d', // Pig's Ribbon
       ]),
       {
         kind: 'positive',
         slug: 'quest-items',
         label: 'Quest Items',
         matches: (row) => (row.neededForQuestCount ?? 0) > 0,
-        iconSourceIds: ['04031001', '04031077'],
+        iconContentIds: [
+          '63df4ceb3580419b2ae1db57f001573eac4fe068edfe5aeea17c4ce734de0f7a', // Lucas' Letter / Maria's Letter
+        ],
       },
       otherChild('other-etc-items', 'Other ETC Items'),
     ],
@@ -173,16 +176,17 @@ export const ITEM_SCOPES: Readonly<Record<ItemScopeSlug, ItemCategoryScope>> = {
     label: 'Set-up',
     itemClasses: ['setup'],
     children: [
-      byType('chairs', 'Chairs', 'chair', ['03010007', '03010008']),
-      byType('holiday-ornaments', 'Holiday Ornaments', 'holiday-ornament', [
-        '03992024',
-        '03992021',
-        '03992026',
+      byType('chairs', 'Chairs', 'chair', [
+        '15ceb9596a6bdc8f61f8aa1382292f3b428a30281315b83ed0499c5d0492e120', // Pink Seal Cushion
       ]),
-      byType('furniture', 'Furniture', 'furniture', ['03000005', '03000006']),
+      byType('holiday-ornaments', 'Holiday Ornaments', 'holiday-ornament', [
+        '96287ff70fcacc9d152b5e2382d3c7c274cbac08230d0c879c6d760dd8bbb5a8', // Circular Tree Ornament
+      ]),
+      byType('furniture', 'Furniture', 'furniture', [
+        '30653202898033325e7bdf8080b52b5b4025df895da27ac1e6e7b213f72e87e1', // Cherry Bed
+      ]),
       byType('crafting-stations', 'Crafting Stations', 'crafting-station', [
-        '03030000',
-        '03030001',
+        'b7d62c62b03503e04609501b97cb8ce7349cfadec38b3e8d01d7eae524355051', // Anvil
       ]),
       otherChild('other-setup-items', 'Other Set-up Items'),
     ],
@@ -197,14 +201,18 @@ export const ITEM_SCOPES: Readonly<Record<ItemScopeSlug, ItemCategoryScope>> = {
         slug: 'pets',
         label: 'Pets',
         matches: (row) => row.itemClass === 'pet',
-        iconSourceIds: ['5000002', '5000008'],
+        iconContentIds: [
+          '7cb4e8cd5e402cc35d7bd6d51dafb1800670816463425b50525f091accdde43e', // Pink Bunny
+        ],
       },
       {
         kind: 'positive',
         slug: 'cash-items',
         label: 'Cash Items',
         matches: (row) => row.itemClass === 'cash',
-        iconSourceIds: ['05070001', '05072000'],
+        iconContentIds: [
+          'e92811536cb6820a65eafaea2452b94161951361e5ed35b16035f0207d8939f0', // Super Megaphone
+        ],
       },
     ],
   },
