@@ -237,4 +237,37 @@ describe('ItemBrowse real router interactions', () => {
     expect(searchState['attackMin']).toBe(17);
     expect(searchState['rel']).toBe('monster-drop');
   });
+
+  it('preserves single numeric URL values for both multi-select and bucket through real router', async () => {
+    const history = createMemoryHistory({
+      initialEntries: [
+        '/maplestory/items/use/upgrade-scrolls?scrollSuccess=100&hpPercent=35',
+      ],
+    });
+    const router = createRouter({ routeTree, history });
+    await router.load();
+
+    const leafMatch = router.state.matches.find((m) =>
+      m.routeId.includes('$child'),
+    );
+    expect(leafMatch?.search).toEqual(
+      expect.objectContaining({
+        scrollSuccess: 100,
+        hpPercent: 35,
+      }),
+    );
+
+    await router.navigate({
+      to: '/maplestory/{-$buildId}/items/{-$scope}/{-$child}',
+      search: {
+        scrollSuccess: 100,
+        hpPercent: 35,
+      },
+    });
+
+    const href = router.state.location.href;
+    expect(href).toContain('scrollSuccess=100');
+    expect(href).toContain('hpPercent=35');
+    expect(href).not.toContain('%22');
+  });
 });
