@@ -100,12 +100,14 @@ export function DrillDownNav<TMeta = undefined>({
   root,
   currentId,
   label,
+  hideEmpty = false,
   renderLink,
   onNavigate,
 }: DrillDownNavProps<TMeta>): ReactElement {
   const { ancestors, current, children } = resolveDrillDownPath(
     root,
     currentId,
+    { hideEmpty },
   );
 
   return (

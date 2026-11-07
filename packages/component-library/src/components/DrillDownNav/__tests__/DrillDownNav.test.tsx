@@ -127,6 +127,50 @@ describe('resolveDrillDownPath', () => {
       'cash',
     ]);
   });
+
+  it('omits child rows with count === 0 when hideEmpty is true', () => {
+    const result = resolveDrillDownPath(demoTree, 'use', { hideEmpty: true });
+    expect(result.children.map((c) => c.id)).toEqual([
+      'use/upgrade-scrolls',
+      'use/recovery',
+    ]);
+  });
+
+  it('keeps child rows with count === 0 when hideEmpty is false', () => {
+    const result = resolveDrillDownPath(demoTree, 'use', { hideEmpty: false });
+    expect(result.children.map((c) => c.id)).toEqual([
+      'use/upgrade-scrolls',
+      'use/recovery',
+      'use/empty',
+    ]);
+  });
+
+  it('never omits the current node or ancestors even when current count === 0 and hideEmpty is true', () => {
+    const result = resolveDrillDownPath(demoTree, 'use/empty', {
+      hideEmpty: true,
+    });
+    expect(result.ancestors.map((a) => a.id)).toEqual(['all', 'use']);
+    expect(result.current.id).toBe('use/empty');
+    expect(result.current.count).toBe(0);
+    expect(result.children).toEqual([]);
+  });
+
+  it('never omits child nodes with undefined count when hideEmpty is true', () => {
+    const treeWithUncounted: DrillDownNode = {
+      id: 'root',
+      label: 'Root',
+      href: '/root',
+      children: [
+        { id: 'zero', label: 'Zero', href: '/zero', count: 0 },
+        { id: 'positive', label: 'Positive', href: '/positive', count: 5 },
+        { id: 'uncounted', label: 'Uncounted', href: '/uncounted' },
+      ],
+    };
+    const result = resolveDrillDownPath(treeWithUncounted, 'root', {
+      hideEmpty: true,
+    });
+    expect(result.children.map((c) => c.id)).toEqual(['positive', 'uncounted']);
+  });
 });
 
 describe('DrillDownNav component', () => {
@@ -293,6 +337,82 @@ describe('DrillDownNav component', () => {
     const zeroCountElement = emptyLink.querySelector('[class*="countDimmed"]');
     expect(zeroCountElement).not.toBeNull();
     expect(zeroCountElement?.textContent).toBe('0');
+  });
+
+  it('hides child rows whose count === 0 when hideEmpty is true', () => {
+    render(
+      <DrillDownNav
+        root={demoTree}
+        currentId="use"
+        label="Item categories"
+        hideEmpty
+      />,
+    );
+
+    expect(screen.queryByText('Empty Category')).not.toBeInTheDocument();
+    expect(screen.getByText('Upgrade Scrolls')).toBeInTheDocument();
+    expect(screen.getByText('Recovery')).toBeInTheDocument();
+  });
+
+  it('shows child rows whose count === 0 (dimmed) when hideEmpty is false or omitted', () => {
+    const { rerender } = render(
+      <DrillDownNav root={demoTree} currentId="use" label="Item categories" />,
+    );
+    expect(screen.getByText('Empty Category')).toBeInTheDocument();
+
+    rerender(
+      <DrillDownNav
+        root={demoTree}
+        currentId="use"
+        label="Item categories"
+        hideEmpty={false}
+      />,
+    );
+    expect(screen.getByText('Empty Category')).toBeInTheDocument();
+  });
+
+  it('still renders current zero node as current with ancestors when hideEmpty is true', () => {
+    render(
+      <DrillDownNav
+        root={demoTree}
+        currentId="use/empty"
+        label="Item categories"
+        hideEmpty
+      />,
+    );
+
+    const currentLink = screen.getByRole('link', {
+      name: /Empty Category/,
+    });
+    expect(currentLink).toHaveAttribute('aria-current', 'page');
+    expect(currentLink.textContent).toContain('0');
+
+    expect(screen.getByRole('link', { name: 'All Items' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Use' })).toBeInTheDocument();
+  });
+
+  it('never hides child rows with undefined count when hideEmpty is true', () => {
+    const treeWithUncounted: DrillDownNode = {
+      id: 'root',
+      label: 'Root',
+      href: '/root',
+      children: [
+        { id: 'zero', label: 'Zero Child', href: '/zero', count: 0 },
+        { id: 'uncounted', label: 'Uncounted Child', href: '/uncounted' },
+      ],
+    };
+
+    render(
+      <DrillDownNav
+        root={treeWithUncounted}
+        currentId="root"
+        label="Test categories"
+        hideEmpty
+      />,
+    );
+
+    expect(screen.queryByText('Zero Child')).not.toBeInTheDocument();
+    expect(screen.getByText('Uncounted Child')).toBeInTheDocument();
   });
 
   it('treats unknown currentId as root', () => {
