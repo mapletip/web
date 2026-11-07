@@ -77,6 +77,7 @@ export function ItemBrowse({
               root={navTree}
               currentId={currentId}
               label="Item categories"
+              hideEmpty
               renderLink={renderItemNavLink}
               {...(onNavigate ? { onNavigate } : {})}
             />

@@ -12,10 +12,61 @@ import { routeTree } from '@/routeTree.gen';
 
 import { ITEM_SCOPES } from '../categories';
 import { loadItemBrowse } from '../load';
+import type { ItemRow } from '../project';
 import { parseItemRouteParams } from '../routing';
 
+const { mockRows } = vi.hoisted(() => {
+  const rows: readonly ItemRow[] = [
+    {
+      key: 'item:use:scroll',
+      sourceId: '02040000',
+      itemClass: 'consume',
+      types: ['upgrade-scroll'],
+    },
+    {
+      key: 'item:use:recovery',
+      sourceId: '02000000',
+      itemClass: 'consume',
+      functions: ['recovery'],
+    },
+    {
+      key: 'item:use:stars',
+      sourceId: '02070000',
+      itemClass: 'consume',
+      types: ['throwing-star'],
+    },
+    {
+      key: 'item:use:potion',
+      sourceId: '02001000',
+      itemClass: 'consume',
+      types: ['potion'],
+    },
+    {
+      key: 'item:etc:quest',
+      sourceId: '04000000',
+      itemClass: 'etc',
+      neededForQuestCount: 1,
+    },
+    {
+      key: 'item:setup:chair',
+      sourceId: '03010000',
+      itemClass: 'setup',
+      types: ['chair'],
+    },
+    {
+      key: 'item:cash:pet',
+      sourceId: '05000000',
+      itemClass: 'pet',
+    },
+  ];
+  return { mockRows: rows };
+});
+
 vi.mock('../load', () => ({
-  loadItemBrowse: vi.fn().mockResolvedValue({ rows: [], coverage: {} }),
+  loadItemBrowse: vi.fn().mockResolvedValue({
+    rows: mockRows,
+    coverage: {},
+  }),
 }));
 
 describe('Items Browse route integration', () => {
@@ -47,7 +98,35 @@ describe('Items Browse route integration', () => {
         'Throwing Stars',
         'Potions',
       ],
-      unexpectedLabels: ['ETC', 'Set-up', 'Cash/Pet'],
+      unexpectedLabels: [
+        'ETC',
+        'Set-up',
+        'Cash/Pet',
+        'Bullets',
+        'Reward Containers',
+        'Monster Cards',
+        'Skill Items',
+      ],
+    },
+    {
+      url: '/maplestory/items/use/bullets',
+      expectedBuildId: 'cw-launch',
+      expectedScope: ITEM_SCOPES.use,
+      expectedChildSlug: 'bullets',
+      currentLabel: 'Bullets',
+      expectedBackLinks: [
+        { href: '/maplestory/items', label: 'All Items' },
+        { href: '/maplestory/items/use', label: 'Use' },
+      ],
+      expectedDirectChildren: [] as readonly string[],
+      unexpectedLabels: [
+        'Upgrade Scrolls',
+        'Recovery',
+        'Throwing Stars',
+        'Potions',
+        'ETC',
+        'Set-up',
+      ],
     },
     {
       url: '/maplestory/items/use/upgrade-scrolls',
@@ -205,6 +284,44 @@ describe('Items Browse route integration', () => {
       ).not.toBeInTheDocument();
     });
   }
+
+  it('CW /maplestory/items/use/bullets renders 200 with Bullets as current (0) plus ← All Items, ← Use', async () => {
+    const url = '/maplestory/items/use/bullets';
+    const history = createMemoryHistory({ initialEntries: [url] });
+    const router = createRouter({ routeTree, history });
+    await router.load();
+
+    const { container } = render(
+      <MantineProvider>
+        <RouterProvider router={router} />
+      </MantineProvider>,
+    );
+
+    const railNav = container.querySelector(
+      'nav[aria-label="Item categories"]',
+    );
+    expect(railNav).not.toBeNull();
+
+    const links = railNav?.querySelectorAll('a') ?? [];
+    const activeLink = Array.from(links).find(
+      (link) => link.getAttribute('aria-current') === 'page',
+    );
+    expect(activeLink).toBeDefined();
+    expect(activeLink?.getAttribute('href')).toBe(
+      '/maplestory/items/use/bullets',
+    );
+    expect(activeLink?.textContent).toContain('Bullets');
+    expect(activeLink?.textContent).toContain('0');
+
+    const backLinks = Array.from(links).filter((link) =>
+      link.textContent?.includes('←'),
+    );
+    expect(backLinks).toHaveLength(2);
+    expect(backLinks[0]?.getAttribute('href')).toBe('/maplestory/items');
+    expect(backLinks[0]?.textContent).toContain('← All Items');
+    expect(backLinks[1]?.getAttribute('href')).toBe('/maplestory/items/use');
+    expect(backLinks[1]?.textContent).toContain('← Use');
+  });
 
   const notFoundUrls = [
     '/maplestory/cw-launch/items',
