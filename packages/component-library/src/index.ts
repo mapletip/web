@@ -33,8 +33,12 @@ export type {
   DrillDownSelectHandler,
   DrillDownSelectMeta,
 } from '@/components/DrillDownNav';
-export { FacetedBrowser } from '@/components/FacetedBrowser';
+export {
+  buildQuantileBuckets,
+  FacetedBrowser,
+} from '@/components/FacetedBrowser';
 export type {
+  BrowseSortOption,
   BrowseState,
   FacetControlContext,
   FacetDefinition,

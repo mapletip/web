@@ -1,5 +1,5 @@
 import { Group, Pagination as MantinePagination } from '@mantine/core';
-import type { ReactElement } from 'react';
+import type { MouseEvent as ReactMouseEvent, ReactElement } from 'react';
 
 import type { BrowseState } from '@/components/FacetedBrowser/hooks/browseState';
 
@@ -35,6 +35,16 @@ function controlLabel(control: PaginationControl): string {
   }
 }
 
+function isPlainLeftClick(event: ReactMouseEvent): boolean {
+  return (
+    event.button === 0 &&
+    !event.altKey &&
+    !event.ctrlKey &&
+    !event.metaKey &&
+    !event.shiftKey
+  );
+}
+
 const ignorePageChange = () => undefined;
 
 export interface PaginationProps {
@@ -61,6 +71,14 @@ export function Pagination({
   const hrefFor = (target: number) =>
     getPageHref?.(target, { ...state, page: target });
 
+  const createClickHandler =
+    (target: number) => (event: ReactMouseEvent<HTMLAnchorElement>) => {
+      if (isPlainLeftClick(event)) {
+        event.preventDefault();
+        onPageChange(target);
+      }
+    };
+
   return (
     <Group justify="flex-end" align="center" wrap="wrap">
       <MantinePagination
@@ -74,6 +92,7 @@ export function Pagination({
             ? {
                 component: 'a' as const,
                 href: hrefFor(pageNumber),
+                onClick: createClickHandler(pageNumber),
               }
             : {}),
         })}
@@ -89,6 +108,7 @@ export function Pagination({
               ? {
                   component: 'a' as const,
                   href: hrefFor(target),
+                  onClick: createClickHandler(target),
                 }
               : {}),
           };

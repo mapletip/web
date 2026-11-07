@@ -32,11 +32,11 @@ import {
 } from './browseState';
 import type { FacetFilterValue } from './filterTypes';
 import {
+  createSearchFilterFn,
   disabledSearchFilterFn,
   nextSortDirection,
   resolveFields,
   resolveSearchFieldIds,
-  searchFilterFn,
   sortFromSorting,
   sortingFromSort,
   withoutIdentityColumns,
@@ -324,8 +324,13 @@ export function useFacetedBrowser<TRecord extends Record<string, unknown>>({
     [searchFields, identityField, idAccessor, columns, queryFields],
   );
 
-  const globalFilterFn =
-    searchFields?.length === 0 ? disabledSearchFilterFn : searchFilterFn;
+  const globalFilterFn = useMemo(
+    () =>
+      searchFields?.length === 0
+        ? disabledSearchFilterFn
+        : createSearchFilterFn(fieldMap),
+    [searchFields, fieldMap],
+  );
 
   const tanstackColumns = useMemo(() => {
     const helper = createColumnHelper<typeof facetedBrowserFeatures, TRecord>();

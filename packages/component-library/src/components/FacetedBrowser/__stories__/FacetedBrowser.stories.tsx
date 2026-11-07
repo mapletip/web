@@ -8,6 +8,7 @@ import { DrillDownNav } from '@/components/DrillDownNav';
 import type { DrillDownNode } from '@/components/DrillDownNav';
 import { FacetedBrowser } from '@/components/FacetedBrowser';
 import type {
+  BrowseSortOption,
   FacetDefinition,
   FacetedBrowserNavigation,
   BrowseState,
@@ -55,12 +56,14 @@ function BrowserExample({
   onStateChange,
   fillHeight = true,
   navigation,
+  sortOptions,
 }: {
   readonly variant?: Variant;
   readonly state?: BrowseState;
   readonly onStateChange?: (nextState: BrowseState) => void;
   readonly fillHeight?: boolean;
   readonly navigation?: FacetedBrowserNavigation;
+  readonly sortOptions?: readonly BrowseSortOption[];
 }) {
   const records = demoRecords;
   const columns = useMemo(
@@ -156,6 +159,7 @@ function BrowserExample({
       facets={facets}
       presentation="comparison"
       {...(navigation ? { navigation } : {})}
+      {...(sortOptions ? { sortOptions } : {})}
       {...(fillHeight ? { fillHeight: true } : { tableMaxHeight: 560 })}
       renderCard={(record) => <FacetedBrowserRecordCard record={record} />}
       {...stateProps}
@@ -371,6 +375,40 @@ export const Controlled: Story = {
       </>
     );
   },
+};
+
+export const SortControl: Story = {
+  name: 'Sort control',
+  render: () => (
+    <BrowserExample
+      sortOptions={[
+        {
+          value: 'name-asc',
+          label: 'Name (A–Z)',
+          field: 'name',
+          direction: 'asc',
+        },
+        {
+          value: 'name-desc',
+          label: 'Name (Z–A)',
+          field: 'name',
+          direction: 'desc',
+        },
+        {
+          value: 'value1-desc',
+          label: 'Value 1 (Highest)',
+          field: 'value1',
+          direction: 'desc',
+        },
+        {
+          value: 'value1-asc',
+          label: 'Value 1 (Lowest)',
+          field: 'value1',
+          direction: 'asc',
+        },
+      ]}
+    />
+  ),
 };
 
 const demoNavTree: DrillDownNode = {

@@ -52,6 +52,13 @@ export interface FacetedBrowserNavigation {
   ) => ReactNode;
 }
 
+export interface BrowseSortOption {
+  readonly value: string;
+  readonly label: string;
+  readonly field: string;
+  readonly direction: 'asc' | 'desc';
+}
+
 interface CommonProps<TRecord extends Record<string, unknown>> {
   readonly title: ReactNode;
   readonly records: readonly TRecord[];
@@ -67,6 +74,7 @@ interface CommonProps<TRecord extends Record<string, unknown>> {
    * navigation drawer.
    */
   readonly navigation?: FacetedBrowserNavigation;
+  readonly sortOptions?: readonly BrowseSortOption[];
   readonly recordNoun?: string;
   /**
    * Visible noun for the result count, when the descriptive `recordNoun` is too

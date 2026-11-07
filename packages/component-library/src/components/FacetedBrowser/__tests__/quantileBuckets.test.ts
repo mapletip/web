@@ -178,4 +178,10 @@ describe('buildQuantileBuckets', () => {
       );
     }
   });
+
+  it('is exported from the package root', async () => {
+    const root = await import('@/index');
+    expect(typeof root.buildQuantileBuckets).toBe('function');
+    expect(root.buildQuantileBuckets).toBe(buildQuantileBuckets);
+  });
 });

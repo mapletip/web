@@ -7,13 +7,14 @@ import { describe, expect, it, vi } from 'vitest';
 import '@/styles.css';
 import { FacetedBrowser } from '@/components/FacetedBrowser';
 import type {
+  BrowseSortOption,
   BrowseState,
   FacetDefinition,
   QueryFieldDefinition,
 } from '@/components/FacetedBrowser';
 import { demoGroupFacetOptions } from '@/fixtures/facetOptions';
 import type { DemoRecord } from '@/fixtures/records';
-import { demoRecords } from '@/fixtures/records';
+import { demoRecords, makeDemoColumns } from '@/fixtures/records';
 
 /**
  * States that are plain React/card presentation (no DataTable measurement, no
@@ -274,6 +275,126 @@ describe('result summary', () => {
       'aria-current',
       'page',
     );
+  });
+});
+
+describe('sort options control', () => {
+  const sortOptions: readonly BrowseSortOption[] = [
+    { value: 'name-asc', label: 'Name (A–Z)', field: 'name', direction: 'asc' },
+    { value: 'name-desc', label: 'Name (Z–A)', field: 'name', direction: 'desc' },
+    { value: 'value1-desc', label: 'Value (Highest)', field: 'value1', direction: 'desc' },
+  ];
+
+  const sortableFields: readonly QueryFieldDefinition<DemoRecord>[] = [
+    { id: 'name', accessor: 'name', sortable: true },
+    { id: 'value1', accessor: 'value1', sortable: true },
+  ];
+
+  it('renders a Mantine Select alongside page size in non-comparison (cards) mode', async () => {
+    const onStateChange = vi.fn();
+    const state: BrowseState = {
+      search: '',
+      filters: {},
+      sort: { field: 'name', direction: 'asc' },
+      page: 2,
+      pageSize: 20,
+      hiddenColumns: [],
+    };
+
+    render(
+      <MantineProvider>
+        <FacetedBrowser
+          title={<h1>Items</h1>}
+          records={demoRecords}
+          idAccessor="id"
+          queryFields={sortableFields}
+          presentation="cards"
+          renderCard={(record) => <div>{record.name}</div>}
+          sortOptions={sortOptions}
+          state={state}
+          onStateChange={onStateChange}
+        />
+      </MantineProvider>,
+    );
+
+    const sortSelect = screen.getByRole('combobox', { name: 'Sort records' });
+    expect(sortSelect).toBeVisible();
+    expect(sortSelect).toHaveValue('Name (A–Z)');
+
+    // Page size select is also rendered alongside
+    expect(screen.getByRole('combobox', { name: 'records per page' })).toBeVisible();
+
+    // Changing sort triggers canonical transition: explicit direction, page resets to 1
+    await userEvent.click(sortSelect);
+    const descOption = await screen.findByRole('option', {
+      name: 'Name (Z–A)',
+      hidden: true,
+    });
+    fireEvent.click(descOption);
+
+    expect(onStateChange).toHaveBeenCalledWith(
+      expect.objectContaining({
+        sort: { field: 'name', direction: 'desc' },
+        page: 1, // page reset
+      }),
+    );
+  });
+
+  it('renders a Mantine Select alongside page size in comparison mode', () => {
+    const onStateChange = vi.fn();
+    const state: BrowseState = {
+      search: '',
+      filters: {},
+      sort: { field: 'name', direction: 'asc' },
+      page: 1,
+      pageSize: 20,
+      hiddenColumns: [],
+    };
+
+    render(
+      <MantineProvider>
+        <FacetedBrowser
+          title={<h1>Items</h1>}
+          records={demoRecords}
+          idAccessor="id"
+          identityField="name"
+          columns={makeDemoColumns()}
+          presentation="comparison"
+          renderCard={(record) => <div>{record.name}</div>}
+          sortOptions={sortOptions}
+          state={state}
+          onStateChange={onStateChange}
+        />
+      </MantineProvider>,
+    );
+
+    const sortSelect = screen.getByRole('combobox', { name: 'Sort records' });
+    expect(sortSelect).toBeVisible();
+    expect(screen.getByRole('combobox', { name: 'records per page' })).toBeVisible();
+  });
+
+  it('omitting sortOptions renders only page size select without a sort select', () => {
+    render(
+      <MantineProvider>
+        <FacetedBrowser
+          title={<h1>Items</h1>}
+          records={demoRecords}
+          idAccessor="id"
+          presentation="cards"
+          renderCard={(record) => <div>{record.name}</div>}
+          defaultState={{
+            search: '',
+            filters: {},
+            page: 1,
+            pageSize: 20,
+            hiddenColumns: [],
+          }}
+        />
+      </MantineProvider>,
+    );
+
+    expect(screen.queryByRole('combobox', { name: 'Sort records' })).not.toBeInTheDocument();
+    expect(screen.getByRole('combobox', { name: 'records per page' })).toBeVisible();
   });
 });
 
