@@ -7,6 +7,7 @@ import type {
 } from '@mapletip/component-library';
 import type { ReactElement } from 'react';
 
+import { BrowsePageShell } from '@/components/BrowsePageShell';
 import { BUILDS, type BuildId } from '@/config/maplekit';
 
 import { MonsterBrowseCard } from '../MonsterBrowseCard';
@@ -16,7 +17,6 @@ import {
   type MonsterFactId,
 } from '../project';
 
-import classes from './MonsterBrowse.module.css';
 
 export interface MonsterBrowseProps {
   readonly buildId: BuildId;
@@ -156,12 +156,7 @@ export function MonsterBrowse({
 }: MonsterBrowseProps): ReactElement {
   const label = BUILDS[buildId].label;
   return (
-    <main
-      id="main-content"
-      tabIndex={-1}
-      className={classes['page']}
-      data-fill-viewport=""
-    >
+    <BrowsePageShell>
       <FacetedBrowser
         title={<Title order={1}>{`MapleStory ${label} Monsters`}</Title>}
         records={rows}
@@ -182,6 +177,6 @@ export function MonsterBrowse({
         renderCard={(record) => <MonsterBrowseCard record={record} />}
         defaultState={defaultState}
       />
-    </main>
+    </BrowsePageShell>
   );
 }

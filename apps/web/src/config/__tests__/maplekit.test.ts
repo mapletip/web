@@ -5,6 +5,7 @@ import {
   DEFAULT_BUILD_ID,
   isBuildId,
   MAPLEKIT_RELEASE,
+  supportedBuildSlug,
 } from '@/config/maplekit';
 
 describe('maplekit configuration', () => {
@@ -20,6 +21,12 @@ describe('maplekit configuration', () => {
   it('configures a supported canonical build', () => {
     expect(isBuildId(DEFAULT_BUILD_ID)).toBe(true);
     expect(DEFAULT_BUILD_ID).toBe('cw-launch');
+  });
+
+  it('narrows valid alternate build slugs and rejects default or unknown with notFound', () => {
+    expect(supportedBuildSlug('gms-v83')).toBe('gms-v83');
+    expect(() => supportedBuildSlug('cw-launch')).toThrow();
+    expect(() => supportedBuildSlug('unknown')).toThrow();
   });
 
   it('keeps the immutable pin and origin unchanged', () => {

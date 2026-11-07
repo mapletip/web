@@ -6,6 +6,7 @@
  * product API.
  */
 import type { GetMonsterBrowseOptions } from '@mapletip/data/monsters';
+import { notFound } from '@tanstack/react-router';
 
 /** MapleKit data origin; immutable release files are served from here. */
 const DATA_ORIGIN = 'https://d0.mapletip.com/';
@@ -47,3 +48,18 @@ export type BuildId = keyof typeof BUILDS;
 export function isBuildId(value: string): value is BuildId {
   return Object.hasOwn(BUILDS, value);
 }
+
+/**
+ * Narrow an arbitrary route slug to an explicitly supported alternate build. The
+ * canonical build has its own unversioned URL, so that slug is refused here to
+ * avoid duplicate content; anything else unknown is a genuine not-found before
+ * any SDK work happens.
+ */
+export function supportedBuildSlug(slug: string): BuildId {
+  if (slug === DEFAULT_BUILD_ID || !isBuildId(slug)) {
+    // eslint-disable-next-line @typescript-eslint/only-throw-error
+    throw notFound();
+  }
+  return slug;
+}
+
