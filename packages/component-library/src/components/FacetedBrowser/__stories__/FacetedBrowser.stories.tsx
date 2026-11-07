@@ -379,25 +379,21 @@ export const SortControl: Story = {
     <BrowserExample
       sortOptions={[
         {
-          value: 'name-asc',
           label: 'Name (A–Z)',
           field: 'name',
           direction: 'asc',
         },
         {
-          value: 'name-desc',
           label: 'Name (Z–A)',
           field: 'name',
           direction: 'desc',
         },
         {
-          value: 'value1-desc',
           label: 'Value 1 (Highest)',
           field: 'value1',
           direction: 'desc',
         },
         {
-          value: 'value1-asc',
           label: 'Value 1 (Lowest)',
           field: 'value1',
           direction: 'asc',

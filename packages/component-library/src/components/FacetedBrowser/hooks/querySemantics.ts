@@ -62,7 +62,8 @@ export interface ResolvedField<TRecord extends Record<string, unknown>> {
   readonly filterFn: FieldFilterFn<TRecord>;
   readonly getUniqueValues: (row: TRecord) => readonly unknown[];
   readonly isIdentity: boolean;
-  readonly searchMatch?: ((value: unknown, query: string) => boolean) | undefined;
+  readonly searchMatch?:
+    ((value: unknown, query: string) => boolean) | undefined;
 }
 
 function searchValueMatches(value: unknown, query: string): boolean {
@@ -79,17 +80,6 @@ function searchValueMatches(value: unknown, query: string): boolean {
   return false;
 }
 
-function applySearchMatch(
-  comparator: (value: unknown, query: string) => boolean,
-  value: unknown,
-  query: string,
-): boolean {
-  if (Array.isArray(value)) {
-    return value.some((entry) => applySearchMatch(comparator, entry, query));
-  }
-  return comparator(value, query);
-}
-
 /**
  * TanStack global filter for the single search box. It scans accessor values
  * (including computed and array-valued query fields) instead of maintaining a
@@ -97,14 +87,14 @@ function applySearchMatch(
  */
 export function createSearchFilterFn<
   TRecord extends Record<string, unknown> = Record<string, unknown>,
->(fieldMap?: Map<string, ResolvedField<TRecord>>) {
+>(fieldMap: Map<string, ResolvedField<TRecord>>) {
   return constructFilterFn({
     filter: (dataValue, filterValue, _row, columnId) => {
       if (typeof filterValue !== 'string' || filterValue.length === 0)
         return true;
-      const field = columnId && fieldMap ? fieldMap.get(columnId) : undefined;
+      const field = columnId ? fieldMap.get(columnId) : undefined;
       if (field?.searchMatch) {
-        return applySearchMatch(field.searchMatch, dataValue, filterValue);
+        return field.searchMatch(dataValue, filterValue);
       }
       return searchValueMatches(dataValue, filterValue);
     },
@@ -112,8 +102,6 @@ export function createSearchFilterFn<
       typeof value === 'string' ? value.trim().toLowerCase() : '',
   });
 }
-
-export const searchFilterFn = createSearchFilterFn();
 
 export const disabledSearchFilterFn = constructFilterFn({
   filter: (_dataValue, filterValue) =>

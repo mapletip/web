@@ -6,7 +6,6 @@ import type { QueryFieldDefinition } from '@/components/FacetedBrowser/hooks/que
 import type { TableColumn } from '@/components/Table';
 
 export interface BrowseSortOption {
-  readonly value: string;
   readonly label: string;
   readonly field: string;
   readonly direction: 'asc' | 'desc';

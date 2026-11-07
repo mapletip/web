@@ -280,9 +280,9 @@ describe('result summary', () => {
 
 describe('sort options control', () => {
   const sortOptions: readonly BrowseSortOption[] = [
-    { value: 'name-asc', label: 'Name (A–Z)', field: 'name', direction: 'asc' },
-    { value: 'name-desc', label: 'Name (Z–A)', field: 'name', direction: 'desc' },
-    { value: 'value1-desc', label: 'Value (Highest)', field: 'value1', direction: 'desc' },
+    { label: 'Name (A–Z)', field: 'name', direction: 'asc' },
+    { label: 'Name (Z–A)', field: 'name', direction: 'desc' },
+    { label: 'Value (Highest)', field: 'value1', direction: 'desc' },
   ];
 
   const sortableFields: readonly QueryFieldDefinition<DemoRecord>[] = [
@@ -322,7 +322,9 @@ describe('sort options control', () => {
     expect(sortSelect).toHaveValue('Name (A–Z)');
 
     // Page size select is also rendered alongside
-    expect(screen.getByRole('combobox', { name: 'records per page' })).toBeVisible();
+    expect(
+      screen.getByRole('combobox', { name: 'records per page' }),
+    ).toBeVisible();
 
     // Changing sort triggers canonical transition: explicit direction, page resets to 1
     await userEvent.click(sortSelect);
@@ -361,6 +363,7 @@ describe('sort options control', () => {
           columns={makeDemoColumns()}
           presentation="comparison"
           renderCard={(record) => <div>{record.name}</div>}
+          recordNoun="monsters"
           sortOptions={sortOptions}
           state={state}
           onStateChange={onStateChange}
@@ -368,9 +371,11 @@ describe('sort options control', () => {
       </MantineProvider>,
     );
 
-    const sortSelect = screen.getByRole('combobox', { name: 'Sort records' });
+    const sortSelect = screen.getByRole('combobox', { name: 'Sort monsters' });
     expect(sortSelect).toBeVisible();
-    expect(screen.getByRole('combobox', { name: 'records per page' })).toBeVisible();
+    expect(
+      screen.getByRole('combobox', { name: 'monsters per page' }),
+    ).toBeVisible();
   });
 
   it('omitting sortOptions renders only page size select without a sort select', () => {
@@ -393,8 +398,12 @@ describe('sort options control', () => {
       </MantineProvider>,
     );
 
-    expect(screen.queryByRole('combobox', { name: 'Sort records' })).not.toBeInTheDocument();
-    expect(screen.getByRole('combobox', { name: 'records per page' })).toBeVisible();
+    expect(
+      screen.queryByRole('combobox', { name: 'Sort records' }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByRole('combobox', { name: 'records per page' }),
+    ).toBeVisible();
   });
 });
 
@@ -430,9 +439,13 @@ describe('rail navigation slot', () => {
 
     const aside = container.querySelector('aside');
     expect(aside).not.toBeNull();
-    expect(screen.getByRole('navigation', { name: 'Category navigation' })).toBeVisible();
+    expect(
+      screen.getByRole('navigation', { name: 'Category navigation' }),
+    ).toBeVisible();
     // "Filters" heading is NOT rendered when zero facets
-    expect(screen.queryByRole('heading', { name: 'Filters' })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('heading', { name: 'Filters' }),
+    ).not.toBeInTheDocument();
   });
 
   it('renders railNavigation above the Filters heading and facet list when facets exist', () => {
@@ -470,6 +483,9 @@ describe('rail navigation slot', () => {
     expect(nav).toBeVisible();
     expect(filtersHeading).toBeVisible();
     // Navigation is placed above the Filters heading
-    expect(nav.compareDocumentPosition(filtersHeading) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(
+      nav.compareDocumentPosition(filtersHeading) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
   });
 });
