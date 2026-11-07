@@ -1,11 +1,11 @@
-import { Title } from '@mantine/core';
+import { Text } from '@mantine/core';
 import { DrillDownNav, FacetedBrowser } from '@mapletip/component-library';
 import type {
-  BrowseState,
   FacetedBrowserNavigationHistory,
+  QueryFieldDefinition,
   TableColumn,
 } from '@mapletip/component-library';
-import { useRouter } from '@tanstack/react-router';
+import { Link, useRouter } from '@tanstack/react-router';
 import { useCallback, useMemo, type ReactElement } from 'react';
 
 import { BrowsePageShell } from '@/components/BrowsePageShell';
@@ -13,22 +13,35 @@ import { BUILDS, type BuildId } from '@/config/maplekit';
 
 import { getCategoryRows } from '../assignment';
 import { ItemBrowseCard } from '../ItemBrowseCard';
+import { ItemBrowseHeader } from '../ItemBrowseHeader';
 import { itemPageMetadata } from '../metadata';
 import {
   DEFAULT_NAV_PARAMS,
   findItemNavNode,
-  getItemNavTree,
+  getItemNavPath,
   ITEM_NAV_TARGET,
   itemNavId,
   renderItemNavLink,
 } from '../navigation';
+import { getItemNavTree } from '../navigation-tree';
 import type { ItemRow } from '../project';
 import type { ItemCategorySelection } from '../routing';
+import { findExactIdNotice, matchSourceId } from '../search';
+import { browseStateToUrl, PAGE_SIZE_OPTIONS } from '../search-params';
+import type { ItemBrowseSearch } from '../search-params';
+import { ITEM_SORT_OPTIONS } from '../sort';
+
+import {
+  useItemBrowseUrlState,
+  type OnSearchChangeOptions,
+} from './useItemBrowseUrlState';
 
 export interface ItemBrowseProps {
   readonly buildId: BuildId;
   readonly rows: readonly ItemRow[];
   readonly category: ItemCategorySelection;
+  readonly search: ItemBrowseSearch;
+  readonly onSearchChange: (options: OnSearchChangeOptions) => void;
 }
 
 export const itemBrowseColumns: readonly TableColumn<ItemRow>[] = [
@@ -48,24 +61,35 @@ export const itemBrowseColumns: readonly TableColumn<ItemRow>[] = [
   },
 ];
 
-const defaultState: BrowseState = {
-  search: '',
-  filters: {},
-  sort: { field: 'name', direction: 'asc' },
-  page: 1,
-  pageSize: 50,
-  hiddenColumns: [],
-};
-
 const SUMMARY_NOUN = { one: 'Item', other: 'Items' } as const;
 
+const itemQueryFields: readonly QueryFieldDefinition<ItemRow>[] = [
+  {
+    id: 'name',
+    accessor: 'name',
+  },
+  {
+    id: 'sourceId',
+    accessor: 'sourceId',
+    searchMatch: ({ value, query }) =>
+      typeof value === 'string' && matchSourceId({ sourceId: value, query }),
+  },
+];
+
+/** Renders a controlled Items catalog page with shareable URL state. */
 export function ItemBrowse({
   buildId,
   rows,
   category,
+  search,
+  onSearchChange,
 }: ItemBrowseProps): ReactElement {
-  const label = BUILDS[buildId].label;
+  const buildLabel = BUILDS[buildId].label;
   const { heading } = itemPageMetadata(buildId, category);
+  const { browseState, handleStateChange } = useItemBrowseUrlState({
+    search,
+    onSearchChange,
+  });
 
   const scopedRows = useMemo(
     () =>
@@ -77,20 +101,31 @@ export function ItemBrowse({
     [rows, category.scope, category.child],
   );
 
-  const navTree = useMemo(() => getItemNavTree(rows, buildId), [rows, buildId]);
-
+  const navTree = useMemo(
+    () => getItemNavTree({ rows, buildId }),
+    [rows, buildId],
+  );
   const currentId = itemNavId(category);
   const currentNode = findItemNavNode(navTree, currentId) ?? navTree;
-  const currentCategoryLabel = currentNode.label;
   const currentIcon = currentNode.icon;
+  const navPath = getItemNavPath({ root: navTree, targetId: currentId });
+  const categorySearch = browseStateToUrl({
+    state: browseState,
+    includePage: false,
+  });
+  const exactIdNotice = findExactIdNotice({
+    query: browseState.search,
+    rows,
+    category,
+    buildId,
+  });
 
   const router = useRouter();
-
   const navHistory = useMemo<FacetedBrowserNavigationHistory>(
     () => ({
       push: () => {
-        const loc = router.history.location;
-        router.history.push(loc.href, loc.state);
+        const location = router.history.location;
+        router.history.push(location.href, location.state);
       },
       back: () => {
         router.history.back();
@@ -105,24 +140,34 @@ export function ItemBrowse({
       void router.navigate({
         to: ITEM_NAV_TARGET,
         params: targetNode.meta ?? DEFAULT_NAV_PARAMS,
+        search: categorySearch,
         replace: options.replace,
       });
     },
-    [navTree, router],
+    [categorySearch, navTree, router],
   );
 
   return (
     <BrowsePageShell>
       <FacetedBrowser
-        title={<Title order={1}>{heading}</Title>}
+        title={
+          <ItemBrowseHeader
+            buildId={buildId}
+            navTree={navTree}
+            navPath={navPath}
+            heading={heading}
+            search={categorySearch}
+            exactIdNotice={exactIdNotice}
+          />
+        }
         navigation={{
           label: 'Item categories',
-          currentLabel: currentCategoryLabel,
+          currentLabel: currentNode.label,
           currentId,
           currentCount: currentNode.count,
+          ...(currentIcon ? { currentIcon } : {}),
           apply: applyNav,
           history: navHistory,
-          ...(currentIcon ? { currentIcon } : {}),
           render: (context) => {
             if (context.mode === 'drawer') {
               return (
@@ -141,7 +186,9 @@ export function ItemBrowse({
                 currentId={currentId}
                 label="Item categories"
                 hideEmpty
-                renderLink={renderItemNavLink}
+                renderLink={(node, props) =>
+                  renderItemNavLink({ node, props, search: categorySearch })
+                }
                 {...(context.onNavigate
                   ? { onNavigate: context.onNavigate }
                   : {})}
@@ -153,17 +200,40 @@ export function ItemBrowse({
         idAccessor="key"
         identityField="name"
         columns={itemBrowseColumns}
-        searchFields={['name', 'sourceId']}
+        queryFields={itemQueryFields}
         facets={[]}
-        recordNoun={`${label} items`}
+        sortOptions={ITEM_SORT_OPTIONS}
+        recordNoun={`${buildLabel} items`}
         summaryMode="total"
         summaryNoun={SUMMARY_NOUN}
-        pageSizeOptions={[25, 50, 75, 100]}
+        pageSizeOptions={PAGE_SIZE_OPTIONS}
         presentation="comparison"
         fillHeight
         tableStorageKey={`mapletip:web:items:${buildId}:v1`}
         renderCard={(record) => <ItemBrowseCard record={record} />}
-        defaultState={defaultState}
+        state={browseState}
+        onStateChange={handleStateChange}
+        renderPageLink={({ page, state, props }) => {
+          const { target, disabled, ...linkProps } = props;
+          const routerLinkProps: Omit<typeof linkProps, 'href'> = linkProps;
+          return (
+            <Link
+              from={ITEM_NAV_TARGET}
+              to="."
+              search={browseStateToUrl({ state: { ...state, page } })}
+              {...routerLinkProps}
+              {...(target === undefined ? {} : { target })}
+              {...(disabled === undefined ? {} : { disabled })}
+            />
+          );
+        }}
+        emptyState={
+          scopedRows.length === 0 ? (
+            <Text>
+              {buildLabel} has no {currentNode.label}.
+            </Text>
+          ) : undefined
+        }
       />
     </BrowsePageShell>
   );
