@@ -54,14 +54,14 @@ export interface RangeFacetConfig {
 
 export const CATEGORICAL_FACETS: readonly CategoricalFacetConfig[] = [
   {
-    field: 'types',
+    field: 'type',
     label: 'Item type',
     values: (row) => row.types ?? [],
     optionLabel: ITEM_TYPE_LABELS,
     quick: true,
   },
   {
-    field: 'functions',
+    field: 'fn',
     label: 'Effect',
     values: (row) =>
       row.functions ? row.functions.filter((fn) => fn !== 'pet') : [],
@@ -133,7 +133,7 @@ export const CATEGORICAL_FACETS: readonly CategoricalFacetConfig[] = [
     field: 'pet',
     label: 'Compatible pets',
     values: (row) => [
-      ...(row.petTargets?.map((t) => t.key) ?? []),
+      ...(row.petTargets?.map((t) => t.sourceId) ?? []),
       ...(row.unresolvedPetTargets?.map((id) => `unresolved:${id}`) ?? []),
     ],
     optionLabel: (val, ctx) =>
@@ -202,9 +202,9 @@ export const RANGE_FACET_MAP = new Map(
   RANGE_FACETS.map((facet) => [facet.field, facet]),
 );
 
-export const DEFAULT_FACETS = ['types', 'functions', 'rel'] as const;
+export const DEFAULT_FACETS = ['type', 'fn', 'rel'] as const;
 
-export const SCROLL_FACETS = [
+const SCROLL_FACETS = [
   'scrollTarget',
   'scrollStat',
   'scrollSuccess',
@@ -215,7 +215,7 @@ export const SCROLL_FACETS = [
   'rel',
 ] as const;
 
-export const PET_FEEDING_FACETS = [
+const PET_FEEDING_FACETS = [
   'pet',
   'closeness',
   'fullness',

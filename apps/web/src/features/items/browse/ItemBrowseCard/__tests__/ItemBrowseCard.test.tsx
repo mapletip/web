@@ -28,7 +28,6 @@ describe('ItemBrowseCard', () => {
       child: ITEM_SCOPES.use.children.find((c) => c.slug === 'upgrade-scrolls'),
     };
     const row: ItemRow = {
-      key: 'scroll-1',
       sourceId: '02040001',
       name: 'Scroll for Helmet for DEF 100%',
       itemClass: 'consume',
@@ -69,7 +68,6 @@ describe('ItemBrowseCard', () => {
     };
     // Potion with only HP, no MP or percents
     const potionRow: ItemRow = {
-      key: 'potion-1',
       sourceId: '02000000',
       name: 'Red Potion',
       itemClass: 'consume',
@@ -79,7 +77,6 @@ describe('ItemBrowseCard', () => {
     const { facts } = getItemColumns(recoveryCategory, coverage, [
       potionRow,
       {
-        key: 'potion-2',
         sourceId: '02000001',
         itemClass: 'consume',
         mp: 100,
@@ -100,7 +97,6 @@ describe('ItemBrowseCard', () => {
 
   it('renders nothing extra when a card has no recorded facts', () => {
     const rowWithoutFacts: ItemRow = {
-      key: 'plain-1',
       sourceId: '04000000',
       name: 'Plain Snail Shell',
       itemClass: 'etc',
@@ -121,7 +117,6 @@ describe('ItemBrowseCard', () => {
 
   it('handles unnamed items gracefully', () => {
     const rowUnnamed: ItemRow = {
-      key: 'unnamed',
       sourceId: '09999999',
       itemClass: 'etc',
     };

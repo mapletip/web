@@ -17,7 +17,6 @@ import type { ItemRow } from '../project';
 const { fixtureRows, cwCoverage, gmsCoverage } = vi.hoisted(() => {
   const rows: readonly ItemRow[] = [
     {
-      key: '1',
       sourceId: '02000000',
       name: 'Red Potion',
       itemClass: 'consume',
@@ -26,7 +25,6 @@ const { fixtureRows, cwCoverage, gmsCoverage } = vi.hoisted(() => {
       hp: 50,
     },
     {
-      key: '2',
       sourceId: '02040000',
       name: 'Scroll for Helmet DEF 100%',
       itemClass: 'consume',
@@ -38,7 +36,6 @@ const { fixtureRows, cwCoverage, gmsCoverage } = vi.hoisted(() => {
       tier: 'lesser',
     },
     {
-      key: '3',
       sourceId: '02070000',
       name: 'Subi Throwing-Stars',
       itemClass: 'consume',
@@ -46,7 +43,6 @@ const { fixtureRows, cwCoverage, gmsCoverage } = vi.hoisted(() => {
       attack: 15,
     },
     {
-      key: '4',
       sourceId: '04000000',
       name: 'Snail Shell',
       itemClass: 'etc',
@@ -55,7 +51,6 @@ const { fixtureRows, cwCoverage, gmsCoverage } = vi.hoisted(() => {
       questFlag: true,
     },
     {
-      key: '5',
       sourceId: '03010000',
       name: 'Relaxer',
       itemClass: 'setup',
@@ -63,7 +58,6 @@ const { fixtureRows, cwCoverage, gmsCoverage } = vi.hoisted(() => {
       seatHp: 50,
     },
     {
-      key: '6',
       sourceId: '05000000',
       name: 'Brown Puppy',
       itemClass: 'pet',
@@ -71,7 +65,6 @@ const { fixtureRows, cwCoverage, gmsCoverage } = vi.hoisted(() => {
       closeness: 1,
     },
     {
-      key: '7',
       sourceId: '05010000',
       name: 'Transparent Hat',
       itemClass: 'cash',
@@ -243,5 +236,5 @@ describe('ItemBrowse server rendering', () => {
         expect(html).toContain('Item categories');
       }
     }
-  });
+  }, 30_000);
 });

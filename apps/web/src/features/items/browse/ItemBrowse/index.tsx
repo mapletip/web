@@ -122,7 +122,7 @@ export function ItemBrowse({
         key={`${buildId}:${category.scope.slug}:${category.child?.slug ?? ''}`}
         title={header}
         records={scopedRows}
-        idAccessor="key"
+        idAccessor="sourceId"
         identityField="name"
         columns={columns}
         searchFields={['name', 'sourceId']}

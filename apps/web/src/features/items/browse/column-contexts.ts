@@ -3,7 +3,7 @@
  */
 import type { ColumnKey } from './column-configs';
 
-export interface ContextColumnConfig {
+interface ContextColumnConfig {
   readonly visible: readonly ColumnKey[];
   readonly optional?: readonly ColumnKey[];
 }

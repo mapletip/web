@@ -10,7 +10,7 @@ import { MAPLEKIT_RELEASE, type BuildId } from '@/config/maplekit';
 
 import { projectItemBrowseRows, type ItemRow } from './project';
 
-export interface LoadedItemBrowse {
+interface LoadedItemBrowse {
   readonly rows: readonly ItemRow[];
   readonly coverage: ItemBrowseCoverage;
 }

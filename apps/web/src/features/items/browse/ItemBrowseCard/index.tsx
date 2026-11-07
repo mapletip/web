@@ -6,7 +6,7 @@ import type { ItemRow } from '../project';
 
 import classes from './ItemBrowseCard.module.css';
 
-export interface ItemBrowseCardProps {
+interface ItemBrowseCardProps {
   readonly record: ItemRow;
   readonly facts?: readonly ItemFactDescriptor[];
 }

@@ -4,7 +4,7 @@ import { SITE_ORIGIN } from '@/config/site';
 import type { ItemCategorySelection } from './routing';
 import type { ItemBrowseSearch } from './search-params';
 
-export interface ItemPageMetadata {
+interface ItemPageMetadata {
   readonly heading: string;
   readonly title: string;
   readonly description: string;
@@ -12,7 +12,7 @@ export interface ItemPageMetadata {
   readonly robots: 'index,follow' | 'noindex,follow';
 }
 
-export function itemCategoryPath(
+function itemCategoryPath(
   buildId: BuildId,
   category: ItemCategorySelection,
 ): string {
@@ -70,7 +70,7 @@ function getItemDescription(
   return `Browse ${buildLabel} ${topic.toLowerCase()} in MapleStory.`;
 }
 
-export function isCleanItemSearch(search?: ItemBrowseSearch): boolean {
+function isCleanItemSearch(search?: ItemBrowseSearch): boolean {
   if (!search) return true;
 
   if (typeof search.q === 'string' && search.q.trim().length > 0) {

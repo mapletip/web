@@ -32,8 +32,8 @@ export interface BrowseContext {
 
 export const PAGE_SIZE_OPTIONS = [25, 50, 75, 100] as const;
 const PAGE_SIZE_SET = new Set<number>(PAGE_SIZE_OPTIONS);
-export type PageSizeOption = (typeof PAGE_SIZE_OPTIONS)[number];
-export const DEFAULT_PAGE_SIZE: PageSizeOption = 50;
+type PageSizeOption = (typeof PAGE_SIZE_OPTIONS)[number];
+const DEFAULT_PAGE_SIZE: PageSizeOption = 50;
 
 const MAX_SEARCH_BYTES = 200;
 const SORT_REGEX = /^([a-zA-Z0-9_]+)-(asc|desc)$/;

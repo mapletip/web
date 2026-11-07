@@ -11,8 +11,8 @@ describe('search-params', () => {
   const dummyContext: BrowseContext = {
     facets: [
       {
-        id: 'types',
-        field: 'types',
+        id: 'type',
+        field: 'type',
         label: 'Item type',
         kind: 'multi-select',
         options: [
@@ -140,11 +140,11 @@ describe('search-params', () => {
     it('accepts multi-select values as comma-separated strings or arrays, normalising to comma string', () => {
       expect(
         validateSearch({
-          types: 'potion,arrow',
+          type: 'potion,arrow',
           rel: ['monster-drop', 'needed-for-quest'],
         }),
       ).toEqual({
-        types: 'potion,arrow',
+        type: 'potion,arrow',
         rel: 'monster-drop,needed-for-quest',
       });
     });
@@ -220,14 +220,14 @@ describe('search-params', () => {
     it('drops facet options not present in the facet definition', () => {
       const state = urlToBrowseState(
         {
-          types: ['potion', 'not-a-type'],
+          type: ['potion', 'not-a-type'],
           unrelatedFacet: ['some-value'],
         },
         dummyContext,
       );
 
       expect(state.filters).toEqual({
-        types: ['potion'],
+        type: ['potion'],
       });
       expect(state.filters['unrelatedFacet']).toBeUndefined();
     });
@@ -267,7 +267,7 @@ describe('search-params', () => {
           page: 3,
           pageSize: 25,
           sort: { field: 'sourceId', direction: 'asc' },
-          filters: { types: ['arrow', 'potion'] },
+          filters: { type: ['arrow', 'potion'] },
           hiddenColumns: ['sourceId'],
         },
         dummyContext,
@@ -278,7 +278,7 @@ describe('search-params', () => {
         page: 3,
         pageSize: 25,
         sort: 'sourceId-asc',
-        types: 'arrow,potion',
+        type: 'arrow,potion',
       });
     });
 
@@ -312,7 +312,7 @@ describe('search-params', () => {
         page: 2,
         pageSize: 75,
         sort: 'name-desc',
-        types: 'potion',
+        type: 'potion',
         attackMin: 15,
       };
       const validated = validateSearch(original);

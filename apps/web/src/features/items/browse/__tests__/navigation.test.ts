@@ -7,34 +7,29 @@ import type { ItemRow } from '../project';
 describe('navigation', () => {
   const dummyRows: readonly ItemRow[] = [
     {
-      key: '1',
       sourceId: '02000000',
       name: 'Red Potion',
       itemClass: 'consume',
       types: ['potion'],
     },
     {
-      key: '2',
       sourceId: '02070000',
       name: 'Subi Throwing-Stars',
       itemClass: 'consume',
       types: ['throwing-star'],
     },
     {
-      key: '3',
       sourceId: '04000000',
       name: 'Snail Shell',
       itemClass: 'etc',
     },
     {
-      key: '4',
       sourceId: '03000000',
       name: 'Blue Chair',
       itemClass: 'setup',
       types: ['chair'],
     },
     {
-      key: '5',
       sourceId: '5000000',
       name: 'Brown Puppy',
       itemClass: 'pet',
@@ -104,7 +99,7 @@ describe('navigation', () => {
         dummyRows,
         { scope: ITEM_SCOPES.use },
         'gms-v83',
-        { q: 'potion', page: 3, types: 'potion' },
+        { q: 'potion', page: 3, type: 'potion' },
       );
 
       const useScope = nav.find((s) => s.slug === 'use');
@@ -116,7 +111,7 @@ describe('navigation', () => {
       });
       expect(useScope?.search).toEqual({
         q: 'potion',
-        types: 'potion',
+        type: 'potion',
       });
 
       const allScope = nav.find((s) => s.slug === 'all');

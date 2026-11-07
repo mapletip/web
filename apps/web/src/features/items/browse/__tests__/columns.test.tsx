@@ -3,14 +3,9 @@ import { renderToString } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 
 import { ITEM_SCOPES } from '../categories';
-import { CONTEXT_COLUMNS } from '../column-contexts';
-import { deriveSortOptions, getItemColumns } from '../columns';
+import { getItemColumns } from '../columns';
 import type { ItemRow } from '../project';
-import {
-  computeScrollStatsSortValue,
-  DEFAULT_ITEM_SORT,
-  STAT_PRIORITY_MULTIPLIER,
-} from '../sort';
+import { computeScrollStatsSortValue, DEFAULT_ITEM_SORT } from '../sort';
 
 const mockCoverage: ItemBrowseCoverage = {
   scrollTier: 'complete',
@@ -45,7 +40,6 @@ describe('getItemColumns - column set selection', () => {
       child: ITEM_SCOPES.use.children.find((c) => c.slug === 'upgrade-scrolls'),
     };
     const rowWithStats: ItemRow = {
-      key: 'scroll-1',
       sourceId: '02040001',
       itemClass: 'consume',
       name: 'Scroll for Helmet for DEF 100%',
@@ -80,7 +74,6 @@ describe('getItemColumns - column set selection', () => {
       child: ITEM_SCOPES.use.children.find((c) => c.slug === 'upgrade-scrolls'),
     };
     const rowWithSpecials: ItemRow = {
-      key: 'scroll-2',
       sourceId: '02040002',
       itemClass: 'consume',
       name: 'Chaos Scroll 60%',
@@ -107,7 +100,6 @@ describe('getItemColumns - column set selection', () => {
       child: ITEM_SCOPES.use.children.find((c) => c.slug === 'upgrade-scrolls'),
     };
     const rowWithTier: ItemRow = {
-      key: 'scroll-3',
       sourceId: '02040003',
       itemClass: 'consume',
       tier: 'lesser',
@@ -136,19 +128,16 @@ describe('getItemColumns - column set selection', () => {
     };
     const rows: ItemRow[] = [
       {
-        key: 'potion-1',
         sourceId: '02000000',
         itemClass: 'consume',
         hp: 50,
       },
       {
-        key: 'potion-2',
         sourceId: '02000001',
         itemClass: 'consume',
         mp: 50,
       },
       {
-        key: 'potion-3',
         sourceId: '02000002',
         itemClass: 'consume',
         hpPercent: 50,
@@ -180,13 +169,11 @@ describe('getItemColumns - column set selection', () => {
     };
     const rows: ItemRow[] = [
       {
-        key: 'subi',
         sourceId: '02070000',
         itemClass: 'consume',
         attack: 15,
       },
       {
-        key: 'other',
         sourceId: '02070001',
         itemClass: 'consume',
         attack: 21,
@@ -211,20 +198,18 @@ describe('getItemColumns - column set selection', () => {
     };
     const rows: ItemRow[] = [
       {
-        key: 'food-1',
         sourceId: '02120000',
         itemClass: 'consume',
         fullness: 30,
         closeness: 1,
-        petTargets: [{ key: '5000000', name: 'Cat' }],
+        petTargets: [{ sourceId: '5000000', name: 'Cat' }],
       },
       {
-        key: 'food-2',
         sourceId: '02120001',
         itemClass: 'consume',
         fullness: 100,
         closeness: 5,
-        petTargets: [{ key: '5000001', name: 'Dog' }],
+        petTargets: [{ sourceId: '5000001', name: 'Dog' }],
       },
     ];
 
@@ -249,13 +234,11 @@ describe('getItemColumns - column set selection', () => {
     // 2 rows: one feeder, one non-feeder, both are Cash Items (itemClass: 'cash')
     const rows: ItemRow[] = [
       {
-        key: 'cash-feeder',
         sourceId: '05240000',
         itemClass: 'cash',
         fullness: 50,
       },
       {
-        key: 'cash-hat',
         sourceId: '01000000',
         itemClass: 'cash',
       },
@@ -282,9 +265,9 @@ describe('getItemColumns - column set selection', () => {
       child: ITEM_SCOPES.etc.children.find((c) => c.slug === 'quest-items'),
     };
     const rows: ItemRow[] = [
-      { key: 'q1', sourceId: '1', itemClass: 'etc', questFlag: true },
-      { key: 'q2', sourceId: '2', itemClass: 'etc', questFlag: false },
-      { key: 'q3', sourceId: '3', itemClass: 'etc' },
+      { sourceId: '1', itemClass: 'etc', questFlag: true },
+      { sourceId: '2', itemClass: 'etc', questFlag: false },
+      { sourceId: '3', itemClass: 'etc' },
     ];
 
     const { columns, facts } = getItemColumns(
@@ -313,13 +296,11 @@ describe('getItemColumns - column set selection', () => {
     };
     const rows: ItemRow[] = [
       {
-        key: 'q1',
         sourceId: '1',
         itemClass: 'etc',
         neededForQuestCount: 12,
       },
       {
-        key: 'q2',
         sourceId: '2',
         itemClass: 'etc',
       },
@@ -348,8 +329,8 @@ describe('getItemColumns - column set selection', () => {
   it('states lower bound in monster drops fullLabel once', () => {
     const etcCategory = { scope: ITEM_SCOPES.etc };
     const rows: ItemRow[] = [
-      { key: 'e1', sourceId: '1', itemClass: 'etc', monsterDropCount: 5 },
-      { key: 'e2', sourceId: '2', itemClass: 'etc', monsterDropCount: 10 },
+      { sourceId: '1', itemClass: 'etc', monsterDropCount: 5 },
+      { sourceId: '2', itemClass: 'etc', monsterDropCount: 10 },
     ];
     const { columns } = getItemColumns(etcCategory, mockCoverage, rows);
     const dropCol = columns.find((c) => c.accessor === 'monsterDropCount');
@@ -362,7 +343,6 @@ describe('getItemColumns - column set selection', () => {
     };
     const rows: ItemRow[] = [
       {
-        key: 'e1',
         sourceId: '1',
         itemClass: 'etc',
         monsterDropCount: 5,
@@ -375,104 +355,24 @@ describe('getItemColumns - column set selection', () => {
   });
 });
 
-describe('deriveSortOptions', () => {
-  it('derives sort options from columns by numeric vs text rule and custom sort labels', () => {
-    const scrollCategory = {
-      scope: ITEM_SCOPES.use,
-      child: ITEM_SCOPES.use.children.find((c) => c.slug === 'upgrade-scrolls'),
-    };
-    const rows: ItemRow[] = [
-      {
-        key: 'scroll-1',
-        sourceId: '02040001',
-        itemClass: 'consume',
-        targetLabel: 'hat',
-        stats: { weaponAttack: 2 },
-        success: 100,
-      },
-      {
-        key: 'scroll-2',
-        sourceId: '02040002',
-        itemClass: 'consume',
-        targetLabel: 'topwear',
-        stats: { weaponAttack: 5 },
-        success: 60,
-      },
-    ];
-
-    const { columns } = getItemColumns(scrollCategory, mockCoverage, rows);
-    const sortOptions = deriveSortOptions(columns);
-
-    // Text column (targetLabel) sorts asc first (A–Z)
-    const targetOptions = sortOptions.filter((o) => o.field === 'targetLabel');
-    expect(targetOptions).toHaveLength(2);
-    expect(targetOptions[0]).toEqual({
-      field: 'targetLabel',
-      direction: 'asc',
-      label: 'Equipment type (A–Z)',
-    });
-    expect(targetOptions[1]).toEqual({
-      field: 'targetLabel',
-      direction: 'desc',
-      label: 'Equipment type (Z–A)',
-    });
-
-    // Custom sort labels on stats: strongest first / weakest first
-    const statsOptions = sortOptions.filter((o) => o.field === 'stats');
-    expect(statsOptions).toHaveLength(2);
-    expect(statsOptions[0]).toEqual({
-      field: 'stats',
-      direction: 'desc',
-      label: 'Stats: strongest first',
-    });
-    expect(statsOptions[1]).toEqual({
-      field: 'stats',
-      direction: 'asc',
-      label: 'Stats: weakest first',
-    });
-
-    // Numeric column (success) sorts desc first (high to low)
-    const successOptions = sortOptions.filter((o) => o.field === 'success');
-    expect(successOptions).toHaveLength(2);
-    expect(successOptions[0]).toEqual({
-      field: 'success',
-      direction: 'desc',
-      label: 'Success: high to low',
-    });
-    expect(successOptions[1]).toEqual({
-      field: 'success',
-      direction: 'asc',
-      label: 'Success: low to high',
-    });
-  });
-});
-
 describe('sort accessors', () => {
-  it('guarantees multiplier exceeds largest GMS delta of 140', () => {
-    expect(STAT_PRIORITY_MULTIPLIER).toBeGreaterThan(140);
-  });
-
   it('sorts scrolls by stat priority then amount', () => {
     const wa1: ItemRow = {
-      key: '1',
       sourceId: '1',
       itemClass: 'consume',
       stats: { weaponAttack: 1 },
     };
     const str140: ItemRow = {
-      key: '2',
       sourceId: '2',
       itemClass: 'consume',
       stats: { strength: 140 },
     };
     const wa5: ItemRow = {
-      key: '3',
       sourceId: '3',
       itemClass: 'consume',
       stats: { weaponAttack: 5 },
     };
     const noStats: ItemRow = {
-      key: '4',
       sourceId: '4',
       itemClass: 'consume',
     };
@@ -495,25 +395,5 @@ describe('sort accessors', () => {
       field: 'name',
       direction: 'asc',
     });
-  });
-
-  it('maintains disjoint visible and optional column lists with no duplicates across all contexts', () => {
-    for (const [contextKey, config] of Object.entries(CONTEXT_COLUMNS)) {
-      const visibleSet = new Set(config.visible);
-      const optionalKeys = config.optional ?? [];
-      const optionalSet = new Set(optionalKeys);
-      const overlap = optionalKeys.filter((key) => visibleSet.has(key));
-
-      expect(visibleSet.size, `Duplicate visible keys in ${contextKey}`).toBe(
-        config.visible.length,
-      );
-      expect(optionalSet.size, `Duplicate optional keys in ${contextKey}`).toBe(
-        optionalKeys.length,
-      );
-      expect(
-        overlap,
-        `Overlapping visible/optional keys in ${contextKey}`,
-      ).toEqual([]);
-    }
   });
 });

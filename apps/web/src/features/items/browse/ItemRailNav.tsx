@@ -5,7 +5,7 @@ import type { ReactElement } from 'react';
 import classes from './ItemRailNav.module.css';
 import type { ItemNavScope } from './navigation';
 
-export interface ItemRailNavProps {
+interface ItemRailNavProps {
   readonly navScopes: readonly ItemNavScope[];
 }
 
