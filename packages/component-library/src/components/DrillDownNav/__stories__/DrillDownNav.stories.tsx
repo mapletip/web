@@ -142,6 +142,14 @@ export const MidLevelCurrent: Story = {
 
     const backLink = canvas.getByRole('link', { name: 'All Products' });
     await expect(backLink.querySelector('svg')).toBeInTheDocument();
+
+    const clearance = canvas.getByRole('link', { name: /Clearance/ });
+    await expect(clearance).toBeInTheDocument();
+    await expect(clearance).toHaveAttribute('href', '#clearance');
+    await expect(clearance).toHaveTextContent('0');
+    await expect(
+      clearance.querySelector('[class*="countDimmed"]'),
+    ).toBeInTheDocument();
   },
 };
 
@@ -167,25 +175,8 @@ export const LeafCurrent: Story = {
   },
 };
 
-export const HideEmptyOff: Story = {
-  name: 'hideEmpty off',
-  args: {
-    root: catalogTree,
-    currentId: 'electronics',
-    label: 'Store catalog',
-    hideEmpty: false,
-  },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    const clearance = canvas.getByRole('link', { name: /Clearance/ });
-    await expect(clearance).toBeInTheDocument();
-    await expect(clearance).toHaveTextContent('0');
-    await expect(getAriaCurrent(canvasElement)).toHaveLength(1);
-  },
-};
-
-export const HideEmptyOn: Story = {
-  name: 'hideEmpty on',
+export const EmptyChildrenHidden: Story = {
+  name: 'Empty children hidden',
   args: {
     root: catalogTree,
     currentId: 'electronics',
@@ -201,8 +192,8 @@ export const HideEmptyOn: Story = {
   },
 };
 
-export const CurrentNodeEmptyWithHideEmpty: Story = {
-  name: 'Current node empty with hideEmpty',
+export const EmptyCurrentNodeStaysVisible: Story = {
+  name: 'Hide empty: current node stays visible',
   args: {
     root: catalogTree,
     currentId: 'electronics/clearance',
