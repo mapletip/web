@@ -56,8 +56,8 @@ export function ItemBrowse({
   );
 
   const facets = useMemo(
-    () => getItemFacets(category, coverage, scopedRows),
-    [category, coverage, scopedRows],
+    () => getItemFacets(category, coverage, scopedRows, rows),
+    [category, coverage, scopedRows, rows],
   );
 
   const browseContext = useMemo<BrowseContext>(
