@@ -107,7 +107,7 @@ describe('Items Browse route integration', () => {
         'Upgrade Scrolls',
         'Recovery',
         'Throwing Stars',
-        'Potions',
+        'Buffs',
       ],
       unexpectedLabels: [
         'ETC',
@@ -135,7 +135,7 @@ describe('Items Browse route integration', () => {
         'Upgrade Scrolls',
         'Recovery',
         'Throwing Stars',
-        'Potions',
+        'Buffs',
         'ETC',
         'Set-up',
       ],

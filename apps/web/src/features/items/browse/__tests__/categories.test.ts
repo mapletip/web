@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  assignChild,
   getCategoryCounts,
   getCategoryRows,
   isItemScope,
@@ -100,36 +101,244 @@ describe('category model and predicates', () => {
     expect(petFoodRows[0]?.key).toBe('item:use:petfood');
   });
 
-  it('allows items to legitimately overlap across positive children in the same scope', () => {
-    const dualItem = makeRow({
-      key: 'item:dual',
-      sourceId: '02000003',
+  it('assigns each item to the first matching positive child in precedence order', () => {
+    // 1. Recovery precedes Buffs (item with recovery function and potion type)
+    const healingPotion = makeRow({
+      key: 'item:healing',
+      sourceId: '02000000',
       itemClass: 'consume',
       types: ['potion', 'food-buff'],
       functions: ['recovery'],
     });
+    expect(assignChild(healingPotion, ITEM_SCOPES.use)?.slug).toBe('recovery');
+    expect(
+      matchesCategory(
+        healingPotion,
+        ITEM_SCOPES.use,
+        findChild(ITEM_SCOPES.use, 'recovery'),
+      ),
+    ).toBe(true);
+    expect(
+      matchesCategory(
+        healingPotion,
+        ITEM_SCOPES.use,
+        findChild(ITEM_SCOPES.use, 'buffs'),
+      ),
+    ).toBe(false);
 
-    const rows = [dualItem];
+    // 2. Pure buff (potion type without recovery function) is assigned to Buffs
+    const buffPotion = makeRow({
+      key: 'item:buff',
+      sourceId: '02002000',
+      itemClass: 'consume',
+      types: ['potion'],
+    });
+    expect(assignChild(buffPotion, ITEM_SCOPES.use)?.slug).toBe('buffs');
 
-    const potionRows = getCategoryRows(
-      rows,
-      ITEM_SCOPES.use,
-      findChild(ITEM_SCOPES.use, 'potions'),
+    // 3. Types precede Quest Items in ETC: monster material needed for quest -> monster-materials
+    const mmQuest = makeRow({
+      key: 'item:mm-quest',
+      sourceId: '04000010',
+      itemClass: 'etc',
+      types: ['monster-material'],
+      neededForQuestCount: 5,
+    });
+    expect(assignChild(mmQuest, ITEM_SCOPES.etc)?.slug).toBe(
+      'monster-materials',
     );
-    const foodBuffRows = getCategoryRows(
-      rows,
-      ITEM_SCOPES.use,
-      findChild(ITEM_SCOPES.use, 'food-buffs'),
-    );
-    const recoveryRows = getCategoryRows(
-      rows,
-      ITEM_SCOPES.use,
-      findChild(ITEM_SCOPES.use, 'recovery'),
-    );
+    expect(
+      matchesCategory(
+        mmQuest,
+        ITEM_SCOPES.etc,
+        findChild(ITEM_SCOPES.etc, 'monster-materials'),
+      ),
+    ).toBe(true);
+    expect(
+      matchesCategory(
+        mmQuest,
+        ITEM_SCOPES.etc,
+        findChild(ITEM_SCOPES.etc, 'quest-items'),
+      ),
+    ).toBe(false);
 
-    expect(potionRows).toHaveLength(1);
-    expect(foodBuffRows).toHaveLength(1);
-    expect(recoveryRows).toHaveLength(1);
+    // 4. Ores precede Quest Items: ore needed for quest -> ores
+    const oreQuest = makeRow({
+      key: 'item:ore-quest',
+      sourceId: '04010000',
+      itemClass: 'etc',
+      types: ['ore'],
+      neededForQuestCount: 2,
+    });
+    expect(assignChild(oreQuest, ITEM_SCOPES.etc)?.slug).toBe('ores');
+
+    // 5. Ores precede Monster Materials: ore with monster-material type -> ores
+    const oreMM = makeRow({
+      key: 'item:ore-mm',
+      sourceId: '04010099',
+      itemClass: 'etc',
+      types: ['ore', 'monster-material'],
+    });
+    expect(assignChild(oreMM, ITEM_SCOPES.etc)?.slug).toBe('ores');
+
+    // 6. Pure quest item (needed-for-quest > 0, no preceding types) -> quest-items
+    const pureQuest = makeRow({
+      key: 'item:pure-quest',
+      sourceId: '04031001',
+      itemClass: 'etc',
+      neededForQuestCount: 1,
+    });
+    expect(assignChild(pureQuest, ITEM_SCOPES.etc)?.slug).toBe('quest-items');
+
+    // 7. Non-matching scope returns undefined
+    expect(assignChild(healingPotion, ITEM_SCOPES.etc)).toBeUndefined();
+  });
+
+  it('enforces invariant: for every scope, sum(child counts) === scope total across all overlap cases', () => {
+    const fixtureRows: readonly ItemRow[] = [
+      // Use: Recovery precedes Buffs
+      makeRow({
+        key: 'u:rec-buff',
+        sourceId: '02000000',
+        itemClass: 'consume',
+        types: ['potion', 'food-buff'],
+        functions: ['recovery'],
+      }),
+      // Use: Pure Buff
+      makeRow({
+        key: 'u:pure-buff',
+        sourceId: '02002000',
+        itemClass: 'consume',
+        types: ['potion'],
+      }),
+      // Use: Upgrade Scroll
+      makeRow({
+        key: 'u:scroll',
+        sourceId: '02040000',
+        itemClass: 'consume',
+        types: ['upgrade-scroll'],
+      }),
+      // Use: Throwing Star
+      makeRow({
+        key: 'u:star',
+        sourceId: '02070000',
+        itemClass: 'consume',
+        types: ['throwing-star'],
+      }),
+      // Use: Other Use Item
+      makeRow({
+        key: 'u:other',
+        sourceId: '02999999',
+        itemClass: 'consume',
+      }),
+
+      // ETC: Ores precede Monster Materials
+      makeRow({
+        key: 'e:ore-mm',
+        sourceId: '04010099',
+        itemClass: 'etc',
+        types: ['ore', 'monster-material'],
+      }),
+      // ETC: Ores precede Quest Items
+      makeRow({
+        key: 'e:ore-quest',
+        sourceId: '04010000',
+        itemClass: 'etc',
+        types: ['ore'],
+        neededForQuestCount: 2,
+      }),
+      // ETC: Gems precede Quest Items
+      makeRow({
+        key: 'e:gem-quest',
+        sourceId: '04020000',
+        itemClass: 'etc',
+        types: ['gem'],
+        neededForQuestCount: 1,
+      }),
+      // ETC: Refined Materials precede Quest Items
+      makeRow({
+        key: 'e:refined-quest',
+        sourceId: '04010100',
+        itemClass: 'etc',
+        types: ['refined-material'],
+        neededForQuestCount: 3,
+      }),
+      // ETC: Monster Materials precede Quest Items
+      makeRow({
+        key: 'e:mm-quest',
+        sourceId: '04000010',
+        itemClass: 'etc',
+        types: ['monster-material'],
+        neededForQuestCount: 5,
+      }),
+      // ETC: Pure Quest Item
+      makeRow({
+        key: 'e:pure-quest',
+        sourceId: '04031001',
+        itemClass: 'etc',
+        neededForQuestCount: 1,
+      }),
+      // ETC: Other ETC Item
+      makeRow({
+        key: 'e:other',
+        sourceId: '04999999',
+        itemClass: 'etc',
+      }),
+
+      // Set-up: Chair
+      makeRow({
+        key: 's:chair',
+        sourceId: '03010000',
+        itemClass: 'setup',
+        types: ['chair'],
+      }),
+      // Set-up: Other Set-up
+      makeRow({
+        key: 's:other',
+        sourceId: '03999999',
+        itemClass: 'setup',
+      }),
+
+      // Cash/Pet: Pet
+      makeRow({
+        key: 'c:pet',
+        sourceId: '5000000',
+        itemClass: 'pet',
+      }),
+      // Cash/Pet: Cash
+      makeRow({
+        key: 'c:cash',
+        sourceId: '05070000',
+        itemClass: 'cash',
+      }),
+    ];
+
+    const counts = getCategoryCounts(fixtureRows);
+
+    expect(counts.all.total).toBe(fixtureRows.length);
+    expect(Object.keys(counts.all.children)).toHaveLength(0);
+
+    const nonAllScopes = [
+      ITEM_SCOPES.use,
+      ITEM_SCOPES.etc,
+      ITEM_SCOPES.setup,
+      ITEM_SCOPES.cash,
+    ] as const;
+
+    for (const scope of nonAllScopes) {
+      const summary = counts[scope.slug];
+      const childSum = Object.values(summary.children).reduce(
+        (a, b) => a + b,
+        0,
+      );
+      expect(
+        childSum,
+        `sum(child counts) for ${scope.slug} must match scope total`,
+      ).toBe(summary.total);
+      expect(summary.total).toBe(
+        fixtureRows.filter((r) => scope.itemClasses.includes(r.itemClass))
+          .length,
+      );
+    }
   });
 
   it('matches skill items by the skill function', () => {
@@ -174,10 +383,10 @@ describe('category model and predicates', () => {
     expect(otherRows[0]?.key).toBe('item:misc');
 
     // Every positive child in the scope is disjoint from Other
-    const positivePotions = getCategoryRows(
+    const positiveBuffs = getCategoryRows(
       rows,
       ITEM_SCOPES.use,
-      findChild(ITEM_SCOPES.use, 'potions'),
+      findChild(ITEM_SCOPES.use, 'buffs'),
     );
     const positiveScrolls = getCategoryRows(
       rows,
@@ -186,7 +395,7 @@ describe('category model and predicates', () => {
     );
 
     const otherKeys = new Set(otherRows.map((r) => r.key));
-    for (const r of [...positivePotions, ...positiveScrolls]) {
+    for (const r of [...positiveBuffs, ...positiveScrolls]) {
       expect(otherKeys.has(r.key)).toBe(false);
     }
   });
@@ -205,17 +414,17 @@ describe('category model and predicates', () => {
       types: ['potion'],
     });
 
-    const potionChild = findChild(scope, 'potions');
+    const buffChild = findChild(scope, 'buffs');
     const otherChild = findChild(scope, 'other-use-items');
 
-    expect(matchesCategory(potion, scope, potionChild)).toBe(true);
+    expect(matchesCategory(potion, scope, buffChild)).toBe(true);
     expect(matchesCategory(potion, scope, otherChild)).toBe(false);
 
-    expect(matchesCategory(misc, scope, potionChild)).toBe(false);
+    expect(matchesCategory(misc, scope, buffChild)).toBe(false);
     expect(matchesCategory(misc, scope, otherChild)).toBe(true);
 
     // Wrong item class never matches
-    expect(matchesCategory(nonConsume, scope, potionChild)).toBe(false);
+    expect(matchesCategory(nonConsume, scope, buffChild)).toBe(false);
     expect(matchesCategory(nonConsume, scope, otherChild)).toBe(false);
   });
 
@@ -261,7 +470,7 @@ describe('category model and predicates', () => {
 
     expect(counts.all.total).toBe(4);
     expect(counts.use.total).toBe(2);
-    expect(counts.use.children['potions']).toBe(1);
+    expect(counts.use.children['buffs']).toBe(1);
     expect(counts.use.children['other-use-items']).toBe(1);
     expect(counts.use.children['bullets']).toBe(0);
 
@@ -662,7 +871,7 @@ describe('category model and predicates', () => {
         }
       }
     }
-    // 26 categories define iconSourceIds (all except other-etc-items and other-setup-items)
-    expect(checkedCategories).toBe(26);
+    // 23 categories define iconSourceIds (all except buffs, other-etc-items, and other-setup-items)
+    expect(checkedCategories).toBe(23);
   });
 });

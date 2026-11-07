@@ -23,7 +23,7 @@ describe('itemPageMetadata', () => {
   });
 
   it('generates versioned child metadata', () => {
-    const child = ITEM_SCOPES.use.children.find((c) => c.slug === 'potions');
+    const child = ITEM_SCOPES.use.children.find((c) => c.slug === 'buffs');
     expect(child).toBeDefined();
     if (!child) return;
     const meta = itemPageMetadata('gms-v83', {
@@ -31,9 +31,9 @@ describe('itemPageMetadata', () => {
       child,
     });
     expect(meta).toEqual({
-      heading: 'MapleStory GMS v83 Potions',
-      title: 'MapleStory GMS v83 Potions – MapleTip',
-      description: 'Browse GMS v83 potions in MapleStory.',
+      heading: 'MapleStory GMS v83 Buffs',
+      title: 'MapleStory GMS v83 Buffs – MapleTip',
+      description: 'Browse GMS v83 buffs in MapleStory.',
     });
   });
 

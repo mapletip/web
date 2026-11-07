@@ -1,9 +1,13 @@
 /**
  * The single category registry for MapleStory Items Browse.
  *
- * Provides functions that return a category's population and per-category counts.
+ * Within a scope, every item belongs to EXACTLY ONE child.
+ * Positive children form an ordered list where order defines precedence:
+ * an item is assigned to the FIRST positive child whose predicate matches.
+ * If no positive child matches, it falls through to the scope's Other child
+ * (if present).
  *
- * Membership is always scope AND predicate.
+ * Scopes are disjoint by itemClass. Membership is always scope AND assignment.
  */
 import type {
   ItemBrowseClass,
@@ -97,6 +101,15 @@ export const ITEM_SCOPES: Readonly<Record<ItemScopeSlug, ItemCategoryScope>> = {
         '02000002',
         '02000001',
       ]),
+      {
+        kind: 'positive',
+        slug: 'buffs',
+        label: 'Buffs',
+        matches: (row) =>
+          Boolean(
+            row.types?.includes('potion') || row.types?.includes('food-buff'),
+          ),
+      },
       byType('throwing-stars', 'Throwing Stars', 'throwing-star', [
         '02070000',
         '02070006',
@@ -116,16 +129,6 @@ export const ITEM_SCOPES: Readonly<Record<ItemScopeSlug, ItemCategoryScope>> = {
       byFunction('reward-containers', 'Reward Containers', 'reward-container', [
         '02022428',
         '02022336',
-      ]),
-      byType('potions', 'Potions', 'potion', [
-        '02000003',
-        '02000001',
-        '02000006',
-      ]),
-      byType('food-buffs', 'Food & Buffs', 'food-buff', [
-        '02022002',
-        '02012000',
-        '02020006',
       ]),
       byFunction('monster-cards', 'Monster Cards', 'monster-card', [
         '02380001',
@@ -152,21 +155,6 @@ export const ITEM_SCOPES: Readonly<Record<ItemScopeSlug, ItemCategoryScope>> = {
     label: 'ETC',
     itemClasses: ['etc'],
     children: [
-      {
-        kind: 'positive',
-        slug: 'quest-items',
-        label: 'Quest Items',
-        matches: (row) => (row.neededForQuestCount ?? 0) > 0,
-        iconSourceIds: ['04031039', '04031040', '04031041'],
-      },
-      {
-        kind: 'positive',
-        slug: 'crafting',
-        label: 'Crafting',
-        matches: (row) =>
-          (row.usedInRecipeCount ?? 0) > 0 || (row.madeByRecipeCount ?? 0) > 0,
-        iconSourceIds: ['04020000', '04020007'],
-      },
       byType('ores', 'Ores', 'ore', ['04010006', '04010001', '04010000']),
       byType('gems', 'Gems & Jewels', 'gem', ['04020107', '04021007']),
       byType('refined-materials', 'Refined Materials', 'refined-material', [
@@ -176,6 +164,13 @@ export const ITEM_SCOPES: Readonly<Record<ItemScopeSlug, ItemCategoryScope>> = {
       byType('monster-materials', 'Monster Materials', 'monster-material', [
         '04000009',
       ]),
+      {
+        kind: 'positive',
+        slug: 'quest-items',
+        label: 'Quest Items',
+        matches: (row) => (row.neededForQuestCount ?? 0) > 0,
+        iconSourceIds: ['04031039', '04031040', '04031041'],
+      },
       otherChild('other-etc-items', 'Other ETC Items'),
     ],
   },
@@ -226,11 +221,30 @@ export function isItemScope(slug: string): slug is ItemScopeSlug {
 }
 
 /**
- * Single predicate determining whether an item row belongs to a scope and optional child.
+ * Assigns an item row to its single mutually exclusive child within a scope.
+ * Positive children are evaluated in declared precedence order; the first match wins.
+ * If no positive child matches, falls through to the scope's Other child (if any).
+ */
+export function assignChild(
+  row: ItemRow,
+  scope: ItemCategoryScope,
+): ItemCategoryChild | undefined {
+  if (!scope.itemClasses.includes(row.itemClass)) {
+    return undefined;
+  }
+  for (const child of scope.children) {
+    if (child.kind === 'positive' && child.matches(row)) {
+      return child;
+    }
+  }
+  return scope.children.find((c) => c.kind === 'other');
+}
+
+/**
+ * Predicate determining whether an item row belongs to a scope and optional child.
  *
- * Membership is always scope AND child predicate.
- * When child is an 'other' child, matches only if the row belongs to the scope
- * and matches NONE of the scope's positive children.
+ * When child is provided, matches if and only if the item belongs to the scope
+ * and is assigned to that exact child by precedence.
  */
 export function matchesCategory(
   row: ItemRow,
@@ -243,10 +257,7 @@ export function matchesCategory(
   if (!child) {
     return true;
   }
-  if (child.kind === 'positive') {
-    return child.matches(row);
-  }
-  return !scope.children.some((c) => c.kind === 'positive' && c.matches(row));
+  return assignChild(row, scope) === child;
 }
 
 export function getCategoryRows(
@@ -264,29 +275,61 @@ export interface ScopeCountSummary {
 
 export type CategoryCounts = Readonly<Record<ItemScopeSlug, ScopeCountSummary>>;
 
-function computeScopeCounts(
-  rows: readonly ItemRow[],
-  scope: ItemCategoryScope,
-): ScopeCountSummary {
-  const scopeRows = rows.filter((row) => matchesCategory(row, scope));
-  const childCounts: Record<string, number> = {};
-  for (const child of scope.children) {
-    childCounts[child.slug] = scopeRows.filter((row) =>
-      matchesCategory(row, scope, child),
-    ).length;
-  }
-  return {
-    total: scopeRows.length,
-    children: childCounts,
-  };
-}
+const NON_ALL_SCOPES = [
+  ITEM_SCOPES.use,
+  ITEM_SCOPES.etc,
+  ITEM_SCOPES.setup,
+  ITEM_SCOPES.cash,
+] as const;
 
 export function getCategoryCounts(rows: readonly ItemRow[]): CategoryCounts {
-  return {
-    all: computeScopeCounts(rows, ITEM_SCOPES.all),
-    use: computeScopeCounts(rows, ITEM_SCOPES.use),
-    etc: computeScopeCounts(rows, ITEM_SCOPES.etc),
-    setup: computeScopeCounts(rows, ITEM_SCOPES.setup),
-    cash: computeScopeCounts(rows, ITEM_SCOPES.cash),
+  const counts: Record<
+    ItemScopeSlug,
+    { total: number; children: Record<string, number> }
+  > = {
+    all: { total: 0, children: {} },
+    use: {
+      total: 0,
+      children: Object.fromEntries(
+        ITEM_SCOPES.use.children.map((c) => [c.slug, 0]),
+      ),
+    },
+    etc: {
+      total: 0,
+      children: Object.fromEntries(
+        ITEM_SCOPES.etc.children.map((c) => [c.slug, 0]),
+      ),
+    },
+    setup: {
+      total: 0,
+      children: Object.fromEntries(
+        ITEM_SCOPES.setup.children.map((c) => [c.slug, 0]),
+      ),
+    },
+    cash: {
+      total: 0,
+      children: Object.fromEntries(
+        ITEM_SCOPES.cash.children.map((c) => [c.slug, 0]),
+      ),
+    },
   };
+
+  for (const row of rows) {
+    if (ITEM_SCOPES.all.itemClasses.includes(row.itemClass)) {
+      counts.all.total++;
+    }
+    for (const scope of NON_ALL_SCOPES) {
+      if (scope.itemClasses.includes(row.itemClass)) {
+        counts[scope.slug].total++;
+        const child = assignChild(row, scope);
+        if (child) {
+          counts[scope.slug].children[child.slug] =
+            (counts[scope.slug].children[child.slug] ?? 0) + 1;
+        }
+        break;
+      }
+    }
+  }
+
+  return counts;
 }

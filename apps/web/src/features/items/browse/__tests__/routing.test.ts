@@ -23,13 +23,13 @@ describe('parseItemRouteParams', () => {
       parseItemRouteParams({
         buildId: 'gms-v83',
         scope: 'use',
-        child: 'potions',
+        child: 'buffs',
       }),
     ).toEqual({
       buildId: 'gms-v83',
       category: {
         scope: ITEM_SCOPES.use,
-        child: ITEM_SCOPES.use.children.find((c) => c.slug === 'potions'),
+        child: ITEM_SCOPES.use.children.find((c) => c.slug === 'buffs'),
       },
     });
 
@@ -67,6 +67,6 @@ describe('parseItemRouteParams', () => {
   });
 
   it('throws notFound for child without scope', () => {
-    expect(() => parseItemRouteParams({ child: 'potions' })).toThrow();
+    expect(() => parseItemRouteParams({ child: 'buffs' })).toThrow();
   });
 });
