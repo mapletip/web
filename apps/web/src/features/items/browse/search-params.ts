@@ -87,6 +87,9 @@ function parseSort(
 }
 
 function parseStringList(val: unknown): readonly string[] {
+  if (typeof val === 'number' && Number.isFinite(val)) {
+    return [String(val)];
+  }
   if (typeof val === 'string' && val.length > 0) {
     return val
       .split(',')
@@ -94,14 +97,16 @@ function parseStringList(val: unknown): readonly string[] {
       .filter(Boolean);
   }
   if (Array.isArray(val)) {
-    return val.flatMap((v) =>
-      typeof v === 'string'
-        ? v
-            .split(',')
-            .map((s) => s.trim())
-            .filter(Boolean)
-        : [],
-    );
+    return val.flatMap((v) => {
+      if (typeof v === 'number' && Number.isFinite(v)) return [String(v)];
+      if (typeof v === 'string') {
+        return v
+          .split(',')
+          .map((s) => s.trim())
+          .filter(Boolean);
+      }
+      return [];
+    });
   }
   return [];
 }
@@ -130,6 +135,10 @@ export function validateSearch(raw: Record<string, unknown>): ItemBrowseSearch {
     if (key.endsWith('Min') || key.endsWith('Max')) {
       const num = parseNumber(value);
       if (num !== undefined) result[key] = num;
+      continue;
+    }
+    if (typeof value === 'number' && Number.isFinite(value)) {
+      result[key] = value;
       continue;
     }
     const list = parseStringList(value);
@@ -206,6 +215,12 @@ export function urlToBrowseState(
   };
 }
 
+function isStringArray(value: unknown): value is readonly string[] {
+  return (
+    Array.isArray(value) && value.every((item) => typeof item === 'string')
+  );
+}
+
 export function browseStateToUrl(
   state: BrowseState,
   context: BrowseContext,
@@ -226,8 +241,17 @@ export function browseStateToUrl(
 
   for (const facet of context.facets) {
     const val = state.filters[facet.field];
-    if (Array.isArray(val) && val.length > 0) {
-      url[facet.field] = val.join(',');
+    if (isStringArray(val) && val.length > 0) {
+      const first = val[0];
+      if (
+        val.length === 1 &&
+        typeof first === 'string' &&
+        /^\d+$/.test(first)
+      ) {
+        url[facet.field] = Number.parseInt(first, 10);
+      } else {
+        url[facet.field] = val.join(',');
+      }
     } else if (typeof val === 'object' && val !== null) {
       const { min, max } = val as { min?: number; max?: number };
       if (typeof min === 'number' && Number.isFinite(min)) {

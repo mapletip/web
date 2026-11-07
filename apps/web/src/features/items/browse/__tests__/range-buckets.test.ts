@@ -20,6 +20,21 @@ describe('range-buckets', () => {
     ]);
   });
 
+  it('formats percent labels when unit is % for exact and quantile buckets', () => {
+    const exact = buildRangeBuckets([35, 50], '%');
+    expect(exact).toEqual([
+      { value: '35', label: '35%', min: 35, max: 35 },
+      { value: '50', label: '50%', min: 50, max: 50 },
+    ]);
+
+    const quantileValues = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100];
+    const quantiles = buildRangeBuckets(quantileValues, '%');
+    expect(quantiles).toBeDefined();
+    for (const b of quantiles!) {
+      expect(b.label).toMatch(/^\d+%–\d+%$/);
+    }
+  });
+
   it('generates quantile buckets when there are more than 6 distinct values', () => {
     const values = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100];
     const buckets = buildRangeBuckets(values);
