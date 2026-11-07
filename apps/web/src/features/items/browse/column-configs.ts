@@ -55,28 +55,31 @@ function col<K extends keyof ItemRow>(
   return { key, accessor: key, title, value, ...extra };
 }
 
-const NUMERIC_COLUMNS_DEF = [
-  ['hp', 'HP', ''],
-  ['mp', 'MP', ''],
-  ['hpPercent', 'HP %', '%'],
-  ['mpPercent', 'MP %', '%'],
-  ['closeness', 'Closeness', ''],
-  ['fullness', 'Fullness', ''],
-  ['tameness', 'Tameness', ''],
-  ['seatHp', 'Seated HP', ''],
-  ['seatMp', 'Seated MP', ''],
-] as const;
+type NumericItemRowKey = {
+  [K in keyof ItemRow]-?: ItemRow[K] extends number | undefined ? K : never;
+}[keyof ItemRow];
 
-type NumericColumnKey = (typeof NUMERIC_COLUMNS_DEF)[number][0];
+function numCol<K extends NumericItemRowKey>(
+  key: K,
+  title: string,
+  unit = '',
+): ColumnConfig {
+  return col(key, title, (row) => formatNum(row[key], unit), {
+    numeric: true,
+  });
+}
 
-const generatedNumericColumns = Object.fromEntries(
-  NUMERIC_COLUMNS_DEF.map(([fieldKey, title, unit]) => [
-    fieldKey,
-    col(fieldKey, title, (row) => formatNum(row[fieldKey], unit), {
-      numeric: true,
-    }),
-  ]),
-) as Record<NumericColumnKey, ColumnConfig>;
+const numericColumns = {
+  hp: numCol('hp', 'HP'),
+  mp: numCol('mp', 'MP'),
+  hpPercent: numCol('hpPercent', 'HP %', '%'),
+  mpPercent: numCol('mpPercent', 'MP %', '%'),
+  closeness: numCol('closeness', 'Closeness'),
+  fullness: numCol('fullness', 'Fullness'),
+  tameness: numCol('tameness', 'Tameness'),
+  seatHp: numCol('seatHp', 'Seated HP'),
+  seatMp: numCol('seatMp', 'Seated MP'),
+};
 
 const REL_TITLES: Readonly<Record<ItemRelationshipKind, string>> = {
   'needed-for-quest': 'Needed for quests',
@@ -88,31 +91,48 @@ const REL_TITLES: Readonly<Record<ItemRelationshipKind, string>> = {
   'cash-shop-listing': 'Cash shop listings',
 };
 
-type RelKey = (typeof RELATIONSHIP_COUNT_FIELDS)[number][1];
-
-const generatedRelationshipColumns = Object.fromEntries(
-  RELATIONSHIP_COUNT_FIELDS.map(([relKind, fieldKey]) => [
+function relCol(
+  relKind: ItemRelationshipKind,
+  fieldKey: (typeof RELATIONSHIP_COUNT_FIELDS)[number][1],
+  width = 140,
+  fullLabel?: string,
+): ColumnConfig {
+  return col(
     fieldKey,
-    col(
-      fieldKey,
-      REL_TITLES[relKind],
-      (row, coverage) =>
-        formatRelCount(row[fieldKey], coverage.relationships[relKind]),
-      {
-        width:
-          fieldKey === 'cashShopListingCount' ||
-          fieldKey === 'foundInContainerCount'
-            ? 160
-            : 140,
-        numeric: true,
-        relationshipKind: relKind,
-        ...(relKind === 'monster-drop'
-          ? { fullLabel: 'Monster drops (lower bound)' }
-          : {}),
-      },
-    ),
-  ]),
-) as Record<RelKey, ColumnConfig>;
+    REL_TITLES[relKind],
+    (row, coverage) =>
+      formatRelCount(row[fieldKey], coverage.relationships[relKind]),
+    {
+      width,
+      numeric: true,
+      relationshipKind: relKind,
+      ...(fullLabel ? { fullLabel } : {}),
+    },
+  );
+}
+
+const relationshipColumns = {
+  neededForQuestCount: relCol('needed-for-quest', 'neededForQuestCount'),
+  questRewardCount: relCol('quest-reward', 'questRewardCount'),
+  usedInRecipeCount: relCol('used-in-recipe', 'usedInRecipeCount'),
+  madeByRecipeCount: relCol('made-by-recipe', 'madeByRecipeCount'),
+  monsterDropCount: relCol(
+    'monster-drop',
+    'monsterDropCount',
+    140,
+    'Monster drops (lower bound)',
+  ),
+  foundInContainerCount: relCol(
+    'found-in-container',
+    'foundInContainerCount',
+    160,
+  ),
+  cashShopListingCount: relCol(
+    'cash-shop-listing',
+    'cashShopListingCount',
+    160,
+  ),
+};
 
 const STATS_SORT_LABELS = {
   desc: 'Stats: strongest first',
@@ -201,8 +221,8 @@ export const COLUMNS = {
       fullLabel: 'Family (source metadata)',
     },
   ),
-  ...generatedNumericColumns,
-  ...generatedRelationshipColumns,
+  ...numericColumns,
+  ...relationshipColumns,
 } as const satisfies Record<string, ColumnConfig>;
 
 export type ColumnKey = keyof typeof COLUMNS;
