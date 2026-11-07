@@ -53,7 +53,6 @@ export interface FacetedBrowserNavigation {
 }
 
 export interface BrowseSortOption {
-  readonly value: string;
   readonly label: string;
   readonly field: string;
   readonly direction: 'asc' | 'desc';

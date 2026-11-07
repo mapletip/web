@@ -3,7 +3,6 @@ import { MagnifyingGlass } from '@phosphor-icons/react';
 import type {
   MouseEvent as ReactMouseEvent,
   ReactElement,
-  ReactNode,
 } from 'react';
 import { useCallback, useMemo, useRef, useState } from 'react';
 
@@ -411,52 +410,43 @@ export function FacetedBrowser<TRecord extends Record<string, unknown>>(
 
   const railLabel = navigation ? navigation.label : 'Filters';
 
-  let toolbarContent: ReactNode;
-  if (comparisonProps) {
-    toolbarContent = (
-      <Toolbar
-        columns={columns}
-        idAccessor={idAccessor}
-        identityField={comparisonProps.identityField}
-        hiddenColumns={browseState.hiddenColumns}
-        defaultHiddenColumns={initialDefaultHiddenColumns}
-        recordNoun={recordNoun}
-        pageSize={browser.pageSize}
-        pageSizeOptions={pageSizeOptions}
-        sortOptions={sortOptions}
-        currentSort={browseState.sort}
-        onHiddenColumnsChange={browser.setHiddenColumns}
-        onColumnVisibilityChange={browser.setColumnVisibility}
-        onPageSizeChange={browser.setPageSize}
-        onSortChange={browser.setSort}
-      />
-    );
-  } else if (sortOptions && sortOptions.length > 0) {
-    toolbarContent = (
+  const primaryToolbar = comparisonProps ? (
+    <Toolbar
+      columns={columns}
+      idAccessor={idAccessor}
+      identityField={comparisonProps.identityField}
+      hiddenColumns={browseState.hiddenColumns}
+      defaultHiddenColumns={initialDefaultHiddenColumns}
+      recordNoun={recordNoun}
+      pageSize={browser.pageSize}
+      pageSizeOptions={pageSizeOptions}
+      onHiddenColumnsChange={browser.setHiddenColumns}
+      onColumnVisibilityChange={browser.setColumnVisibility}
+      onPageSizeChange={browser.setPageSize}
+    />
+  ) : (
+    <PageSizeSelect
+      recordNoun={recordNoun}
+      pageSize={browser.pageSize}
+      pageSizeOptions={pageSizeOptions}
+      onChange={browser.setPageSize}
+    />
+  );
+
+  const toolbarContent =
+    sortOptions && sortOptions.length > 0 ? (
       <Group gap="xs">
         <SortSelect
+          recordNoun={recordNoun}
           sortOptions={sortOptions}
           currentSort={browseState.sort}
           onChange={browser.setSort}
         />
-        <PageSizeSelect
-          recordNoun={recordNoun}
-          pageSize={browser.pageSize}
-          pageSizeOptions={pageSizeOptions}
-          onChange={browser.setPageSize}
-        />
+        {primaryToolbar}
       </Group>
+    ) : (
+      primaryToolbar
     );
-  } else {
-    toolbarContent = (
-      <PageSizeSelect
-        recordNoun={recordNoun}
-        pageSize={browser.pageSize}
-        pageSizeOptions={pageSizeOptions}
-        onChange={browser.setPageSize}
-      />
-    );
-  }
 
   return (
     <>
