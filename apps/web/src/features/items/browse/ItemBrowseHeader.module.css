@@ -1,0 +1,30 @@
+.buildSwitcher {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background-color: var(--mantine-color-dark-6);
+  padding: 2px 4px;
+  border-radius: var(--mantine-radius-sm);
+  font-size: var(--mantine-font-size-xs);
+}
+
+.buildLink {
+  padding: 4px 8px;
+  border-radius: var(--mantine-radius-xs);
+  text-decoration: none;
+  color: var(--mantine-color-dimmed);
+  font-weight: 500;
+  transition:
+    color 150ms ease,
+    background-color 150ms ease;
+}
+
+.buildLink:hover {
+  color: var(--mantine-color-text);
+}
+
+.buildLink[aria-current='page'] {
+  background-color: var(--mantine-color-dark-4);
+  color: var(--mantine-color-text);
+  font-weight: 600;
+}
