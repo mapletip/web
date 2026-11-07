@@ -524,11 +524,23 @@ describe('category model and predicates', () => {
         types: ['potion'],
       },
       {
-        key: '02000001',
-        sourceId: '02000001',
+        key: '02000003',
+        sourceId: '02000003',
         itemClass: 'consume',
         functions: ['recovery'],
         types: ['potion'],
+      },
+      {
+        key: '02012000',
+        sourceId: '02012000',
+        itemClass: 'consume',
+        types: ['potion'],
+      },
+      {
+        key: '02022002',
+        sourceId: '02022002',
+        itemClass: 'consume',
+        types: ['food-buff'],
       },
       {
         key: '02070000',
@@ -615,36 +627,6 @@ describe('category model and predicates', () => {
         functions: ['reward-container'],
       },
       {
-        key: '02000003',
-        sourceId: '02000003',
-        itemClass: 'consume',
-        types: ['potion'],
-      },
-      {
-        key: '02000006',
-        sourceId: '02000006',
-        itemClass: 'consume',
-        types: ['potion'],
-      },
-      {
-        key: '02022002',
-        sourceId: '02022002',
-        itemClass: 'consume',
-        types: ['food-buff'],
-      },
-      {
-        key: '02012000',
-        sourceId: '02012000',
-        itemClass: 'consume',
-        types: ['food-buff'],
-      },
-      {
-        key: '02020006',
-        sourceId: '02020006',
-        itemClass: 'consume',
-        types: ['food-buff'],
-      },
-      {
         key: '02380001',
         sourceId: '02380001',
         itemClass: 'consume',
@@ -697,20 +679,14 @@ describe('category model and predicates', () => {
 
       // ETC
       {
-        key: '04031039',
-        sourceId: '04031039',
+        key: '04031001',
+        sourceId: '04031001',
         itemClass: 'etc',
         neededForQuestCount: 1,
       },
       {
-        key: '04031040',
-        sourceId: '04031040',
-        itemClass: 'etc',
-        neededForQuestCount: 1,
-      },
-      {
-        key: '04031041',
-        sourceId: '04031041',
+        key: '04031077',
+        sourceId: '04031077',
         itemClass: 'etc',
         neededForQuestCount: 1,
       },
@@ -771,8 +747,8 @@ describe('category model and predicates', () => {
         types: ['refined-material'],
       },
       {
-        key: '04000009',
-        sourceId: '04000009',
+        key: '04001000',
+        sourceId: '04001000',
         itemClass: 'etc',
         types: ['monster-material'],
       },
@@ -840,12 +816,10 @@ describe('category model and predicates', () => {
       },
 
       // Cash/Pet
-      { key: '5000000', sourceId: '5000000', itemClass: 'pet' },
-      { key: '5000001', sourceId: '5000001', itemClass: 'pet' },
       { key: '5000002', sourceId: '5000002', itemClass: 'pet' },
-      { key: '05120002', sourceId: '05120002', itemClass: 'cash' },
-      { key: '05010000', sourceId: '05010000', itemClass: 'cash' },
-      { key: '05010002', sourceId: '05010002', itemClass: 'cash' },
+      { key: '5000008', sourceId: '5000008', itemClass: 'pet' },
+      { key: '05070001', sourceId: '05070001', itemClass: 'cash' },
+      { key: '05072000', sourceId: '05072000', itemClass: 'cash' },
     ];
 
     const fixtureBySourceId = new Map(fixtureRows.map((r) => [r.sourceId, r]));
@@ -871,7 +845,7 @@ describe('category model and predicates', () => {
         }
       }
     }
-    // 23 categories define iconSourceIds (all except buffs, other-etc-items, and other-setup-items)
+    // 23 categories define iconSourceIds (all except other-use-items, other-etc-items, and other-setup-items)
     expect(checkedCategories).toBe(23);
   });
 });

@@ -228,11 +228,11 @@ describe('navigation', () => {
       const rowsWithIcon: readonly ItemRow[] = [
         ...dummyRows,
         {
-          key: 'consume:02000000:icon',
-          sourceId: '02000000',
+          key: 'consume:02000002:icon',
+          sourceId: '02000002',
           itemClass: 'consume',
           functions: ['recovery'],
-          icon: '3e6f5119559b88de2f712dc0bf15ede726d2db79649e96a0a46c57c72fea0559',
+          icon: '182b52bbd81a4baeff46af86ad8317adfad729e10e78e4c5cb41c46a7263d5f6',
         },
       ];
       const tree = getItemNavTree(rowsWithIcon, 'cw-launch');
@@ -260,7 +260,7 @@ describe('navigation', () => {
         },
         {
           key: 'recovery-no-icon',
-          sourceId: '02000000',
+          sourceId: '02000002',
           itemClass: 'consume',
           functions: ['recovery'],
           // icon is omitted
@@ -281,22 +281,15 @@ describe('navigation', () => {
     });
 
     it('resolves the first preferred source ID with a known icon', () => {
-      // Both 02000002 (second preference) and 02000001 (third preference) are present with icons,
-      // but 02000000 (first preference) is missing.
+      // 02000003 (second preference) is present with an icon,
+      // but 02000002 (first preference) is missing.
       const rows: readonly ItemRow[] = [
         {
-          key: 'white-pot',
-          sourceId: '02000002',
+          key: 'blue-pot',
+          sourceId: '02000003',
           itemClass: 'consume',
           functions: ['recovery'],
-          icon: '182b52bbd81a4baeff46af86ad8317adfad729e10e78e4c5cb41c46a7263d5f6',
-        },
-        {
-          key: 'orange-pot',
-          sourceId: '02000001',
-          itemClass: 'consume',
-          functions: ['recovery'],
-          icon: 'd49da50440246171b9a8898595c30abfee7bd89945afd651cfa76d6f463378d5',
+          icon: '34676be30fc0eaecf46f3531bcf91c49df5ef12574e92ebef3a9fa05f42ba794',
         },
       ];
 
@@ -309,7 +302,7 @@ describe('navigation', () => {
       expect(recoveryNode?.icon).toBeDefined();
       const iconElement = recoveryNode?.icon as ReactElement<{ src: string }>;
       expect(iconElement.props.src).toContain(
-        '182b52bbd81a4baeff46af86ad8317adfad729e10e78e4c5cb41c46a7263d5f6',
+        '34676be30fc0eaecf46f3531bcf91c49df5ef12574e92ebef3a9fa05f42ba794',
       );
     });
   });

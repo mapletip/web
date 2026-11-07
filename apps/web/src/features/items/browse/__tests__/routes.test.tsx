@@ -29,10 +29,10 @@ const { mockRows } = vi.hoisted(() => {
     },
     {
       key: 'item:use:recovery',
-      sourceId: '02000000',
+      sourceId: '02000002',
       itemClass: 'consume',
       functions: ['recovery'],
-      icon: '3e6f5119559b88de2f712dc0bf15ede726d2db79649e96a0a46c57c72fea0559',
+      icon: '182b52bbd81a4baeff46af86ad8317adfad729e10e78e4c5cb41c46a7263d5f6',
     },
     {
       key: 'item:use:stars',
@@ -50,21 +50,21 @@ const { mockRows } = vi.hoisted(() => {
     },
     {
       key: 'item:etc:quest',
-      sourceId: '04031039',
+      sourceId: '04031001',
       itemClass: 'etc',
       neededForQuestCount: 1,
       icon: 'bb3f67112d67a4593cd7865dbd98cbd765ba9002860259ebec5a8d0494d20978',
     },
     {
       key: 'item:setup:chair',
-      sourceId: '03010000',
+      sourceId: '03010007',
       itemClass: 'setup',
       types: ['chair'],
       icon: 'e9a7ddb8d65561a0709fcfab637a242c38dc9c09c3fe80a06144e545e8f4ca6a',
     },
     {
       key: 'item:cash:pet',
-      sourceId: '5000000',
+      sourceId: '5000002',
       itemClass: 'pet',
       icon: 'b6a3972dcd2035e0f2bc062d4ea6016671534b5059f8772ddf72f07fc853320e',
     },
@@ -349,7 +349,7 @@ describe('Items Browse route integration', () => {
     expect(chipMatch).not.toBeNull();
     const recoveryIcon = itemIconUrl(
       MAPLEKIT_RELEASE.baseUrl,
-      '3e6f5119559b88de2f712dc0bf15ede726d2db79649e96a0a46c57c72fea0559',
+      '182b52bbd81a4baeff46af86ad8317adfad729e10e78e4c5cb41c46a7263d5f6',
     );
     expect(chipMatch?.[1]).toContain(recoveryIcon);
     expect(chipMatch?.[1]).toContain('Recovery');
@@ -374,7 +374,7 @@ describe('Items Browse route integration', () => {
     );
     const recoveryIcon = itemIconUrl(
       MAPLEKIT_RELEASE.baseUrl,
-      '3e6f5119559b88de2f712dc0bf15ede726d2db79649e96a0a46c57c72fea0559',
+      '182b52bbd81a4baeff46af86ad8317adfad729e10e78e4c5cb41c46a7263d5f6',
     );
     const starsIcon = itemIconUrl(
       MAPLEKIT_RELEASE.baseUrl,

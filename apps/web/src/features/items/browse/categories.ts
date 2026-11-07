@@ -96,11 +96,7 @@ export const ITEM_SCOPES: Readonly<Record<ItemScopeSlug, ItemCategoryScope>> = {
         '02040000',
         '02040001',
       ]),
-      byFunction('recovery', 'Recovery', 'recovery', [
-        '02000000',
-        '02000002',
-        '02000001',
-      ]),
+      byFunction('recovery', 'Recovery', 'recovery', ['02000002', '02000003']),
       {
         kind: 'positive',
         slug: 'buffs',
@@ -109,6 +105,7 @@ export const ITEM_SCOPES: Readonly<Record<ItemScopeSlug, ItemCategoryScope>> = {
           Boolean(
             row.types?.includes('potion') || row.types?.includes('food-buff'),
           ),
+        iconSourceIds: ['02012000', '02022002'],
       },
       byType('throwing-stars', 'Throwing Stars', 'throwing-star', [
         '02070000',
@@ -144,10 +141,7 @@ export const ITEM_SCOPES: Readonly<Record<ItemScopeSlug, ItemCategoryScope>> = {
         '02028000',
         '02028001',
       ]),
-      otherChild('other-use-items', 'Other Use Items', [
-        '02030000',
-        '02030004',
-      ]),
+      otherChild('other-use-items', 'Other Use Items'),
     ],
   },
   etc: {
@@ -162,14 +156,14 @@ export const ITEM_SCOPES: Readonly<Record<ItemScopeSlug, ItemCategoryScope>> = {
         '04011001',
       ]),
       byType('monster-materials', 'Monster Materials', 'monster-material', [
-        '04000009',
+        '04001000',
       ]),
       {
         kind: 'positive',
         slug: 'quest-items',
         label: 'Quest Items',
         matches: (row) => (row.neededForQuestCount ?? 0) > 0,
-        iconSourceIds: ['04031039', '04031040', '04031041'],
+        iconSourceIds: ['04031001', '04031077'],
       },
       otherChild('other-etc-items', 'Other ETC Items'),
     ],
@@ -179,7 +173,7 @@ export const ITEM_SCOPES: Readonly<Record<ItemScopeSlug, ItemCategoryScope>> = {
     label: 'Set-up',
     itemClasses: ['setup'],
     children: [
-      byType('chairs', 'Chairs', 'chair', ['03010000', '03010008', '03010007']),
+      byType('chairs', 'Chairs', 'chair', ['03010007', '03010008']),
       byType('holiday-ornaments', 'Holiday Ornaments', 'holiday-ornament', [
         '03992024',
         '03992021',
@@ -203,14 +197,14 @@ export const ITEM_SCOPES: Readonly<Record<ItemScopeSlug, ItemCategoryScope>> = {
         slug: 'pets',
         label: 'Pets',
         matches: (row) => row.itemClass === 'pet',
-        iconSourceIds: ['5000000', '5000001', '5000002'],
+        iconSourceIds: ['5000002', '5000008'],
       },
       {
         kind: 'positive',
         slug: 'cash-items',
         label: 'Cash Items',
         matches: (row) => row.itemClass === 'cash',
-        iconSourceIds: ['05120002', '05010000', '05010002'],
+        iconSourceIds: ['05070001', '05072000'],
       },
     ],
   },
