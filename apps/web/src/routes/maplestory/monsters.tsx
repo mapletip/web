@@ -1,10 +1,8 @@
 import { createFileRoute } from '@tanstack/react-router';
 
+import { BrowseUnavailable } from '@/components/BrowseUnavailable';
 import { DEFAULT_BUILD_ID } from '@/config/maplekit';
-import {
-  MonsterBrowse,
-  MonsterBrowseUnavailable,
-} from '@/features/monsters/browse';
+import { MonsterBrowse } from '@/features/monsters/browse';
 import { loadMonsterBrowse } from '@/features/monsters/browse/load';
 import { monsterPageMetadata } from '@/features/monsters/browse/metadata';
 
@@ -22,7 +20,7 @@ export const Route = createFileRoute('/maplestory/monsters')({
     ],
   }),
   component: MonsterBrowsePage,
-  errorComponent: MonsterBrowseUnavailable,
+  errorComponent: BrowseUnavailable,
 });
 
 function MonsterBrowsePage() {

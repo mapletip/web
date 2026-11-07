@@ -62,4 +62,3 @@ export function supportedBuildSlug(slug: string): BuildId {
   }
   return slug;
 }
-

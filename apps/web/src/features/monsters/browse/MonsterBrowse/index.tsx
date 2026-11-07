@@ -17,7 +17,6 @@ import {
   type MonsterFactId,
 } from '../project';
 
-
 export interface MonsterBrowseProps {
   readonly buildId: BuildId;
   readonly rows: readonly MonsterBrowseRow[];

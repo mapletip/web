@@ -1,7 +1,7 @@
 import type { ItemBrowseRow } from '@mapletip/data/items';
 import { describe, expect, it } from 'vitest';
 
-import { projectItemBrowseRows } from '../project';
+import { projectItemBrowseRows, UNNAMED_ITEM_LABEL } from '../project';
 
 function makeBaseRow(overrides: Partial<ItemBrowseRow> = {}): ItemBrowseRow {
   return {
@@ -15,7 +15,7 @@ function makeBaseRow(overrides: Partial<ItemBrowseRow> = {}): ItemBrowseRow {
 }
 
 describe('projectItemBrowseRows', () => {
-  it('distinguishes unknown vs absent name and icon states', () => {
+  it('omits absent or unknown name and icon while keeping known values', () => {
     const rows = projectItemBrowseRows([
       makeBaseRow({
         key: 'item:1',
@@ -32,16 +32,19 @@ describe('projectItemBrowseRows', () => {
     ]);
 
     expect(rows[0]?.name).toBeUndefined();
-    expect(rows[0]?.nameState).toBe('unknown');
     expect(rows[0]?.icon).toBe('b'.repeat(64));
 
     expect(rows[1]?.name).toBeUndefined();
-    expect(rows[1]?.nameState).toBe('absent');
     expect(rows[1]?.icon).toBeUndefined();
+
+    // Verify dropped payload fields are not present on rows
+    expect('nameState' in (rows[0] ?? {})).toBe(false);
+    expect('rel' in (rows[0] ?? {})).toBe(false);
+    expect('statKeys' in (rows[0] ?? {})).toBe(false);
   });
 
-  it('keeps known 0 values for numeric properties and does not drop them', () => {
-    const [row] = projectItemBrowseRows([
+  it('keeps known 0 values for numeric properties and records directTargetCount only when > 0', () => {
+    const [rowWithZero, rowWithTargets] = projectItemBrowseRows([
       makeBaseRow({
         projectileAttack: 0,
         recovery: { hp: 0, mp: 0, hpPercent: 0, mpPercent: 0 },
@@ -57,31 +60,46 @@ describe('projectItemBrowseRows', () => {
           'cash-shop-listing': 0,
         },
       }),
+      makeBaseRow({
+        scroll: {
+          targets: ['equip:1', 'equip:2'],
+        },
+      }),
     ]);
 
-    expect(row?.attack).toBe(0);
-    expect(row?.hp).toBe(0);
-    expect(row?.mp).toBe(0);
-    expect(row?.hpPercent).toBe(0);
-    expect(row?.mpPercent).toBe(0);
-    expect(row?.seatHp).toBe(0);
-    expect(row?.seatMp).toBe(0);
-    expect(row?.closeness).toBe(0);
-    expect(row?.fullness).toBe(0);
-    expect(row?.tameness).toBe(0);
-    expect(row?.success).toBe(0);
-    expect(row?.cursed).toBe(0);
-    expect(row?.directTargetCount).toBe(0);
+    expect(rowWithZero?.attack).toBe(0);
+    expect(rowWithZero?.hp).toBe(0);
+    expect(rowWithZero?.mp).toBe(0);
+    expect(rowWithZero?.hpPercent).toBe(0);
+    expect(rowWithZero?.mpPercent).toBe(0);
+    expect(rowWithZero?.seatHp).toBe(0);
+    expect(rowWithZero?.seatMp).toBe(0);
+    expect(rowWithZero?.closeness).toBe(0);
+    expect(rowWithZero?.fullness).toBe(0);
+    expect(rowWithZero?.tameness).toBe(0);
+    expect(rowWithZero?.success).toBe(0);
+    expect(rowWithZero?.cursed).toBe(0);
+    // directTargetCount is only recorded when > 0
+    expect(rowWithZero?.directTargetCount).toBeUndefined();
+
+    expect(rowWithTargets?.directTargetCount).toBe(2);
   });
 
-  it('resolves pet targets from the roster while preserving unresolved targets', () => {
-    const petTargetKey = 'item:pet:kino';
+  it('resolves pet targets from the roster, keeping unknown names with honest fallback', () => {
+    const kinoKey = 'item:pet:kino';
+    const unknownPetKey = 'item:pet:mystery';
     const rows = projectItemBrowseRows([
       makeBaseRow({
-        key: petTargetKey,
+        key: kinoKey,
         sourceId: '5000042',
         itemClass: 'pet',
         name: { state: 'known', value: 'Kino' },
+      }),
+      makeBaseRow({
+        key: unknownPetKey,
+        sourceId: '5000099',
+        itemClass: 'pet',
+        name: { state: 'unknown' },
       }),
       makeBaseRow({
         key: 'item:food:sprout',
@@ -90,7 +108,7 @@ describe('projectItemBrowseRows', () => {
         name: { state: 'known', value: 'Sprout' },
         petFood: {
           closeness: 100,
-          targets: [petTargetKey],
+          targets: [kinoKey, unknownPetKey],
           unresolvedTargets: ['5000046'],
         },
       }),
@@ -98,7 +116,8 @@ describe('projectItemBrowseRows', () => {
 
     const sprout = rows.find((r) => r.sourceId === '05240018');
     expect(sprout).toBeDefined();
-    expect(sprout?.petTargets).toEqual(['Kino']);
+    // Known pet name is resolved; unknown pet name retains honest fallback label (never lost)
+    expect(sprout?.petTargets).toEqual(['Kino', UNNAMED_ITEM_LABEL]);
     expect(sprout?.unresolvedPetTargets).toEqual(['5000046']);
   });
 
