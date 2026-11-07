@@ -214,13 +214,32 @@ describe('navigation', () => {
       expect(node?.icon).toBeDefined();
     });
 
-    it('locates child node by id without icon', () => {
+    it('locates child node by id without icon when rows omit icon', () => {
       const tree = getItemNavTree(dummyRows, 'cw-launch');
       const node = findItemNavNode(tree, 'use/recovery');
       expect(node).toBeDefined();
       expect(node?.id).toBe('use/recovery');
       expect(node?.label).toBe('Recovery');
       expect(node?.icon).toBeUndefined();
+    });
+
+    it('locates child node by id with resolved item icon when rows have icon', () => {
+      const rowsWithIcon: readonly ItemRow[] = [
+        ...dummyRows,
+        {
+          key: 'consume:02000000:icon',
+          sourceId: '02000000',
+          itemClass: 'consume',
+          functions: ['recovery'],
+          icon: '3e6f5119559b88de2f712dc0bf15ede726d2db79649e96a0a46c57c72fea0559',
+        },
+      ];
+      const tree = getItemNavTree(rowsWithIcon, 'cw-launch');
+      const node = findItemNavNode(tree, 'use/recovery');
+      expect(node).toBeDefined();
+      expect(node?.id).toBe('use/recovery');
+      expect(node?.label).toBe('Recovery');
+      expect(node?.icon).toBeDefined();
     });
 
     it('returns undefined for nonexistent id', () => {

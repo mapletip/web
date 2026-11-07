@@ -15,6 +15,48 @@ import type {
 export const ITEM_SCOPE_SLUGS = ['all', 'use', 'etc', 'setup', 'cash'] as const;
 export type ItemScopeSlug = (typeof ITEM_SCOPE_SLUGS)[number];
 
+export const ITEM_CHILD_SLUGS = {
+  use: [
+    'upgrade-scrolls',
+    'recovery',
+    'throwing-stars',
+    'arrows',
+    'bullets',
+    'pet-food',
+    'summoning-items',
+    'reward-containers',
+    'potions',
+    'food-buffs',
+    'monster-cards',
+    'skill-items',
+    'meso-pouches',
+    'other-use-items',
+  ],
+  etc: [
+    'quest-items',
+    'crafting',
+    'ores',
+    'gems',
+    'refined-materials',
+    'monster-materials',
+    'other-etc-items',
+  ],
+  setup: [
+    'chairs',
+    'holiday-ornaments',
+    'furniture',
+    'crafting-stations',
+    'other-setup-items',
+  ],
+  cash: ['pets', 'cash-items'],
+} as const;
+
+export type ItemChildScopeSlug = keyof typeof ITEM_CHILD_SLUGS;
+
+export type ItemCategoryChildId = {
+  [S in ItemChildScopeSlug]: `${S}/${(typeof ITEM_CHILD_SLUGS)[S][number]}`;
+}[ItemChildScopeSlug];
+
 export interface ItemPositiveChild {
   readonly kind: 'positive';
   readonly slug: string;

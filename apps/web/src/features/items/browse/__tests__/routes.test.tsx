@@ -1,4 +1,5 @@
 import { MantineProvider } from '@mantine/core';
+import { itemIconUrl } from '@mapletip/data/items';
 import {
   createMemoryHistory,
   createRouter,
@@ -9,6 +10,7 @@ import { renderToString } from 'react-dom/server';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import useIcon from '@/assets/maplestory/navigation/items-use-red-potion.png?no-inline';
+import { MAPLEKIT_RELEASE } from '@/config/maplekit';
 import { routeTree } from '@/routeTree.gen';
 
 import { ITEM_SCOPES } from '../categories';
@@ -23,41 +25,48 @@ const { mockRows } = vi.hoisted(() => {
       sourceId: '02040000',
       itemClass: 'consume',
       types: ['upgrade-scroll'],
+      icon: '3a453e4e40b44d9358f9348abdda896b64ecc046a52e5b07a2388bdbd7dc8601',
     },
     {
       key: 'item:use:recovery',
       sourceId: '02000000',
       itemClass: 'consume',
       functions: ['recovery'],
+      icon: '3e6f5119559b88de2f712dc0bf15ede726d2db79649e96a0a46c57c72fea0559',
     },
     {
       key: 'item:use:stars',
       sourceId: '02070000',
       itemClass: 'consume',
       types: ['throwing-star'],
+      icon: 'f77172ea2f08e2e8586c8d2a208c3614cbf112a09796609f9b4fc5c8affb5e0e',
     },
     {
       key: 'item:use:potion',
-      sourceId: '02001000',
+      sourceId: '02000003',
       itemClass: 'consume',
       types: ['potion'],
+      icon: '8e3e5f732599bc6a681e939e526ab134619cdb6711dfa52a7f7011e4e2f4d5b6',
     },
     {
       key: 'item:etc:quest',
-      sourceId: '04000000',
+      sourceId: '04031039',
       itemClass: 'etc',
       neededForQuestCount: 1,
+      icon: 'bb3f67112d67a4593cd7865dbd98cbd765ba9002860259ebec5a8d0494d20978',
     },
     {
       key: 'item:setup:chair',
       sourceId: '03010000',
       itemClass: 'setup',
       types: ['chair'],
+      icon: 'e9a7ddb8d65561a0709fcfab637a242c38dc9c09c3fe80a06144e545e8f4ca6a',
     },
     {
       key: 'item:cash:pet',
-      sourceId: '05000000',
+      sourceId: '5000000',
       itemClass: 'pet',
+      icon: 'b6a3972dcd2035e0f2bc062d4ea6016671534b5059f8772ddf72f07fc853320e',
     },
   ];
   return { mockRows: rows };
@@ -85,6 +94,7 @@ describe('Items Browse route integration', () => {
       expectedBackLinks: [] as readonly { href: string; label: string }[],
       expectedDirectChildren: ['Use', 'ETC', 'Set-up', 'Cash/Pet'],
       unexpectedLabels: ['Upgrade Scrolls', 'Recovery', 'Quest Items'],
+      expectedHasIcon: true,
     },
     {
       url: '/maplestory/items/use',
@@ -108,6 +118,7 @@ describe('Items Browse route integration', () => {
         'Monster Cards',
         'Skill Items',
       ],
+      expectedHasIcon: true,
     },
     {
       url: '/maplestory/items/use/bullets',
@@ -128,6 +139,7 @@ describe('Items Browse route integration', () => {
         'ETC',
         'Set-up',
       ],
+      expectedHasIcon: false,
     },
     {
       url: '/maplestory/items/use/upgrade-scrolls',
@@ -141,6 +153,7 @@ describe('Items Browse route integration', () => {
       ],
       expectedDirectChildren: [] as readonly string[],
       unexpectedLabels: ['Recovery', 'Throwing Stars', 'ETC', 'Set-up'],
+      expectedHasIcon: true,
     },
     {
       url: '/maplestory/gms-v83/items',
@@ -151,6 +164,7 @@ describe('Items Browse route integration', () => {
       expectedBackLinks: [] as readonly { href: string; label: string }[],
       expectedDirectChildren: ['Use', 'ETC', 'Set-up', 'Cash/Pet'],
       unexpectedLabels: ['Quest Items', 'Chairs'],
+      expectedHasIcon: true,
     },
     {
       url: '/maplestory/gms-v83/items/etc/quest-items',
@@ -164,6 +178,7 @@ describe('Items Browse route integration', () => {
       ],
       expectedDirectChildren: [] as readonly string[],
       unexpectedLabels: ['Crafting', 'Ores', 'Use', 'Set-up'],
+      expectedHasIcon: true,
     },
   ];
 
@@ -176,6 +191,7 @@ describe('Items Browse route integration', () => {
     expectedBackLinks,
     expectedDirectChildren,
     unexpectedLabels,
+    expectedHasIcon,
   } of validTestCases) {
     it(`matches items leaf and loads data for ${url}`, async () => {
       const history = createMemoryHistory({ initialEntries: [url] });
@@ -278,9 +294,7 @@ describe('Items Browse route integration', () => {
       });
       expect(navChip).toBeVisible();
       expect(navChip.textContent).toContain(currentLabel);
-      expect(navChip.querySelector('img') !== null).toBe(
-        expectedChildSlug === undefined,
-      );
+      expect(navChip.querySelector('img') !== null).toBe(expectedHasIcon);
 
       // Verify "Filters" button is absent when facets are empty
       expect(
@@ -313,7 +327,7 @@ describe('Items Browse route integration', () => {
     expect(chipMatch?.[1]).toContain('Use');
   });
 
-  it('renders the mobile navigation chip without an icon in SSR for /maplestory/items/use/recovery', async () => {
+  it('renders the mobile navigation chip with Recovery icon in SSR for /maplestory/items/use/recovery', async () => {
     const history = createMemoryHistory({
       initialEntries: ['/maplestory/items/use/recovery'],
     });
@@ -328,14 +342,48 @@ describe('Items Browse route integration', () => {
 
     // Verify the chip button exists with Recovery accessible name
     expect(html).toContain('Item categories: Recovery. Open Item categories');
-    // Verify the chip button has no icon
+    // Verify the chip button has Recovery icon
     const chipMatch = html.match(
       /<button[^>]*aria-label="Item categories: Recovery\. Open Item categories"[^>]*>([\s\S]*?)<\/button>/,
     );
     expect(chipMatch).not.toBeNull();
-    expect(chipMatch?.[1]).not.toContain(useIcon);
-    expect(chipMatch?.[1]).not.toContain('<img');
+    const recoveryIcon = itemIconUrl(
+      MAPLEKIT_RELEASE.baseUrl,
+      '3e6f5119559b88de2f712dc0bf15ede726d2db79649e96a0a46c57c72fea0559',
+    );
+    expect(chipMatch?.[1]).toContain(recoveryIcon);
     expect(chipMatch?.[1]).toContain('Recovery');
+  });
+
+  it('shows icons on children in the rail during SSR for /maplestory/items/use', async () => {
+    const history = createMemoryHistory({
+      initialEntries: ['/maplestory/items/use'],
+    });
+    const router = createRouter({ routeTree, history });
+    await router.load();
+
+    const html = renderToString(
+      <MantineProvider>
+        <RouterProvider router={router} />
+      </MantineProvider>,
+    );
+
+    const upgradeScrollIcon = itemIconUrl(
+      MAPLEKIT_RELEASE.baseUrl,
+      '3a453e4e40b44d9358f9348abdda896b64ecc046a52e5b07a2388bdbd7dc8601',
+    );
+    const recoveryIcon = itemIconUrl(
+      MAPLEKIT_RELEASE.baseUrl,
+      '3e6f5119559b88de2f712dc0bf15ede726d2db79649e96a0a46c57c72fea0559',
+    );
+    const starsIcon = itemIconUrl(
+      MAPLEKIT_RELEASE.baseUrl,
+      'f77172ea2f08e2e8586c8d2a208c3614cbf112a09796609f9b4fc5c8affb5e0e',
+    );
+
+    expect(html).toContain(upgradeScrollIcon);
+    expect(html).toContain(recoveryIcon);
+    expect(html).toContain(starsIcon);
   });
 
   it('CW /maplestory/items/use/bullets renders 200 with Bullets as current (0) plus ← All Items, ← Use', async () => {

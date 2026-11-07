@@ -5,6 +5,7 @@ import type {
   DrillDownLinkRenderProps,
   DrillDownNode,
 } from '@mapletip/component-library';
+import { itemIconUrl } from '@mapletip/data/items';
 import { Link } from '@tanstack/react-router';
 import type { ComponentProps, ReactElement, ReactNode } from 'react';
 
@@ -13,14 +14,20 @@ import cashIcon from '@/assets/maplestory/navigation/items-cash-pet-brown-puppy.
 import etcIcon from '@/assets/maplestory/navigation/items-etc-snail-shell.png?no-inline';
 import setupIcon from '@/assets/maplestory/navigation/items-setup-blue-chair.png?no-inline';
 import useIcon from '@/assets/maplestory/navigation/items-use-red-potion.png?no-inline';
-import { DEFAULT_BUILD_ID, type BuildId } from '@/config/maplekit';
+import {
+  DEFAULT_BUILD_ID,
+  MAPLEKIT_RELEASE,
+  type BuildId,
+} from '@/config/maplekit';
 
 import {
   getCategoryCounts,
   ITEM_SCOPES,
   ITEM_SCOPE_SLUGS,
+  type ItemCategoryChildId,
   type ItemScopeSlug,
 } from './categories';
+import { CATEGORY_ICONS } from './category-icons';
 import type { ItemRow } from './project';
 import type { ItemCategorySelection } from './routing';
 
@@ -63,14 +70,12 @@ export function findItemNavNode<TMeta = ItemNavRouteParams>(
 }
 
 /**
- * Renders the decorative icon for an item category scope.
+ * Renders the decorative 20px img icon for navigation nodes.
  */
-function itemScopeIcon(
-  scopeSlug: ItemScopeSlug,
-): ReactElement<ComponentProps<'img'>> {
+function renderItemNavIcon(src: string): ReactElement<ComponentProps<'img'>> {
   return (
     <img
-      src={SCOPE_ICONS[scopeSlug]}
+      src={src}
       alt=""
       width={20}
       height={20}
@@ -123,6 +128,13 @@ export function getItemNavTree(
   const counts = getCategoryCounts(rows);
   const buildParam = buildId === DEFAULT_BUILD_ID ? undefined : buildId;
 
+  const iconBySourceId = new Map<string, string>();
+  for (const row of rows) {
+    if (row.icon && !iconBySourceId.has(row.sourceId)) {
+      iconBySourceId.set(row.sourceId, row.icon);
+    }
+  }
+
   const scopeNodes: readonly DrillDownNode<ItemNavRouteParams>[] =
     NON_ALL_SCOPES.map((scopeSlug) => {
       const scopeObj = ITEM_SCOPES[scopeSlug];
@@ -140,10 +152,26 @@ export function getItemNavTree(
             scope: scopeSlug,
             child: child.slug,
           };
+          const childId = `${scopeSlug}/${child.slug}` as ItemCategoryChildId;
+          const preferredIds = CATEGORY_ICONS[childId];
+          let childIcon: ReactElement<ComponentProps<'img'>> | undefined;
+          if (preferredIds) {
+            for (const sourceId of preferredIds) {
+              const contentId = iconBySourceId.get(sourceId);
+              if (contentId) {
+                childIcon = renderItemNavIcon(
+                  itemIconUrl(MAPLEKIT_RELEASE.baseUrl, contentId),
+                );
+                break;
+              }
+            }
+          }
+
           return {
-            id: `${scopeSlug}/${child.slug}`,
+            id: childId,
             label: child.label,
             href: buildItemNavHref(childParams),
+            ...(childIcon ? { icon: childIcon } : {}),
             count: scopeCounts.children[child.slug] ?? 0,
             meta: childParams,
           };
@@ -153,7 +181,7 @@ export function getItemNavTree(
         id: scopeSlug,
         label: scopeObj.label,
         href: buildItemNavHref(scopeParams),
-        icon: itemScopeIcon(scopeSlug),
+        icon: renderItemNavIcon(SCOPE_ICONS[scopeSlug]),
         count: scopeCounts.total,
         meta: scopeParams,
         children: childNodes,
@@ -169,7 +197,7 @@ export function getItemNavTree(
     id: 'all',
     label: ITEM_SCOPES.all.label,
     href: buildItemNavHref(rootParams),
-    icon: itemScopeIcon('all'),
+    icon: renderItemNavIcon(SCOPE_ICONS.all),
     count: counts.all.total,
     meta: rootParams,
     children: scopeNodes,
