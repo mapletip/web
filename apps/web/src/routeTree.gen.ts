@@ -12,8 +12,16 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as ApiHealthzRouteImport } from './routes/api/healthz'
+import { Route as MaplestoryItemsRouteImport } from './routes/maplestory/items'
 import { Route as MaplestoryMonstersRouteImport } from './routes/maplestory/monsters'
+import { Route as MaplestoryBuildIdItemsRouteImport } from './routes/maplestory/$buildId/items'
 import { Route as MaplestoryBuildIdMonstersRouteImport } from './routes/maplestory/$buildId/monsters'
+import { Route as MaplestoryItemsIndexRouteImport } from './routes/maplestory/items/index'
+import { Route as MaplestoryBuildIdItemsIndexRouteImport } from './routes/maplestory/$buildId/items/index'
+import { Route as MaplestoryItemsScopeIndexRouteImport } from './routes/maplestory/items/$scope/index'
+import { Route as MaplestoryItemsScopeChildRouteImport } from './routes/maplestory/items/$scope/$child'
+import { Route as MaplestoryBuildIdItemsScopeIndexRouteImport } from './routes/maplestory/$buildId/items/$scope/index'
+import { Route as MaplestoryBuildIdItemsScopeChildRouteImport } from './routes/maplestory/$buildId/items/$scope/$child'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -30,9 +38,19 @@ const ApiHealthzRoute = ApiHealthzRouteImport.update({
   path: '/api/healthz',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MaplestoryItemsRoute = MaplestoryItemsRouteImport.update({
+  id: '/maplestory/items',
+  path: '/maplestory/items',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const MaplestoryMonstersRoute = MaplestoryMonstersRouteImport.update({
   id: '/maplestory/monsters',
   path: '/maplestory/monsters',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MaplestoryBuildIdItemsRoute = MaplestoryBuildIdItemsRouteImport.update({
+  id: '/maplestory/$buildId/items',
+  path: '/maplestory/$buildId/items',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MaplestoryBuildIdMonstersRoute =
@@ -41,13 +59,56 @@ const MaplestoryBuildIdMonstersRoute =
     path: '/maplestory/$buildId/monsters',
     getParentRoute: () => rootRouteImport,
   } as any)
+const MaplestoryItemsIndexRoute = MaplestoryItemsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => MaplestoryItemsRoute,
+} as any)
+const MaplestoryBuildIdItemsIndexRoute =
+  MaplestoryBuildIdItemsIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => MaplestoryBuildIdItemsRoute,
+  } as any)
+const MaplestoryItemsScopeIndexRoute =
+  MaplestoryItemsScopeIndexRouteImport.update({
+    id: '/$scope/',
+    path: '/$scope/',
+    getParentRoute: () => MaplestoryItemsRoute,
+  } as any)
+const MaplestoryItemsScopeChildRoute =
+  MaplestoryItemsScopeChildRouteImport.update({
+    id: '/$scope/$child',
+    path: '/$scope/$child',
+    getParentRoute: () => MaplestoryItemsRoute,
+  } as any)
+const MaplestoryBuildIdItemsScopeIndexRoute =
+  MaplestoryBuildIdItemsScopeIndexRouteImport.update({
+    id: '/$scope/',
+    path: '/$scope/',
+    getParentRoute: () => MaplestoryBuildIdItemsRoute,
+  } as any)
+const MaplestoryBuildIdItemsScopeChildRoute =
+  MaplestoryBuildIdItemsScopeChildRouteImport.update({
+    id: '/$scope/$child',
+    path: '/$scope/$child',
+    getParentRoute: () => MaplestoryBuildIdItemsRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/privacy': typeof PrivacyRoute
   '/api/healthz': typeof ApiHealthzRoute
+  '/maplestory/items': typeof MaplestoryItemsRouteWithChildren
   '/maplestory/monsters': typeof MaplestoryMonstersRoute
+  '/maplestory/$buildId/items': typeof MaplestoryBuildIdItemsRouteWithChildren
   '/maplestory/$buildId/monsters': typeof MaplestoryBuildIdMonstersRoute
+  '/maplestory/items/': typeof MaplestoryItemsIndexRoute
+  '/maplestory/items/$scope/$child': typeof MaplestoryItemsScopeChildRoute
+  '/maplestory/$buildId/items/': typeof MaplestoryBuildIdItemsIndexRoute
+  '/maplestory/items/$scope/': typeof MaplestoryItemsScopeIndexRoute
+  '/maplestory/$buildId/items/$scope/$child': typeof MaplestoryBuildIdItemsScopeChildRoute
+  '/maplestory/$buildId/items/$scope/': typeof MaplestoryBuildIdItemsScopeIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -55,14 +116,28 @@ export interface FileRoutesByTo {
   '/api/healthz': typeof ApiHealthzRoute
   '/maplestory/monsters': typeof MaplestoryMonstersRoute
   '/maplestory/$buildId/monsters': typeof MaplestoryBuildIdMonstersRoute
+  '/maplestory/items': typeof MaplestoryItemsIndexRoute
+  '/maplestory/items/$scope/$child': typeof MaplestoryItemsScopeChildRoute
+  '/maplestory/$buildId/items': typeof MaplestoryBuildIdItemsIndexRoute
+  '/maplestory/items/$scope': typeof MaplestoryItemsScopeIndexRoute
+  '/maplestory/$buildId/items/$scope/$child': typeof MaplestoryBuildIdItemsScopeChildRoute
+  '/maplestory/$buildId/items/$scope': typeof MaplestoryBuildIdItemsScopeIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/privacy': typeof PrivacyRoute
   '/api/healthz': typeof ApiHealthzRoute
+  '/maplestory/items': typeof MaplestoryItemsRouteWithChildren
   '/maplestory/monsters': typeof MaplestoryMonstersRoute
+  '/maplestory/$buildId/items': typeof MaplestoryBuildIdItemsRouteWithChildren
   '/maplestory/$buildId/monsters': typeof MaplestoryBuildIdMonstersRoute
+  '/maplestory/items/': typeof MaplestoryItemsIndexRoute
+  '/maplestory/items/$scope/$child': typeof MaplestoryItemsScopeChildRoute
+  '/maplestory/$buildId/items/': typeof MaplestoryBuildIdItemsIndexRoute
+  '/maplestory/items/$scope/': typeof MaplestoryItemsScopeIndexRoute
+  '/maplestory/$buildId/items/$scope/$child': typeof MaplestoryBuildIdItemsScopeChildRoute
+  '/maplestory/$buildId/items/$scope/': typeof MaplestoryBuildIdItemsScopeIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -70,8 +145,16 @@ export interface FileRouteTypes {
     | '/'
     | '/privacy'
     | '/api/healthz'
+    | '/maplestory/items'
     | '/maplestory/monsters'
+    | '/maplestory/$buildId/items'
     | '/maplestory/$buildId/monsters'
+    | '/maplestory/items/'
+    | '/maplestory/items/$scope/$child'
+    | '/maplestory/$buildId/items/'
+    | '/maplestory/items/$scope/'
+    | '/maplestory/$buildId/items/$scope/$child'
+    | '/maplestory/$buildId/items/$scope/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -79,20 +162,36 @@ export interface FileRouteTypes {
     | '/api/healthz'
     | '/maplestory/monsters'
     | '/maplestory/$buildId/monsters'
+    | '/maplestory/items'
+    | '/maplestory/items/$scope/$child'
+    | '/maplestory/$buildId/items'
+    | '/maplestory/items/$scope'
+    | '/maplestory/$buildId/items/$scope/$child'
+    | '/maplestory/$buildId/items/$scope'
   id:
     | '__root__'
     | '/'
     | '/privacy'
     | '/api/healthz'
+    | '/maplestory/items'
     | '/maplestory/monsters'
+    | '/maplestory/$buildId/items'
     | '/maplestory/$buildId/monsters'
+    | '/maplestory/items/'
+    | '/maplestory/items/$scope/$child'
+    | '/maplestory/$buildId/items/'
+    | '/maplestory/items/$scope/'
+    | '/maplestory/$buildId/items/$scope/$child'
+    | '/maplestory/$buildId/items/$scope/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   PrivacyRoute: typeof PrivacyRoute
   ApiHealthzRoute: typeof ApiHealthzRoute
+  MaplestoryItemsRoute: typeof MaplestoryItemsRouteWithChildren
   MaplestoryMonstersRoute: typeof MaplestoryMonstersRoute
+  MaplestoryBuildIdItemsRoute: typeof MaplestoryBuildIdItemsRouteWithChildren
   MaplestoryBuildIdMonstersRoute: typeof MaplestoryBuildIdMonstersRoute
 }
 
@@ -119,11 +218,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiHealthzRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/maplestory/items': {
+      id: '/maplestory/items'
+      path: '/maplestory/items'
+      fullPath: '/maplestory/items'
+      preLoaderRoute: typeof MaplestoryItemsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/maplestory/monsters': {
       id: '/maplestory/monsters'
       path: '/maplestory/monsters'
       fullPath: '/maplestory/monsters'
       preLoaderRoute: typeof MaplestoryMonstersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/maplestory/$buildId/items': {
+      id: '/maplestory/$buildId/items'
+      path: '/maplestory/$buildId/items'
+      fullPath: '/maplestory/$buildId/items'
+      preLoaderRoute: typeof MaplestoryBuildIdItemsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/maplestory/$buildId/monsters': {
@@ -133,14 +246,94 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MaplestoryBuildIdMonstersRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/maplestory/items/': {
+      id: '/maplestory/items/'
+      path: '/'
+      fullPath: '/maplestory/items/'
+      preLoaderRoute: typeof MaplestoryItemsIndexRouteImport
+      parentRoute: typeof MaplestoryItemsRoute
+    }
+    '/maplestory/$buildId/items/': {
+      id: '/maplestory/$buildId/items/'
+      path: '/'
+      fullPath: '/maplestory/$buildId/items/'
+      preLoaderRoute: typeof MaplestoryBuildIdItemsIndexRouteImport
+      parentRoute: typeof MaplestoryBuildIdItemsRoute
+    }
+    '/maplestory/items/$scope/': {
+      id: '/maplestory/items/$scope/'
+      path: '/$scope'
+      fullPath: '/maplestory/items/$scope/'
+      preLoaderRoute: typeof MaplestoryItemsScopeIndexRouteImport
+      parentRoute: typeof MaplestoryItemsRoute
+    }
+    '/maplestory/items/$scope/$child': {
+      id: '/maplestory/items/$scope/$child'
+      path: '/$scope/$child'
+      fullPath: '/maplestory/items/$scope/$child'
+      preLoaderRoute: typeof MaplestoryItemsScopeChildRouteImport
+      parentRoute: typeof MaplestoryItemsRoute
+    }
+    '/maplestory/$buildId/items/$scope/': {
+      id: '/maplestory/$buildId/items/$scope/'
+      path: '/$scope'
+      fullPath: '/maplestory/$buildId/items/$scope/'
+      preLoaderRoute: typeof MaplestoryBuildIdItemsScopeIndexRouteImport
+      parentRoute: typeof MaplestoryBuildIdItemsRoute
+    }
+    '/maplestory/$buildId/items/$scope/$child': {
+      id: '/maplestory/$buildId/items/$scope/$child'
+      path: '/$scope/$child'
+      fullPath: '/maplestory/$buildId/items/$scope/$child'
+      preLoaderRoute: typeof MaplestoryBuildIdItemsScopeChildRouteImport
+      parentRoute: typeof MaplestoryBuildIdItemsRoute
+    }
   }
 }
+
+interface MaplestoryItemsRouteChildren {
+  MaplestoryItemsIndexRoute: typeof MaplestoryItemsIndexRoute
+  MaplestoryItemsScopeChildRoute: typeof MaplestoryItemsScopeChildRoute
+  MaplestoryItemsScopeIndexRoute: typeof MaplestoryItemsScopeIndexRoute
+}
+
+const MaplestoryItemsRouteChildren: MaplestoryItemsRouteChildren = {
+  MaplestoryItemsIndexRoute: MaplestoryItemsIndexRoute,
+  MaplestoryItemsScopeChildRoute: MaplestoryItemsScopeChildRoute,
+  MaplestoryItemsScopeIndexRoute: MaplestoryItemsScopeIndexRoute,
+}
+
+const MaplestoryItemsRouteWithChildren = MaplestoryItemsRoute._addFileChildren(
+  MaplestoryItemsRouteChildren,
+)
+
+interface MaplestoryBuildIdItemsRouteChildren {
+  MaplestoryBuildIdItemsIndexRoute: typeof MaplestoryBuildIdItemsIndexRoute
+  MaplestoryBuildIdItemsScopeChildRoute: typeof MaplestoryBuildIdItemsScopeChildRoute
+  MaplestoryBuildIdItemsScopeIndexRoute: typeof MaplestoryBuildIdItemsScopeIndexRoute
+}
+
+const MaplestoryBuildIdItemsRouteChildren: MaplestoryBuildIdItemsRouteChildren =
+  {
+    MaplestoryBuildIdItemsIndexRoute: MaplestoryBuildIdItemsIndexRoute,
+    MaplestoryBuildIdItemsScopeChildRoute:
+      MaplestoryBuildIdItemsScopeChildRoute,
+    MaplestoryBuildIdItemsScopeIndexRoute:
+      MaplestoryBuildIdItemsScopeIndexRoute,
+  }
+
+const MaplestoryBuildIdItemsRouteWithChildren =
+  MaplestoryBuildIdItemsRoute._addFileChildren(
+    MaplestoryBuildIdItemsRouteChildren,
+  )
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   PrivacyRoute: PrivacyRoute,
   ApiHealthzRoute: ApiHealthzRoute,
+  MaplestoryItemsRoute: MaplestoryItemsRouteWithChildren,
   MaplestoryMonstersRoute: MaplestoryMonstersRoute,
+  MaplestoryBuildIdItemsRoute: MaplestoryBuildIdItemsRouteWithChildren,
   MaplestoryBuildIdMonstersRoute: MaplestoryBuildIdMonstersRoute,
 }
 export const routeTree = rootRouteImport
