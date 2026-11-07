@@ -51,6 +51,39 @@ describe('FacetedBrowser server rendering', () => {
     expect(html).toContain('href="/records/record-001"');
   });
 
+  it('renders clamped rows, page number, and window during SSR when page is out of range', () => {
+    const html = renderToString(
+      <MantineProvider theme={theme} forceColorScheme="dark">
+        <FacetedBrowser
+          title={<h1>Clamped Browser</h1>}
+          records={demoRecords.slice(0, 5)}
+          idAccessor="id"
+          presentation="cards"
+          renderCard={(record) => <a href={record.href}>{record.name}</a>}
+          state={{
+            search: '',
+            filters: {},
+            page: 999,
+            pageSize: 2,
+            hiddenColumns: [],
+          }}
+          onStateChange={() => undefined}
+        />
+      </MantineProvider>,
+    );
+
+    // demoRecords.slice(0, 5) with pageSize: 2 has 3 pages:
+    // page 1: Record 001, Record 002
+    // page 2: Record 003, Record 004
+    // page 3: Record 005
+    // Page 999 must clamp to page 3 during SSR (not render 0 rows)
+    expect(html).toContain('Clamped Browser');
+    expect(html).toContain('Record 005');
+    expect(html).not.toContain('Record 001');
+    // Summary text must show window for page 3: 5–5 of 5
+    expect(html).toContain('5–5 of 5 records');
+  });
+
   it('fails clearly when a typed facet uses an unregistered query field', () => {
     expect(() =>
       renderToString(

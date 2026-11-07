@@ -32,6 +32,7 @@ export interface QueryField<TRecord extends Record<string, unknown>> {
     columnId: string,
     filterValue: unknown,
   ) => boolean;
+  readonly searchMatch?: (value: unknown, query: string) => boolean;
 }
 
 export type QueryFieldDefinition<TRecord extends Record<string, unknown>> =
@@ -61,6 +62,8 @@ export interface ResolvedField<TRecord extends Record<string, unknown>> {
   readonly filterFn: FieldFilterFn<TRecord>;
   readonly getUniqueValues: (row: TRecord) => readonly unknown[];
   readonly isIdentity: boolean;
+  readonly searchMatch?:
+    ((value: unknown, query: string) => boolean) | undefined;
 }
 
 function searchValueMatches(value: unknown, query: string): boolean {
@@ -82,15 +85,23 @@ function searchValueMatches(value: unknown, query: string): boolean {
  * (including computed and array-valued query fields) instead of maintaining a
  * separate pre-table record filter.
  */
-export const searchFilterFn = constructFilterFn({
-  filter: (dataValue, filterValue) => {
-    if (typeof filterValue !== 'string' || filterValue.length === 0)
-      return true;
-    return searchValueMatches(dataValue, filterValue);
-  },
-  resolveFilterValue: (value) =>
-    typeof value === 'string' ? value.trim().toLowerCase() : '',
-});
+export function createSearchFilterFn<
+  TRecord extends Record<string, unknown> = Record<string, unknown>,
+>(fieldMap: Map<string, ResolvedField<TRecord>>) {
+  return constructFilterFn({
+    filter: (dataValue, filterValue, _row, columnId) => {
+      if (typeof filterValue !== 'string' || filterValue.length === 0)
+        return true;
+      const field = columnId ? fieldMap.get(columnId) : undefined;
+      if (field?.searchMatch) {
+        return field.searchMatch(dataValue, filterValue);
+      }
+      return searchValueMatches(dataValue, filterValue);
+    },
+    resolveFilterValue: (value) =>
+      typeof value === 'string' ? value.trim().toLowerCase() : '',
+  });
+}
 
 export const disabledSearchFilterFn = constructFilterFn({
   filter: (_dataValue, filterValue) =>
@@ -213,6 +224,7 @@ function fieldFromQuery<TRecord extends Record<string, unknown>>(
     getUniqueValues:
       definition?.getUniqueValues ?? ((row) => uniqueValues(accessorFn(row))),
     isIdentity: id === idAccessor || id === identityField,
+    searchMatch: definition?.searchMatch ?? existing?.searchMatch,
   };
 }
 

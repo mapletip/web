@@ -5,6 +5,16 @@ import type { BrowseState } from '@/components/FacetedBrowser/hooks/browseState'
 import type { QueryFieldDefinition } from '@/components/FacetedBrowser/hooks/querySemantics';
 import type { TableColumn } from '@/components/Table';
 
+export interface BrowseSortOption {
+  readonly label: string;
+  readonly field: string;
+  readonly direction: 'asc' | 'desc';
+}
+
+export interface StateChangeDetails {
+  readonly reason?: 'clamp' | undefined;
+}
+
 interface CommonProps<TRecord extends Record<string, unknown>> {
   readonly title: ReactNode;
   readonly records: readonly TRecord[];
@@ -12,6 +22,8 @@ interface CommonProps<TRecord extends Record<string, unknown>> {
   readonly queryFields?: readonly QueryFieldDefinition<TRecord>[];
   readonly searchFields?: readonly (keyof TRecord & string)[];
   readonly facets?: readonly FacetDefinition<TRecord>[];
+  readonly sortOptions?: readonly BrowseSortOption[];
+  readonly railNavigation?: ReactNode;
   readonly recordNoun?: string;
   /**
    * Visible noun for the result count, when the descriptive `recordNoun` is too
@@ -56,12 +68,18 @@ interface CommonProps<TRecord extends Record<string, unknown>> {
 type StateProps =
   | {
       readonly state: BrowseState;
-      readonly onStateChange: (nextState: BrowseState) => void;
+      readonly onStateChange: (
+        nextState: BrowseState,
+        details?: StateChangeDetails,
+      ) => void;
       readonly defaultState?: never;
     }
   | {
       readonly state?: never;
-      readonly onStateChange?: (nextState: BrowseState) => void;
+      readonly onStateChange?: (
+        nextState: BrowseState,
+        details?: StateChangeDetails,
+      ) => void;
       readonly defaultState?: BrowseState;
     };
 

@@ -5,6 +5,7 @@ import { expect, screen, userEvent, waitFor, within } from 'storybook/test';
 
 import { FacetedBrowser } from '@/components/FacetedBrowser';
 import type {
+  BrowseSortOption,
   FacetDefinition,
   BrowseState,
   QueryFieldDefinition,
@@ -50,11 +51,15 @@ function BrowserExample({
   state,
   onStateChange,
   fillHeight = true,
+  sortOptions,
+  railNavigation,
 }: {
   readonly variant?: Variant;
   readonly state?: BrowseState;
   readonly onStateChange?: (nextState: BrowseState) => void;
   readonly fillHeight?: boolean;
+  readonly sortOptions?: readonly BrowseSortOption[];
+  readonly railNavigation?: React.ReactNode;
 }) {
   const records = demoRecords;
   const columns = useMemo(
@@ -149,6 +154,8 @@ function BrowserExample({
       queryFields={queryFields}
       facets={facets}
       presentation="comparison"
+      {...(sortOptions ? { sortOptions } : {})}
+      {...(railNavigation ? { railNavigation } : {})}
       {...(fillHeight ? { fillHeight: true } : { tableMaxHeight: 560 })}
       renderCard={(record) => <FacetedBrowserRecordCard record={record} />}
       {...stateProps}
@@ -364,4 +371,62 @@ export const Controlled: Story = {
       </>
     );
   },
+};
+
+export const SortControl: Story = {
+  name: 'Sort control',
+  render: () => (
+    <BrowserExample
+      sortOptions={[
+        {
+          label: 'Name (A–Z)',
+          field: 'name',
+          direction: 'asc',
+        },
+        {
+          label: 'Name (Z–A)',
+          field: 'name',
+          direction: 'desc',
+        },
+        {
+          label: 'Value 1 (Highest)',
+          field: 'value1',
+          direction: 'desc',
+        },
+        {
+          label: 'Value 1 (Lowest)',
+          field: 'value1',
+          direction: 'asc',
+        },
+      ]}
+    />
+  ),
+};
+
+export const RailNavigationSlot: Story = {
+  name: 'Rail navigation',
+  render: () => (
+    <BrowserExample
+      railNavigation={
+        <nav aria-label="Demo category navigation">
+          <Text size="sm" fw={600} mb="xs">
+            Categories
+          </Text>
+          <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+            <li>
+              <a href="#all" style={{ fontWeight: 'bold' }}>
+                All Categories
+              </a>
+            </li>
+            <li>
+              <a href="#featured">Featured</a>
+            </li>
+            <li>
+              <a href="#archive">Archive</a>
+            </li>
+          </ul>
+        </nav>
+      }
+    />
+  ),
 };

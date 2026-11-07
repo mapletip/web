@@ -11,6 +11,7 @@ import {
 import { Gear } from '@phosphor-icons/react';
 import { useMemo, type ReactElement } from 'react';
 
+import type { BrowseSortOption } from '@/components/FacetedBrowser/FacetedBrowser.types';
 import type { TableColumn } from '@/components/Table';
 
 function sameFields(
@@ -74,6 +75,61 @@ export function PageSizeSelect({
           if (value !== null) onChange(Number(value));
         }}
         w={76}
+      />
+    </Group>
+  );
+}
+
+export interface SortSelectProps {
+  readonly recordNoun: string;
+  readonly sortOptions: readonly BrowseSortOption[];
+  readonly currentSort?:
+    { readonly field: string; readonly direction: 'asc' | 'desc' } | undefined;
+  readonly onChange: (field: string, direction: 'asc' | 'desc') => void;
+}
+
+export function SortSelect({
+  recordNoun,
+  sortOptions,
+  currentSort,
+  onChange,
+}: SortSelectProps): ReactElement {
+  const selectedValue = currentSort
+    ? `${currentSort.field}:${currentSort.direction}`
+    : null;
+
+  const data = useMemo(
+    () =>
+      sortOptions.map((opt) => ({
+        value: `${opt.field}:${opt.direction}`,
+        label: opt.label,
+      })),
+    [sortOptions],
+  );
+
+  return (
+    <Group gap={6} align="center">
+      <Text size="xs" c="dimmed">
+        Sort:
+      </Text>
+      <Select
+        aria-label={`Sort ${recordNoun}`}
+        size="sm"
+        checkIconPosition="left"
+        withAlignedLabels
+        allowDeselect={false}
+        value={selectedValue}
+        data={data}
+        onChange={(value) => {
+          if (!value) return;
+          const opt = sortOptions.find(
+            (o) => `${o.field}:${o.direction}` === value,
+          );
+          if (opt) {
+            onChange(opt.field, opt.direction);
+          }
+        }}
+        w={{ base: '100%', md: 230 }}
       />
     </Group>
   );
