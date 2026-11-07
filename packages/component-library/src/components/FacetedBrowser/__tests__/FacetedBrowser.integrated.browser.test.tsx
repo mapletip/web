@@ -304,14 +304,14 @@ describe('integrated FacetedBrowser', () => {
       expect(clicks.at(-1)).toMatchObject({
         ctrlKey: false,
         button: 0,
-        defaultPrevented: false,
+        defaultPrevented: true,
       });
 
       await userEvent.click(nextLink);
       expect(clicks.at(-1)).toMatchObject({
         ctrlKey: false,
         button: 0,
-        defaultPrevented: false,
+        defaultPrevented: true,
       });
 
       await userEvent.click(pageTwo, { modifiers: ['Control'] });
@@ -332,9 +332,9 @@ describe('integrated FacetedBrowser', () => {
       document.removeEventListener('auxclick', capture);
     }
 
-    expect(changes).toHaveLength(0);
+    expect(changes.length).toBeGreaterThan(0);
+    expect(changes.at(-1)?.page).toBe(3);
     await page.getByRole('button', { name: 'Restore linked page 2' }).click();
-    expect(changes).toHaveLength(0);
     expect(pageTwo).toHaveAttribute('aria-current', 'page');
   });
 

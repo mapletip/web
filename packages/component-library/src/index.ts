@@ -24,8 +24,9 @@ export type {
   HeaderProps,
   HeaderSubLink,
 } from '@/components/Header';
-export { FacetedBrowser } from '@/components/FacetedBrowser';
+export { buildQuantileBuckets, FacetedBrowser } from '@/components/FacetedBrowser';
 export type {
+  BrowseSortOption,
   BrowseState,
   FacetControlContext,
   FacetDefinition,

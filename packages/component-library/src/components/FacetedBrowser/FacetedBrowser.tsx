@@ -1,6 +1,10 @@
-import { Stack, TextInput, Title } from '@mantine/core';
+import { Group, Stack, TextInput, Title } from '@mantine/core';
 import { MagnifyingGlass } from '@phosphor-icons/react';
-import type { MouseEvent as ReactMouseEvent, ReactElement } from 'react';
+import type {
+  MouseEvent as ReactMouseEvent,
+  ReactElement,
+  ReactNode,
+} from 'react';
 import { useCallback, useMemo, useRef, useState } from 'react';
 
 import { ActiveFilters } from '@/components/FacetedBrowser/ActiveFilters/ActiveFilters';
@@ -34,6 +38,7 @@ import {
 } from '@/components/FacetedBrowser/Summary/Summary';
 import {
   PageSizeSelect,
+  SortSelect,
   Toolbar,
 } from '@/components/FacetedBrowser/Toolbar/Toolbar';
 import { ComparisonTable } from '@/components/Table';
@@ -76,6 +81,8 @@ export function FacetedBrowser<TRecord extends Record<string, unknown>>(
     searchFields,
     facets: facetDefinitions = EMPTY_FACETS,
     recordNoun = 'records',
+    sortOptions,
+    railNavigation,
     summaryNoun,
     summaryMode = 'page-window',
     resultsLabel = `${recordNoun} results`,
@@ -372,6 +379,78 @@ export function FacetedBrowser<TRecord extends Record<string, unknown>>(
       />
     ) : undefined;
 
+  let railContent: ReactNode;
+  if (railNavigation || facets.length > 0) {
+    railContent = (
+      <Stack gap="md">
+        {railNavigation}
+        {facets.length > 0 ? (
+          <>
+            <Title order={2} size="h4">
+              Filters
+            </Title>
+            <FacetList
+              key={facetResetEpoch}
+              facets={facets}
+              values={browseState.filters}
+              records={records}
+              surface="rail"
+              getCounts={browser.getFacetValues}
+              onChange={browser.setFilter}
+            />
+          </>
+        ) : null}
+      </Stack>
+    );
+  }
+
+  let toolbarContent: ReactNode;
+  if (comparisonProps) {
+    toolbarContent = (
+      <Toolbar
+        columns={columns}
+        idAccessor={idAccessor}
+        identityField={comparisonProps.identityField}
+        hiddenColumns={browseState.hiddenColumns}
+        defaultHiddenColumns={initialDefaultHiddenColumns}
+        recordNoun={recordNoun}
+        pageSize={browser.pageSize}
+        pageSizeOptions={pageSizeOptions}
+        sortOptions={sortOptions}
+        currentSort={browseState.sort}
+        onHiddenColumnsChange={browser.setHiddenColumns}
+        onColumnVisibilityChange={browser.setColumnVisibility}
+        onPageSizeChange={browser.setPageSize}
+        onSortChange={browser.setSort}
+      />
+    );
+  } else if (sortOptions && sortOptions.length > 0) {
+    toolbarContent = (
+      <Group gap="xs">
+        <SortSelect
+          sortOptions={sortOptions}
+          currentSort={browseState.sort}
+          onChange={browser.setSort}
+        />
+        <PageSizeSelect
+          recordNoun={recordNoun}
+          pageSize={browser.pageSize}
+          pageSizeOptions={pageSizeOptions}
+          onChange={browser.setPageSize}
+        />
+      </Group>
+    );
+  } else {
+    toolbarContent = (
+      <PageSizeSelect
+        recordNoun={recordNoun}
+        pageSize={browser.pageSize}
+        pageSizeOptions={pageSizeOptions}
+        onChange={browser.setPageSize}
+      />
+    );
+  }
+
   return (
     <>
       <Layout
@@ -391,24 +470,7 @@ export function FacetedBrowser<TRecord extends Record<string, unknown>>(
             />
           </form>
         }
-        rail={
-          facets.length > 0 ? (
-            <Stack gap="md">
-              <Title order={2} size="h4">
-                Filters
-              </Title>
-              <FacetList
-                key={facetResetEpoch}
-                facets={facets}
-                values={browseState.filters}
-                records={records}
-                surface="rail"
-                getCounts={browser.getFacetValues}
-                onChange={browser.setFilter}
-              />
-            </Stack>
-          ) : undefined
-        }
+        rail={railContent}
         railLabel="Filters"
         quickFacets={
           facets.length > 0 ? (
@@ -428,30 +490,7 @@ export function FacetedBrowser<TRecord extends Record<string, unknown>>(
           />
         }
         summary={<Summary text={summaryText} />}
-        toolbar={
-          comparisonProps ? (
-            <Toolbar
-              columns={columns}
-              idAccessor={idAccessor}
-              identityField={comparisonProps.identityField}
-              hiddenColumns={browseState.hiddenColumns}
-              defaultHiddenColumns={initialDefaultHiddenColumns}
-              recordNoun={recordNoun}
-              pageSize={browser.pageSize}
-              pageSizeOptions={pageSizeOptions}
-              onHiddenColumnsChange={browser.setHiddenColumns}
-              onColumnVisibilityChange={browser.setColumnVisibility}
-              onPageSizeChange={browser.setPageSize}
-            />
-          ) : (
-            <PageSizeSelect
-              recordNoun={recordNoun}
-              pageSize={browser.pageSize}
-              pageSizeOptions={pageSizeOptions}
-              onChange={browser.setPageSize}
-            />
-          )
-        }
+        toolbar={toolbarContent}
         status={statusContent}
         resultsLabel={resultsLabel}
         fillHeight={fillHeight}

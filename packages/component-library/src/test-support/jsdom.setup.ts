@@ -31,3 +31,7 @@ if (typeof globalThis.ResizeObserver !== 'function') {
     disconnect(): void {}
   };
 }
+
+if (typeof Element.prototype.scrollIntoView !== 'function') {
+  Element.prototype.scrollIntoView = () => undefined;
+}

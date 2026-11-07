@@ -11,6 +11,7 @@ import {
 import { Gear } from '@phosphor-icons/react';
 import { useMemo, type ReactElement } from 'react';
 
+import type { BrowseSortOption } from '@/components/FacetedBrowser/FacetedBrowser.types';
 import type { TableColumn } from '@/components/Table';
 
 function sameFields(
@@ -79,6 +80,61 @@ export function PageSizeSelect({
   );
 }
 
+export interface SortSelectProps {
+  readonly sortOptions: readonly BrowseSortOption[];
+  readonly currentSort?:
+    | { readonly field: string; readonly direction: 'asc' | 'desc' }
+    | undefined;
+  readonly onChange: (field: string, direction: 'asc' | 'desc') => void;
+}
+
+export function SortSelect({
+  sortOptions,
+  currentSort,
+  onChange,
+}: SortSelectProps): ReactElement {
+  const selected = currentSort
+    ? sortOptions.find(
+        (opt) =>
+          opt.field === currentSort.field &&
+          opt.direction === currentSort.direction,
+      )
+    : undefined;
+
+  const data = useMemo(
+    () =>
+      sortOptions.map((opt) => ({
+        value: opt.value,
+        label: opt.label,
+      })),
+    [sortOptions],
+  );
+
+  return (
+    <Group gap={6} align="center">
+      <Text size="xs" c="dimmed">
+        Sort:
+      </Text>
+      <Select
+        aria-label="Sort records"
+        size="sm"
+        checkIconPosition="left"
+        withAlignedLabels
+        value={selected?.value ?? null}
+        data={data}
+        onChange={(value) => {
+          if (value !== null) {
+            const opt = sortOptions.find((o) => o.value === value);
+            if (opt) {
+              onChange(opt.field, opt.direction);
+            }
+          }
+        }}
+      />
+    </Group>
+  );
+}
+
 export interface ToolbarProps<TRecord extends Record<string, unknown>> {
   readonly columns: readonly TableColumn<TRecord>[];
   readonly idAccessor: keyof TRecord & string;
@@ -88,9 +144,16 @@ export interface ToolbarProps<TRecord extends Record<string, unknown>> {
   readonly recordNoun: string;
   readonly pageSize: number;
   readonly pageSizeOptions: readonly number[];
+  readonly sortOptions?: readonly BrowseSortOption[] | undefined;
+  readonly currentSort?:
+    | { readonly field: string; readonly direction: 'asc' | 'desc' }
+    | undefined;
   readonly onHiddenColumnsChange: (hiddenColumns: readonly string[]) => void;
   readonly onColumnVisibilityChange: (field: string, visible: boolean) => void;
   readonly onPageSizeChange: (pageSize: number) => void;
+  readonly onSortChange?:
+    | ((field: string, direction: 'asc' | 'desc') => void)
+    | undefined;
 }
 
 /** Column visibility and page-size controls for the desktop comparison surface. */
@@ -103,9 +166,12 @@ export function Toolbar<TRecord extends Record<string, unknown>>({
   recordNoun,
   pageSize,
   pageSizeOptions,
+  sortOptions,
+  currentSort,
   onHiddenColumnsChange,
   onColumnVisibilityChange,
   onPageSizeChange,
+  onSortChange,
 }: ToolbarProps<TRecord>): ReactElement {
   const dataColumns = columns.filter(
     (column) =>
@@ -178,6 +244,13 @@ export function Toolbar<TRecord extends Record<string, unknown>>({
           </Stack>
         </Popover.Dropdown>
       </Popover>
+      {sortOptions && sortOptions.length > 0 && onSortChange ? (
+        <SortSelect
+          sortOptions={sortOptions}
+          currentSort={currentSort}
+          onChange={onSortChange}
+        />
+      ) : null}
       <PageSizeSelect
         recordNoun={recordNoun}
         pageSize={pageSize}

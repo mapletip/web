@@ -1778,4 +1778,95 @@ describe('useFacetedBrowser', () => {
       expect(text('scope-page')).toBe('1');
     });
   });
+
+  describe('Per-field search semantics with searchMatch', () => {
+    it('applies custom searchMatch on queryFields for global filter and draft evaluation', async () => {
+      interface ItemRecord extends Record<string, unknown> {
+        readonly id: string;
+        readonly name: string;
+      }
+      const records: readonly ItemRecord[] = [
+        { id: '02000060', name: 'Scroll for Helmet for DEF 10%' },
+        { id: '02000061', name: 'Scroll for Gloves for ATT 60%' },
+        { id: '60', name: 'Other Scroll' },
+      ];
+
+      function SearchSemanticsHarness() {
+        const [search, setSearch] = useState('');
+        const [draftCount, setDraftCount] = useState<number | null>(null);
+        const browser = useFacetedBrowser({
+          records,
+          idAccessor: 'id',
+          queryFields: [
+            { id: 'name' },
+            {
+              id: 'id',
+              searchMatch: (val, query) =>
+                String(val) === query || Number(val) === Number(query),
+            },
+          ],
+          search,
+        });
+
+        return (
+          <div>
+            <div data-testid="matching-names">
+              {browser.records.map((r) => r.name).join(',')}
+            </div>
+            <div data-testid="draft-count">{String(draftCount)}</div>
+            <button
+              type="button"
+              onClick={() => {
+                const evalResult = browser.evaluateDraft({});
+                setDraftCount(evalResult.matchingCount);
+              }}
+            >
+              Evaluate Draft
+            </button>
+            <input
+              aria-label="Search"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
+        );
+      }
+
+      render(<SearchSemanticsHarness />);
+      expect(text('matching-names')).toBe(
+        'Other Scroll,Scroll for Helmet for DEF 10%,Scroll for Gloves for ATT 60%',
+      );
+
+      // Search for "60":
+      // - name contains "60" -> "Scroll for Gloves for ATT 60%" matches
+      // - id: "02000060" does NOT match "60" because numeric ID 2000060 !== 60
+      // - id: "60" matches "60" because numeric ID 60 === 60
+      await userEvent.type(
+        screen.getByRole('textbox', { name: 'Search' }),
+        '60',
+      );
+      expect(text('matching-names')).toBe(
+        'Other Scroll,Scroll for Gloves for ATT 60%',
+      );
+
+      // Draft evaluation reflects the custom searchMatch comparator
+      await userEvent.click(
+        screen.getByRole('button', { name: 'Evaluate Draft' }),
+      );
+      expect(text('draft-count')).toBe('2');
+
+      // Search for "02000060": matches only the first record by exact ID
+      await userEvent.clear(screen.getByRole('textbox', { name: 'Search' }));
+      await userEvent.type(
+        screen.getByRole('textbox', { name: 'Search' }),
+        '02000060',
+      );
+      expect(text('matching-names')).toBe('Scroll for Helmet for DEF 10%');
+
+      await userEvent.click(
+        screen.getByRole('button', { name: 'Evaluate Draft' }),
+      );
+      expect(text('draft-count')).toBe('1');
+    });
+  });
 });

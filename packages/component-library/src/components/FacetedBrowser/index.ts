@@ -1,5 +1,9 @@
 export { FacetedBrowser } from '@/components/FacetedBrowser/FacetedBrowser';
-export type { FacetedBrowserProps } from '@/components/FacetedBrowser/FacetedBrowser.types';
+export { buildQuantileBuckets } from '@/components/FacetedBrowser/FacetControls/quantileBuckets';
+export type {
+  BrowseSortOption,
+  FacetedBrowserProps,
+} from '@/components/FacetedBrowser/FacetedBrowser.types';
 export type {
   FacetControlContext,
   FacetDefinition,
