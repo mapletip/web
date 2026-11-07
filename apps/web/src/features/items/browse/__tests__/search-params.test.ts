@@ -36,6 +36,26 @@ describe('search-params', () => {
         label: 'Attack',
         kind: 'range',
       },
+      {
+        id: 'hpPercent',
+        field: 'hpPercent',
+        label: 'HP %',
+        kind: 'range',
+        buckets: [
+          { value: '35', label: '35%', min: 35, max: 35 },
+          { value: '50', label: '50%', min: 50, max: 50 },
+        ],
+      },
+      {
+        id: 'scrollSuccess',
+        field: 'scrollSuccess',
+        label: 'Success rate',
+        kind: 'multi-select',
+        options: [
+          { value: '60', label: '60%' },
+          { value: '100', label: '100%' },
+        ],
+      },
     ],
     sortOptions: [
       { label: 'Name (A–Z)', field: 'name', direction: 'asc' },
@@ -129,6 +149,18 @@ describe('search-params', () => {
       });
     });
 
+    it('preserves single numeric URL values as numbers in validateSearch', () => {
+      expect(
+        validateSearch({
+          scrollSuccess: 100,
+          hpPercent: 35,
+        }),
+      ).toEqual({
+        scrollSuccess: 100,
+        hpPercent: 35,
+      });
+    });
+
     it('preserves open-ended range parameters as numbers', () => {
       expect(
         validateSearch({
@@ -169,6 +201,20 @@ describe('search-params', () => {
         dummyContext,
       );
       expect(validState.sort).toEqual({ field: 'sourceId', direction: 'asc' });
+    });
+
+    it('parses single numeric values for both multi-select and bucket', () => {
+      const state = urlToBrowseState(
+        {
+          scrollSuccess: 100,
+          hpPercent: 35,
+        },
+        dummyContext,
+      );
+      expect(state.filters).toEqual({
+        scrollSuccess: ['100'],
+        hpPercent: ['35'],
+      });
     });
 
     it('drops facet options not present in the facet definition', () => {
