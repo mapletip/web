@@ -456,6 +456,34 @@ describe('responsive navigation slot', () => {
     ).not.toBeInTheDocument();
   });
 
+  it('renders Filters button when facets are present but none are quick', () => {
+    const nonQuickFacets = facets.map((f) => ({ ...f, quick: false }));
+    render(
+      <MantineProvider>
+        <FacetedBrowser
+          title={<h1>Items</h1>}
+          records={demoRecords}
+          idAccessor="id"
+          queryFields={queryFields}
+          facets={nonQuickFacets}
+          presentation="cards"
+          renderCard={(record) => <div>{record.name}</div>}
+          defaultState={{
+            search: '',
+            filters: {},
+            page: 1,
+            pageSize: 20,
+            hiddenColumns: [],
+          }}
+        />
+      </MantineProvider>,
+    );
+
+    expect(
+      screen.getByRole('button', { name: /Open all filters/i }),
+    ).toBeVisible();
+  });
+
   it('opens separate navigation drawer on chip click and closes on onNavigate', async () => {
     let capturedOnNavigate: (() => void) | undefined;
 

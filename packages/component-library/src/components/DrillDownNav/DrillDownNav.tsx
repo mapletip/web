@@ -17,7 +17,9 @@ function renderRowContent<TMeta>(
   if (kind === 'ancestor') {
     return (
       <span className={classes['rowContent']}>
-        <span className={classes['backArrow']}>←</span>{' '}
+        <span className={classes['backArrow']} aria-hidden="true">
+          ←
+        </span>{' '}
         <span className={classes['label']}>{node.label}</span>
       </span>
     );

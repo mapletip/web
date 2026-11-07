@@ -436,6 +436,7 @@ export function FacetedBrowser<TRecord extends Record<string, unknown>>(
                     },
                   }
                 : {})}
+              hasFilters={facets.length > 0}
               facets={quickFacets}
               activeTotal={activeFilterCount}
               onOpen={drawer.open}

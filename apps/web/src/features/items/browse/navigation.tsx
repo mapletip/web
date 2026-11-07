@@ -18,6 +18,7 @@ import { DEFAULT_BUILD_ID, type BuildId } from '@/config/maplekit';
 import {
   getCategoryCounts,
   ITEM_SCOPES,
+  ITEM_SCOPE_SLUGS,
   type ItemScopeSlug,
 } from './categories';
 import type { ItemRow } from './project';
@@ -82,6 +83,10 @@ export function itemNavId(category: ItemCategorySelection): string {
   return category.scope.slug;
 }
 
+const NON_ALL_SCOPES = ITEM_SCOPE_SLUGS.filter(
+  (slug): slug is Exclude<ItemScopeSlug, 'all'> => slug !== 'all',
+);
+
 /**
  * Builds the declarative DrillDownNode root tree for Items navigation.
  */
@@ -92,15 +97,8 @@ export function getItemNavTree(
   const counts = getCategoryCounts(rows);
   const buildParam = buildId === DEFAULT_BUILD_ID ? undefined : buildId;
 
-  const nonAllScopes: readonly ItemScopeSlug[] = [
-    'use',
-    'etc',
-    'setup',
-    'cash',
-  ];
-
   const scopeNodes: readonly DrillDownNode<ItemNavRouteParams>[] =
-    nonAllScopes.map((scopeSlug) => {
+    NON_ALL_SCOPES.map((scopeSlug) => {
       const scopeObj = ITEM_SCOPES[scopeSlug];
       const scopeCounts = counts[scopeSlug];
       const scopeParams: ItemNavRouteParams = {

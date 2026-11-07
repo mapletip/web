@@ -220,8 +220,14 @@ describe('DrillDownNav component', () => {
       <DrillDownNav root={demoTree} currentId="use" label="Item categories" />,
     );
 
-    const backLink = screen.getByRole('link', { name: /←\s*All Items/ });
+    // Arrow is aria-hidden so the back link's accessible name is exactly the label
+    const backLink = screen.getByRole('link', { name: 'All Items' });
     expect(backLink).toHaveAttribute('href', '/items');
+    const arrow = backLink.querySelector('[class*="backArrow"]');
+    expect(arrow).toHaveAttribute('aria-hidden', 'true');
+    expect(arrow?.textContent).toBe('←');
+    expect(screen.queryByRole('link', { name: /←/ })).not.toBeInTheDocument();
+
     // Ancestor row must NOT render the icon or count defined on root
     expect(backLink.querySelector('[data-testid="icon-all"]')).toBeNull();
     expect(backLink.textContent).not.toContain('100');
@@ -301,12 +307,12 @@ describe('DrillDownNav component', () => {
       />,
     );
 
-    const backLink = screen.getByRole('link', { name: /←\s*All Items/ });
+    const backLink = screen.getByRole('link', { name: 'All Items' });
     fireEvent.click(backLink);
     expect(onNavigate).toHaveBeenCalledTimes(1);
 
     const currentLink = screen.getByRole('link', {
-      name: (name) => name.includes('Use') && !name.includes('←'),
+      name: (name) => name.includes('Use'),
     });
     fireEvent.click(currentLink);
     expect(onNavigate).toHaveBeenCalledTimes(2);

@@ -21,6 +21,7 @@ export interface QuickFacetsProps {
   readonly activeTotal: number;
   readonly onOpen: (section: string | null) => void;
   readonly navigation?: QuickFacetsNavigation | undefined;
+  readonly hasFilters?: boolean | undefined;
 }
 
 /** Mobile shortcuts that open the matching section in the filter drawer or navigation drawer. */
@@ -29,6 +30,7 @@ export function QuickFacets({
   activeTotal,
   onOpen,
   navigation,
+  hasFilters = facets.length > 0,
 }: QuickFacetsProps): ReactElement {
   return (
     <Scroller
@@ -46,7 +48,7 @@ export function QuickFacets({
           {navigation.currentLabel}
         </Button>
       ) : null}
-      {facets.length > 0 ? (
+      {hasFilters ? (
         <Button
           variant="default"
           aria-label={`Filters, ${activeTotal} active. Open all filters`}

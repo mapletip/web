@@ -6,18 +6,23 @@ export interface ResolvedDrillDownPath<TMeta = undefined> {
   readonly children: readonly DrillDownNode<TMeta>[];
 }
 
-function findNodePath<TMeta>(
+interface FoundPath<TMeta> {
+  readonly ancestors: readonly DrillDownNode<TMeta>[];
+  readonly current: DrillDownNode<TMeta>;
+}
+
+function findNode<TMeta>(
   node: DrillDownNode<TMeta>,
   targetId: string,
   ancestors: readonly DrillDownNode<TMeta>[],
-): readonly DrillDownNode<TMeta>[] | null {
-  const currentPath = [...ancestors, node];
+): FoundPath<TMeta> | null {
   if (node.id === targetId) {
-    return currentPath;
+    return { ancestors, current: node };
   }
   if (node.children) {
+    const nextAncestors = [...ancestors, node];
     for (const child of node.children) {
-      const match = findNodePath(child, targetId, currentPath);
+      const match = findNode(child, targetId, nextAncestors);
       if (match) {
         return match;
       }
@@ -35,8 +40,8 @@ export function resolveDrillDownPath<TMeta = undefined>(
   root: DrillDownNode<TMeta>,
   currentId: string,
 ): ResolvedDrillDownPath<TMeta> {
-  const path = findNodePath(root, currentId, []);
-  if (!path || path.length === 0) {
+  const match = findNode(root, currentId, []);
+  if (!match) {
     return {
       ancestors: [],
       current: root,
@@ -44,10 +49,9 @@ export function resolveDrillDownPath<TMeta = undefined>(
     };
   }
 
-  const current = path[path.length - 1]!;
   return {
-    ancestors: path.slice(0, -1),
-    current,
-    children: current.children ?? [],
+    ancestors: match.ancestors,
+    current: match.current,
+    children: match.current.children ?? [],
   };
 }
