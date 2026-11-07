@@ -13,12 +13,18 @@ type RowKind = 'ancestor' | 'current' | 'child';
 function renderRowContent<TMeta>(
   node: DrillDownNode<TMeta>,
   kind: RowKind,
+  reserveIconSlot: boolean,
 ): ReactNode {
-  const iconElement = node.icon ? (
-    <span className={classes['icon']} aria-hidden="true">
-      {node.icon}
-    </span>
-  ) : null;
+  let iconElement: ReactNode = null;
+  if (node.icon) {
+    iconElement = (
+      <span className={classes['icon']} aria-hidden="true">
+        {node.icon}
+      </span>
+    );
+  } else if (reserveIconSlot) {
+    iconElement = <span className={classes['iconSlot']} aria-hidden="true" />;
+  }
 
   if (kind === 'ancestor') {
     return (
@@ -64,11 +70,12 @@ function getRowKindClass(kind: RowKind): string {
 function renderLinkItem<TMeta>(
   node: DrillDownNode<TMeta>,
   kind: RowKind,
+  reserveIconSlot: boolean,
   onNavigate: (() => void) | undefined,
   renderLink: DrillDownNavProps<TMeta>['renderLink'],
 ): ReactNode {
   const isCurrent = kind === 'current';
-  const rowContent = renderRowContent(node, kind);
+  const rowContent = renderRowContent(node, kind, reserveIconSlot);
   const kindClass = getRowKindClass(kind);
   const className = `${classes['row']} ${kindClass}`.trim();
 
@@ -110,20 +117,35 @@ export function DrillDownNav<TMeta = undefined>({
     { hideEmpty },
   );
 
+  const ancestorsHaveIcon = ancestors.some((node) => Boolean(node.icon));
+  const childrenHaveIcon = children.some((node) => Boolean(node.icon));
+
   return (
     <nav aria-label={label} className={classes['nav']}>
       <ul className={classes['list']}>
         {ancestors.map((node) => (
           <li key={node.id} className={classes['item']}>
-            {renderLinkItem(node, 'ancestor', onNavigate, renderLink)}
+            {renderLinkItem(
+              node,
+              'ancestor',
+              ancestorsHaveIcon,
+              onNavigate,
+              renderLink,
+            )}
           </li>
         ))}
         <li key={current.id} className={classes['item']}>
-          {renderLinkItem(current, 'current', onNavigate, renderLink)}
+          {renderLinkItem(current, 'current', false, onNavigate, renderLink)}
         </li>
         {children.map((node) => (
           <li key={node.id} className={classes['item']}>
-            {renderLinkItem(node, 'child', onNavigate, renderLink)}
+            {renderLinkItem(
+              node,
+              'child',
+              childrenHaveIcon,
+              onNavigate,
+              renderLink,
+            )}
           </li>
         ))}
       </ul>

@@ -301,7 +301,7 @@ describe('DrillDownNav component', () => {
     expect(backLink.querySelector('[class*="countDimmed"]')).toBeNull();
   });
 
-  it('ancestor without icon unchanged (arrow + label only, no icon, no count)', () => {
+  it('ancestor without icon reserves icon slot when sibling ancestor has an icon', () => {
     render(
       <DrillDownNav
         root={catalogTree}
@@ -316,15 +316,99 @@ describe('DrillDownNav component', () => {
     expect(arrow).toHaveAttribute('aria-hidden', 'true');
     expect(arrow?.textContent).toBe('←');
 
-    // Node without icon does NOT render icon wrapper
-    expect(backLink.querySelector('[class*="icon"]')).toBeNull();
+    // Node without icon does NOT render an icon, but reserves the icon slot because 'all' has an icon
+    expect(backLink.querySelector('[data-testid="icon-all"]')).toBeNull();
+    const iconSlot = backLink.querySelector('[class*="iconSlot"]');
+    expect(iconSlot).toBeInTheDocument();
+    expect(iconSlot).toHaveAttribute('aria-hidden', 'true');
 
     // Node does NOT render count
     expect(backLink.textContent).not.toContain('30');
     expect(backLink.querySelector('[class*="count"]')).toBeNull();
+    expect(backLink.querySelector('[class*="countDimmed"]')).toBeNull();
 
     // Rendered text is exactly arrow + label
     expect(backLink.textContent).toMatch(/←\s*Electronics$/);
+  });
+
+  it('ancestors in a list where no back row has an icon remain unchanged (no icon or slot)', () => {
+    const treeWithoutAncestorIcons: DrillDownNode = {
+      id: 'root',
+      label: 'Root Category',
+      href: '/root',
+      children: [
+        {
+          id: 'sub',
+          label: 'Sub Category',
+          href: '/root/sub',
+          children: [
+            {
+              id: 'leaf',
+              label: 'Leaf Category',
+              href: '/root/sub/leaf',
+            },
+          ],
+        },
+      ],
+    };
+
+    render(
+      <DrillDownNav
+        root={treeWithoutAncestorIcons}
+        currentId="leaf"
+        label="Product categories"
+      />,
+    );
+
+    const rootBackLink = screen.getByRole('link', { name: 'Root Category' });
+    const subBackLink = screen.getByRole('link', { name: 'Sub Category' });
+
+    expect(rootBackLink.querySelector('[class*="icon"]')).toBeNull();
+    expect(rootBackLink.querySelector('[class*="iconSlot"]')).toBeNull();
+    expect(subBackLink.querySelector('[class*="icon"]')).toBeNull();
+    expect(subBackLink.querySelector('[class*="iconSlot"]')).toBeNull();
+  });
+
+  it('reserves icon slot on child rows without icon when sibling child has an icon', () => {
+    render(
+      <DrillDownNav
+        root={catalogTree}
+        currentId="all"
+        label="Product categories"
+      />,
+    );
+
+    // Clothing has an icon
+    const clothingLink = screen.getByRole('link', { name: /Clothing/ });
+    expect(
+      clothingLink.querySelector('[data-testid="icon-clothing"]'),
+    ).toBeInTheDocument();
+
+    // Electronics, Home, Garden have no icon, but reserve icon slot
+    for (const name of ['Electronics', 'Home', 'Garden']) {
+      const link = screen.getByRole('link', { name: new RegExp(name) });
+      expect(link.querySelector('svg')).toBeNull();
+      const slot = link.querySelector('[class*="iconSlot"]');
+      expect(slot).toBeInTheDocument();
+      expect(slot).toHaveAttribute('aria-hidden', 'true');
+    }
+  });
+
+  it('does not reserve icon slots on child rows when no child in the list has an icon', () => {
+    render(
+      <DrillDownNav
+        root={catalogTree}
+        currentId="clothing"
+        label="Product categories"
+      />,
+    );
+
+    // None of clothing's children (shirts, pants, empty) have an icon
+    for (const name of ['Shirts', 'Pants', 'Empty Category']) {
+      const link = screen.getByRole('link', { name: new RegExp(name) });
+      expect(link.querySelector('[class*="icon"]')).toBeNull();
+      expect(link.querySelector('[class*="iconSlot"]')).toBeNull();
+    }
   });
 
   it('accessible name stays exactly the label for ancestor rows with and without icons', () => {

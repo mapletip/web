@@ -77,7 +77,13 @@ const catalogTree: DrillDownNode = {
       href: '#garden',
       icon: <Plant size={20} aria-hidden="true" />,
       children: [
-        { id: 'garden/plants', label: 'Plants', href: '#plants', count: 65 },
+        {
+          id: 'garden/plants',
+          label: 'Plants',
+          href: '#plants',
+          count: 65,
+          icon: <Plant size={20} aria-hidden="true" />,
+        },
         { id: 'garden/tools', label: 'Tools', href: '#tools' },
       ],
     },
@@ -239,5 +245,25 @@ export const CustomRenderLink: Story = {
     await expect(custom).toBeInTheDocument();
     await expect(custom).toHaveAttribute('aria-current', 'page');
     await expect(getAriaCurrent(canvasElement)).toHaveLength(1);
+  },
+};
+
+export const MixedChildIcons: Story = {
+  name: 'Mixed child icons (reserved slot)',
+  args: {
+    root: catalogTree,
+    currentId: 'garden',
+    label: 'Store catalog',
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const plants = canvas.getByRole('link', { name: /Plants/ });
+    const tools = canvas.getByRole('link', { name: /Tools/ });
+
+    await expect(plants.querySelector('svg')).toBeInTheDocument();
+    await expect(tools.querySelector('svg')).not.toBeInTheDocument();
+    await expect(
+      tools.querySelector('[class*="iconSlot"]'),
+    ).toBeInTheDocument();
   },
 };
