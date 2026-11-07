@@ -5,10 +5,10 @@
  */
 import type {
   ItemBrowseFunction,
+  ItemBrowseScrollDeltas,
   ItemBrowseType,
   ItemBrowseUpgradeSpecial,
   ItemBrowseUpgradeTarget,
-  ItemBrowseUpgradeTier,
   ItemRelationshipKind,
 } from './project';
 
@@ -94,9 +94,7 @@ export const UPGRADE_TARGET_LABELS: Readonly<
   wand: 'Wand',
 };
 
-export const UPGRADE_TIER_LABELS: Readonly<
-  Record<ItemBrowseUpgradeTier, string>
-> = {
+export const UPGRADE_TIER_LABELS: Readonly<Record<string, string>> = {
   lesser: 'Lesser',
   intermediate: 'Intermediate',
   greater: 'Greater',
@@ -153,4 +151,4 @@ export const SCROLL_STAT_ORDER = [
   'criticalDamage',
   'craft',
   'swim',
-] as const;
+] as const satisfies readonly (keyof ItemBrowseScrollDeltas)[];

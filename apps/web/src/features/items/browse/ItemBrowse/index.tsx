@@ -7,7 +7,7 @@ import { BrowsePageShell } from '@/components/BrowsePageShell';
 import { BUILDS, type BuildId } from '@/config/maplekit';
 
 import { getCategoryRows } from '../categories';
-import { itemBrowseColumns } from '../columns';
+import { getItemColumns } from '../columns';
 import { getItemFacets, ITEM_QUERY_FIELDS } from '../facets';
 import { ItemBrowseCard } from '../ItemBrowseCard';
 import { ItemBrowseHeader } from '../ItemBrowseHeader';
@@ -15,14 +15,13 @@ import { ItemRailNav } from '../ItemRailNav';
 import { itemPageMetadata } from '../metadata';
 import { getItemNavData } from '../navigation';
 import type { ItemRow } from '../project';
-import type { ItemCategorySelection } from '../routing';
+import { itemCategoryContextKey, type ItemCategorySelection } from '../routing';
 import { findExactIdNotice } from '../search';
 import {
   PAGE_SIZE_OPTIONS,
   type BrowseContext,
   type ItemBrowseSearch,
 } from '../search-params';
-import { ITEM_SORT_OPTIONS } from '../sort';
 
 import { useItemBrowseUrlState } from './useItemBrowseUrlState';
 
@@ -48,11 +47,17 @@ export function ItemBrowse({
   onSearchChange,
 }: ItemBrowseProps): ReactElement {
   const label = BUILDS[buildId].label;
+  const contextKey = itemCategoryContextKey(category);
   const { heading } = itemPageMetadata(buildId, category);
 
   const scopedRows = useMemo(
     () => getCategoryRows(rows, category.scope, category.child),
     [rows, category.scope, category.child],
+  );
+
+  const { columns, defaultHiddenColumns, sortOptions, facts } = useMemo(
+    () => getItemColumns(category, coverage, scopedRows),
+    [category, coverage, scopedRows],
   );
 
   const facets = useMemo(
@@ -63,9 +68,10 @@ export function ItemBrowse({
   const browseContext = useMemo<BrowseContext>(
     () => ({
       facets,
-      sortOptions: ITEM_SORT_OPTIONS,
+      sortOptions,
+      defaultHiddenColumns,
     }),
-    [facets],
+    [facets, sortOptions, defaultHiddenColumns],
   );
 
   const {
@@ -118,20 +124,23 @@ export function ItemBrowse({
         records={scopedRows}
         idAccessor="key"
         identityField="name"
-        columns={itemBrowseColumns}
+        columns={columns}
         searchFields={['name', 'sourceId']}
         queryFields={ITEM_QUERY_FIELDS}
         facets={facets}
-        sortOptions={ITEM_SORT_OPTIONS}
+        sortOptions={sortOptions}
         railNavigation={railNav}
         recordNoun={`${label} items`}
+        tableLabel={`${category.child?.label ?? category.scope.label} comparison`}
         summaryMode="total"
         summaryNoun={SUMMARY_NOUN}
         pageSizeOptions={PAGE_SIZE_OPTIONS}
         presentation="comparison"
         fillHeight
-        tableStorageKey={`mapletip:web:items:${buildId}:v1`}
-        renderCard={(record) => <ItemBrowseCard record={record} />}
+        tableStorageKey={`mapletip:web:items:${buildId}:${contextKey}:v1`}
+        renderCard={(record) => (
+          <ItemBrowseCard record={record} facts={facts} />
+        )}
         state={browseState}
         onStateChange={handleStateChange}
         getPageHref={getPageHref}

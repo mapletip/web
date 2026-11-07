@@ -27,9 +27,11 @@ export interface ItemBrowseSearch {
 export interface BrowseContext {
   readonly facets: readonly FacetDefinition<ItemRow>[];
   readonly sortOptions: readonly BrowseSortOption[];
+  readonly defaultHiddenColumns?: readonly string[] | undefined;
 }
 
 export const PAGE_SIZE_OPTIONS = [25, 50, 75, 100] as const;
+const PAGE_SIZE_SET = new Set<number>(PAGE_SIZE_OPTIONS);
 export type PageSizeOption = (typeof PAGE_SIZE_OPTIONS)[number];
 export const DEFAULT_PAGE_SIZE: PageSizeOption = 50;
 
@@ -68,10 +70,7 @@ function parsePage(val: unknown): number | undefined {
 
 function parsePageSize(val: unknown): number | undefined {
   const num = parseInteger(val);
-  return num !== undefined &&
-    (PAGE_SIZE_OPTIONS as readonly number[]).includes(num)
-    ? num
-    : undefined;
+  return num !== undefined && PAGE_SIZE_SET.has(num) ? num : undefined;
 }
 
 function parseSort(
@@ -87,9 +86,7 @@ function parseSort(
 }
 
 function parseStringList(val: unknown): readonly string[] {
-  if (typeof val === 'number' && Number.isFinite(val)) {
-    return [String(val)];
-  }
+  if (typeof val === 'number' && Number.isFinite(val)) return [String(val)];
   if (typeof val === 'string' && val.length > 0) {
     return val
       .split(',')
@@ -97,16 +94,7 @@ function parseStringList(val: unknown): readonly string[] {
       .filter(Boolean);
   }
   if (Array.isArray(val)) {
-    return val.flatMap((v) => {
-      if (typeof v === 'number' && Number.isFinite(v)) return [String(v)];
-      if (typeof v === 'string') {
-        return v
-          .split(',')
-          .map((s) => s.trim())
-          .filter(Boolean);
-      }
-      return [];
-    });
+    return val.flatMap((v) => parseStringList(v));
   }
   return [];
 }
@@ -252,13 +240,20 @@ export function browseStateToUrl(
       } else {
         url[facet.field] = val.join(',');
       }
-    } else if (typeof val === 'object' && val !== null) {
-      const { min, max } = val as { min?: number; max?: number };
-      if (typeof min === 'number' && Number.isFinite(min)) {
-        url[`${facet.field}Min`] = min;
+    } else if (typeof val === 'object' && val !== null && !Array.isArray(val)) {
+      if (
+        'min' in val &&
+        typeof val.min === 'number' &&
+        Number.isFinite(val.min)
+      ) {
+        url[`${facet.field}Min`] = val.min;
       }
-      if (typeof max === 'number' && Number.isFinite(max)) {
-        url[`${facet.field}Max`] = max;
+      if (
+        'max' in val &&
+        typeof val.max === 'number' &&
+        Number.isFinite(val.max)
+      ) {
+        url[`${facet.field}Max`] = val.max;
       }
     }
   }
