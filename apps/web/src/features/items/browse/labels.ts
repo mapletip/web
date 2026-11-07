@@ -3,7 +3,58 @@
  *
  * Raw WZ and contract keys never leak into the player interface.
  */
-import type { ItemBrowseUpgradeTarget } from './project';
+import type {
+  ItemBrowseFunction,
+  ItemBrowseType,
+  ItemBrowseUpgradeSpecial,
+  ItemBrowseUpgradeTarget,
+  ItemBrowseUpgradeTier,
+  ItemRelationshipKind,
+} from './project';
+
+export type { ItemRelationshipKind };
+
+export const ITEM_TYPE_LABELS: Readonly<Record<ItemBrowseType, string>> = {
+  'upgrade-scroll': 'Upgrade Scroll',
+  arrow: 'Arrow',
+  'throwing-star': 'Throwing Star',
+  bullet: 'Bullet',
+  chair: 'Chair',
+  ore: 'Ore',
+  gem: 'Gem & Jewel',
+  'pet-food': 'Pet Food',
+  'refined-material': 'Refined Material',
+  potion: 'Potion',
+  'food-buff': 'Food & Buff',
+  'monster-material': 'Monster Material',
+  'holiday-ornament': 'Holiday Ornament',
+  furniture: 'Furniture',
+  'crafting-station': 'Crafting Station',
+  'meso-pouch': 'Meso Pouch',
+};
+
+export const ITEM_FUNCTION_LABELS: Readonly<Record<ItemBrowseFunction, string>> =
+  {
+    upgrade: 'Upgrade',
+    skill: 'Skill & Mastery',
+    summon: 'Summon',
+    'reward-container': 'Reward Container',
+    'monster-card': 'Monster Card',
+    readable: 'Book & Scroll',
+    pet: 'Pet',
+    recovery: 'Recovery',
+  };
+
+export const RELATIONSHIP_LABELS: Readonly<Record<ItemRelationshipKind, string>> =
+  {
+    'cash-shop-listing': 'Cash Shop Listing',
+    'found-in-container': 'Found in Container',
+    'made-by-recipe': 'Made by Recipe',
+    'monster-drop': 'Monster Drop',
+    'needed-for-quest': 'Needed for Quest',
+    'quest-reward': 'Quest Reward',
+    'used-in-recipe': 'Used in Recipe',
+  };
 
 export const UPGRADE_TARGET_LABELS: Readonly<
   Record<ItemBrowseUpgradeTarget, string>
@@ -41,17 +92,35 @@ export const UPGRADE_TARGET_LABELS: Readonly<
   wand: 'Wand',
 };
 
+export const UPGRADE_TIER_LABELS: Readonly<Record<ItemBrowseUpgradeTier, string>> =
+  {
+    lesser: 'Lesser',
+    intermediate: 'Intermediate',
+    greater: 'Greater',
+    chaos: 'Chaos',
+  };
+
+export const UPGRADE_SPECIAL_LABELS: Readonly<
+  Record<ItemBrowseUpgradeSpecial, string>
+> = {
+  'clean-slate': 'Clean Slate',
+  chaos: 'Chaos',
+  'anti-slip': 'Anti-Slip',
+  'warm-support': 'Warm Support',
+  'randomized-stats': 'Randomized Stats',
+};
+
 export const SCROLL_STAT_LABELS: Readonly<Record<string, string>> = {
-  weaponAttack: 'Weapon ATT',
-  magicAttack: 'Magic ATT',
-  strength: 'STR',
-  dexterity: 'DEX',
-  intelligence: 'INT',
-  luck: 'LUK',
+  weaponAttack: 'Weapon Attack',
+  magicAttack: 'Magic Attack',
+  strength: 'Strength',
+  dexterity: 'Dexterity',
+  intelligence: 'Intelligence',
+  luck: 'Luck',
   maxHp: 'Max HP',
   maxMp: 'Max MP',
-  weaponDefense: 'Weapon DEF',
-  magicDefense: 'Magic DEF',
+  weaponDefense: 'Weapon Defense',
+  magicDefense: 'Magic Defense',
   accuracy: 'Accuracy',
   avoidability: 'Avoidability',
   speed: 'Speed',
@@ -61,3 +130,33 @@ export const SCROLL_STAT_LABELS: Readonly<Record<string, string>> = {
   craft: 'Craft',
   swim: 'Swim',
 };
+
+export function formatItemType(type: ItemBrowseType): string {
+  return ITEM_TYPE_LABELS[type] ?? type;
+}
+
+export function formatItemFunction(fn: ItemBrowseFunction): string {
+  return ITEM_FUNCTION_LABELS[fn] ?? fn;
+}
+
+export function formatRelationshipKind(kind: ItemRelationshipKind): string {
+  return RELATIONSHIP_LABELS[kind] ?? kind;
+}
+
+export function formatUpgradeTarget(target: ItemBrowseUpgradeTarget): string {
+  return UPGRADE_TARGET_LABELS[target] ?? target;
+}
+
+export function formatUpgradeTier(tier: ItemBrowseUpgradeTier): string {
+  return UPGRADE_TIER_LABELS[tier] ?? tier;
+}
+
+export function formatUpgradeSpecial(
+  special: ItemBrowseUpgradeSpecial,
+): string {
+  return UPGRADE_SPECIAL_LABELS[special] ?? special;
+}
+
+export function formatScrollStat(stat: string): string {
+  return SCROLL_STAT_LABELS[stat] ?? stat;
+}

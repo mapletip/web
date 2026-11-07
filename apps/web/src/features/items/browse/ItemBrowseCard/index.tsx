@@ -14,6 +14,12 @@ export function ItemBrowseCard({
   return (
     <article className={classes['card']}>
       <h2 className={classes['name']}>{displayName}</h2>
+      <dl className={classes['facts']} aria-label={`${displayName} facts`}>
+        <div>
+          <dt>ID</dt>
+          <dd title={`ID: ${record.sourceId}`}>{record.sourceId}</dd>
+        </div>
+      </dl>
     </article>
   );
 }

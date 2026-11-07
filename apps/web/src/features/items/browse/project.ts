@@ -4,194 +4,178 @@
  *
  * Absent values are omitted (undefined means "no value"; never coerce to 0).
  */
-import type { ItemBrowseRecord, ItemBrowseRow } from '@mapletip/data/items';
+import type { ItemBrowseRow } from '@mapletip/data/items';
 
-type Fact = ItemBrowseRow['name'];
-type Scroll = NonNullable<ItemBrowseRecord['scroll']>;
-export type ItemBrowseClass = ItemBrowseRecord['itemClass'];
-export type ItemBrowseType = NonNullable<ItemBrowseRecord['types']>[number];
-export type ItemBrowseFunction = NonNullable<
-  ItemBrowseRecord['functions']
->[number];
-export type ItemBrowseScrollDeltas = NonNullable<Scroll['deltas']>;
-export type ItemBrowseUpgradeTarget = NonNullable<Scroll['targetLabel']>;
-export type ItemBrowseUpgradeTier = NonNullable<Scroll['tier']>;
-export type ItemBrowseUpgradeSpecial = NonNullable<Scroll['specials']>[number];
-export type ItemRelationshipKind = keyof NonNullable<
-  ItemBrowseRecord['relationships']
->;
+import {
+  SCROLL_STAT_PRIORITY,
+  type ItemBrowseScrollDeltas,
+  type ItemRelationshipKind,
+  type ItemRow,
+} from './types';
 
-export interface ItemPetTarget {
-  readonly key: string;
-  readonly name?: string;
-}
+export * from './types';
 
-export type ItemRow = {
-  readonly key: string;
-  readonly sourceId: string;
-  readonly itemClass: ItemBrowseClass;
-  readonly name?: string;
-  readonly icon?: string;
-  readonly types?: readonly ItemBrowseType[];
-  readonly functions?: readonly ItemBrowseFunction[];
-  readonly cashShopListingCount?: number;
-  readonly foundInContainerCount?: number;
-  readonly madeByRecipeCount?: number;
-  readonly monsterDropCount?: number;
-  readonly neededForQuestCount?: number;
-  readonly questRewardCount?: number;
-  readonly usedInRecipeCount?: number;
-  readonly questFlag?: boolean;
-  readonly family?: string;
-  readonly hp?: number;
-  readonly mp?: number;
-  readonly hpPercent?: number;
-  readonly mpPercent?: number;
-  readonly attack?: number;
-  readonly closeness?: number;
-  readonly fullness?: number;
-  readonly tameness?: number;
-  readonly petTargets?: readonly ItemPetTarget[];
-  readonly unresolvedPetTargets?: readonly string[];
-  readonly seatHp?: number;
-  readonly seatMp?: number;
-  readonly success?: number;
-  readonly cursed?: number;
-  readonly targetLabel?: ItemBrowseUpgradeTarget;
-  readonly tier?: ItemBrowseUpgradeTier;
-  readonly specials?: readonly ItemBrowseUpgradeSpecial[];
-  readonly stats?: Readonly<ItemBrowseScrollDeltas>;
-  readonly directTargetCount?: number;
-};
+function computeStatRank(
+  deltas?: ItemBrowseScrollDeltas | null,
+): number | undefined {
+  if (!deltas) return undefined;
+  const keys = Object.keys(deltas);
+  if (keys.length === 0) return undefined;
 
-type WritableItemRow = { -readonly [K in keyof ItemRow]: ItemRow[K] };
-
-function setField<K extends keyof ItemRow>(
-  row: WritableItemRow,
-  key: K,
-  value: ItemRow[K] | null | undefined,
-): void {
-  if (value != null) {
-    row[key] = value;
-  }
-}
-
-function extractKnownFact(fact: Fact): string | undefined {
-  if (fact.state === 'known') {
-    return fact.value;
-  }
-  return undefined;
-}
-
-function filterNonEmptyArray<T>(
-  array: readonly T[] | undefined,
-): readonly T[] | undefined {
-  if (array && array.length > 0) {
-    return array;
-  }
-  return undefined;
-}
-
-function resolvePetTargets(
-  targets: readonly string[] | undefined,
-  petNamesByKey: ReadonlyMap<string, string>,
-): readonly ItemPetTarget[] | undefined {
-  if (!targets || targets.length === 0) {
-    return undefined;
-  }
-
-  const distinctKeys = Array.from(new Set(targets));
-  return distinctKeys.map((targetKey) => {
-    const knownName = petNamesByKey.get(targetKey);
-    if (knownName !== undefined) {
-      return { key: targetKey, name: knownName };
+  for (const [i, statKey] of SCROLL_STAT_PRIORITY.entries()) {
+    const val = deltas[statKey];
+    if (typeof val === 'number') {
+      return (i + 1) * 10000 - val;
     }
-    return { key: targetKey };
-  });
-}
+  }
 
-export const RELATIONSHIP_COUNT_FIELDS = [
-  ['cash-shop-listing', 'cashShopListingCount'],
-  ['found-in-container', 'foundInContainerCount'],
-  ['made-by-recipe', 'madeByRecipeCount'],
-  ['monster-drop', 'monsterDropCount'],
-  ['needed-for-quest', 'neededForQuestCount'],
-  ['quest-reward', 'questRewardCount'],
-  ['used-in-recipe', 'usedInRecipeCount'],
-] as const satisfies readonly (readonly [
-  ItemRelationshipKind,
-  keyof ItemRow,
-])[];
+  return 999999;
+}
 
 export function projectItemBrowseRows(
   records: readonly ItemBrowseRow[],
 ): readonly ItemRow[] {
-  const petNamesByKey = new Map<string, string>();
+  const namesByKey = new Map<string, string>();
   for (const record of records) {
     if (record.name.state === 'known') {
-      petNamesByKey.set(record.key, record.name.value);
+      namesByKey.set(record.key, record.name.value);
     }
   }
 
   return records.map((record) => {
-    const row: WritableItemRow = {
-      key: record.key,
-      sourceId: record.sourceId,
-      itemClass: record.itemClass,
-    };
+    const name =
+      record.name.state === 'known' ? record.name.value : undefined;
+    const nameState = record.name.state;
+    const icon =
+      record.icon.state === 'known' ? record.icon.value : undefined;
 
-    setField(row, 'name', extractKnownFact(record.name));
-    setField(row, 'icon', extractKnownFact(record.icon));
-    setField(row, 'types', filterNonEmptyArray(record.types));
-    setField(row, 'functions', filterNonEmptyArray(record.functions));
+    const relKinds: ItemRelationshipKind[] = [];
+    const rels = record.relationships;
+    if (rels) {
+      if ((rels['cash-shop-listing'] ?? 0) > 0) relKinds.push('cash-shop-listing');
+      if ((rels['found-in-container'] ?? 0) > 0) relKinds.push('found-in-container');
+      if ((rels['made-by-recipe'] ?? 0) > 0) relKinds.push('made-by-recipe');
+      if ((rels['monster-drop'] ?? 0) > 0) relKinds.push('monster-drop');
+      if ((rels['needed-for-quest'] ?? 0) > 0) relKinds.push('needed-for-quest');
+      if ((rels['quest-reward'] ?? 0) > 0) relKinds.push('quest-reward');
+      if ((rels['used-in-recipe'] ?? 0) > 0) relKinds.push('used-in-recipe');
+    }
 
-    if (record.relationships) {
-      for (const [relationshipKind, fieldKey] of RELATIONSHIP_COUNT_FIELDS) {
-        setField(row, fieldKey, record.relationships[relationshipKind]);
+    let resolvedPetTargets: string[] | undefined;
+    if (record.petFood?.targets && record.petFood.targets.length > 0) {
+      const resolved: string[] = [];
+      for (const targetKey of record.petFood.targets) {
+        const petName = namesByKey.get(targetKey);
+        if (petName) resolved.push(petName);
+      }
+      if (resolved.length > 0) {
+        resolvedPetTargets = Array.from(new Set(resolved));
       }
     }
 
-    setField(row, 'questFlag', record.questFlag);
-    setField(row, 'family', record.family || undefined);
-    setField(row, 'attack', record.projectileAttack);
-    setField(row, 'hp', record.recovery?.hp);
-    setField(row, 'mp', record.recovery?.mp);
-    setField(row, 'hpPercent', record.recovery?.hpPercent);
-    setField(row, 'mpPercent', record.recovery?.mpPercent);
+    const deltas = record.scroll?.deltas;
+    const statKeys = deltas ? Object.keys(deltas) : undefined;
+    const statRank = computeStatRank(deltas);
 
-    const petFood = record.petFood;
-    setField(row, 'closeness', petFood?.closeness);
-    setField(row, 'fullness', petFood?.fullness);
-    setField(row, 'tameness', petFood?.tameness);
-    setField(
-      row,
-      'petTargets',
-      resolvePetTargets(petFood?.targets, petNamesByKey),
-    );
-    setField(
-      row,
-      'unresolvedPetTargets',
-      filterNonEmptyArray(petFood?.unresolvedTargets),
-    );
-
-    setField(row, 'seatHp', record.seatingRecovery?.hp);
-    setField(row, 'seatMp', record.seatingRecovery?.mp);
-
-    const scroll = record.scroll;
-    setField(row, 'success', scroll?.success);
-    setField(row, 'cursed', scroll?.cursed);
-    setField(row, 'targetLabel', scroll?.targetLabel);
-    setField(row, 'tier', scroll?.tier);
-    setField(row, 'specials', filterNonEmptyArray(scroll?.specials));
-    setField(
-      row,
-      'stats',
-      scroll?.deltas && Object.keys(scroll.deltas).length > 0
-        ? scroll.deltas
-        : undefined,
-    );
-    setField(row, 'directTargetCount', scroll?.targets?.length || undefined);
-
-    return row;
+    return {
+      key: record.key,
+      sourceId: record.sourceId,
+      ...(name !== undefined ? { name } : {}),
+      nameState,
+      ...(icon !== undefined ? { icon } : {}),
+      itemClass: record.itemClass,
+      ...(record.types && record.types.length > 0
+        ? { types: record.types }
+        : {}),
+      ...(record.functions && record.functions.length > 0
+        ? { functions: record.functions }
+        : {}),
+      ...(relKinds.length > 0 ? { rel: relKinds } : {}),
+      ...(typeof rels?.['cash-shop-listing'] === 'number'
+        ? { cashShopListingCount: rels['cash-shop-listing'] }
+        : {}),
+      ...(typeof rels?.['found-in-container'] === 'number'
+        ? { foundInContainerCount: rels['found-in-container'] }
+        : {}),
+      ...(typeof rels?.['made-by-recipe'] === 'number'
+        ? { madeByRecipeCount: rels['made-by-recipe'] }
+        : {}),
+      ...(typeof rels?.['monster-drop'] === 'number'
+        ? { monsterDropCount: rels['monster-drop'] }
+        : {}),
+      ...(typeof rels?.['needed-for-quest'] === 'number'
+        ? { neededForQuestCount: rels['needed-for-quest'] }
+        : {}),
+      ...(typeof rels?.['quest-reward'] === 'number'
+        ? { questRewardCount: rels['quest-reward'] }
+        : {}),
+      ...(typeof rels?.['used-in-recipe'] === 'number'
+        ? { usedInRecipeCount: rels['used-in-recipe'] }
+        : {}),
+      ...(record.questFlag === true ? { questFlag: true } : {}),
+      ...(typeof record.family === 'string' && record.family.length > 0
+        ? { family: record.family }
+        : {}),
+      ...(typeof record.recovery?.hp === 'number'
+        ? { hp: record.recovery.hp }
+        : {}),
+      ...(typeof record.recovery?.mp === 'number'
+        ? { mp: record.recovery.mp }
+        : {}),
+      ...(typeof record.recovery?.hpPercent === 'number'
+        ? { hpPercent: record.recovery.hpPercent }
+        : {}),
+      ...(typeof record.recovery?.mpPercent === 'number'
+        ? { mpPercent: record.recovery.mpPercent }
+        : {}),
+      ...(typeof record.projectileAttack === 'number'
+        ? { attack: record.projectileAttack }
+        : {}),
+      ...(typeof record.petFood?.closeness === 'number'
+        ? { closeness: record.petFood.closeness }
+        : {}),
+      ...(typeof record.petFood?.fullness === 'number'
+        ? { fullness: record.petFood.fullness }
+        : {}),
+      ...(typeof record.petFood?.tameness === 'number'
+        ? { tameness: record.petFood.tameness }
+        : {}),
+      ...(resolvedPetTargets !== undefined
+        ? { petTargets: resolvedPetTargets }
+        : {}),
+      ...(record.petFood?.unresolvedTargets &&
+      record.petFood.unresolvedTargets.length > 0
+        ? { unresolvedPetTargets: record.petFood.unresolvedTargets }
+        : {}),
+      ...(typeof record.seatingRecovery?.hp === 'number'
+        ? { seatHp: record.seatingRecovery.hp }
+        : {}),
+      ...(typeof record.seatingRecovery?.mp === 'number'
+        ? { seatMp: record.seatingRecovery.mp }
+        : {}),
+      ...(typeof record.scroll?.success === 'number'
+        ? { success: record.scroll.success }
+        : {}),
+      ...(typeof record.scroll?.cursed === 'number'
+        ? { cursed: record.scroll.cursed }
+        : {}),
+      ...(record.scroll?.targetLabel !== undefined &&
+      record.scroll?.targetLabel !== null
+        ? { targetLabel: record.scroll.targetLabel }
+        : {}),
+      ...(record.scroll?.tier !== undefined && record.scroll?.tier !== null
+        ? { tier: record.scroll.tier }
+        : {}),
+      ...(record.scroll?.specials && record.scroll.specials.length > 0
+        ? { specials: record.scroll.specials }
+        : {}),
+      ...(deltas && statKeys && statKeys.length > 0 ? { stats: deltas } : {}),
+      ...(statKeys && statKeys.length > 0 ? { statKeys } : {}),
+      ...(statRank !== undefined ? { statRank } : {}),
+      ...(record.scroll?.targets !== undefined &&
+      record.scroll.targets !== null
+        ? { directTargetCount: record.scroll.targets.length }
+        : {}),
+    };
   });
 }
