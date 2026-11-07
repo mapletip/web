@@ -11,6 +11,7 @@ import type { ReactElement } from 'react';
 import {
   COLUMNS,
   CONTEXT_COLUMNS,
+  DEFAULT_CONTEXT_COLUMNS,
   type ColumnConfig,
   type ColumnKey,
 } from './column-configs';
@@ -20,7 +21,13 @@ import type { ItemRow } from './project';
 import { itemCategoryContextKey, type ItemCategorySelection } from './routing';
 
 export interface ItemTableColumn extends TableColumn<ItemRow> {
-  readonly getValue?: (row: ItemRow) => string | undefined;
+  readonly sortLabels?: { readonly asc: string; readonly desc: string };
+}
+
+export interface ItemFactDescriptor {
+  readonly key: string;
+  readonly title: string;
+  readonly value: (row: ItemRow) => string | undefined;
 }
 
 export function ItemIdentity({
@@ -49,21 +56,21 @@ export function shouldIncludeColumn(
 ): boolean {
   if (column.key === 'name') return true;
   if (rows.length === 0) return false;
-
-  const firstValue = column.value(rows[0]!, coverage);
-  if (firstValue === 'Unavailable') return false;
-
-  let hasAnyValue = firstValue !== undefined;
-  let allShareSameValue = true;
-
-  for (let index = 1; index < rows.length; index += 1) {
-    const value = column.value(rows[index]!, coverage);
-    if (value === 'Unavailable') return false;
-    if (value !== undefined) hasAnyValue = true;
-    if (value !== firstValue) allShareSameValue = false;
+  if (
+    column.relationshipKind &&
+    coverage.relationships[column.relationshipKind] === 'unsupported'
+  ) {
+    return false;
   }
 
-  return hasAnyValue && (rows.length === 1 || !allShareSameValue);
+  const values = rows.map((row) => column.value(row, coverage));
+  const hasValue = values.some((value) => value !== undefined);
+  if (!hasValue) return false;
+  if (rows.length === 1) return true;
+
+  const firstValue = values[0];
+  const allShareSameValue = values.every((value) => value === firstValue);
+  return !allShareSameValue;
 }
 
 function adaptColumn(
@@ -75,18 +82,17 @@ function adaptColumn(
   const width = config.width ?? (isNumeric ? 100 : undefined);
 
   return {
-    accessor: (config.key === 'kind'
-      ? 'itemClass'
-      : config.key) as keyof ItemRow,
+    accessor: config.accessor,
     title: config.title,
     ...(config.fullLabel ? { fullLabel: config.fullLabel } : {}),
     ...(width !== undefined ? { width } : {}),
+    ...(config.nowrap ? { nowrap: true } : {}),
     ...(isNumeric ? { numeric: true, textAlign: 'right' as const } : {}),
     ...(isSortable ? { sortable: true } : {}),
     ...(config.firstSortDirection
       ? { firstSortDirection: config.firstSortDirection }
       : {}),
-    getValue: (row) => config.value(row, coverage),
+    ...(config.sortLabels ? { sortLabels: config.sortLabels } : {}),
     render: (row) => {
       if (config.key === 'name') return <ItemIdentity record={row} />;
       const displayValue = config.value(row, coverage);
@@ -94,14 +100,6 @@ function adaptColumn(
         return (
           <span title="Not recorded" aria-label="Not recorded">
             —
-          </span>
-        );
-      }
-      if (displayValue.endsWith('+')) {
-        const title = `${displayValue.slice(0, -1)} (lower bound)`;
-        return (
-          <span title={title} aria-label={title}>
-            {displayValue}
           </span>
         );
       }
@@ -114,6 +112,7 @@ export interface GetItemColumnsResult {
   readonly columns: readonly ItemTableColumn[];
   readonly defaultHiddenColumns: readonly string[];
   readonly sortOptions: readonly BrowseSortOption[];
+  readonly facts: readonly ItemFactDescriptor[];
 }
 
 export function getItemColumns(
@@ -125,7 +124,7 @@ export function getItemColumns(
   const context =
     CONTEXT_COLUMNS[contextKey] ??
     CONTEXT_COLUMNS[category.scope.slug] ??
-    CONTEXT_COLUMNS['all']!;
+    DEFAULT_CONTEXT_COLUMNS;
 
   const candidateKeys: ColumnKey[] = [
     ...context.visible,
@@ -135,15 +134,21 @@ export function getItemColumns(
 
   const columns: ItemTableColumn[] = [];
   const defaultHiddenColumns: string[] = [];
+  const facts: ItemFactDescriptor[] = [];
 
   for (const key of candidateKeys) {
     const config = COLUMNS[key];
     if (shouldIncludeColumn(config, rows, coverage)) {
       columns.push(adaptColumn(config, coverage));
       if (defaultHidden.has(key)) {
-        defaultHiddenColumns.push(
-          config.key === 'kind' ? 'itemClass' : config.key,
-        );
+        defaultHiddenColumns.push(config.accessor);
+      }
+      if (config.key !== 'name') {
+        facts.push({
+          key: config.key,
+          title: config.title,
+          value: (row) => config.value(row, coverage),
+        });
       }
     }
   }
@@ -152,11 +157,12 @@ export function getItemColumns(
     columns,
     defaultHiddenColumns,
     sortOptions: deriveSortOptions(columns),
+    facts,
   };
 }
 
 export function deriveSortOptions(
-  columns: readonly TableColumn<ItemRow>[],
+  columns: readonly ItemTableColumn[],
 ): readonly BrowseSortOption[] {
   return columns
     .filter((column) => column.sortable)
@@ -164,10 +170,14 @@ export function deriveSortOptions(
       const isNumeric = column.numeric ?? false;
       const primary = column.firstSortDirection ?? (isNumeric ? 'desc' : 'asc');
       const secondary = primary === 'desc' ? 'asc' : 'desc';
-      const getLabel = (direction: 'asc' | 'desc') =>
-        isNumeric
+      const getLabel = (direction: 'asc' | 'desc') => {
+        if (column.sortLabels) {
+          return column.sortLabels[direction];
+        }
+        return isNumeric
           ? `${column.title}: ${direction === 'desc' ? 'high to low' : 'low to high'}`
           : `${column.title} (${direction === 'asc' ? 'A–Z' : 'Z–A'})`;
+      };
       return [
         {
           field: column.accessor,

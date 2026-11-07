@@ -1,7 +1,6 @@
-import type { TableColumn } from '@mapletip/component-library';
 import type { ReactElement } from 'react';
 
-import type { ItemTableColumn } from '../columns';
+import type { ItemFactDescriptor } from '../columns';
 import { ItemIcon } from '../ItemIcon';
 import type { ItemRow } from '../project';
 
@@ -9,15 +8,22 @@ import classes from './ItemBrowseCard.module.css';
 
 export interface ItemBrowseCardProps {
   readonly record: ItemRow;
-  readonly columns?: readonly TableColumn<ItemRow>[];
+  readonly facts?: readonly ItemFactDescriptor[];
 }
 
 export function ItemBrowseCard({
   record,
-  columns = [],
+  facts = [],
 }: ItemBrowseCardProps): ReactElement {
   const displayName = record.name ?? 'Unnamed item';
-  const factColumns = columns.filter((col) => col.accessor !== 'name');
+  const visibleFacts = facts
+    .map((fact) => {
+      const value = fact.value(record);
+      return value !== undefined
+        ? { key: fact.key, title: fact.title, value }
+        : null;
+    })
+    .filter((item): item is NonNullable<typeof item> => item !== null);
 
   return (
     <article className={classes['card']}>
@@ -29,21 +35,14 @@ export function ItemBrowseCard({
         </div>
       </div>
 
-      {factColumns.length > 0 && (
+      {visibleFacts.length > 0 && (
         <dl className={classes['facts']} aria-label={`${displayName} facts`}>
-          {factColumns.map((col) => {
-            const itemCol = col as ItemTableColumn;
-            const value = itemCol.getValue
-              ? itemCol.getValue(record)
-              : undefined;
-            const content = value ?? 'Not recorded';
-            return (
-              <div key={col.accessor}>
-                <dt>{col.title}</dt>
-                <dd>{content}</dd>
-              </div>
-            );
-          })}
+          {visibleFacts.map((fact) => (
+            <div key={fact.key}>
+              <dt>{fact.title}</dt>
+              <dd>{fact.value}</dd>
+            </div>
+          ))}
         </dl>
       )}
     </article>

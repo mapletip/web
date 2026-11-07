@@ -55,7 +55,7 @@ export function ItemBrowse({
     [rows, category.scope, category.child],
   );
 
-  const { columns, defaultHiddenColumns, sortOptions } = useMemo(
+  const { columns, defaultHiddenColumns, sortOptions, facts } = useMemo(
     () => getItemColumns(category, coverage, scopedRows),
     [category, coverage, scopedRows],
   );
@@ -139,7 +139,7 @@ export function ItemBrowse({
         fillHeight
         tableStorageKey={`mapletip:web:items:${buildId}:${contextKey}:v1`}
         renderCard={(record) => (
-          <ItemBrowseCard record={record} columns={columns} />
+          <ItemBrowseCard record={record} facts={facts} />
         )}
         state={browseState}
         onStateChange={handleStateChange}

@@ -22,7 +22,7 @@ const coverage = {
 };
 
 describe('ItemBrowseCard', () => {
-  it('renders icon, name, ID, and facts from context columns', () => {
+  it('renders icon, name, ID, and facts from context columns that have a value', () => {
     const scrollCategory = {
       scope: ITEM_SCOPES.use,
       child: ITEM_SCOPES.use.children.find((c) => c.slug === 'upgrade-scrolls'),
@@ -37,11 +37,11 @@ describe('ItemBrowseCard', () => {
       success: 100,
     };
 
-    const { columns } = getItemColumns(scrollCategory, coverage, [row]);
+    const { facts } = getItemColumns(scrollCategory, coverage, [row]);
 
     render(
       <MantineProvider theme={theme}>
-        <ItemBrowseCard record={row} columns={columns} />
+        <ItemBrowseCard record={row} facts={facts} />
       </MantineProvider>,
     );
 
@@ -51,7 +51,7 @@ describe('ItemBrowseCard', () => {
     );
     expect(screen.getByText('02040001')).toBeInTheDocument();
 
-    // Facts from scroll columns
+    // Facts from scroll columns that have a value
     expect(screen.getByText('Equipment type')).toBeInTheDocument();
     expect(screen.getByText('Hat')).toBeInTheDocument();
     expect(screen.getByText('Stats')).toBeInTheDocument();
@@ -62,38 +62,61 @@ describe('ItemBrowseCard', () => {
     expect(screen.getByText('No recorded risk')).toBeInTheDocument();
   });
 
-  it('renders missing states in full words on cards', () => {
-    const scrollCategory = {
+  it('omits facts without values so cards only show recorded facts', () => {
+    const recoveryCategory = {
       scope: ITEM_SCOPES.use,
-      child: ITEM_SCOPES.use.children.find((c) => c.slug === 'upgrade-scrolls'),
+      child: ITEM_SCOPES.use.children.find((c) => c.slug === 'recovery'),
     };
-    // Scroll without deltas/stats
-    const rowWithoutStats: ItemRow = {
-      key: 'scroll-blank',
-      sourceId: '02049999',
+    // Potion with only HP, no MP or percents
+    const potionRow: ItemRow = {
+      key: 'potion-1',
+      sourceId: '02000000',
+      name: 'Red Potion',
       itemClass: 'consume',
-      targetLabel: 'claw',
-      success: 60,
+      hp: 100,
     };
 
-    const { columns } = getItemColumns(scrollCategory, coverage, [
-      rowWithoutStats,
+    const { facts } = getItemColumns(recoveryCategory, coverage, [
+      potionRow,
       {
-        key: 'other',
-        sourceId: '02049998',
+        key: 'potion-2',
+        sourceId: '02000001',
         itemClass: 'consume',
-        stats: { weaponAttack: 2 },
+        mp: 100,
       },
     ]);
 
     render(
       <MantineProvider theme={theme}>
-        <ItemBrowseCard record={rowWithoutStats} columns={columns} />
+        <ItemBrowseCard record={potionRow} facts={facts} />
       </MantineProvider>,
     );
 
-    // Missing stats rendered as full words "Not recorded"
-    expect(screen.getByText('Not recorded')).toBeInTheDocument();
+    expect(screen.getByText('HP')).toBeInTheDocument();
+    expect(screen.getByText('100')).toBeInTheDocument();
+    expect(screen.queryByText('MP')).not.toBeInTheDocument();
+    expect(screen.queryByText('Not recorded')).not.toBeInTheDocument();
+  });
+
+  it('renders nothing extra when a card has no recorded facts', () => {
+    const rowWithoutFacts: ItemRow = {
+      key: 'plain-1',
+      sourceId: '04000000',
+      name: 'Plain Snail Shell',
+      itemClass: 'etc',
+    };
+
+    render(
+      <MantineProvider theme={theme}>
+        <ItemBrowseCard record={rowWithoutFacts} facts={[]} />
+      </MantineProvider>,
+    );
+
+    expect(screen.getByRole('heading', { level: 2 })).toHaveTextContent(
+      'Plain Snail Shell',
+    );
+    expect(screen.getByText('04000000')).toBeInTheDocument();
+    expect(screen.queryByRole('definition')).not.toBeInTheDocument();
   });
 
   it('handles unnamed items gracefully', () => {

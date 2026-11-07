@@ -128,7 +128,7 @@ describe('getItemColumns - column set selection', () => {
     expect(unsupportedCols.map((c) => c.accessor)).not.toContain('tier');
   });
 
-  it('selects recovery columns showing units', () => {
+  it('selects recovery columns showing numbers without redundant HP unit', () => {
     const recoveryCategory = {
       scope: ITEM_SCOPES.use,
       child: ITEM_SCOPES.use.children.find((c) => c.slug === 'recovery'),
@@ -155,17 +155,21 @@ describe('getItemColumns - column set selection', () => {
       },
     ];
 
-    const { columns } = getItemColumns(recoveryCategory, mockCoverage, rows);
+    const { columns, facts } = getItemColumns(
+      recoveryCategory,
+      mockCoverage,
+      rows,
+    );
     const accessors = columns.map((c) => c.accessor);
     expect(accessors).toContain('hp');
     expect(accessors).toContain('mp');
     expect(accessors).toContain('hpPercent');
     expect(accessors).toContain('mpPercent');
 
-    const hpCol = columns.find((c) => c.accessor === 'hp')!;
-    expect(hpCol.getValue?.(rows[0]!)).toBe('50 HP');
-    const hpPercentCol = columns.find((c) => c.accessor === 'hpPercent')!;
-    expect(hpPercentCol.getValue?.(rows[2]!)).toBe('50%');
+    const hpFact = facts.find((f) => f.key === 'hp')!;
+    expect(hpFact.value(rows[0]!)).toBe('50');
+    const hpPercentFact = facts.find((f) => f.key === 'hpPercent')!;
+    expect(hpPercentFact.value(rows[2]!)).toBe('50%');
   });
 
   it('selects projectile attack column with formatted plus', () => {
@@ -180,12 +184,23 @@ describe('getItemColumns - column set selection', () => {
         itemClass: 'consume',
         attack: 15,
       },
+      {
+        key: 'other',
+        sourceId: '02070001',
+        itemClass: 'consume',
+        attack: 21,
+      },
     ];
 
-    const { columns } = getItemColumns(starsCategory, mockCoverage, rows);
+    const { columns, facts } = getItemColumns(
+      starsCategory,
+      mockCoverage,
+      rows,
+    );
     const attackCol = columns.find((c) => c.accessor === 'attack')!;
     expect(attackCol).toBeDefined();
-    expect(attackCol.getValue?.(rows[0]!)).toBe('+15');
+    const attackFact = facts.find((f) => f.key === 'attack')!;
+    expect(attackFact.value(rows[0]!)).toBe('+15');
   });
 
   it('keeps feeding columns visible on Pet Food', () => {
@@ -271,13 +286,18 @@ describe('getItemColumns - column set selection', () => {
       { key: 'q3', sourceId: '3', itemClass: 'etc' },
     ];
 
-    const { columns } = getItemColumns(questCategory, mockCoverage, rows);
+    const { columns, facts } = getItemColumns(
+      questCategory,
+      mockCoverage,
+      rows,
+    );
     const flagCol = columns.find((c) => c.accessor === 'questFlag')!;
     expect(flagCol).toBeDefined();
 
-    expect(flagCol.getValue?.(rows[0]!)).toBe('Yes');
-    expect(flagCol.getValue?.(rows[1]!)).toBe('No');
-    expect(flagCol.getValue?.(rows[2]!)).toBeUndefined();
+    const flagFact = facts.find((f) => f.key === 'questFlag')!;
+    expect(flagFact.value(rows[0]!)).toBe('Yes');
+    expect(flagFact.value(rows[1]!)).toBe('No');
+    expect(flagFact.value(rows[2]!)).toBeUndefined();
 
     // Table cell render
     const renderedMissing = renderToString(flagCol.render!(rows[2]!));
@@ -315,14 +335,24 @@ describe('getItemColumns - column set selection', () => {
     const { columns } = getItemColumns(questCategory, partialCoverage, rows);
     const col = columns.find((c) => c.accessor === 'neededForQuestCount')!;
 
-    // Lower bound rendering in table
-    const lowerBoundHtml = renderToString(col.render!(rows[0]!));
-    expect(lowerBoundHtml).toContain('12+');
-    expect(lowerBoundHtml).toContain('title="12 (lower bound)"');
+    // Table render in partial coverage
+    const countHtml = renderToString(col.render!(rows[0]!));
+    expect(countHtml).toBe('12');
 
     // Missing count in partial coverage renders None recorded
     const missingHtml = renderToString(col.render!(rows[1]!));
     expect(missingHtml).toBe('None recorded');
+  });
+
+  it('states lower bound in monster drops fullLabel once', () => {
+    const etcCategory = { scope: ITEM_SCOPES.etc };
+    const rows: ItemRow[] = [
+      { key: 'e1', sourceId: '1', itemClass: 'etc', monsterDropCount: 5 },
+      { key: 'e2', sourceId: '2', itemClass: 'etc', monsterDropCount: 10 },
+    ];
+    const { columns } = getItemColumns(etcCategory, mockCoverage, rows);
+    const dropCol = columns.find((c) => c.accessor === 'monsterDropCount');
+    expect(dropCol?.fullLabel).toBe('Monster drops (lower bound)');
   });
 
   it('omits relationship column when coverage is unsupported', () => {
@@ -345,7 +375,7 @@ describe('getItemColumns - column set selection', () => {
 });
 
 describe('deriveSortOptions', () => {
-  it('derives sort options from columns by numeric vs text rule', () => {
+  it('derives sort options from columns by numeric vs text rule and custom sort labels', () => {
     const scrollCategory = {
       scope: ITEM_SCOPES.use,
       child: ITEM_SCOPES.use.children.find((c) => c.slug === 'upgrade-scrolls'),
@@ -356,6 +386,7 @@ describe('deriveSortOptions', () => {
         sourceId: '02040001',
         itemClass: 'consume',
         targetLabel: 'hat',
+        stats: { weaponAttack: 2 },
         success: 100,
       },
       {
@@ -363,6 +394,7 @@ describe('deriveSortOptions', () => {
         sourceId: '02040002',
         itemClass: 'consume',
         targetLabel: 'topwear',
+        stats: { weaponAttack: 5 },
         success: 60,
       },
     ];
@@ -382,6 +414,20 @@ describe('deriveSortOptions', () => {
       field: 'targetLabel',
       direction: 'desc',
       label: 'Equipment type (Z–A)',
+    });
+
+    // Custom sort labels on stats: strongest first / weakest first
+    const statsOptions = sortOptions.filter((o) => o.field === 'stats');
+    expect(statsOptions).toHaveLength(2);
+    expect(statsOptions[0]).toEqual({
+      field: 'stats',
+      direction: 'desc',
+      label: 'Stats: strongest first',
+    });
+    expect(statsOptions[1]).toEqual({
+      field: 'stats',
+      direction: 'asc',
+      label: 'Stats: weakest first',
     });
 
     // Numeric column (success) sorts desc first (high to low)
