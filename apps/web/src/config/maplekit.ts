@@ -8,7 +8,7 @@
 import type { GetMonsterBrowseOptions } from '@mapletip/data/monsters';
 
 /** MapleKit data origin; immutable release files are served from here. */
-const DATA_ORIGIN = 'https://data.mapletip.com/';
+const DATA_ORIGIN = 'https://d0.mapletip.com/';
 
 /**
  * Caller-owned trust anchor. The manifest `path`, `sha256` and `byteLength`
@@ -18,9 +18,9 @@ const DATA_ORIGIN = 'https://data.mapletip.com/';
 const RELEASE_PIN = {
   format: 'mapletip.local-release-pin',
   releaseId:
-    'release-522b28866e453e0f1369688c0e48dd153311c18d093961ad44409df33200905e',
-  path: 'v1/releases/aa16dd552dc2502ed6a16ea19b9e778d06c2d83aedd1d89a456197b0cf0ea06f.json',
-  sha256: 'aa16dd552dc2502ed6a16ea19b9e778d06c2d83aedd1d89a456197b0cf0ea06f',
+    'release-e7b76e1194f40c87ed6653d946f451f2500f63bec750a006077c98962dac1ca4',
+  path: 'v1/releases/976466f0c178f4c73c9de9691eb0f89e65585f1d100c70384efb0cd8a23eb842.json',
+  sha256: '976466f0c178f4c73c9de9691eb0f89e65585f1d100c70384efb0cd8a23eb842',
   byteLength: 745,
 } as const satisfies GetMonsterBrowseOptions['pin'];
 

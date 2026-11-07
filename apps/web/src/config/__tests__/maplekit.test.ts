@@ -25,11 +25,11 @@ describe('maplekit configuration', () => {
   it('keeps the immutable pin and origin unchanged', () => {
     // Guards against an accidental release rotation; changing them is a
     // deliberate release-pin decision, not a refactor.
-    expect(MAPLEKIT_RELEASE.baseUrl).toBe('https://data.mapletip.com/');
+    expect(MAPLEKIT_RELEASE.baseUrl).toBe('https://d0.mapletip.com/');
     expect(MAPLEKIT_RELEASE.pin).toMatchObject({
       format: 'mapletip.local-release-pin',
       sha256:
-        'aa16dd552dc2502ed6a16ea19b9e778d06c2d83aedd1d89a456197b0cf0ea06f',
+        '976466f0c178f4c73c9de9691eb0f89e65585f1d100c70384efb0cd8a23eb842',
       byteLength: 745,
     });
   });
