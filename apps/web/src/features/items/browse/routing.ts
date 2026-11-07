@@ -11,8 +11,9 @@ import {
 
 import {
   isItemScope,
-  isItemScopeChild,
-  type ItemScopeSlug,
+  ITEM_SCOPES,
+  type ItemCategoryChild,
+  type ItemCategoryScope,
 } from './categories';
 
 export interface ItemRouteParams {
@@ -22,8 +23,8 @@ export interface ItemRouteParams {
 }
 
 export interface ItemCategorySelection {
-  readonly scope: ItemScopeSlug;
-  readonly childSlug?: string;
+  readonly scope: ItemCategoryScope;
+  readonly child?: ItemCategoryChild;
 }
 
 export interface ParsedItemRoute {
@@ -53,7 +54,7 @@ export function parseItemRouteParams(params: ItemRouteParams): ParsedItemRoute {
       // eslint-disable-next-line @typescript-eslint/only-throw-error
       throw notFound();
     }
-    return { buildId, category: { scope: 'all' } };
+    return { buildId, category: { scope: ITEM_SCOPES.all } };
   }
 
   if (scope === 'all') {
@@ -66,13 +67,16 @@ export function parseItemRouteParams(params: ItemRouteParams): ParsedItemRoute {
     throw notFound();
   }
 
+  const scopeObj = ITEM_SCOPES[scope];
+
   if (child !== undefined) {
-    if (!isItemScopeChild(scope, child)) {
+    const childObj = scopeObj.children.find((c) => c.slug === child);
+    if (!childObj) {
       // eslint-disable-next-line @typescript-eslint/only-throw-error
       throw notFound();
     }
-    return { buildId, category: { scope, childSlug: child } };
+    return { buildId, category: { scope: scopeObj, child: childObj } };
   }
 
-  return { buildId, category: { scope } };
+  return { buildId, category: { scope: scopeObj } };
 }
