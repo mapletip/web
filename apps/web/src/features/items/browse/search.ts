@@ -20,7 +20,7 @@ export function matchSourceId(sourceId: string, query: string): boolean {
   return Number.parseInt(trimmedQuery, 10) === Number.parseInt(sourceId, 10);
 }
 
-export function getOwningScope(row: ItemRow): ItemCategoryScope {
+function getOwningScope(row: ItemRow): ItemCategoryScope {
   for (const slug of ITEM_SCOPE_SLUGS) {
     if (slug === 'all') continue;
     const scope = ITEM_SCOPES[slug];

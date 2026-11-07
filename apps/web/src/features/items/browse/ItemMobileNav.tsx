@@ -5,7 +5,7 @@ import type { ReactElement } from 'react';
 import classes from './ItemMobileNav.module.css';
 import type { ItemNavScope } from './navigation';
 
-export interface ItemMobileNavProps {
+interface ItemMobileNavProps {
   readonly navScopes: readonly ItemNavScope[];
 }
 

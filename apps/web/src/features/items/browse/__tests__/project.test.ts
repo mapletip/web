@@ -41,6 +41,7 @@ describe('projectItemBrowseRows', () => {
     expect('nameState' in (rows[0] ?? {})).toBe(false);
     expect('rel' in (rows[0] ?? {})).toBe(false);
     expect('statKeys' in (rows[0] ?? {})).toBe(false);
+    expect('key' in (rows[0] ?? {})).toBe(false);
   });
 
   it('keeps known 0 values for numeric properties and records directTargetCount only when > 0', () => {
@@ -140,10 +141,10 @@ describe('projectItemBrowseRows', () => {
 
     // Two distinct pets sharing the same name stay separate; unnamed pets keep no invented name
     expect(food?.petTargets).toEqual([
-      { key: dragonPetA, name: 'Baby Dragon' },
-      { key: dragonPetB, name: 'Baby Dragon' },
-      { key: unnamedPetA },
-      { key: unnamedPetB },
+      { sourceId: '5000020', name: 'Baby Dragon' },
+      { sourceId: '5000021', name: 'Baby Dragon' },
+      { sourceId: '5000098' },
+      { sourceId: '5000099' },
     ]);
 
     // Unresolved targets stay separate

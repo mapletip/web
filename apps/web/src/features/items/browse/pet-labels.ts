@@ -1,7 +1,7 @@
 import type { ItemRow } from './project';
 
 /**
- * Builds a key -> label lookup for pet targets from the roster.
+ * Builds a sourceId -> label lookup for pet targets from the roster.
  *
  * Rules:
  * - Unnamed pet gets "Unnamed pet (<source id>)".
@@ -17,7 +17,7 @@ export function buildPetLabels(
   >();
   for (const row of roster) {
     if (row.itemClass === 'pet') {
-      pets.set(row.key, { name: row.name, sourceId: row.sourceId });
+      pets.set(row.sourceId, { name: row.name, sourceId: row.sourceId });
     }
   }
 
@@ -29,13 +29,13 @@ export function buildPetLabels(
   }
 
   const labels = new Map<string, string>();
-  for (const [key, pet] of pets) {
+  for (const [sourceId, pet] of pets) {
     if (!pet.name) {
-      labels.set(key, `Unnamed pet (${pet.sourceId})`);
+      labels.set(sourceId, `Unnamed pet (${pet.sourceId})`);
     } else if ((nameCounts.get(pet.name) ?? 0) > 1) {
-      labels.set(key, `${pet.name} (${pet.sourceId})`);
+      labels.set(sourceId, `${pet.name} (${pet.sourceId})`);
     } else {
-      labels.set(key, pet.name);
+      labels.set(sourceId, pet.name);
     }
   }
 

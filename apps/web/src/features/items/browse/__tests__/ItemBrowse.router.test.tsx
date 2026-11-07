@@ -16,7 +16,6 @@ import type { ItemRow } from '../project';
 const { fixtureRows } = vi.hoisted(() => {
   const rows: readonly ItemRow[] = [
     {
-      key: 'item:02000000',
       sourceId: '02000000',
       name: 'Red Potion',
       itemClass: 'consume',
@@ -24,7 +23,6 @@ const { fixtureRows } = vi.hoisted(() => {
       functions: ['recovery'],
     },
     {
-      key: 'item:02070000',
       sourceId: '02070000',
       name: 'Subi Throwing-Stars',
       itemClass: 'consume',
@@ -32,7 +30,6 @@ const { fixtureRows } = vi.hoisted(() => {
       attack: 15,
     },
     {
-      key: 'item:02070001',
       sourceId: '02070001',
       name: 'Mokbi Throwing-Stars',
       itemClass: 'consume',
@@ -41,7 +38,6 @@ const { fixtureRows } = vi.hoisted(() => {
       monsterDropCount: 1,
     },
     {
-      key: 'item:04000000',
       sourceId: '04000000',
       name: 'Snail Shell',
       itemClass: 'etc',
@@ -78,13 +74,13 @@ describe('ItemBrowse real router interactions', () => {
 
     await router.navigate({
       to: '/maplestory/{-$buildId}/items/{-$scope}/{-$child}',
-      search: { types: ['potion', 'food-buff'] },
+      search: { type: ['potion', 'food-buff'] },
     });
 
     const href = router.state.location.href;
     expect(href).not.toContain('%5B');
     expect(href).not.toContain('%22');
-    expect(href).toMatch(/types=potion(%2C|,)food-buff/);
+    expect(href).toMatch(/type=potion(%2C|,)food-buff/);
   });
 
   it('rail scope rows with children are real links that navigate when clicked', async () => {

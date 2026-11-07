@@ -21,13 +21,12 @@ export type ItemRelationshipKind = keyof NonNullable<
   ItemBrowseRecord['relationships']
 >;
 
-export interface ItemPetTarget {
-  readonly key: string;
+interface ItemPetTarget {
+  readonly sourceId: string;
   readonly name?: string;
 }
 
 export type ItemRow = {
-  readonly key: string;
   readonly sourceId: string;
   readonly itemClass: ItemBrowseClass;
   readonly name?: string;
@@ -94,20 +93,31 @@ function filterNonEmptyArray<T>(
 
 function resolvePetTargets(
   targets: readonly string[] | undefined,
-  petNamesByKey: ReadonlyMap<string, string>,
+  petByTargetKey: ReadonlyMap<
+    string,
+    { readonly sourceId: string; readonly name?: string }
+  >,
 ): readonly ItemPetTarget[] | undefined {
   if (!targets || targets.length === 0) {
     return undefined;
   }
 
-  const distinctKeys = Array.from(new Set(targets));
-  return distinctKeys.map((targetKey) => {
-    const knownName = petNamesByKey.get(targetKey);
-    if (knownName !== undefined) {
-      return { key: targetKey, name: knownName };
+  const seen = new Set<string>();
+  const resolved: ItemPetTarget[] = [];
+  for (const targetKey of targets) {
+    const pet = petByTargetKey.get(targetKey);
+    const sourceId = pet ? pet.sourceId : targetKey;
+    if (seen.has(sourceId)) {
+      continue;
     }
-    return { key: targetKey };
-  });
+    seen.add(sourceId);
+    if (pet?.name !== undefined) {
+      resolved.push({ sourceId, name: pet.name });
+    } else {
+      resolved.push({ sourceId });
+    }
+  }
+  return resolved.length > 0 ? resolved : undefined;
 }
 
 export const RELATIONSHIP_COUNT_FIELDS = [
@@ -126,16 +136,22 @@ export const RELATIONSHIP_COUNT_FIELDS = [
 export function projectItemBrowseRows(
   records: readonly ItemBrowseRow[],
 ): readonly ItemRow[] {
-  const petNamesByKey = new Map<string, string>();
+  const petByTargetKey = new Map<
+    string,
+    { readonly sourceId: string; readonly name?: string }
+  >();
   for (const record of records) {
-    if (record.name.state === 'known') {
-      petNamesByKey.set(record.key, record.name.value);
-    }
+    const knownName = extractKnownFact(record.name);
+    const entry = {
+      sourceId: record.sourceId,
+      ...(knownName !== undefined ? { name: knownName } : {}),
+    };
+    petByTargetKey.set(record.key, entry);
+    petByTargetKey.set(record.sourceId, entry);
   }
 
   return records.map((record) => {
     const row: WritableItemRow = {
-      key: record.key,
       sourceId: record.sourceId,
       itemClass: record.itemClass,
     };
@@ -166,7 +182,7 @@ export function projectItemBrowseRows(
     setField(
       row,
       'petTargets',
-      resolvePetTargets(petFood?.targets, petNamesByKey),
+      resolvePetTargets(petFood?.targets, petByTargetKey),
     );
     setField(
       row,

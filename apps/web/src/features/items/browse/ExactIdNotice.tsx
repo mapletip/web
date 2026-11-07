@@ -7,7 +7,7 @@ import type { BuildId } from '@/config/maplekit';
 import { ITEM_NAV_TARGET } from './navigation';
 import type { ExactIdNoticeState } from './search';
 
-export interface ExactIdNoticeProps {
+interface ExactIdNoticeProps {
   readonly notice: ExactIdNoticeState;
   readonly buildId: BuildId;
 }
@@ -58,7 +58,7 @@ export function ExactIdNotice({
     <Alert variant="light" title={`Matching items for ID ${notice.query}`}>
       <List size="sm">
         {notice.items.map(({ item, owningScope }) => (
-          <List.Item key={item.key}>
+          <List.Item key={item.sourceId}>
             {`${item.name ?? 'Unnamed item'} (${item.sourceId}) is in `}
             <Anchor
               renderRoot={(props) => (

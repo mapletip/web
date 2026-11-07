@@ -16,7 +16,7 @@ export const DEFAULT_ITEM_SORT = {
  * lower-priority stats regardless of delta amount, while deltas within the same stat
  * priority group sort predictably by amount.
  */
-export const STAT_PRIORITY_MULTIPLIER = 10_000;
+const STAT_PRIORITY_MULTIPLIER = 10_000;
 
 /**
  * Client-side query-field accessor computing a numeric sort score for scroll stats.

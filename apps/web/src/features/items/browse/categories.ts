@@ -15,14 +15,14 @@ import type {
 export const ITEM_SCOPE_SLUGS = ['all', 'use', 'etc', 'setup', 'cash'] as const;
 export type ItemScopeSlug = (typeof ITEM_SCOPE_SLUGS)[number];
 
-export interface ItemPositiveChild {
+interface ItemPositiveChild {
   readonly kind: 'positive';
   readonly slug: string;
   readonly label: string;
   readonly matches: (row: ItemRow) => boolean;
 }
 
-export interface ItemOtherChild {
+interface ItemOtherChild {
   readonly kind: 'other';
   readonly slug: string;
   readonly label: string;
@@ -187,7 +187,7 @@ export function getCategoryRows(
   return rows.filter((row) => matchesCategory(row, scope, child));
 }
 
-export interface ScopeCountSummary {
+interface ScopeCountSummary {
   readonly total: number;
   readonly children: Readonly<Record<string, number>>;
 }

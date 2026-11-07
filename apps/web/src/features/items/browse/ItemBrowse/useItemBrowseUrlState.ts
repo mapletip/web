@@ -12,7 +12,7 @@ import {
   type ItemBrowseSearch,
 } from '../search-params';
 
-export interface UseItemBrowseUrlStateOptions {
+interface UseItemBrowseUrlStateOptions {
   readonly searchProp?: ItemBrowseSearch | undefined;
   readonly browseContext: BrowseContext;
   readonly onSearchChange?:
@@ -20,7 +20,7 @@ export interface UseItemBrowseUrlStateOptions {
     | undefined;
 }
 
-export interface UseItemBrowseUrlStateResult {
+interface UseItemBrowseUrlStateResult {
   readonly browseState: BrowseState;
   readonly localSearch: string;
   readonly urlSearch: ItemBrowseSearch;

@@ -23,13 +23,13 @@ import type { ItemCategorySelection } from './routing';
 export const ITEM_NAV_TARGET =
   '/maplestory/{-$buildId}/items/{-$scope}/{-$child}' as const;
 
-export interface ItemNavRouteParams {
+interface ItemNavRouteParams {
   readonly buildId?: string | undefined;
   readonly scope?: string | undefined;
   readonly child?: string | undefined;
 }
 
-export interface ItemNavChild {
+interface ItemNavChild {
   readonly slug: string;
   readonly label: string;
   readonly count: number;

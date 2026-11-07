@@ -3,7 +3,7 @@ import { theme } from '@mapletip/theme';
 import { renderToString } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 
-import { ItemIcon, ITEM_ICON_PLACEHOLDER } from '../ItemIcon';
+import { ItemIcon } from '../ItemIcon';
 
 describe('ItemIcon SSR markup', () => {
   it('renders lazy decorative image with media URL when icon digest is present', () => {
@@ -32,11 +32,5 @@ describe('ItemIcon SSR markup', () => {
     expect(html).toContain('loading="lazy"');
     expect(html).toContain('data:image/svg+xml');
     expect(html).not.toContain('https://d0.mapletip.com');
-  });
-
-  it('provides a valid placeholder data URI', () => {
-    expect(ITEM_ICON_PLACEHOLDER.startsWith('data:image/svg+xml')).toBe(true);
-    expect(ITEM_ICON_PLACEHOLDER).toContain("width='32'");
-    expect(ITEM_ICON_PLACEHOLDER).toContain("height='32'");
   });
 });

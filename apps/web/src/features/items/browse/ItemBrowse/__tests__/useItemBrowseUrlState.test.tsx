@@ -11,10 +11,7 @@ import { act, render } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
 import type { BrowseContext, ItemBrowseSearch } from '../../search-params';
-import {
-  useItemBrowseUrlState,
-  type UseItemBrowseUrlStateResult,
-} from '../useItemBrowseUrlState';
+import { useItemBrowseUrlState } from '../useItemBrowseUrlState';
 
 describe('useItemBrowseUrlState', () => {
   const dummyContext: BrowseContext = {
@@ -35,7 +32,7 @@ describe('useItemBrowseUrlState', () => {
       replace: boolean,
     ) => void;
   }) {
-    let latestResult!: UseItemBrowseUrlStateResult;
+    let latestResult!: ReturnType<typeof useItemBrowseUrlState>;
 
     function TestConsumer() {
       latestResult = useItemBrowseUrlState({

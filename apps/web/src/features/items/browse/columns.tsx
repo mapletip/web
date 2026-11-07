@@ -20,7 +20,7 @@ import { ItemIcon } from './ItemIcon';
 import type { ItemRow } from './project';
 import { itemCategoryContextKey, type ItemCategorySelection } from './routing';
 
-export interface ItemTableColumn extends TableColumn<ItemRow> {
+interface ItemTableColumn extends TableColumn<ItemRow> {
   readonly sortLabels?: { readonly asc: string; readonly desc: string };
 }
 
@@ -30,11 +30,7 @@ export interface ItemFactDescriptor {
   readonly value: (row: ItemRow) => string | undefined;
 }
 
-export function ItemIdentity({
-  record,
-}: {
-  readonly record: ItemRow;
-}): ReactElement {
+function ItemIdentity({ record }: { readonly record: ItemRow }): ReactElement {
   const displayName = record.name ?? 'Unnamed item';
   return (
     <div className={classes['identity']}>
@@ -49,7 +45,7 @@ export function ItemIdentity({
   );
 }
 
-export function shouldIncludeColumn(
+function shouldIncludeColumn(
   column: ColumnConfig,
   rows: readonly ItemRow[],
   coverage: ItemBrowseCoverage,
@@ -108,7 +104,7 @@ function adaptColumn(
   };
 }
 
-export interface GetItemColumnsResult {
+interface GetItemColumnsResult {
   readonly columns: readonly ItemTableColumn[];
   readonly defaultHiddenColumns: readonly string[];
   readonly sortOptions: readonly BrowseSortOption[];
@@ -161,7 +157,7 @@ export function getItemColumns(
   };
 }
 
-export function deriveSortOptions(
+function deriveSortOptions(
   columns: readonly ItemTableColumn[],
 ): readonly BrowseSortOption[] {
   return columns

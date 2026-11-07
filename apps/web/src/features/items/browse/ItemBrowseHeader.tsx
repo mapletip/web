@@ -13,7 +13,7 @@ import { ITEM_NAV_TARGET, type ItemNavScope } from './navigation';
 import type { ItemCategorySelection } from './routing';
 import type { ExactIdNoticeState } from './search';
 
-export interface ItemBrowseHeaderProps {
+interface ItemBrowseHeaderProps {
   readonly buildId: BuildId;
   readonly coverage: ItemBrowseCoverage;
   readonly category: ItemCategorySelection;

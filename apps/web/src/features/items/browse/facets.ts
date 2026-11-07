@@ -16,7 +16,6 @@ import {
   CATEGORICAL_FACETS,
   CONTEXT_FACETS,
   DEFAULT_FACETS,
-  getItemRelationships,
   RANGE_FACET_MAP,
   RANGE_FACETS,
   type CategoricalContext,
@@ -30,8 +29,6 @@ import { buildRangeBuckets } from './range-buckets';
 import { itemCategoryContextKey, type ItemCategorySelection } from './routing';
 import { matchSourceId } from './search';
 import { computeScrollStatsSortValue } from './sort';
-
-export { getItemRelationships };
 
 export const ITEM_QUERY_FIELDS: readonly QueryFieldDefinition<ItemRow>[] = [
   ...CATEGORICAL_FACETS.map((facet) => ({

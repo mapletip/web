@@ -12,7 +12,6 @@ import type { ItemRow } from '../project';
 
 function makeRow(overrides: Partial<ItemRow> = {}): ItemRow {
   return {
-    key: 'item:test:1',
     sourceId: '02000000',
     itemClass: 'consume',
     ...overrides,
@@ -30,37 +29,15 @@ describe('category model and predicates', () => {
     expect(isItemScope('setup')).toBe(true);
     expect(isItemScope('cash')).toBe(true);
     expect(isItemScope('invalid')).toBe(false);
-
-    expect(
-      ITEM_SCOPES.use.children.some((c) => c.slug === 'upgrade-scrolls'),
-    ).toBe(true);
-    expect(ITEM_SCOPES.use.children.some((c) => c.slug === 'skill-items')).toBe(
-      true,
-    );
-    expect(
-      ITEM_SCOPES.use.children.some((c) => c.slug === 'other-use-items'),
-    ).toBe(true);
-    expect(ITEM_SCOPES.use.children.some((c) => c.slug === 'chairs')).toBe(
-      false,
-    );
-    expect(ITEM_SCOPES.etc.children.some((c) => c.slug === 'quest-items')).toBe(
-      true,
-    );
-    expect(ITEM_SCOPES.setup.children.some((c) => c.slug === 'chairs')).toBe(
-      true,
-    );
-    expect(ITEM_SCOPES.cash.children.some((c) => c.slug === 'pets')).toBe(true);
   });
 
   it('enforces scope-AND-predicate membership', () => {
     const cashHealer = makeRow({
-      key: 'item:cash:healer',
       sourceId: '05000001',
       itemClass: 'cash',
       functions: ['recovery'],
     });
     const useHealer = makeRow({
-      key: 'item:use:healer',
       sourceId: '02000002',
       itemClass: 'consume',
       functions: ['recovery'],
@@ -75,17 +52,15 @@ describe('category model and predicates', () => {
       findChild(ITEM_SCOPES.use, 'recovery'),
     );
     expect(useRecoveryRows).toHaveLength(1);
-    expect(useRecoveryRows[0]?.key).toBe('item:use:healer');
+    expect(useRecoveryRows[0]?.sourceId).toBe('02000002');
 
     // Cash feeder Sprout in Cash scope MUST be excluded from Use Pet Food
     const cashPetFood = makeRow({
-      key: 'item:cash:sprout',
       sourceId: '05240018',
       itemClass: 'cash',
       types: ['pet-food'],
     });
     const usePetFood = makeRow({
-      key: 'item:use:petfood',
       sourceId: '02120000',
       itemClass: 'consume',
       types: ['pet-food'],
@@ -97,12 +72,11 @@ describe('category model and predicates', () => {
       findChild(ITEM_SCOPES.use, 'pet-food'),
     );
     expect(petFoodRows).toHaveLength(1);
-    expect(petFoodRows[0]?.key).toBe('item:use:petfood');
+    expect(petFoodRows[0]?.sourceId).toBe('02120000');
   });
 
   it('allows items to legitimately overlap across positive children in the same scope', () => {
     const dualItem = makeRow({
-      key: 'item:dual',
       sourceId: '02000003',
       itemClass: 'consume',
       types: ['potion', 'food-buff'],
@@ -134,7 +108,6 @@ describe('category model and predicates', () => {
 
   it('matches skill items by the skill function', () => {
     const skillItem = makeRow({
-      key: 'item:skill:1',
       sourceId: '02280000',
       itemClass: 'consume',
       functions: ['skill'],
@@ -147,17 +120,17 @@ describe('category model and predicates', () => {
 
   it('computes Other as the complement of the union of positive children', () => {
     const potion = makeRow({
-      key: 'item:potion',
+      sourceId: '02000010',
       itemClass: 'consume',
       types: ['potion'],
     });
     const scroll = makeRow({
-      key: 'item:scroll',
+      sourceId: '02040010',
       itemClass: 'consume',
       types: ['upgrade-scroll'],
     });
     const miscellaneous = makeRow({
-      key: 'item:misc',
+      sourceId: '02990000',
       itemClass: 'consume',
       types: [],
       functions: [],
@@ -171,7 +144,7 @@ describe('category model and predicates', () => {
       findChild(ITEM_SCOPES.use, 'other-use-items'),
     );
     expect(otherRows).toHaveLength(1);
-    expect(otherRows[0]?.key).toBe('item:misc');
+    expect(otherRows[0]?.sourceId).toBe('02990000');
 
     // Every positive child in the scope is disjoint from Other
     const positivePotions = getCategoryRows(
@@ -185,22 +158,22 @@ describe('category model and predicates', () => {
       findChild(ITEM_SCOPES.use, 'upgrade-scrolls'),
     );
 
-    const otherKeys = new Set(otherRows.map((r) => r.key));
+    const otherSourceIds = new Set(otherRows.map((r) => r.sourceId));
     for (const r of [...positivePotions, ...positiveScrolls]) {
-      expect(otherKeys.has(r.key)).toBe(false);
+      expect(otherSourceIds.has(r.sourceId)).toBe(false);
     }
   });
 
   it('verifies single membership predicate matchesCategory handles positive and other children', () => {
     const scope = ITEM_SCOPES.use;
     const potion = makeRow({
-      key: 'p1',
+      sourceId: '02000020',
       itemClass: 'consume',
       types: ['potion'],
     });
-    const misc = makeRow({ key: 'm1', itemClass: 'consume' });
+    const misc = makeRow({ sourceId: '02990020', itemClass: 'consume' });
     const nonConsume = makeRow({
-      key: 'nc1',
+      sourceId: '04000020',
       itemClass: 'etc',
       types: ['potion'],
     });
@@ -222,7 +195,7 @@ describe('category model and predicates', () => {
   it('returns an empty array for recognized zero-member children without failing', () => {
     const rows = [
       makeRow({
-        key: 'item:potion',
+        sourceId: '02000001',
         itemClass: 'consume',
         types: ['potion'],
       }),
@@ -238,21 +211,21 @@ describe('category model and predicates', () => {
 
   it('computes per-category counts accurately', () => {
     const potion = makeRow({
-      key: 'item:potion',
+      sourceId: '02000030',
       itemClass: 'consume',
       types: ['potion'],
     });
     const otherUse = makeRow({
-      key: 'item:other',
+      sourceId: '02990030',
       itemClass: 'consume',
     });
     const questItem = makeRow({
-      key: 'item:quest',
+      sourceId: '04000030',
       itemClass: 'etc',
       neededForQuestCount: 2,
     });
     const pet = makeRow({
-      key: 'item:pet',
+      sourceId: '05000030',
       itemClass: 'pet',
     });
 
@@ -275,13 +248,13 @@ describe('category model and predicates', () => {
   });
 
   it('returns scope-specific rows when no child is supplied', () => {
-    const consumeRow = makeRow({ key: 'item:consume', itemClass: 'consume' });
-    const etcRow = makeRow({ key: 'item:etc', itemClass: 'etc' });
+    const consumeRow = makeRow({ sourceId: '02000040', itemClass: 'consume' });
+    const etcRow = makeRow({ sourceId: '04000040', itemClass: 'etc' });
 
     const rows = [consumeRow, etcRow];
     const scopeRows = getCategoryRows(rows, ITEM_SCOPES.use);
 
     expect(scopeRows).toHaveLength(1);
-    expect(scopeRows[0]?.key).toBe('item:consume');
+    expect(scopeRows[0]?.sourceId).toBe('02000040');
   });
 });

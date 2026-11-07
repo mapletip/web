@@ -7,31 +7,26 @@ import { findExactIdNotice, matchSourceId } from '../search';
 describe('search matching and exact-ID notices', () => {
   const dummyRows: readonly ItemRow[] = [
     {
-      key: 'item:02000000',
       sourceId: '02000000',
       name: 'Red Potion',
       itemClass: 'consume',
     },
     {
-      key: 'item:04000000',
       sourceId: '04000000',
       name: 'Snail Shell',
       itemClass: 'etc',
     },
     {
-      key: 'item:5000000',
       sourceId: '5000000',
       name: 'Brown Puppy',
       itemClass: 'pet',
     },
     {
-      key: 'item:dup:1',
       sourceId: '03000000',
       name: 'Blue Chair',
       itemClass: 'setup',
     },
     {
-      key: 'item:dup:2',
       sourceId: '3000000',
       name: 'Another Blue Chair',
       itemClass: 'setup',
@@ -101,7 +96,6 @@ describe('search matching and exact-ID notices', () => {
       const rowsWithName: readonly ItemRow[] = [
         ...dummyRows,
         {
-          key: 'item:scroll60',
           sourceId: '02040000',
           name: 'Scroll for Bow 60%',
           itemClass: 'consume',

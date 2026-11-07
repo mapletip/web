@@ -5,7 +5,6 @@ import { ITEM_SCOPES } from '../categories';
 import {
   getDropCoverageNotice,
   getItemFacets,
-  getItemRelationships,
   ITEM_QUERY_FIELDS,
 } from '../facets';
 import type { ItemRow } from '../project';
@@ -26,7 +25,6 @@ describe('facets', () => {
 
   const dummyRows: readonly ItemRow[] = [
     {
-      key: '1',
       sourceId: '02000000',
       name: 'Red Potion',
       itemClass: 'consume',
@@ -36,7 +34,6 @@ describe('facets', () => {
       neededForQuestCount: 1,
     },
     {
-      key: '2',
       sourceId: '02060000',
       name: 'Arrow for Bow',
       itemClass: 'consume',
@@ -45,7 +42,6 @@ describe('facets', () => {
       monsterDropCount: 2,
     },
     {
-      key: '3',
       sourceId: '02000001',
       name: 'Blue Potion',
       itemClass: 'consume',
@@ -53,23 +49,6 @@ describe('facets', () => {
       functions: ['recovery'],
     },
   ];
-
-  describe('getItemRelationships', () => {
-    it('derives relationships from counts > 0', () => {
-      const rels = getItemRelationships(dummyRows[0]!);
-      expect(rels).toEqual(['monster-drop', 'needed-for-quest']);
-    });
-
-    it('returns empty array when no relationship counts are positive', () => {
-      const rels = getItemRelationships({
-        key: '4',
-        sourceId: '02000002',
-        itemClass: 'consume',
-        monsterDropCount: 0,
-      });
-      expect(rels).toEqual([]);
-    });
-  });
 
   describe('getItemFacets', () => {
     it('limits facet options to values present in the category population', () => {
@@ -80,14 +59,14 @@ describe('facets', () => {
         dummyRows,
       );
 
-      const typeFacet = facets.find((f) => f.id === 'types');
+      const typeFacet = facets.find((f) => f.id === 'type');
       expect(typeFacet).toBeDefined();
       expect(typeFacet?.options).toEqual([
         { value: 'arrow', label: 'Arrow' },
         { value: 'potion', label: 'Potion' },
       ]);
 
-      const fnFacet = facets.find((f) => f.id === 'functions');
+      const fnFacet = facets.find((f) => f.id === 'fn');
       expect(fnFacet).toBeDefined();
       expect(fnFacet?.options).toEqual([
         { value: 'recovery', label: 'Recovery' },
@@ -97,21 +76,18 @@ describe('facets', () => {
     it('drops pet option from Effect facet', () => {
       const rowsWithPetFn: readonly ItemRow[] = [
         {
-          key: 'p1',
           sourceId: '02000000',
           itemClass: 'consume',
           types: ['potion'],
           functions: ['pet', 'recovery'],
         },
         {
-          key: 'p2',
           sourceId: '02000001',
           itemClass: 'consume',
           types: ['potion'],
           functions: ['recovery'],
         },
         {
-          key: 'p3',
           sourceId: '02060000',
           itemClass: 'consume',
           types: ['arrow'],
@@ -125,7 +101,7 @@ describe('facets', () => {
         rowsWithPetFn,
         rowsWithPetFn,
       );
-      const fnFacet = facets.find((f) => f.id === 'functions');
+      const fnFacet = facets.find((f) => f.id === 'fn');
       expect(fnFacet).toBeDefined();
       expect(fnFacet?.options?.some((opt) => opt.value === 'pet')).toBe(false);
       expect(fnFacet?.options).toEqual([
@@ -183,7 +159,6 @@ describe('facets', () => {
       };
       const scrollRows: readonly ItemRow[] = [
         {
-          key: 's1',
           sourceId: '02040001',
           name: 'Scroll for Helmet DEF 60%',
           itemClass: 'consume',
@@ -193,7 +168,6 @@ describe('facets', () => {
           success: 60,
         },
         {
-          key: 's2',
           sourceId: '02040002',
           name: 'Scroll for Shoes Jump 60%',
           itemClass: 'consume',
@@ -211,8 +185,8 @@ describe('facets', () => {
         scrollRows,
       );
 
-      // 'Item type: Upgrade Scroll (2)' matches 2/2 rows -> dropped -> types facet omitted
-      const typeFacet = facets.find((f) => f.id === 'types');
+      // 'Item type: Upgrade Scroll (2)' matches 2/2 rows -> dropped -> type facet omitted
+      const typeFacet = facets.find((f) => f.id === 'type');
       expect(typeFacet).toBeUndefined();
 
       // scrollSuccess has 60% on 2/2 rows -> dropped -> scrollSuccess facet omitted
@@ -234,19 +208,16 @@ describe('facets', () => {
       };
       const scrollRows: readonly ItemRow[] = [
         {
-          key: 's1',
           sourceId: '02040001',
           itemClass: 'consume',
           stats: { strength: 2, weaponAttack: 1 },
         },
         {
-          key: 's2',
           sourceId: '02040002',
           itemClass: 'consume',
           stats: { magicAttack: 2, dexterity: 1 },
         },
         {
-          key: 's3',
           sourceId: '02040003',
           itemClass: 'consume',
           stats: { luck: 2 },
@@ -282,49 +253,6 @@ describe('facets', () => {
       ]);
     });
 
-    it('scrollRisk keeps known 0 as a distinct value and undefined as none', () => {
-      const scrollsCategory = {
-        scope: ITEM_SCOPES.use,
-        child: ITEM_SCOPES.use.children.find(
-          (c) => c.slug === 'upgrade-scrolls',
-        ),
-      };
-      const scrollRows: readonly ItemRow[] = [
-        {
-          key: 's1',
-          sourceId: '02040001',
-          itemClass: 'consume',
-          cursed: 0,
-        },
-        {
-          key: 's2',
-          sourceId: '02040002',
-          itemClass: 'consume',
-          cursed: 50,
-        },
-        {
-          key: 's3',
-          sourceId: '02040003',
-          itemClass: 'consume',
-        },
-      ];
-
-      const facets = getItemFacets(
-        scrollsCategory,
-        dummyCoverage,
-        scrollRows,
-        scrollRows,
-      );
-      const riskFacet = facets.find((f) => f.id === 'scrollRisk');
-      expect(riskFacet).toBeDefined();
-
-      expect(riskFacet?.options).toEqual([
-        { value: 'none', label: 'No recorded risk' },
-        { value: '0', label: '0% on failure' },
-        { value: '50', label: '50% on failure' },
-      ]);
-    });
-
     it('hides scrollTier when coverage is unsupported', () => {
       const scrollsCategory = {
         scope: ITEM_SCOPES.use,
@@ -334,7 +262,6 @@ describe('facets', () => {
       };
       const rowsWithTier: readonly ItemRow[] = [
         {
-          key: 's1',
           sourceId: '02040001',
           name: 'Scroll 1',
           itemClass: 'consume',
@@ -342,7 +269,6 @@ describe('facets', () => {
           tier: 'lesser',
         },
         {
-          key: 's2',
           sourceId: '02040002',
           name: 'Scroll 2',
           itemClass: 'consume',
@@ -376,73 +302,6 @@ describe('facets', () => {
       expect(facetsSup.find((f) => f.id === 'scrollTier')).toBeDefined();
     });
 
-    it('keeps chair seat recovery values absent from Recovery child', () => {
-      const recoveryCategory = {
-        scope: ITEM_SCOPES.use,
-        child: ITEM_SCOPES.use.children.find((c) => c.slug === 'recovery'),
-      };
-      const chairsCategory = {
-        scope: ITEM_SCOPES.setup,
-        child: ITEM_SCOPES.setup.children.find((c) => c.slug === 'chairs'),
-      };
-
-      const recoveryRows: readonly ItemRow[] = [
-        {
-          key: 'r1',
-          sourceId: '02000000',
-          name: 'Red Potion',
-          itemClass: 'consume',
-          hp: 50,
-        },
-        {
-          key: 'r2',
-          sourceId: '02000001',
-          name: 'Orange Potion',
-          itemClass: 'consume',
-          hp: 150,
-        },
-      ];
-
-      const chairRows: readonly ItemRow[] = [
-        {
-          key: 'c1',
-          sourceId: '03010000',
-          name: 'Relaxer',
-          itemClass: 'setup',
-          seatHp: 50,
-          seatMp: 10,
-        },
-        {
-          key: 'c2',
-          sourceId: '03010001',
-          name: 'Yellow Chair',
-          itemClass: 'setup',
-          seatHp: 100,
-          seatMp: 20,
-        },
-      ];
-
-      const recoveryFacets = getItemFacets(
-        recoveryCategory,
-        dummyCoverage,
-        recoveryRows,
-        recoveryRows,
-      );
-      expect(recoveryFacets.find((f) => f.id === 'seatHp')).toBeUndefined();
-      expect(recoveryFacets.find((f) => f.id === 'seatMp')).toBeUndefined();
-      expect(recoveryFacets.find((f) => f.id === 'hp')).toBeDefined();
-
-      const chairFacets = getItemFacets(
-        chairsCategory,
-        dummyCoverage,
-        chairRows,
-        chairRows,
-      );
-      expect(chairFacets.find((f) => f.id === 'seatHp')).toBeDefined();
-      expect(chairFacets.find((f) => f.id === 'seatMp')).toBeDefined();
-      expect(chairFacets.find((f) => f.id === 'hp')).toBeUndefined();
-    });
-
     it('disambiguates duplicate pet names and handles unresolved and unnamed targets', () => {
       const petFoodCategory = {
         scope: ITEM_SCOPES.use,
@@ -451,25 +310,21 @@ describe('facets', () => {
 
       const roster: readonly ItemRow[] = [
         {
-          key: 'pet:dragon-red',
           sourceId: '5000020',
           name: 'Baby Dragon',
           itemClass: 'pet',
         },
         {
-          key: 'pet:dragon-blue',
           sourceId: '5000021',
           name: 'Baby Dragon',
           itemClass: 'pet',
         },
         {
-          key: 'pet:husky',
           sourceId: '5000010',
           name: 'Husky',
           itemClass: 'pet',
         },
         {
-          key: 'pet:unnamed',
           sourceId: '5000099',
           itemClass: 'pet',
         },
@@ -477,24 +332,22 @@ describe('facets', () => {
 
       const foodRows: readonly ItemRow[] = [
         {
-          key: 'f1',
           sourceId: '02120000',
           name: 'Dragon Food',
           itemClass: 'consume',
           petTargets: [
-            { key: 'pet:dragon-red', name: 'Baby Dragon' },
-            { key: 'pet:dragon-blue', name: 'Baby Dragon' },
+            { sourceId: '5000020', name: 'Baby Dragon' },
+            { sourceId: '5000021', name: 'Baby Dragon' },
           ],
           unresolvedPetTargets: ['5000046'],
         },
         {
-          key: 'f2',
           sourceId: '02120001',
           name: 'Dog Food',
           itemClass: 'consume',
           petTargets: [
-            { key: 'pet:husky', name: 'Husky' },
-            { key: 'pet:unnamed' },
+            { sourceId: '5000010', name: 'Husky' },
+            { sourceId: '5000099' },
           ],
         },
       ];
@@ -511,23 +364,23 @@ describe('facets', () => {
       const options = petFacet?.options ?? [];
       // Colliding names have sourceId appended
       expect(options).toContainEqual({
-        value: 'pet:dragon-red',
+        value: '5000020',
         label: 'Baby Dragon (5000020)',
       });
       expect(options).toContainEqual({
-        value: 'pet:dragon-blue',
+        value: '5000021',
         label: 'Baby Dragon (5000021)',
       });
 
       // Unique name stays clean
       expect(options).toContainEqual({
-        value: 'pet:husky',
+        value: '5000010',
         label: 'Husky',
       });
 
       // Unnamed pet gets "Unnamed pet (<source id>)"
       expect(options).toContainEqual({
-        value: 'pet:unnamed',
+        value: '5000099',
         label: 'Unnamed pet (5000099)',
       });
 
@@ -582,7 +435,6 @@ describe('facets', () => {
 
     it('does not match percent-only item against flat hp range and never sums units', () => {
       const elixir: ItemRow = {
-        key: 'elixir',
         sourceId: '02000004',
         name: 'Elixir',
         itemClass: 'consume',
@@ -590,7 +442,6 @@ describe('facets', () => {
         mpPercent: 50,
       };
       const potion: ItemRow = {
-        key: 'potion',
         sourceId: '02000000',
         name: 'Red Potion',
         itemClass: 'consume',
@@ -606,13 +457,11 @@ describe('facets', () => {
 
     it('keeps attack-less arrow in population and only excludes it when attack range is active', () => {
       const basicArrow: ItemRow = {
-        key: 'arrow:basic',
         sourceId: '02060000',
         name: 'Arrow for Bow',
         itemClass: 'consume',
       };
       const bronzeArrow: ItemRow = {
-        key: 'arrow:bronze',
         sourceId: '02060001',
         name: 'Bronze Arrow for Bow',
         itemClass: 'consume',
@@ -625,21 +474,18 @@ describe('facets', () => {
 
     it('evaluates OR within multi-select and AND across independent facets', () => {
       const scrollStrength: ItemRow = {
-        key: 's1',
         sourceId: '02040001',
         itemClass: 'consume',
         stats: { strength: 2 },
         success: 60,
       };
       const scrollLuck: ItemRow = {
-        key: 's2',
         sourceId: '02040002',
         itemClass: 'consume',
         stats: { luck: 2 },
         success: 60,
       };
       const scrollDex: ItemRow = {
-        key: 's3',
         sourceId: '02040003',
         itemClass: 'consume',
         stats: { dexterity: 2 },

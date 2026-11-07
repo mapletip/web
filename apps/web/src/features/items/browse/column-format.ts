@@ -20,7 +20,7 @@ import type {
   ItemRow,
 } from './project';
 
-export type ItemBrowseCoverageState = ItemBrowseCoverage['scrollTier'];
+type ItemBrowseCoverageState = ItemBrowseCoverage['scrollTier'];
 
 export const SCOPE_LABELS: Readonly<Record<ItemBrowseClass, string>> = {
   consume: ITEM_SCOPES.use.label,
@@ -55,14 +55,14 @@ export function formatStats(stats: ItemRow['stats']): string | undefined {
 
 export function formatPets(row: ItemRow): string | undefined {
   const named =
-    row.petTargets?.map((target) => target.name ?? target.key) ?? [];
+    row.petTargets?.map((target) => target.name ?? target.sourceId) ?? [];
   const unresolved =
     row.unresolvedPetTargets?.map((targetId) => `Unresolved ${targetId}`) ?? [];
   const all = [...named, ...unresolved];
   return all.length > 0 ? all.join(', ') : undefined;
 }
 
-export function formatList(
+function formatList(
   items: readonly string[] | undefined,
   labels: Readonly<Record<string, string>>,
 ): string | undefined {
