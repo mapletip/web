@@ -1,19 +1,20 @@
 import { describe, expect, it } from 'vitest';
 
+import { ITEM_SCOPES } from '../categories';
 import { parseItemRouteParams } from '../routing';
 
 describe('parseItemRouteParams', () => {
   it('parses unversioned root route params to default build and all items', () => {
     expect(parseItemRouteParams({})).toEqual({
       buildId: 'cw-launch',
-      category: { scope: 'all' },
+      category: { scope: ITEM_SCOPES.all },
     });
   });
 
   it('parses valid versioned root route params', () => {
     expect(parseItemRouteParams({ buildId: 'gms-v83' })).toEqual({
       buildId: 'gms-v83',
-      category: { scope: 'all' },
+      category: { scope: ITEM_SCOPES.all },
     });
   });
 
@@ -26,7 +27,10 @@ describe('parseItemRouteParams', () => {
       }),
     ).toEqual({
       buildId: 'gms-v83',
-      category: { scope: 'use', childSlug: 'potions' },
+      category: {
+        scope: ITEM_SCOPES.use,
+        child: ITEM_SCOPES.use.children.find((c) => c.slug === 'potions'),
+      },
     });
 
     expect(
@@ -36,7 +40,10 @@ describe('parseItemRouteParams', () => {
       }),
     ).toEqual({
       buildId: 'cw-launch',
-      category: { scope: 'setup', childSlug: 'chairs' },
+      category: {
+        scope: ITEM_SCOPES.setup,
+        child: ITEM_SCOPES.setup.children.find((c) => c.slug === 'chairs'),
+      },
     });
   });
 

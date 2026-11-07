@@ -155,26 +155,6 @@ export function isItemScope(slug: string): slug is ItemScopeSlug {
   return Object.hasOwn(ITEM_SCOPES, slug);
 }
 
-export function getItemScope(slug: ItemScopeSlug): ItemCategoryScope {
-  return ITEM_SCOPES[slug];
-}
-
-export function getItemScopeChild(
-  scopeSlug: ItemScopeSlug,
-  childSlug: string,
-): ItemCategoryChild | undefined {
-  return ITEM_SCOPES[scopeSlug].children.find(
-    (child) => child.slug === childSlug,
-  );
-}
-
-export function isItemScopeChild(
-  scopeSlug: ItemScopeSlug,
-  childSlug: string,
-): boolean {
-  return getItemScopeChild(scopeSlug, childSlug) !== undefined;
-}
-
 /**
  * Single predicate determining whether an item row belongs to a scope and optional child.
  *
@@ -199,24 +179,11 @@ export function matchesCategory(
   return !scope.children.some((c) => c.kind === 'positive' && c.matches(row));
 }
 
-export function getScopeRows(
-  rows: readonly ItemRow[],
-  scopeSlug: ItemScopeSlug,
-): readonly ItemRow[] {
-  const scope = getItemScope(scopeSlug);
-  return rows.filter((row) => matchesCategory(row, scope));
-}
-
 export function getCategoryRows(
   rows: readonly ItemRow[],
-  scopeSlug: ItemScopeSlug,
-  childSlug?: string,
+  scope: ItemCategoryScope,
+  child?: ItemCategoryChild,
 ): readonly ItemRow[] {
-  const scope = getItemScope(scopeSlug);
-  const child = childSlug ? getItemScopeChild(scopeSlug, childSlug) : undefined;
-  if (childSlug && !child) {
-    return [];
-  }
   return rows.filter((row) => matchesCategory(row, scope, child));
 }
 

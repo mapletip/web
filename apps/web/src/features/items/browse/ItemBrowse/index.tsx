@@ -55,8 +55,8 @@ export function ItemBrowse({
   const { heading } = itemPageMetadata(buildId, category);
 
   const scopedRows = useMemo(
-    () => getCategoryRows(rows, category.scope, category.childSlug),
-    [rows, category.scope, category.childSlug],
+    () => getCategoryRows(rows, category.scope, category.child),
+    [rows, category.scope, category.child],
   );
 
   return (
