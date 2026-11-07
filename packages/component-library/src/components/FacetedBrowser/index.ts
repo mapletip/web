@@ -8,6 +8,7 @@ export type {
   FacetedBrowserNavigationHistory,
   FacetedBrowserNavigationRenderContext,
   FacetedBrowserProps,
+  StateChangeDetails,
 } from '@/components/FacetedBrowser/FacetedBrowser.types';
 export type {
   FacetControlContext,

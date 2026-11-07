@@ -52,4 +52,5 @@ export type {
   FacetedBrowserNavigationRenderContext,
   FacetedBrowserProps,
   QueryFieldDefinition,
+  StateChangeDetails,
 } from '@/components/FacetedBrowser';

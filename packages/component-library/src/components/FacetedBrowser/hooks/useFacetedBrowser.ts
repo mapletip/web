@@ -19,6 +19,8 @@ import {
 
 import type { SortIntent, TableColumn, TableProps } from '@/components/Table';
 
+import type { StateChangeDetails } from '../FacetedBrowser.types';
+
 import {
   EMPTY_FILTERS,
   browseStatesEqual,
@@ -45,6 +47,7 @@ import {
 import { draftTableFeatures, facetedBrowserFeatures } from './tableFeatures';
 
 export type { BrowseState } from './browseState';
+export type { StateChangeDetails };
 export type {
   FieldFilterFn,
   QueryField,
@@ -85,7 +88,8 @@ export interface UseFacetedBrowserOptions<
   /** Optional canonical state. When set, this is the sole source of committed values. */
   readonly browseState?: BrowseState | undefined;
   /** Receives a complete canonical state transition when `browseState` is supplied. */
-  readonly onBrowseStateChange?: ((state: BrowseState) => void) | undefined;
+  readonly onBrowseStateChange?:
+    ((state: BrowseState, details?: StateChangeDetails) => void) | undefined;
   readonly searchFields?: readonly (keyof TRecord & string)[] | undefined;
   readonly onSortChange?: ((sort: SortIntent) => void) | undefined;
   readonly onPageChange?: ((page: number) => void) | undefined;
@@ -273,7 +277,7 @@ export function useFacetedBrowser<TRecord extends Record<string, unknown>>({
   );
 
   const emitState = useCallback(
-    (nextState: BrowseState): boolean => {
+    (nextState: BrowseState, details?: StateChangeDetails): boolean => {
       const next = createBrowseState(nextState, initialPageSize);
       if (browseStatesEqual(latestStateRef.current, next)) return false;
       latestStateRef.current = next;
@@ -283,7 +287,11 @@ export function useFacetedBrowser<TRecord extends Record<string, unknown>>({
             'useFacetedBrowser requires onBrowseStateChange with browseState.',
           );
         }
-        onBrowseStateChange(next);
+        if (details !== undefined) {
+          onBrowseStateChange(next, details);
+        } else {
+          onBrowseStateChange(next);
+        }
         queueMicrotask(() => {
           if (
             browseStatesEqual(latestStateRef.current, next) &&
@@ -678,7 +686,9 @@ export function useFacetedBrowser<TRecord extends Record<string, unknown>>({
     const key = `${canonicalState.page}:${pageCount}:${records.length}`;
     if (lastClampRef.current === key) return;
     lastClampRef.current = key;
-    if (emitState({ ...canonicalState, page: clampedPage })) {
+    if (
+      emitState({ ...canonicalState, page: clampedPage }, { reason: 'clamp' })
+    ) {
       onPageChange?.(clampedPage);
     }
   }, [canonicalState, emitState, onPageChange, pageCount, records]);
@@ -746,11 +756,6 @@ export function useFacetedBrowser<TRecord extends Record<string, unknown>>({
     ],
   );
 
-  const paginatedRows = table.getRowModel().rows;
-  const processedRecords = useMemo(
-    () => paginatedRows.map((row) => row.original),
-    [paginatedRows],
-  );
   const allFilteredRows = table.getPrePaginatedRowModel().rows;
   const allFilteredRecords = useMemo(
     () => allFilteredRows.map((row) => row.original),
@@ -758,9 +763,38 @@ export function useFacetedBrowser<TRecord extends Record<string, unknown>>({
   );
 
   const totalMatchingCount = allFilteredRecords.length;
-  const page = canonicalState.page;
+  const calculatedPageCount = Math.max(
+    1,
+    Math.ceil(totalMatchingCount / canonicalState.pageSize),
+  );
+  const effectivePage = Math.min(
+    Math.max(1, canonicalState.page),
+    calculatedPageCount,
+  );
+
+  const paginatedRows = useMemo(() => {
+    if (canonicalState.page <= calculatedPageCount) {
+      return table.getRowModel().rows;
+    }
+    const start = (effectivePage - 1) * canonicalState.pageSize;
+    const end = start + canonicalState.pageSize;
+    return allFilteredRows.slice(start, end);
+  }, [
+    allFilteredRows,
+    canonicalState.page,
+    canonicalState.pageSize,
+    calculatedPageCount,
+    effectivePage,
+    table,
+  ]);
+
+  const processedRecords = useMemo(
+    () => paginatedRows.map((row) => row.original),
+    [paginatedRows],
+  );
+
   const { pageStart, pageEnd } = pageWindow(
-    page,
+    effectivePage,
     canonicalState.pageSize,
     totalMatchingCount,
   );
@@ -828,8 +862,8 @@ export function useFacetedBrowser<TRecord extends Record<string, unknown>>({
     allFilteredRecords,
     totalMatchingCount,
     totalRecordCount: records.length,
-    page,
-    pageCount: Math.max(1, pageCount),
+    page: effectivePage,
+    pageCount: calculatedPageCount,
     pageSize: canonicalState.pageSize,
     pageStart,
     pageEnd,

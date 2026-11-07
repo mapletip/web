@@ -1,9 +1,6 @@
 import { Group, Stack, TextInput, Title } from '@mantine/core';
 import { MagnifyingGlass } from '@phosphor-icons/react';
-import type {
-  MouseEvent as ReactMouseEvent,
-  ReactElement,
-} from 'react';
+import type { MouseEvent as ReactMouseEvent, ReactElement } from 'react';
 import { useCallback, useMemo, useRef, useState } from 'react';
 
 import { ActiveFilters } from '@/components/FacetedBrowser/ActiveFilters/ActiveFilters';
@@ -16,7 +13,10 @@ import { FacetList } from '@/components/FacetedBrowser/FacetControls/FacetList';
 import { resolveFacets } from '@/components/FacetedBrowser/FacetControls/resolveFacets';
 import type { FacetDefinition } from '@/components/FacetedBrowser/FacetControls/types';
 import classes from '@/components/FacetedBrowser/FacetedBrowser.module.css';
-import type { FacetedBrowserProps } from '@/components/FacetedBrowser/FacetedBrowser.types';
+import type {
+  FacetedBrowserProps,
+  StateChangeDetails,
+} from '@/components/FacetedBrowser/FacetedBrowser.types';
 import { FilterDrawer } from '@/components/FacetedBrowser/FilterDrawer/FilterDrawer';
 import {
   createBrowseState,
@@ -133,9 +133,13 @@ export function FacetedBrowser<TRecord extends Record<string, unknown>>(
   ]);
   const browseState = controlled ? controlledState : internalState;
   const changeBrowseState = useCallback(
-    (nextState: BrowseState) => {
+    (nextState: BrowseState, details?: StateChangeDetails) => {
       if (!controlled) setInternalState(nextState);
-      onStateChange?.(nextState);
+      if (details !== undefined) {
+        onStateChange?.(nextState, details);
+      } else {
+        onStateChange?.(nextState);
+      }
     },
     [controlled, onStateChange],
   );
@@ -448,6 +452,14 @@ export function FacetedBrowser<TRecord extends Record<string, unknown>>(
       primaryToolbar
     );
 
+  const effectiveState = useMemo(
+    () =>
+      browser.page === browseState.page
+        ? browseState
+        : { ...browseState, page: browser.page },
+    [browseState, browser.page],
+  );
+
   return (
     <>
       <Layout
@@ -512,7 +524,7 @@ export function FacetedBrowser<TRecord extends Record<string, unknown>>(
             page={browser.page}
             pageCount={browser.pageCount}
             recordNoun={recordNoun}
-            state={browseState}
+            state={effectiveState}
             getPageHref={getPageHref}
             onPageChange={browser.setPage}
           />

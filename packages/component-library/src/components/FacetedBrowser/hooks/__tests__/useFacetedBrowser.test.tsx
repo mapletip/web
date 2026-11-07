@@ -334,6 +334,34 @@ describe('useFacetedBrowser', () => {
       expect(text('page-count')).toBe('1');
       expect(text('page')).toBe('1');
     });
+
+    it('emits onBrowseStateChange with { reason: "clamp" } and renders clamped rows during render', () => {
+      const onBrowseStateChange = vi.fn();
+      mountHarness({
+        options: {
+          browseState: {
+            search: '',
+            filters: {},
+            page: 999,
+            pageSize: 2,
+            hiddenColumns: [],
+          },
+          onBrowseStateChange,
+        },
+      });
+
+      // Renders clamped page 3 immediately during render (5 items, pageSize: 2 -> 3 pages)
+      expect(text('page')).toBe('3');
+      expect(text('page-start')).toBe('5');
+      expect(text('page-end')).toBe('5');
+      expect(text('records')).toBe('Epsilon');
+
+      // Clamping effect emits corrective transition with reason: 'clamp'
+      expect(onBrowseStateChange).toHaveBeenCalledWith(
+        expect.objectContaining({ page: 3 }),
+        { reason: 'clamp' },
+      );
+    });
   });
 
   describe('Filtering and faceting semantics', () => {
