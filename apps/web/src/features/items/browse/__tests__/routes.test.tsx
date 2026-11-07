@@ -1,4 +1,10 @@
-import { createMemoryHistory, createRouter } from '@tanstack/react-router';
+import { MantineProvider } from '@mantine/core';
+import {
+  createMemoryHistory,
+  createRouter,
+  RouterProvider,
+} from '@tanstack/react-router';
+import { render } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { routeTree } from '@/routeTree.gen';
@@ -78,6 +84,46 @@ describe('Items Browse route integration', () => {
         expectedBuildId,
         expect.anything(),
       );
+    });
+
+    it(`renders rail category links with correct hrefs and a single aria-current for ${url}`, async () => {
+      const history = createMemoryHistory({ initialEntries: [url] });
+      const router = createRouter({ routeTree, history });
+      await router.load();
+
+      const { container } = render(
+        <MantineProvider>
+          <RouterProvider router={router} />
+        </MantineProvider>,
+      );
+
+      const railNav = container.querySelector(
+        'nav[aria-label="Item categories"]',
+      );
+      expect(railNav).not.toBeNull();
+
+      const links = railNav?.querySelectorAll('a') ?? [];
+      expect(links.length).toBeGreaterThan(0);
+
+      // Verify scope links point to correct hrefs
+      const buildPrefix =
+        expectedBuildId === 'cw-launch' ? '' : `/${expectedBuildId}`;
+      const allLink = Array.from(links).find(
+        (l) => l.getAttribute('href') === `/maplestory${buildPrefix}/items`,
+      );
+      expect(allLink).toBeDefined();
+
+      const useLink = Array.from(links).find(
+        (l) => l.getAttribute('href') === `/maplestory${buildPrefix}/items/use`,
+      );
+      expect(useLink).toBeDefined();
+
+      // Only the active entry gets aria-current="page"
+      const activeLinks = Array.from(links).filter(
+        (link) => link.getAttribute('aria-current') === 'page',
+      );
+      expect(activeLinks).toHaveLength(1);
+      expect(activeLinks[0]?.getAttribute('href')).toBe(url);
     });
   }
 

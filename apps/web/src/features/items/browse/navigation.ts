@@ -1,0 +1,114 @@
+/**
+ * Navigation data model and helpers for Items Browse.
+ *
+ * Shared between desktop rail and mobile header navigation presentations.
+ * Both presentations are server-rendered.
+ */
+import allItemsIcon from '@/assets/maplestory/navigation/items-all-meso-pouch.png?no-inline';
+import cashIcon from '@/assets/maplestory/navigation/items-cash-pet-brown-puppy.png?no-inline';
+import etcIcon from '@/assets/maplestory/navigation/items-etc-snail-shell.png?no-inline';
+import setupIcon from '@/assets/maplestory/navigation/items-setup-blue-chair.png?no-inline';
+import useIcon from '@/assets/maplestory/navigation/items-use-red-potion.png?no-inline';
+import { DEFAULT_BUILD_ID, type BuildId } from '@/config/maplekit';
+
+import {
+  getCategoryCounts,
+  ITEM_SCOPE_SLUGS,
+  ITEM_SCOPES,
+  type ItemScopeSlug,
+} from './categories';
+import type { ItemRow } from './project';
+import type { ItemCategorySelection } from './routing';
+
+export const ITEM_NAV_TARGET =
+  '/maplestory/{-$buildId}/items/{-$scope}/{-$child}' as const;
+
+export interface ItemNavRouteParams {
+  readonly buildId?: string | undefined;
+  readonly scope?: string | undefined;
+  readonly child?: string | undefined;
+}
+
+export interface ItemNavChild {
+  readonly slug: string;
+  readonly label: string;
+  readonly count: number;
+  readonly active: boolean;
+  readonly zeroCount: boolean;
+  readonly to: typeof ITEM_NAV_TARGET;
+  readonly params: ItemNavRouteParams;
+}
+
+export interface ItemNavScope {
+  readonly slug: ItemScopeSlug;
+  readonly label: string;
+  readonly icon: string;
+  readonly count: number;
+  readonly active: boolean;
+  readonly expanded: boolean;
+  readonly children: readonly ItemNavChild[];
+  readonly to: typeof ITEM_NAV_TARGET;
+  readonly params: ItemNavRouteParams;
+}
+
+const SCOPE_ICONS: Readonly<Record<ItemScopeSlug, string>> = {
+  all: allItemsIcon,
+  use: useIcon,
+  etc: etcIcon,
+  setup: setupIcon,
+  cash: cashIcon,
+};
+
+export function getItemNavData(
+  allRows: readonly ItemRow[],
+  currentCategory: ItemCategorySelection,
+  buildId: BuildId,
+): readonly ItemNavScope[] {
+  const counts = getCategoryCounts(allRows);
+  const currentScopeSlug = currentCategory.scope.slug;
+  const currentChildSlug = currentCategory.child?.slug;
+  const buildParam = buildId === DEFAULT_BUILD_ID ? undefined : buildId;
+
+  return ITEM_SCOPE_SLUGS.map((scopeSlug) => {
+    const scopeObj = ITEM_SCOPES[scopeSlug];
+    const scopeCounts = counts[scopeSlug];
+    const isScopeActive =
+      scopeSlug === currentScopeSlug && currentChildSlug === undefined;
+    const isExpanded = scopeSlug === currentScopeSlug;
+
+    const children: readonly ItemNavChild[] = scopeObj.children.map((child) => {
+      const childCount = scopeCounts.children[child.slug] ?? 0;
+      const isChildActive =
+        scopeSlug === currentScopeSlug && currentChildSlug === child.slug;
+      return {
+        slug: child.slug,
+        label: child.label,
+        count: childCount,
+        active: isChildActive,
+        zeroCount: childCount === 0,
+        to: ITEM_NAV_TARGET,
+        params: {
+          buildId: buildParam,
+          scope: scopeSlug,
+          child: child.slug,
+        },
+      };
+    });
+
+    return {
+      slug: scopeSlug,
+      label: scopeObj.label,
+      icon: SCOPE_ICONS[scopeSlug],
+      count: scopeCounts.total,
+      active: isScopeActive,
+      expanded: isExpanded,
+      children,
+      to: ITEM_NAV_TARGET,
+      params: {
+        buildId: buildParam,
+        scope: scopeSlug === 'all' ? undefined : scopeSlug,
+        child: undefined,
+      },
+    };
+  });
+}

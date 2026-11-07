@@ -1,4 +1,4 @@
-import { Title } from '@mantine/core';
+import { Stack, Title } from '@mantine/core';
 import { FacetedBrowser } from '@mapletip/component-library';
 import type { BrowseState, TableColumn } from '@mapletip/component-library';
 import { useMemo, type ReactElement } from 'react';
@@ -8,7 +8,10 @@ import { BUILDS, type BuildId } from '@/config/maplekit';
 
 import { getCategoryRows } from '../categories';
 import { ItemBrowseCard } from '../ItemBrowseCard';
+import { ItemMobileNav } from '../ItemMobileNav';
+import { ItemRailNav } from '../ItemRailNav';
 import { itemPageMetadata } from '../metadata';
+import { getItemNavData } from '../navigation';
 import type { ItemRow } from '../project';
 import type { ItemCategorySelection } from '../routing';
 
@@ -59,10 +62,21 @@ export function ItemBrowse({
     [rows, category.scope, category.child],
   );
 
+  const navScopes = useMemo(
+    () => getItemNavData(rows, category, buildId),
+    [rows, category, buildId],
+  );
+
   return (
     <BrowsePageShell>
       <FacetedBrowser
-        title={<Title order={1}>{heading}</Title>}
+        title={
+          <Stack gap="xs">
+            <Title order={1}>{heading}</Title>
+            <ItemMobileNav navScopes={navScopes} />
+          </Stack>
+        }
+        railNavigation={<ItemRailNav navScopes={navScopes} />}
         records={scopedRows}
         idAccessor="key"
         identityField="name"
