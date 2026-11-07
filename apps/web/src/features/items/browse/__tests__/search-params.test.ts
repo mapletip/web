@@ -2,174 +2,278 @@ import { describe, expect, it } from 'vitest';
 
 import {
   browseStateToUrl,
-  ITEM_BROWSE_DEFAULT_SEARCH,
-  ITEM_BROWSE_DEFAULT_STATE,
-  PAGE_SIZE_OPTIONS,
-  itemBrowseSearchSchema,
   urlToBrowseState,
+  validateSearch,
+  type BrowseContext,
 } from '../search-params';
 
-describe('Items Browse search params', () => {
-  it('validates the four general keys and well-formed facet values', () => {
-    expect(
-      itemBrowseSearchSchema.parse({
-        q: 'red potion',
-        page: '3',
-        pageSize: '75',
-        sort: 'name-desc',
-        types: ['potion', 'arrow'],
-        hp: { min: 50, max: 100 },
-        questFlag: true,
-        ignored: 'scalar facet value',
-      }),
-    ).toStrictEqual({
-      q: 'red potion',
-      page: 3,
-      pageSize: 75,
-      sort: 'name-desc',
-      types: ['potion', 'arrow'],
-      hp: { min: 50, max: 100 },
-      questFlag: true,
-    });
-  });
+describe('search-params', () => {
+  const dummyContext: BrowseContext = {
+    facets: [
+      {
+        id: 'types',
+        field: 'types',
+        label: 'Item type',
+        kind: 'multi-select',
+        options: [
+          { value: 'potion', label: 'Potion' },
+          { value: 'arrow', label: 'Arrow' },
+        ],
+      },
+      {
+        id: 'rel',
+        field: 'rel',
+        label: 'Relationship',
+        kind: 'multi-select',
+        options: [
+          { value: 'monster-drop', label: 'Monster Drop' },
+          { value: 'needed-for-quest', label: 'Needed for Quest' },
+        ],
+      },
+      {
+        id: 'attack',
+        field: 'attack',
+        label: 'Attack',
+        kind: 'range',
+      },
+    ],
+    sortOptions: [
+      { label: 'Name (A–Z)', field: 'name', direction: 'asc' },
+      { label: 'Name (Z–A)', field: 'name', direction: 'desc' },
+      { label: 'ID', field: 'sourceId', direction: 'asc' },
+      { label: 'ID (Z–A)', field: 'sourceId', direction: 'desc' },
+    ],
+  };
 
-  it('keeps facet URL shapes and coerces finite numeric array values', () => {
-    expect(
-      itemBrowseSearchSchema.parse({
-        types: [100],
-        empty: [],
-        mixed: ['valid', true],
-        noBounds: {},
-        reversed: { min: 100, max: 50 },
-        infinite: { min: Number.POSITIVE_INFINITY },
-        extraRangeKey: { min: 1, step: 2 },
-        boolean: false,
-        scalar: 'drop-me',
-        nonPlainObject: new Date(),
-      }),
-    ).toStrictEqual({
-      q: '',
-      page: 1,
-      pageSize: 50,
-      sort: 'name-asc',
-      types: ['100'],
-      empty: [],
-      mixed: ['valid'],
-      noBounds: {},
-      reversed: { min: 100, max: 50 },
-      boolean: false,
-      nonPlainObject: {},
+  describe('validateSearch', () => {
+    it('is tolerant and never throws on empty or garbage input', () => {
+      expect(validateSearch({})).toEqual({});
+      expect(
+        validateSearch({
+          foo: null,
+          bar: undefined,
+          baz: () => {},
+          obj: { nested: 123 },
+        }),
+      ).toEqual({});
     });
-  });
 
-  it('uses shared defaults for invalid general values', () => {
-    expect(
-      itemBrowseSearchSchema.parse({
-        q: 'a'.repeat(201),
-        page: 0,
-        pageSize: 30,
-        sort: 'unsupported-ascending',
-      }),
-    ).toEqual({ q: '', page: 1, pageSize: 50, sort: 'name-asc' });
-    expect(itemBrowseSearchSchema.parse({ q: '' })).toEqual({
-      q: '',
-      page: 1,
-      pageSize: 50,
-      sort: 'name-asc',
+    it('validates search query q within 200 UTF-8 bytes and drops oversize', () => {
+      expect(validateSearch({ q: 'red potion' })).toEqual({ q: 'red potion' });
+
+      // Exactly 200 ASCII bytes
+      const q200 = 'a'.repeat(200);
+      expect(validateSearch({ q: q200 })).toEqual({ q: q200 });
+
+      // 201 ASCII bytes -> dropped
+      const q201 = 'a'.repeat(201);
+      expect(validateSearch({ q: q201 })).toEqual({});
+
+      // UTF-8 multibyte characters exceeding 200 bytes
+      const qMaple = '🍁'.repeat(51);
+      expect(validateSearch({ q: qMaple })).toEqual({});
+
+      // Empty string is dropped
+      expect(validateSearch({ q: '' })).toEqual({});
     });
-  });
 
-  it('drops a bad facet value without resetting general search values', () => {
-    expect(
-      itemBrowseSearchSchema.parse({
-        q: 'potion',
-        page: '4',
-        pageSize: '75',
-        sort: 'name-desc',
-        invalidFacet: 'scalar',
-      }),
-    ).toStrictEqual({
-      q: 'potion',
-      page: 4,
-      pageSize: 75,
-      sort: 'name-desc',
+    it('validates page as integer 1..9999 and drops invalid', () => {
+      expect(validateSearch({ page: 1 })).toEqual({ page: 1 });
+      expect(validateSearch({ page: 42 })).toEqual({ page: 42 });
+      expect(validateSearch({ page: '5' })).toEqual({ page: 5 });
+      expect(validateSearch({ page: 9999 })).toEqual({ page: 9999 });
+
+      expect(validateSearch({ page: 0 })).toEqual({});
+      expect(validateSearch({ page: -1 })).toEqual({});
+      expect(validateSearch({ page: 10000 })).toEqual({});
+      expect(validateSearch({ page: 1.5 })).toEqual({});
+      expect(validateSearch({ page: 'abc' })).toEqual({});
+      expect(validateSearch({ page: NaN })).toEqual({});
     });
-  });
 
-  it('converts finite numeric queries to strings', () => {
-    expect(itemBrowseSearchSchema.parse({ q: 2000000 })).toMatchObject({
-      q: '2000000',
+    it('validates pageSize to one of 25, 50, 75, 100 and drops others', () => {
+      expect(validateSearch({ pageSize: 25 })).toEqual({ pageSize: 25 });
+      expect(validateSearch({ pageSize: '50' })).toEqual({ pageSize: 50 });
+      expect(validateSearch({ pageSize: 75 })).toEqual({ pageSize: 75 });
+      expect(validateSearch({ pageSize: 100 })).toEqual({ pageSize: 100 });
+
+      expect(validateSearch({ pageSize: 10 })).toEqual({});
+      expect(validateSearch({ pageSize: 30 })).toEqual({});
+      expect(validateSearch({ pageSize: 200 })).toEqual({});
+      expect(validateSearch({ pageSize: 'foo' })).toEqual({});
     });
-  });
 
-  it('accepts only configured page sizes and name sort options', () => {
-    for (const pageSize of PAGE_SIZE_OPTIONS) {
-      expect(itemBrowseSearchSchema.parse({ pageSize })).toMatchObject({
-        pageSize,
+    it('validates sort as <field>-<asc|desc> and drops malformed', () => {
+      expect(validateSearch({ sort: 'name-asc' })).toEqual({
+        sort: 'name-asc',
       });
-    }
-    expect(itemBrowseSearchSchema.parse({ sort: 'name-asc' })).toMatchObject({
-      sort: 'name-asc',
+      expect(validateSearch({ sort: 'sourceId-desc' })).toEqual({
+        sort: 'sourceId-desc',
+      });
+
+      expect(validateSearch({ sort: 'name' })).toEqual({});
+      expect(validateSearch({ sort: 'name-ascending' })).toEqual({});
+      expect(validateSearch({ sort: 'name-asc-extra' })).toEqual({});
+      expect(validateSearch({ sort: '-asc' })).toEqual({});
     });
-    expect(itemBrowseSearchSchema.parse({ sort: 'name-desc' })).toMatchObject({
-      sort: 'name-desc',
+
+    it('accepts multi-select values as comma-separated strings or arrays, normalising to comma string', () => {
+      expect(
+        validateSearch({
+          types: 'potion,arrow',
+          rel: ['monster-drop', 'needed-for-quest'],
+        }),
+      ).toEqual({
+        types: 'potion,arrow',
+        rel: 'monster-drop,needed-for-quest',
+      });
     });
-    expect(
-      itemBrowseSearchSchema.parse({ sort: 'sourceId-asc' }),
-    ).toMatchObject({
-      sort: 'name-asc',
+
+    it('preserves open-ended range parameters as numbers', () => {
+      expect(
+        validateSearch({
+          attackMin: '10',
+          attackMax: 50,
+        }),
+      ).toEqual({
+        attackMin: 10,
+        attackMax: 50,
+      });
+
+      expect(validateSearch({ attackMin: 'invalid' })).toEqual({});
     });
   });
 
-  it('maps every validated facet key into state and back to the URL', () => {
-    const search = itemBrowseSearchSchema.parse({
-      q: 'potion',
-      page: 3,
-      pageSize: 25,
-      sort: 'name-desc',
-      types: ['arrow', 'potion'],
-      hp: { min: 75, max: 125 },
-      questFlag: false,
+  describe('urlToBrowseState', () => {
+    it('returns default browse state for clean/empty search', () => {
+      const state = urlToBrowseState({}, dummyContext);
+      expect(state).toEqual({
+        search: '',
+        page: 1,
+        pageSize: 50,
+        sort: { field: 'name', direction: 'asc' },
+        filters: {},
+        hiddenColumns: [],
+      });
     });
-    const state = urlToBrowseState({ search });
-    expect(state.filters).toEqual({
-      types: ['arrow', 'potion'],
-      hp: { min: 75, max: 125 },
-      questFlag: false,
+
+    it('drops sort options not valid for the current context', () => {
+      const state = urlToBrowseState(
+        { sort: 'invalidField-asc' },
+        dummyContext,
+      );
+      expect(state.sort).toEqual({ field: 'name', direction: 'asc' });
+
+      const validState = urlToBrowseState(
+        { sort: 'sourceId-asc' },
+        dummyContext,
+      );
+      expect(validState.sort).toEqual({ field: 'sourceId', direction: 'asc' });
     });
-    expect(browseStateToUrl({ state, includePage: false })).toEqual({
-      q: 'potion',
-      page: 1,
-      pageSize: 25,
-      sort: 'name-desc',
-      types: ['arrow', 'potion'],
-      hp: { min: 75, max: 125 },
-      questFlag: false,
+
+    it('drops facet options not present in the facet definition', () => {
+      const state = urlToBrowseState(
+        {
+          types: ['potion', 'not-a-type'],
+          unrelatedFacet: ['some-value'],
+        },
+        dummyContext,
+      );
+
+      expect(state.filters).toEqual({
+        types: ['potion'],
+      });
+      expect(state.filters['unrelatedFacet']).toBeUndefined();
+    });
+
+    it('parses open-ended ranges and drops invalid ranges where min > max', () => {
+      const minOnly = urlToBrowseState({ attackMin: 10 }, dummyContext);
+      expect(minOnly.filters['attack']).toEqual({ min: 10 });
+
+      const maxOnly = urlToBrowseState({ attackMax: 50 }, dummyContext);
+      expect(maxOnly.filters['attack']).toEqual({ max: 50 });
+
+      const bothValid = urlToBrowseState(
+        { attackMin: 10, attackMax: 50 },
+        dummyContext,
+      );
+      expect(bothValid.filters['attack']).toEqual({ min: 10, max: 50 });
+
+      const invalid = urlToBrowseState(
+        { attackMin: 50, attackMax: 10 },
+        dummyContext,
+      );
+      expect(invalid.filters['attack']).toBeUndefined();
     });
   });
 
-  it('omits facet keys for category navigation when given general-only state', () => {
-    const state = {
-      ...ITEM_BROWSE_DEFAULT_STATE,
-      filters: { types: ['potion'] },
-    };
-    expect(
-      browseStateToUrl({
-        state: { ...state, filters: {} },
-        includePage: false,
-      }),
-    ).toEqual(ITEM_BROWSE_DEFAULT_SEARCH);
-  });
+  describe('browseStateToUrl', () => {
+    it('omits defaults so a clean page has a clean empty URL object', () => {
+      const state = urlToBrowseState({}, dummyContext);
+      const url = browseStateToUrl(state, dummyContext);
+      expect(url).toEqual({});
+    });
 
-  it('restores the shared default browse state when no facets are active', () => {
-    expect(
-      urlToBrowseState({ search: itemBrowseSearchSchema.parse({}) }),
-    ).toEqual(ITEM_BROWSE_DEFAULT_STATE);
-    expect(ITEM_BROWSE_DEFAULT_SEARCH).toEqual({
-      q: '',
-      page: 1,
-      pageSize: 50,
-      sort: 'name-asc',
+    it('serializes multi-select values comma-joined', () => {
+      const url = browseStateToUrl(
+        {
+          search: 'snail',
+          page: 3,
+          pageSize: 25,
+          sort: { field: 'sourceId', direction: 'asc' },
+          filters: { types: ['arrow', 'potion'] },
+          hiddenColumns: ['sourceId'],
+        },
+        dummyContext,
+      );
+
+      expect(url).toEqual({
+        q: 'snail',
+        page: 3,
+        pageSize: 25,
+        sort: 'sourceId-asc',
+        types: 'arrow,potion',
+      });
+    });
+
+    it('serializes open-ended inclusive ranges and round trips safely', () => {
+      const minOnlyUrl = browseStateToUrl(
+        {
+          search: '',
+          page: 1,
+          pageSize: 50,
+          filters: { attack: { min: 10 } },
+          hiddenColumns: [],
+        },
+        dummyContext,
+      );
+      expect(minOnlyUrl).toEqual({ attackMin: 10 });
+
+      const maxOnlyUrl = browseStateToUrl(
+        {
+          search: '',
+          page: 1,
+          pageSize: 50,
+          filters: { attack: { max: 50 } },
+          hiddenColumns: [],
+        },
+        dummyContext,
+      );
+      expect(maxOnlyUrl).toEqual({ attackMax: 50 });
+
+      const original = {
+        q: 'shield',
+        page: 2,
+        pageSize: 75,
+        sort: 'name-desc',
+        types: 'potion',
+        attackMin: 15,
+      };
+      const validated = validateSearch(original);
+      const state = urlToBrowseState(validated, dummyContext);
+      const output = browseStateToUrl(state, dummyContext);
+
+      expect(output).toEqual(original);
     });
   });
 });

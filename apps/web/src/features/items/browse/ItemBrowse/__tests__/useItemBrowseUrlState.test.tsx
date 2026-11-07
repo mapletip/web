@@ -1,49 +1,78 @@
-import { act, render } from '@testing-library/react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
-
+import { MantineProvider } from '@mantine/core';
 import {
-  itemBrowseSearchSchema,
-  type ItemBrowseSearch,
-} from '../../search-params';
+  createMemoryHistory,
+  createRootRoute,
+  createRoute,
+  createRouter,
+  Outlet,
+  RouterProvider,
+} from '@tanstack/react-router';
+import { act, render } from '@testing-library/react';
+import { describe, expect, it, vi } from 'vitest';
+
+import type { BrowseContext, ItemBrowseSearch } from '../../search-params';
 import {
   useItemBrowseUrlState,
-  type OnSearchChangeOptions,
   type UseItemBrowseUrlStateResult,
 } from '../useItemBrowseUrlState';
 
 describe('useItemBrowseUrlState', () => {
-  function setup({
-    search = itemBrowseSearchSchema.parse({}),
-    onSearchChange = vi.fn(),
+  const dummyContext: BrowseContext = {
+    facets: [],
+    sortOptions: [
+      { label: 'Name (A–Z)', field: 'name', direction: 'asc' },
+      { label: 'Name (Z–A)', field: 'name', direction: 'desc' },
+    ],
+  };
+
+  async function setup({
+    searchProp,
+    onSearchChange,
   }: {
-    readonly search?: ItemBrowseSearch;
-    readonly onSearchChange?: (options: OnSearchChangeOptions) => void;
-  } = {}) {
-    let latestResult: UseItemBrowseUrlStateResult | undefined;
+    searchProp?: ItemBrowseSearch;
+    onSearchChange?: (
+      nextSearch: Record<string, unknown>,
+      replace: boolean,
+    ) => void;
+  }) {
+    let latestResult!: UseItemBrowseUrlStateResult;
 
     function TestConsumer() {
-      latestResult = useItemBrowseUrlState({ search, onSearchChange });
+      latestResult = useItemBrowseUrlState({
+        searchProp,
+        browseContext: dummyContext,
+        onSearchChange,
+      });
       return null;
     }
 
-    render(<TestConsumer />);
+    const rootRoute = createRootRoute({ component: () => <Outlet /> });
+    const indexRoute = createRoute({
+      getParentRoute: () => rootRoute,
+      path: '/',
+      component: TestConsumer,
+    });
+    const testTree = rootRoute.addChildren([indexRoute]);
+    const history = createMemoryHistory({ initialEntries: ['/'] });
+    const router = createRouter({ routeTree: testTree, history });
+    await router.load();
+
+    render(
+      <MantineProvider>
+        <RouterProvider router={router} />
+      </MantineProvider>,
+    );
+
     return {
-      getResult: () => {
-        if (!latestResult) throw new Error('Hook has not rendered.');
-        return latestResult;
-      },
-      onSearchChange,
+      getResult: () => latestResult,
+      router,
     };
   }
 
-  afterEach(() => {
-    vi.useRealTimers();
-  });
-
-  it('debounces text search and requests replace history', () => {
+  it('debounces text search typing and uses replace: true', async () => {
     vi.useFakeTimers();
     const onSearchChange = vi.fn();
-    const { getResult } = setup({ onSearchChange });
+    const { getResult } = await setup({ onSearchChange });
 
     act(() => {
       getResult().handleStateChange({
@@ -51,104 +80,57 @@ describe('useItemBrowseUrlState', () => {
         search: 'pot',
       });
     });
-    expect(getResult().browseState.search).toBe('pot');
+
+    // Immediate local search
+    expect(getResult().localSearch).toBe('pot');
     expect(onSearchChange).not.toHaveBeenCalled();
 
+    // After debounce
     act(() => {
       vi.advanceTimersByTime(150);
     });
-    expect(onSearchChange).toHaveBeenCalledWith({
-      search: { q: 'pot', page: 1, pageSize: 50, sort: 'name-asc' },
-      replace: true,
-    });
+
+    expect(onSearchChange).toHaveBeenCalledWith({ q: 'pot' }, true);
+    vi.useRealTimers();
   });
 
-  it('pushes discrete state changes', () => {
+  it('emits discrete change with replace: false', async () => {
     const onSearchChange = vi.fn();
-    const { getResult } = setup({ onSearchChange });
+    const { getResult } = await setup({ onSearchChange });
 
-    act(() => {
-      getResult().handleStateChange({ ...getResult().browseState, page: 2 });
-    });
-
-    expect(onSearchChange).toHaveBeenCalledWith({
-      search: { q: '', page: 2, pageSize: 50, sort: 'name-asc' },
-      replace: false,
-    });
-  });
-
-  it('pushes facet changes with active options and resets the page', () => {
-    const onSearchChange = vi.fn();
-    const { getResult } = setup({
-      search: itemBrowseSearchSchema.parse({ page: 4 }),
-      onSearchChange,
-    });
-
-    act(() => {
-      getResult().handleStateChange({
-        ...getResult().browseState,
-        page: 1,
-        filters: { types: ['potion'] },
-      });
-    });
-
-    expect(onSearchChange).toHaveBeenCalledWith({
-      search: {
-        q: '',
-        page: 1,
-        pageSize: 50,
-        sort: 'name-asc',
-        types: ['potion'],
-      },
-      replace: false,
-    });
-  });
-
-  it('replaces clamp corrections', () => {
-    const onSearchChange = vi.fn();
-    const { getResult } = setup({
-      search: itemBrowseSearchSchema.parse({ page: 3 }),
-      onSearchChange,
-    });
-
-    act(() => {
-      getResult().handleStateChange(
-        { ...getResult().browseState, page: 1 },
-        { reason: 'clamp' },
-      );
-    });
-
-    expect(onSearchChange).toHaveBeenCalledWith({
-      search: { q: '', page: 1, pageSize: 50, sort: 'name-asc' },
-      replace: true,
-    });
-  });
-
-  it('cancels a pending search replace before pushing a discrete change', () => {
-    vi.useFakeTimers();
-    const onSearchChange = vi.fn();
-    const { getResult } = setup({ onSearchChange });
-
-    act(() => {
-      getResult().handleStateChange({
-        ...getResult().browseState,
-        search: 'pot',
-      });
-    });
     act(() => {
       getResult().handleStateChange({
         ...getResult().browseState,
         page: 2,
       });
     });
+
+    expect(onSearchChange).toHaveBeenCalledWith({ page: 2 }, false);
+  });
+
+  it('emits corrective clamp transition with replace: true', async () => {
+    const onSearchChange = vi.fn();
+    const { getResult } = await setup({ onSearchChange });
+
     act(() => {
-      vi.advanceTimersByTime(150);
+      getResult().handleStateChange(
+        {
+          ...getResult().browseState,
+          page: 1,
+        },
+        { reason: 'clamp' },
+      );
     });
 
-    expect(onSearchChange).toHaveBeenCalledTimes(1);
-    expect(onSearchChange).toHaveBeenCalledWith({
-      search: { q: 'pot', page: 2, pageSize: 50, sort: 'name-asc' },
-      replace: false,
+    expect(onSearchChange).toHaveBeenCalledWith({}, true);
+  });
+
+  it('builds real location href for getPageHref', async () => {
+    const { getResult } = await setup({});
+    const href = getResult().getPageHref(2, {
+      ...getResult().browseState,
+      page: 2,
     });
+    expect(href).toBe('/?page=2');
   });
 });

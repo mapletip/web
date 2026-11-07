@@ -110,7 +110,7 @@ function resolvePetTargets(
   });
 }
 
-const RELATIONSHIP_COUNT_FIELDS = [
+export const RELATIONSHIP_COUNT_FIELDS = [
   ['cash-shop-listing', 'cashShopListingCount'],
   ['found-in-container', 'foundInContainerCount'],
   ['made-by-recipe', 'madeByRecipeCount'],

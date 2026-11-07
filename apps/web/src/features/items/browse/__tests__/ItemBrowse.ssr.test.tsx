@@ -57,12 +57,10 @@ vi.mock('../load', () => ({
   }),
 }));
 
-describe('Items Browse server rendering', () => {
-  it('renders category breadcrumbs from nav nodes', async () => {
+describe('ItemBrowse server rendering', () => {
+  it('renders filtered rows and real links for a filtered category URL', async () => {
     const history = createMemoryHistory({
-      initialEntries: [
-        '/maplestory/items/etc?q=potion&page=4&pageSize=25&sort=name-desc',
-      ],
+      initialEntries: ['/maplestory/items/use/throwing-stars'],
     });
     const router = createRouter({ routeTree, history });
     await router.load();
@@ -73,53 +71,73 @@ describe('Items Browse server rendering', () => {
       </MantineProvider>,
     );
 
+    // Filtered row matches
+    expect(html).toContain('Subi Throwing-Stars');
+    expect(html).toContain('02070000');
+
+    // Items outside this child category are not rendered in the results
+    expect(html).not.toContain('Red Potion');
+    expect(html).not.toContain('Snail Shell');
+
+    // Real links in SSR HTML
+    // 1. Breadcrumbs
+    expect(html).toContain('href="/"');
+    expect(html).toContain('href="/maplestory/items"');
+    expect(html).toContain('href="/maplestory/items/use"');
+
+    // 2. Build switch
     expect(html).toContain(
-      'href="/maplestory/items?q=potion&amp;pageSize=25&amp;sort=name-desc"',
+      'href="/maplestory/gms-v83/items/use/throwing-stars"',
     );
-    expect(html).not.toContain('page=4');
-    expect(html).toContain('aria-label="Breadcrumb"');
-    expect(html).toContain('All Items');
-    expect(html).toContain('ETC');
-    expect(html).not.toContain('Home');
-    expect(html).toContain('aria-current="page"');
+
+    // 3. Rail and mobile links
+    expect(html).toContain('href="/maplestory/items/use/throwing-stars"');
+    expect(html).toContain('href="/maplestory/items/use/arrows"');
+    expect(html).toContain('href="/maplestory/items/etc"');
+
+    // 4. Scope and child counts present in SSR HTML
+    expect(html).toContain('Throwing Stars');
   });
 
-  it('shows the custom empty state only for a category with no rows', async () => {
-    const emptyCategoryHistory = createMemoryHistory({
-      initialEntries: ['/maplestory/items/use/bullets'],
+  it('renders exact-ID notice when an item ID belongs to another scope', async () => {
+    const history = createMemoryHistory({
+      initialEntries: ['/maplestory/items/etc?q=02000000'],
     });
-    const emptyCategoryRouter = createRouter({
-      routeTree,
-      history: emptyCategoryHistory,
-    });
-    await emptyCategoryRouter.load();
+    const router = createRouter({ routeTree, history });
+    await router.load();
 
-    const emptyCategoryHtml = renderToString(
+    const html = renderToString(
       <MantineProvider theme={theme} forceColorScheme="dark">
-        <RouterProvider router={emptyCategoryRouter} />
+        <RouterProvider router={router} />
       </MantineProvider>,
     );
-    expect(emptyCategoryHtml.replaceAll('<!-- -->', '')).toContain(
-      'Classic World has no Bullets.',
-    );
 
-    const noSearchResultsHistory = createMemoryHistory({
-      initialEntries: ['/maplestory/items?q=missing'],
-    });
-    const noSearchResultsRouter = createRouter({
-      routeTree,
-      history: noSearchResultsHistory,
-    });
-    await noSearchResultsRouter.load();
+    expect(html).toContain('Item 02000000 is in');
+    expect(html).toContain('href="/maplestory/items/use?q=02000000"');
+  });
 
-    const noSearchResultsHtml = renderToString(
+  it('renders rail landmark and all category links in SSR HTML on All Items page', async () => {
+    const history = createMemoryHistory({
+      initialEntries: ['/maplestory/items'],
+    });
+    const router = createRouter({ routeTree, history });
+    await router.load();
+
+    const html = renderToString(
       <MantineProvider theme={theme} forceColorScheme="dark">
-        <RouterProvider router={noSearchResultsRouter} />
+        <RouterProvider router={router} />
       </MantineProvider>,
     );
-    expect(noSearchResultsHtml).toContain('No Classic World items match');
-    expect(noSearchResultsHtml).not.toContain(
-      'Classic World has no All Items.',
-    );
+
+    // Rail landmark with accessible name
+    expect(html).toContain('aria-label="Item categories"');
+
+    // All category child links are in SSR HTML even when on All Items
+    expect(html).toContain('href="/maplestory/items/use/throwing-stars"');
+    expect(html).toContain('href="/maplestory/items/use/arrows"');
+    expect(html).toContain('href="/maplestory/items/use/potions"');
+
+    // Active link has aria-current="page"
+    expect(html).toContain('aria-current="page"');
   });
 });

@@ -1,116 +1,180 @@
-/** Facet declarations and query-field registration for Items Browse. */
+/**
+ * Facet definitions and option derivation for Items Browse.
+ *
+ * Facet options are limited to values present in the current category population.
+ * Relationship coverage governs available relationship options and labeling.
+ */
 import type {
   FacetDefinition,
+  FacetOption,
   QueryFieldDefinition,
 } from '@mapletip/component-library';
 import type { ItemBrowseCoverage } from '@mapletip/data/items';
 
 import {
-  ITEM_FACET_CONFIGS,
-  type CategoricalContext,
-  type ItemFacetConfig,
-  type ItemFacetField,
-} from './facet-config';
-import { getItemFacetFields } from './facet-contexts';
-import type { ItemRow } from './project';
+  ITEM_FUNCTION_LABELS,
+  ITEM_TYPE_LABELS,
+  RELATIONSHIP_LABELS,
+  type ItemRelationshipKind,
+} from './labels';
+import {
+  RELATIONSHIP_COUNT_FIELDS,
+  type ItemBrowseFunction,
+  type ItemBrowseType,
+  type ItemRow,
+} from './project';
 import type { ItemCategorySelection } from './routing';
 import { matchSourceId } from './search';
 
-/** The sole query-field list includes facet values and hidden exact item IDs. */
-export const ITEM_QUERY_FIELDS: readonly QueryFieldDefinition<ItemRow>[] = [
-  ...Object.entries(ITEM_FACET_CONFIGS).map(([field, config]) => {
-    if (config.kind === 'multi-select') {
-      return { id: field, accessor: config.values };
+export function getItemRelationships(
+  row: ItemRow,
+): readonly ItemRelationshipKind[] {
+  const rels: ItemRelationshipKind[] = [];
+  for (const [relKind, fieldKey] of RELATIONSHIP_COUNT_FIELDS) {
+    const count = row[fieldKey];
+    if (typeof count === 'number' && count > 0) {
+      rels.push(relKind);
     }
-    return { id: field, accessor: config.getValue };
-  }),
+  }
+  return rels;
+}
+
+function buildFacetOptions<T extends string>(
+  labelMap: Readonly<Record<T, string>>,
+  presentValues: ReadonlySet<T>,
+  formatLabel?: (value: T, baseLabel: string) => string | undefined,
+): readonly FacetOption[] {
+  const options: FacetOption[] = [];
+  for (const value of presentValues) {
+    const baseLabel = labelMap[value];
+    if (baseLabel !== undefined) {
+      const label = formatLabel ? formatLabel(value, baseLabel) : baseLabel;
+      if (label !== undefined) {
+        options.push({ value, label });
+      }
+    }
+  }
+  return options.sort((a, b) => a.label.localeCompare(b.label));
+}
+
+export function getItemFacets(
+  _category: ItemCategorySelection,
+  coverage: ItemBrowseCoverage,
+  scopedRows: readonly ItemRow[],
+): readonly FacetDefinition<ItemRow>[] {
+  const facets: FacetDefinition<ItemRow>[] = [];
+
+  // 1. Item type facet
+  const presentTypes = new Set<ItemBrowseType>();
+  for (const row of scopedRows) {
+    if (row.types) {
+      for (const t of row.types) {
+        presentTypes.add(t);
+      }
+    }
+  }
+  const typeOptions = buildFacetOptions(ITEM_TYPE_LABELS, presentTypes);
+  if (typeOptions.length > 0) {
+    facets.push({
+      id: 'types',
+      field: 'types',
+      label: 'Item type',
+      kind: 'multi-select',
+      options: typeOptions,
+    });
+  }
+
+  // 2. Effect (function) facet
+  const presentFunctions = new Set<ItemBrowseFunction>();
+  for (const row of scopedRows) {
+    if (row.functions) {
+      for (const fn of row.functions) {
+        presentFunctions.add(fn);
+      }
+    }
+  }
+  const functionOptions = buildFacetOptions(
+    ITEM_FUNCTION_LABELS,
+    presentFunctions,
+  );
+  if (functionOptions.length > 0) {
+    facets.push({
+      id: 'functions',
+      field: 'functions',
+      label: 'Effect',
+      kind: 'multi-select',
+      options: functionOptions,
+    });
+  }
+
+  // 3. Relationship facet
+  const presentRels = new Set<ItemRelationshipKind>();
+  for (const row of scopedRows) {
+    for (const rel of getItemRelationships(row)) {
+      presentRels.add(rel);
+    }
+  }
+  const relationshipOptions = buildFacetOptions(
+    RELATIONSHIP_LABELS,
+    presentRels,
+    (relKind, baseLabel) => {
+      const relCoverage = coverage.relationships[relKind];
+      if (relCoverage === 'unsupported') {
+        return undefined;
+      }
+      return relCoverage === 'partial' ? `${baseLabel} (partial)` : baseLabel;
+    },
+  );
+  if (relationshipOptions.length > 0) {
+    facets.push({
+      id: 'rel',
+      field: 'rel',
+      label: 'Relationship',
+      kind: 'multi-select',
+      options: relationshipOptions,
+    });
+  }
+
+  return facets;
+}
+
+export const ITEM_QUERY_FIELDS: readonly QueryFieldDefinition<ItemRow>[] = [
+  {
+    id: 'types',
+    accessor: (row) => row.types ?? [],
+    getUniqueValues: (row) => row.types ?? [],
+  },
+  {
+    id: 'functions',
+    accessor: (row) => row.functions ?? [],
+    getUniqueValues: (row) => row.functions ?? [],
+  },
+  {
+    id: 'rel',
+    accessor: (row) => getItemRelationships(row),
+    getUniqueValues: (row) => getItemRelationships(row),
+  },
   {
     id: 'sourceId',
     accessor: (row) => row.sourceId,
-    searchMatch: ({ value, query }) =>
-      typeof value === 'string' && matchSourceId({ sourceId: value, query }),
+    searchMatch: (val, query) =>
+      typeof val === 'string' ? matchSourceId(val, query) : false,
   },
 ];
 
-interface DeriveFacetOptions {
-  readonly field: ItemFacetField;
-  readonly context: CategoricalContext;
-}
-
-function deriveFacet({
-  field,
-  context,
-}: DeriveFacetOptions): FacetDefinition<ItemRow> {
-  const config: ItemFacetConfig = ITEM_FACET_CONFIGS[field];
-  const shared = {
-    id: field,
-    field,
-    label: config.label,
-    ...(config.quick ? { quick: true } : {}),
-  };
-
-  if (config.kind === 'multi-select') {
-    const labels =
-      typeof config.labels === 'function'
-        ? config.labels({ context })
-        : config.labels;
-    const optionValues = config.optionOrder ?? Object.keys(labels ?? {});
-    const options =
-      labels === undefined
-        ? undefined
-        : optionValues.flatMap((value) => {
-            const label = labels[value];
-            if (label === undefined) return [];
-            const group = config.groups?.[value];
-            return [
-              { value, label, ...(group === undefined ? {} : { group }) },
-            ];
-          });
-    return {
-      ...shared,
-      kind: 'multi-select',
-      ...(options === undefined ? {} : { options }),
-      ...(config.formatOption === undefined
-        ? {}
-        : { formatOption: config.formatOption }),
-    };
+export function getDropCoverageNotice(
+  coverage: ItemBrowseCoverage,
+  category: ItemCategorySelection,
+): string | undefined {
+  if (category.scope.slug !== 'all' || category.child !== undefined) {
+    return undefined;
   }
-
-  if (config.kind === 'range') {
-    return {
-      ...shared,
-      kind: 'range',
-      buckets: config.buckets,
-    };
+  const dropCoverage = coverage.relationships['monster-drop'];
+  if (dropCoverage === 'unsupported') {
+    return 'Classic World has no monster drop data.';
   }
-
-  return { ...shared, kind: 'boolean' };
-}
-
-export interface GetItemFacetsOptions {
-  readonly category: ItemCategorySelection;
-  readonly coverage: ItemBrowseCoverage;
-}
-
-/** Declares category facets and leaves data-backed pruning to the library. */
-export function getItemFacets({
-  category,
-  coverage,
-}: GetItemFacetsOptions): readonly FacetDefinition<ItemRow>[] {
-  const context: CategoricalContext = { coverage };
-  const questRecipeCoverageComplete =
-    coverage.relationships['needed-for-quest'] === 'complete' &&
-    coverage.relationships['used-in-recipe'] === 'complete';
-  return getItemFacetFields({
-    scope: category.scope.slug,
-    childSlug: category.child?.slug,
-  }).flatMap((field) => {
-    if (
-      field === 'noRecordedQuestOrRecipeUse' &&
-      !questRecipeCoverageComplete
-    ) {
-      return [];
-    }
-    return [deriveFacet({ field, context })];
-  });
+  if (dropCoverage === 'partial') {
+    return 'GMS monster-book evidence is incomplete and a missing record does not mean an item cannot drop.';
+  }
+  return undefined;
 }

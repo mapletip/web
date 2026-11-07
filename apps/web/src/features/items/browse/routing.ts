@@ -24,7 +24,7 @@ export interface ItemRouteParams {
 
 export interface ItemCategorySelection {
   readonly scope: ItemCategoryScope;
-  readonly child?: ItemCategoryChild;
+  readonly child?: ItemCategoryChild | undefined;
 }
 
 export interface ParsedItemRoute {
