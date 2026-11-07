@@ -4,7 +4,8 @@ import {
   createRouter,
   RouterProvider,
 } from '@tanstack/react-router';
-import { render } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
+import { renderToString } from 'react-dom/server';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { routeTree } from '@/routeTree.gen';
@@ -28,30 +29,61 @@ describe('Items Browse route integration', () => {
       expectedBuildId: 'cw-launch',
       expectedScope: ITEM_SCOPES.all,
       expectedChildSlug: undefined,
+      currentLabel: 'All Items',
+      expectedBackLinks: [] as readonly { href: string; label: string }[],
+      expectedDirectChildren: ['Use', 'ETC', 'Set-up', 'Cash/Pet'],
+      unexpectedLabels: ['Upgrade Scrolls', 'Recovery', 'Quest Items'],
     },
     {
       url: '/maplestory/items/use',
       expectedBuildId: 'cw-launch',
       expectedScope: ITEM_SCOPES.use,
       expectedChildSlug: undefined,
+      currentLabel: 'Use',
+      expectedBackLinks: [{ href: '/maplestory/items', label: 'All Items' }],
+      expectedDirectChildren: [
+        'Upgrade Scrolls',
+        'Recovery',
+        'Throwing Stars',
+        'Potions',
+      ],
+      unexpectedLabels: ['ETC', 'Set-up', 'Cash/Pet'],
     },
     {
       url: '/maplestory/items/use/upgrade-scrolls',
       expectedBuildId: 'cw-launch',
       expectedScope: ITEM_SCOPES.use,
       expectedChildSlug: 'upgrade-scrolls',
+      currentLabel: 'Upgrade Scrolls',
+      expectedBackLinks: [
+        { href: '/maplestory/items', label: 'All Items' },
+        { href: '/maplestory/items/use', label: 'Use' },
+      ],
+      expectedDirectChildren: [] as readonly string[],
+      unexpectedLabels: ['Recovery', 'Throwing Stars', 'ETC', 'Set-up'],
     },
     {
       url: '/maplestory/gms-v83/items',
       expectedBuildId: 'gms-v83',
       expectedScope: ITEM_SCOPES.all,
       expectedChildSlug: undefined,
+      currentLabel: 'All Items',
+      expectedBackLinks: [] as readonly { href: string; label: string }[],
+      expectedDirectChildren: ['Use', 'ETC', 'Set-up', 'Cash/Pet'],
+      unexpectedLabels: ['Quest Items', 'Chairs'],
     },
     {
       url: '/maplestory/gms-v83/items/etc/quest-items',
       expectedBuildId: 'gms-v83',
       expectedScope: ITEM_SCOPES.etc,
       expectedChildSlug: 'quest-items',
+      currentLabel: 'Quest Items',
+      expectedBackLinks: [
+        { href: '/maplestory/gms-v83/items', label: 'All Items' },
+        { href: '/maplestory/gms-v83/items/etc', label: 'ETC' },
+      ],
+      expectedDirectChildren: [] as readonly string[],
+      unexpectedLabels: ['Crafting', 'Ores', 'Use', 'Set-up'],
     },
   ];
 
@@ -60,6 +92,10 @@ describe('Items Browse route integration', () => {
     expectedBuildId,
     expectedScope,
     expectedChildSlug,
+    currentLabel,
+    expectedBackLinks,
+    expectedDirectChildren,
+    unexpectedLabels,
   } of validTestCases) {
     it(`matches items leaf and loads data for ${url}`, async () => {
       const history = createMemoryHistory({ initialEntries: [url] });
@@ -86,7 +122,23 @@ describe('Items Browse route integration', () => {
       );
     });
 
-    it(`renders rail category links with correct hrefs and a single aria-current for ${url}`, async () => {
+    it(`renders exact drill-down shape and single aria-current in SSR for ${url}`, async () => {
+      const history = createMemoryHistory({ initialEntries: [url] });
+      const router = createRouter({ routeTree, history });
+      await router.load();
+
+      const html = renderToString(
+        <MantineProvider>
+          <RouterProvider router={router} />
+        </MantineProvider>,
+      );
+
+      // Verify exactly one aria-current="page" across the entire SSR output
+      const currentMatches = html.match(/aria-current="page"/g) ?? [];
+      expect(currentMatches).toHaveLength(1);
+    });
+
+    it(`renders drill-down navigation and responsive chip for ${url}`, async () => {
       const history = createMemoryHistory({ initialEntries: [url] });
       const router = createRouter({ routeTree, history });
       await router.load();
@@ -105,64 +157,52 @@ describe('Items Browse route integration', () => {
       const links = railNav?.querySelectorAll('a') ?? [];
       expect(links.length).toBeGreaterThan(0);
 
-      // Verify scope links point to correct hrefs
-      const buildPrefix =
-        expectedBuildId === 'cw-launch' ? '' : `/${expectedBuildId}`;
-      const allLink = Array.from(links).find(
-        (l) => l.getAttribute('href') === `/maplestory${buildPrefix}/items`,
-      );
-      expect(allLink).toBeDefined();
-
-      const useLink = Array.from(links).find(
-        (l) => l.getAttribute('href') === `/maplestory${buildPrefix}/items/use`,
-      );
-      expect(useLink).toBeDefined();
-
-      // Only the active entry gets aria-current="page"
+      // Verify exactly one aria-current in the desktop rail
       const activeLinks = Array.from(links).filter(
         (link) => link.getAttribute('aria-current') === 'page',
       );
       expect(activeLinks).toHaveLength(1);
       expect(activeLinks[0]?.getAttribute('href')).toBe(url);
+      expect(activeLinks[0]?.textContent).toContain(currentLabel);
 
-      // Mobile scope navigation assertions
-      const mobileScopeNav = container.querySelector(
-        'nav[aria-label="Inventory scopes"]',
+      // Verify back rows
+      const backLinks = Array.from(links).filter((link) =>
+        link.textContent?.includes('←'),
       );
-      expect(mobileScopeNav).not.toBeNull();
+      expect(backLinks).toHaveLength(expectedBackLinks.length);
+      for (const [index, expectedBack] of expectedBackLinks.entries()) {
+        const link = backLinks[index];
+        expect(link?.getAttribute('href')).toBe(expectedBack.href);
+        expect(link?.textContent).toContain(`← ${expectedBack.label}`);
+      }
 
-      const mobileScopeTabs = Array.from(
-        mobileScopeNav?.querySelectorAll('a') ?? [],
-      );
-      expect(mobileScopeTabs.length).toBeGreaterThan(0);
+      // Verify direct children
+      for (const childLabel of expectedDirectChildren) {
+        const childLink = Array.from(links).find((link) =>
+          link.textContent?.includes(childLabel),
+        );
+        expect(childLink).toBeDefined();
+      }
 
-      const parentScopeHref =
-        expectedScope.slug === 'all'
-          ? `/maplestory${buildPrefix}/items`
-          : `/maplestory${buildPrefix}/items/${expectedScope.slug}`;
-      const parentScopeTab = mobileScopeTabs.find(
-        (tab) => tab.getAttribute('href') === parentScopeHref,
-      );
-      expect(parentScopeTab).toBeDefined();
+      // Verify no siblings outside drill-down path
+      for (const unexpected of unexpectedLabels) {
+        const unexpectedLink = Array.from(links).find((link) =>
+          link.textContent?.includes(unexpected),
+        );
+        expect(unexpectedLink).toBeUndefined();
+      }
 
-      const isChildPage = expectedChildSlug !== undefined;
+      // Verify mobile quick navigation chip
+      const navChip = screen.getByRole('button', {
+        name: `Item categories: ${currentLabel}. Open Item categories`,
+      });
+      expect(navChip).toBeVisible();
+      expect(navChip.textContent).toContain(currentLabel);
 
-      // The parent scope tab is always expanded
-      expect(parentScopeTab?.hasAttribute('data-expanded')).toBe(true);
-      expect(parentScopeTab?.getAttribute('aria-current')).toBe(
-        isChildPage ? null : 'page',
-      );
-
-      // Exactly the parent scope tab has data-expanded; other tabs have neither
-      const expandedTabs = mobileScopeTabs.filter((tab) =>
-        tab.hasAttribute('data-expanded'),
-      );
-      expect(expandedTabs).toEqual([parentScopeTab]);
-
-      const currentScopeTabs = mobileScopeTabs.filter(
-        (tab) => tab.getAttribute('aria-current') === 'page',
-      );
-      expect(currentScopeTabs).toEqual(isChildPage ? [] : [parentScopeTab]);
+      // Verify "Filters" button is absent when facets are empty
+      expect(
+        screen.queryByRole('button', { name: /Open all filters/i }),
+      ).not.toBeInTheDocument();
     });
   }
 

@@ -1,11 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { getCategoryCounts, ITEM_SCOPES } from '../categories';
-import {
-  getItemNavData,
-  ITEM_NAV_TARGET,
-  type ItemNavScope,
-} from '../navigation';
+import { buildItemNavHref, getItemNavTree, itemNavId } from '../navigation';
 import type { ItemRow } from '../project';
 
 describe('navigation', () => {
@@ -52,170 +48,141 @@ describe('navigation', () => {
     },
   ];
 
-  function countActive(scopes: readonly ItemNavScope[]): number {
-    let total = 0;
-    for (const scope of scopes) {
-      if (scope.active) total += 1;
-      for (const child of scope.children) {
-        if (child.active) total += 1;
-      }
-    }
-    return total;
-  }
-
-  describe('getItemNavData', () => {
-    it('computes counts that equal getCategoryCounts', () => {
-      const expectedCounts = getCategoryCounts(dummyRows);
-      const nav = getItemNavData(
-        dummyRows,
-        { scope: ITEM_SCOPES.all },
-        'cw-launch',
+  describe('buildItemNavHref', () => {
+    it('builds canonical hrefs without buildId', () => {
+      expect(buildItemNavHref({})).toBe('/maplestory/items');
+      expect(buildItemNavHref({ scope: 'use' })).toBe('/maplestory/items/use');
+      expect(buildItemNavHref({ scope: 'use', child: 'recovery' })).toBe(
+        '/maplestory/items/use/recovery',
       );
+    });
 
-      for (const scope of nav) {
-        expect(scope.count).toBe(expectedCounts[scope.slug].total);
-        for (const child of scope.children) {
-          expect(child.count).toBe(
-            expectedCounts[scope.slug].children[child.slug] ?? 0,
+    it('builds versioned hrefs with explicit buildId', () => {
+      expect(buildItemNavHref({ buildId: 'gms-v83' })).toBe(
+        '/maplestory/gms-v83/items',
+      );
+      expect(buildItemNavHref({ buildId: 'gms-v83', scope: 'etc' })).toBe(
+        '/maplestory/gms-v83/items/etc',
+      );
+      expect(
+        buildItemNavHref({
+          buildId: 'gms-v83',
+          scope: 'etc',
+          child: 'quest-items',
+        }),
+      ).toBe('/maplestory/gms-v83/items/etc/quest-items');
+    });
+  });
+
+  describe('itemNavId', () => {
+    it('returns "all" for All Items category', () => {
+      expect(itemNavId({ scope: ITEM_SCOPES.all })).toBe('all');
+    });
+
+    it('returns "<scope>" for scope category without child', () => {
+      expect(itemNavId({ scope: ITEM_SCOPES.use })).toBe('use');
+    });
+
+    it('returns "<scope>/<child>" for child category', () => {
+      const child = ITEM_SCOPES.use.children.find(
+        (c) => c.slug === 'throwing-stars',
+      );
+      expect(child).toBeDefined();
+      expect(itemNavId({ scope: ITEM_SCOPES.use, child })).toBe(
+        'use/throwing-stars',
+      );
+    });
+  });
+
+  describe('getItemNavTree', () => {
+    it('computes tree structure and counts matching getCategoryCounts', () => {
+      const expectedCounts = getCategoryCounts(dummyRows);
+      const root = getItemNavTree(dummyRows, 'cw-launch');
+
+      expect(root.id).toBe('all');
+      expect(root.label).toBe('All Items');
+      expect(root.count).toBe(expectedCounts.all.total);
+      expect(root.href).toBe('/maplestory/items');
+      expect(root.meta).toEqual({ buildId: undefined });
+
+      const children = root.children ?? [];
+      expect(children.map((c) => c.id)).toEqual([
+        'use',
+        'etc',
+        'setup',
+        'cash',
+      ]);
+
+      for (const scopeNode of children) {
+        const slug = scopeNode.id as 'use' | 'etc' | 'setup' | 'cash';
+        expect(scopeNode.count).toBe(expectedCounts[slug].total);
+        expect(scopeNode.href).toBe(`/maplestory/items/${slug}`);
+        expect(scopeNode.meta).toEqual({
+          buildId: undefined,
+          scope: slug,
+        });
+
+        const childNodes = scopeNode.children ?? [];
+        for (const childNode of childNodes) {
+          const childSlug = childNode.id.replace(`${slug}/`, '');
+          expect(childNode.count).toBe(
+            expectedCounts[slug].children[childSlug] ?? 0,
           );
+          expect(childNode.href).toBe(`/maplestory/items/${slug}/${childSlug}`);
+          expect(childNode.meta).toEqual({
+            buildId: undefined,
+            scope: slug,
+            child: childSlug,
+          });
         }
       }
     });
 
-    it('has exactly one active entry for All', () => {
-      const nav = getItemNavData(
-        dummyRows,
-        { scope: ITEM_SCOPES.all },
-        'cw-launch',
-      );
+    it('omits buildId in hrefs and meta for cw-launch', () => {
+      const root = getItemNavTree(dummyRows, 'cw-launch');
+      expect(root.href).toBe('/maplestory/items');
+      expect(root.meta?.buildId).toBeUndefined();
 
-      expect(countActive(nav)).toBe(1);
-      const allScope = nav.find((s) => s.slug === 'all');
-      expect(allScope?.active).toBe(true);
+      const useScope = root.children?.find((c) => c.id === 'use');
+      expect(useScope?.href).toBe('/maplestory/items/use');
+      expect(useScope?.meta?.buildId).toBeUndefined();
+
+      const recoveryChild = useScope?.children?.find(
+        (c) => c.id === 'use/recovery',
+      );
+      expect(recoveryChild?.href).toBe('/maplestory/items/use/recovery');
+      expect(recoveryChild?.meta?.buildId).toBeUndefined();
     });
 
-    it('has exactly one active entry for a scope page', () => {
-      const nav = getItemNavData(
-        dummyRows,
-        { scope: ITEM_SCOPES.use },
-        'cw-launch',
-      );
+    it('includes buildId in hrefs and meta for gms-v83', () => {
+      const root = getItemNavTree(dummyRows, 'gms-v83');
+      expect(root.href).toBe('/maplestory/gms-v83/items');
+      expect(root.meta?.buildId).toBe('gms-v83');
 
-      expect(countActive(nav)).toBe(1);
-      const useScope = nav.find((s) => s.slug === 'use');
-      expect(useScope?.active).toBe(true);
-      expect(useScope?.children.some((c) => c.active)).toBe(false);
+      const etcScope = root.children?.find((c) => c.id === 'etc');
+      expect(etcScope?.href).toBe('/maplestory/gms-v83/items/etc');
+      expect(etcScope?.meta?.buildId).toBe('gms-v83');
+
+      const questChild = etcScope?.children?.find(
+        (c) => c.id === 'etc/quest-items',
+      );
+      expect(questChild?.href).toBe(
+        '/maplestory/gms-v83/items/etc/quest-items',
+      );
+      expect(questChild?.meta?.buildId).toBe('gms-v83');
     });
 
-    it('has exactly one active entry for a child page', () => {
-      const throwingStarsChild = ITEM_SCOPES.use.children.find(
-        (c) => c.slug === 'throwing-stars',
+    it('retains zero-count categories with count 0 and valid href', () => {
+      const root = getItemNavTree(dummyRows, 'cw-launch');
+      const useScope = root.children?.find((c) => c.id === 'use');
+      const bulletsChild = useScope?.children?.find(
+        (c) => c.id === 'use/bullets',
       );
-      expect(throwingStarsChild).toBeDefined();
-      if (!throwingStarsChild) throw new Error('missing throwing-stars child');
-
-      const nav = getItemNavData(
-        dummyRows,
-        { scope: ITEM_SCOPES.use, child: throwingStarsChild },
-        'cw-launch',
-      );
-
-      expect(countActive(nav)).toBe(1);
-      const useScope = nav.find((s) => s.slug === 'use');
-      expect(useScope?.active).toBe(false);
-      expect(useScope?.expanded).toBe(true);
-
-      const otherScopes = nav.filter((s) => s.slug !== 'use');
-      for (const scope of otherScopes) {
-        expect(scope.expanded).toBe(false);
-      }
-
-      const starChild = useScope?.children.find(
-        (c) => c.slug === 'throwing-stars',
-      );
-      expect(starChild?.active).toBe(true);
-    });
-
-    it('has exactly one active entry for an Other child', () => {
-      const otherUseChild = ITEM_SCOPES.use.children.find(
-        (c) => c.slug === 'other-use-items',
-      );
-      expect(otherUseChild).toBeDefined();
-      if (!otherUseChild) throw new Error('missing other-use-items child');
-
-      const nav = getItemNavData(
-        dummyRows,
-        { scope: ITEM_SCOPES.use, child: otherUseChild },
-        'cw-launch',
-      );
-
-      expect(countActive(nav)).toBe(1);
-      const useScope = nav.find((s) => s.slug === 'use');
-      expect(useScope?.active).toBe(false);
-      expect(useScope?.expanded).toBe(true);
-
-      const otherScopes = nav.filter((s) => s.slug !== 'use');
-      for (const scope of otherScopes) {
-        expect(scope.expanded).toBe(false);
-      }
-
-      const otherChild = useScope?.children.find(
-        (c) => c.slug === 'other-use-items',
-      );
-      expect(otherChild?.active).toBe(true);
-    });
-
-    it('omits buildId for cw-launch and includes it for gms-v83', () => {
-      const cwNav = getItemNavData(
-        dummyRows,
-        { scope: ITEM_SCOPES.use },
-        'cw-launch',
-      );
-      const cwUse = cwNav.find((s) => s.slug === 'use');
-      expect(cwUse?.params.buildId).toBeUndefined();
-      expect(cwUse?.children[0]?.params.buildId).toBeUndefined();
-
-      const gmsNav = getItemNavData(
-        dummyRows,
-        { scope: ITEM_SCOPES.use },
-        'gms-v83',
-      );
-      const gmsUse = gmsNav.find((s) => s.slug === 'use');
-      expect(gmsUse?.params.buildId).toBe('gms-v83');
-      expect(gmsUse?.children[0]?.params.buildId).toBe('gms-v83');
-    });
-
-    it('omits scope for All Items', () => {
-      const nav = getItemNavData(
-        dummyRows,
-        { scope: ITEM_SCOPES.all },
-        'cw-launch',
-      );
-
-      const allScope = nav.find((s) => s.slug === 'all');
-      expect(allScope?.params.scope).toBeUndefined();
-      expect(allScope?.params.child).toBeUndefined();
-
-      const useScope = nav.find((s) => s.slug === 'use');
-      expect(useScope?.params.scope).toBe('use');
-      expect(useScope?.params.child).toBeUndefined();
-    });
-
-    it('keeps zero-count children visible, dimmed with 0 and valid link targets', () => {
-      const nav = getItemNavData(
-        dummyRows,
-        { scope: ITEM_SCOPES.use },
-        'cw-launch',
-      );
-
-      const useScope = nav.find((s) => s.slug === 'use');
-      const bulletsChild = useScope?.children.find((c) => c.slug === 'bullets');
 
       expect(bulletsChild).toBeDefined();
       expect(bulletsChild?.count).toBe(0);
-      expect(bulletsChild?.zeroCount).toBe(true);
-      expect(bulletsChild?.to).toBe(ITEM_NAV_TARGET);
-      expect(bulletsChild?.params).toEqual({
+      expect(bulletsChild?.href).toBe('/maplestory/items/use/bullets');
+      expect(bulletsChild?.meta).toEqual({
         buildId: undefined,
         scope: 'use',
         child: 'bullets',
