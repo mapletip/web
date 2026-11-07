@@ -3,6 +3,7 @@ import { renderToString } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 
 import { ITEM_SCOPES } from '../categories';
+import { CONTEXT_COLUMNS } from '../column-contexts';
 import { deriveSortOptions, getItemColumns } from '../columns';
 import type { ItemRow } from '../project';
 import {
@@ -494,5 +495,25 @@ describe('sort accessors', () => {
       field: 'name',
       direction: 'asc',
     });
+  });
+
+  it('maintains disjoint visible and optional column lists with no duplicates across all contexts', () => {
+    for (const [contextKey, config] of Object.entries(CONTEXT_COLUMNS)) {
+      const visibleSet = new Set(config.visible);
+      const optionalKeys = config.optional ?? [];
+      const optionalSet = new Set(optionalKeys);
+      const overlap = optionalKeys.filter((key) => visibleSet.has(key));
+
+      expect(visibleSet.size, `Duplicate visible keys in ${contextKey}`).toBe(
+        config.visible.length,
+      );
+      expect(optionalSet.size, `Duplicate optional keys in ${contextKey}`).toBe(
+        optionalKeys.length,
+      );
+      expect(
+        overlap,
+        `Overlapping visible/optional keys in ${contextKey}`,
+      ).toEqual([]);
+    }
   });
 });

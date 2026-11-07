@@ -126,11 +126,11 @@ export function getItemColumns(
     CONTEXT_COLUMNS[category.scope.slug] ??
     DEFAULT_CONTEXT_COLUMNS;
 
-  const candidateKeys: ColumnKey[] = [
-    ...context.visible,
-    ...(context.optional ?? []),
-  ];
-  const defaultHidden = new Set<string>(context.optional ?? []);
+  const optionalKeys = (context.optional ?? []).filter(
+    (key) => !context.visible.includes(key),
+  );
+  const candidateKeys: ColumnKey[] = [...context.visible, ...optionalKeys];
+  const defaultHidden = new Set<string>(optionalKeys);
 
   const columns: ItemTableColumn[] = [];
   const defaultHiddenColumns: string[] = [];
