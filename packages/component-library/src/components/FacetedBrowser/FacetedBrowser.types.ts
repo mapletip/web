@@ -12,6 +12,14 @@ interface CommonProps<TRecord extends Record<string, unknown>> {
   readonly queryFields?: readonly QueryFieldDefinition<TRecord>[];
   readonly searchFields?: readonly (keyof TRecord & string)[];
   readonly facets?: readonly FacetDefinition<TRecord>[];
+  /**
+   * Optional navigation element rendered at the top of the desktop rail.
+   *
+   * When provided, the rail renders even if there are no facets, with an
+   * `aria-label="Browse navigation"`. When facets are also present, navigation
+   * is displayed above the filters.
+   */
+  readonly railNavigation?: ReactNode;
   readonly recordNoun?: string;
   /**
    * Visible noun for the result count, when the descriptive `recordNoun` is too

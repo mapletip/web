@@ -276,3 +276,137 @@ describe('result summary', () => {
     );
   });
 });
+
+describe('rail navigation slot', () => {
+  it('renders the rail when railNavigation exists even with zero facets, without a Filters heading', () => {
+    const { container } = render(
+      <MantineProvider>
+        <FacetedBrowser
+          title={<h1>Items</h1>}
+          records={demoRecords}
+          idAccessor="id"
+          facets={[]}
+          railNavigation={
+            <nav aria-label="Category navigation">
+              <ul>
+                <li>Use</li>
+                <li>ETC</li>
+              </ul>
+            </nav>
+          }
+          presentation="cards"
+          renderCard={(record) => <div>{record.name}</div>}
+          defaultState={{
+            search: '',
+            filters: {},
+            page: 1,
+            pageSize: 20,
+            hiddenColumns: [],
+          }}
+        />
+      </MantineProvider>,
+    );
+
+    const aside = container.querySelector('aside');
+    expect(aside).not.toBeNull();
+    expect(aside).toHaveAttribute('aria-label', 'Browse navigation');
+    expect(
+      screen.getByRole('navigation', { name: 'Category navigation' }),
+    ).toBeVisible();
+    expect(
+      screen.queryByRole('heading', { name: 'Filters' }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('renders railNavigation above the Filters heading and facet list when facets exist', () => {
+    const { container } = render(
+      <MantineProvider>
+        <FacetedBrowser
+          title={<h1>Items</h1>}
+          records={demoRecords}
+          idAccessor="id"
+          queryFields={queryFields}
+          facets={facets}
+          railNavigation={
+            <nav aria-label="Category navigation">
+              <span>Categories</span>
+            </nav>
+          }
+          presentation="cards"
+          renderCard={(record) => <div>{record.name}</div>}
+          defaultState={{
+            search: '',
+            filters: {},
+            page: 1,
+            pageSize: 20,
+            hiddenColumns: [],
+          }}
+        />
+      </MantineProvider>,
+    );
+
+    const aside = container.querySelector('aside');
+    expect(aside).not.toBeNull();
+    expect(aside).toHaveAttribute('aria-label', 'Browse navigation');
+    const nav = screen.getByRole('navigation', { name: 'Category navigation' });
+    const filtersHeading = screen.getByRole('heading', { name: 'Filters' });
+
+    expect(nav).toBeVisible();
+    expect(filtersHeading).toBeVisible();
+    expect(
+      nav.compareDocumentPosition(filtersHeading) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+  });
+
+  it('renders no aside when neither railNavigation nor facets exist', () => {
+    const { container } = render(
+      <MantineProvider>
+        <FacetedBrowser
+          title={<h1>Items</h1>}
+          records={demoRecords}
+          idAccessor="id"
+          facets={[]}
+          presentation="cards"
+          renderCard={(record) => <div>{record.name}</div>}
+          defaultState={{
+            search: '',
+            filters: {},
+            page: 1,
+            pageSize: 20,
+            hiddenColumns: [],
+          }}
+        />
+      </MantineProvider>,
+    );
+
+    expect(container.querySelector('aside')).toBeNull();
+  });
+
+  it('uses Filters aria-label when facets exist without navigation', () => {
+    const { container } = render(
+      <MantineProvider>
+        <FacetedBrowser
+          title={<h1>Monsters</h1>}
+          records={demoRecords}
+          idAccessor="id"
+          queryFields={queryFields}
+          facets={facets}
+          presentation="cards"
+          renderCard={(record) => <div>{record.name}</div>}
+          defaultState={{
+            search: '',
+            filters: {},
+            page: 1,
+            pageSize: 20,
+            hiddenColumns: [],
+          }}
+        />
+      </MantineProvider>,
+    );
+
+    const aside = container.querySelector('aside');
+    expect(aside).not.toBeNull();
+    expect(aside).toHaveAttribute('aria-label', 'Filters');
+  });
+});

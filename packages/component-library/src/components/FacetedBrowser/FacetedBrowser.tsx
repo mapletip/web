@@ -76,6 +76,7 @@ export function FacetedBrowser<TRecord extends Record<string, unknown>>(
     searchFields,
     facets: facetDefinitions = EMPTY_FACETS,
     recordNoun = 'records',
+    railNavigation,
     summaryNoun,
     summaryMode = 'page-window',
     resultsLabel = `${recordNoun} results`,
@@ -372,6 +373,31 @@ export function FacetedBrowser<TRecord extends Record<string, unknown>>(
       />
     ) : undefined;
 
+  const railContent =
+    railNavigation || facets.length > 0 ? (
+      <Stack gap="md">
+        {railNavigation}
+        {facets.length > 0 ? (
+          <>
+            <Title order={2} size="h4">
+              Filters
+            </Title>
+            <FacetList
+              key={facetResetEpoch}
+              facets={facets}
+              values={browseState.filters}
+              records={records}
+              surface="rail"
+              getCounts={browser.getFacetValues}
+              onChange={browser.setFilter}
+            />
+          </>
+        ) : null}
+      </Stack>
+    ) : undefined;
+
+  const railLabel = railNavigation ? 'Browse navigation' : 'Filters';
+
   return (
     <>
       <Layout
@@ -391,25 +417,8 @@ export function FacetedBrowser<TRecord extends Record<string, unknown>>(
             />
           </form>
         }
-        rail={
-          facets.length > 0 ? (
-            <Stack gap="md">
-              <Title order={2} size="h4">
-                Filters
-              </Title>
-              <FacetList
-                key={facetResetEpoch}
-                facets={facets}
-                values={browseState.filters}
-                records={records}
-                surface="rail"
-                getCounts={browser.getFacetValues}
-                onChange={browser.setFilter}
-              />
-            </Stack>
-          ) : undefined
-        }
-        railLabel="Filters"
+        rail={railContent}
+        railLabel={railLabel}
         quickFacets={
           facets.length > 0 ? (
             <QuickFacets

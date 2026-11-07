@@ -50,11 +50,13 @@ function BrowserExample({
   state,
   onStateChange,
   fillHeight = true,
+  railNavigation,
 }: {
   readonly variant?: Variant;
   readonly state?: BrowseState;
   readonly onStateChange?: (nextState: BrowseState) => void;
   readonly fillHeight?: boolean;
+  readonly railNavigation?: React.ReactNode;
 }) {
   const records = demoRecords;
   const columns = useMemo(
@@ -149,6 +151,7 @@ function BrowserExample({
       queryFields={queryFields}
       facets={facets}
       presentation="comparison"
+      {...(railNavigation ? { railNavigation } : {})}
       {...(fillHeight ? { fillHeight: true } : { tableMaxHeight: 560 })}
       renderCard={(record) => <FacetedBrowserRecordCard record={record} />}
       {...stateProps}
@@ -364,4 +367,32 @@ export const Controlled: Story = {
       </>
     );
   },
+};
+
+export const RailNavigationSlot: Story = {
+  name: 'Rail navigation',
+  render: () => (
+    <BrowserExample
+      railNavigation={
+        <nav aria-label="Demo category navigation">
+          <Text size="sm" fw={600} mb="xs">
+            Categories
+          </Text>
+          <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+            <li>
+              <a href="#all" style={{ fontWeight: 'bold' }}>
+                All Categories
+              </a>
+            </li>
+            <li>
+              <a href="#featured">Featured</a>
+            </li>
+            <li>
+              <a href="#archive">Archive</a>
+            </li>
+          </ul>
+        </nav>
+      }
+    />
+  ),
 };
