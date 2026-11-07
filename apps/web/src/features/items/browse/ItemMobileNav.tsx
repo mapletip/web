@@ -23,6 +23,7 @@ export function ItemMobileNav({ navScopes }: ItemMobileNavProps): ReactElement {
             params={scope.params}
             activeOptions={{ exact: true, includeSearch: false }}
             className={classes['scopeTab']}
+            data-expanded={scope.expanded ? '' : undefined}
           >
             <img
               src={scope.icon}

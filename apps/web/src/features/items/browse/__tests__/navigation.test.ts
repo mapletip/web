@@ -123,6 +123,12 @@ describe('navigation', () => {
       expect(countActive(nav)).toBe(1);
       const useScope = nav.find((s) => s.slug === 'use');
       expect(useScope?.active).toBe(false);
+      expect(useScope?.expanded).toBe(true);
+
+      const otherScopes = nav.filter((s) => s.slug !== 'use');
+      for (const scope of otherScopes) {
+        expect(scope.expanded).toBe(false);
+      }
 
       const starChild = useScope?.children.find(
         (c) => c.slug === 'throwing-stars',
@@ -146,6 +152,12 @@ describe('navigation', () => {
       expect(countActive(nav)).toBe(1);
       const useScope = nav.find((s) => s.slug === 'use');
       expect(useScope?.active).toBe(false);
+      expect(useScope?.expanded).toBe(true);
+
+      const otherScopes = nav.filter((s) => s.slug !== 'use');
+      for (const scope of otherScopes) {
+        expect(scope.expanded).toBe(false);
+      }
 
       const otherChild = useScope?.children.find(
         (c) => c.slug === 'other-use-items',

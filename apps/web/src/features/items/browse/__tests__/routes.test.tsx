@@ -124,6 +124,45 @@ describe('Items Browse route integration', () => {
       );
       expect(activeLinks).toHaveLength(1);
       expect(activeLinks[0]?.getAttribute('href')).toBe(url);
+
+      // Mobile scope navigation assertions
+      const mobileScopeNav = container.querySelector(
+        'nav[aria-label="Inventory scopes"]',
+      );
+      expect(mobileScopeNav).not.toBeNull();
+
+      const mobileScopeTabs = Array.from(
+        mobileScopeNav?.querySelectorAll('a') ?? [],
+      );
+      expect(mobileScopeTabs.length).toBeGreaterThan(0);
+
+      const parentScopeHref =
+        expectedScope.slug === 'all'
+          ? `/maplestory${buildPrefix}/items`
+          : `/maplestory${buildPrefix}/items/${expectedScope.slug}`;
+      const parentScopeTab = mobileScopeTabs.find(
+        (tab) => tab.getAttribute('href') === parentScopeHref,
+      );
+      expect(parentScopeTab).toBeDefined();
+
+      const isChildPage = expectedChildSlug !== undefined;
+
+      // The parent scope tab is always expanded
+      expect(parentScopeTab?.hasAttribute('data-expanded')).toBe(true);
+      expect(parentScopeTab?.getAttribute('aria-current')).toBe(
+        isChildPage ? null : 'page',
+      );
+
+      // Exactly the parent scope tab has data-expanded; other tabs have neither
+      const expandedTabs = mobileScopeTabs.filter((tab) =>
+        tab.hasAttribute('data-expanded'),
+      );
+      expect(expandedTabs).toEqual([parentScopeTab]);
+
+      const currentScopeTabs = mobileScopeTabs.filter(
+        (tab) => tab.getAttribute('aria-current') === 'page',
+      );
+      expect(currentScopeTabs).toEqual(isChildPage ? [] : [parentScopeTab]);
     });
   }
 

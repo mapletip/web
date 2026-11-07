@@ -48,7 +48,8 @@
   background-color: var(--mapletip-color-hover);
 }
 
-.scopeTab[aria-current='page'] {
+.scopeTab[aria-current='page'],
+.scopeTab[data-expanded] {
   background-color: var(--mapletip-color-selection);
   border-color: var(--mapletip-color-selection-edge);
   color: var(--mapletip-color-brand-text);
