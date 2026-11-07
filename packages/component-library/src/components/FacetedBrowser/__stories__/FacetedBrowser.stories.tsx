@@ -3,9 +3,12 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { useMemo, useState } from 'react';
 import { expect, screen, userEvent, waitFor, within } from 'storybook/test';
 
+import { DrillDownNav } from '@/components/DrillDownNav';
+import type { DrillDownNode } from '@/components/DrillDownNav';
 import { FacetedBrowser } from '@/components/FacetedBrowser';
 import type {
   FacetDefinition,
+  FacetedBrowserNavigation,
   BrowseState,
   QueryFieldDefinition,
 } from '@/components/FacetedBrowser';
@@ -50,13 +53,13 @@ function BrowserExample({
   state,
   onStateChange,
   fillHeight = true,
-  railNavigation,
+  navigation,
 }: {
   readonly variant?: Variant;
   readonly state?: BrowseState;
   readonly onStateChange?: (nextState: BrowseState) => void;
   readonly fillHeight?: boolean;
-  readonly railNavigation?: React.ReactNode;
+  readonly navigation?: FacetedBrowserNavigation;
 }) {
   const records = demoRecords;
   const columns = useMemo(
@@ -151,7 +154,7 @@ function BrowserExample({
       queryFields={queryFields}
       facets={facets}
       presentation="comparison"
-      {...(railNavigation ? { railNavigation } : {})}
+      {...(navigation ? { navigation } : {})}
       {...(fillHeight ? { fillHeight: true } : { tableMaxHeight: 560 })}
       renderCard={(record) => <FacetedBrowserRecordCard record={record} />}
       {...stateProps}
@@ -369,30 +372,46 @@ export const Controlled: Story = {
   },
 };
 
+const demoNavTree: DrillDownNode = {
+  id: 'all',
+  label: 'All Categories',
+  href: '#all',
+  count: 24,
+  children: [
+    {
+      id: 'featured',
+      label: 'Featured',
+      href: '#featured',
+      count: 8,
+      children: [
+        { id: 'spotlight', label: 'Spotlight', href: '#spotlight', count: 3 },
+      ],
+    },
+    {
+      id: 'archive',
+      label: 'Archive',
+      href: '#archive',
+      count: 16,
+    },
+  ],
+};
+
 export const RailNavigationSlot: Story = {
   name: 'Rail navigation',
   render: () => (
     <BrowserExample
-      railNavigation={
-        <nav aria-label="Demo category navigation">
-          <Text size="sm" fw={600} mb="xs">
-            Categories
-          </Text>
-          <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-            <li>
-              <a href="#all" style={{ fontWeight: 'bold' }}>
-                All Categories
-              </a>
-            </li>
-            <li>
-              <a href="#featured">Featured</a>
-            </li>
-            <li>
-              <a href="#archive">Archive</a>
-            </li>
-          </ul>
-        </nav>
-      }
+      navigation={{
+        label: 'Categories',
+        currentLabel: 'Featured',
+        render: ({ onNavigate }) => (
+          <DrillDownNav
+            root={demoNavTree}
+            currentId="featured"
+            label="Categories"
+            {...(onNavigate ? { onNavigate } : {})}
+          />
+        ),
+      }}
     />
   ),
 };

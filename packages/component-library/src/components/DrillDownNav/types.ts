@@ -27,6 +27,6 @@ export interface DrillDownNavProps<TMeta = undefined> {
   readonly root: DrillDownNode<TMeta>;
   readonly currentId: string;
   readonly label: string;
-  readonly renderLink?: DrillDownLinkRenderer<TMeta>;
-  readonly onNavigate?: () => void;
+  readonly renderLink?: DrillDownLinkRenderer<TMeta> | undefined;
+  readonly onNavigate?: (() => void) | undefined;
 }

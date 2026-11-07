@@ -1,5 +1,5 @@
 import { MantineProvider } from '@mantine/core';
-import { render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { ReactNode } from 'react';
 import { describe, expect, it, vi } from 'vitest';
@@ -277,8 +277,8 @@ describe('result summary', () => {
   });
 });
 
-describe('rail navigation slot', () => {
-  it('renders the rail when railNavigation exists even with zero facets, without a Filters heading', () => {
+describe('responsive navigation slot', () => {
+  it('renders the rail when navigation exists even with zero facets, without a Filters heading and with navigation.label aside aria-label', () => {
     const { container } = render(
       <MantineProvider>
         <FacetedBrowser
@@ -286,14 +286,18 @@ describe('rail navigation slot', () => {
           records={demoRecords}
           idAccessor="id"
           facets={[]}
-          railNavigation={
-            <nav aria-label="Category navigation">
-              <ul>
-                <li>Use</li>
-                <li>ETC</li>
-              </ul>
-            </nav>
-          }
+          navigation={{
+            label: 'Item categories',
+            currentLabel: 'All Items',
+            render: () => (
+              <nav aria-label="Item categories">
+                <ul>
+                  <li>Use</li>
+                  <li>ETC</li>
+                </ul>
+              </nav>
+            ),
+          }}
           presentation="cards"
           renderCard={(record) => <div>{record.name}</div>}
           defaultState={{
@@ -309,16 +313,16 @@ describe('rail navigation slot', () => {
 
     const aside = container.querySelector('aside');
     expect(aside).not.toBeNull();
-    expect(aside).toHaveAttribute('aria-label', 'Browse navigation');
+    expect(aside).toHaveAttribute('aria-label', 'Item categories');
     expect(
-      screen.getByRole('navigation', { name: 'Category navigation' }),
+      screen.getByRole('navigation', { name: 'Item categories' }),
     ).toBeVisible();
     expect(
       screen.queryByRole('heading', { name: 'Filters' }),
     ).not.toBeInTheDocument();
   });
 
-  it('renders railNavigation above the Filters heading and facet list when facets exist', () => {
+  it('renders navigation above the Filters heading and facet list when facets exist', () => {
     const { container } = render(
       <MantineProvider>
         <FacetedBrowser
@@ -327,11 +331,15 @@ describe('rail navigation slot', () => {
           idAccessor="id"
           queryFields={queryFields}
           facets={facets}
-          railNavigation={
-            <nav aria-label="Category navigation">
-              <span>Categories</span>
-            </nav>
-          }
+          navigation={{
+            label: 'Item categories',
+            currentLabel: 'Use',
+            render: () => (
+              <nav aria-label="Item categories">
+                <span>Categories</span>
+              </nav>
+            ),
+          }}
           presentation="cards"
           renderCard={(record) => <div>{record.name}</div>}
           defaultState={{
@@ -347,8 +355,8 @@ describe('rail navigation slot', () => {
 
     const aside = container.querySelector('aside');
     expect(aside).not.toBeNull();
-    expect(aside).toHaveAttribute('aria-label', 'Browse navigation');
-    const nav = screen.getByRole('navigation', { name: 'Category navigation' });
+    expect(aside).toHaveAttribute('aria-label', 'Item categories');
+    const nav = screen.getByRole('navigation', { name: 'Item categories' });
     const filtersHeading = screen.getByRole('heading', { name: 'Filters' });
 
     expect(nav).toBeVisible();
@@ -359,7 +367,7 @@ describe('rail navigation slot', () => {
     ).toBeTruthy();
   });
 
-  it('renders no aside when neither railNavigation nor facets exist', () => {
+  it('renders no aside when neither navigation nor facets exist', () => {
     const { container } = render(
       <MantineProvider>
         <FacetedBrowser
@@ -408,5 +416,162 @@ describe('rail navigation slot', () => {
     const aside = container.querySelector('aside');
     expect(aside).not.toBeNull();
     expect(aside).toHaveAttribute('aria-label', 'Filters');
+  });
+
+  it('renders navigation chip and omits Filters button when facets is empty', () => {
+    render(
+      <MantineProvider>
+        <FacetedBrowser
+          title={<h1>Items</h1>}
+          records={demoRecords}
+          idAccessor="id"
+          facets={[]}
+          navigation={{
+            label: 'Item categories',
+            currentLabel: 'Recovery',
+            render: () => <div>Nav Body</div>,
+          }}
+          presentation="cards"
+          renderCard={(record) => <div>{record.name}</div>}
+          defaultState={{
+            search: '',
+            filters: {},
+            page: 1,
+            pageSize: 20,
+            hiddenColumns: [],
+          }}
+        />
+      </MantineProvider>,
+    );
+
+    const navChip = screen.getByRole('button', {
+      name: 'Item categories: Recovery. Open Item categories',
+    });
+    expect(navChip).toBeVisible();
+    expect(navChip.textContent).toContain('Recovery');
+
+    // Filters button should NOT exist when facets are empty
+    expect(
+      screen.queryByRole('button', { name: /Open all filters/i }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('opens separate navigation drawer on chip click and closes on onNavigate', async () => {
+    let capturedOnNavigate: (() => void) | undefined;
+
+    render(
+      <MantineProvider>
+        <FacetedBrowser
+          title={<h1>Items</h1>}
+          records={demoRecords}
+          idAccessor="id"
+          facets={[]}
+          navigation={{
+            label: 'Item categories',
+            currentLabel: 'Recovery',
+            render: ({ onNavigate }) => {
+              capturedOnNavigate = onNavigate;
+              return (
+                <div>
+                  <span>Category Content</span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onNavigate?.();
+                    }}
+                  >
+                    Click Category
+                  </button>
+                </div>
+              );
+            },
+          }}
+          presentation="cards"
+          renderCard={(record) => <div>{record.name}</div>}
+          defaultState={{
+            search: '',
+            filters: {},
+            page: 1,
+            pageSize: 20,
+            hiddenColumns: [],
+          }}
+        />
+      </MantineProvider>,
+    );
+
+    const navChip = screen.getByRole('button', {
+      name: 'Item categories: Recovery. Open Item categories',
+    });
+    fireEvent.click(navChip);
+
+    // Wait for the navigation drawer dialog to mount
+    await waitFor(() => {
+      expect(screen.getByRole('dialog')).toBeInTheDocument();
+    });
+
+    const closeBtn = screen.getByRole('button', {
+      name: 'Close Item categories',
+    });
+    expect(closeBtn).toBeInTheDocument();
+
+    // Calling onNavigate closes the drawer
+    expect(capturedOnNavigate).toBeDefined();
+    capturedOnNavigate?.();
+
+    await waitFor(() => {
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    });
+
+    // Verify filter drawer Apply/Reset buttons do not exist in this drawer
+    expect(
+      screen.queryByRole('button', { name: 'Reset' }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('keeps filter drawer untouched and distinct from navigation drawer when facets exist', async () => {
+    render(
+      <MantineProvider>
+        <FacetedBrowser
+          title={<h1>Items</h1>}
+          records={demoRecords}
+          idAccessor="id"
+          queryFields={queryFields}
+          facets={facets}
+          navigation={{
+            label: 'Item categories',
+            currentLabel: 'Recovery',
+            render: () => <div>Nav Drawer Body</div>,
+          }}
+          presentation="cards"
+          renderCard={(record) => <div>{record.name}</div>}
+          defaultState={{
+            search: '',
+            filters: {},
+            page: 1,
+            pageSize: 20,
+            hiddenColumns: [],
+          }}
+        />
+      </MantineProvider>,
+    );
+
+    // Both navigation chip and Filters button exist
+    const navChip = screen.getByRole('button', {
+      name: 'Item categories: Recovery. Open Item categories',
+    });
+    expect(navChip).toBeVisible();
+
+    const filtersBtn = screen.getByRole('button', {
+      name: /Open all filters/i,
+    });
+    expect(filtersBtn).toBeVisible();
+
+    // Opening filter drawer opens filter drawer with Reset/Cancel/Apply
+    fireEvent.click(filtersBtn);
+    await waitFor(() => {
+      expect(screen.getByRole('dialog')).toBeInTheDocument();
+    });
+    expect(screen.getByRole('button', { name: 'Reset' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Cancel' })).toBeInTheDocument();
   });
 });

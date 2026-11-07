@@ -39,6 +39,7 @@ export type {
   FacetFilterValue,
   FacetOption,
   FacetRangeBucket,
+  FacetedBrowserNavigation,
   FacetedBrowserProps,
   QueryFieldDefinition,
 } from '@/components/FacetedBrowser';
