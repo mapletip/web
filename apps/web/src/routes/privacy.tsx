@@ -1,5 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router';
 
+import { SITE_ORIGIN } from '@/config/site';
 import { PrivacyPolicy } from '@/features/privacy/PrivacyPolicy';
 
 export const Route = createFileRoute('/privacy')({
@@ -13,7 +14,7 @@ export const Route = createFileRoute('/privacy')({
       },
       { name: 'robots', content: 'index,follow' },
     ],
-    links: [{ rel: 'canonical', href: 'https://mapletip.com/privacy' }],
+    links: [{ rel: 'canonical', href: `${SITE_ORIGIN}/privacy` }],
   }),
   component: PrivacyPolicy,
 });
