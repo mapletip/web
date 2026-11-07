@@ -278,22 +278,31 @@ describe('result summary', () => {
 });
 
 describe('responsive navigation slot', () => {
+  const genericNavigation = {
+    label: 'Categories',
+    rootLabel: 'All Products',
+    categoryLabel: 'Clothing',
+    subCategoryLabel: 'Shirts',
+    items: ['Clothing', 'Electronics'],
+  };
+
   it('renders the rail when navigation exists even with zero facets, without a Filters heading and with navigation.label aside aria-label', () => {
     const { container } = render(
       <MantineProvider>
         <FacetedBrowser
-          title={<h1>Items</h1>}
+          title={<h1>Catalog</h1>}
           records={demoRecords}
           idAccessor="id"
           facets={[]}
           navigation={{
-            label: 'Item categories',
-            currentLabel: 'All Items',
+            label: genericNavigation.label,
+            currentLabel: genericNavigation.rootLabel,
             render: () => (
-              <nav aria-label="Item categories">
+              <nav aria-label={genericNavigation.label}>
                 <ul>
-                  <li>Use</li>
-                  <li>ETC</li>
+                  {genericNavigation.items.map((item) => (
+                    <li key={item}>{item}</li>
+                  ))}
                 </ul>
               </nav>
             ),
@@ -313,9 +322,9 @@ describe('responsive navigation slot', () => {
 
     const aside = container.querySelector('aside');
     expect(aside).not.toBeNull();
-    expect(aside).toHaveAttribute('aria-label', 'Item categories');
+    expect(aside).toHaveAttribute('aria-label', genericNavigation.label);
     expect(
-      screen.getByRole('navigation', { name: 'Item categories' }),
+      screen.getByRole('navigation', { name: genericNavigation.label }),
     ).toBeVisible();
     expect(
       screen.queryByRole('heading', { name: 'Filters' }),
@@ -326,17 +335,17 @@ describe('responsive navigation slot', () => {
     const { container } = render(
       <MantineProvider>
         <FacetedBrowser
-          title={<h1>Items</h1>}
+          title={<h1>Catalog</h1>}
           records={demoRecords}
           idAccessor="id"
           queryFields={queryFields}
           facets={facets}
           navigation={{
-            label: 'Item categories',
-            currentLabel: 'Use',
+            label: genericNavigation.label,
+            currentLabel: genericNavigation.categoryLabel,
             render: () => (
-              <nav aria-label="Item categories">
-                <span>Categories</span>
+              <nav aria-label={genericNavigation.label}>
+                <span>{genericNavigation.label}</span>
               </nav>
             ),
           }}
@@ -355,8 +364,10 @@ describe('responsive navigation slot', () => {
 
     const aside = container.querySelector('aside');
     expect(aside).not.toBeNull();
-    expect(aside).toHaveAttribute('aria-label', 'Item categories');
-    const nav = screen.getByRole('navigation', { name: 'Item categories' });
+    expect(aside).toHaveAttribute('aria-label', genericNavigation.label);
+    const nav = screen.getByRole('navigation', {
+      name: genericNavigation.label,
+    });
     const filtersHeading = screen.getByRole('heading', { name: 'Filters' });
 
     expect(nav).toBeVisible();
@@ -371,7 +382,7 @@ describe('responsive navigation slot', () => {
     const { container } = render(
       <MantineProvider>
         <FacetedBrowser
-          title={<h1>Items</h1>}
+          title={<h1>Catalog</h1>}
           records={demoRecords}
           idAccessor="id"
           facets={[]}
@@ -395,7 +406,7 @@ describe('responsive navigation slot', () => {
     const { container } = render(
       <MantineProvider>
         <FacetedBrowser
-          title={<h1>Monsters</h1>}
+          title={<h1>Catalog</h1>}
           records={demoRecords}
           idAccessor="id"
           queryFields={queryFields}
@@ -422,13 +433,13 @@ describe('responsive navigation slot', () => {
     render(
       <MantineProvider>
         <FacetedBrowser
-          title={<h1>Items</h1>}
+          title={<h1>Catalog</h1>}
           records={demoRecords}
           idAccessor="id"
           facets={[]}
           navigation={{
-            label: 'Item categories',
-            currentLabel: 'Recovery',
+            label: genericNavigation.label,
+            currentLabel: genericNavigation.subCategoryLabel,
             render: () => <div>Nav Body</div>,
           }}
           presentation="cards"
@@ -445,10 +456,10 @@ describe('responsive navigation slot', () => {
     );
 
     const navChip = screen.getByRole('button', {
-      name: 'Item categories: Recovery. Open Item categories',
+      name: `${genericNavigation.label}: ${genericNavigation.subCategoryLabel}. Open ${genericNavigation.label}`,
     });
     expect(navChip).toBeVisible();
-    expect(navChip.textContent).toContain('Recovery');
+    expect(navChip.textContent).toContain(genericNavigation.subCategoryLabel);
 
     // Filters button should NOT exist when facets are empty
     expect(
@@ -461,7 +472,7 @@ describe('responsive navigation slot', () => {
     render(
       <MantineProvider>
         <FacetedBrowser
-          title={<h1>Items</h1>}
+          title={<h1>Catalog</h1>}
           records={demoRecords}
           idAccessor="id"
           queryFields={queryFields}
@@ -490,13 +501,13 @@ describe('responsive navigation slot', () => {
     render(
       <MantineProvider>
         <FacetedBrowser
-          title={<h1>Items</h1>}
+          title={<h1>Catalog</h1>}
           records={demoRecords}
           idAccessor="id"
           facets={[]}
           navigation={{
-            label: 'Item categories',
-            currentLabel: 'Recovery',
+            label: genericNavigation.label,
+            currentLabel: genericNavigation.subCategoryLabel,
             render: ({ onNavigate }) => {
               capturedOnNavigate = onNavigate;
               return (
@@ -528,7 +539,7 @@ describe('responsive navigation slot', () => {
     );
 
     const navChip = screen.getByRole('button', {
-      name: 'Item categories: Recovery. Open Item categories',
+      name: `${genericNavigation.label}: ${genericNavigation.subCategoryLabel}. Open ${genericNavigation.label}`,
     });
     fireEvent.click(navChip);
 
@@ -538,7 +549,7 @@ describe('responsive navigation slot', () => {
     });
 
     const closeBtn = screen.getByRole('button', {
-      name: 'Close Item categories',
+      name: `Close ${genericNavigation.label}`,
     });
     expect(closeBtn).toBeInTheDocument();
 
@@ -560,14 +571,14 @@ describe('responsive navigation slot', () => {
     render(
       <MantineProvider>
         <FacetedBrowser
-          title={<h1>Items</h1>}
+          title={<h1>Catalog</h1>}
           records={demoRecords}
           idAccessor="id"
           queryFields={queryFields}
           facets={facets}
           navigation={{
-            label: 'Item categories',
-            currentLabel: 'Recovery',
+            label: genericNavigation.label,
+            currentLabel: genericNavigation.subCategoryLabel,
             render: () => <div>Nav Drawer Body</div>,
           }}
           presentation="cards"
@@ -585,7 +596,7 @@ describe('responsive navigation slot', () => {
 
     // Both navigation chip and Filters button exist
     const navChip = screen.getByRole('button', {
-      name: 'Item categories: Recovery. Open Item categories',
+      name: `${genericNavigation.label}: ${genericNavigation.subCategoryLabel}. Open ${genericNavigation.label}`,
     });
     expect(navChip).toBeVisible();
 

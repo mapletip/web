@@ -13,144 +13,148 @@ interface TestMeta {
   readonly route: string;
 }
 
-const demoTree: DrillDownNode<TestMeta> = {
+const catalogTree: DrillDownNode<TestMeta> = {
   id: 'all',
-  label: 'All Items',
-  href: '/items',
+  label: 'All Products',
+  href: '/products',
   icon: <span data-testid="icon-all">icon-all</span>,
   count: 100,
   meta: { route: 'all' },
   children: [
     {
-      id: 'use',
-      label: 'Use',
-      href: '/items/use',
-      icon: <span data-testid="icon-use">icon-use</span>,
+      id: 'clothing',
+      label: 'Clothing',
+      href: '/products/clothing',
+      icon: <span data-testid="icon-clothing">icon-clothing</span>,
       count: 40,
-      meta: { route: 'use' },
+      meta: { route: 'clothing' },
       children: [
         {
-          id: 'use/upgrade-scrolls',
-          label: 'Upgrade Scrolls',
-          href: '/items/use/upgrade-scrolls',
+          id: 'clothing/shirts',
+          label: 'Shirts',
+          href: '/products/clothing/shirts',
           count: 15,
-          meta: { route: 'scrolls' },
+          meta: { route: 'shirts' },
         },
         {
-          id: 'use/recovery',
-          label: 'Recovery',
-          href: '/items/use/recovery',
+          id: 'clothing/pants',
+          label: 'Pants',
+          href: '/products/clothing/pants',
           count: 25,
-          meta: { route: 'recovery' },
+          meta: { route: 'pants' },
         },
         {
-          id: 'use/empty',
+          id: 'clothing/empty',
           label: 'Empty Category',
-          href: '/items/use/empty',
+          href: '/products/clothing/empty',
           count: 0,
           meta: { route: 'empty' },
         },
       ],
     },
     {
-      id: 'etc',
-      label: 'ETC',
-      href: '/items/etc',
+      id: 'electronics',
+      label: 'Electronics',
+      href: '/products/electronics',
       count: 30,
-      meta: { route: 'etc' },
+      meta: { route: 'electronics' },
       children: [
         {
-          id: 'etc/quest-items',
-          label: 'Quest Items',
-          href: '/items/etc/quest-items',
+          id: 'electronics/audio',
+          label: 'Audio',
+          href: '/products/electronics/audio',
           count: 10,
-          meta: { route: 'quest' },
+          meta: { route: 'audio' },
         },
       ],
     },
     {
-      id: 'setup',
-      label: 'Set-up',
-      href: '/items/setup',
+      id: 'home',
+      label: 'Home',
+      href: '/products/home',
       count: 20,
-      meta: { route: 'setup' },
+      meta: { route: 'home' },
     },
     {
-      id: 'cash',
-      label: 'Cash/Pet',
-      href: '/items/cash',
+      id: 'garden',
+      label: 'Garden',
+      href: '/products/garden',
       count: 10,
-      meta: { route: 'cash' },
+      meta: { route: 'garden' },
     },
   ],
 };
 
 describe('resolveDrillDownPath', () => {
   it('resolves root as current when currentId is root id', () => {
-    const result = resolveDrillDownPath(demoTree, 'all');
+    const result = resolveDrillDownPath(catalogTree, 'all');
     expect(result.ancestors).toEqual([]);
     expect(result.current.id).toBe('all');
     expect(result.children.map((c) => c.id)).toEqual([
-      'use',
-      'etc',
-      'setup',
-      'cash',
+      'clothing',
+      'electronics',
+      'home',
+      'garden',
     ]);
   });
 
   it('resolves middle node as current with root ancestor and direct children', () => {
-    const result = resolveDrillDownPath(demoTree, 'use');
+    const result = resolveDrillDownPath(catalogTree, 'clothing');
     expect(result.ancestors.map((a) => a.id)).toEqual(['all']);
-    expect(result.current.id).toBe('use');
+    expect(result.current.id).toBe('clothing');
     expect(result.children.map((c) => c.id)).toEqual([
-      'use/upgrade-scrolls',
-      'use/recovery',
-      'use/empty',
+      'clothing/shirts',
+      'clothing/pants',
+      'clothing/empty',
     ]);
   });
 
   it('resolves leaf node as current with full ancestor chain and no children', () => {
-    const result = resolveDrillDownPath(demoTree, 'use/recovery');
-    expect(result.ancestors.map((a) => a.id)).toEqual(['all', 'use']);
-    expect(result.current.id).toBe('use/recovery');
+    const result = resolveDrillDownPath(catalogTree, 'clothing/pants');
+    expect(result.ancestors.map((a) => a.id)).toEqual(['all', 'clothing']);
+    expect(result.current.id).toBe('clothing/pants');
     expect(result.children).toEqual([]);
   });
 
   it('treats root as current when currentId is unknown', () => {
-    const result = resolveDrillDownPath(demoTree, 'unknown-id');
+    const result = resolveDrillDownPath(catalogTree, 'unknown-id');
     expect(result.ancestors).toEqual([]);
     expect(result.current.id).toBe('all');
     expect(result.children.map((c) => c.id)).toEqual([
-      'use',
-      'etc',
-      'setup',
-      'cash',
+      'clothing',
+      'electronics',
+      'home',
+      'garden',
     ]);
   });
 
   it('omits child rows with count === 0 when hideEmpty is true', () => {
-    const result = resolveDrillDownPath(demoTree, 'use', { hideEmpty: true });
+    const result = resolveDrillDownPath(catalogTree, 'clothing', {
+      hideEmpty: true,
+    });
     expect(result.children.map((c) => c.id)).toEqual([
-      'use/upgrade-scrolls',
-      'use/recovery',
+      'clothing/shirts',
+      'clothing/pants',
     ]);
   });
 
   it('keeps child rows with count === 0 when hideEmpty is false', () => {
-    const result = resolveDrillDownPath(demoTree, 'use', { hideEmpty: false });
+    const result = resolveDrillDownPath(catalogTree, 'clothing', {
+      hideEmpty: false,
+    });
     expect(result.children.map((c) => c.id)).toEqual([
-      'use/upgrade-scrolls',
-      'use/recovery',
-      'use/empty',
+      'clothing/shirts',
+      'clothing/pants',
+      'clothing/empty',
     ]);
   });
 
   it('never omits the current node or ancestors even when current count === 0 and hideEmpty is true', () => {
-    const result = resolveDrillDownPath(demoTree, 'use/empty', {
+    const result = resolveDrillDownPath(catalogTree, 'clothing/empty', {
       hideEmpty: true,
     });
-    expect(result.ancestors.map((a) => a.id)).toEqual(['all', 'use']);
-    expect(result.current.id).toBe('use/empty');
+    expect(result.ancestors.map((a) => a.id)).toEqual(['all', 'clothing']);
+    expect(result.current.id).toBe('clothing/empty');
     expect(result.current.count).toBe(0);
     expect(result.children).toEqual([]);
   });
@@ -174,21 +178,25 @@ describe('resolveDrillDownPath', () => {
 });
 
 describe('DrillDownNav component', () => {
-  it('renders Shape 1 (Current = root): All Items* and direct children without back rows', () => {
+  it('renders Shape 1 (Current = root): All Products* and direct children without back rows', () => {
     render(
-      <DrillDownNav root={demoTree} currentId="all" label="Item categories" />,
+      <DrillDownNav
+        root={catalogTree}
+        currentId="all"
+        label="Product categories"
+      />,
     );
 
-    const nav = screen.getByRole('navigation', { name: 'Item categories' });
+    const nav = screen.getByRole('navigation', { name: 'Product categories' });
     expect(nav).toBeInTheDocument();
 
     const links = screen.getAllByRole('link');
     expect(links.map((link) => link.textContent)).toEqual([
-      expect.stringContaining('All Items'),
-      expect.stringContaining('Use'),
-      expect.stringContaining('ETC'),
-      expect.stringContaining('Set-up'),
-      expect.stringContaining('Cash/Pet'),
+      expect.stringContaining('All Products'),
+      expect.stringContaining('Clothing'),
+      expect.stringContaining('Electronics'),
+      expect.stringContaining('Home'),
+      expect.stringContaining('Garden'),
     ]);
 
     // Back rows are not rendered
@@ -199,56 +207,60 @@ describe('DrillDownNav component', () => {
       (link) => link.getAttribute('aria-current') === 'page',
     );
     expect(currentLinks).toHaveLength(1);
-    expect(currentLinks[0]).toHaveAttribute('href', '/items');
-    expect(currentLinks[0]?.textContent).toContain('All Items');
+    expect(currentLinks[0]).toHaveAttribute('href', '/products');
+    expect(currentLinks[0]?.textContent).toContain('All Products');
   });
 
-  it('renders Shape 2 (Current = Use): ← All Items, Use*, and Use children without siblings', () => {
+  it('renders Shape 2 (Current = Clothing): ← All Products, Clothing*, and Clothing children without siblings', () => {
     render(
-      <DrillDownNav root={demoTree} currentId="use" label="Item categories" />,
+      <DrillDownNav
+        root={catalogTree}
+        currentId="clothing"
+        label="Product categories"
+      />,
     );
 
     const links = screen.getAllByRole('link');
     expect(links.map((link) => link.textContent)).toEqual([
-      expect.stringMatching(/←.*All Items/),
-      expect.stringContaining('Use'),
-      expect.stringContaining('Upgrade Scrolls'),
-      expect.stringContaining('Recovery'),
+      expect.stringMatching(/←.*All Products/),
+      expect.stringContaining('Clothing'),
+      expect.stringContaining('Shirts'),
+      expect.stringContaining('Pants'),
       expect.stringContaining('Empty Category'),
     ]);
 
-    // Sibling scopes (ETC, Set-up, Cash/Pet) must NOT be rendered
-    expect(screen.queryByText('ETC')).not.toBeInTheDocument();
-    expect(screen.queryByText('Set-up')).not.toBeInTheDocument();
-    expect(screen.queryByText('Cash/Pet')).not.toBeInTheDocument();
+    // Sibling scopes (Electronics, Home, Garden) must NOT be rendered
+    expect(screen.queryByText('Electronics')).not.toBeInTheDocument();
+    expect(screen.queryByText('Home')).not.toBeInTheDocument();
+    expect(screen.queryByText('Garden')).not.toBeInTheDocument();
 
     // Exactly one link has aria-current="page"
     const currentLinks = links.filter(
       (link) => link.getAttribute('aria-current') === 'page',
     );
     expect(currentLinks).toHaveLength(1);
-    expect(currentLinks[0]).toHaveAttribute('href', '/items/use');
-    expect(currentLinks[0]?.textContent).toContain('Use');
+    expect(currentLinks[0]).toHaveAttribute('href', '/products/clothing');
+    expect(currentLinks[0]?.textContent).toContain('Clothing');
   });
 
-  it('renders Shape 3 (Current = Recovery): ← All Items, ← Use, and Recovery* without siblings or children', () => {
+  it('renders Shape 3 (Current = Pants): ← All Products, ← Clothing, and Pants* without siblings or children', () => {
     render(
       <DrillDownNav
-        root={demoTree}
-        currentId="use/recovery"
-        label="Item categories"
+        root={catalogTree}
+        currentId="clothing/pants"
+        label="Product categories"
       />,
     );
 
     const links = screen.getAllByRole('link');
     expect(links.map((link) => link.textContent)).toEqual([
-      expect.stringMatching(/←.*All Items/),
-      expect.stringMatching(/←.*Use/),
-      expect.stringContaining('Recovery'),
+      expect.stringMatching(/←.*All Products/),
+      expect.stringMatching(/←.*Clothing/),
+      expect.stringContaining('Pants'),
     ]);
 
-    // Sibling children (Upgrade Scrolls, Empty Category) must NOT be rendered
-    expect(screen.queryByText('Upgrade Scrolls')).not.toBeInTheDocument();
+    // Sibling children (Shirts, Empty Category) must NOT be rendered
+    expect(screen.queryByText('Shirts')).not.toBeInTheDocument();
     expect(screen.queryByText('Empty Category')).not.toBeInTheDocument();
 
     // Exactly one link has aria-current="page"
@@ -256,17 +268,21 @@ describe('DrillDownNav component', () => {
       (link) => link.getAttribute('aria-current') === 'page',
     );
     expect(currentLinks).toHaveLength(1);
-    expect(currentLinks[0]).toHaveAttribute('href', '/items/use/recovery');
+    expect(currentLinks[0]).toHaveAttribute('href', '/products/clothing/pants');
   });
 
   it('ancestor with icon renders the icon and no count', () => {
     render(
-      <DrillDownNav root={demoTree} currentId="use" label="Item categories" />,
+      <DrillDownNav
+        root={catalogTree}
+        currentId="clothing"
+        label="Product categories"
+      />,
     );
 
     // Arrow is aria-hidden so the back link's accessible name is exactly the label
-    const backLink = screen.getByRole('link', { name: 'All Items' });
-    expect(backLink).toHaveAttribute('href', '/items');
+    const backLink = screen.getByRole('link', { name: 'All Products' });
+    expect(backLink).toHaveAttribute('href', '/products');
     const arrow = backLink.querySelector('[class*="backArrow"]');
     expect(arrow).toHaveAttribute('aria-hidden', 'true');
     expect(arrow?.textContent).toBe('←');
@@ -288,14 +304,14 @@ describe('DrillDownNav component', () => {
   it('ancestor without icon unchanged (arrow + label only, no icon, no count)', () => {
     render(
       <DrillDownNav
-        root={demoTree}
-        currentId="etc/quest-items"
-        label="Item categories"
+        root={catalogTree}
+        currentId="electronics/audio"
+        label="Product categories"
       />,
     );
 
-    const backLink = screen.getByRole('link', { name: 'ETC' });
-    expect(backLink).toHaveAttribute('href', '/items/etc');
+    const backLink = screen.getByRole('link', { name: 'Electronics' });
+    expect(backLink).toHaveAttribute('href', '/products/electronics');
     const arrow = backLink.querySelector('[class*="backArrow"]');
     expect(arrow).toHaveAttribute('aria-hidden', 'true');
     expect(arrow?.textContent).toBe('←');
@@ -308,30 +324,38 @@ describe('DrillDownNav component', () => {
     expect(backLink.querySelector('[class*="count"]')).toBeNull();
 
     // Rendered text is exactly arrow + label
-    expect(backLink.textContent).toMatch(/←\s*ETC$/);
+    expect(backLink.textContent).toMatch(/←\s*Electronics$/);
   });
 
   it('accessible name stays exactly the label for ancestor rows with and without icons', () => {
     render(
       <DrillDownNav
-        root={demoTree}
-        currentId="etc/quest-items"
-        label="Item categories"
+        root={catalogTree}
+        currentId="electronics/audio"
+        label="Product categories"
       />,
     );
 
-    expect(screen.getByRole('link', { name: 'All Items' })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'ETC' })).toBeInTheDocument();
+    expect(
+      screen.getByRole('link', { name: 'All Products' }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('link', { name: 'Electronics' }),
+    ).toBeInTheDocument();
     expect(screen.queryByRole('link', { name: /←/ })).not.toBeInTheDocument();
   });
 
   it('renders zero counts dimmed while keeping the row an interactive link', () => {
     render(
-      <DrillDownNav root={demoTree} currentId="use" label="Item categories" />,
+      <DrillDownNav
+        root={catalogTree}
+        currentId="clothing"
+        label="Product categories"
+      />,
     );
 
     const emptyLink = screen.getByRole('link', { name: /Empty Category/ });
-    expect(emptyLink).toHaveAttribute('href', '/items/use/empty');
+    expect(emptyLink).toHaveAttribute('href', '/products/clothing/empty');
     expect(emptyLink.textContent).toContain('0');
 
     const zeroCountElement = emptyLink.querySelector('[class*="countDimmed"]');
@@ -342,29 +366,33 @@ describe('DrillDownNav component', () => {
   it('hides child rows whose count === 0 when hideEmpty is true', () => {
     render(
       <DrillDownNav
-        root={demoTree}
-        currentId="use"
-        label="Item categories"
+        root={catalogTree}
+        currentId="clothing"
+        label="Product categories"
         hideEmpty
       />,
     );
 
     expect(screen.queryByText('Empty Category')).not.toBeInTheDocument();
-    expect(screen.getByText('Upgrade Scrolls')).toBeInTheDocument();
-    expect(screen.getByText('Recovery')).toBeInTheDocument();
+    expect(screen.getByText('Shirts')).toBeInTheDocument();
+    expect(screen.getByText('Pants')).toBeInTheDocument();
   });
 
   it('shows child rows whose count === 0 (dimmed) when hideEmpty is false or omitted', () => {
     const { rerender } = render(
-      <DrillDownNav root={demoTree} currentId="use" label="Item categories" />,
+      <DrillDownNav
+        root={catalogTree}
+        currentId="clothing"
+        label="Product categories"
+      />,
     );
     expect(screen.getByText('Empty Category')).toBeInTheDocument();
 
     rerender(
       <DrillDownNav
-        root={demoTree}
-        currentId="use"
-        label="Item categories"
+        root={catalogTree}
+        currentId="clothing"
+        label="Product categories"
         hideEmpty={false}
       />,
     );
@@ -374,9 +402,9 @@ describe('DrillDownNav component', () => {
   it('still renders current zero node as current with ancestors when hideEmpty is true', () => {
     render(
       <DrillDownNav
-        root={demoTree}
-        currentId="use/empty"
-        label="Item categories"
+        root={catalogTree}
+        currentId="clothing/empty"
+        label="Product categories"
         hideEmpty
       />,
     );
@@ -387,8 +415,10 @@ describe('DrillDownNav component', () => {
     expect(currentLink).toHaveAttribute('aria-current', 'page');
     expect(currentLink.textContent).toContain('0');
 
-    expect(screen.getByRole('link', { name: 'All Items' })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Use' })).toBeInTheDocument();
+    expect(
+      screen.getByRole('link', { name: 'All Products' }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Clothing' })).toBeInTheDocument();
   });
 
   it('never hides child rows with undefined count when hideEmpty is true', () => {
@@ -418,17 +448,17 @@ describe('DrillDownNav component', () => {
   it('treats unknown currentId as root', () => {
     render(
       <DrillDownNav
-        root={demoTree}
+        root={catalogTree}
         currentId="non-existent"
-        label="Item categories"
+        label="Product categories"
       />,
     );
 
     const currentLink = screen
       .getAllByRole('link')
       .find((link) => link.getAttribute('aria-current') === 'page');
-    expect(currentLink).toHaveAttribute('href', '/items');
-    expect(currentLink?.textContent).toContain('All Items');
+    expect(currentLink).toHaveAttribute('href', '/products');
+    expect(currentLink?.textContent).toContain('All Products');
   });
 
   it('passes node with meta and built props to renderLink', () => {
@@ -449,42 +479,42 @@ describe('DrillDownNav component', () => {
 
     render(
       <DrillDownNav
-        root={demoTree}
-        currentId="use"
-        label="Item categories"
+        root={catalogTree}
+        currentId="clothing"
+        label="Product categories"
         renderLink={renderLink}
       />,
     );
 
     expect(renderLink).toHaveBeenCalled();
-    const useLink = screen.getByTestId('custom-use');
-    expect(useLink).toHaveAttribute('data-route', 'use');
-    expect(useLink).toHaveAttribute('aria-current', 'page');
-    expect(useLink).toHaveAttribute('href', '/items/use');
+    const clothingLink = screen.getByTestId('custom-clothing');
+    expect(clothingLink).toHaveAttribute('data-route', 'clothing');
+    expect(clothingLink).toHaveAttribute('aria-current', 'page');
+    expect(clothingLink).toHaveAttribute('href', '/products/clothing');
   });
 
   it('fires onNavigate when any row link is clicked', () => {
     const onNavigate = vi.fn();
     render(
       <DrillDownNav
-        root={demoTree}
-        currentId="use"
-        label="Item categories"
+        root={catalogTree}
+        currentId="clothing"
+        label="Product categories"
         onNavigate={onNavigate}
       />,
     );
 
-    const backLink = screen.getByRole('link', { name: 'All Items' });
+    const backLink = screen.getByRole('link', { name: 'All Products' });
     fireEvent.click(backLink);
     expect(onNavigate).toHaveBeenCalledTimes(1);
 
     const currentLink = screen.getByRole('link', {
-      name: (name) => name.includes('Use'),
+      name: (name) => name.includes('Clothing'),
     });
     fireEvent.click(currentLink);
     expect(onNavigate).toHaveBeenCalledTimes(2);
 
-    const childLink = screen.getByRole('link', { name: /Recovery/ });
+    const childLink = screen.getByRole('link', { name: /Pants/ });
     fireEvent.click(childLink);
     expect(onNavigate).toHaveBeenCalledTimes(3);
   });

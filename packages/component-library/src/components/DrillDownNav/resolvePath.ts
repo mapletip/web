@@ -45,15 +45,14 @@ function findNode<TMeta>(
 export function resolveDrillDownPath<TMeta = undefined>(
   root: DrillDownNode<TMeta>,
   currentId: string,
-  options?: ResolveDrillDownPathOptions | boolean,
+  options: ResolveDrillDownPathOptions = {},
 ): ResolvedDrillDownPath<TMeta> {
   const match = findNode(root, currentId, []);
   const current = match ? match.current : root;
   const ancestors = match ? match.ancestors : [];
   const rawChildren = current.children ?? [];
 
-  const hideEmpty =
-    typeof options === 'boolean' ? options : (options?.hideEmpty ?? false);
+  const hideEmpty = options.hideEmpty ?? false;
 
   const children = hideEmpty
     ? rawChildren.filter((child) => child.count !== 0)

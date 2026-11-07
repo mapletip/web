@@ -95,6 +95,23 @@ function getAriaCurrent(
 const meta: Meta<typeof DrillDownNav> = {
   title: 'Components/DrillDownNav',
   component: DrillDownNav,
+  parameters: {
+    layout: 'padded',
+  },
+  decorators: [
+    (Story) => (
+      <div
+        style={{
+          width: 260,
+          maxWidth: '100%',
+          alignSelf: 'flex-start',
+          marginRight: 'auto',
+        }}
+      >
+        <Story />
+      </div>
+    ),
+  ],
   argTypes: {
     currentId: { control: 'text' },
     hideEmpty: { control: 'boolean' },

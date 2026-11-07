@@ -79,15 +79,19 @@
   color: var(--mantine-color-dimmed);
 }
 
-.currentRow {
-  background-color: var(--mapletip-color-selection) !important;
-  color: var(--mapletip-color-brand-text) !important;
+.row.currentRow {
+  background-color: var(--mapletip-color-selection);
+  color: var(--mapletip-color-brand-text);
   font-weight: 600;
 }
 
-.currentRow .count,
-.currentRow .label {
-  color: var(--mapletip-color-brand-text) !important;
+.row.currentRow:hover {
+  background-color: var(--mapletip-color-selection);
+}
+
+.row.currentRow .count,
+.row.currentRow .label {
+  color: inherit;
 }
 
 .childRow {
