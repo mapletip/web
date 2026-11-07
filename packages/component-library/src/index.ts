@@ -38,4 +38,5 @@ export type {
   FacetRangeBucket,
   FacetedBrowserProps,
   QueryFieldDefinition,
+  StateChangeDetails,
 } from '@/components/FacetedBrowser';

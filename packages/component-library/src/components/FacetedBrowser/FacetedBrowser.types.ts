@@ -11,6 +11,10 @@ export interface BrowseSortOption {
   readonly direction: 'asc' | 'desc';
 }
 
+export interface StateChangeDetails {
+  readonly reason?: 'clamp' | undefined;
+}
+
 interface CommonProps<TRecord extends Record<string, unknown>> {
   readonly title: ReactNode;
   readonly records: readonly TRecord[];
@@ -64,12 +68,18 @@ interface CommonProps<TRecord extends Record<string, unknown>> {
 type StateProps =
   | {
       readonly state: BrowseState;
-      readonly onStateChange: (nextState: BrowseState) => void;
+      readonly onStateChange: (
+        nextState: BrowseState,
+        details?: StateChangeDetails,
+      ) => void;
       readonly defaultState?: never;
     }
   | {
       readonly state?: never;
-      readonly onStateChange?: (nextState: BrowseState) => void;
+      readonly onStateChange?: (
+        nextState: BrowseState,
+        details?: StateChangeDetails,
+      ) => void;
       readonly defaultState?: BrowseState;
     };
 

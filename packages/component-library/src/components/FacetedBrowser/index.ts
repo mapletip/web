@@ -3,6 +3,7 @@ export { buildQuantileBuckets } from '@/components/FacetedBrowser/FacetControls/
 export type {
   BrowseSortOption,
   FacetedBrowserProps,
+  StateChangeDetails,
 } from '@/components/FacetedBrowser/FacetedBrowser.types';
 export type {
   FacetControlContext,
