@@ -24,10 +24,8 @@ import {
   getCategoryCounts,
   ITEM_SCOPES,
   ITEM_SCOPE_SLUGS,
-  type ItemCategoryChildId,
   type ItemScopeSlug,
 } from './categories';
-import { CATEGORY_ICONS } from './category-icons';
 import type { ItemRow } from './project';
 import type { ItemCategorySelection } from './routing';
 
@@ -152,11 +150,9 @@ export function getItemNavTree(
             scope: scopeSlug,
             child: child.slug,
           };
-          const childId = `${scopeSlug}/${child.slug}` as ItemCategoryChildId;
-          const preferredIds = CATEGORY_ICONS[childId];
           let childIcon: ReactElement<ComponentProps<'img'>> | undefined;
-          if (preferredIds) {
-            for (const sourceId of preferredIds) {
+          if (child.iconSourceIds) {
+            for (const sourceId of child.iconSourceIds) {
               const contentId = iconBySourceId.get(sourceId);
               if (contentId) {
                 childIcon = renderItemNavIcon(
@@ -168,7 +164,7 @@ export function getItemNavTree(
           }
 
           return {
-            id: childId,
+            id: `${scopeSlug}/${child.slug}`,
             label: child.label,
             href: buildItemNavHref(childParams),
             ...(childIcon ? { icon: childIcon } : {}),

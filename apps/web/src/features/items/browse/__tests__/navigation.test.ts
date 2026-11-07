@@ -1,3 +1,4 @@
+import type { ReactElement } from 'react';
 import { describe, expect, it } from 'vitest';
 
 import { getCategoryCounts, ITEM_SCOPES } from '../categories';
@@ -245,6 +246,71 @@ describe('navigation', () => {
     it('returns undefined for nonexistent id', () => {
       const tree = getItemNavTree(dummyRows, 'cw-launch');
       expect(findItemNavNode(tree, 'nonexistent')).toBeUndefined();
+    });
+
+    it('yields no icon when preferred IDs are missing or have no icon', () => {
+      // Rows contain members of recovery, but neither has sourceId in iconSourceIds or an icon
+      const rowsWithoutPreferred: readonly ItemRow[] = [
+        {
+          key: 'other-recovery',
+          sourceId: '02999999',
+          itemClass: 'consume',
+          functions: ['recovery'],
+          icon: '3e6f5119559b88de2f712dc0bf15ede726d2db79649e96a0a46c57c72fea0559',
+        },
+        {
+          key: 'recovery-no-icon',
+          sourceId: '02000000',
+          itemClass: 'consume',
+          functions: ['recovery'],
+          // icon is omitted
+        },
+      ];
+
+      const tree = getItemNavTree(rowsWithoutPreferred, 'cw-launch');
+      const useScope = tree.children?.find((c) => c.id === 'use');
+      const recoveryNode = useScope?.children?.find(
+        (c) => c.id === 'use/recovery',
+      );
+      const otherEtcNode = tree.children
+        ?.find((c) => c.id === 'etc')
+        ?.children?.find((c) => c.id === 'etc/other-etc-items');
+
+      expect(recoveryNode?.icon).toBeUndefined();
+      expect(otherEtcNode?.icon).toBeUndefined();
+    });
+
+    it('resolves the first preferred source ID with a known icon', () => {
+      // Both 02000002 (second preference) and 02000001 (third preference) are present with icons,
+      // but 02000000 (first preference) is missing.
+      const rows: readonly ItemRow[] = [
+        {
+          key: 'white-pot',
+          sourceId: '02000002',
+          itemClass: 'consume',
+          functions: ['recovery'],
+          icon: '182b52bbd81a4baeff46af86ad8317adfad729e10e78e4c5cb41c46a7263d5f6',
+        },
+        {
+          key: 'orange-pot',
+          sourceId: '02000001',
+          itemClass: 'consume',
+          functions: ['recovery'],
+          icon: 'd49da50440246171b9a8898595c30abfee7bd89945afd651cfa76d6f463378d5',
+        },
+      ];
+
+      const tree = getItemNavTree(rows, 'cw-launch');
+      const useScope = tree.children?.find((c) => c.id === 'use');
+      const recoveryNode = useScope?.children?.find(
+        (c) => c.id === 'use/recovery',
+      );
+
+      expect(recoveryNode?.icon).toBeDefined();
+      const iconElement = recoveryNode?.icon as ReactElement<{ src: string }>;
+      expect(iconElement.props.src).toContain(
+        '182b52bbd81a4baeff46af86ad8317adfad729e10e78e4c5cb41c46a7263d5f6',
+      );
     });
   });
 });
