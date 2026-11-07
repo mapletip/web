@@ -6,6 +6,7 @@ import {
   getDropCoverageNotice,
   getItemFacets,
   getItemRelationships,
+  ITEM_QUERY_FIELDS,
 } from '../facets';
 import type { ItemRow } from '../project';
 
@@ -43,6 +44,14 @@ describe('facets', () => {
       functions: [],
       monsterDropCount: 2,
     },
+    {
+      key: '3',
+      sourceId: '02000001',
+      name: 'Blue Potion',
+      itemClass: 'consume',
+      types: ['potion'],
+      functions: ['recovery'],
+    },
   ];
 
   describe('getItemRelationships', () => {
@@ -53,8 +62,8 @@ describe('facets', () => {
 
     it('returns empty array when no relationship counts are positive', () => {
       const rels = getItemRelationships({
-        key: '3',
-        sourceId: '02000001',
+        key: '4',
+        sourceId: '02000002',
         itemClass: 'consume',
         monsterDropCount: 0,
       });
@@ -120,6 +129,394 @@ describe('facets', () => {
       expect(
         relFacetUnsup?.options?.some((opt) => opt.value === 'monster-drop'),
       ).toBe(false);
+    });
+
+    it('drops no-op options that match every row in the population and omits empty facets', () => {
+      // In Upgrade Scrolls, every scroll has type 'upgrade-scroll'
+      const scrollsCategory = {
+        scope: ITEM_SCOPES.use,
+        child: ITEM_SCOPES.use.children.find(
+          (c) => c.slug === 'upgrade-scrolls',
+        ),
+      };
+      const scrollRows: readonly ItemRow[] = [
+        {
+          key: 's1',
+          sourceId: '02040001',
+          name: 'Scroll for Helmet DEF 60%',
+          itemClass: 'consume',
+          types: ['upgrade-scroll'],
+          targetLabel: 'hat',
+          stats: { weaponDefense: 2 },
+          success: 60,
+        },
+        {
+          key: 's2',
+          sourceId: '02040002',
+          name: 'Scroll for Shoes Jump 60%',
+          itemClass: 'consume',
+          types: ['upgrade-scroll'],
+          targetLabel: 'shoes',
+          stats: { jump: 2 },
+          success: 60,
+        },
+      ];
+
+      const facets = getItemFacets(scrollsCategory, dummyCoverage, scrollRows);
+
+      // 'Item type: Upgrade Scroll (2)' matches 2/2 rows -> dropped -> types facet omitted
+      const typeFacet = facets.find((f) => f.id === 'types');
+      expect(typeFacet).toBeUndefined();
+
+      // scrollSuccess has 60% on 2/2 rows -> dropped -> scrollSuccess facet omitted
+      const successFacet = facets.find((f) => f.id === 'scrollSuccess');
+      expect(successFacet).toBeUndefined();
+
+      // scrollTarget has 'hat' (1/2) and 'shoes' (1/2) -> kept!
+      const targetFacet = facets.find((f) => f.id === 'scrollTarget');
+      expect(targetFacet).toBeDefined();
+      expect(targetFacet?.options).toHaveLength(2);
+    });
+
+    it('hides scrollTier when coverage is unsupported', () => {
+      const scrollsCategory = {
+        scope: ITEM_SCOPES.use,
+        child: ITEM_SCOPES.use.children.find(
+          (c) => c.slug === 'upgrade-scrolls',
+        ),
+      };
+      const rowsWithTier: readonly ItemRow[] = [
+        {
+          key: 's1',
+          sourceId: '02040001',
+          name: 'Scroll 1',
+          itemClass: 'consume',
+          types: ['upgrade-scroll'],
+          tier: 'lesser',
+        },
+        {
+          key: 's2',
+          sourceId: '02040002',
+          name: 'Scroll 2',
+          itemClass: 'consume',
+          types: ['upgrade-scroll'],
+          tier: 'intermediate',
+        },
+      ];
+
+      const unsupportedCov: ItemBrowseCoverage = {
+        ...dummyCoverage,
+        scrollTier: 'unsupported',
+      };
+      const facetsUnsup = getItemFacets(
+        scrollsCategory,
+        unsupportedCov,
+        rowsWithTier,
+      );
+      expect(facetsUnsup.find((f) => f.id === 'scrollTier')).toBeUndefined();
+
+      const supportedCov: ItemBrowseCoverage = {
+        ...dummyCoverage,
+        scrollTier: 'complete',
+      };
+      const facetsSup = getItemFacets(
+        scrollsCategory,
+        supportedCov,
+        rowsWithTier,
+      );
+      expect(facetsSup.find((f) => f.id === 'scrollTier')).toBeDefined();
+    });
+
+    it('keeps chair seat recovery values absent from Recovery child', () => {
+      const recoveryCategory = {
+        scope: ITEM_SCOPES.use,
+        child: ITEM_SCOPES.use.children.find((c) => c.slug === 'recovery'),
+      };
+      const chairsCategory = {
+        scope: ITEM_SCOPES.setup,
+        child: ITEM_SCOPES.setup.children.find((c) => c.slug === 'chairs'),
+      };
+
+      const recoveryRows: readonly ItemRow[] = [
+        {
+          key: 'r1',
+          sourceId: '02000000',
+          name: 'Red Potion',
+          itemClass: 'consume',
+          hp: 50,
+        },
+        {
+          key: 'r2',
+          sourceId: '02000001',
+          name: 'Orange Potion',
+          itemClass: 'consume',
+          hp: 150,
+        },
+      ];
+
+      const chairRows: readonly ItemRow[] = [
+        {
+          key: 'c1',
+          sourceId: '03010000',
+          name: 'Relaxer',
+          itemClass: 'setup',
+          seatHp: 50,
+          seatMp: 10,
+        },
+        {
+          key: 'c2',
+          sourceId: '03010001',
+          name: 'Yellow Chair',
+          itemClass: 'setup',
+          seatHp: 100,
+          seatMp: 20,
+        },
+      ];
+
+      const recoveryFacets = getItemFacets(
+        recoveryCategory,
+        dummyCoverage,
+        recoveryRows,
+      );
+      expect(recoveryFacets.find((f) => f.id === 'seatHp')).toBeUndefined();
+      expect(recoveryFacets.find((f) => f.id === 'seatMp')).toBeUndefined();
+      expect(recoveryFacets.find((f) => f.id === 'hp')).toBeDefined();
+
+      const chairFacets = getItemFacets(
+        chairsCategory,
+        dummyCoverage,
+        chairRows,
+      );
+      expect(chairFacets.find((f) => f.id === 'seatHp')).toBeDefined();
+      expect(chairFacets.find((f) => f.id === 'seatMp')).toBeDefined();
+      expect(chairFacets.find((f) => f.id === 'hp')).toBeUndefined();
+    });
+
+    it('disambiguates duplicate pet names and handles unresolved and unnamed targets', () => {
+      const petFoodCategory = {
+        scope: ITEM_SCOPES.use,
+        child: ITEM_SCOPES.use.children.find((c) => c.slug === 'pet-food'),
+      };
+
+      const roster: readonly ItemRow[] = [
+        {
+          key: 'pet:dragon-red',
+          sourceId: '5000020',
+          name: 'Baby Dragon',
+          itemClass: 'pet',
+        },
+        {
+          key: 'pet:dragon-blue',
+          sourceId: '5000021',
+          name: 'Baby Dragon',
+          itemClass: 'pet',
+        },
+        {
+          key: 'pet:husky',
+          sourceId: '5000010',
+          name: 'Husky',
+          itemClass: 'pet',
+        },
+        {
+          key: 'pet:unnamed',
+          sourceId: '5000099',
+          itemClass: 'pet',
+        },
+      ];
+
+      const foodRows: readonly ItemRow[] = [
+        {
+          key: 'f1',
+          sourceId: '02120000',
+          name: 'Dragon Food',
+          itemClass: 'consume',
+          petTargets: [
+            { key: 'pet:dragon-red', name: 'Baby Dragon' },
+            { key: 'pet:dragon-blue', name: 'Baby Dragon' },
+          ],
+          unresolvedPetTargets: ['5000046'],
+        },
+        {
+          key: 'f2',
+          sourceId: '02120001',
+          name: 'Dog Food',
+          itemClass: 'consume',
+          petTargets: [
+            { key: 'pet:husky', name: 'Husky' },
+            { key: 'pet:unnamed' },
+          ],
+        },
+      ];
+
+      const facets = getItemFacets(
+        petFoodCategory,
+        dummyCoverage,
+        foodRows,
+        roster,
+      );
+      const petFacet = facets.find((f) => f.id === 'pet');
+      expect(petFacet).toBeDefined();
+
+      const options = petFacet?.options ?? [];
+      // Colliding names have sourceId appended
+      expect(options).toContainEqual({
+        value: 'pet:dragon-red',
+        label: 'Baby Dragon (5000020)',
+      });
+      expect(options).toContainEqual({
+        value: 'pet:dragon-blue',
+        label: 'Baby Dragon (5000021)',
+      });
+
+      // Unique name stays clean
+      expect(options).toContainEqual({
+        value: 'pet:husky',
+        label: 'Husky',
+      });
+
+      // Unnamed pet gets "Unnamed pet (<source id>)"
+      expect(options).toContainEqual({
+        value: 'pet:unnamed',
+        label: 'Unnamed pet (5000099)',
+      });
+
+      // Unresolved target gets "Unresolved target <id>"
+      expect(options).toContainEqual({
+        value: '5000046',
+        label: 'Unresolved target 5000046',
+      });
+    });
+  });
+
+  describe('query fields & filtering semantics', () => {
+    function getNumericValue(
+      fieldId: string,
+      row: ItemRow,
+    ): number | undefined {
+      const field = ITEM_QUERY_FIELDS.find(
+        (f) => typeof f === 'object' && f !== null && f.id === fieldId,
+      );
+      if (typeof field === 'object' && field !== null) {
+        const accessor = field.accessor;
+        if (typeof accessor === 'function') {
+          const val: unknown = accessor(row);
+          if (typeof val === 'number') {
+            return val;
+          }
+        }
+      }
+      return undefined;
+    }
+
+    function getStringListValue(
+      fieldId: string,
+      row: ItemRow,
+    ): readonly string[] {
+      const field = ITEM_QUERY_FIELDS.find(
+        (f) => typeof f === 'object' && f !== null && f.id === fieldId,
+      );
+      if (typeof field === 'object' && field !== null) {
+        const accessor = field.accessor;
+        if (typeof accessor === 'function') {
+          const val: unknown = accessor(row);
+          if (Array.isArray(val)) {
+            return val.filter(
+              (item): item is string => typeof item === 'string',
+            );
+          }
+        }
+      }
+      return [];
+    }
+
+    it('does not match percent-only item against flat hp range and never sums units', () => {
+      const elixir: ItemRow = {
+        key: 'elixir',
+        sourceId: '02000004',
+        name: 'Elixir',
+        itemClass: 'consume',
+        hpPercent: 50,
+        mpPercent: 50,
+      };
+      const potion: ItemRow = {
+        key: 'potion',
+        sourceId: '02000000',
+        name: 'Red Potion',
+        itemClass: 'consume',
+        hp: 50,
+      };
+
+      // Accessors return honest undefined, never 0
+      expect(getNumericValue('hp', elixir)).toBeUndefined();
+      expect(getNumericValue('hp', potion)).toBe(50);
+      expect(getNumericValue('hpPercent', elixir)).toBe(50);
+      expect(getNumericValue('hpPercent', potion)).toBeUndefined();
+    });
+
+    it('keeps attack-less arrow in population and only excludes it when attack range is active', () => {
+      const basicArrow: ItemRow = {
+        key: 'arrow:basic',
+        sourceId: '02060000',
+        name: 'Arrow for Bow',
+        itemClass: 'consume',
+      };
+      const bronzeArrow: ItemRow = {
+        key: 'arrow:bronze',
+        sourceId: '02060001',
+        name: 'Bronze Arrow for Bow',
+        itemClass: 'consume',
+        attack: 1,
+      };
+
+      expect(getNumericValue('attack', basicArrow)).toBeUndefined();
+      expect(getNumericValue('attack', bronzeArrow)).toBe(1);
+    });
+
+    it('evaluates OR within multi-select and AND across independent facets', () => {
+      const scrollStrength: ItemRow = {
+        key: 's1',
+        sourceId: '02040001',
+        itemClass: 'consume',
+        stats: { strength: 2 },
+        success: 60,
+      };
+      const scrollLuck: ItemRow = {
+        key: 's2',
+        sourceId: '02040002',
+        itemClass: 'consume',
+        stats: { luck: 2 },
+        success: 60,
+      };
+      const scrollDex: ItemRow = {
+        key: 's3',
+        sourceId: '02040003',
+        itemClass: 'consume',
+        stats: { dexterity: 2 },
+        success: 100,
+      };
+
+      // OR within: selecting ['strength', 'luck']
+      const filterStats = ['strength', 'luck'];
+      const matchesOr = (row: ItemRow) => {
+        const rowStats = getStringListValue('scrollStat', row);
+        return rowStats.some((s) => filterStats.includes(s));
+      };
+
+      expect(matchesOr(scrollStrength)).toBe(true);
+      expect(matchesOr(scrollLuck)).toBe(true);
+      expect(matchesOr(scrollDex)).toBe(false);
+
+      // AND across: combining with success === 60
+      const matchesBoth = (row: ItemRow) => {
+        const matchesStat = matchesOr(row);
+        const rowSuccess = getStringListValue('scrollSuccess', row);
+        const matchesSuccess = rowSuccess.includes('60');
+        return matchesStat && matchesSuccess;
+      };
+
+      expect(matchesBoth(scrollStrength)).toBe(true);
+      expect(matchesBoth(scrollLuck)).toBe(true);
+      expect(matchesBoth(scrollDex)).toBe(false);
     });
   });
 

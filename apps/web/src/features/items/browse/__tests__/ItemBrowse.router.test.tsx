@@ -29,6 +29,16 @@ const { fixtureRows } = vi.hoisted(() => {
       name: 'Subi Throwing-Stars',
       itemClass: 'consume',
       types: ['throwing-star'],
+      attack: 15,
+    },
+    {
+      key: 'item:02070001',
+      sourceId: '02070001',
+      name: 'Mokbi Throwing-Stars',
+      itemClass: 'consume',
+      types: ['throwing-star'],
+      attack: 19,
+      monsterDropCount: 1,
     },
     {
       key: 'item:04000000',
@@ -200,5 +210,31 @@ describe('ItemBrowse real router interactions', () => {
     expect(activeChildLink).toBeVisible();
     expect(siblingChildLink).not.toBeNull();
     expect(siblingChildLink).toHaveStyle({ display: 'none' });
+  });
+
+  it('round-trips one multi-select and one open-ended range facet through the real router', async () => {
+    const history = createMemoryHistory({
+      initialEntries: ['/maplestory/items/use/throwing-stars?attackMin=17'],
+    });
+    const router = createRouter({ routeTree, history });
+    await router.load();
+
+    expect(router.state.location.search).toEqual({ attackMin: 17 });
+
+    await router.navigate({
+      to: '/maplestory/{-$buildId}/items/{-$scope}/{-$child}',
+      search: {
+        attackMin: 17,
+        rel: ['monster-drop'],
+      },
+    });
+
+    const href = router.state.location.href;
+    expect(href).toContain('attackMin=17');
+    expect(href).toContain('rel=monster-drop');
+
+    const searchState = router.state.location.search as Record<string, unknown>;
+    expect(searchState['attackMin']).toBe(17);
+    expect(searchState['rel']).toBe('monster-drop');
   });
 });

@@ -1,70 +1,52 @@
 /**
  * Facet definitions and option derivation for Items Browse.
  *
- * Facet options are limited to values present in the current category population.
- * Relationship coverage governs available relationship options and labeling.
+ * Provides contextual facets per category plus common categorical facets.
+ * Facet options are limited to values present in the current category population
+ * and options that cannot narrow the page are dropped.
  */
-import type {
-  FacetDefinition,
-  FacetOption,
-  QueryFieldDefinition,
-} from '@mapletip/component-library';
+import type { FacetDefinition } from '@mapletip/component-library';
 import type { ItemBrowseCoverage } from '@mapletip/data/items';
 
+import { getContextualFacets } from './context-facets';
+import { buildPresentFacetOptions } from './facet-options';
 import {
   ITEM_FUNCTION_LABELS,
   ITEM_TYPE_LABELS,
   RELATIONSHIP_LABELS,
   type ItemRelationshipKind,
 } from './labels';
-import {
-  RELATIONSHIP_COUNT_FIELDS,
-  type ItemBrowseFunction,
-  type ItemBrowseType,
-  type ItemRow,
-} from './project';
+import type { ItemBrowseFunction, ItemBrowseType, ItemRow } from './project';
+import { getItemRelationships, ITEM_QUERY_FIELDS } from './query-fields';
 import type { ItemCategorySelection } from './routing';
-import { matchSourceId } from './search';
 
-export function getItemRelationships(
-  row: ItemRow,
-): readonly ItemRelationshipKind[] {
-  const rels: ItemRelationshipKind[] = [];
-  for (const [relKind, fieldKey] of RELATIONSHIP_COUNT_FIELDS) {
-    const count = row[fieldKey];
-    if (typeof count === 'number' && count > 0) {
-      rels.push(relKind);
-    }
-  }
-  return rels;
-}
-
-function buildFacetOptions<T extends string>(
-  labelMap: Readonly<Record<T, string>>,
-  presentValues: ReadonlySet<T>,
-  formatLabel?: (value: T, baseLabel: string) => string | undefined,
-): readonly FacetOption[] {
-  const options: FacetOption[] = [];
-  for (const value of presentValues) {
-    const baseLabel = labelMap[value];
-    if (baseLabel !== undefined) {
-      const label = formatLabel ? formatLabel(value, baseLabel) : baseLabel;
-      if (label !== undefined) {
-        options.push({ value, label });
-      }
-    }
-  }
-  return options.sort((a, b) => a.label.localeCompare(b.label));
-}
+export { getItemRelationships, ITEM_QUERY_FIELDS };
 
 export function getItemFacets(
-  _category: ItemCategorySelection,
+  category: ItemCategorySelection,
   coverage: ItemBrowseCoverage,
   scopedRows: readonly ItemRow[],
+  roster: readonly ItemRow[] = scopedRows,
 ): readonly FacetDefinition<ItemRow>[] {
   const facets: FacetDefinition<ItemRow>[] = [];
 
-  // 1. Item type facet
+  // 1. Contextual facets listed first
+  const contextualFacets = getContextualFacets(
+    category,
+    coverage,
+    scopedRows,
+    roster,
+  );
+  for (const facet of contextualFacets) {
+    facets.push(facet);
+  }
+
+  // 2. Common facets (Item type, Effect, Relationship)
+  const isGenericScope =
+    (category.scope.slug === 'all' || category.scope.slug === 'use') &&
+    category.child === undefined;
+
+  // Item type facet
   const presentTypes = new Set<ItemBrowseType>();
   for (const row of scopedRows) {
     if (row.types) {
@@ -73,18 +55,24 @@ export function getItemFacets(
       }
     }
   }
-  const typeOptions = buildFacetOptions(ITEM_TYPE_LABELS, presentTypes);
+  const typeOptions = buildPresentFacetOptions(
+    presentTypes,
+    scopedRows,
+    (row, t) => row.types?.includes(t) ?? false,
+    ITEM_TYPE_LABELS,
+  );
   if (typeOptions.length > 0) {
     facets.push({
       id: 'types',
       field: 'types',
       label: 'Item type',
       kind: 'multi-select',
+      ...(isGenericScope ? { quick: true } : {}),
       options: typeOptions,
     });
   }
 
-  // 2. Effect (function) facet
+  // Effect (function) facet
   const presentFunctions = new Set<ItemBrowseFunction>();
   for (const row of scopedRows) {
     if (row.functions) {
@@ -93,9 +81,11 @@ export function getItemFacets(
       }
     }
   }
-  const functionOptions = buildFacetOptions(
-    ITEM_FUNCTION_LABELS,
+  const functionOptions = buildPresentFacetOptions(
     presentFunctions,
+    scopedRows,
+    (row, fn) => row.functions?.includes(fn) ?? false,
+    ITEM_FUNCTION_LABELS,
   );
   if (functionOptions.length > 0) {
     facets.push({
@@ -103,25 +93,29 @@ export function getItemFacets(
       field: 'functions',
       label: 'Effect',
       kind: 'multi-select',
+      ...(isGenericScope ? { quick: true } : {}),
       options: functionOptions,
     });
   }
 
-  // 3. Relationship facet
+  // Relationship facet
   const presentRels = new Set<ItemRelationshipKind>();
   for (const row of scopedRows) {
     for (const rel of getItemRelationships(row)) {
       presentRels.add(rel);
     }
   }
-  const relationshipOptions = buildFacetOptions(
-    RELATIONSHIP_LABELS,
+  const relationshipOptions = buildPresentFacetOptions(
     presentRels,
-    (relKind, baseLabel) => {
+    scopedRows,
+    (row, rel) => getItemRelationships(row).includes(rel),
+    (relKind) => {
       const relCoverage = coverage.relationships[relKind];
       if (relCoverage === 'unsupported') {
         return undefined;
       }
+      const baseLabel = RELATIONSHIP_LABELS[relKind];
+      if (!baseLabel) return undefined;
       return relCoverage === 'partial' ? `${baseLabel} (partial)` : baseLabel;
     },
   );
@@ -137,30 +131,6 @@ export function getItemFacets(
 
   return facets;
 }
-
-export const ITEM_QUERY_FIELDS: readonly QueryFieldDefinition<ItemRow>[] = [
-  {
-    id: 'types',
-    accessor: (row) => row.types ?? [],
-    getUniqueValues: (row) => row.types ?? [],
-  },
-  {
-    id: 'functions',
-    accessor: (row) => row.functions ?? [],
-    getUniqueValues: (row) => row.functions ?? [],
-  },
-  {
-    id: 'rel',
-    accessor: (row) => getItemRelationships(row),
-    getUniqueValues: (row) => getItemRelationships(row),
-  },
-  {
-    id: 'sourceId',
-    accessor: (row) => row.sourceId,
-    searchMatch: (val, query) =>
-      typeof val === 'string' ? matchSourceId(val, query) : false,
-  },
-];
 
 export function getDropCoverageNotice(
   coverage: ItemBrowseCoverage,
