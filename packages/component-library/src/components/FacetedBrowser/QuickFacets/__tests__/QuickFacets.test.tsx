@@ -61,4 +61,23 @@ describe('QuickFacets', () => {
       expect(document.activeElement).toBe(target);
     }
   });
+
+  it('renders Filters button when hasFilters is true even with no quick facets', () => {
+    render(
+      <MantineProvider>
+        <QuickFacets
+          activeTotal={0}
+          facets={[]}
+          hasFilters={true}
+          onOpen={() => undefined}
+        />
+      </MantineProvider>,
+    );
+
+    expect(
+      screen.getByRole('button', {
+        name: 'Filters, 0 active. Open all filters',
+      }),
+    ).toBeVisible();
+  });
 });

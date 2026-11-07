@@ -1,5 +1,8 @@
 export { FacetedBrowser } from '@/components/FacetedBrowser/FacetedBrowser';
-export type { FacetedBrowserProps } from '@/components/FacetedBrowser/FacetedBrowser.types';
+export type {
+  FacetedBrowserNavigation,
+  FacetedBrowserProps,
+} from '@/components/FacetedBrowser/FacetedBrowser.types';
 export type {
   FacetControlContext,
   FacetDefinition,

@@ -25,6 +25,7 @@ import { resolveFields } from '@/components/FacetedBrowser/hooks/querySemantics'
 import { useFacetedBrowser } from '@/components/FacetedBrowser/hooks/useFacetedBrowser';
 import { useFacetedBrowserDrawer } from '@/components/FacetedBrowser/hooks/useFacetedBrowserDrawer';
 import { Layout } from '@/components/FacetedBrowser/Layout/Layout';
+import { NavigationDrawer } from '@/components/FacetedBrowser/NavigationDrawer';
 import { Pagination } from '@/components/FacetedBrowser/Pagination/Pagination';
 import { QuickFacets } from '@/components/FacetedBrowser/QuickFacets/QuickFacets';
 import { Status, hasStatus } from '@/components/FacetedBrowser/Status/Status';
@@ -76,6 +77,7 @@ export function FacetedBrowser<TRecord extends Record<string, unknown>>(
     searchFields,
     facets: facetDefinitions = EMPTY_FACETS,
     recordNoun = 'records',
+    navigation,
     summaryNoun,
     summaryMode = 'page-window',
     resultsLabel = `${recordNoun} results`,
@@ -372,6 +374,35 @@ export function FacetedBrowser<TRecord extends Record<string, unknown>>(
       />
     ) : undefined;
 
+  const [navDrawerOpened, setNavDrawerOpened] = useState(false);
+  const openNavDrawer = useCallback(() => setNavDrawerOpened(true), []);
+  const closeNavDrawer = useCallback(() => setNavDrawerOpened(false), []);
+
+  const railContent =
+    navigation || facets.length > 0 ? (
+      <Stack gap="md">
+        {navigation ? navigation.render({ onNavigate: undefined }) : null}
+        {facets.length > 0 ? (
+          <>
+            <Title order={2} size="h4">
+              Filters
+            </Title>
+            <FacetList
+              key={facetResetEpoch}
+              facets={facets}
+              values={browseState.filters}
+              records={records}
+              surface="rail"
+              getCounts={browser.getFacetValues}
+              onChange={browser.setFilter}
+            />
+          </>
+        ) : null}
+      </Stack>
+    ) : undefined;
+
+  const railLabel = navigation ? navigation.label : 'Filters';
+
   return (
     <>
       <Layout
@@ -391,28 +422,21 @@ export function FacetedBrowser<TRecord extends Record<string, unknown>>(
             />
           </form>
         }
-        rail={
-          facets.length > 0 ? (
-            <Stack gap="md">
-              <Title order={2} size="h4">
-                Filters
-              </Title>
-              <FacetList
-                key={facetResetEpoch}
-                facets={facets}
-                values={browseState.filters}
-                records={records}
-                surface="rail"
-                getCounts={browser.getFacetValues}
-                onChange={browser.setFilter}
-              />
-            </Stack>
-          ) : undefined
-        }
-        railLabel="Filters"
+        rail={railContent}
+        railLabel={railLabel}
         quickFacets={
-          facets.length > 0 ? (
+          navigation || facets.length > 0 ? (
             <QuickFacets
+              {...(navigation
+                ? {
+                    navigation: {
+                      label: navigation.label,
+                      currentLabel: navigation.currentLabel,
+                      onOpen: openNavDrawer,
+                    },
+                  }
+                : {})}
+              hasFilters={facets.length > 0}
               facets={quickFacets}
               activeTotal={activeFilterCount}
               onOpen={drawer.open}
@@ -513,6 +537,15 @@ export function FacetedBrowser<TRecord extends Record<string, unknown>>(
           />
         </Stack>
       </FilterDrawer>
+      {navigation ? (
+        <NavigationDrawer
+          opened={navDrawerOpened}
+          title={navigation.label}
+          onClose={closeNavDrawer}
+        >
+          {navigation.render({ onNavigate: closeNavDrawer })}
+        </NavigationDrawer>
+      ) : null}
     </>
   );
 }

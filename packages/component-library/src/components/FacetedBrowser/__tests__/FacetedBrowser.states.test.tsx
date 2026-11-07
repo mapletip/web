@@ -1,5 +1,5 @@
 import { MantineProvider } from '@mantine/core';
-import { render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { ReactNode } from 'react';
 import { describe, expect, it, vi } from 'vitest';
@@ -274,5 +274,343 @@ describe('result summary', () => {
       'aria-current',
       'page',
     );
+  });
+});
+
+describe('responsive navigation slot', () => {
+  const genericNavigation = {
+    label: 'Categories',
+    rootLabel: 'All Products',
+    categoryLabel: 'Clothing',
+    subCategoryLabel: 'Shirts',
+    items: ['Clothing', 'Electronics'],
+  };
+
+  it('renders the rail when navigation exists even with zero facets, without a Filters heading and with navigation.label aside aria-label', () => {
+    const { container } = render(
+      <MantineProvider>
+        <FacetedBrowser
+          title={<h1>Catalog</h1>}
+          records={demoRecords}
+          idAccessor="id"
+          facets={[]}
+          navigation={{
+            label: genericNavigation.label,
+            currentLabel: genericNavigation.rootLabel,
+            render: () => (
+              <nav aria-label={genericNavigation.label}>
+                <ul>
+                  {genericNavigation.items.map((item) => (
+                    <li key={item}>{item}</li>
+                  ))}
+                </ul>
+              </nav>
+            ),
+          }}
+          presentation="cards"
+          renderCard={(record) => <div>{record.name}</div>}
+          defaultState={{
+            search: '',
+            filters: {},
+            page: 1,
+            pageSize: 20,
+            hiddenColumns: [],
+          }}
+        />
+      </MantineProvider>,
+    );
+
+    const aside = container.querySelector('aside');
+    expect(aside).not.toBeNull();
+    expect(aside).toHaveAttribute('aria-label', genericNavigation.label);
+    expect(
+      screen.getByRole('navigation', { name: genericNavigation.label }),
+    ).toBeVisible();
+    expect(
+      screen.queryByRole('heading', { name: 'Filters' }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('renders navigation above the Filters heading and facet list when facets exist', () => {
+    const { container } = render(
+      <MantineProvider>
+        <FacetedBrowser
+          title={<h1>Catalog</h1>}
+          records={demoRecords}
+          idAccessor="id"
+          queryFields={queryFields}
+          facets={facets}
+          navigation={{
+            label: genericNavigation.label,
+            currentLabel: genericNavigation.categoryLabel,
+            render: () => (
+              <nav aria-label={genericNavigation.label}>
+                <span>{genericNavigation.label}</span>
+              </nav>
+            ),
+          }}
+          presentation="cards"
+          renderCard={(record) => <div>{record.name}</div>}
+          defaultState={{
+            search: '',
+            filters: {},
+            page: 1,
+            pageSize: 20,
+            hiddenColumns: [],
+          }}
+        />
+      </MantineProvider>,
+    );
+
+    const aside = container.querySelector('aside');
+    expect(aside).not.toBeNull();
+    expect(aside).toHaveAttribute('aria-label', genericNavigation.label);
+    const nav = screen.getByRole('navigation', {
+      name: genericNavigation.label,
+    });
+    const filtersHeading = screen.getByRole('heading', { name: 'Filters' });
+
+    expect(nav).toBeVisible();
+    expect(filtersHeading).toBeVisible();
+    expect(
+      nav.compareDocumentPosition(filtersHeading) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+  });
+
+  it('renders no aside when neither navigation nor facets exist', () => {
+    const { container } = render(
+      <MantineProvider>
+        <FacetedBrowser
+          title={<h1>Catalog</h1>}
+          records={demoRecords}
+          idAccessor="id"
+          facets={[]}
+          presentation="cards"
+          renderCard={(record) => <div>{record.name}</div>}
+          defaultState={{
+            search: '',
+            filters: {},
+            page: 1,
+            pageSize: 20,
+            hiddenColumns: [],
+          }}
+        />
+      </MantineProvider>,
+    );
+
+    expect(container.querySelector('aside')).toBeNull();
+  });
+
+  it('uses Filters aria-label when facets exist without navigation', () => {
+    const { container } = render(
+      <MantineProvider>
+        <FacetedBrowser
+          title={<h1>Catalog</h1>}
+          records={demoRecords}
+          idAccessor="id"
+          queryFields={queryFields}
+          facets={facets}
+          presentation="cards"
+          renderCard={(record) => <div>{record.name}</div>}
+          defaultState={{
+            search: '',
+            filters: {},
+            page: 1,
+            pageSize: 20,
+            hiddenColumns: [],
+          }}
+        />
+      </MantineProvider>,
+    );
+
+    const aside = container.querySelector('aside');
+    expect(aside).not.toBeNull();
+    expect(aside).toHaveAttribute('aria-label', 'Filters');
+  });
+
+  it('renders navigation chip and omits Filters button when facets is empty', () => {
+    render(
+      <MantineProvider>
+        <FacetedBrowser
+          title={<h1>Catalog</h1>}
+          records={demoRecords}
+          idAccessor="id"
+          facets={[]}
+          navigation={{
+            label: genericNavigation.label,
+            currentLabel: genericNavigation.subCategoryLabel,
+            render: () => <div>Nav Body</div>,
+          }}
+          presentation="cards"
+          renderCard={(record) => <div>{record.name}</div>}
+          defaultState={{
+            search: '',
+            filters: {},
+            page: 1,
+            pageSize: 20,
+            hiddenColumns: [],
+          }}
+        />
+      </MantineProvider>,
+    );
+
+    const navChip = screen.getByRole('button', {
+      name: `${genericNavigation.label}: ${genericNavigation.subCategoryLabel}. Open ${genericNavigation.label}`,
+    });
+    expect(navChip).toBeVisible();
+    expect(navChip.textContent).toContain(genericNavigation.subCategoryLabel);
+
+    // Filters button should NOT exist when facets are empty
+    expect(
+      screen.queryByRole('button', { name: /Open all filters/i }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('renders Filters button when facets are present but none are quick', () => {
+    const nonQuickFacets = facets.map((f) => ({ ...f, quick: false }));
+    render(
+      <MantineProvider>
+        <FacetedBrowser
+          title={<h1>Catalog</h1>}
+          records={demoRecords}
+          idAccessor="id"
+          queryFields={queryFields}
+          facets={nonQuickFacets}
+          presentation="cards"
+          renderCard={(record) => <div>{record.name}</div>}
+          defaultState={{
+            search: '',
+            filters: {},
+            page: 1,
+            pageSize: 20,
+            hiddenColumns: [],
+          }}
+        />
+      </MantineProvider>,
+    );
+
+    expect(
+      screen.getByRole('button', { name: /Open all filters/i }),
+    ).toBeVisible();
+  });
+
+  it('opens separate navigation drawer on chip click and closes on onNavigate', async () => {
+    let capturedOnNavigate: (() => void) | undefined;
+
+    render(
+      <MantineProvider>
+        <FacetedBrowser
+          title={<h1>Catalog</h1>}
+          records={demoRecords}
+          idAccessor="id"
+          facets={[]}
+          navigation={{
+            label: genericNavigation.label,
+            currentLabel: genericNavigation.subCategoryLabel,
+            render: ({ onNavigate }) => {
+              capturedOnNavigate = onNavigate;
+              return (
+                <div>
+                  <span>Category Content</span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onNavigate?.();
+                    }}
+                  >
+                    Click Category
+                  </button>
+                </div>
+              );
+            },
+          }}
+          presentation="cards"
+          renderCard={(record) => <div>{record.name}</div>}
+          defaultState={{
+            search: '',
+            filters: {},
+            page: 1,
+            pageSize: 20,
+            hiddenColumns: [],
+          }}
+        />
+      </MantineProvider>,
+    );
+
+    const navChip = screen.getByRole('button', {
+      name: `${genericNavigation.label}: ${genericNavigation.subCategoryLabel}. Open ${genericNavigation.label}`,
+    });
+    fireEvent.click(navChip);
+
+    // Wait for the navigation drawer dialog to mount
+    await waitFor(() => {
+      expect(screen.getByRole('dialog')).toBeInTheDocument();
+    });
+
+    const closeBtn = screen.getByRole('button', {
+      name: `Close ${genericNavigation.label}`,
+    });
+    expect(closeBtn).toBeInTheDocument();
+
+    // Calling onNavigate closes the drawer
+    expect(capturedOnNavigate).toBeDefined();
+    capturedOnNavigate?.();
+
+    await waitFor(() => {
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    });
+
+    // Verify filter drawer Apply/Reset buttons do not exist in this drawer
+    expect(
+      screen.queryByRole('button', { name: 'Reset' }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('keeps filter drawer untouched and distinct from navigation drawer when facets exist', async () => {
+    render(
+      <MantineProvider>
+        <FacetedBrowser
+          title={<h1>Catalog</h1>}
+          records={demoRecords}
+          idAccessor="id"
+          queryFields={queryFields}
+          facets={facets}
+          navigation={{
+            label: genericNavigation.label,
+            currentLabel: genericNavigation.subCategoryLabel,
+            render: () => <div>Nav Drawer Body</div>,
+          }}
+          presentation="cards"
+          renderCard={(record) => <div>{record.name}</div>}
+          defaultState={{
+            search: '',
+            filters: {},
+            page: 1,
+            pageSize: 20,
+            hiddenColumns: [],
+          }}
+        />
+      </MantineProvider>,
+    );
+
+    // Both navigation chip and Filters button exist
+    const navChip = screen.getByRole('button', {
+      name: `${genericNavigation.label}: ${genericNavigation.subCategoryLabel}. Open ${genericNavigation.label}`,
+    });
+    expect(navChip).toBeVisible();
+
+    const filtersBtn = screen.getByRole('button', {
+      name: /Open all filters/i,
+    });
+    expect(filtersBtn).toBeVisible();
+
+    // Opening filter drawer opens filter drawer with Reset/Cancel/Apply
+    fireEvent.click(filtersBtn);
+    await waitFor(() => {
+      expect(screen.getByRole('dialog')).toBeInTheDocument();
+    });
+    expect(screen.getByRole('button', { name: 'Reset' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Cancel' })).toBeInTheDocument();
   });
 });

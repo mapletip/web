@@ -5,6 +5,14 @@ import type { BrowseState } from '@/components/FacetedBrowser/hooks/browseState'
 import type { QueryFieldDefinition } from '@/components/FacetedBrowser/hooks/querySemantics';
 import type { TableColumn } from '@/components/Table';
 
+export interface FacetedBrowserNavigation {
+  readonly label: string;
+  readonly currentLabel: string;
+  readonly render: (context: {
+    readonly onNavigate: (() => void) | undefined;
+  }) => ReactNode;
+}
+
 interface CommonProps<TRecord extends Record<string, unknown>> {
   readonly title: ReactNode;
   readonly records: readonly TRecord[];
@@ -12,6 +20,14 @@ interface CommonProps<TRecord extends Record<string, unknown>> {
   readonly queryFields?: readonly QueryFieldDefinition<TRecord>[];
   readonly searchFields?: readonly (keyof TRecord & string)[];
   readonly facets?: readonly FacetDefinition<TRecord>[];
+  /**
+   * Optional responsive category navigation configuration.
+   *
+   * On md and wider viewports, rendered at the top of the rail above filters.
+   * Below md, rendered as a quick-filter navigation chip opening a dedicated
+   * navigation drawer.
+   */
+  readonly navigation?: FacetedBrowserNavigation;
   readonly recordNoun?: string;
   /**
    * Visible noun for the result count, when the descriptive `recordNoun` is too
