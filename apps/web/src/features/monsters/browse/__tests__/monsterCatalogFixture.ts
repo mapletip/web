@@ -1,5 +1,5 @@
 /**
- * Deterministic contract-2.0 catalog fixtures for tests.
+ * Deterministic contract-2.0 and contract-2.1 catalog fixtures for tests.
  *
  * The SDK's narrow entry does not re-export the generated catalog types, so the
  * contract-2 member is extracted from `StaticMonsterCatalog` instead.
@@ -8,9 +8,14 @@ import type { StaticMonsterCatalog } from '@mapletip/data/monsters';
 
 export type ContractTwoCatalog = Extract<
   StaticMonsterCatalog,
-  { format: 'mapletip.monster-catalog-2' }
+  { contractVersion: '2.0' }
 >;
 export type ContractTwoRecord = ContractTwoCatalog['records'][number];
+export type ContractTwoOneCatalog = Extract<
+  StaticMonsterCatalog,
+  { contractVersion: '2.1' }
+>;
+export type ContractTwoOneRecord = ContractTwoOneCatalog['records'][number];
 
 export function knownFact<T>(value: T): { state: 'known'; value: T } {
   return { state: 'known', value };
@@ -60,5 +65,22 @@ export function fixtureCatalog(
       build_id: options.buildId ?? 'cw-launch',
       family_id: options.familyId ?? 'classic-world',
     },
+  };
+}
+
+/** Add a 2.1 version marker while reusing the common catalog fixture builder. */
+export function fixtureCatalogV21({
+  records,
+  sprite,
+}: {
+  records: readonly ContractTwoRecord[];
+  sprite: ContractTwoOneRecord['sprite'];
+}): ContractTwoOneCatalog {
+  const catalog = fixtureCatalog(records);
+
+  return {
+    ...catalog,
+    contractVersion: '2.1',
+    records: records.map((record) => ({ ...record, sprite })),
   };
 }

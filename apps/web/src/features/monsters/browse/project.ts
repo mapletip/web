@@ -1,5 +1,5 @@
 /**
- * App-owned projection of a contract-2.0 Monster catalog into flat, sortable,
+ * App-owned projection of a contract-2 Monster catalog into flat, sortable,
  * JSON-serializable browse rows.
  *
  * The mapping is deliberately explicit: contract-2 tuples are positional, so
@@ -8,7 +8,7 @@
  */
 import type { StaticMonsterCatalog } from '@mapletip/data/monsters';
 
-/** Contract-2.0 catalog, narrowed out of the SDK's contract-version union. */
+/** Contract-2.x catalog, narrowed out of the SDK's contract-version union. */
 type MonsterCatalogV2 = Extract<
   StaticMonsterCatalog,
   { format: 'mapletip.monster-catalog-2' }
@@ -242,7 +242,7 @@ export function projectMonsterBrowseRows(
 ): readonly MonsterBrowseRow[] {
   if (catalog.format !== 'mapletip.monster-catalog-2') {
     throw new Error(
-      'Monster browse requires a contract-2.0 Monster catalog, but the release supplied an older contract.',
+      'Monster browse requires a contract-2 Monster catalog, but the release supplied an older contract.',
     );
   }
 
