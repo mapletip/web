@@ -36,9 +36,11 @@ function sortKey(option: SortKeyOption): string {
 }
 
 function parseSearchQuery(value: unknown): string | undefined {
-  if (typeof value !== 'string' || value.length === 0) return undefined;
-  const bytes = new TextEncoder().encode(value).length;
-  return bytes <= MAX_SEARCH_BYTES ? value : undefined;
+  const query =
+    typeof value === 'number' && Number.isFinite(value) ? String(value) : value;
+  if (typeof query !== 'string' || query.length === 0) return undefined;
+  const bytes = new TextEncoder().encode(query).length;
+  return bytes <= MAX_SEARCH_BYTES ? query : undefined;
 }
 
 function parseInteger(value: unknown): number | undefined {

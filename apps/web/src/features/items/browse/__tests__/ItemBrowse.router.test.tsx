@@ -158,6 +158,64 @@ describe('Items Browse router state', () => {
     });
   });
 
+  it('keeps numeric q values from shared URLs and reloads the generated URL', async () => {
+    const user = userEvent.setup();
+    const history = createMemoryHistory({
+      initialEntries: ['/maplestory/items/use?q=2000000'],
+    });
+    const router = createRouter({ routeTree, history });
+    await router.load();
+
+    render(
+      <MantineProvider theme={theme} forceColorScheme="dark">
+        <RouterProvider router={router} />
+      </MantineProvider>,
+    );
+
+    const search = screen.getByRole('textbox', {
+      name: 'Search Classic World items',
+    });
+    expect(search).toHaveValue('2000000');
+    const loadedQuery = new URL(
+      router.state.location.href,
+      'http://localhost',
+    ).searchParams.get('q');
+    expect(['2000000', '"2000000"']).toContain(loadedQuery);
+    expect(screen.getByText('Red Potion')).toBeInTheDocument();
+    expect(
+      screen.queryByText('Classic World has no item with ID 2000000.'),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText('Matching items for ID 2000000'),
+    ).not.toBeInTheDocument();
+
+    await user.clear(search);
+    await user.type(search, '2000000');
+    await waitFor(() => {
+      expect(
+        new URL(
+          router.state.location.href,
+          'http://localhost',
+        ).searchParams.has('q'),
+      ).toBe(true);
+    });
+    const generatedUrl = router.state.location.href;
+    const reloadHistory = createMemoryHistory({
+      initialEntries: [generatedUrl],
+    });
+    const reloadRouter = createRouter({ routeTree, history: reloadHistory });
+    await reloadRouter.load();
+
+    const generatedQuery = new URL(
+      generatedUrl,
+      'http://localhost',
+    ).searchParams.get('q');
+    expect(['2000000', '"2000000"']).toContain(generatedQuery);
+    expect(reloadRouter.state.matches.at(-1)?.search).toMatchObject({
+      q: '2000000',
+    });
+  });
+
   it('replaces debounced search and pushes pagination', async () => {
     const user = userEvent.setup();
     const history = createMemoryHistory({

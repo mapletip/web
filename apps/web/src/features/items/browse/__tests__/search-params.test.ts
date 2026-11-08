@@ -44,6 +44,10 @@ describe('Items Browse search params', () => {
     });
   });
 
+  it('converts finite numeric queries to strings', () => {
+    expect(validateSearch({ q: 2000000 })).toMatchObject({ q: '2000000' });
+  });
+
   it('accepts only configured page sizes and sort options', () => {
     for (const pageSize of PAGE_SIZE_OPTIONS) {
       expect(validateSearch({ pageSize })).toMatchObject({ pageSize });
