@@ -2,6 +2,7 @@ import { Text } from '@mantine/core';
 import { DrillDownNav, FacetedBrowser } from '@mapletip/component-library';
 import type {
   FacetedBrowserNavigationHistory,
+  QueryFieldDefinition,
   TableColumn,
 } from '@mapletip/component-library';
 import { Link, useRouter } from '@tanstack/react-router';
@@ -25,6 +26,7 @@ import {
 import { getItemNavTree } from '../navigation-tree';
 import type { ItemRow } from '../project';
 import type { ItemCategorySelection } from '../routing';
+import { matchSourceId } from '../search';
 import { browseStateToUrl, PAGE_SIZE_OPTIONS } from '../search-params';
 import type { ItemBrowseSearch } from '../search-params';
 import { ITEM_SORT_OPTIONS } from '../sort';
@@ -53,6 +55,16 @@ export const itemBrowseColumns: readonly TableColumn<ItemRow>[] = [
 ];
 
 const SUMMARY_NOUN = { one: 'Item', other: 'Items' } as const;
+
+/** Search-only exact item-ID match; the ID is never displayed. */
+const ITEM_QUERY_FIELDS: readonly QueryFieldDefinition<ItemRow>[] = [
+  {
+    id: 'sourceId',
+    accessor: 'sourceId',
+    searchMatch: ({ value, query }) =>
+      typeof value === 'string' && matchSourceId({ sourceId: value, query }),
+  },
+];
 
 /** Renders a controlled Items catalog page with shareable URL state. */
 export function ItemBrowse({
@@ -168,7 +180,7 @@ export function ItemBrowse({
         idAccessor="key"
         identityField="name"
         columns={itemBrowseColumns}
-        searchFields={['name']}
+        queryFields={ITEM_QUERY_FIELDS}
         facets={[]}
         sortOptions={ITEM_SORT_OPTIONS}
         recordNoun={`${buildLabel} items`}

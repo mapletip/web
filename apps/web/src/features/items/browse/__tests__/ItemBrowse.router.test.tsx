@@ -100,8 +100,7 @@ describe('Items Browse router state', () => {
     expect(router.state.location.href).toBe('/maplestory/items');
   });
 
-  it('searches numeric substrings in item names', async () => {
-    const user = userEvent.setup();
+  it('matches exact numeric item IDs without displaying them', async () => {
     const history = createMemoryHistory({
       initialEntries: ['/maplestory/items?q=2000000'],
     });
@@ -114,17 +113,27 @@ describe('Items Browse router state', () => {
       </MantineProvider>,
     );
 
-    const search = screen.getByRole('textbox', {
-      name: 'Search Classic World items',
+    expect(screen.getByText('Red Potion')).toBeInTheDocument();
+    expect(screen.getByText('Potion 2000000')).toBeInTheDocument();
+    expect(screen.getByRole('table')).not.toHaveTextContent('02000000');
+  });
+
+  it('matches partial numeric queries in names, not item IDs', async () => {
+    const history = createMemoryHistory({
+      initialEntries: ['/maplestory/items?q=200'],
     });
+    const router = createRouter({ routeTree, history });
+    await router.load();
+
+    render(
+      <MantineProvider theme={theme} forceColorScheme="dark">
+        <RouterProvider router={router} />
+      </MantineProvider>,
+    );
+
     expect(screen.getByText('Potion 2000000')).toBeInTheDocument();
     expect(screen.queryByText('Red Potion')).not.toBeInTheDocument();
-
-    await user.clear(search);
-    await user.type(search, 'Potion');
-    await waitFor(() => {
-      expect(screen.getByText('Red Potion')).toBeInTheDocument();
-    });
+    expect(screen.getByRole('table')).not.toHaveTextContent('02000000');
   });
 
   it('keeps numeric q values from shared URLs and reloads the generated URL', async () => {
