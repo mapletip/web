@@ -138,6 +138,41 @@ describe('NavigationDrawer', () => {
     expect(history.back).not.toHaveBeenCalled();
   });
 
+  it('just closes and pops history on tapping leaf row when leaf id equals currentId', () => {
+    const onApply = vi.fn();
+    const onClose = vi.fn();
+    const history = { push: vi.fn(), back: vi.fn() };
+
+    render(
+      <MantineProvider>
+        <NavigationDrawer
+          {...defaultProps}
+          currentId="clothing/shirts"
+          onApply={onApply}
+          onClose={onClose}
+          history={history}
+        >
+          {({ onSelect }) => (
+            <button
+              type="button"
+              onClick={() =>
+                onSelect({ id: 'clothing/shirts', count: 15 }, { isLeaf: true })
+              }
+            >
+              Select Shirts
+            </button>
+          )}
+        </NavigationDrawer>
+      </MantineProvider>,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Select Shirts' }));
+
+    expect(onApply).not.toHaveBeenCalled();
+    expect(history.back).toHaveBeenCalledTimes(1);
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
   it('applies draft and replaces history on footer apply click when draft differs from current', () => {
     const onApply = vi.fn();
     const onClose = vi.fn();

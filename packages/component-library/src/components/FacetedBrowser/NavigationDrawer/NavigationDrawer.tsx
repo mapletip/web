@@ -119,6 +119,10 @@ export function NavigationDrawer({
       meta: FacetedBrowserNavigationDrawerMeta,
     ) => {
       if (meta.isLeaf) {
+        if (node.id === currentId) {
+          handleCancel();
+          return;
+        }
         onApply(node.id, { replace: true });
         onClose();
       } else {
@@ -127,7 +131,7 @@ export function NavigationDrawer({
         setDrillEpoch((epoch) => epoch + 1);
       }
     },
-    [onApply, onClose],
+    [currentId, handleCancel, onApply, onClose],
   );
 
   useEffect(() => {
