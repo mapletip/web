@@ -62,6 +62,7 @@ describe('Pagination with renderPageLink', () => {
     expect(page2Item?.props.className).toContain('mantine-Pagination-control');
     expect(page2Item?.props.children).toBe(2);
     expect(page2Item?.props['aria-current']).toBe('page');
+    expect(page2Item?.props['data-active']).toBeDefined();
 
     // Controls: on page 2 of 5, previous is page 1, next is page 3
     const prevControl = calls.find(
@@ -87,7 +88,7 @@ describe('Pagination with renderPageLink', () => {
     expect(nextControl?.props['aria-current']).toBeUndefined();
   });
 
-  it('keeps the renderer element with Mantine classes and aria-current on the active page', () => {
+  it('keeps the renderer element with Mantine classes, data-active, and aria-current on the active page', () => {
     const renderPageLink: PageLinkRenderer = ({ page, props }) => (
       <a href={`/items?page=${page}`} data-testid={`page-${page}`} {...props}>
         {props.children}
@@ -110,16 +111,103 @@ describe('Pagination with renderPageLink', () => {
     const activeLink = screen.getByRole('link', { name: 'Page 2' });
     expect(activeLink).toHaveAttribute('href', '/items?page=2');
     expect(activeLink).toHaveAttribute('aria-current', 'page');
+    expect(activeLink).toHaveAttribute('data-active');
     expect(activeLink).toHaveClass('mantine-Pagination-control');
 
     const inactiveLink = screen.getByRole('link', { name: 'Page 1' });
     expect(inactiveLink).toHaveAttribute('href', '/items?page=1');
     expect(inactiveLink).not.toHaveAttribute('aria-current');
+    expect(inactiveLink).not.toHaveAttribute('data-active');
     expect(inactiveLink).toHaveClass('mantine-Pagination-control');
 
     const nextLink = screen.getByRole('link', { name: 'Next page' });
     expect(nextLink).toHaveAttribute('href', '/items?page=3');
+    expect(nextLink).not.toHaveAttribute('data-active');
     expect(nextLink).toHaveClass('mantine-Pagination-control');
+  });
+
+  it('renders disabled controls at page 1 and last page as buttons with data-disabled, not links', () => {
+    const renderPageLink: PageLinkRenderer = ({ page, props }) => (
+      <a href={`/items?page=${page}`} {...props}>
+        {props.children}
+      </a>
+    );
+
+    const { rerender } = render(
+      <MantineProvider>
+        <Pagination
+          page={1}
+          pageCount={5}
+          recordNoun="items"
+          state={{ ...mockState, page: 1 }}
+          renderPageLink={renderPageLink}
+          onPageChange={vi.fn()}
+        />
+      </MantineProvider>,
+    );
+
+    // At page 1: Previous is disabled (not a link), Next is an enabled link
+    expect(screen.queryByRole('link', { name: 'Previous page' })).toBeNull();
+    const prevControlPage1 = screen.getByRole('button', {
+      name: 'Previous page',
+    });
+    expect(prevControlPage1).toBeDisabled();
+    expect(prevControlPage1).toHaveAttribute('data-disabled');
+
+    const nextLinkPage1 = screen.getByRole('link', { name: 'Next page' });
+    expect(nextLinkPage1).toHaveAttribute('href', '/items?page=2');
+    expect(nextLinkPage1).not.toHaveAttribute('data-disabled');
+
+    // At last page (5 of 5): Next is disabled (not a link), Previous is an enabled link
+    rerender(
+      <MantineProvider>
+        <Pagination
+          page={5}
+          pageCount={5}
+          recordNoun="items"
+          state={{ ...mockState, page: 5 }}
+          renderPageLink={renderPageLink}
+          onPageChange={vi.fn()}
+        />
+      </MantineProvider>,
+    );
+
+    expect(screen.queryByRole('link', { name: 'Next page' })).toBeNull();
+    const nextControlPage5 = screen.getByRole('button', { name: 'Next page' });
+    expect(nextControlPage5).toBeDisabled();
+    expect(nextControlPage5).toHaveAttribute('data-disabled');
+
+    const prevLinkPage5 = screen.getByRole('link', { name: 'Previous page' });
+    expect(prevLinkPage5).toHaveAttribute('href', '/items?page=4');
+    expect(prevLinkPage5).not.toHaveAttribute('data-disabled');
+  });
+
+  it('does not invoke onPageChange when clicking links in renderer mode', async () => {
+    const onPageChange = vi.fn();
+    const renderPageLink: PageLinkRenderer = ({ page, props }) => (
+      <a href={`/items?page=${page}`} {...props}>
+        {props.children}
+      </a>
+    );
+
+    render(
+      <MantineProvider>
+        <Pagination
+          page={2}
+          pageCount={5}
+          recordNoun="items"
+          state={mockState}
+          renderPageLink={renderPageLink}
+          onPageChange={onPageChange}
+        />
+      </MantineProvider>,
+    );
+
+    await userEvent.click(screen.getByRole('link', { name: 'Page 3' }));
+    expect(onPageChange).not.toHaveBeenCalled();
+
+    await userEvent.click(screen.getByRole('link', { name: 'Next page' }));
+    expect(onPageChange).not.toHaveBeenCalled();
   });
 
   it('renders standard buttons and triggers onPageChange when renderPageLink is omitted', async () => {

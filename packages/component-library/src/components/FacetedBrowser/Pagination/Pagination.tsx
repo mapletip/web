@@ -1,14 +1,12 @@
 import { Group, Pagination as MantinePagination } from '@mantine/core';
-import type { ReactElement, ReactNode } from 'react';
+import type { ComponentPropsWithoutRef, ReactElement, ReactNode } from 'react';
 
 import type { BrowseState } from '@/components/FacetedBrowser/hooks/browseState';
 
-export interface PageLinkRenderProps {
-  readonly className: string;
-  readonly children: ReactNode;
-  readonly 'aria-label': string | undefined;
-  readonly 'aria-current': 'page' | undefined;
-}
+export type PageLinkRenderProps = ComponentPropsWithoutRef<'a'> & {
+  readonly [dataAttribute: `data-${string}`]: unknown;
+  readonly disabled?: boolean | undefined;
+};
 
 export interface PageLinkRenderOptions {
   readonly page: number;
@@ -18,47 +16,58 @@ export interface PageLinkRenderOptions {
 
 export type PageLinkRenderer = (options: PageLinkRenderOptions) => ReactNode;
 
-interface PageLinkAdapterProps {
-  readonly className: string;
-  readonly children: ReactNode;
-  readonly 'aria-label'?: string | undefined;
-  readonly 'aria-current'?: 'page' | undefined;
+interface PageLinkAdapterProps extends PageLinkRenderProps {
   readonly page?: number | undefined;
   readonly state?: BrowseState | undefined;
   readonly renderPageLink?: PageLinkRenderer | undefined;
 }
 
 function PageLinkAdapter({
-  className,
-  children,
-  'aria-label': ariaLabel,
-  'aria-current': ariaCurrent,
   page,
   state,
   renderPageLink,
+  ...props
 }: PageLinkAdapterProps): ReactNode {
   if (!renderPageLink || page === undefined || !state) {
     return null;
   }
+  if (props.disabled) {
+    const dataAttributes = Object.fromEntries(
+      Object.entries(props).filter(([key]) => key.startsWith('data-')),
+    );
+    return (
+      <button
+        type="button"
+        disabled
+        className={props.className}
+        style={props.style}
+        aria-label={props['aria-label']}
+        {...dataAttributes}
+      >
+        {props.children}
+      </button>
+    );
+  }
   return renderPageLink({
     page,
     state,
-    props: {
-      className,
-      children,
-      'aria-label': ariaLabel,
-      'aria-current': ariaCurrent,
-    },
+    props,
   });
 }
 
 type PaginationControl = 'first' | 'previous' | 'next' | 'last';
 
-function controlTarget(
-  control: PaginationControl,
-  page: number,
-  pageCount: number,
-): number {
+interface ControlTargetOptions {
+  readonly control: PaginationControl;
+  readonly page: number;
+  readonly pageCount: number;
+}
+
+function controlTarget({
+  control,
+  page,
+  pageCount,
+}: ControlTargetOptions): number {
   switch (control) {
     case 'first':
       return 1;
@@ -81,21 +90,6 @@ function controlLabel(control: PaginationControl): string {
       return 'Next page';
     case 'last':
       return 'Last page';
-  }
-}
-
-function isControlDisabled(
-  control: PaginationControl,
-  page: number,
-  pageCount: number,
-): boolean {
-  switch (control) {
-    case 'first':
-    case 'previous':
-      return page <= 1;
-    case 'next':
-    case 'last':
-      return page >= pageCount;
   }
 }
 
@@ -124,7 +118,7 @@ export function Pagination({
       <MantinePagination
         total={pageCount}
         value={page}
-        onChange={onPageChange}
+        {...(renderPageLink ? {} : { onChange: onPageChange })}
         aria-label={`${recordNoun} pages`}
         getItemProps={(pageNumber) => ({
           'aria-label': `Page ${pageNumber}`,
@@ -137,24 +131,17 @@ export function Pagination({
               }
             : {}),
         })}
-        getControlProps={(control) => {
-          const label = controlLabel(control);
-          if (isControlDisabled(control, page, pageCount)) {
-            return { 'aria-label': label, disabled: true };
-          }
-          const target = controlTarget(control, page, pageCount);
-          return {
-            'aria-label': label,
-            ...(renderPageLink
-              ? {
-                  component: PageLinkAdapter,
-                  page: target,
-                  state,
-                  renderPageLink,
-                }
-              : {}),
-          };
-        }}
+        getControlProps={(control) => ({
+          'aria-label': controlLabel(control),
+          ...(renderPageLink
+            ? {
+                component: PageLinkAdapter,
+                page: controlTarget({ control, page, pageCount }),
+                state,
+                renderPageLink,
+              }
+            : {}),
+        })}
       />
     </Group>
   );
