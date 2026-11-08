@@ -685,6 +685,12 @@ describe('category model and predicates', () => {
         types: ['meso-pouch'],
         icon: '1a1202deec7cf17c8aec33e32c120f44e2cb7d2a1c9c4951ba9aa9f8093fcd24',
       },
+      {
+        key: '02030000',
+        sourceId: '02030000',
+        itemClass: 'consume',
+        icon: '13e65ab29234619f545b04a1809f6546078fd958b3e37386c52ecb0ae03a2ec4',
+      },
 
       // ETC
       {
@@ -728,6 +734,12 @@ describe('category model and predicates', () => {
         itemClass: 'etc',
         neededForQuestCount: 1,
         icon: '63df4ceb3580419b2ae1db57f001573eac4fe068edfe5aeea17c4ce734de0f7a',
+      },
+      {
+        key: '04031083',
+        sourceId: '04031083',
+        itemClass: 'etc',
+        icon: '01a2f55abad4412c067f2ff4bbded0ce3793affe55817e4fc84e70c808289a43',
       },
 
       // Set-up
@@ -800,7 +812,7 @@ describe('category model and predicates', () => {
         }
       }
     }
-    // 23 categories define iconContentIds (all except other-use-items, other-etc-items, and other-setup-items)
-    expect(checkedCategories).toBe(23);
+    // 25 categories define iconContentIds (all except other-setup-items)
+    expect(checkedCategories).toBe(25);
   });
 });

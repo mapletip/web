@@ -138,7 +138,9 @@ export const ITEM_SCOPES: Readonly<Record<ItemScopeSlug, ItemCategoryScope>> = {
       byType('meso-pouches', 'Meso Pouches', 'meso-pouch', [
         '1a1202deec7cf17c8aec33e32c120f44e2cb7d2a1c9c4951ba9aa9f8093fcd24', // Mysterious Meso Pouch
       ]),
-      otherChild('other-use-items', 'Other Use Items'),
+      otherChild('other-use-items', 'Other Use Items', [
+        '13e65ab29234619f545b04a1809f6546078fd958b3e37386c52ecb0ae03a2ec4', // Return Scroll - Nearest Town
+      ]),
     ],
   },
   etc: {
@@ -169,7 +171,9 @@ export const ITEM_SCOPES: Readonly<Record<ItemScopeSlug, ItemCategoryScope>> = {
           '63df4ceb3580419b2ae1db57f001573eac4fe068edfe5aeea17c4ce734de0f7a', // Lucas' Letter / Maria's Letter
         ],
       },
-      otherChild('other-etc-items', 'Other ETC Items'),
+      otherChild('other-etc-items', 'Other ETC Items', [
+        '01a2f55abad4412c067f2ff4bbded0ce3793affe55817e4fc84e70c808289a43', // Ticket to Orbis (Regular)
+      ]),
     ],
   },
   setup: {

@@ -9,7 +9,7 @@ import { itemIconUrl } from '@mapletip/data/items';
 import { Link } from '@tanstack/react-router';
 import type { ComponentProps, ReactElement, ReactNode } from 'react';
 
-import allItemsIcon from '@/assets/maplestory/navigation/items-all-meso-pouch.png?no-inline';
+import allItemsIcon from '@/assets/maplestory/navigation/items-all-maple-leaf.png?no-inline';
 import cashIcon from '@/assets/maplestory/navigation/items-cash-pet-brown-puppy.png?no-inline';
 import etcIcon from '@/assets/maplestory/navigation/items-etc-snail-shell.png?no-inline';
 import setupIcon from '@/assets/maplestory/navigation/items-setup-blue-chair.png?no-inline';
