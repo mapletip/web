@@ -321,34 +321,82 @@ describe('DrillDownNav component', () => {
     expect(backLink.querySelector('[class*="countDimmed"]')).toBeNull();
   });
 
-  it('ancestor without icon reserves icon slot when sibling ancestor has an icon', () => {
+  it('ancestor without icon has no icon slot element while a sibling ancestor with an icon keeps its icon; children still reserve', () => {
+    const mixedTree: DrillDownNode = {
+      id: 'root',
+      label: 'All Products',
+      href: '/products',
+      icon: <span data-testid="icon-root">icon-root</span>,
+      children: [
+        {
+          id: 'category',
+          label: 'Category Without Icon',
+          href: '/products/category',
+          children: [
+            {
+              id: 'current',
+              label: 'Current Category',
+              href: '/products/category/current',
+              children: [
+                {
+                  id: 'child-with-icon',
+                  label: 'Child With Icon',
+                  href: '/products/category/current/with-icon',
+                  icon: <span data-testid="icon-child">icon-child</span>,
+                },
+                {
+                  id: 'child-no-icon',
+                  label: 'Child No Icon',
+                  href: '/products/category/current/no-icon',
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    };
+
     render(
       <DrillDownNav
-        root={catalogTree}
-        currentId="electronics/audio"
+        root={mixedTree}
+        currentId="current"
         label="Product categories"
       />,
     );
 
-    const backLink = screen.getByRole('link', { name: 'Electronics' });
-    expect(backLink).toHaveAttribute('href', '/products/electronics');
-    const arrow = backLink.querySelector('[class*="backArrow"]');
-    expect(arrow).toHaveAttribute('aria-hidden', 'true');
-    expect(arrow?.textContent).toBe('←');
+    // Sibling ancestor with an icon keeps its icon
+    const rootBackLink = screen.getByRole('link', { name: 'All Products' });
+    expect(
+      rootBackLink.querySelector('[data-testid="icon-root"]'),
+    ).toBeInTheDocument();
+    expect(rootBackLink.querySelector('[class*="icon"]')).toBeInTheDocument();
 
-    // Node without icon does NOT render an icon, but reserves the icon slot because 'all' has an icon
-    expect(backLink.querySelector('[data-testid="icon-all"]')).toBeNull();
-    const iconSlot = backLink.querySelector('[class*="iconSlot"]');
-    expect(iconSlot).toBeInTheDocument();
-    expect(iconSlot).toHaveAttribute('aria-hidden', 'true');
+    // Ancestor without icon has NO icon slot element
+    const categoryBackLink = screen.getByRole('link', {
+      name: 'Category Without Icon',
+    });
+    expect(categoryBackLink.querySelector('[class*="icon"]')).toBeNull();
+    expect(categoryBackLink.querySelector('[class*="iconSlot"]')).toBeNull();
 
-    // Node does NOT render count
-    expect(backLink.textContent).not.toContain('30');
-    expect(backLink.querySelector('[class*="count"]')).toBeNull();
-    expect(backLink.querySelector('[class*="countDimmed"]')).toBeNull();
+    // Current row
+    const currentLink = screen.getByRole('link', { name: 'Current Category' });
+    expect(currentLink).toHaveAttribute('aria-current', 'page');
 
-    // Rendered text is exactly arrow + label
-    expect(backLink.textContent).toMatch(/←\s*Electronics$/);
+    // Children still reserve icon slot when a sibling child has an icon
+    const childWithIconLink = screen.getByRole('link', {
+      name: /Child With Icon/,
+    });
+    expect(
+      childWithIconLink.querySelector('[data-testid="icon-child"]'),
+    ).toBeInTheDocument();
+
+    const childNoIconLink = screen.getByRole('link', { name: /Child No Icon/ });
+    expect(
+      childNoIconLink.querySelector('[data-testid="icon-child"]'),
+    ).toBeNull();
+    const childIconSlot = childNoIconLink.querySelector('[class*="iconSlot"]');
+    expect(childIconSlot).toBeInTheDocument();
+    expect(childIconSlot).toHaveAttribute('aria-hidden', 'true');
   });
 
   it('ancestors in a list where no back row has an icon remain unchanged (no icon or slot)', () => {

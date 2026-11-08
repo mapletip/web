@@ -267,3 +267,46 @@ export const MixedChildIcons: Story = {
     ).toBeInTheDocument();
   },
 };
+
+const mixedAncestorsTree: DrillDownNode = {
+  id: 'all',
+  label: 'All Products',
+  href: '#all',
+  count: 1450,
+  children: [
+    {
+      id: 'clothing',
+      label: 'Clothing',
+      href: '#clothing',
+      count: 320,
+      icon: <TShirt size={20} aria-hidden="true" />,
+      children: [
+        { id: 'clothing/shirts', label: 'Shirts', href: '#shirts', count: 150 },
+      ],
+    },
+  ],
+};
+
+export const LeafMixedAncestors: Story = {
+  name: 'Leaf current (mixed ancestor icons)',
+  args: {
+    root: mixedAncestorsTree,
+    currentId: 'clothing/shirts',
+    label: 'Store catalog',
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const current = getAriaCurrent(canvasElement);
+    await expect(current).toHaveLength(1);
+    await expect(current[0]).toHaveTextContent('Shirts');
+
+    const allProducts = canvas.getByRole('link', { name: 'All Products' });
+    await expect(allProducts.querySelector('svg')).not.toBeInTheDocument();
+    await expect(
+      allProducts.querySelector('[class*="iconSlot"]'),
+    ).not.toBeInTheDocument();
+
+    const clothing = canvas.getByRole('link', { name: 'Clothing' });
+    await expect(clothing.querySelector('svg')).toBeInTheDocument();
+  },
+};

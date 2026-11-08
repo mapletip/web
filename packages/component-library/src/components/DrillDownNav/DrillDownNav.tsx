@@ -182,7 +182,6 @@ export function DrillDownNav<TMeta = undefined>({
     hideEmpty,
   });
 
-  const ancestorsHaveIcon = ancestors.some((node) => Boolean(node.icon));
   const childrenHaveIcon = children.some((node) => Boolean(node.icon));
 
   interface RenderItemOptions {
@@ -218,7 +217,7 @@ export function DrillDownNav<TMeta = undefined>({
             {renderItem({
               node,
               kind: 'ancestor',
-              reserveIconSlot: ancestorsHaveIcon,
+              reserveIconSlot: false,
             })}
           </li>
         ))}
