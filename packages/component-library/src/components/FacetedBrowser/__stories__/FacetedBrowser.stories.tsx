@@ -52,6 +52,29 @@ type Story = StoryObj<typeof meta>;
 
 type Variant = 'loading' | 'error' | 'unavailable' | 'noMatches' | 'drawerOpen';
 
+const demoSortOptions: readonly BrowseSortOption[] = [
+  {
+    label: 'Name (A–Z)',
+    field: 'name',
+    direction: 'asc',
+  },
+  {
+    label: 'Name (Z–A)',
+    field: 'name',
+    direction: 'desc',
+  },
+  {
+    label: 'Value 1 (Highest)',
+    field: 'value1',
+    direction: 'desc',
+  },
+  {
+    label: 'Value 1 (Lowest)',
+    field: 'value1',
+    direction: 'asc',
+  },
+];
+
 function BrowserExample({
   variant,
   state,
@@ -190,7 +213,7 @@ function BrowserExample({
 }
 
 export const Default: Story = {
-  render: () => <BrowserExample />,
+  render: () => <BrowserExample sortOptions={demoSortOptions} />,
 };
 
 export const Active: Story = {
@@ -380,36 +403,6 @@ export const Controlled: Story = {
       </>
     );
   },
-};
-
-export const SortControl: Story = {
-  name: 'Sort control',
-  render: () => (
-    <BrowserExample
-      sortOptions={[
-        {
-          label: 'Name (A–Z)',
-          field: 'name',
-          direction: 'asc',
-        },
-        {
-          label: 'Name (Z–A)',
-          field: 'name',
-          direction: 'desc',
-        },
-        {
-          label: 'Value 1 (Highest)',
-          field: 'value1',
-          direction: 'desc',
-        },
-        {
-          label: 'Value 1 (Lowest)',
-          field: 'value1',
-          direction: 'asc',
-        },
-      ]}
-    />
-  ),
 };
 
 const demoNavTree: DrillDownNode = {
