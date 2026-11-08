@@ -100,7 +100,7 @@ describe('Items Browse route integration', () => {
       expectedBackLinks: [] as readonly { href: string; label: string }[],
       expectedDirectChildren: ['Use', 'ETC', 'Set-up', 'Cash'],
       unexpectedLabels: ['Scrolls', 'Recovery', 'Quest Items'],
-      expectedHasIcon: true,
+      expectedHasIcon: false,
     },
     {
       url: '/maplestory/items/use',
@@ -170,7 +170,7 @@ describe('Items Browse route integration', () => {
       expectedBackLinks: [] as readonly { href: string; label: string }[],
       expectedDirectChildren: ['Use', 'ETC', 'Set-up', 'Cash'],
       unexpectedLabels: ['Quest Items', 'Chairs'],
-      expectedHasIcon: true,
+      expectedHasIcon: false,
     },
     {
       url: '/maplestory/gms-v83/items/etc/quest-items',

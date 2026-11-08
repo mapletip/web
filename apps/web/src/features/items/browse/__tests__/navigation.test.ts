@@ -110,6 +110,7 @@ describe('navigation', () => {
       expect(root.count).toBe(expectedCounts.all.total);
       expect(root.href).toBe('/maplestory/items');
       expect(root.meta).toEqual({ buildId: undefined });
+      expect(root.icon).toBeUndefined();
 
       const children = root.children ?? [];
       expect(children.map((c) => c.id)).toEqual([
@@ -203,13 +204,13 @@ describe('navigation', () => {
   });
 
   describe('findItemNavNode', () => {
-    it('locates root node by id and provides its icon', () => {
+    it('locates root node by id and confirms it has no icon', () => {
       const tree = getItemNavTree(dummyRows, 'cw-launch');
       const node = findItemNavNode(tree, 'all');
       expect(node).toBeDefined();
       expect(node?.id).toBe('all');
       expect(node?.label).toBe('All Items');
-      expect(node?.icon).toBeDefined();
+      expect(node?.icon).toBeUndefined();
     });
 
     it('locates scope node by id and provides its icon', () => {

@@ -9,7 +9,6 @@ import { itemIconUrl } from '@mapletip/data/items';
 import { Link } from '@tanstack/react-router';
 import type { ComponentProps, ReactElement, ReactNode } from 'react';
 
-import allItemsIcon from '@/assets/maplestory/navigation/items-all-maple-leaf.png?no-inline';
 import cashIcon from '@/assets/maplestory/navigation/items-cash-pet-brown-puppy.png?no-inline';
 import etcIcon from '@/assets/maplestory/navigation/items-etc-snail-shell.png?no-inline';
 import setupIcon from '@/assets/maplestory/navigation/items-setup-blue-chair.png?no-inline';
@@ -39,8 +38,9 @@ export interface ItemNavRouteParams {
   readonly child?: string | undefined;
 }
 
-const SCOPE_ICONS: Readonly<Record<ItemScopeSlug, string>> = {
-  all: allItemsIcon,
+type ScopedItemScopeSlug = Exclude<ItemScopeSlug, 'all'>;
+
+const SCOPE_ICONS: Readonly<Record<ScopedItemScopeSlug, string>> = {
   use: useIcon,
   etc: etcIcon,
   setup: setupIcon,
@@ -114,7 +114,7 @@ export function itemNavId(category: ItemCategorySelection): string {
 }
 
 const NON_ALL_SCOPES = ITEM_SCOPE_SLUGS.filter(
-  (slug): slug is Exclude<ItemScopeSlug, 'all'> => slug !== 'all',
+  (slug): slug is ScopedItemScopeSlug => slug !== 'all',
 );
 
 /**
@@ -214,7 +214,6 @@ export function getItemNavTree(
     id: 'all',
     label: ITEM_SCOPES.all.label,
     href: buildItemNavHref(rootParams),
-    icon: renderItemNavIcon(SCOPE_ICONS.all),
     count: counts.all.total,
     meta: rootParams,
     children: scopeNodes,
