@@ -7,7 +7,20 @@ import {
   isItemScope,
   matchesCategory,
 } from '../assignment';
-import { ITEM_SCOPES, type ItemCategoryScope } from '../categories';
+import {
+  allScope,
+  cashScope,
+  etcScope,
+  ITEM_SCOPES,
+  ITEM_SCOPE_SLUGS,
+  setupScope,
+  useScope,
+  type ItemCategoryScope,
+} from '../categories';
+import { cashScope as directCashScope } from '../categories/cash';
+import { etcScope as directEtcScope } from '../categories/etc';
+import { setupScope as directSetupScope } from '../categories/setup';
+import { useScope as directUseScope } from '../categories/use';
 import type { ItemRow } from '../project';
 
 function makeRow(overrides: Partial<ItemRow> = {}): ItemRow {
@@ -30,6 +43,17 @@ describe('category model and predicates', () => {
     expect(isItemScope('setup')).toBe(true);
     expect(isItemScope('cash')).toBe(true);
     expect(isItemScope('invalid')).toBe(false);
+
+    expect(ITEM_SCOPE_SLUGS).toEqual(['all', 'use', 'etc', 'setup', 'cash']);
+    expect(ITEM_SCOPES.all).toBe(allScope);
+    expect(ITEM_SCOPES.use).toBe(useScope);
+    expect(ITEM_SCOPES.etc).toBe(etcScope);
+    expect(ITEM_SCOPES.setup).toBe(setupScope);
+    expect(ITEM_SCOPES.cash).toBe(cashScope);
+    expect(useScope).toBe(directUseScope);
+    expect(etcScope).toBe(directEtcScope);
+    expect(setupScope).toBe(directSetupScope);
+    expect(cashScope).toBe(directCashScope);
 
     expect(ITEM_SCOPES.use.children.some((c) => c.slug === 'scrolls')).toBe(
       true,
