@@ -79,13 +79,21 @@ function getRowKindClass(kind: RowKind): string {
   return classes['childRow'] ?? '';
 }
 
-function renderLinkItem<TMeta>(
-  node: DrillDownNode<TMeta>,
-  kind: RowKind,
-  reserveIconSlot: boolean,
-  onNavigate: (() => void) | undefined,
-  renderLink: DrillDownNavProps<TMeta>['renderLink'],
-): ReactNode {
+interface RenderLinkItemOptions<TMeta> {
+  readonly node: DrillDownNode<TMeta>;
+  readonly kind: RowKind;
+  readonly reserveIconSlot: boolean;
+  readonly onNavigate?: (() => void) | undefined;
+  readonly renderLink?: DrillDownNavProps<TMeta>['renderLink'];
+}
+
+function renderLinkItem<TMeta>({
+  node,
+  kind,
+  reserveIconSlot,
+  onNavigate,
+  renderLink,
+}: RenderLinkItemOptions<TMeta>): ReactNode {
   const isCurrent = kind === 'current';
   const rowContent = renderRowContent(node, kind, reserveIconSlot);
   const kindClass = getRowKindClass(kind);
@@ -115,13 +123,21 @@ function renderLinkItem<TMeta>(
   );
 }
 
-function renderButtonItem<TMeta>(
-  node: DrillDownNode<TMeta>,
-  kind: RowKind,
-  reserveIconSlot: boolean,
-  hideEmpty: boolean,
-  onSelect: DrillDownSelectHandler<TMeta>,
-): ReactNode {
+interface RenderButtonItemOptions<TMeta> {
+  readonly node: DrillDownNode<TMeta>;
+  readonly kind: RowKind;
+  readonly reserveIconSlot: boolean;
+  readonly hideEmpty: boolean;
+  readonly onSelect: DrillDownSelectHandler<TMeta>;
+}
+
+function renderButtonItem<TMeta>({
+  node,
+  kind,
+  reserveIconSlot,
+  hideEmpty,
+  onSelect,
+}: RenderButtonItemOptions<TMeta>): ReactNode {
   const isCurrent = kind === 'current';
   const rowContent = renderRowContent(node, kind, reserveIconSlot);
   const kindClass = getRowKindClass(kind);
@@ -164,9 +180,21 @@ export function DrillDownNav<TMeta = undefined>({
     reserveIconSlot: boolean,
   ) => {
     if (onSelect) {
-      return renderButtonItem(node, kind, reserveIconSlot, hideEmpty, onSelect);
+      return renderButtonItem({
+        node,
+        kind,
+        reserveIconSlot,
+        hideEmpty,
+        onSelect,
+      });
     }
-    return renderLinkItem(node, kind, reserveIconSlot, onNavigate, renderLink);
+    return renderLinkItem({
+      node,
+      kind,
+      reserveIconSlot,
+      onNavigate,
+      renderLink,
+    });
   };
 
   return (
