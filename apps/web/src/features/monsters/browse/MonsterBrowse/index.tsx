@@ -79,7 +79,7 @@ export const monsterBrowseColumns: readonly TableColumn<MonsterBrowseRow>[] = [
     sortable: true,
     firstSortDirection: 'asc',
     render: (record) => (
-      <Group gap="xs" wrap="nowrap">
+      <Group align="flex-start" gap="xs" wrap="nowrap">
         <MonsterSprite sprite={record.sprite} />
         <span>{record.name}</span>
       </Group>
