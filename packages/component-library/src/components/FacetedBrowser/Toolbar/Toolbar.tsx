@@ -80,12 +80,22 @@ export function PageSizeSelect({
   );
 }
 
+const DRAWER_SELECT_STYLES = {
+  label: {
+    fontWeight: 600,
+    fontSize: 'var(--mantine-font-size-sm)',
+    color: 'var(--mantine-color-text)',
+    marginBottom: 'var(--mantine-spacing-xs)',
+  },
+} as const;
+
 export interface SortSelectProps {
   readonly recordNoun: string;
   readonly sortOptions: readonly BrowseSortOption[];
   readonly currentSort?:
     { readonly field: string; readonly direction: 'asc' | 'desc' } | undefined;
   readonly onChange: (field: string, direction: 'asc' | 'desc') => void;
+  readonly surface?: 'toolbar' | 'drawer';
 }
 
 export function SortSelect({
@@ -93,6 +103,7 @@ export function SortSelect({
   sortOptions,
   currentSort,
   onChange,
+  surface = 'toolbar',
 }: SortSelectProps): ReactElement {
   const selectedValue = currentSort
     ? `${currentSort.field}:${currentSort.direction}`
@@ -107,30 +118,38 @@ export function SortSelect({
     [sortOptions],
   );
 
+  const select = (
+    <Select
+      aria-label={surface === 'toolbar' ? `Sort ${recordNoun}` : undefined}
+      label={surface === 'drawer' ? 'Sort' : undefined}
+      size="sm"
+      checkIconPosition="left"
+      withAlignedLabels
+      allowDeselect={false}
+      value={selectedValue}
+      data={data}
+      onChange={(value) => {
+        if (!value) return;
+        const opt = sortOptions.find(
+          (o) => `${o.field}:${o.direction}` === value,
+        );
+        if (opt) {
+          onChange(opt.field, opt.direction);
+        }
+      }}
+      w={surface === 'drawer' ? '100%' : { base: '100%', md: 230 }}
+      {...(surface === 'drawer' ? { styles: DRAWER_SELECT_STYLES } : {})}
+    />
+  );
+
+  if (surface === 'drawer') return select;
+
   return (
     <Group gap={6} align="center">
       <Text size="xs" c="dimmed">
         Sort:
       </Text>
-      <Select
-        aria-label={`Sort ${recordNoun}`}
-        size="sm"
-        checkIconPosition="left"
-        withAlignedLabels
-        allowDeselect={false}
-        value={selectedValue}
-        data={data}
-        onChange={(value) => {
-          if (!value) return;
-          const opt = sortOptions.find(
-            (o) => `${o.field}:${o.direction}` === value,
-          );
-          if (opt) {
-            onChange(opt.field, opt.direction);
-          }
-        }}
-        w={{ base: '100%', md: 230 }}
-      />
+      {select}
     </Group>
   );
 }

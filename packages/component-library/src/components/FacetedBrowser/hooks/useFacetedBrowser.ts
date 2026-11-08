@@ -147,6 +147,11 @@ export interface UseFacetedBrowserReturn<
   ) => void;
   /** Reset all filters to empty. */
   readonly resetFilters: () => void;
+  /** Atomically commit a drawer draft's filters and sort in a single transition. */
+  readonly commitDraft: (draft: {
+    readonly filters: Record<string, FacetFilterValue>;
+    readonly sort?: SortIntent | undefined;
+  }) => void;
   /** Columns currently visible in original declaration order. */
   readonly visibleColumns: readonly TableColumn<TRecord>[];
   /** Column visibility map. */
@@ -500,6 +505,41 @@ export function useFacetedBrowser<TRecord extends Record<string, unknown>>({
   const resetFilters = useCallback(() => {
     setFilters({});
   }, [setFilters]);
+
+  const commitDraft = useCallback(
+    ({
+      filters,
+      sort,
+    }: {
+      readonly filters: Record<string, FacetFilterValue>;
+      readonly sort?: SortIntent | undefined;
+    }) => {
+      const current = latestStateRef.current;
+      const nextFilters = normalizeFilters(filters);
+      const filtersChanged = !filtersEqual(current.filters, nextFilters);
+      const sortChanged =
+        sort !== undefined
+          ? current.sort?.field !== sort.field ||
+            current.sort?.direction !== sort.direction
+          : false;
+
+      if (!filtersChanged && !sortChanged) return;
+
+      const nextSort = sort ?? current.sort;
+      const nextState: BrowseState = {
+        ...current,
+        filters: nextFilters,
+        page: 1,
+        ...(nextSort ? { sort: nextSort } : {}),
+      };
+      const changed = emitState(nextState);
+      if (!changed) return;
+      if (filtersChanged) onFiltersChange?.(nextFilters);
+      if (sortChanged && sort) onSortChange?.(sort);
+      if (current.page !== 1) onPageChange?.(1);
+    },
+    [emitState, onFiltersChange, onPageChange, onSortChange],
+  );
 
   const setHiddenColumns = useCallback(
     (nextHiddenColumns: readonly string[]) => {
@@ -877,6 +917,7 @@ export function useFacetedBrowser<TRecord extends Record<string, unknown>>({
     setFilter,
     setFilters,
     resetFilters,
+    commitDraft,
     visibleColumns,
     columnVisibility,
     setColumnVisibility,

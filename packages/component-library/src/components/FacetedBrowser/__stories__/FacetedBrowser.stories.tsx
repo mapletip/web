@@ -267,7 +267,7 @@ export const CrossFacetFiltering: Story = {
 
 export const MobileCards: Story = {
   name: 'Mobile cards',
-  render: () => <BrowserExample />,
+  render: () => <BrowserExample sortOptions={demoSortOptions} />,
   globals: { viewport: { value: 'mobileBreakpoint', isRotated: false } },
 };
 
@@ -305,7 +305,9 @@ export const CustomResults: Story = {
 };
 
 export const DrawerOpen: Story = {
-  render: () => <BrowserExample variant="drawerOpen" />,
+  render: () => (
+    <BrowserExample variant="drawerOpen" sortOptions={demoSortOptions} />
+  ),
   globals: { viewport: { value: 'tablet', isRotated: false } },
 };
 

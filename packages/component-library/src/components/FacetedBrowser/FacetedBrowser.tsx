@@ -1,4 +1,4 @@
-import { Group, Stack, TextInput, Title } from '@mantine/core';
+import { Box, Divider, Group, Stack, TextInput, Title } from '@mantine/core';
 import { MagnifyingGlass } from '@phosphor-icons/react';
 import type { MouseEvent as ReactMouseEvent, ReactElement } from 'react';
 import { useCallback, useMemo, useRef, useState } from 'react';
@@ -220,7 +220,7 @@ export function FacetedBrowser<TRecord extends Record<string, unknown>>(
     statusActive,
     filterIsInvalid,
     evaluateDraft: browser.evaluateDraft,
-    commitFilters: browser.setFilters,
+    commitDraft: browser.commitDraft,
   });
 
   const shownDrawerFacet = facets.find(
@@ -440,12 +440,14 @@ export function FacetedBrowser<TRecord extends Record<string, unknown>>(
   const toolbarContent =
     sortOptions && sortOptions.length > 0 ? (
       <Group gap="xs">
-        <SortSelect
-          recordNoun={recordNoun}
-          sortOptions={sortOptions}
-          currentSort={browseState.sort}
-          onChange={browser.setSort}
-        />
+        <Box visibleFrom="md">
+          <SortSelect
+            recordNoun={recordNoun}
+            sortOptions={sortOptions}
+            currentSort={browseState.sort}
+            onChange={browser.setSort}
+          />
+        </Box>
         {primaryToolbar}
       </Group>
     ) : (
@@ -459,6 +461,9 @@ export function FacetedBrowser<TRecord extends Record<string, unknown>>(
         : { ...browseState, page: browser.page },
     [browseState, browser.page],
   );
+
+  const hasSortOptions = sortOptions !== undefined && sortOptions.length > 0;
+  const hasFilterOptions = facets.length > 0 || hasSortOptions;
 
   return (
     <>
@@ -482,7 +487,7 @@ export function FacetedBrowser<TRecord extends Record<string, unknown>>(
         rail={railContent}
         railLabel={railLabel}
         quickFacets={
-          navigation || facets.length > 0 ? (
+          navigation || hasFilterOptions ? (
             <QuickFacets
               {...(navigation
                 ? {
@@ -496,7 +501,7 @@ export function FacetedBrowser<TRecord extends Record<string, unknown>>(
                     },
                   }
                 : {})}
-              hasFilters={facets.length > 0}
+              hasFilters={hasFilterOptions}
               facets={quickFacets}
               activeTotal={activeFilterCount}
               onOpen={drawer.open}
@@ -562,6 +567,20 @@ export function FacetedBrowser<TRecord extends Record<string, unknown>>(
             <div role="presentation" onClick={handleDrawerContentClick}>
               {drawerContent}
             </div>
+          ) : null}
+          {sortOptions && sortOptions.length > 0 && !shownDrawerFacet ? (
+            <>
+              <SortSelect
+                recordNoun={recordNoun}
+                sortOptions={sortOptions}
+                currentSort={drawer.draftSort}
+                onChange={drawer.setSort}
+                surface="drawer"
+              />
+              {drawerFacets.length > 0 ? (
+                <Divider my="sm" color="var(--mapletip-color-border-subtle)" />
+              ) : null}
+            </>
           ) : null}
           <FacetList
             key={facetResetEpoch}

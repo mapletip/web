@@ -114,4 +114,34 @@ describe('FacetedBrowser server rendering', () => {
       ),
     ).toThrow('unregistered query field');
   });
+
+  it('hides the toolbar sort select below md via the responsive mechanism while keeping the drawer closed during SSR', () => {
+    const html = renderToString(
+      <MantineProvider theme={theme} forceColorScheme="dark">
+        <FacetedBrowser
+          title={<h1>Sort SSR</h1>}
+          records={demoRecords.slice(0, 5)}
+          idAccessor="id"
+          presentation="cards"
+          renderCard={(record) => <div>{record.name}</div>}
+          sortOptions={[
+            { label: 'Name (A–Z)', field: 'name', direction: 'asc' },
+            { label: 'Name (Z–A)', field: 'name', direction: 'desc' },
+          ]}
+          defaultState={{
+            search: '',
+            filters: {},
+            page: 1,
+            pageSize: 10,
+            hiddenColumns: [],
+            sort: { field: 'name', direction: 'asc' },
+          }}
+        />
+      </MantineProvider>,
+    );
+
+    expect(html).toContain('mantine-visible-from-md');
+    expect(html).toContain('aria-label="Sort records"');
+    expect(html).not.toContain('role="dialog"');
+  });
 });

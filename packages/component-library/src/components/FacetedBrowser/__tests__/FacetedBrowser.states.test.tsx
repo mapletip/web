@@ -1,5 +1,11 @@
 import { MantineProvider } from '@mantine/core';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import {
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { ReactNode } from 'react';
 import { describe, expect, it, vi } from 'vitest';
@@ -404,6 +410,183 @@ describe('sort options control', () => {
     expect(
       screen.getByRole('combobox', { name: 'records per page' }),
     ).toBeVisible();
+  });
+
+  it('renders Filters button when sortOptions is present with zero facets, and omits it with neither', () => {
+    const { unmount } = render(
+      <MantineProvider>
+        <FacetedBrowser
+          title={<h1>Items</h1>}
+          records={demoRecords}
+          idAccessor="id"
+          presentation="cards"
+          renderCard={(record) => <div>{record.name}</div>}
+          sortOptions={sortOptions}
+          facets={[]}
+          defaultState={{
+            search: '',
+            filters: {},
+            page: 1,
+            pageSize: 20,
+            hiddenColumns: [],
+          }}
+        />
+      </MantineProvider>,
+    );
+
+    expect(screen.getByRole('button', { name: /Filters/i })).toBeVisible();
+
+    unmount();
+
+    render(
+      <MantineProvider>
+        <FacetedBrowser
+          title={<h1>Items</h1>}
+          records={demoRecords}
+          idAccessor="id"
+          presentation="cards"
+          renderCard={(record) => <div>{record.name}</div>}
+          facets={[]}
+          defaultState={{
+            search: '',
+            filters: {},
+            page: 1,
+            pageSize: 20,
+            hiddenColumns: [],
+          }}
+        />
+      </MantineProvider>,
+    );
+
+    expect(
+      screen.queryByRole('button', { name: /Filters/i }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('renders Sort section in drawer only with sortOptions, and with zero facets drawer contains only Sort', () => {
+    const onDrawerOpenedChange = vi.fn();
+    render(
+      <MantineProvider>
+        <FacetedBrowser
+          title={<h1>Items</h1>}
+          records={demoRecords}
+          idAccessor="id"
+          presentation="cards"
+          renderCard={(record) => <div>{record.name}</div>}
+          sortOptions={sortOptions}
+          facets={[]}
+          drawerOpened={true}
+          onDrawerOpenedChange={onDrawerOpenedChange}
+          defaultState={{
+            search: '',
+            filters: {},
+            page: 1,
+            pageSize: 20,
+            hiddenColumns: [],
+          }}
+        />
+      </MantineProvider>,
+    );
+
+    const dialog = screen.getByRole('dialog');
+    expect(dialog).toBeInTheDocument();
+    const drawerSort = within(dialog).getByRole('combobox', { name: 'Sort' });
+    expect(drawerSort).toBeVisible();
+    expect(within(dialog).queryByRole('checkbox')).not.toBeInTheDocument();
+  });
+
+  it('stages sort change in the drawer: Cancel leaves sort unchanged, Apply commits it via onStateChange', async () => {
+    const onStateChange = vi.fn();
+    const onDrawerOpenedChange = vi.fn();
+    const state: BrowseState = {
+      search: '',
+      filters: {},
+      sort: { field: 'name', direction: 'asc' },
+      page: 2,
+      pageSize: 20,
+      hiddenColumns: [],
+    };
+
+    const { rerender } = render(
+      <MantineProvider>
+        <FacetedBrowser
+          title={<h1>Items</h1>}
+          records={demoRecords}
+          idAccessor="id"
+          queryFields={sortableFields}
+          presentation="cards"
+          renderCard={(record) => <div>{record.name}</div>}
+          sortOptions={sortOptions}
+          state={state}
+          onStateChange={onStateChange}
+          drawerOpened={true}
+          onDrawerOpenedChange={onDrawerOpenedChange}
+        />
+      </MantineProvider>,
+    );
+
+    const dialog = screen.getByRole('dialog');
+    const drawerSort = within(dialog).getByRole('combobox', { name: 'Sort' });
+    expect(drawerSort).toHaveValue('Name (A–Z)');
+
+    await userEvent.click(drawerSort);
+    const listboxId = drawerSort.getAttribute('aria-controls')!;
+    const drawerListbox = document.getElementById(listboxId)!;
+    const descOption = within(drawerListbox).getByRole('option', {
+      name: 'Name (Z–A)',
+      hidden: true,
+    });
+    fireEvent.click(descOption);
+
+    const cancelButton = within(dialog).getByRole('button', { name: 'Cancel' });
+    await userEvent.click(cancelButton);
+    expect(onStateChange).not.toHaveBeenCalled();
+    expect(onDrawerOpenedChange).toHaveBeenCalledWith(false);
+
+    rerender(
+      <MantineProvider>
+        <FacetedBrowser
+          title={<h1>Items</h1>}
+          records={demoRecords}
+          idAccessor="id"
+          queryFields={sortableFields}
+          presentation="cards"
+          renderCard={(record) => <div>{record.name}</div>}
+          sortOptions={sortOptions}
+          state={state}
+          onStateChange={onStateChange}
+          drawerOpened={true}
+          onDrawerOpenedChange={onDrawerOpenedChange}
+        />
+      </MantineProvider>,
+    );
+
+    const reopenedDialog = screen.getByRole('dialog');
+    const reopenedSort = within(reopenedDialog).getByRole('combobox', {
+      name: 'Sort',
+    });
+    expect(reopenedSort).toHaveValue('Name (A–Z)');
+
+    await userEvent.click(reopenedSort);
+    const reopenedListboxId = reopenedSort.getAttribute('aria-controls')!;
+    const reopenedListbox = document.getElementById(reopenedListboxId)!;
+    const descOption2 = within(reopenedListbox).getByRole('option', {
+      name: 'Name (Z–A)',
+      hidden: true,
+    });
+    fireEvent.click(descOption2);
+
+    const applyButton = within(reopenedDialog).getByRole('button', {
+      name: /Show/i,
+    });
+    await userEvent.click(applyButton);
+
+    expect(onStateChange).toHaveBeenCalledWith(
+      expect.objectContaining({
+        sort: { field: 'name', direction: 'desc' },
+        page: 1,
+      }),
+    );
   });
 });
 

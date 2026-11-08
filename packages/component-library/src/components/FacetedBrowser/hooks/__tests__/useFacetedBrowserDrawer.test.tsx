@@ -5,7 +5,10 @@ import { describe, expect, it, vi } from 'vitest';
 
 import type { FacetFilterValue } from '@/components/FacetedBrowser';
 import { isInvalidNumericRange } from '@/components/FacetedBrowser/hooks/filterTypes';
-import { useFacetedBrowserDrawer } from '@/components/FacetedBrowser/hooks/useFacetedBrowserDrawer';
+import {
+  useFacetedBrowserDrawer,
+  type DraftCommit,
+} from '@/components/FacetedBrowser/hooks/useFacetedBrowserDrawer';
 
 const committedState = {
   search: '',
@@ -17,9 +20,11 @@ const committedState = {
 
 function DrawerHarness({
   commitFilters,
+  commitDraft,
   initiallyOpened = true,
 }: {
-  readonly commitFilters: (filters: Record<string, FacetFilterValue>) => void;
+  readonly commitFilters?: (filters: Record<string, FacetFilterValue>) => void;
+  readonly commitDraft?: (draft: DraftCommit) => void;
   readonly initiallyOpened?: boolean;
 }) {
   const [opened, setOpened] = useState(initiallyOpened);
@@ -34,7 +39,8 @@ function DrawerHarness({
       matchingRecords: [],
       getFacetValues: () => new Map<string, number>(),
     }),
-    commitFilters,
+    commitFilters: commitFilters ?? (() => undefined),
+    ...(commitDraft ? { commitDraft } : {}),
   });
 
   return (
@@ -85,6 +91,24 @@ function DrawerHarness({
         }}
       >
         Open set and apply
+      </button>
+      <button
+        type="button"
+        onClick={() => {
+          drawer.setSort('value1', 'desc');
+          drawer.apply();
+        }}
+      >
+        Set sort and apply
+      </button>
+      <button
+        type="button"
+        onClick={() => {
+          drawer.setSort('value1', 'desc');
+          drawer.close();
+        }}
+      >
+        Set sort and close
       </button>
     </div>
   );
@@ -141,5 +165,28 @@ describe('FacetedBrowser drawer actions', () => {
       screen.getByRole('button', { name: 'Invalid and apply' }),
     );
     expect(commitFilters).not.toHaveBeenCalled();
+  });
+
+  it('stages draft sort and passes it to commitDraft on apply', async () => {
+    const commitDraft = vi.fn();
+    render(<DrawerHarness commitDraft={commitDraft} />);
+
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Set sort and apply' }),
+    );
+    expect(commitDraft).toHaveBeenCalledWith({
+      filters: {},
+      sort: { field: 'value1', direction: 'desc' },
+    });
+  });
+
+  it('discards draft sort when drawer is closed without applying', async () => {
+    const commitDraft = vi.fn();
+    render(<DrawerHarness commitDraft={commitDraft} />);
+
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Set sort and close' }),
+    );
+    expect(commitDraft).not.toHaveBeenCalled();
   });
 });
