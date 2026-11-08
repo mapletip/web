@@ -2,6 +2,8 @@ import { MantineProvider } from '@mantine/core';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
+import classes from '@/components/FacetedBrowser/FilterDrawer/FilterDrawer.module.css';
+
 import { NavigationDrawer } from '../NavigationDrawer';
 
 describe('NavigationDrawer', () => {
@@ -33,6 +35,25 @@ describe('NavigationDrawer', () => {
     expect(
       screen.getByRole('button', { name: 'Show 100 items' }),
     ).toBeInTheDocument();
+  });
+
+  it('renders footer buttons inside a paired footer container', () => {
+    render(
+      <MantineProvider>
+        <NavigationDrawer {...defaultProps}>
+          {() => <div>Drawer Body</div>}
+        </NavigationDrawer>
+      </MantineProvider>,
+    );
+
+    const cancelButton = screen.getByRole('button', { name: 'Cancel' });
+    const applyButton = screen.getByRole('button', {
+      name: 'Show 100 items',
+    });
+    expect(cancelButton.parentElement).toBe(applyButton.parentElement);
+    expect(cancelButton.parentElement?.className).toContain(
+      classes['footerPair'],
+    );
   });
 
   it('renders "Show items" when draft count is undefined', () => {

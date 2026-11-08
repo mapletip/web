@@ -174,7 +174,9 @@ export function NavigationDrawer({
               ? children({ selectedId: draftId, onSelect: handleSelect })
               : children}
           </div>
-          <div className={classes['footer']}>
+          <div
+            className={`${classes['footer']} ${classes['footerPair'] ?? ''}`.trim()}
+          >
             <Button variant="default" onClick={handleCancel}>
               Cancel
             </Button>

@@ -71,6 +71,15 @@
   gap: var(--mantine-spacing-xs);
 }
 
+.footerPair {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.footerPair > * {
+  width: 100%;
+}
+
 @media (max-width: 47.99rem) {
   .footer {
     display: grid;
@@ -87,5 +96,9 @@
 
   .footer > * {
     width: 100%;
+  }
+
+  .footerPair > :last-child {
+    grid-column: auto;
   }
 }
