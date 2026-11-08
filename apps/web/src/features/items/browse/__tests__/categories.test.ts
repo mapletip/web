@@ -686,10 +686,10 @@ describe('category model and predicates', () => {
         icon: '1a1202deec7cf17c8aec33e32c120f44e2cb7d2a1c9c4951ba9aa9f8093fcd24',
       },
       {
-        key: '02030000',
-        sourceId: '02030000',
+        key: '02190000',
+        sourceId: '02190000',
         itemClass: 'consume',
-        icon: '13e65ab29234619f545b04a1809f6546078fd958b3e37386c52ecb0ae03a2ec4',
+        icon: '45f5193907b528c8221c6267724b4dd71cd4d9cef11b11c99d6c2975ad26d45f',
       },
 
       // ETC

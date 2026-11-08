@@ -139,7 +139,7 @@ export const ITEM_SCOPES: Readonly<Record<ItemScopeSlug, ItemCategoryScope>> = {
         '1a1202deec7cf17c8aec33e32c120f44e2cb7d2a1c9c4951ba9aa9f8093fcd24', // Mysterious Meso Pouch
       ]),
       otherChild('other-use-items', 'Other Use Items', [
-        '13e65ab29234619f545b04a1809f6546078fd958b3e37386c52ecb0ae03a2ec4', // Return Scroll - Nearest Town
+        '45f5193907b528c8221c6267724b4dd71cd4d9cef11b11c99d6c2975ad26d45f', // Lie Detector Test
       ]),
     ],
   },
