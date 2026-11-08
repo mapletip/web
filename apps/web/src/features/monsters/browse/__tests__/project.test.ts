@@ -1,3 +1,4 @@
+import type { StaticMonsterCatalog } from '@mapletip/data/monsters';
 import { describe, expect, it } from 'vitest';
 
 import {
@@ -11,7 +12,6 @@ import {
 import {
   ABSENT_FACT,
   fixtureCatalog,
-  fixtureCatalogV21,
   fixtureRecord,
   knownFact,
   UNKNOWN_FACT,
@@ -29,7 +29,7 @@ function firstRow(rows: readonly MonsterBrowseRow[]): MonsterBrowseRow {
  * Distinct sentinel per positional slot, so a mis-ordered or guessed mapping
  * cannot pass by coincidence.
  */
-function sentinelRecord() {
+function sentinelRecord(input: Pick<FixtureRecordInput, 'sprite'> = {}) {
   return fixtureRecord({
     key: 'fixture:monster:001',
     name: knownFact('Sentinel Snail'),
@@ -58,23 +58,62 @@ function sentinelRecord() {
       knownFact(9), // category — deliberately not projected
       knownFact('sentinel-mob-type'), // raw mob type — deliberately not projected
     ],
+    ...input,
   });
 }
 
-describe('projectMonsterBrowseRows contract-2 tuple mapping', () => {
-  it('projects contract 2.1 sprite facts to the same rows as contract 2.0', () => {
-    const records = [sentinelRecord()];
-    const rowsV20 = projectMonsterBrowseRows(fixtureCatalog(records));
-    const catalogV21 = fixtureCatalogV21({
-      records,
-      sprite: knownFact('fixture-sprite-content-id'),
-    });
+describe('projectMonsterBrowseRows contract-2.1 tuple mapping', () => {
+  it('projects known sprite content IDs without treating them as display facts', () => {
+    const contentId = 'a'.repeat(64);
+    const row = firstRow(
+      projectMonsterBrowseRows(
+        fixtureCatalog({
+          records: [sentinelRecord({ sprite: knownFact(contentId) })],
+        }),
+      ),
+    );
 
-    expect(projectMonsterBrowseRows(catalogV21)).toEqual(rowsV20);
+    expect(row.sprite).toBe(contentId);
+    expect(row.factStates).not.toHaveProperty('sprite');
+  });
+
+  it('omits non-known sprite states without recording them as display facts', () => {
+    for (const sprite of [UNKNOWN_FACT, ABSENT_FACT, UNSUPPORTED_FACT]) {
+      const row = firstRow(
+        projectMonsterBrowseRows(
+          fixtureCatalog({ records: [sentinelRecord({ sprite })] }),
+        ),
+      );
+
+      expect(row).not.toHaveProperty('sprite');
+      expect(row.factStates).not.toHaveProperty('sprite');
+    }
+  });
+
+  it('rejects a contract 2.0 catalog', () => {
+    const catalogV21 = fixtureCatalog({ records: [sentinelRecord()] });
+    const catalogV20: StaticMonsterCatalog = {
+      contractVersion: '2.0',
+      format: catalogV21.format,
+      recordCount: catalogV21.recordCount,
+      records: catalogV21.records.map((record) => ({
+        key: record.key,
+        name: record.name,
+        stats: record.stats,
+        traits: record.traits,
+        elements: record.elements,
+        relationships: record.relationships,
+      })),
+      scope: catalogV21.scope,
+    };
+
+    expect(() => projectMonsterBrowseRows(catalogV20)).toThrow('contract-2.1');
   });
 
   it('reads every projected stat and trait from its own positional slot', () => {
-    const rows = projectMonsterBrowseRows(fixtureCatalog([sentinelRecord()]));
+    const rows = projectMonsterBrowseRows(
+      fixtureCatalog({ records: [sentinelRecord()] }),
+    );
     const row = firstRow(rows);
 
     expect(row.key).toBe('fixture:monster:001');
@@ -108,7 +147,7 @@ describe('projectMonsterBrowseRows contract-2 tuple mapping', () => {
 
   it('does not project the traits and collections deliberately left out', () => {
     const row = firstRow(
-      projectMonsterBrowseRows(fixtureCatalog([sentinelRecord()])),
+      projectMonsterBrowseRows(fixtureCatalog({ records: [sentinelRecord()] })),
     );
 
     for (const omitted of [
@@ -157,7 +196,9 @@ describe('monster fact states', () => {
     ],
   });
 
-  const row = firstRow(projectMonsterBrowseRows(fixtureCatalog([record])));
+  const row = firstRow(
+    projectMonsterBrowseRows(fixtureCatalog({ records: [record] })),
+  );
 
   it('keeps a known false distinct from every non-known state', () => {
     expect(row.boss).toBe(false);
@@ -215,37 +256,39 @@ describe('derived EXP per 100 HP', () => {
   function ratioRow(hp: StatFact, exp: StatFact): MonsterBrowseRow {
     return firstRow(
       projectMonsterBrowseRows(
-        fixtureCatalog([
-          fixtureRecord({
-            key: 'fixture:monster:ratio',
-            name: knownFact('Ratio Sentinel'),
-            stats: [
-              knownFact(10), // level
-              hp,
-              knownFact(0), // mp
-              exp,
-              knownFact(0), // physical attack
-              knownFact(0), // physical defense
-              knownFact(0), // magic attack
-              knownFact(0), // magic defense
-              knownFact(0), // accuracy
-              knownFact(0), // avoidability
-              knownFact(0), // pushed
-              knownFact(0), // speed
-            ],
-            traits: [
-              knownFact(false),
-              knownFact(false),
-              knownFact(false),
-              knownFact(0),
-              knownFact(false),
-              knownFact(false),
-              knownFact(0),
-              knownFact(0),
-              knownFact('ratio-fixture'),
-            ],
-          }),
-        ]),
+        fixtureCatalog({
+          records: [
+            fixtureRecord({
+              key: 'fixture:monster:ratio',
+              name: knownFact('Ratio Sentinel'),
+              stats: [
+                knownFact(10), // level
+                hp,
+                knownFact(0), // mp
+                exp,
+                knownFact(0), // physical attack
+                knownFact(0), // physical defense
+                knownFact(0), // magic attack
+                knownFact(0), // magic defense
+                knownFact(0), // accuracy
+                knownFact(0), // avoidability
+                knownFact(0), // pushed
+                knownFact(0), // speed
+              ],
+              traits: [
+                knownFact(false),
+                knownFact(false),
+                knownFact(false),
+                knownFact(0),
+                knownFact(false),
+                knownFact(false),
+                knownFact(0),
+                knownFact(0),
+                knownFact('ratio-fixture'),
+              ],
+            }),
+          ],
+        }),
       ),
     );
   }
@@ -344,7 +387,7 @@ describe('full roster projection', () => {
   });
 
   it('projects exactly the declared number of records without slicing', () => {
-    const rows = projectMonsterBrowseRows(fixtureCatalog(records));
+    const rows = projectMonsterBrowseRows(fixtureCatalog({ records }));
 
     expect(rows).toHaveLength(5);
     expect(rows.map((row) => row.key)).toEqual([

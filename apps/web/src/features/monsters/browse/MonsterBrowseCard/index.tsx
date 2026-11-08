@@ -1,5 +1,7 @@
+import { Group } from '@mantine/core';
 import type { ReactElement } from 'react';
 
+import { MonsterSprite } from '../MonsterSprite';
 import {
   formatMonsterFact,
   type MonsterBrowseRow,
@@ -28,7 +30,10 @@ export function MonsterBrowseCard({
 }): ReactElement {
   return (
     <article className={classes['card']}>
-      <h2 className={classes['name']}>{record.name}</h2>
+      <Group gap="xs" wrap="nowrap">
+        <MonsterSprite sprite={record.sprite} />
+        <h2 className={classes['name']}>{record.name}</h2>
+      </Group>
       <dl className={classes['facts']} aria-label={`${record.name} facts`}>
         {summaryFacts.map(({ id, label }) => {
           const displayValue = formatMonsterFact(record, id);

@@ -1,4 +1,4 @@
-import { Title } from '@mantine/core';
+import { Group, Title } from '@mantine/core';
 import { FacetedBrowser } from '@mapletip/component-library';
 import type {
   BrowseState,
@@ -11,6 +11,7 @@ import { BrowsePageShell } from '@/components/BrowsePageShell';
 import { BUILDS, type BuildId } from '@/config/maplekit';
 
 import { MonsterBrowseCard } from '../MonsterBrowseCard';
+import { MonsterSprite } from '../MonsterSprite';
 import {
   formatMonsterFact,
   type MonsterBrowseRow,
@@ -77,7 +78,12 @@ export const monsterBrowseColumns: readonly TableColumn<MonsterBrowseRow>[] = [
     title: 'Name',
     sortable: true,
     firstSortDirection: 'asc',
-    render: (record) => record.name,
+    render: (record) => (
+      <Group gap="xs" wrap="nowrap">
+        <MonsterSprite sprite={record.sprite} />
+        <span>{record.name}</span>
+      </Group>
+    ),
   },
   statColumn('level', 'Level', { firstSortDirection: 'asc' }),
   statColumn('hp', 'HP'),

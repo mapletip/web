@@ -1,19 +1,19 @@
 /**
- * App-owned projection of a contract-2 Monster catalog into flat, sortable,
+ * App-owned projection of a contract-2.1 Monster catalog into flat, sortable,
  * JSON-serializable browse rows.
  *
  * The mapping is deliberately explicit: contract-2 tuples are positional, so
  * every projected slot is named here by an index constant that mirrors the
- * published contract order.
+ * published contract order. The contract's sprite fact stays separate from
+ * displayable facts because only its known content ID affects the thumbnail.
  */
-import type { StaticMonsterCatalog } from '@mapletip/data/monsters';
-
-/** Contract-2.x catalog, narrowed out of the SDK's contract-version union. */
-type MonsterCatalogV2 = Extract<
+import { hasMonsterSprites } from '@mapletip/data/monsters';
+import type {
+  MonsterCatalogV2_1,
   StaticMonsterCatalog,
-  { format: 'mapletip.monster-catalog-2' }
->;
-type MonsterCatalogRecordV2 = MonsterCatalogV2['records'][number];
+} from '@mapletip/data/monsters';
+
+type MonsterCatalogRecordV2_1 = MonsterCatalogV2_1['records'][number];
 
 export type MonsterFactState = 'known' | 'unknown' | 'absent' | 'unsupported';
 export type UnknownFactState = Exclude<MonsterFactState, 'known'>;
@@ -44,6 +44,8 @@ export interface MonsterBrowseRow extends Record<string, unknown> {
   readonly key: string;
   /** Display name when known, otherwise an honest fallback label. */
   readonly name: string;
+  /** Content ID for the representative sprite, present only when known. */
+  readonly sprite?: string;
   // Numeric facts: present ONLY when the canonical state is `known`.
   readonly level?: number;
   readonly hp?: number;
@@ -138,10 +140,12 @@ function readFact<T>(
   return undefined;
 }
 
-function projectRecord(record: MonsterCatalogRecordV2): MonsterBrowseRow {
+function projectRecord(record: MonsterCatalogRecordV2_1): MonsterBrowseRow {
   const factStates: Partial<Record<MonsterFactId, UnknownFactState>> = {};
 
   const name = readFact<string>(record.name, 'name', factStates);
+  const sprite =
+    record.sprite.state === 'known' ? record.sprite.value : undefined;
   const level = readFact<number>(record.stats[STAT.level], 'level', factStates);
   const hp = readFact<number>(record.stats[STAT.hp], 'hp', factStates);
   const mp = readFact<number>(record.stats[STAT.mp], 'mp', factStates);
@@ -211,6 +215,7 @@ function projectRecord(record: MonsterCatalogRecordV2): MonsterBrowseRow {
     key: record.key,
     name: name ?? UNNAMED_MONSTER_LABEL,
     factStates,
+    ...(sprite === undefined ? {} : { sprite }),
     ...(level === undefined ? {} : { level }),
     ...(hp === undefined ? {} : { hp }),
     ...(mp === undefined ? {} : { mp }),
@@ -234,15 +239,14 @@ function projectRecord(record: MonsterCatalogRecordV2): MonsterBrowseRow {
  * Project EVERY record in the catalog — no slicing, filtering or sampling.
  *
  * The SDK already rejects a catalog whose declared record count disagrees with
- * its records, so this only guards the one contract this projection understands:
- * the SDK supports several catalog versions.
+ * its records, so this only guards the contract this projection understands.
  */
 export function projectMonsterBrowseRows(
   catalog: StaticMonsterCatalog,
 ): readonly MonsterBrowseRow[] {
-  if (catalog.format !== 'mapletip.monster-catalog-2') {
+  if (!hasMonsterSprites(catalog)) {
     throw new Error(
-      'Monster browse requires a contract-2 Monster catalog, but the release supplied an older contract.',
+      'Monster browse requires a contract-2.1 Monster catalog, but the release supplied an older contract.',
     );
   }
 

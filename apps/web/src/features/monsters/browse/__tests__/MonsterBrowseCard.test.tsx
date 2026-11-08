@@ -1,3 +1,4 @@
+import { MantineProvider } from '@mantine/core';
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 
@@ -14,6 +15,7 @@ function knownRow(): MonsterBrowseRow {
   return {
     key: 'fixture:monster:001',
     name: 'Sentinel Snail',
+    sprite: 'c'.repeat(64),
     level: 5,
     hp: 30,
     exp: 1,
@@ -61,9 +63,17 @@ function factTitles(): readonly string[] {
     .map((element) => element.getAttribute('title') ?? '');
 }
 
+function renderCard(record: MonsterBrowseRow) {
+  return render(
+    <MantineProvider>
+      <MonsterBrowseCard record={record} />
+    </MantineProvider>,
+  );
+}
+
 describe('MonsterBrowseCard', () => {
   it('presents the training facts in their documented order', () => {
-    render(<MonsterBrowseCard record={knownRow()} />);
+    const { container } = renderCard(knownRow());
 
     expect(factLabels()).toEqual([
       'Level',
@@ -77,11 +87,15 @@ describe('MonsterBrowseCard', () => {
     expect(
       screen.getByRole('heading', { name: 'Sentinel Snail' }),
     ).toBeVisible();
+    expect(container.querySelector('img')).toHaveAttribute(
+      'src',
+      `https://d0.mapletip.com/media/images/cc/${'c'.repeat(64)}.png`,
+    );
     expect(screen.getByText('EXP / 100 HP', { exact: true })).toBeVisible();
   });
 
   it('shows formatted known values, including a genuine false', () => {
-    render(<MonsterBrowseCard record={knownRow()} />);
+    renderCard(knownRow());
 
     expect(factValues()).toEqual(['5', '30', '1', '3.33', 'No', 'Yes', 'Yes']);
     expect(factTitles()).toEqual([
@@ -97,7 +111,11 @@ describe('MonsterBrowseCard', () => {
   });
 
   it('keeps every non-known state distinct instead of inventing a value', () => {
-    render(<MonsterBrowseCard record={unknownRow()} />);
+    renderCard(unknownRow());
+
+    expect(
+      document.querySelector('[data-fallback="true"]'),
+    ).toBeInTheDocument();
 
     expect(factValues()).toEqual([
       'Unknown',
@@ -112,7 +130,7 @@ describe('MonsterBrowseCard', () => {
   });
 
   it('is a labelled list with no invented record links', () => {
-    render(<MonsterBrowseCard record={knownRow()} />);
+    renderCard(knownRow());
 
     const list = screen.getAllByRole('definition')[0]?.closest('dl');
     expect(list).toHaveAttribute('aria-label', 'Sentinel Snail facts');
