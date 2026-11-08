@@ -12,6 +12,8 @@ import type {
   FacetDefinition,
   FacetedBrowserNavigation,
   BrowseState,
+  PageLinkRenderOptions,
+  PageLinkRenderer,
   QueryFieldDefinition,
 } from '@/components/FacetedBrowser';
 import { FacetedBrowserRecordCard } from '@/components/FacetedBrowser/__stories__/FacetedBrowserRecordCard';
@@ -57,6 +59,7 @@ function BrowserExample({
   fillHeight = true,
   navigation,
   sortOptions,
+  renderPageLink,
 }: {
   readonly variant?: Variant;
   readonly state?: BrowseState;
@@ -64,6 +67,7 @@ function BrowserExample({
   readonly fillHeight?: boolean;
   readonly navigation?: FacetedBrowserNavigation;
   readonly sortOptions?: readonly BrowseSortOption[];
+  readonly renderPageLink?: PageLinkRenderer;
 }) {
   const records = demoRecords;
   const columns = useMemo(
@@ -160,6 +164,7 @@ function BrowserExample({
       presentation="comparison"
       {...(navigation ? { navigation } : {})}
       {...(sortOptions ? { sortOptions } : {})}
+      {...(renderPageLink ? { renderPageLink } : {})}
       {...(fillHeight ? { fillHeight: true } : { tableMaxHeight: 560 })}
       renderCard={(record) => <FacetedBrowserRecordCard record={record} />}
       {...stateProps}
@@ -559,4 +564,21 @@ export const NavigationDrawerDrillAndApply: Story = {
       canvas.getByRole('button', { name: /Categories: Spotlight/i }),
     ).toBeInTheDocument();
   },
+};
+
+export const HostPageLinkRenderer: StoryObj<{
+  renderPageLink?: PageLinkRenderer;
+}> = {
+  name: 'Host page link renderer',
+  args: {
+    renderPageLink: ({
+      page: targetPage,
+      props: linkProps,
+    }: PageLinkRenderOptions) => (
+      <a href={`?page=${targetPage}`} {...linkProps}>
+        {linkProps.children}
+      </a>
+    ),
+  },
+  render: (args) => <BrowserExample {...args} />,
 };

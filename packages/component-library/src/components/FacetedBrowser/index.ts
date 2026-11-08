@@ -8,6 +8,9 @@ export type {
   FacetedBrowserNavigationHistory,
   FacetedBrowserNavigationRenderContext,
   FacetedBrowserProps,
+  PageLinkRenderOptions,
+  PageLinkRenderProps,
+  PageLinkRenderer,
   StateChangeDetails,
 } from '@/components/FacetedBrowser/FacetedBrowser.types';
 export type {

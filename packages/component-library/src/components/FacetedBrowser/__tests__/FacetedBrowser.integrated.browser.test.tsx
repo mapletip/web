@@ -251,7 +251,20 @@ describe('integrated FacetedBrowser', () => {
             idAccessor="id"
             presentation="cards"
             renderCard={(record) => <a href={record.href}>{record.name}</a>}
-            getPageHref={(pageNumber) => `/records?page=${pageNumber}`}
+            renderPageLink={({ page: targetPage, props: linkProps }) => (
+              <a
+                href={`/records?page=${targetPage}`}
+                {...linkProps}
+                onClick={(event) => {
+                  event.preventDefault();
+                  const next = { ...current, page: targetPage };
+                  changes.push(next);
+                  setCurrent(next);
+                }}
+              >
+                {linkProps.children}
+              </a>
+            )}
             state={current}
             onStateChange={(next) => {
               changes.push(next);
@@ -280,60 +293,12 @@ describe('integrated FacetedBrowser', () => {
     const nextLink = page.getByRole('link', { name: 'Next page' });
     expect(nextLink).toHaveAttribute('href', '/records?page=2');
 
-    const clicks: {
-      readonly ctrlKey: boolean;
-      readonly button: number;
-      readonly defaultPrevented: boolean;
-    }[] = [];
-    const capture = (event: Event) => {
-      const mouseEvent = event as MouseEvent;
-      if (!(mouseEvent.target instanceof Element)) return;
-      if (!mouseEvent.target.closest('a[href]')) return;
-      clicks.push({
-        ctrlKey: mouseEvent.ctrlKey,
-        button: mouseEvent.button,
-        defaultPrevented: mouseEvent.defaultPrevented,
-      });
-      mouseEvent.preventDefault();
-    };
-    document.addEventListener('click', capture);
-    document.addEventListener('auxclick', capture);
+    await userEvent.click(pageTwo);
+    expect(changes.at(-1)?.page).toBe(2);
 
-    try {
-      await userEvent.click(pageTwo);
-      expect(clicks.at(-1)).toMatchObject({
-        ctrlKey: false,
-        button: 0,
-        defaultPrevented: true,
-      });
-
-      await userEvent.click(nextLink);
-      expect(clicks.at(-1)).toMatchObject({
-        ctrlKey: false,
-        button: 0,
-        defaultPrevented: true,
-      });
-
-      await userEvent.click(pageTwo, { modifiers: ['Control'] });
-      expect(clicks.at(-1)).toMatchObject({
-        ctrlKey: true,
-        button: 0,
-        defaultPrevented: false,
-      });
-
-      await userEvent.click(pageTwo, { button: 'middle' });
-      expect(clicks.at(-1)).toMatchObject({
-        ctrlKey: false,
-        button: 1,
-        defaultPrevented: false,
-      });
-    } finally {
-      document.removeEventListener('click', capture);
-      document.removeEventListener('auxclick', capture);
-    }
-
-    expect(changes.length).toBeGreaterThan(0);
+    await userEvent.click(nextLink);
     expect(changes.at(-1)?.page).toBe(3);
+
     await page.getByRole('button', { name: 'Restore linked page 2' }).click();
     expect(pageTwo).toHaveAttribute('aria-current', 'page');
   });

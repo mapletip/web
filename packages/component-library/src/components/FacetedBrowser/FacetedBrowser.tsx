@@ -95,7 +95,7 @@ export function FacetedBrowser<TRecord extends Record<string, unknown>>(
     onRetry,
     emptyState,
     drawerContent,
-    getPageHref,
+    renderPageLink,
     tableStorageKey,
     fillHeight = false,
     state: controlledState,
@@ -525,7 +525,7 @@ export function FacetedBrowser<TRecord extends Record<string, unknown>>(
             pageCount={browser.pageCount}
             recordNoun={recordNoun}
             state={effectiveState}
-            getPageHref={getPageHref}
+            renderPageLink={renderPageLink}
             onPageChange={browser.setPage}
           />
         }

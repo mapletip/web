@@ -1,7 +1,56 @@
 import { Group, Pagination as MantinePagination } from '@mantine/core';
-import type { MouseEvent as ReactMouseEvent, ReactElement } from 'react';
+import type { ReactElement, ReactNode } from 'react';
 
 import type { BrowseState } from '@/components/FacetedBrowser/hooks/browseState';
+
+export interface PageLinkRenderProps {
+  readonly className: string;
+  readonly children: ReactNode;
+  readonly 'aria-label': string | undefined;
+  readonly 'aria-current': 'page' | undefined;
+}
+
+export interface PageLinkRenderOptions {
+  readonly page: number;
+  readonly state: BrowseState;
+  readonly props: PageLinkRenderProps;
+}
+
+export type PageLinkRenderer = (options: PageLinkRenderOptions) => ReactNode;
+
+interface PageLinkAdapterProps {
+  readonly className: string;
+  readonly children: ReactNode;
+  readonly 'aria-label'?: string | undefined;
+  readonly 'aria-current'?: 'page' | undefined;
+  readonly page?: number | undefined;
+  readonly state?: BrowseState | undefined;
+  readonly renderPageLink?: PageLinkRenderer | undefined;
+}
+
+function PageLinkAdapter({
+  className,
+  children,
+  'aria-label': ariaLabel,
+  'aria-current': ariaCurrent,
+  page,
+  state,
+  renderPageLink,
+}: PageLinkAdapterProps): ReactNode {
+  if (!renderPageLink || page === undefined || !state) {
+    return null;
+  }
+  return renderPageLink({
+    page,
+    state,
+    props: {
+      className,
+      children,
+      'aria-label': ariaLabel,
+      'aria-current': ariaCurrent,
+    },
+  });
+}
 
 type PaginationControl = 'first' | 'previous' | 'next' | 'last';
 
@@ -35,80 +84,73 @@ function controlLabel(control: PaginationControl): string {
   }
 }
 
-function isPlainLeftClick(event: ReactMouseEvent): boolean {
-  return (
-    event.button === 0 &&
-    !event.altKey &&
-    !event.ctrlKey &&
-    !event.metaKey &&
-    !event.shiftKey
-  );
+function isControlDisabled(
+  control: PaginationControl,
+  page: number,
+  pageCount: number,
+): boolean {
+  switch (control) {
+    case 'first':
+    case 'previous':
+      return page <= 1;
+    case 'next':
+    case 'last':
+      return page >= pageCount;
+  }
 }
-
-const ignorePageChange = () => undefined;
 
 export interface PaginationProps {
   readonly page: number;
   readonly pageCount: number;
   readonly recordNoun: string;
   readonly state: BrowseState;
-  readonly getPageHref:
-    ((page: number, nextState: BrowseState) => string) | undefined;
+  readonly renderPageLink?: PageLinkRenderer | undefined;
   readonly onPageChange: (page: number) => void;
 }
 
-/** Semantic buttons locally, real host links when a URL factory is supplied. */
+/** Semantic buttons locally, real host links when a link renderer is supplied. */
 export function Pagination({
   page,
   pageCount,
   recordNoun,
   state,
-  getPageHref,
+  renderPageLink,
   onPageChange,
 }: PaginationProps): ReactElement | null {
   if (pageCount <= 1) return null;
-
-  const hrefFor = (target: number) =>
-    getPageHref?.(target, { ...state, page: target });
-
-  const createClickHandler =
-    (target: number) => (event: ReactMouseEvent<HTMLAnchorElement>) => {
-      if (isPlainLeftClick(event)) {
-        event.preventDefault();
-        onPageChange(target);
-      }
-    };
 
   return (
     <Group justify="flex-end" align="center" wrap="wrap">
       <MantinePagination
         total={pageCount}
         value={page}
-        onChange={getPageHref ? ignorePageChange : onPageChange}
+        onChange={onPageChange}
         aria-label={`${recordNoun} pages`}
         getItemProps={(pageNumber) => ({
           'aria-label': `Page ${pageNumber}`,
-          ...(getPageHref
+          ...(renderPageLink
             ? {
-                component: 'a' as const,
-                href: hrefFor(pageNumber),
-                onClick: createClickHandler(pageNumber),
+                component: PageLinkAdapter,
+                page: pageNumber,
+                state,
+                renderPageLink,
               }
             : {}),
         })}
         getControlProps={(control) => {
-          const target = controlTarget(control, page, pageCount);
           const label = controlLabel(control);
-          if (target < 1 || target > pageCount) {
+          if (isControlDisabled(control, page, pageCount)) {
             return { 'aria-label': label, disabled: true };
           }
+          const target = controlTarget(control, page, pageCount);
           return {
             'aria-label': label,
-            ...(getPageHref
+            ...(renderPageLink
               ? {
-                  component: 'a' as const,
-                  href: hrefFor(target),
-                  onClick: createClickHandler(target),
+                  component: PageLinkAdapter,
+                  page: target,
+                  state,
+                  renderPageLink,
                 }
               : {}),
           };

@@ -44,8 +44,8 @@ server rendering and hydrated UI stay on the Maple Twilight scheme. See
 [`@mapletip/theme`](../theme/README.md) for the host setup.
 
 The component library never owns application navigation content. For controlled browsing
-pass `state` and `onStateChange`; for self-managed browsing pass `defaultState`. Supply `getPageHref` so
-pagination renders real links, and keep entity names as ordinary `<a href>` links.
+pass `state` and `onStateChange`; for self-managed browsing pass `defaultState`. Supply `renderPageLink` so
+pagination renders real links (e.g. TanStack Router `<Link>`), and keep entity names as ordinary `<a href>` links.
 
 ## Persistence
 
