@@ -74,11 +74,7 @@ export function NavigationDrawer({
     if (history) {
       history.push();
     } else if (typeof window !== 'undefined') {
-      window.history.pushState(
-        window.history.state,
-        '',
-        window.location.href,
-      );
+      window.history.pushState(window.history.state, '', window.location.href);
     }
   }, [opened, history]);
 
