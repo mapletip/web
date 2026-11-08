@@ -6,13 +6,15 @@ import {
   Popover,
   Select,
   Stack,
+  type StyleProp,
   Text,
 } from '@mantine/core';
 import { Gear } from '@phosphor-icons/react';
 import { useMemo, type ReactElement } from 'react';
 
+import { FACET_LABEL_STYLES } from '@/components/FacetedBrowser/FacetControls/types';
 import type { BrowseSortOption } from '@/components/FacetedBrowser/FacetedBrowser.types';
-import type { TableColumn } from '@/components/Table';
+import type { SortIntent, TableColumn } from '@/components/Table';
 
 function sameFields(
   left: readonly string[],
@@ -80,22 +82,14 @@ export function PageSizeSelect({
   );
 }
 
-const DRAWER_SELECT_STYLES = {
-  label: {
-    fontWeight: 600,
-    fontSize: 'var(--mantine-font-size-sm)',
-    color: 'var(--mantine-color-text)',
-    marginBottom: 'var(--mantine-spacing-xs)',
-  },
-} as const;
-
 export interface SortSelectProps {
   readonly recordNoun: string;
   readonly sortOptions: readonly BrowseSortOption[];
-  readonly currentSort?:
-    { readonly field: string; readonly direction: 'asc' | 'desc' } | undefined;
-  readonly onChange: (field: string, direction: 'asc' | 'desc') => void;
-  readonly surface?: 'toolbar' | 'drawer';
+  readonly currentSort?: SortIntent | undefined;
+  readonly onChange: (sort: SortIntent) => void;
+  readonly label?: string | undefined;
+  readonly 'aria-label'?: string | undefined;
+  readonly w?: StyleProp<number | string> | undefined;
 }
 
 export function SortSelect({
@@ -103,7 +97,9 @@ export function SortSelect({
   sortOptions,
   currentSort,
   onChange,
-  surface = 'toolbar',
+  label,
+  'aria-label': ariaLabel,
+  w = '100%',
 }: SortSelectProps): ReactElement {
   const selectedValue = currentSort
     ? `${currentSort.field}:${currentSort.direction}`
@@ -118,10 +114,10 @@ export function SortSelect({
     [sortOptions],
   );
 
-  const select = (
+  return (
     <Select
-      aria-label={surface === 'toolbar' ? `Sort ${recordNoun}` : undefined}
-      label={surface === 'drawer' ? 'Sort' : undefined}
+      {...(label ? { label } : {})}
+      {...(label ? {} : { 'aria-label': ariaLabel ?? `Sort ${recordNoun}` })}
       size="sm"
       checkIconPosition="left"
       withAlignedLabels
@@ -134,23 +130,12 @@ export function SortSelect({
           (o) => `${o.field}:${o.direction}` === value,
         );
         if (opt) {
-          onChange(opt.field, opt.direction);
+          onChange({ field: opt.field, direction: opt.direction });
         }
       }}
-      w={surface === 'drawer' ? '100%' : { base: '100%', md: 230 }}
-      {...(surface === 'drawer' ? { styles: DRAWER_SELECT_STYLES } : {})}
+      w={w}
+      styles={FACET_LABEL_STYLES}
     />
-  );
-
-  if (surface === 'drawer') return select;
-
-  return (
-    <Group gap={6} align="center">
-      <Text size="xs" c="dimmed">
-        Sort:
-      </Text>
-      {select}
-    </Group>
   );
 }
 

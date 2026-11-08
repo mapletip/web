@@ -20,13 +20,13 @@ export interface DraftEvaluation {
 
 export interface DraftCommit {
   readonly filters: Record<string, FacetFilterValue>;
-  readonly sort?: SortIntent | undefined;
+  readonly sort: SortIntent | undefined;
 }
 
 interface DraftSession {
   readonly baseState: BrowseState;
   readonly filters: Record<string, FacetFilterValue>;
-  readonly sort?: SortIntent | undefined;
+  readonly sort: SortIntent | undefined;
 }
 
 export interface UseFacetedBrowserDrawerOptions {
@@ -40,8 +40,8 @@ export interface UseFacetedBrowserDrawerOptions {
   readonly evaluateDraft: (
     filters: Record<string, FacetFilterValue>,
   ) => DraftEvaluation;
-  readonly commitFilters?: (filters: Record<string, FacetFilterValue>) => void;
-  readonly commitDraft?: (draft: DraftCommit) => void;
+  readonly commitDraft: (draft: DraftCommit) => void;
+  readonly defaultSort?: SortIntent | undefined;
 }
 
 function snapshotState(state: BrowseState): BrowseState {
@@ -60,7 +60,7 @@ function createSession(state: BrowseState): DraftSession {
   return {
     baseState,
     filters: { ...baseState.filters },
-    ...(baseState.sort ? { sort: { ...baseState.sort } } : {}),
+    sort: baseState.sort ? { ...baseState.sort } : undefined,
   };
 }
 
@@ -78,7 +78,7 @@ export interface UseFacetedBrowserDrawerReturn {
   readonly reset: () => void;
   readonly apply: () => void;
   readonly setValue: (field: string, value: FacetFilterValue) => void;
-  readonly setSort: (field: string, direction: 'asc' | 'desc') => void;
+  readonly setSort: (sort: SortIntent) => void;
 }
 
 /** Owns the transient drawer draft, its evaluation and stale-session dismissal. */
@@ -89,8 +89,8 @@ export function useFacetedBrowserDrawer({
   statusActive,
   filterIsInvalid,
   evaluateDraft,
-  commitFilters,
   commitDraft,
+  defaultSort,
 }: UseFacetedBrowserDrawerOptions): UseFacetedBrowserDrawerReturn {
   const [session, setSession] = useState<DraftSession | null>(() =>
     opened ? createSession(committedState) : null,
@@ -167,19 +167,6 @@ export function useFacetedBrowserDrawer({
 
   const invalidDraft = filterIsInvalid(draftFilters);
 
-  const updateSession = useCallback(
-    (nextFilters: Record<string, FacetFilterValue>) => {
-      if (!openedRef.current) return;
-      const base = sessionRef.current ?? createSession(committedState);
-      replaceSession(
-        filtersEqual(nextFilters, base.filters)
-          ? base
-          : { ...base, filters: nextFilters },
-      );
-    },
-    [committedState, replaceSession],
-  );
-
   const open = useCallback(
     (facetId: string | null) => {
       openedRef.current = true;
@@ -208,20 +195,15 @@ export function useFacetedBrowserDrawer({
       return;
     }
     openedRef.current = false;
-    if (commitDraft) {
-      commitDraft({
-        filters: currentSession.filters,
-        ...(currentSession.sort ? { sort: currentSession.sort } : {}),
-      });
-    } else {
-      commitFilters?.(currentSession.filters);
-    }
+    commitDraft({
+      filters: currentSession.filters,
+      sort: currentSession.sort,
+    });
     replaceSession(null);
     setFocusedFacetId(null);
     onOpenedChange(false);
   }, [
     commitDraft,
-    commitFilters,
     committedState,
     filterIsInvalid,
     onOpenedChange,
@@ -241,10 +223,9 @@ export function useFacetedBrowserDrawer({
   );
 
   const setSort = useCallback(
-    (field: string, direction: 'asc' | 'desc') => {
+    (nextSort: SortIntent) => {
       if (!openedRef.current) return;
       const base = sessionRef.current ?? createSession(committedState);
-      const nextSort: SortIntent = { field, direction };
       if (
         base.sort?.field === nextSort.field &&
         base.sort?.direction === nextSort.direction
@@ -262,7 +243,15 @@ export function useFacetedBrowserDrawer({
     [draftEvaluation],
   );
 
-  const reset = useCallback(() => updateSession({}), [updateSession]);
+  const reset = useCallback(() => {
+    if (!openedRef.current) return;
+    const base = sessionRef.current ?? createSession(committedState);
+    replaceSession({
+      ...base,
+      filters: {},
+      sort: defaultSort ? { ...defaultSort } : undefined,
+    });
+  }, [committedState, defaultSort, replaceSession]);
   const backToOverview = useCallback(() => setFocusedFacetId(null), []);
 
   return {

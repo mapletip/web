@@ -8,6 +8,7 @@ import { render } from 'vitest-browser-react';
 import '@/styles.css';
 import { FacetedBrowser } from '@/components/FacetedBrowser';
 import type {
+  BrowseSortOption,
   FacetDefinition,
   BrowseState,
   QueryFieldDefinition,
@@ -79,6 +80,7 @@ function Browser({
   drawerOpened,
   onDrawerOpenedChange,
   drawerContent,
+  sortOptions,
   loading = false,
 }: {
   readonly state: BrowseState;
@@ -86,6 +88,7 @@ function Browser({
   readonly drawerOpened?: boolean;
   readonly onDrawerOpenedChange?: (opened: boolean) => void;
   readonly drawerContent?: ReactNode;
+  readonly sortOptions?: readonly BrowseSortOption[];
   readonly loading?: boolean;
 }) {
   return (
@@ -105,6 +108,7 @@ function Browser({
         state={browseState}
         onStateChange={onStateChange}
         loading={loading}
+        {...(sortOptions ? { sortOptions } : {})}
         {...(drawerContent !== undefined ? { drawerContent } : {})}
         {...(drawerOpened !== undefined && onDrawerOpenedChange
           ? { drawerOpened, onDrawerOpenedChange }
@@ -536,12 +540,17 @@ describe('integrated FacetedBrowser', () => {
       sort: { field: 'value1', direction: 'desc' },
       page: 1,
     };
+    const sortOptions: readonly BrowseSortOption[] = [
+      { label: 'Value 1 (Low to High)', field: 'value1', direction: 'asc' },
+      { label: 'Value 1 (High to Low)', field: 'value1', direction: 'desc' },
+    ];
 
     function ResettableBrowser() {
       const [current, setCurrent] = useState(initial);
       return (
         <Browser
           state={current}
+          sortOptions={sortOptions}
           onStateChange={(next) => {
             changes.push(next);
             setCurrent(next);
@@ -552,14 +561,19 @@ describe('integrated FacetedBrowser', () => {
 
     await render(<ResettableBrowser />);
     await page.viewport(375, 812);
-    await page
-      .getByRole('button', { name: /Category, 1 active filter/u })
-      .click();
+    await page.getByRole('button', { name: /^Filters/u }).click();
     expect(page.getByRole('checkbox', { name: /^Alpha \(/u })).toBeChecked();
+
+    const sortSelect = page.getByRole('combobox', { name: 'Sort' });
+    await sortSelect.click();
+    await page.getByRole('option', { name: 'Value 1 (Low to High)' }).click();
+    expect(sortSelect).toHaveValue('Value 1 (Low to High)');
+
     await page.getByRole('button', { name: 'Reset' }).click();
     expect(
       page.getByRole('checkbox', { name: /^Alpha \(/u }),
     ).not.toBeChecked();
+    expect(sortSelect).toHaveValue('Value 1 (High to Low)');
     expect(changes).toHaveLength(0);
     await page.getByRole('button', { name: /^Show \d+ records$/u }).click();
 

@@ -50,3 +50,12 @@ export interface FacetDefinition<TRecord extends Record<string, unknown>> {
   /** Specialized controls receive the current canonical or draft value and setter. */
   readonly renderControl?: (context: FacetControlContext<TRecord>) => ReactNode;
 }
+
+export const FACET_LABEL_STYLES = {
+  label: {
+    fontWeight: 600,
+    fontSize: 'var(--mantine-font-size-sm)',
+    color: 'var(--mantine-color-text)',
+    marginBottom: 'var(--mantine-spacing-xs)',
+  },
+} as const;

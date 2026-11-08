@@ -1,4 +1,12 @@
-import { Box, Divider, Group, Stack, TextInput, Title } from '@mantine/core';
+import {
+  Box,
+  Divider,
+  Group,
+  Stack,
+  Text,
+  TextInput,
+  Title,
+} from '@mantine/core';
 import { MagnifyingGlass } from '@phosphor-icons/react';
 import type { MouseEvent as ReactMouseEvent, ReactElement } from 'react';
 import { useCallback, useMemo, useRef, useState } from 'react';
@@ -41,6 +49,7 @@ import {
   SortSelect,
   Toolbar,
 } from '@/components/FacetedBrowser/Toolbar/Toolbar';
+import type { SortIntent } from '@/components/Table';
 import { ComparisonTable } from '@/components/Table';
 import {
   deriveTableStorageKey,
@@ -128,6 +137,10 @@ export function FacetedBrowser<TRecord extends Record<string, unknown>>(
   const [internalState, setInternalState] = useState<BrowseState>(() =>
     createBrowseState(controlled ? undefined : defaultState, fallbackSize),
   );
+  const [initialSort] = useState<SortIntent | undefined>(() => {
+    const sort = controlledState?.sort ?? defaultState?.sort;
+    return sort ? { ...sort } : undefined;
+  });
   const [initialDefaultHiddenColumns] = useState(() => [
     ...(defaultState?.hiddenColumns ?? EMPTY_HIDDEN_COLUMNS),
   ]);
@@ -221,6 +234,7 @@ export function FacetedBrowser<TRecord extends Record<string, unknown>>(
     filterIsInvalid,
     evaluateDraft: browser.evaluateDraft,
     commitDraft: browser.commitDraft,
+    defaultSort: initialSort,
   });
 
   const shownDrawerFacet = facets.find(
@@ -441,12 +455,18 @@ export function FacetedBrowser<TRecord extends Record<string, unknown>>(
     sortOptions && sortOptions.length > 0 ? (
       <Group gap="xs">
         <Box visibleFrom="md">
-          <SortSelect
-            recordNoun={recordNoun}
-            sortOptions={sortOptions}
-            currentSort={browseState.sort}
-            onChange={browser.setSort}
-          />
+          <Group gap={6} align="center">
+            <Text size="xs" c="dimmed">
+              Sort:
+            </Text>
+            <SortSelect
+              recordNoun={recordNoun}
+              sortOptions={sortOptions}
+              currentSort={browseState.sort}
+              onChange={browser.setSort}
+              w={{ base: '100%', md: 230 }}
+            />
+          </Group>
         </Box>
         {primaryToolbar}
       </Group>
@@ -575,7 +595,8 @@ export function FacetedBrowser<TRecord extends Record<string, unknown>>(
                 sortOptions={sortOptions}
                 currentSort={drawer.draftSort}
                 onChange={drawer.setSort}
-                surface="drawer"
+                label="Sort"
+                w="100%"
               />
               {drawerFacets.length > 0 ? (
                 <Divider my="sm" color="var(--mapletip-color-border-subtle)" />

@@ -221,19 +221,39 @@ function BrowserTestHarness(props: {
       <button type="button" onClick={() => browser.clearQuery()}>
         Clear Query
       </button>
-      <button type="button" onClick={() => browser.setSort('name', 'asc')}>
+      <button
+        type="button"
+        onClick={() => browser.setSort({ field: 'name', direction: 'asc' })}
+      >
         Sort Name Asc
       </button>
-      <button type="button" onClick={() => browser.setSort('name', 'desc')}>
+      <button
+        type="button"
+        onClick={() => browser.setSort({ field: 'name', direction: 'desc' })}
+      >
         Sort Name Desc
       </button>
-      <button type="button" onClick={() => browser.setSort('level', 'asc')}>
+      <button
+        type="button"
+        onClick={() => browser.setSort({ field: 'level', direction: 'asc' })}
+      >
         Sort Level Asc
       </button>
-      <button type="button" onClick={() => browser.setSort('level', 'desc')}>
+      <button
+        type="button"
+        onClick={() => browser.setSort({ field: 'level', direction: 'desc' })}
+      >
         Sort Level Desc
       </button>
-      <button type="button" onClick={() => browser.setSort('level')}>
+      <button
+        type="button"
+        onClick={() =>
+          browser.tableProps.onSortChange({
+            field: 'level',
+            direction: 'asc',
+          })
+        }
+      >
         Toggle Level Sort
       </button>
       <button
@@ -1295,7 +1315,9 @@ describe('useFacetedBrowser', () => {
             </button>
             <button
               type="button"
-              onClick={() => browser.setSort('mobCount', 'asc')}
+              onClick={() =>
+                browser.setSort({ field: 'mobCount', direction: 'asc' })
+              }
             >
               Sort Mob Count Asc
             </button>

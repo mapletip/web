@@ -125,8 +125,8 @@ export interface UseFacetedBrowserReturn<
   readonly pageEnd: number;
   /** Current sort status. */
   readonly sort: SortIntent | undefined;
-  /** Update sorting for a column. */
-  readonly setSort: (field: string, direction?: 'asc' | 'desc') => void;
+  /** Update sorting for a column by sort intent. */
+  readonly setSort: (sort: SortIntent) => void;
   /** Set the current 1-based page. */
   readonly setPage: (page: number) => void;
   /** Change the number of results shown per page. */
@@ -150,7 +150,7 @@ export interface UseFacetedBrowserReturn<
   /** Atomically commit a drawer draft's filters and sort in a single transition. */
   readonly commitDraft: (draft: {
     readonly filters: Record<string, FacetFilterValue>;
-    readonly sort?: SortIntent | undefined;
+    readonly sort: SortIntent | undefined;
   }) => void;
   /** Columns currently visible in original declaration order. */
   readonly visibleColumns: readonly TableColumn<TRecord>[];
@@ -396,23 +396,47 @@ export function useFacetedBrowser<TRecord extends Record<string, unknown>>({
     [emitState, onPageChange, onSortChange],
   );
 
-  const setSort = useCallback(
-    (field: string, direction?: 'asc' | 'desc') => {
+  const toggleSort = useCallback(
+    (sort: SortIntent) => {
       const state = latestStateRef.current;
       const current = state.sort;
-      const currentField = fieldMap.get(field);
+      const currentField = fieldMap.get(sort.field);
       if (!currentField?.enableSorting) return;
       const nextDirection = nextSortDirection(
         current,
-        field,
+        sort.field,
         currentField?.sortDescFirst,
-        direction,
+        undefined,
       );
 
-      if (current?.field === field && current.direction === nextDirection) {
+      if (
+        current?.field === sort.field &&
+        current.direction === nextDirection
+      ) {
         return;
       }
-      commitSort({ field, direction: nextDirection }, { emitCallback: true });
+      commitSort(
+        { field: sort.field, direction: nextDirection },
+        { emitCallback: true },
+      );
+    },
+    [commitSort, fieldMap],
+  );
+
+  const setSort = useCallback(
+    (sort: SortIntent) => {
+      const state = latestStateRef.current;
+      const current = state.sort;
+      const currentField = fieldMap.get(sort.field);
+      if (!currentField?.enableSorting) return;
+
+      if (
+        current?.field === sort.field &&
+        current.direction === sort.direction
+      ) {
+        return;
+      }
+      commitSort(sort, { emitCallback: true });
     },
     [commitSort, fieldMap],
   );
@@ -512,25 +536,24 @@ export function useFacetedBrowser<TRecord extends Record<string, unknown>>({
       sort,
     }: {
       readonly filters: Record<string, FacetFilterValue>;
-      readonly sort?: SortIntent | undefined;
+      readonly sort: SortIntent | undefined;
     }) => {
       const current = latestStateRef.current;
       const nextFilters = normalizeFilters(filters);
       const filtersChanged = !filtersEqual(current.filters, nextFilters);
       const sortChanged =
-        sort !== undefined
-          ? current.sort?.field !== sort.field ||
-            current.sort?.direction !== sort.direction
-          : false;
+        current.sort?.field !== sort?.field ||
+        current.sort?.direction !== sort?.direction;
 
       if (!filtersChanged && !sortChanged) return;
 
-      const nextSort = sort ?? current.sort;
       const nextState: BrowseState = {
-        ...current,
+        search: current.search,
         filters: nextFilters,
         page: 1,
-        ...(nextSort ? { sort: nextSort } : {}),
+        pageSize: current.pageSize,
+        hiddenColumns: current.hiddenColumns,
+        ...(sort ? { sort } : {}),
       };
       const changed = emitState(nextState);
       if (!changed) return;
@@ -868,9 +891,9 @@ export function useFacetedBrowser<TRecord extends Record<string, unknown>>({
       // The renderer reports the visual column's direction. Resolve the field's
       // declared/overridden first direction inside the browser so query fields
       // remain authoritative for integrated tables.
-      setSort(nextSort.field);
+      toggleSort(nextSort);
     },
-    [setSort],
+    [toggleSort],
   );
 
   const tableProps = useMemo<UseFacetedBrowserReturn<TRecord>['tableProps']>(

@@ -2,7 +2,7 @@ import { Button, Checkbox, Stack } from '@mantine/core';
 import type { ReactElement, ReactNode } from 'react';
 import { useState } from 'react';
 
-import type { FacetOptionWithCount } from './types';
+import { FACET_LABEL_STYLES, type FacetOptionWithCount } from './types';
 
 const DEFAULT_VISIBLE_OPTIONS = 3;
 
@@ -41,14 +41,7 @@ export function OptionList({
         label={label}
         value={[...value]}
         onChange={(next) => onChange(next)}
-        styles={{
-          label: {
-            fontWeight: 600,
-            fontSize: 'var(--mantine-font-size-sm)',
-            color: 'var(--mantine-color-text)',
-            marginBottom: 'var(--mantine-spacing-xs)',
-          },
-        }}
+        styles={FACET_LABEL_STYLES}
       >
         <Stack gap="xs" mt="xs">
           {visibleOptions.map((option) => (

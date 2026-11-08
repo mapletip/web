@@ -3,7 +3,6 @@ import userEvent from '@testing-library/user-event';
 import { useState } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 
-import type { FacetFilterValue } from '@/components/FacetedBrowser';
 import { isInvalidNumericRange } from '@/components/FacetedBrowser/hooks/filterTypes';
 import {
   useFacetedBrowserDrawer,
@@ -19,11 +18,9 @@ const committedState = {
 } as const;
 
 function DrawerHarness({
-  commitFilters,
-  commitDraft,
+  commitDraft = () => undefined,
   initiallyOpened = true,
 }: {
-  readonly commitFilters?: (filters: Record<string, FacetFilterValue>) => void;
   readonly commitDraft?: (draft: DraftCommit) => void;
   readonly initiallyOpened?: boolean;
 }) {
@@ -39,8 +36,7 @@ function DrawerHarness({
       matchingRecords: [],
       getFacetValues: () => new Map<string, number>(),
     }),
-    commitFilters: commitFilters ?? (() => undefined),
-    ...(commitDraft ? { commitDraft } : {}),
+    commitDraft,
   });
 
   return (
@@ -95,7 +91,7 @@ function DrawerHarness({
       <button
         type="button"
         onClick={() => {
-          drawer.setSort('value1', 'desc');
+          drawer.setSort({ field: 'value1', direction: 'desc' });
           drawer.apply();
         }}
       >
@@ -104,7 +100,7 @@ function DrawerHarness({
       <button
         type="button"
         onClick={() => {
-          drawer.setSort('value1', 'desc');
+          drawer.setSort({ field: 'value1', direction: 'desc' });
           drawer.close();
         }}
       >
@@ -116,55 +112,59 @@ function DrawerHarness({
 
 describe('FacetedBrowser drawer actions', () => {
   it('applies the draft written earlier in the same event', async () => {
-    const commitFilters = vi.fn();
-    render(<DrawerHarness commitFilters={commitFilters} />);
+    const commitDraft = vi.fn();
+    render(<DrawerHarness commitDraft={commitDraft} />);
 
     await userEvent.click(
       screen.getByRole('button', { name: 'Set and apply' }),
     );
-    expect(commitFilters).toHaveBeenCalledWith({ group: ['Beta'] });
+    expect(commitDraft).toHaveBeenCalledWith({
+      filters: { group: ['Beta'] },
+      sort: undefined,
+    });
   });
 
   it('does not apply after a close in the same event', async () => {
-    const commitFilters = vi.fn();
-    render(<DrawerHarness commitFilters={commitFilters} />);
+    const commitDraft = vi.fn();
+    render(<DrawerHarness commitDraft={commitDraft} />);
 
     await userEvent.click(
       screen.getByRole('button', { name: 'Close and apply' }),
     );
-    expect(commitFilters).not.toHaveBeenCalled();
+    expect(commitDraft).not.toHaveBeenCalled();
   });
 
   it('does not resurrect a closed session when set and apply follow close', async () => {
-    const commitFilters = vi.fn();
-    render(<DrawerHarness commitFilters={commitFilters} />);
+    const commitDraft = vi.fn();
+    render(<DrawerHarness commitDraft={commitDraft} />);
 
     await userEvent.click(
       screen.getByRole('button', { name: 'Close set and apply' }),
     );
-    expect(commitFilters).not.toHaveBeenCalled();
+    expect(commitDraft).not.toHaveBeenCalled();
   });
 
   it('applies a session opened earlier in the same event', async () => {
-    const commitFilters = vi.fn();
-    render(
-      <DrawerHarness commitFilters={commitFilters} initiallyOpened={false} />,
-    );
+    const commitDraft = vi.fn();
+    render(<DrawerHarness commitDraft={commitDraft} initiallyOpened={false} />);
 
     await userEvent.click(
       screen.getByRole('button', { name: 'Open set and apply' }),
     );
-    expect(commitFilters).toHaveBeenCalledWith({ group: ['Beta'] });
+    expect(commitDraft).toHaveBeenCalledWith({
+      filters: { group: ['Beta'] },
+      sort: undefined,
+    });
   });
 
   it('does not apply an invalid draft written in the same event', async () => {
-    const commitFilters = vi.fn();
-    render(<DrawerHarness commitFilters={commitFilters} />);
+    const commitDraft = vi.fn();
+    render(<DrawerHarness commitDraft={commitDraft} />);
 
     await userEvent.click(
       screen.getByRole('button', { name: 'Invalid and apply' }),
     );
-    expect(commitFilters).not.toHaveBeenCalled();
+    expect(commitDraft).not.toHaveBeenCalled();
   });
 
   it('stages draft sort and passes it to commitDraft on apply', async () => {
