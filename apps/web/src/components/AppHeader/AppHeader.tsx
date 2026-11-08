@@ -98,7 +98,7 @@ const navigation: readonly HeaderLink[] = [
       },
       {
         id: 'cash-items',
-        label: 'Cash/Pet',
+        label: 'Cash',
         description: 'Browse Cash items and Pets',
         icon: navigationIcon(cashItems),
         href: '/maplestory/items/cash',

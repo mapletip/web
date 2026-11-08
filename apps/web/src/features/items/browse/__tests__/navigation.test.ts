@@ -121,6 +121,7 @@ describe('navigation', () => {
 
       for (const scopeNode of children) {
         const slug = scopeNode.id as 'use' | 'etc' | 'setup' | 'cash';
+        expect(scopeNode.label).toBe(ITEM_SCOPES[slug].label);
         expect(scopeNode.count).toBe(expectedCounts[slug].total);
         expect(scopeNode.href).toBe(`/maplestory/items/${slug}`);
         expect(scopeNode.meta).toEqual({
@@ -131,6 +132,11 @@ describe('navigation', () => {
         const childNodes = scopeNode.children ?? [];
         for (const childNode of childNodes) {
           const childSlug = childNode.id.replace(`${slug}/`, '');
+          const registryChild = ITEM_SCOPES[slug].children.find(
+            (c) => c.slug === childSlug,
+          );
+          expect(registryChild).toBeDefined();
+          expect(childNode.label).toBe(registryChild?.label);
           expect(childNode.count).toBe(
             expectedCounts[slug].children[childSlug] ?? 0,
           );

@@ -92,7 +92,7 @@ export const ITEM_SCOPES: Readonly<Record<ItemScopeSlug, ItemCategoryScope>> = {
     label: 'Use',
     itemClasses: ['consume'],
     children: [
-      byType('upgrade-scrolls', 'Upgrade Scrolls', 'upgrade-scroll', [
+      byType('scrolls', 'Scrolls', 'upgrade-scroll', [
         '3a453e4e40b44d9358f9348abdda896b64ecc046a52e5b07a2388bdbd7dc8601', // Scroll for Helmet for DEF 100%
       ]),
       byFunction('recovery', 'Recovery', 'recovery', [
@@ -123,16 +123,16 @@ export const ITEM_SCOPES: Readonly<Record<ItemScopeSlug, ItemCategoryScope>> = {
       byType('pet-food', 'Pet Food', 'pet-food', [
         '48bbbec3311d822c327cfc030c8d5a2d5f0c726a263356c40c02af0f125aac7c', // Pet Food
       ]),
-      byFunction('summoning-items', 'Summoning Items', 'summon', [
+      byFunction('summoning-sacks', 'Summoning Sacks', 'summon', [
         '6c254da1ae5e2f8294a162a86622807c3c45d1bcb123660e17ebdd1739174357', // Black Sack
       ]),
-      byFunction('reward-containers', 'Reward Containers', 'reward-container', [
+      byFunction('boxes', 'Boxes', 'reward-container', [
         'cc78d2418978f78394df682664352ee29cb05c6eab276916eea5bb829fe4a595', // Mysterious Box
       ]),
       byFunction('monster-cards', 'Monster Cards', 'monster-card', [
         'a8ecbc24e9b7659ec44e8281bd630a7280a35580d5aac3e0ada70ab6718b1735', // Blue Snail Card
       ]),
-      byFunction('skill-items', 'Skill Items', 'skill', [
+      byFunction('mastery-books', 'Mastery Books', 'skill', [
         '147e22281aa79e799cb16f38bcf9685bede7679e0132fde589b6d8e24185e10b', // [Mastery Book] Sharp Eyes
       ]),
       byType('meso-pouches', 'Meso Pouches', 'meso-pouch', [
@@ -149,13 +149,13 @@ export const ITEM_SCOPES: Readonly<Record<ItemScopeSlug, ItemCategoryScope>> = {
       byType('ores', 'Ores', 'ore', [
         '9bc102b58369315c30222c8c54107371efd84b875e76d5c83665c42428049cf4', // Gold Ore
       ]),
-      byType('gems', 'Gems & Jewels', 'gem', [
+      byType('gems', 'Gems', 'gem', [
         '365ff7564302e01a8ca13a94f63ff05adc0b318a9c44dc8a69506e52300b4874', // Diamond
       ]),
-      byType('refined-materials', 'Refined Materials', 'refined-material', [
+      byType('refined-ores', 'Refined Ores', 'refined-material', [
         '75d29c88a2df6716e8452fdcd5e2de63a2cfbc587f9537ec3706b02639f5d4aa', // Steel Plate / Iron Ingot
       ]),
-      byType('monster-materials', 'Monster Materials', 'monster-material', [
+      byType('monster-drops', 'Monster Drops', 'monster-material', [
         '752e1848b26d249f7728fa2b290b6077872e79dea71db2d18aea20c8605889e5', // Orange Mushroom Cap
         'a17e4c3ad5053c275a4f791c71f0707e2e0e6b02b056f0892e4a221df76bd57d', // Pig's Ribbon
       ]),
@@ -163,7 +163,8 @@ export const ITEM_SCOPES: Readonly<Record<ItemScopeSlug, ItemCategoryScope>> = {
         kind: 'positive',
         slug: 'quest-items',
         label: 'Quest Items',
-        matches: (row) => (row.neededForQuestCount ?? 0) > 0,
+        matches: (row) =>
+          row.questFlag === true || (row.neededForQuestCount ?? 0) > 0,
         iconContentIds: [
           '63df4ceb3580419b2ae1db57f001573eac4fe068edfe5aeea17c4ce734de0f7a', // Lucas' Letter / Maria's Letter
         ],
@@ -179,7 +180,7 @@ export const ITEM_SCOPES: Readonly<Record<ItemScopeSlug, ItemCategoryScope>> = {
       byType('chairs', 'Chairs', 'chair', [
         '15ceb9596a6bdc8f61f8aa1382292f3b428a30281315b83ed0499c5d0492e120', // Pink Seal Cushion
       ]),
-      byType('holiday-ornaments', 'Holiday Ornaments', 'holiday-ornament', [
+      byType('event-items', 'Event Items', 'holiday-ornament', [
         '96287ff70fcacc9d152b5e2382d3c7c274cbac08230d0c879c6d760dd8bbb5a8', // Circular Tree Ornament
       ]),
       byType('furniture', 'Furniture', 'furniture', [
@@ -193,7 +194,7 @@ export const ITEM_SCOPES: Readonly<Record<ItemScopeSlug, ItemCategoryScope>> = {
   },
   cash: {
     slug: 'cash',
-    label: 'Cash/Pet',
+    label: 'Cash',
     itemClasses: ['cash', 'pet'],
     children: [
       {

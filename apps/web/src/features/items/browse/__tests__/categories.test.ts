@@ -32,11 +32,21 @@ describe('category model and predicates', () => {
     expect(isItemScope('cash')).toBe(true);
     expect(isItemScope('invalid')).toBe(false);
 
+    expect(ITEM_SCOPES.use.children.some((c) => c.slug === 'scrolls')).toBe(
+      true,
+    );
     expect(
       ITEM_SCOPES.use.children.some((c) => c.slug === 'upgrade-scrolls'),
+    ).toBe(false);
+    expect(
+      ITEM_SCOPES.use.children.some((c) => c.slug === 'summoning-sacks'),
+    ).toBe(true);
+    expect(ITEM_SCOPES.use.children.some((c) => c.slug === 'boxes')).toBe(true);
+    expect(
+      ITEM_SCOPES.use.children.some((c) => c.slug === 'mastery-books'),
     ).toBe(true);
     expect(ITEM_SCOPES.use.children.some((c) => c.slug === 'skill-items')).toBe(
-      true,
+      false,
     );
     expect(
       ITEM_SCOPES.use.children.some((c) => c.slug === 'other-use-items'),
@@ -44,13 +54,33 @@ describe('category model and predicates', () => {
     expect(ITEM_SCOPES.use.children.some((c) => c.slug === 'chairs')).toBe(
       false,
     );
+    expect(
+      ITEM_SCOPES.etc.children.some((c) => c.slug === 'refined-ores'),
+    ).toBe(true);
+    expect(
+      ITEM_SCOPES.etc.children.some((c) => c.slug === 'refined-materials'),
+    ).toBe(false);
+    expect(
+      ITEM_SCOPES.etc.children.some((c) => c.slug === 'monster-drops'),
+    ).toBe(true);
+    expect(
+      ITEM_SCOPES.etc.children.some((c) => c.slug === 'monster-materials'),
+    ).toBe(false);
     expect(ITEM_SCOPES.etc.children.some((c) => c.slug === 'quest-items')).toBe(
       true,
     );
+    expect(
+      ITEM_SCOPES.setup.children.some((c) => c.slug === 'event-items'),
+    ).toBe(true);
+    expect(
+      ITEM_SCOPES.setup.children.some((c) => c.slug === 'holiday-ornaments'),
+    ).toBe(false);
     expect(ITEM_SCOPES.setup.children.some((c) => c.slug === 'chairs')).toBe(
       true,
     );
     expect(ITEM_SCOPES.cash.children.some((c) => c.slug === 'pets')).toBe(true);
+    expect(ITEM_SCOPES.cash.label).toBe('Cash');
+    expect(findChild(ITEM_SCOPES.etc, 'gems')?.label).toBe('Gems');
   });
 
   it('enforces scope-AND-predicate membership', () => {
@@ -135,7 +165,7 @@ describe('category model and predicates', () => {
     });
     expect(assignChild(buffPotion, ITEM_SCOPES.use)?.slug).toBe('buffs');
 
-    // 3. Types precede Quest Items in ETC: monster material needed for quest -> monster-materials
+    // 3. Types precede Quest Items in ETC: monster material needed for quest -> monster-drops
     const mmQuest = makeRow({
       key: 'item:mm-quest',
       sourceId: '04000010',
@@ -143,14 +173,12 @@ describe('category model and predicates', () => {
       types: ['monster-material'],
       neededForQuestCount: 5,
     });
-    expect(assignChild(mmQuest, ITEM_SCOPES.etc)?.slug).toBe(
-      'monster-materials',
-    );
+    expect(assignChild(mmQuest, ITEM_SCOPES.etc)?.slug).toBe('monster-drops');
     expect(
       matchesCategory(
         mmQuest,
         ITEM_SCOPES.etc,
-        findChild(ITEM_SCOPES.etc, 'monster-materials'),
+        findChild(ITEM_SCOPES.etc, 'monster-drops'),
       ),
     ).toBe(true);
     expect(
@@ -171,7 +199,7 @@ describe('category model and predicates', () => {
     });
     expect(assignChild(oreQuest, ITEM_SCOPES.etc)?.slug).toBe('ores');
 
-    // 5. Ores precede Monster Materials: ore with monster-material type -> ores
+    // 5. Ores precede Monster Drops: ore with monster-material type -> ores
     const oreMM = makeRow({
       key: 'item:ore-mm',
       sourceId: '04010099',
@@ -193,7 +221,54 @@ describe('category model and predicates', () => {
     expect(assignChild(healingPotion, ITEM_SCOPES.etc)).toBeUndefined();
   });
 
-  it('enforces invariant: for every scope, sum(child counts) === scope total across all overlap cases', () => {
+  it('assigns a quest-flag-only ETC row to Quest Items', () => {
+    const questFlagOnly = makeRow({
+      key: 'item:quest-flag-only',
+      sourceId: '04031002',
+      itemClass: 'etc',
+      questFlag: true,
+    });
+    expect(assignChild(questFlagOnly, ITEM_SCOPES.etc)?.slug).toBe(
+      'quest-items',
+    );
+    expect(
+      matchesCategory(
+        questFlagOnly,
+        ITEM_SCOPES.etc,
+        findChild(ITEM_SCOPES.etc, 'quest-items'),
+      ),
+    ).toBe(true);
+  });
+
+  it('keeps a quest-flag monster-material row in Monster Drops', () => {
+    const mmQuestFlag = makeRow({
+      key: 'item:mm-quest-flag',
+      sourceId: '04000011',
+      itemClass: 'etc',
+      types: ['monster-material'],
+      questFlag: true,
+      neededForQuestCount: 2,
+    });
+    expect(assignChild(mmQuestFlag, ITEM_SCOPES.etc)?.slug).toBe(
+      'monster-drops',
+    );
+    expect(
+      matchesCategory(
+        mmQuestFlag,
+        ITEM_SCOPES.etc,
+        findChild(ITEM_SCOPES.etc, 'monster-drops'),
+      ),
+    ).toBe(true);
+    expect(
+      matchesCategory(
+        mmQuestFlag,
+        ITEM_SCOPES.etc,
+        findChild(ITEM_SCOPES.etc, 'quest-items'),
+      ),
+    ).toBe(false);
+  });
+
+  it('enforces invariant: per-scope child counts sum to the scope total across all overlap cases', () => {
     const fixtureRows: readonly ItemRow[] = [
       // Use: Recovery precedes Buffs
       makeRow({
@@ -210,7 +285,7 @@ describe('category model and predicates', () => {
         itemClass: 'consume',
         types: ['potion'],
       }),
-      // Use: Upgrade Scroll
+      // Use: Scroll
       makeRow({
         key: 'u:scroll',
         sourceId: '02040000',
@@ -231,7 +306,7 @@ describe('category model and predicates', () => {
         itemClass: 'consume',
       }),
 
-      // ETC: Ores precede Monster Materials
+      // ETC: Ores precede Monster Drops
       makeRow({
         key: 'e:ore-mm',
         sourceId: '04010099',
@@ -254,7 +329,7 @@ describe('category model and predicates', () => {
         types: ['gem'],
         neededForQuestCount: 1,
       }),
-      // ETC: Refined Materials precede Quest Items
+      // ETC: Refined Ores precede Quest Items
       makeRow({
         key: 'e:refined-quest',
         sourceId: '04010100',
@@ -262,7 +337,7 @@ describe('category model and predicates', () => {
         types: ['refined-material'],
         neededForQuestCount: 3,
       }),
-      // ETC: Monster Materials precede Quest Items
+      // ETC: Monster Drops precede Quest Items (with neededForQuestCount)
       makeRow({
         key: 'e:mm-quest',
         sourceId: '04000010',
@@ -270,12 +345,27 @@ describe('category model and predicates', () => {
         types: ['monster-material'],
         neededForQuestCount: 5,
       }),
-      // ETC: Pure Quest Item
+      // ETC: Monster Drops precede Quest Items (with questFlag)
+      makeRow({
+        key: 'e:mm-questflag',
+        sourceId: '04000012',
+        itemClass: 'etc',
+        types: ['monster-material'],
+        questFlag: true,
+      }),
+      // ETC: Pure Quest Item (by neededForQuestCount)
       makeRow({
         key: 'e:pure-quest',
         sourceId: '04031001',
         itemClass: 'etc',
         neededForQuestCount: 1,
+      }),
+      // ETC: Pure Quest Item (by questFlag only)
+      makeRow({
+        key: 'e:quest-flag-only',
+        sourceId: '04031002',
+        itemClass: 'etc',
+        questFlag: true,
       }),
       // ETC: Other ETC Item
       makeRow({
@@ -291,6 +381,13 @@ describe('category model and predicates', () => {
         itemClass: 'setup',
         types: ['chair'],
       }),
+      // Set-up: Event Item
+      makeRow({
+        key: 's:event',
+        sourceId: '03992024',
+        itemClass: 'setup',
+        types: ['holiday-ornament'],
+      }),
       // Set-up: Other Set-up
       makeRow({
         key: 's:other',
@@ -298,13 +395,13 @@ describe('category model and predicates', () => {
         itemClass: 'setup',
       }),
 
-      // Cash/Pet: Pet
+      // Cash: Pet
       makeRow({
         key: 'c:pet',
         sourceId: '5000000',
         itemClass: 'pet',
       }),
-      // Cash/Pet: Cash
+      // Cash: Cash
       makeRow({
         key: 'c:cash',
         sourceId: '05070000',
@@ -341,16 +438,16 @@ describe('category model and predicates', () => {
     }
   });
 
-  it('matches skill items by the skill function', () => {
+  it('matches mastery books by the skill function', () => {
     const skillItem = makeRow({
       key: 'item:skill:1',
       sourceId: '02280000',
       itemClass: 'consume',
       functions: ['skill'],
     });
-    const child = findChild(ITEM_SCOPES.use, 'skill-items');
+    const child = findChild(ITEM_SCOPES.use, 'mastery-books');
     expect(child).toBeDefined();
-    expect(child?.label).toBe('Skill Items');
+    expect(child?.label).toBe('Mastery Books');
     expect(child?.kind === 'positive' && child.matches(skillItem)).toBe(true);
   });
 
@@ -391,7 +488,7 @@ describe('category model and predicates', () => {
     const positiveScrolls = getCategoryRows(
       rows,
       ITEM_SCOPES.use,
-      findChild(ITEM_SCOPES.use, 'upgrade-scrolls'),
+      findChild(ITEM_SCOPES.use, 'scrolls'),
     );
 
     const otherKeys = new Set(otherRows.map((r) => r.key));
@@ -663,7 +760,7 @@ describe('category model and predicates', () => {
         icon: 'b7d62c62b03503e04609501b97cb8ce7349cfadec38b3e8d01d7eae524355051',
       },
 
-      // Cash/Pet
+      // Cash
       {
         key: '5000002',
         sourceId: '5000002',

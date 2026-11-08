@@ -66,6 +66,15 @@ describe('parseItemRouteParams', () => {
     ).toThrow();
   });
 
+  it('throws notFound for deprecated category slugs', () => {
+    expect(() =>
+      parseItemRouteParams({ scope: 'use', child: 'upgrade-scrolls' }),
+    ).toThrow();
+    expect(() =>
+      parseItemRouteParams({ scope: 'etc', child: 'monster-materials' }),
+    ).toThrow();
+  });
+
   it('throws notFound for child without scope', () => {
     expect(() => parseItemRouteParams({ child: 'buffs' })).toThrow();
   });

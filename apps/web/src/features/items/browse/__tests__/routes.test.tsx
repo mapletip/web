@@ -92,8 +92,8 @@ describe('Items Browse route integration', () => {
       expectedChildSlug: undefined,
       currentLabel: 'All Items',
       expectedBackLinks: [] as readonly { href: string; label: string }[],
-      expectedDirectChildren: ['Use', 'ETC', 'Set-up', 'Cash/Pet'],
-      unexpectedLabels: ['Upgrade Scrolls', 'Recovery', 'Quest Items'],
+      expectedDirectChildren: ['Use', 'ETC', 'Set-up', 'Cash'],
+      unexpectedLabels: ['Scrolls', 'Recovery', 'Quest Items'],
       expectedHasIcon: true,
     },
     {
@@ -104,7 +104,7 @@ describe('Items Browse route integration', () => {
       currentLabel: 'Use',
       expectedBackLinks: [{ href: '/maplestory/items', label: 'All Items' }],
       expectedDirectChildren: [
-        'Upgrade Scrolls',
+        'Scrolls',
         'Recovery',
         'Throwing Stars',
         'Buffs',
@@ -112,11 +112,11 @@ describe('Items Browse route integration', () => {
       unexpectedLabels: [
         'ETC',
         'Set-up',
-        'Cash/Pet',
+        'Cash',
         'Bullets',
-        'Reward Containers',
+        'Boxes',
         'Monster Cards',
-        'Skill Items',
+        'Mastery Books',
       ],
       expectedHasIcon: true,
     },
@@ -132,7 +132,7 @@ describe('Items Browse route integration', () => {
       ],
       expectedDirectChildren: [] as readonly string[],
       unexpectedLabels: [
-        'Upgrade Scrolls',
+        'Scrolls',
         'Recovery',
         'Throwing Stars',
         'Buffs',
@@ -142,11 +142,11 @@ describe('Items Browse route integration', () => {
       expectedHasIcon: false,
     },
     {
-      url: '/maplestory/items/use/upgrade-scrolls',
+      url: '/maplestory/items/use/scrolls',
       expectedBuildId: 'cw-launch',
       expectedScope: ITEM_SCOPES.use,
-      expectedChildSlug: 'upgrade-scrolls',
-      currentLabel: 'Upgrade Scrolls',
+      expectedChildSlug: 'scrolls',
+      currentLabel: 'Scrolls',
       expectedBackLinks: [
         { href: '/maplestory/items', label: 'All Items' },
         { href: '/maplestory/items/use', label: 'Use' },
@@ -162,7 +162,7 @@ describe('Items Browse route integration', () => {
       expectedChildSlug: undefined,
       currentLabel: 'All Items',
       expectedBackLinks: [] as readonly { href: string; label: string }[],
-      expectedDirectChildren: ['Use', 'ETC', 'Set-up', 'Cash/Pet'],
+      expectedDirectChildren: ['Use', 'ETC', 'Set-up', 'Cash'],
       unexpectedLabels: ['Quest Items', 'Chairs'],
       expectedHasIcon: true,
     },
@@ -429,6 +429,8 @@ describe('Items Browse route integration', () => {
     '/maplestory/not-a-build/items',
     '/maplestory/items/all',
     '/maplestory/items/use/nope',
+    '/maplestory/items/use/upgrade-scrolls',
+    '/maplestory/items/etc/monster-materials',
   ];
 
   for (const url of notFoundUrls) {
