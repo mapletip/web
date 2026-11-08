@@ -141,7 +141,7 @@ export function SortSelect({
         }
       }}
       w={w ?? `calc(${longestLabel}ch + ${SORT_SELECT_CHROME})`}
-      classNames={{ label: labelClasses.label }}
+      classNames={{ label: labelClasses['label'] ?? '' }}
     />
   );
 }

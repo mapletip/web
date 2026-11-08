@@ -27,7 +27,7 @@ export function BooleanControl({
       withAlignedLabels
       value={typeof value === 'boolean' ? String(value) : null}
       w={200}
-      classNames={{ label: labelClasses.label }}
+      classNames={{ label: labelClasses['label'] ?? '' }}
       data={[
         { value: 'true', label: `Yes (${counts.get('true') ?? 0})` },
         { value: 'false', label: `No (${counts.get('false') ?? 0})` },

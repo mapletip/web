@@ -42,7 +42,7 @@ export function OptionList({
         label={label}
         value={[...value]}
         onChange={(next) => onChange(next)}
-        classNames={{ label: labelClasses.label }}
+        classNames={{ label: labelClasses['label'] ?? '' }}
       >
         <Stack gap="xs" mt="xs">
           {visibleOptions.map((option) => (
