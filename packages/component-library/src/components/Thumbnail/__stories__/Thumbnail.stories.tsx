@@ -1,4 +1,4 @@
-import { Group, Text } from '@mantine/core';
+import { Group, SimpleGrid, Stack, Text } from '@mantine/core';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 
 import { Thumbnail } from '@/components/Thumbnail';
@@ -15,56 +15,64 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const LargeImage: Story = {
-  name: 'Large image scales down',
-  render: () => (
-    <Group data-testid="thumbnail-story" align="center" gap="sm">
-      <Thumbnail src={recordImageStress} size={40} />
-      <Text>Large image in a 40 px box</Text>
-    </Group>
-  ),
+type GalleryTile = {
+  label: string;
+  thumbnails: readonly {
+    src?: string;
+    size: number;
+    caption?: string;
+  }[];
 };
 
-export const SmallImage: Story = {
-  name: 'Small image keeps native size',
-  render: () => (
-    <Group data-testid="thumbnail-story" align="center" gap="sm">
-      <Thumbnail src={smallImage} size={40} />
-      <Text>16 px image in a 40 px box</Text>
-    </Group>
-  ),
-};
+const galleryTiles: readonly GalleryTile[] = [
+  {
+    label: 'Large image scaled down',
+    thumbnails: [{ src: recordImageStress, size: 40 }],
+  },
+  {
+    label: 'Small image at native size',
+    thumbnails: [{ src: smallImage, size: 40 }],
+  },
+  {
+    label: 'Missing image',
+    thumbnails: [{ size: 40 }],
+  },
+  {
+    label: 'Broken image',
+    thumbnails: [{ src: brokenImage, size: 40 }],
+  },
+  {
+    label: 'Size row',
+    thumbnails: [24, 32, 40, 48].map((size) => ({
+      src: recordImageStress,
+      size,
+      caption: String(size),
+    })),
+  },
+];
 
-export const MissingImage: Story = {
-  name: 'Missing image',
+export const Gallery: Story = {
   render: () => (
-    <Group data-testid="thumbnail-story" align="center" gap="sm">
-      <Thumbnail size={40} />
-      <Text>No image available</Text>
-    </Group>
-  ),
-};
-
-export const BrokenImage: Story = {
-  name: 'Broken image',
-  render: () => (
-    <Group data-testid="thumbnail-story" align="center" gap="sm">
-      <Thumbnail src={brokenImage} size={40} />
-      <Text>Image could not be loaded</Text>
-    </Group>
-  ),
-};
-
-export const SizeRow: Story = {
-  name: 'Several sizes beside text',
-  render: () => (
-    <Group data-testid="thumbnail-story" align="center" gap="md" wrap="nowrap">
-      {[24, 32, 40, 48].map((size) => (
-        <Group key={size} align="center" gap="xs" wrap="nowrap">
-          <Thumbnail src={recordImageStress} size={size} />
-          <Text>{size}</Text>
-        </Group>
+    <SimpleGrid
+      data-testid="thumbnail-story"
+      cols={2}
+      spacing="lg"
+      verticalSpacing="lg"
+      w={480}
+    >
+      {galleryTiles.map(({ label, thumbnails }) => (
+        <Stack key={label} align="center" gap="xs">
+          <Text size="sm">{label}</Text>
+          <Group align="center" gap="xs" wrap="nowrap">
+            {thumbnails.map(({ src, size, caption }) => (
+              <Stack key={size} align="center" gap={2}>
+                <Thumbnail src={src} size={size} />
+                {caption && <Text size="xs">{caption}</Text>}
+              </Stack>
+            ))}
+          </Group>
+        </Stack>
       ))}
-    </Group>
+    </SimpleGrid>
   ),
 };
