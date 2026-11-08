@@ -32,20 +32,11 @@ function PageLinkAdapter({
     return null;
   }
   if (props.disabled) {
-    const dataAttributes = Object.fromEntries(
-      Object.entries(props).filter(([key]) => key.startsWith('data-')),
-    );
     return (
       <button
         type="button"
-        disabled
-        className={props.className}
-        style={props.style}
-        aria-label={props['aria-label']}
-        {...dataAttributes}
-      >
-        {props.children}
-      </button>
+        {...(props as ComponentPropsWithoutRef<'button'>)}
+      />
     );
   }
   return renderPageLink({
