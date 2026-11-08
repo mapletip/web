@@ -1,11 +1,15 @@
 import { Alert, Box, Button, Text, Title } from '@mantine/core';
+import { Sparkle } from '@phosphor-icons/react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { useMemo, useState } from 'react';
 import { expect, screen, userEvent, waitFor, within } from 'storybook/test';
 
+import { DrillDownNav } from '@/components/DrillDownNav';
+import type { DrillDownNode } from '@/components/DrillDownNav';
 import { FacetedBrowser } from '@/components/FacetedBrowser';
 import type {
   FacetDefinition,
+  FacetedBrowserNavigation,
   BrowseState,
   QueryFieldDefinition,
 } from '@/components/FacetedBrowser';
@@ -50,11 +54,13 @@ function BrowserExample({
   state,
   onStateChange,
   fillHeight = true,
+  navigation,
 }: {
   readonly variant?: Variant;
   readonly state?: BrowseState;
   readonly onStateChange?: (nextState: BrowseState) => void;
   readonly fillHeight?: boolean;
+  readonly navigation?: FacetedBrowserNavigation;
 }) {
   const records = demoRecords;
   const columns = useMemo(
@@ -149,6 +155,7 @@ function BrowserExample({
       queryFields={queryFields}
       facets={facets}
       presentation="comparison"
+      {...(navigation ? { navigation } : {})}
       {...(fillHeight ? { fillHeight: true } : { tableMaxHeight: 560 })}
       renderCard={(record) => <FacetedBrowserRecordCard record={record} />}
       {...stateProps}
@@ -363,5 +370,159 @@ export const Controlled: Story = {
         />
       </>
     );
+  },
+};
+
+const demoNavTree: DrillDownNode = {
+  id: 'all',
+  label: 'All Categories',
+  href: '#all',
+  count: 24,
+  children: [
+    {
+      id: 'featured',
+      label: 'Featured',
+      href: '#featured',
+      icon: <Sparkle size={20} aria-hidden="true" />,
+      count: 8,
+      children: [
+        { id: 'spotlight', label: 'Spotlight', href: '#spotlight', count: 3 },
+      ],
+    },
+    {
+      id: 'archive',
+      label: 'Archive',
+      href: '#archive',
+      count: 16,
+    },
+  ],
+};
+
+export const RailNavigationSlot: Story = {
+  name: 'Rail navigation',
+  render: () => (
+    <BrowserExample
+      navigation={{
+        label: 'Categories',
+        currentLabel: 'Featured',
+        currentId: 'featured',
+        currentCount: 8,
+        apply: () => {},
+        currentIcon: <Sparkle size={20} aria-hidden="true" />,
+        render: (context) => (
+          <DrillDownNav
+            root={demoNavTree}
+            currentId="featured"
+            label="Categories"
+            {...(context.mode === 'rail' && context.onNavigate
+              ? { onNavigate: context.onNavigate }
+              : {})}
+          />
+        ),
+      }}
+    />
+  ),
+};
+
+function DrawerNavigationExample() {
+  const [currentId, setCurrentId] = useState('all');
+
+  const currentNode = useMemo(() => {
+    function find(node: DrillDownNode): DrillDownNode | undefined {
+      if (node.id === currentId) return node;
+      if (node.children) {
+        for (const child of node.children) {
+          const res = find(child);
+          if (res) return res;
+        }
+      }
+      return undefined;
+    }
+    return find(demoNavTree) ?? demoNavTree;
+  }, [currentId]);
+
+  return (
+    <BrowserExample
+      navigation={{
+        label: 'Categories',
+        currentLabel: currentNode.label,
+        currentId,
+        currentCount: currentNode.count,
+        apply: (id) => {
+          setCurrentId(id);
+        },
+        currentIcon: <Sparkle size={20} aria-hidden="true" />,
+        render: (context) => {
+          if (context.mode === 'drawer') {
+            return (
+              <DrillDownNav
+                root={demoNavTree}
+                currentId={context.selectedId}
+                label="Categories"
+                onSelect={context.onSelect}
+              />
+            );
+          }
+          return (
+            <DrillDownNav
+              root={demoNavTree}
+              currentId={currentId}
+              label="Categories"
+              {...(context.onNavigate
+                ? { onNavigate: context.onNavigate }
+                : {})}
+            />
+          );
+        },
+      }}
+    />
+  );
+}
+
+export const NavigationDrawerDrillAndApply: Story = {
+  name: 'Navigation drawer drill and apply',
+  render: () => <DrawerNavigationExample />,
+  globals: { viewport: { value: 'mobileBreakpoint', isRotated: false } },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    // 1. Open the navigation drawer from the mobile chip
+    const chip = canvas.getByRole('button', {
+      name: /Categories: All Categories/i,
+    });
+    await userEvent.click(chip);
+
+    // 2. Wait for the navigation drawer dialog to mount in document.body
+    await waitFor(async () => {
+      await expect(screen.getByRole('dialog')).toBeInTheDocument();
+    });
+
+    const dialog = within(screen.getByRole('dialog'));
+
+    // 3. Drill into "Featured" (non-leaf row)
+    const featuredBtn = dialog.getByRole('button', { name: /^Featured/i });
+    await userEvent.click(featuredBtn);
+
+    // 4. Verify drill-down shape: Featured highlighted, back row to All Categories, Spotlight child visible
+    await waitFor(async () => {
+      const activeBtn = dialog.getByRole('button', { name: /^Featured/i });
+      await expect(activeBtn).toHaveAttribute('aria-current', 'true');
+    });
+    await expect(
+      dialog.getByRole('button', { name: /All Categories/i }),
+    ).toBeInTheDocument();
+    const spotlightBtn = dialog.getByRole('button', { name: /Spotlight/i });
+    await expect(spotlightBtn).toBeInTheDocument();
+
+    // 5. Tap leaf row "Spotlight" -> applies immediately and closes
+    await userEvent.click(spotlightBtn);
+
+    // 6. Verify drawer is closed and chip updated to Spotlight
+    await waitFor(async () => {
+      await expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    });
+    await expect(
+      canvas.getByRole('button', { name: /Categories: Spotlight/i }),
+    ).toBeInTheDocument();
   },
 };

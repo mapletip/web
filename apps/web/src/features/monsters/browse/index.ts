@@ -9,4 +9,3 @@
  */
 export { MonsterBrowse } from './MonsterBrowse';
 export type { MonsterBrowseProps } from './MonsterBrowse';
-export { MonsterBrowseUnavailable } from './MonsterBrowseUnavailable';

@@ -11,7 +11,7 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 
-import { MonsterBrowseUnavailable } from '../MonsterBrowseUnavailable';
+import { BrowseUnavailable } from '../BrowseUnavailable';
 
 /**
  * The route error boundary is a real UI contract: a generic user-facing message,
@@ -23,15 +23,15 @@ async function renderFailedRoute(error: unknown) {
   const rootRoute = createRootRoute({ component: () => <Outlet /> });
   const failingRoute = createRoute({
     getParentRoute: () => rootRoute,
-    path: '/monsters',
+    path: '/browse',
     loader: () => {
       throw error;
     },
-    errorComponent: MonsterBrowseUnavailable,
+    errorComponent: BrowseUnavailable,
   });
   const router = createRouter({
     routeTree: rootRoute.addChildren([failingRoute]),
-    history: createMemoryHistory({ initialEntries: ['/monsters'] }),
+    history: createMemoryHistory({ initialEntries: ['/browse'] }),
   });
 
   render(
@@ -43,7 +43,7 @@ async function renderFailedRoute(error: unknown) {
   return router;
 }
 
-describe('MonsterBrowseUnavailable', () => {
+describe('BrowseUnavailable', () => {
   it('shows a generic user-facing message with a retry', async () => {
     await renderFailedRoute(
       Object.assign(new Error('internal detail'), {

@@ -1,0 +1,15 @@
+.collectionIcon {
+  display: inline-grid;
+  grid-template-columns: repeat(2, 15px);
+  grid-template-rows: repeat(2, 15px);
+  width: 30px;
+  height: 30px;
+  flex: 0 0 30px;
+}
+
+.sprite {
+  display: block;
+  width: 15px;
+  height: 15px;
+  object-fit: contain;
+}

@@ -205,7 +205,9 @@
 
 .linkIcon {
   display: flex;
-  flex: 0 0 auto;
+  flex: 0 0 1.875rem;
+  width: 1.875rem;
+  min-width: 1.875rem;
   align-items: center;
   justify-content: center;
   color: var(--mapletip-color-brand);

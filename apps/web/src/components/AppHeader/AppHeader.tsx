@@ -9,13 +9,13 @@ import allEquipment from '@/assets/maplestory/navigation/equipment-all-maple-shi
 import armorAccessories from '@/assets/maplestory/navigation/equipment-armor-zakum-helmet.png?no-inline';
 import otherEquipment from '@/assets/maplestory/navigation/equipment-other-hog.png?no-inline';
 import weapons from '@/assets/maplestory/navigation/equipment-weapons-maple-sword.png?no-inline';
-import allItems from '@/assets/maplestory/navigation/items-all-meso-pouch.png?no-inline';
 import cashItems from '@/assets/maplestory/navigation/items-cash-pet-brown-puppy.png?no-inline';
 import etcItems from '@/assets/maplestory/navigation/items-etc-snail-shell.png?no-inline';
 import setupItems from '@/assets/maplestory/navigation/items-setup-blue-chair.png?no-inline';
 import useItems from '@/assets/maplestory/navigation/items-use-red-potion.png?no-inline';
 
 import classes from './AppHeader.module.css';
+import { ItemCollectionIcon } from './ItemCollectionIcon';
 
 /** Nexon sprite artwork is decorative; the adjacent label names the destination. */
 function navigationIcon(src: string) {
@@ -72,7 +72,7 @@ const navigation: readonly HeaderLink[] = [
         id: 'all-items',
         label: 'All Items',
         description: 'Browse every non-equipment item',
-        icon: navigationIcon(allItems),
+        icon: <ItemCollectionIcon />,
         href: '/maplestory/items',
       },
       {
@@ -98,7 +98,7 @@ const navigation: readonly HeaderLink[] = [
       },
       {
         id: 'cash-items',
-        label: 'Cash/Pet',
+        label: 'Cash',
         description: 'Browse Cash items and Pets',
         icon: navigationIcon(cashItems),
         href: '/maplestory/items/cash',

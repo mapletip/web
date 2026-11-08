@@ -1,0 +1,117 @@
+.nav {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.item {
+  display: flex;
+  width: 100%;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: 28px;
+  padding-block: 4px;
+  padding-inline: var(--mantine-spacing-sm);
+  border: 0;
+  border-radius: var(--mantine-radius-sm);
+  background: transparent;
+  color: var(--mapletip-color-ink);
+  font: inherit;
+  font-size: var(--mantine-font-size-sm);
+  line-height: 1.4;
+  text-align: start;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    background-color 150ms ease,
+    color 150ms ease;
+}
+
+.row:hover {
+  background-color: var(--mapletip-color-hover);
+}
+
+.rowContent {
+  display: flex;
+  align-items: flex-start;
+  width: 100%;
+  gap: var(--mantine-spacing-xs);
+}
+
+.backArrow {
+  display: inline-flex;
+  flex: none;
+  color: var(--mapletip-color-muted);
+}
+
+.icon,
+.iconSlot {
+  display: inline-flex;
+  flex: none;
+  width: 20px;
+  height: 20px;
+}
+
+.icon {
+  align-items: center;
+  justify-content: center;
+}
+
+.label {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: break-word;
+}
+
+.count {
+  flex: none;
+  font-size: var(--mantine-font-size-xs);
+  color: var(--mapletip-color-muted);
+}
+
+.countDimmed {
+  flex: none;
+  font-size: var(--mantine-font-size-xs);
+  color: var(--mantine-color-dimmed);
+}
+
+.row.currentRow {
+  background-color: var(--mapletip-color-selection);
+  color: var(--mapletip-color-brand-text);
+  font-weight: 600;
+}
+
+.row.currentRow:hover {
+  background-color: var(--mapletip-color-selection);
+}
+
+.row.currentRow .count,
+.row.currentRow .label {
+  color: inherit;
+}
+
+.childRow {
+  padding-inline-start: calc(var(--mantine-spacing-sm) + 16px);
+  color: var(--mapletip-color-muted);
+}
+
+.childRow:hover {
+  color: var(--mapletip-color-ink);
+}
+
+.ancestorRow {
+  color: var(--mapletip-color-ink);
+}

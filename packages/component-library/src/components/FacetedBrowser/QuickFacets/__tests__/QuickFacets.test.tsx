@@ -61,4 +61,75 @@ describe('QuickFacets', () => {
       expect(document.activeElement).toBe(target);
     }
   });
+
+  it('renders Filters button when hasFilters is true even with no quick facets', () => {
+    render(
+      <MantineProvider>
+        <QuickFacets
+          activeTotal={0}
+          facets={[]}
+          hasFilters={true}
+          onOpen={() => undefined}
+        />
+      </MantineProvider>,
+    );
+
+    expect(
+      screen.getByRole('button', {
+        name: 'Filters, 0 active. Open all filters',
+      }),
+    ).toBeVisible();
+  });
+
+  it('renders navigation chip with decorative icon when given, keeping accessible name unchanged', () => {
+    render(
+      <MantineProvider>
+        <QuickFacets
+          activeTotal={0}
+          facets={[]}
+          navigation={{
+            label: 'Category',
+            currentLabel: 'Potions',
+            currentIcon: <span data-testid="nav-icon">potion-icon</span>,
+            onOpen: () => undefined,
+          }}
+          onOpen={() => undefined}
+        />
+      </MantineProvider>,
+    );
+
+    const button = screen.getByRole('button', {
+      name: 'Category: Potions. Open Category',
+    });
+    expect(button).toBeVisible();
+    expect(button.textContent).toContain('Potions');
+
+    const iconWrapper = button.querySelector('[class*="icon"]');
+    expect(iconWrapper).toBeInTheDocument();
+    expect(iconWrapper).toHaveAttribute('aria-hidden', 'true');
+    expect(screen.getByTestId('nav-icon')).toBeInTheDocument();
+  });
+
+  it('renders navigation chip without icon when omitted', () => {
+    render(
+      <MantineProvider>
+        <QuickFacets
+          activeTotal={0}
+          facets={[]}
+          navigation={{
+            label: 'Category',
+            currentLabel: 'Potions',
+            onOpen: () => undefined,
+          }}
+          onOpen={() => undefined}
+        />
+      </MantineProvider>,
+    );
+
+    const button = screen.getByRole('button', {
+      name: 'Category: Potions. Open Category',
+    });
+    expect(button).toBeVisible();
+    expect(button.querySelector('[class*="icon"]')).toBeNull();
+  });
 });

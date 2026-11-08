@@ -2,14 +2,14 @@ import { Button, Text, Title } from '@mantine/core';
 import { useRouter } from '@tanstack/react-router';
 import type { ReactElement } from 'react';
 
-import classes from './MonsterBrowseUnavailable.module.css';
+import classes from './BrowseUnavailable.module.css';
 
 /**
- * Generic user-facing error state for this route. It offers a retry and never
+ * Generic user-facing error state for browse routes. It offers a retry and never
  * renders raw SDK messages, paths, digests or stacks, because those are not a
  * visitor-facing contract.
  */
-export function MonsterBrowseUnavailable(): ReactElement {
+export function BrowseUnavailable(): ReactElement {
   const router = useRouter();
 
   return (
