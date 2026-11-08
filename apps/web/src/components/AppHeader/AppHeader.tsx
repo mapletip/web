@@ -15,6 +15,7 @@ import setupItems from '@/assets/maplestory/navigation/items-setup-blue-chair.pn
 import useItems from '@/assets/maplestory/navigation/items-use-red-potion.png?no-inline';
 
 import classes from './AppHeader.module.css';
+import { ItemCollectionIcon } from './ItemCollectionIcon';
 
 /** Nexon sprite artwork is decorative; the adjacent label names the destination. */
 function navigationIcon(src: string) {
@@ -71,6 +72,7 @@ const navigation: readonly HeaderLink[] = [
         id: 'all-items',
         label: 'All Items',
         description: 'Browse every non-equipment item',
+        icon: <ItemCollectionIcon />,
         href: '/maplestory/items',
       },
       {
