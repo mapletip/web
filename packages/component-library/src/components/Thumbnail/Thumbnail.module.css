@@ -1,0 +1,8 @@
+.thumbnail {
+  flex-shrink: 0;
+}
+
+.thumbnail[data-fallback] {
+  background: var(--mantine-color-default-hover);
+  border-radius: var(--mantine-radius-sm);
+}
