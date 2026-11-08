@@ -6,7 +6,9 @@ export interface ResolvedDrillDownPath<TMeta = undefined> {
   readonly children: readonly DrillDownNode<TMeta>[];
 }
 
-export interface ResolveDrillDownPathOptions {
+export interface ResolveDrillDownPathOptions<TMeta = undefined> {
+  readonly root: DrillDownNode<TMeta>;
+  readonly currentId: string;
   readonly hideEmpty?: boolean | undefined;
 }
 
@@ -42,17 +44,15 @@ function findNode<TMeta>(
  * When hideEmpty is true, child rows whose count === 0 are omitted.
  * The current node and ancestors are never omitted. Nodes with count undefined are never hidden.
  */
-export function resolveDrillDownPath<TMeta = undefined>(
-  root: DrillDownNode<TMeta>,
-  currentId: string,
-  options: ResolveDrillDownPathOptions = {},
-): ResolvedDrillDownPath<TMeta> {
+export function resolveDrillDownPath<TMeta = undefined>({
+  root,
+  currentId,
+  hideEmpty = false,
+}: ResolveDrillDownPathOptions<TMeta>): ResolvedDrillDownPath<TMeta> {
   const match = findNode(root, currentId, []);
   const current = match ? match.current : root;
   const ancestors = match ? match.ancestors : [];
   const rawChildren = current.children ?? [];
-
-  const hideEmpty = options.hideEmpty ?? false;
 
   const children = hideEmpty
     ? rawChildren.filter((child) => child.count !== 0)

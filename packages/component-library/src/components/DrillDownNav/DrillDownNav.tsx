@@ -11,10 +11,15 @@ import type {
 
 type RowKind = 'ancestor' | 'current' | 'child';
 
-function isLeafNode<TMeta>(
-  node: DrillDownNode<TMeta>,
-  hideEmpty: boolean,
-): boolean {
+interface IsLeafNodeOptions<TMeta> {
+  readonly node: DrillDownNode<TMeta>;
+  readonly hideEmpty: boolean;
+}
+
+function isLeafNode<TMeta>({
+  node,
+  hideEmpty,
+}: IsLeafNodeOptions<TMeta>): boolean {
   const rawChildren = node.children ?? [];
   const visibleChildren = hideEmpty
     ? rawChildren.filter((child) => child.count !== 0)
@@ -22,11 +27,17 @@ function isLeafNode<TMeta>(
   return visibleChildren.length === 0;
 }
 
-function renderRowContent<TMeta>(
-  node: DrillDownNode<TMeta>,
-  kind: RowKind,
-  reserveIconSlot: boolean,
-): ReactNode {
+interface RenderRowContentOptions<TMeta> {
+  readonly node: DrillDownNode<TMeta>;
+  readonly kind: RowKind;
+  readonly reserveIconSlot: boolean;
+}
+
+function renderRowContent<TMeta>({
+  node,
+  kind,
+  reserveIconSlot,
+}: RenderRowContentOptions<TMeta>): ReactNode {
   let iconElement: ReactNode = null;
   if (node.icon) {
     iconElement = (
@@ -95,7 +106,7 @@ function renderLinkItem<TMeta>({
   renderLink,
 }: RenderLinkItemOptions<TMeta>): ReactNode {
   const isCurrent = kind === 'current';
-  const rowContent = renderRowContent(node, kind, reserveIconSlot);
+  const rowContent = renderRowContent({ node, kind, reserveIconSlot });
   const kindClass = getRowKindClass(kind);
   const className = `${classes['row']} ${kindClass}`.trim();
 
@@ -139,10 +150,10 @@ function renderButtonItem<TMeta>({
   onSelect,
 }: RenderButtonItemOptions<TMeta>): ReactNode {
   const isCurrent = kind === 'current';
-  const rowContent = renderRowContent(node, kind, reserveIconSlot);
+  const rowContent = renderRowContent({ node, kind, reserveIconSlot });
   const kindClass = getRowKindClass(kind);
   const className = `${classes['row']} ${kindClass}`.trim();
-  const isLeaf = isLeafNode(node, hideEmpty);
+  const isLeaf = isLeafNode({ node, hideEmpty });
 
   return (
     <button
@@ -165,20 +176,22 @@ export function DrillDownNav<TMeta = undefined>({
   onNavigate,
   onSelect,
 }: DrillDownNavProps<TMeta>): ReactElement {
-  const { ancestors, current, children } = resolveDrillDownPath(
+  const { ancestors, current, children } = resolveDrillDownPath({
     root,
     currentId,
-    { hideEmpty },
-  );
+    hideEmpty,
+  });
 
   const ancestorsHaveIcon = ancestors.some((node) => Boolean(node.icon));
   const childrenHaveIcon = children.some((node) => Boolean(node.icon));
 
-  const renderItem = (
-    node: DrillDownNode<TMeta>,
-    kind: RowKind,
-    reserveIconSlot: boolean,
-  ) => {
+  interface RenderItemOptions {
+    readonly node: DrillDownNode<TMeta>;
+    readonly kind: RowKind;
+    readonly reserveIconSlot: boolean;
+  }
+
+  const renderItem = ({ node, kind, reserveIconSlot }: RenderItemOptions) => {
     if (onSelect) {
       return renderButtonItem({
         node,
@@ -202,15 +215,27 @@ export function DrillDownNav<TMeta = undefined>({
       <ul className={classes['list']}>
         {ancestors.map((node) => (
           <li key={node.id} className={classes['item']}>
-            {renderItem(node, 'ancestor', ancestorsHaveIcon)}
+            {renderItem({
+              node,
+              kind: 'ancestor',
+              reserveIconSlot: ancestorsHaveIcon,
+            })}
           </li>
         ))}
         <li key={current.id} className={classes['item']}>
-          {renderItem(current, 'current', false)}
+          {renderItem({
+            node: current,
+            kind: 'current',
+            reserveIconSlot: false,
+          })}
         </li>
         {children.map((node) => (
           <li key={node.id} className={classes['item']}>
-            {renderItem(node, 'child', childrenHaveIcon)}
+            {renderItem({
+              node,
+              kind: 'child',
+              reserveIconSlot: childrenHaveIcon,
+            })}
           </li>
         ))}
       </ul>

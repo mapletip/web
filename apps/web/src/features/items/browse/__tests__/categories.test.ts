@@ -5,10 +5,9 @@ import {
   getCategoryCounts,
   getCategoryRows,
   isItemScope,
-  ITEM_SCOPES,
   matchesCategory,
-  type ItemCategoryScope,
-} from '../categories';
+} from '../assignment';
+import { ITEM_SCOPES, type ItemCategoryScope } from '../categories';
 import type { ItemRow } from '../project';
 
 function makeRow(overrides: Partial<ItemRow> = {}): ItemRow {
@@ -100,11 +99,11 @@ describe('category model and predicates', () => {
     const rows = [cashHealer, useHealer];
 
     // Recovery in Use scope MUST exclude the Cash healer
-    const useRecoveryRows = getCategoryRows(
+    const useRecoveryRows = getCategoryRows({
       rows,
-      ITEM_SCOPES.use,
-      findChild(ITEM_SCOPES.use, 'recovery'),
-    );
+      scope: ITEM_SCOPES.use,
+      child: findChild(ITEM_SCOPES.use, 'recovery'),
+    });
     expect(useRecoveryRows).toHaveLength(1);
     expect(useRecoveryRows[0]?.key).toBe('item:use:healer');
 
@@ -122,11 +121,11 @@ describe('category model and predicates', () => {
       types: ['pet-food'],
     });
 
-    const petFoodRows = getCategoryRows(
-      [cashPetFood, usePetFood],
-      ITEM_SCOPES.use,
-      findChild(ITEM_SCOPES.use, 'pet-food'),
-    );
+    const petFoodRows = getCategoryRows({
+      rows: [cashPetFood, usePetFood],
+      scope: ITEM_SCOPES.use,
+      child: findChild(ITEM_SCOPES.use, 'pet-food'),
+    });
     expect(petFoodRows).toHaveLength(1);
     expect(petFoodRows[0]?.key).toBe('item:use:petfood');
   });
@@ -142,18 +141,18 @@ describe('category model and predicates', () => {
     });
     expect(assignChild(healingPotion, ITEM_SCOPES.use)?.slug).toBe('recovery');
     expect(
-      matchesCategory(
-        healingPotion,
-        ITEM_SCOPES.use,
-        findChild(ITEM_SCOPES.use, 'recovery'),
-      ),
+      matchesCategory({
+        row: healingPotion,
+        scope: ITEM_SCOPES.use,
+        child: findChild(ITEM_SCOPES.use, 'recovery'),
+      }),
     ).toBe(true);
     expect(
-      matchesCategory(
-        healingPotion,
-        ITEM_SCOPES.use,
-        findChild(ITEM_SCOPES.use, 'buffs'),
-      ),
+      matchesCategory({
+        row: healingPotion,
+        scope: ITEM_SCOPES.use,
+        child: findChild(ITEM_SCOPES.use, 'buffs'),
+      }),
     ).toBe(false);
 
     // 2. Pure buff (potion type without recovery function) is assigned to Buffs
@@ -175,18 +174,18 @@ describe('category model and predicates', () => {
     });
     expect(assignChild(mmQuest, ITEM_SCOPES.etc)?.slug).toBe('monster-drops');
     expect(
-      matchesCategory(
-        mmQuest,
-        ITEM_SCOPES.etc,
-        findChild(ITEM_SCOPES.etc, 'monster-drops'),
-      ),
+      matchesCategory({
+        row: mmQuest,
+        scope: ITEM_SCOPES.etc,
+        child: findChild(ITEM_SCOPES.etc, 'monster-drops'),
+      }),
     ).toBe(true);
     expect(
-      matchesCategory(
-        mmQuest,
-        ITEM_SCOPES.etc,
-        findChild(ITEM_SCOPES.etc, 'quest-items'),
-      ),
+      matchesCategory({
+        row: mmQuest,
+        scope: ITEM_SCOPES.etc,
+        child: findChild(ITEM_SCOPES.etc, 'quest-items'),
+      }),
     ).toBe(false);
 
     // 4. Ores precede Quest Items: ore needed for quest -> ores
@@ -232,11 +231,11 @@ describe('category model and predicates', () => {
       'quest-items',
     );
     expect(
-      matchesCategory(
-        questFlagOnly,
-        ITEM_SCOPES.etc,
-        findChild(ITEM_SCOPES.etc, 'quest-items'),
-      ),
+      matchesCategory({
+        row: questFlagOnly,
+        scope: ITEM_SCOPES.etc,
+        child: findChild(ITEM_SCOPES.etc, 'quest-items'),
+      }),
     ).toBe(true);
   });
 
@@ -253,18 +252,18 @@ describe('category model and predicates', () => {
       'monster-drops',
     );
     expect(
-      matchesCategory(
-        mmQuestFlag,
-        ITEM_SCOPES.etc,
-        findChild(ITEM_SCOPES.etc, 'monster-drops'),
-      ),
+      matchesCategory({
+        row: mmQuestFlag,
+        scope: ITEM_SCOPES.etc,
+        child: findChild(ITEM_SCOPES.etc, 'monster-drops'),
+      }),
     ).toBe(true);
     expect(
-      matchesCategory(
-        mmQuestFlag,
-        ITEM_SCOPES.etc,
-        findChild(ITEM_SCOPES.etc, 'quest-items'),
-      ),
+      matchesCategory({
+        row: mmQuestFlag,
+        scope: ITEM_SCOPES.etc,
+        child: findChild(ITEM_SCOPES.etc, 'quest-items'),
+      }),
     ).toBe(false);
   });
 
@@ -471,25 +470,25 @@ describe('category model and predicates', () => {
 
     const rows = [potion, scroll, miscellaneous];
 
-    const otherRows = getCategoryRows(
+    const otherRows = getCategoryRows({
       rows,
-      ITEM_SCOPES.use,
-      findChild(ITEM_SCOPES.use, 'other-use-items'),
-    );
+      scope: ITEM_SCOPES.use,
+      child: findChild(ITEM_SCOPES.use, 'other-use-items'),
+    });
     expect(otherRows).toHaveLength(1);
     expect(otherRows[0]?.key).toBe('item:misc');
 
     // Every positive child in the scope is disjoint from Other
-    const positiveBuffs = getCategoryRows(
+    const positiveBuffs = getCategoryRows({
       rows,
-      ITEM_SCOPES.use,
-      findChild(ITEM_SCOPES.use, 'buffs'),
-    );
-    const positiveScrolls = getCategoryRows(
+      scope: ITEM_SCOPES.use,
+      child: findChild(ITEM_SCOPES.use, 'buffs'),
+    });
+    const positiveScrolls = getCategoryRows({
       rows,
-      ITEM_SCOPES.use,
-      findChild(ITEM_SCOPES.use, 'scrolls'),
-    );
+      scope: ITEM_SCOPES.use,
+      child: findChild(ITEM_SCOPES.use, 'scrolls'),
+    });
 
     const otherKeys = new Set(otherRows.map((r) => r.key));
     for (const r of [...positiveBuffs, ...positiveScrolls]) {
@@ -514,15 +513,23 @@ describe('category model and predicates', () => {
     const buffChild = findChild(scope, 'buffs');
     const otherChild = findChild(scope, 'other-use-items');
 
-    expect(matchesCategory(potion, scope, buffChild)).toBe(true);
-    expect(matchesCategory(potion, scope, otherChild)).toBe(false);
+    expect(matchesCategory({ row: potion, scope, child: buffChild })).toBe(
+      true,
+    );
+    expect(matchesCategory({ row: potion, scope, child: otherChild })).toBe(
+      false,
+    );
 
-    expect(matchesCategory(misc, scope, buffChild)).toBe(false);
-    expect(matchesCategory(misc, scope, otherChild)).toBe(true);
+    expect(matchesCategory({ row: misc, scope, child: buffChild })).toBe(false);
+    expect(matchesCategory({ row: misc, scope, child: otherChild })).toBe(true);
 
     // Wrong item class never matches
-    expect(matchesCategory(nonConsume, scope, buffChild)).toBe(false);
-    expect(matchesCategory(nonConsume, scope, otherChild)).toBe(false);
+    expect(matchesCategory({ row: nonConsume, scope, child: buffChild })).toBe(
+      false,
+    );
+    expect(matchesCategory({ row: nonConsume, scope, child: otherChild })).toBe(
+      false,
+    );
   });
 
   it('returns an empty array for recognized zero-member children without failing', () => {
@@ -534,11 +541,11 @@ describe('category model and predicates', () => {
       }),
     ];
 
-    const bulletsRows = getCategoryRows(
+    const bulletsRows = getCategoryRows({
       rows,
-      ITEM_SCOPES.use,
-      findChild(ITEM_SCOPES.use, 'bullets'),
-    );
+      scope: ITEM_SCOPES.use,
+      child: findChild(ITEM_SCOPES.use, 'bullets'),
+    });
     expect(bulletsRows).toHaveLength(0);
   });
 
@@ -585,7 +592,7 @@ describe('category model and predicates', () => {
     const etcRow = makeRow({ key: 'item:etc', itemClass: 'etc' });
 
     const rows = [consumeRow, etcRow];
-    const scopeRows = getCategoryRows(rows, ITEM_SCOPES.use);
+    const scopeRows = getCategoryRows({ rows, scope: ITEM_SCOPES.use });
 
     expect(scopeRows).toHaveLength(1);
     expect(scopeRows[0]?.key).toBe('item:consume');
@@ -804,7 +811,7 @@ describe('category model and predicates', () => {
             row,
             `Row with icon ${contentId} must exist in fixture`,
           ).toBeDefined();
-          const isMember = row ? matchesCategory(row, scope, child) : false;
+          const isMember = row ? matchesCategory({ row, scope, child }) : false;
           expect(
             isMember,
             `icon ${contentId} must be carried by a member of category ${scope.slug}/${child.slug}`,

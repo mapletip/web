@@ -87,7 +87,10 @@ const catalogTree: DrillDownNode<TestMeta> = {
 
 describe('resolveDrillDownPath', () => {
   it('resolves root as current when currentId is root id', () => {
-    const result = resolveDrillDownPath(catalogTree, 'all');
+    const result = resolveDrillDownPath({
+      root: catalogTree,
+      currentId: 'all',
+    });
     expect(result.ancestors).toEqual([]);
     expect(result.current.id).toBe('all');
     expect(result.children.map((c) => c.id)).toEqual([
@@ -99,7 +102,10 @@ describe('resolveDrillDownPath', () => {
   });
 
   it('resolves middle node as current with root ancestor and direct children', () => {
-    const result = resolveDrillDownPath(catalogTree, 'clothing');
+    const result = resolveDrillDownPath({
+      root: catalogTree,
+      currentId: 'clothing',
+    });
     expect(result.ancestors.map((a) => a.id)).toEqual(['all']);
     expect(result.current.id).toBe('clothing');
     expect(result.children.map((c) => c.id)).toEqual([
@@ -110,14 +116,20 @@ describe('resolveDrillDownPath', () => {
   });
 
   it('resolves leaf node as current with full ancestor chain and no children', () => {
-    const result = resolveDrillDownPath(catalogTree, 'clothing/pants');
+    const result = resolveDrillDownPath({
+      root: catalogTree,
+      currentId: 'clothing/pants',
+    });
     expect(result.ancestors.map((a) => a.id)).toEqual(['all', 'clothing']);
     expect(result.current.id).toBe('clothing/pants');
     expect(result.children).toEqual([]);
   });
 
   it('treats root as current when currentId is unknown', () => {
-    const result = resolveDrillDownPath(catalogTree, 'unknown-id');
+    const result = resolveDrillDownPath({
+      root: catalogTree,
+      currentId: 'unknown-id',
+    });
     expect(result.ancestors).toEqual([]);
     expect(result.current.id).toBe('all');
     expect(result.children.map((c) => c.id)).toEqual([
@@ -129,7 +141,9 @@ describe('resolveDrillDownPath', () => {
   });
 
   it('omits child rows with count === 0 when hideEmpty is true', () => {
-    const result = resolveDrillDownPath(catalogTree, 'clothing', {
+    const result = resolveDrillDownPath({
+      root: catalogTree,
+      currentId: 'clothing',
       hideEmpty: true,
     });
     expect(result.children.map((c) => c.id)).toEqual([
@@ -139,7 +153,9 @@ describe('resolveDrillDownPath', () => {
   });
 
   it('keeps child rows with count === 0 when hideEmpty is false', () => {
-    const result = resolveDrillDownPath(catalogTree, 'clothing', {
+    const result = resolveDrillDownPath({
+      root: catalogTree,
+      currentId: 'clothing',
       hideEmpty: false,
     });
     expect(result.children.map((c) => c.id)).toEqual([
@@ -150,7 +166,9 @@ describe('resolveDrillDownPath', () => {
   });
 
   it('never omits the current node or ancestors even when current count === 0 and hideEmpty is true', () => {
-    const result = resolveDrillDownPath(catalogTree, 'clothing/empty', {
+    const result = resolveDrillDownPath({
+      root: catalogTree,
+      currentId: 'clothing/empty',
       hideEmpty: true,
     });
     expect(result.ancestors.map((a) => a.id)).toEqual(['all', 'clothing']);
@@ -170,7 +188,9 @@ describe('resolveDrillDownPath', () => {
         { id: 'uncounted', label: 'Uncounted', href: '/uncounted' },
       ],
     };
-    const result = resolveDrillDownPath(treeWithUncounted, 'root', {
+    const result = resolveDrillDownPath({
+      root: treeWithUncounted,
+      currentId: 'root',
       hideEmpty: true,
     });
     expect(result.children.map((c) => c.id)).toEqual(['positive', 'uncounted']);

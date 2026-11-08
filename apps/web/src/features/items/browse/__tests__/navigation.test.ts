@@ -1,7 +1,8 @@
 import type { ReactElement } from 'react';
 import { describe, expect, it } from 'vitest';
 
-import { getCategoryCounts, ITEM_SCOPES } from '../categories';
+import { getCategoryCounts } from '../assignment';
+import { ITEM_SCOPES } from '../categories';
 import {
   buildItemNavHref,
   findItemNavNode,

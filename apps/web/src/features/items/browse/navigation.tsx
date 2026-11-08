@@ -19,9 +19,8 @@ import {
   type BuildId,
 } from '@/config/maplekit';
 
+import { assignChild, getCategoryCounts } from './assignment';
 import {
-  assignChild,
-  getCategoryCounts,
   ITEM_SCOPES,
   ITEM_SCOPE_SLUGS,
   type ItemScopeSlug,

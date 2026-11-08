@@ -11,7 +11,7 @@ import { useCallback, useMemo, type ReactElement } from 'react';
 import { BrowsePageShell } from '@/components/BrowsePageShell';
 import { BUILDS, type BuildId } from '@/config/maplekit';
 
-import { getCategoryRows } from '../categories';
+import { getCategoryRows } from '../assignment';
 import { ItemBrowseCard } from '../ItemBrowseCard';
 import { itemPageMetadata } from '../metadata';
 import {
@@ -68,7 +68,12 @@ export function ItemBrowse({
   const { heading } = itemPageMetadata(buildId, category);
 
   const scopedRows = useMemo(
-    () => getCategoryRows(rows, category.scope, category.child),
+    () =>
+      getCategoryRows({
+        rows,
+        scope: category.scope,
+        child: category.child,
+      }),
     [rows, category.scope, category.child],
   );
 

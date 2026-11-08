@@ -9,8 +9,8 @@ import {
   type BuildId,
 } from '@/config/maplekit';
 
+import { isItemScope } from './assignment';
 import {
-  isItemScope,
   ITEM_SCOPES,
   type ItemCategoryChild,
   type ItemCategoryScope,
