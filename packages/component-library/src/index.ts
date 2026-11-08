@@ -14,6 +14,8 @@ export type {
   FooterLinkRenderProps,
   FooterProps,
 } from '@/components/Footer';
+export { Thumbnail } from '@/components/Thumbnail';
+export type { ThumbnailProps } from '@/components/Thumbnail';
 export { Header } from '@/components/Header';
 export type {
   HeaderGroupLink,
