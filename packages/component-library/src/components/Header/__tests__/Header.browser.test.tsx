@@ -1097,4 +1097,67 @@ describe('Header', () => {
       .element(dialog.getByRole('link', { name: 'Maps' }))
       .toBeVisible();
   });
+
+  it('allocates a 30px (1.875rem) wide column for rich navigation icons and aligns row titles', async () => {
+    await renderHeader({
+      brand: brand(),
+      navigation: [
+        {
+          id: 'category',
+          label: 'Category',
+          description: 'Browse category',
+          children: [
+            {
+              id: 'custom',
+              label: 'Custom 30x30',
+              description: 'Host-provided ReactNode up to 30x30',
+              icon: (
+                <div
+                  data-testid="custom-30"
+                  style={{ width: '30px', height: '30px' }}
+                />
+              ),
+              href: '/category/custom',
+            },
+            {
+              id: 'standard',
+              label: 'Standard 22x22',
+              description: 'Standard 22px icon',
+              icon: <svg data-testid="standard-22" aria-hidden="true" />,
+              href: '/category/standard',
+            },
+          ],
+        },
+      ],
+    });
+
+    await userEvent.click(page.getByRole('button', { name: 'Category' }));
+    const customLink = page.getByRole('link', { name: /Custom 30x30/ });
+    await expect.element(customLink).toBeVisible();
+
+    const customIconSlot = customLink
+      .element()
+      .querySelector('[class*="linkIcon"]');
+    expect(customIconSlot).not.toBeNull();
+    const customRect = customIconSlot?.getBoundingClientRect();
+    expect(customRect?.width).toBe(30);
+
+    const standardLink = page.getByRole('link', { name: /Standard 22x22/ });
+    const standardIconSlot = standardLink
+      .element()
+      .querySelector('[class*="linkIcon"]');
+    expect(standardIconSlot).not.toBeNull();
+    const standardRect = standardIconSlot?.getBoundingClientRect();
+    expect(standardRect?.width).toBe(30);
+
+    const customLabel = customLink
+      .element()
+      .querySelector('[class*="linkLabel"]');
+    const standardLabel = standardLink
+      .element()
+      .querySelector('[class*="linkLabel"]');
+    expect(customLabel?.getBoundingClientRect().left).toBe(
+      standardLabel?.getBoundingClientRect().left,
+    );
+  });
 });
