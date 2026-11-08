@@ -44,10 +44,10 @@ vi.mock('../load', () => ({
 }));
 
 describe('Items Browse server rendering', () => {
-  it('renders category breadcrumbs, build links and exact-ID links from nav nodes', async () => {
+  it('renders category breadcrumbs from nav nodes', async () => {
     const history = createMemoryHistory({
       initialEntries: [
-        '/maplestory/items/etc?q=02000000&page=4&pageSize=25&sort=sourceId-desc',
+        '/maplestory/items/etc?q=potion&page=4&pageSize=25&sort=name-desc',
       ],
     });
     const router = createRouter({ routeTree, history });
@@ -59,22 +59,14 @@ describe('Items Browse server rendering', () => {
       </MantineProvider>,
     );
 
-    expect(html).toContain('Item 02000000 is in');
     expect(html).toContain(
-      'href="/maplestory/items?q=02000000&amp;pageSize=25&amp;sort=sourceId-desc"',
-    );
-    expect(html).toContain(
-      'href="/maplestory/items/use?q=02000000&amp;pageSize=25&amp;sort=sourceId-desc"',
-    );
-    expect(html).toContain(
-      'href="/maplestory/gms-v83/items/etc?q=02000000&amp;pageSize=25&amp;sort=sourceId-desc"',
+      'href="/maplestory/items?q=potion&amp;pageSize=25&amp;sort=name-desc"',
     );
     expect(html).not.toContain('page=4');
     expect(html).toContain('aria-label="Breadcrumb"');
     expect(html).toContain('All Items');
     expect(html).toContain('ETC');
     expect(html).not.toContain('Home');
-    expect(html).toContain('aria-label="MapleStory game build"');
     expect(html).toContain('aria-current="page"');
   });
 

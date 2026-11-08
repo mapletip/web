@@ -18,18 +18,6 @@ import { ITEM_BROWSE_DEFAULT_SEARCH } from '../search-params';
 const { fixtureRows } = vi.hoisted(() => {
   const rows: readonly ItemRow[] = [
     {
-      key: 'item:9',
-      sourceId: '9',
-      name: 'Numeric ID Nine',
-      itemClass: 'consume',
-    },
-    {
-      key: 'item:10',
-      sourceId: '10',
-      name: 'Numeric ID Ten',
-      itemClass: 'consume',
-    },
-    {
       key: 'item:02000000',
       sourceId: '02000000',
       name: 'Red Potion',
@@ -39,6 +27,12 @@ const { fixtureRows } = vi.hoisted(() => {
       key: 'item:02070000',
       sourceId: '02070000',
       name: 'Subi Throwing-Stars',
+      itemClass: 'consume',
+    },
+    {
+      key: 'item:digit-name',
+      sourceId: '02000001',
+      name: 'Potion 2000000',
       itemClass: 'consume',
     },
     {
@@ -90,25 +84,6 @@ describe('Items Browse router state', () => {
     expect(target.searchParams.has('sort')).toBe(false);
   });
 
-  it('sorts item IDs numerically in ascending order', async () => {
-    const history = createMemoryHistory({
-      initialEntries: ['/maplestory/items?sort=sourceId-asc&pageSize=100'],
-    });
-    const router = createRouter({ routeTree, history });
-    await router.load();
-
-    render(
-      <MantineProvider theme={theme} forceColorScheme="dark">
-        <RouterProvider router={router} />
-      </MantineProvider>,
-    );
-
-    const displayedNames = screen
-      .getAllByText(/Numeric ID (Nine|Ten)/)
-      .map((element) => element.textContent);
-    expect(displayedNames).toEqual(['Numeric ID Nine', 'Numeric ID Ten']);
-  });
-
   it('strips default search params through the route middleware', async () => {
     const history = createMemoryHistory({
       initialEntries: ['/maplestory/items'],
@@ -125,10 +100,10 @@ describe('Items Browse router state', () => {
     expect(router.state.location.href).toBe('/maplestory/items');
   });
 
-  it('matches numeric item IDs exactly while allowing name substrings', async () => {
+  it('searches numeric substrings in item names', async () => {
     const user = userEvent.setup();
     const history = createMemoryHistory({
-      initialEntries: ['/maplestory/items?q=020'],
+      initialEntries: ['/maplestory/items?q=2000000'],
     });
     const router = createRouter({ routeTree, history });
     await router.load();
@@ -139,17 +114,11 @@ describe('Items Browse router state', () => {
       </MantineProvider>,
     );
 
-    expect(
-      screen.getByText('Classic World has no item with ID 020.'),
-    ).toBeInTheDocument();
     const search = screen.getByRole('textbox', {
       name: 'Search Classic World items',
     });
-    await user.clear(search);
-    await user.type(search, '2000000');
-    await waitFor(() => {
-      expect(screen.getByText('Red Potion')).toBeInTheDocument();
-    });
+    expect(screen.getByText('Potion 2000000')).toBeInTheDocument();
+    expect(screen.queryByText('Red Potion')).not.toBeInTheDocument();
 
     await user.clear(search);
     await user.type(search, 'Potion');
@@ -181,13 +150,7 @@ describe('Items Browse router state', () => {
       'http://localhost',
     ).searchParams.get('q');
     expect(['2000000', '"2000000"']).toContain(loadedQuery);
-    expect(screen.getByText('Red Potion')).toBeInTheDocument();
-    expect(
-      screen.queryByText('Classic World has no item with ID 2000000.'),
-    ).not.toBeInTheDocument();
-    expect(
-      screen.queryByText('Matching items for ID 2000000'),
-    ).not.toBeInTheDocument();
+    expect(screen.getByText('Potion 2000000')).toBeInTheDocument();
 
     await user.clear(search);
     await user.type(search, '2000000');

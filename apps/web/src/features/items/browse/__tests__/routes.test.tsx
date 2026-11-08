@@ -235,9 +235,9 @@ describe('Items Browse route integration', () => {
         </MantineProvider>,
       );
 
-      // The current category and active build each have one current link.
+      // The current category has one current link.
       const currentMatches = html.match(/aria-current="page"/g) ?? [];
-      expect(currentMatches).toHaveLength(2);
+      expect(currentMatches).toHaveLength(1);
     });
 
     it(`renders drill-down navigation and responsive chip for ${url}`, async () => {

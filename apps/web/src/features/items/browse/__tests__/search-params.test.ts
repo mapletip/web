@@ -15,7 +15,7 @@ describe('Items Browse search params', () => {
         q: 'red potion',
         page: '3',
         pageSize: '75',
-        sort: 'sourceId-desc',
+        sort: 'name-desc',
         extra: 'ignored',
         unsupported: 'ignored',
       }),
@@ -23,7 +23,7 @@ describe('Items Browse search params', () => {
       q: 'red potion',
       page: 3,
       pageSize: 75,
-      sort: 'sourceId-desc',
+      sort: 'name-desc',
     });
   });
 
@@ -33,7 +33,7 @@ describe('Items Browse search params', () => {
         q: 'a'.repeat(201),
         page: 0,
         pageSize: 30,
-        sort: 'sourceId-ascending',
+        sort: 'unsupported-ascending',
       }),
     ).toEqual({ q: '', page: 1, pageSize: 50, sort: 'name-asc' });
     expect(validateSearch({ q: '' })).toEqual({
@@ -55,8 +55,17 @@ describe('Items Browse search params', () => {
     expect(validateSearch({ sort: 'name-asc' })).toMatchObject({
       sort: 'name-asc',
     });
+    expect(validateSearch({ sort: 'name-desc' })).toMatchObject({
+      sort: 'name-desc',
+    });
+  });
+
+  it('rejects legacy ID sort URLs and falls back to name ascending', () => {
     expect(validateSearch({ sort: 'sourceId-asc' })).toMatchObject({
-      sort: 'sourceId-asc',
+      sort: 'name-asc',
+    });
+    expect(validateSearch({ sort: 'sourceId-desc' })).toMatchObject({
+      sort: 'name-asc',
     });
   });
 
@@ -86,10 +95,10 @@ describe('Items Browse search params', () => {
           search: 'snail',
           page: 3,
           pageSize: 25,
-          sort: { field: 'sourceId', direction: 'desc' },
+          sort: { field: 'name', direction: 'desc' },
         },
         includePage: false,
       }),
-    ).toEqual({ q: 'snail', page: 1, pageSize: 25, sort: 'sourceId-desc' });
+    ).toEqual({ q: 'snail', page: 1, pageSize: 25, sort: 'name-desc' });
   });
 });
