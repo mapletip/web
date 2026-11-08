@@ -27,13 +27,19 @@ import {
  */
 const FIXTURE_MP = 999;
 
-function record(
-  key: string,
-  name: string,
-  level: number,
-  hp: number,
-  exp: number,
-) {
+function record({
+  key,
+  name,
+  level,
+  hp,
+  exp,
+}: {
+  readonly key: string;
+  readonly name: string;
+  readonly level: number;
+  readonly hp: number;
+  readonly exp: number;
+}) {
   return fixtureRecord({
     key: `fixture:monster:${key}`,
     name: knownFact(name),
@@ -66,12 +72,14 @@ function record(
 }
 
 const rows = projectMonsterBrowseRows(
-  fixtureCatalog([
-    record('001', 'Sentinel Snail', 5, 30, 1),
-    record('002', 'Sentinel Slime', 12, 45, 2),
-    record('003', 'Red Snail', 25, 68, 8),
-    record('004', 'Blue Snail', 40, 100, 20),
-  ]),
+  fixtureCatalog({
+    records: [
+      record({ key: '001', name: 'Sentinel Snail', level: 5, hp: 30, exp: 1 }),
+      record({ key: '002', name: 'Sentinel Slime', level: 12, hp: 45, exp: 2 }),
+      record({ key: '003', name: 'Red Snail', level: 25, hp: 68, exp: 8 }),
+      record({ key: '004', name: 'Blue Snail', level: 40, hp: 100, exp: 20 }),
+    ],
+  }),
 );
 
 function mountBrowse() {
@@ -98,6 +106,11 @@ function column(accessor: string) {
 
 describe('MonsterBrowse', () => {
   it('keeps compact headers with full accessible names and stable sort intents', () => {
+    expect(column('name')).toMatchObject({
+      accessor: 'name',
+      sortable: true,
+      firstSortDirection: 'asc',
+    });
     expect(column('physicalAttack')).toMatchObject({
       title: 'W. ATT',
       fullLabel: 'Weapon attack',

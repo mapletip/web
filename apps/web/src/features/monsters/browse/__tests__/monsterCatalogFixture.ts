@@ -1,21 +1,7 @@
-/**
- * Deterministic contract-2.0 and contract-2.1 catalog fixtures for tests.
- *
- * The SDK's narrow entry does not re-export the generated catalog types, so the
- * contract-2 member is extracted from `StaticMonsterCatalog` instead.
- */
-import type { StaticMonsterCatalog } from '@mapletip/data/monsters';
+/** Deterministic contract-2.1 catalog fixtures for tests. */
+import type { MonsterCatalogV2_1 } from '@mapletip/data/monsters';
 
-export type ContractTwoCatalog = Extract<
-  StaticMonsterCatalog,
-  { contractVersion: '2.0' }
->;
-export type ContractTwoRecord = ContractTwoCatalog['records'][number];
-export type ContractTwoOneCatalog = Extract<
-  StaticMonsterCatalog,
-  { contractVersion: '2.1' }
->;
-export type ContractTwoOneRecord = ContractTwoOneCatalog['records'][number];
+type MonsterRecord = MonsterCatalogV2_1['records'][number];
 
 export function knownFact<T>(value: T): { state: 'known'; value: T } {
   return { state: 'known', value };
@@ -30,12 +16,13 @@ export const UNSUPPORTED_FACT = { state: 'unsupported' } as const;
 
 export interface FixtureRecordInput {
   readonly key: string;
-  readonly name: ContractTwoRecord['name'];
-  readonly stats: ContractTwoRecord['stats'];
-  readonly traits: ContractTwoRecord['traits'];
+  readonly name: MonsterRecord['name'];
+  readonly stats: MonsterRecord['stats'];
+  readonly traits: MonsterRecord['traits'];
+  readonly sprite?: MonsterRecord['sprite'];
 }
 
-export function fixtureRecord(input: FixtureRecordInput): ContractTwoRecord {
+export function fixtureRecord(input: FixtureRecordInput): MonsterRecord {
   return {
     key: input.key,
     name: input.name,
@@ -43,44 +30,31 @@ export function fixtureRecord(input: FixtureRecordInput): ContractTwoRecord {
     traits: input.traits,
     elements: { state: 'unknown' },
     relationships: { state: 'unknown' },
+    sprite: input.sprite ?? UNKNOWN_FACT,
   };
 }
 
-export interface FixtureCatalogOptions {
+export interface FixtureCatalogInput {
+  readonly records: readonly MonsterRecord[];
   readonly buildId?: string;
   readonly familyId?: string;
   readonly recordCount?: number;
 }
 
-export function fixtureCatalog(
-  records: readonly ContractTwoRecord[],
-  options: FixtureCatalogOptions = {},
-): ContractTwoCatalog {
+export function fixtureCatalog({
+  records,
+  buildId,
+  familyId,
+  recordCount,
+}: FixtureCatalogInput): MonsterCatalogV2_1 {
   return {
-    contractVersion: '2.0',
+    contractVersion: '2.1',
     format: 'mapletip.monster-catalog-2',
-    recordCount: options.recordCount ?? records.length,
+    recordCount: recordCount ?? records.length,
     records: [...records],
     scope: {
-      build_id: options.buildId ?? 'cw-launch',
-      family_id: options.familyId ?? 'classic-world',
+      build_id: buildId ?? 'cw-launch',
+      family_id: familyId ?? 'classic-world',
     },
-  };
-}
-
-/** Add a 2.1 version marker while reusing the common catalog fixture builder. */
-export function fixtureCatalogV21({
-  records,
-  sprite,
-}: {
-  records: readonly ContractTwoRecord[];
-  sprite: ContractTwoOneRecord['sprite'];
-}): ContractTwoOneCatalog {
-  const catalog = fixtureCatalog(records);
-
-  return {
-    ...catalog,
-    contractVersion: '2.1',
-    records: records.map((record) => ({ ...record, sprite })),
   };
 }

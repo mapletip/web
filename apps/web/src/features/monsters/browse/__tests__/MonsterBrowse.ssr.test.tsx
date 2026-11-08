@@ -16,6 +16,8 @@ import {
   UNKNOWN_FACT,
 } from './monsterCatalogFixture';
 
+const KNOWN_SPRITE_ID = 'b'.repeat(64);
+
 function knownStats(base: number) {
   return [
     knownFact(base + 1),
@@ -49,6 +51,7 @@ const fixtureRecords = [
       knownFact(0),
       knownFact('fixture'),
     ],
+    sprite: knownFact(KNOWN_SPRITE_ID),
   }),
   fixtureRecord({
     key: 'fixture:monster:002',
@@ -98,7 +101,9 @@ const fixtureRecords = [
 ];
 
 function renderBrowseHtml(): string {
-  const rows = projectMonsterBrowseRows(fixtureCatalog(fixtureRecords));
+  const rows = projectMonsterBrowseRows(
+    fixtureCatalog({ records: fixtureRecords }),
+  );
 
   // The page takes its rows as props and uses no router hooks, so plain server
   // rendering is the whole contract; no router scaffolding is needed.
@@ -122,6 +127,9 @@ describe('MonsterBrowse server rendering', () => {
     expect(html).toContain('Sentinel Snail');
     expect(html).toContain('Sentinel Slime');
     expect(html).toContain('Sentinel Mushroom');
+    const spriteUrl = `https://d0.mapletip.com/media/images/bb/${KNOWN_SPRITE_ID}.png`;
+    expect(html.split(`src="${spriteUrl}"`).length - 1).toBe(2);
+    expect(html).toContain('data-fallback="true"');
     // Compact MapleTip browse labels, with the full stat name kept for assistive
     // technology through the column's `fullLabel`.
     expect(html).toContain('W. ATT');

@@ -8,11 +8,14 @@ const getMonsterBrowse = vi.hoisted(() =>
   vi.fn<(options: unknown) => Promise<unknown>>(),
 );
 
-vi.mock('@mapletip/data/monsters', () => ({ getMonsterBrowse }));
+vi.mock('@mapletip/data/monsters', async (importOriginal) => ({
+  ...(await importOriginal()),
+  getMonsterBrowse,
+}));
 
 function catalogFixture() {
   return {
-    contractVersion: '2.0',
+    contractVersion: '2.1',
     format: 'mapletip.monster-catalog-2',
     recordCount: 0,
     records: [],
