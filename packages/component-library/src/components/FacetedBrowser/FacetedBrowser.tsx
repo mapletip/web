@@ -1,4 +1,12 @@
-import { Stack, TextInput, Title } from '@mantine/core';
+import {
+  Box,
+  Divider,
+  Group,
+  Stack,
+  Text,
+  TextInput,
+  Title,
+} from '@mantine/core';
 import { MagnifyingGlass } from '@phosphor-icons/react';
 import type { MouseEvent as ReactMouseEvent, ReactElement } from 'react';
 import { useCallback, useMemo, useRef, useState } from 'react';
@@ -13,7 +21,10 @@ import { FacetList } from '@/components/FacetedBrowser/FacetControls/FacetList';
 import { resolveFacets } from '@/components/FacetedBrowser/FacetControls/resolveFacets';
 import type { FacetDefinition } from '@/components/FacetedBrowser/FacetControls/types';
 import classes from '@/components/FacetedBrowser/FacetedBrowser.module.css';
-import type { FacetedBrowserProps } from '@/components/FacetedBrowser/FacetedBrowser.types';
+import type {
+  FacetedBrowserProps,
+  StateChangeDetails,
+} from '@/components/FacetedBrowser/FacetedBrowser.types';
 import { FilterDrawer } from '@/components/FacetedBrowser/FilterDrawer/FilterDrawer';
 import {
   createBrowseState,
@@ -35,8 +46,10 @@ import {
 } from '@/components/FacetedBrowser/Summary/Summary';
 import {
   PageSizeSelect,
+  SortSelect,
   Toolbar,
 } from '@/components/FacetedBrowser/Toolbar/Toolbar';
+import type { SortIntent } from '@/components/Table';
 import { ComparisonTable } from '@/components/Table';
 import {
   deriveTableStorageKey,
@@ -78,6 +91,7 @@ export function FacetedBrowser<TRecord extends Record<string, unknown>>(
     facets: facetDefinitions = EMPTY_FACETS,
     recordNoun = 'records',
     navigation,
+    sortOptions,
     summaryNoun,
     summaryMode = 'page-window',
     resultsLabel = `${recordNoun} results`,
@@ -90,7 +104,7 @@ export function FacetedBrowser<TRecord extends Record<string, unknown>>(
     onRetry,
     emptyState,
     drawerContent,
-    getPageHref,
+    renderPageLink,
     tableStorageKey,
     fillHeight = false,
     state: controlledState,
@@ -123,14 +137,22 @@ export function FacetedBrowser<TRecord extends Record<string, unknown>>(
   const [internalState, setInternalState] = useState<BrowseState>(() =>
     createBrowseState(controlled ? undefined : defaultState, fallbackSize),
   );
+  const [initialSort] = useState<SortIntent | undefined>(() => {
+    const sort = controlledState?.sort ?? defaultState?.sort;
+    return sort ? { ...sort } : undefined;
+  });
   const [initialDefaultHiddenColumns] = useState(() => [
     ...(defaultState?.hiddenColumns ?? EMPTY_HIDDEN_COLUMNS),
   ]);
   const browseState = controlled ? controlledState : internalState;
   const changeBrowseState = useCallback(
-    (nextState: BrowseState) => {
+    (nextState: BrowseState, details?: StateChangeDetails) => {
       if (!controlled) setInternalState(nextState);
-      onStateChange?.(nextState);
+      if (details !== undefined) {
+        onStateChange?.(nextState, details);
+      } else {
+        onStateChange?.(nextState);
+      }
     },
     [controlled, onStateChange],
   );
@@ -211,7 +233,8 @@ export function FacetedBrowser<TRecord extends Record<string, unknown>>(
     statusActive,
     filterIsInvalid,
     evaluateDraft: browser.evaluateDraft,
-    commitFilters: browser.setFilters,
+    commitDraft: browser.commitDraft,
+    defaultSort: initialSort,
   });
 
   const shownDrawerFacet = facets.find(
@@ -405,6 +428,62 @@ export function FacetedBrowser<TRecord extends Record<string, unknown>>(
 
   const railLabel = navigation ? navigation.label : 'Filters';
 
+  const primaryToolbar = comparisonProps ? (
+    <Toolbar
+      columns={columns}
+      idAccessor={idAccessor}
+      identityField={comparisonProps.identityField}
+      hiddenColumns={browseState.hiddenColumns}
+      defaultHiddenColumns={initialDefaultHiddenColumns}
+      recordNoun={recordNoun}
+      pageSize={browser.pageSize}
+      pageSizeOptions={pageSizeOptions}
+      onHiddenColumnsChange={browser.setHiddenColumns}
+      onColumnVisibilityChange={browser.setColumnVisibility}
+      onPageSizeChange={browser.setPageSize}
+    />
+  ) : (
+    <PageSizeSelect
+      recordNoun={recordNoun}
+      pageSize={browser.pageSize}
+      pageSizeOptions={pageSizeOptions}
+      onChange={browser.setPageSize}
+    />
+  );
+
+  const toolbarContent =
+    sortOptions && sortOptions.length > 0 ? (
+      <Group gap="xs">
+        <Box visibleFrom="md">
+          <Group gap={6} align="center">
+            <Text size="xs" c="dimmed">
+              Sort:
+            </Text>
+            <SortSelect
+              recordNoun={recordNoun}
+              sortOptions={sortOptions}
+              currentSort={browseState.sort}
+              onChange={browser.setSort}
+            />
+          </Group>
+        </Box>
+        {primaryToolbar}
+      </Group>
+    ) : (
+      primaryToolbar
+    );
+
+  const effectiveState = useMemo(
+    () =>
+      browser.page === browseState.page
+        ? browseState
+        : { ...browseState, page: browser.page },
+    [browseState, browser.page],
+  );
+
+  const hasSortOptions = sortOptions !== undefined && sortOptions.length > 0;
+  const hasFilterOptions = facets.length > 0 || hasSortOptions;
+
   return (
     <>
       <Layout
@@ -427,7 +506,7 @@ export function FacetedBrowser<TRecord extends Record<string, unknown>>(
         rail={railContent}
         railLabel={railLabel}
         quickFacets={
-          navigation || facets.length > 0 ? (
+          navigation || hasFilterOptions ? (
             <QuickFacets
               {...(navigation
                 ? {
@@ -441,7 +520,7 @@ export function FacetedBrowser<TRecord extends Record<string, unknown>>(
                     },
                   }
                 : {})}
-              hasFilters={facets.length > 0}
+              hasFilters={hasFilterOptions}
               facets={quickFacets}
               activeTotal={activeFilterCount}
               onOpen={drawer.open}
@@ -457,30 +536,7 @@ export function FacetedBrowser<TRecord extends Record<string, unknown>>(
           />
         }
         summary={<Summary text={summaryText} />}
-        toolbar={
-          comparisonProps ? (
-            <Toolbar
-              columns={columns}
-              idAccessor={idAccessor}
-              identityField={comparisonProps.identityField}
-              hiddenColumns={browseState.hiddenColumns}
-              defaultHiddenColumns={initialDefaultHiddenColumns}
-              recordNoun={recordNoun}
-              pageSize={browser.pageSize}
-              pageSizeOptions={pageSizeOptions}
-              onHiddenColumnsChange={browser.setHiddenColumns}
-              onColumnVisibilityChange={browser.setColumnVisibility}
-              onPageSizeChange={browser.setPageSize}
-            />
-          ) : (
-            <PageSizeSelect
-              recordNoun={recordNoun}
-              pageSize={browser.pageSize}
-              pageSizeOptions={pageSizeOptions}
-              onChange={browser.setPageSize}
-            />
-          )
-        }
+        toolbar={toolbarContent}
         status={statusContent}
         resultsLabel={resultsLabel}
         fillHeight={fillHeight}
@@ -492,8 +548,8 @@ export function FacetedBrowser<TRecord extends Record<string, unknown>>(
             page={browser.page}
             pageCount={browser.pageCount}
             recordNoun={recordNoun}
-            state={browseState}
-            getPageHref={getPageHref}
+            state={effectiveState}
+            renderPageLink={renderPageLink}
             onPageChange={browser.setPage}
           />
         }
@@ -530,6 +586,21 @@ export function FacetedBrowser<TRecord extends Record<string, unknown>>(
             <div role="presentation" onClick={handleDrawerContentClick}>
               {drawerContent}
             </div>
+          ) : null}
+          {sortOptions && sortOptions.length > 0 && !shownDrawerFacet ? (
+            <>
+              <SortSelect
+                recordNoun={recordNoun}
+                sortOptions={sortOptions}
+                currentSort={drawer.draftSort}
+                onChange={drawer.setSort}
+                label="Sort"
+                w="100%"
+              />
+              {drawerFacets.length > 0 ? (
+                <Divider my="sm" color="var(--mapletip-color-border-subtle)" />
+              ) : null}
+            </>
           ) : null}
           <FacetList
             key={facetResetEpoch}

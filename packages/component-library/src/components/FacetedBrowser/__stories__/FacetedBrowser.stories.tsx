@@ -8,9 +8,12 @@ import { DrillDownNav } from '@/components/DrillDownNav';
 import type { DrillDownNode } from '@/components/DrillDownNav';
 import { FacetedBrowser } from '@/components/FacetedBrowser';
 import type {
+  BrowseSortOption,
   FacetDefinition,
   FacetedBrowserNavigation,
   BrowseState,
+  PageLinkRenderOptions,
+  PageLinkRenderer,
   QueryFieldDefinition,
 } from '@/components/FacetedBrowser';
 import { FacetedBrowserRecordCard } from '@/components/FacetedBrowser/__stories__/FacetedBrowserRecordCard';
@@ -49,18 +52,45 @@ type Story = StoryObj<typeof meta>;
 
 type Variant = 'loading' | 'error' | 'unavailable' | 'noMatches' | 'drawerOpen';
 
+const demoSortOptions: readonly BrowseSortOption[] = [
+  {
+    label: 'Name (A–Z)',
+    field: 'name',
+    direction: 'asc',
+  },
+  {
+    label: 'Name (Z–A)',
+    field: 'name',
+    direction: 'desc',
+  },
+  {
+    label: 'Value 1 (Highest)',
+    field: 'value1',
+    direction: 'desc',
+  },
+  {
+    label: 'Value 1 (Lowest)',
+    field: 'value1',
+    direction: 'asc',
+  },
+];
+
 function BrowserExample({
   variant,
   state,
   onStateChange,
   fillHeight = true,
   navigation,
+  sortOptions,
+  renderPageLink,
 }: {
   readonly variant?: Variant;
   readonly state?: BrowseState;
   readonly onStateChange?: (nextState: BrowseState) => void;
   readonly fillHeight?: boolean;
   readonly navigation?: FacetedBrowserNavigation;
+  readonly sortOptions?: readonly BrowseSortOption[];
+  readonly renderPageLink?: PageLinkRenderer;
 }) {
   const records = demoRecords;
   const columns = useMemo(
@@ -156,6 +186,8 @@ function BrowserExample({
       facets={facets}
       presentation="comparison"
       {...(navigation ? { navigation } : {})}
+      {...(sortOptions ? { sortOptions } : {})}
+      {...(renderPageLink ? { renderPageLink } : {})}
       {...(fillHeight ? { fillHeight: true } : { tableMaxHeight: 560 })}
       renderCard={(record) => <FacetedBrowserRecordCard record={record} />}
       {...stateProps}
@@ -181,7 +213,7 @@ function BrowserExample({
 }
 
 export const Default: Story = {
-  render: () => <BrowserExample />,
+  render: () => <BrowserExample sortOptions={demoSortOptions} />,
 };
 
 export const Active: Story = {
@@ -235,7 +267,7 @@ export const CrossFacetFiltering: Story = {
 
 export const MobileCards: Story = {
   name: 'Mobile cards',
-  render: () => <BrowserExample />,
+  render: () => <BrowserExample sortOptions={demoSortOptions} />,
   globals: { viewport: { value: 'mobileBreakpoint', isRotated: false } },
 };
 
@@ -273,7 +305,9 @@ export const CustomResults: Story = {
 };
 
 export const DrawerOpen: Story = {
-  render: () => <BrowserExample variant="drawerOpen" />,
+  render: () => (
+    <BrowserExample variant="drawerOpen" sortOptions={demoSortOptions} />
+  ),
   globals: { viewport: { value: 'tablet', isRotated: false } },
 };
 
@@ -525,4 +559,21 @@ export const NavigationDrawerDrillAndApply: Story = {
       canvas.getByRole('button', { name: /Categories: Spotlight/i }),
     ).toBeInTheDocument();
   },
+};
+
+export const HostPageLinkRenderer: StoryObj<{
+  renderPageLink?: PageLinkRenderer;
+}> = {
+  name: 'Host page link renderer',
+  args: {
+    renderPageLink: ({
+      page: targetPage,
+      props: linkProps,
+    }: PageLinkRenderOptions) => (
+      <a href={`?page=${targetPage}`} {...linkProps}>
+        {linkProps.children}
+      </a>
+    ),
+  },
+  render: (args) => <BrowserExample {...args} />,
 };

@@ -8,6 +8,7 @@ import { render } from 'vitest-browser-react';
 import '@/styles.css';
 import { FacetedBrowser } from '@/components/FacetedBrowser';
 import type {
+  BrowseSortOption,
   FacetDefinition,
   BrowseState,
   QueryFieldDefinition,
@@ -79,6 +80,7 @@ function Browser({
   drawerOpened,
   onDrawerOpenedChange,
   drawerContent,
+  sortOptions,
   loading = false,
 }: {
   readonly state: BrowseState;
@@ -86,6 +88,7 @@ function Browser({
   readonly drawerOpened?: boolean;
   readonly onDrawerOpenedChange?: (opened: boolean) => void;
   readonly drawerContent?: ReactNode;
+  readonly sortOptions?: readonly BrowseSortOption[];
   readonly loading?: boolean;
 }) {
   return (
@@ -105,6 +108,7 @@ function Browser({
         state={browseState}
         onStateChange={onStateChange}
         loading={loading}
+        {...(sortOptions ? { sortOptions } : {})}
         {...(drawerContent !== undefined ? { drawerContent } : {})}
         {...(drawerOpened !== undefined && onDrawerOpenedChange
           ? { drawerOpened, onDrawerOpenedChange }
@@ -251,7 +255,20 @@ describe('integrated FacetedBrowser', () => {
             idAccessor="id"
             presentation="cards"
             renderCard={(record) => <a href={record.href}>{record.name}</a>}
-            getPageHref={(pageNumber) => `/records?page=${pageNumber}`}
+            renderPageLink={({ page: targetPage, props: linkProps }) => (
+              <a
+                href={`/records?page=${targetPage}`}
+                {...linkProps}
+                onClick={(event) => {
+                  event.preventDefault();
+                  const next = { ...current, page: targetPage };
+                  changes.push(next);
+                  setCurrent(next);
+                }}
+              >
+                {linkProps.children}
+              </a>
+            )}
             state={current}
             onStateChange={(next) => {
               changes.push(next);
@@ -280,61 +297,13 @@ describe('integrated FacetedBrowser', () => {
     const nextLink = page.getByRole('link', { name: 'Next page' });
     expect(nextLink).toHaveAttribute('href', '/records?page=2');
 
-    const clicks: {
-      readonly ctrlKey: boolean;
-      readonly button: number;
-      readonly defaultPrevented: boolean;
-    }[] = [];
-    const capture = (event: Event) => {
-      const mouseEvent = event as MouseEvent;
-      if (!(mouseEvent.target instanceof Element)) return;
-      if (!mouseEvent.target.closest('a[href]')) return;
-      clicks.push({
-        ctrlKey: mouseEvent.ctrlKey,
-        button: mouseEvent.button,
-        defaultPrevented: mouseEvent.defaultPrevented,
-      });
-      mouseEvent.preventDefault();
-    };
-    document.addEventListener('click', capture);
-    document.addEventListener('auxclick', capture);
+    await userEvent.click(pageTwo);
+    expect(changes.at(-1)?.page).toBe(2);
 
-    try {
-      await userEvent.click(pageTwo);
-      expect(clicks.at(-1)).toMatchObject({
-        ctrlKey: false,
-        button: 0,
-        defaultPrevented: false,
-      });
+    await userEvent.click(nextLink);
+    expect(changes.at(-1)?.page).toBe(3);
 
-      await userEvent.click(nextLink);
-      expect(clicks.at(-1)).toMatchObject({
-        ctrlKey: false,
-        button: 0,
-        defaultPrevented: false,
-      });
-
-      await userEvent.click(pageTwo, { modifiers: ['Control'] });
-      expect(clicks.at(-1)).toMatchObject({
-        ctrlKey: true,
-        button: 0,
-        defaultPrevented: false,
-      });
-
-      await userEvent.click(pageTwo, { button: 'middle' });
-      expect(clicks.at(-1)).toMatchObject({
-        ctrlKey: false,
-        button: 1,
-        defaultPrevented: false,
-      });
-    } finally {
-      document.removeEventListener('click', capture);
-      document.removeEventListener('auxclick', capture);
-    }
-
-    expect(changes).toHaveLength(0);
     await page.getByRole('button', { name: 'Restore linked page 2' }).click();
-    expect(changes).toHaveLength(0);
     expect(pageTwo).toHaveAttribute('aria-current', 'page');
   });
 
@@ -571,12 +540,17 @@ describe('integrated FacetedBrowser', () => {
       sort: { field: 'value1', direction: 'desc' },
       page: 1,
     };
+    const sortOptions: readonly BrowseSortOption[] = [
+      { label: 'Value 1 (Low to High)', field: 'value1', direction: 'asc' },
+      { label: 'Value 1 (High to Low)', field: 'value1', direction: 'desc' },
+    ];
 
     function ResettableBrowser() {
       const [current, setCurrent] = useState(initial);
       return (
         <Browser
           state={current}
+          sortOptions={sortOptions}
           onStateChange={(next) => {
             changes.push(next);
             setCurrent(next);
@@ -587,14 +561,19 @@ describe('integrated FacetedBrowser', () => {
 
     await render(<ResettableBrowser />);
     await page.viewport(375, 812);
-    await page
-      .getByRole('button', { name: /Category, 1 active filter/u })
-      .click();
+    await page.getByRole('button', { name: /^Filters/u }).click();
     expect(page.getByRole('checkbox', { name: /^Alpha \(/u })).toBeChecked();
+
+    const sortSelect = page.getByRole('combobox', { name: 'Sort' });
+    await sortSelect.click();
+    await page.getByRole('option', { name: 'Value 1 (Low to High)' }).click();
+    expect(sortSelect).toHaveValue('Value 1 (Low to High)');
+
     await page.getByRole('button', { name: 'Reset' }).click();
     expect(
       page.getByRole('checkbox', { name: /^Alpha \(/u }),
     ).not.toBeChecked();
+    expect(sortSelect).toHaveValue('Value 1 (High to Low)');
     expect(changes).toHaveLength(0);
     await page.getByRole('button', { name: /^Show \d+ records$/u }).click();
 

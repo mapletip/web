@@ -1,11 +1,17 @@
 export { FacetedBrowser } from '@/components/FacetedBrowser/FacetedBrowser';
+export { buildQuantileBuckets } from '@/components/FacetedBrowser/FacetControls/quantileBuckets';
 export type {
+  BrowseSortOption,
   FacetedBrowserNavigation,
   FacetedBrowserNavigationDrawerMeta,
   FacetedBrowserNavigationDrawerNode,
   FacetedBrowserNavigationHistory,
   FacetedBrowserNavigationRenderContext,
   FacetedBrowserProps,
+  PageLinkRenderOptions,
+  PageLinkRenderProps,
+  PageLinkRenderer,
+  StateChangeDetails,
 } from '@/components/FacetedBrowser/FacetedBrowser.types';
 export type {
   FacetControlContext,
@@ -22,6 +28,7 @@ export type {
   QueryField,
   QueryFieldAccessor,
   QueryFieldDefinition,
+  SearchMatchOptions,
   UseFacetedBrowserOptions,
   UseFacetedBrowserReturn,
 } from '@/components/FacetedBrowser/hooks/useFacetedBrowser';

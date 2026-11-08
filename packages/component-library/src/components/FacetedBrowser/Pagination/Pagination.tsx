@@ -1,15 +1,64 @@
 import { Group, Pagination as MantinePagination } from '@mantine/core';
-import type { ReactElement } from 'react';
+import type { ComponentPropsWithoutRef, ReactElement, ReactNode } from 'react';
 
 import type { BrowseState } from '@/components/FacetedBrowser/hooks/browseState';
 
+export type PageLinkRenderProps = ComponentPropsWithoutRef<'a'> & {
+  readonly [dataAttribute: `data-${string}`]: unknown;
+  readonly disabled?: boolean | undefined;
+};
+
+export interface PageLinkRenderOptions {
+  readonly page: number;
+  readonly state: BrowseState;
+  readonly props: PageLinkRenderProps;
+}
+
+export type PageLinkRenderer = (options: PageLinkRenderOptions) => ReactNode;
+
+interface PageLinkAdapterProps extends PageLinkRenderProps {
+  readonly page?: number | undefined;
+  readonly state?: BrowseState | undefined;
+  readonly renderPageLink?: PageLinkRenderer | undefined;
+}
+
+function PageLinkAdapter({
+  page,
+  state,
+  renderPageLink,
+  ...props
+}: PageLinkAdapterProps): ReactNode {
+  if (!renderPageLink || page === undefined || !state) {
+    return null;
+  }
+  if (props.disabled) {
+    return (
+      <button
+        type="button"
+        {...(props as ComponentPropsWithoutRef<'button'>)}
+      />
+    );
+  }
+  return renderPageLink({
+    page,
+    state,
+    props,
+  });
+}
+
 type PaginationControl = 'first' | 'previous' | 'next' | 'last';
 
-function controlTarget(
-  control: PaginationControl,
-  page: number,
-  pageCount: number,
-): number {
+interface ControlTargetOptions {
+  readonly control: PaginationControl;
+  readonly page: number;
+  readonly pageCount: number;
+}
+
+function controlTarget({
+  control,
+  page,
+  pageCount,
+}: ControlTargetOptions): number {
   switch (control) {
     case 'first':
       return 1;
@@ -35,64 +84,55 @@ function controlLabel(control: PaginationControl): string {
   }
 }
 
-const ignorePageChange = () => undefined;
-
 export interface PaginationProps {
   readonly page: number;
   readonly pageCount: number;
   readonly recordNoun: string;
   readonly state: BrowseState;
-  readonly getPageHref:
-    ((page: number, nextState: BrowseState) => string) | undefined;
+  readonly renderPageLink?: PageLinkRenderer | undefined;
   readonly onPageChange: (page: number) => void;
 }
 
-/** Semantic buttons locally, real host links when a URL factory is supplied. */
+/** Semantic buttons locally, real host links when a link renderer is supplied. */
 export function Pagination({
   page,
   pageCount,
   recordNoun,
   state,
-  getPageHref,
+  renderPageLink,
   onPageChange,
 }: PaginationProps): ReactElement | null {
   if (pageCount <= 1) return null;
-
-  const hrefFor = (target: number) =>
-    getPageHref?.(target, { ...state, page: target });
 
   return (
     <Group justify="flex-end" align="center" wrap="wrap">
       <MantinePagination
         total={pageCount}
         value={page}
-        onChange={getPageHref ? ignorePageChange : onPageChange}
+        {...(renderPageLink ? {} : { onChange: onPageChange })}
         aria-label={`${recordNoun} pages`}
         getItemProps={(pageNumber) => ({
           'aria-label': `Page ${pageNumber}`,
-          ...(getPageHref
+          ...(renderPageLink
             ? {
-                component: 'a' as const,
-                href: hrefFor(pageNumber),
+                component: PageLinkAdapter,
+                page: pageNumber,
+                state,
+                renderPageLink,
               }
             : {}),
         })}
-        getControlProps={(control) => {
-          const target = controlTarget(control, page, pageCount);
-          const label = controlLabel(control);
-          if (target < 1 || target > pageCount) {
-            return { 'aria-label': label, disabled: true };
-          }
-          return {
-            'aria-label': label,
-            ...(getPageHref
-              ? {
-                  component: 'a' as const,
-                  href: hrefFor(target),
-                }
-              : {}),
-          };
-        }}
+        getControlProps={(control) => ({
+          'aria-label': controlLabel(control),
+          ...(renderPageLink
+            ? {
+                component: PageLinkAdapter,
+                page: controlTarget({ control, page, pageCount }),
+                state,
+                renderPageLink,
+              }
+            : {}),
+        })}
       />
     </Group>
   );

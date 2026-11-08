@@ -33,7 +33,11 @@ export function NeutralBrowserMarkup(): ReactElement {
         pageSize: demoRowsPerPage,
         hiddenColumns: [],
       }}
-      getPageHref={(page) => `?page=${page}`}
+      renderPageLink={({ page, props }) => (
+        <a href={`?page=${page}`} {...props}>
+          {props.children}
+        </a>
+      )}
     />
   );
 }

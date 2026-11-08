@@ -3,7 +3,14 @@ import type { ReactNode } from 'react';
 import type { FacetDefinition } from '@/components/FacetedBrowser/FacetControls/types';
 import type { BrowseState } from '@/components/FacetedBrowser/hooks/browseState';
 import type { QueryFieldDefinition } from '@/components/FacetedBrowser/hooks/querySemantics';
+import type {
+  PageLinkRenderOptions,
+  PageLinkRenderProps,
+  PageLinkRenderer,
+} from '@/components/FacetedBrowser/Pagination/Pagination';
 import type { TableColumn } from '@/components/Table';
+
+export type { PageLinkRenderOptions, PageLinkRenderProps, PageLinkRenderer };
 
 export interface FacetedBrowserNavigationDrawerNode {
   readonly id: string;
@@ -52,6 +59,16 @@ export interface FacetedBrowserNavigation {
   ) => ReactNode;
 }
 
+export interface BrowseSortOption {
+  readonly label: string;
+  readonly field: string;
+  readonly direction: 'asc' | 'desc';
+}
+
+export interface StateChangeDetails {
+  readonly reason?: 'clamp' | undefined;
+}
+
 interface CommonProps<TRecord extends Record<string, unknown>> {
   readonly title: ReactNode;
   readonly records: readonly TRecord[];
@@ -67,6 +84,7 @@ interface CommonProps<TRecord extends Record<string, unknown>> {
    * navigation drawer.
    */
   readonly navigation?: FacetedBrowserNavigation;
+  readonly sortOptions?: readonly BrowseSortOption[];
   readonly recordNoun?: string;
   /**
    * Visible noun for the result count, when the descriptive `recordNoun` is too
@@ -93,7 +111,12 @@ interface CommonProps<TRecord extends Record<string, unknown>> {
   readonly onRetry?: () => void;
   readonly emptyState?: ReactNode;
   readonly drawerContent?: ReactNode;
-  readonly getPageHref?: (page: number, nextState: BrowseState) => string;
+  /**
+   * Optional host page-link renderer. When provided, pagination controls and
+   * items render through this adapter (e.g. producing TanStack Router `<Link>`
+   * elements) instead of plain buttons.
+   */
+  readonly renderPageLink?: PageLinkRenderer | undefined;
   /**
    * Optional stable host/domain namespace for persisted DataTable widths.
    * Omit for the derived per-table-schema bucket.
@@ -111,12 +134,18 @@ interface CommonProps<TRecord extends Record<string, unknown>> {
 type StateProps =
   | {
       readonly state: BrowseState;
-      readonly onStateChange: (nextState: BrowseState) => void;
+      readonly onStateChange: (
+        nextState: BrowseState,
+        details?: StateChangeDetails,
+      ) => void;
       readonly defaultState?: never;
     }
   | {
       readonly state?: never;
-      readonly onStateChange?: (nextState: BrowseState) => void;
+      readonly onStateChange?: (
+        nextState: BrowseState,
+        details?: StateChangeDetails,
+      ) => void;
       readonly defaultState?: BrowseState;
     };
 

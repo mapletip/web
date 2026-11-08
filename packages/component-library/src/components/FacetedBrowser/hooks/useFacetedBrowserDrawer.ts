@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
+import type { SortIntent } from '@/components/Table';
+
 import {
   EMPTY_FILTERS,
   browseStatesEqual,
@@ -16,9 +18,15 @@ export interface DraftEvaluation {
   readonly getFacetValues: (field: string) => Map<string, number>;
 }
 
+export interface DraftCommit {
+  readonly filters: Record<string, FacetFilterValue>;
+  readonly sort: SortIntent | undefined;
+}
+
 interface DraftSession {
   readonly baseState: BrowseState;
   readonly filters: Record<string, FacetFilterValue>;
+  readonly sort: SortIntent | undefined;
 }
 
 export interface UseFacetedBrowserDrawerOptions {
@@ -32,7 +40,8 @@ export interface UseFacetedBrowserDrawerOptions {
   readonly evaluateDraft: (
     filters: Record<string, FacetFilterValue>,
   ) => DraftEvaluation;
-  readonly commitFilters: (filters: Record<string, FacetFilterValue>) => void;
+  readonly commitDraft: (draft: DraftCommit) => void;
+  readonly defaultSort?: SortIntent | undefined;
 }
 
 function snapshotState(state: BrowseState): BrowseState {
@@ -48,12 +57,17 @@ function snapshotState(state: BrowseState): BrowseState {
 
 function createSession(state: BrowseState): DraftSession {
   const baseState = snapshotState(state);
-  return { baseState, filters: { ...baseState.filters } };
+  return {
+    baseState,
+    filters: { ...baseState.filters },
+    sort: baseState.sort ? { ...baseState.sort } : undefined,
+  };
 }
 
 export interface UseFacetedBrowserDrawerReturn {
   readonly opened: boolean;
   readonly draftFilters: Record<string, FacetFilterValue>;
+  readonly draftSort?: SortIntent | undefined;
   readonly focusedFacetId: string | null;
   readonly pendingCount: number | undefined;
   readonly invalidDraft: boolean;
@@ -64,6 +78,7 @@ export interface UseFacetedBrowserDrawerReturn {
   readonly reset: () => void;
   readonly apply: () => void;
   readonly setValue: (field: string, value: FacetFilterValue) => void;
+  readonly setSort: (sort: SortIntent) => void;
 }
 
 /** Owns the transient drawer draft, its evaluation and stale-session dismissal. */
@@ -74,7 +89,8 @@ export function useFacetedBrowserDrawer({
   statusActive,
   filterIsInvalid,
   evaluateDraft,
-  commitFilters,
+  commitDraft,
+  defaultSort,
 }: UseFacetedBrowserDrawerOptions): UseFacetedBrowserDrawerReturn {
   const [session, setSession] = useState<DraftSession | null>(() =>
     opened ? createSession(committedState) : null,
@@ -104,6 +120,10 @@ export function useFacetedBrowserDrawer({
     activeSession !== null && sessionMatches
       ? activeSession.filters
       : EMPTY_FILTERS;
+  const draftSort =
+    activeSession !== null && sessionMatches
+      ? activeSession.sort
+      : committedState.sort;
 
   const resetSession = useCallback(() => {
     replaceSession(null);
@@ -147,19 +167,6 @@ export function useFacetedBrowserDrawer({
 
   const invalidDraft = filterIsInvalid(draftFilters);
 
-  const updateSession = useCallback(
-    (nextFilters: Record<string, FacetFilterValue>) => {
-      if (!openedRef.current) return;
-      const base = sessionRef.current ?? createSession(committedState);
-      replaceSession(
-        filtersEqual(nextFilters, base.filters)
-          ? base
-          : { ...base, filters: nextFilters },
-      );
-    },
-    [committedState, replaceSession],
-  );
-
   const open = useCallback(
     (facetId: string | null) => {
       openedRef.current = true;
@@ -188,12 +195,15 @@ export function useFacetedBrowserDrawer({
       return;
     }
     openedRef.current = false;
-    commitFilters(currentSession.filters);
+    commitDraft({
+      filters: currentSession.filters,
+      sort: currentSession.sort,
+    });
     replaceSession(null);
     setFocusedFacetId(null);
     onOpenedChange(false);
   }, [
-    commitFilters,
+    commitDraft,
     committedState,
     filterIsInvalid,
     onOpenedChange,
@@ -212,18 +222,42 @@ export function useFacetedBrowserDrawer({
     [committedState, replaceSession],
   );
 
+  const setSort = useCallback(
+    (nextSort: SortIntent) => {
+      if (!openedRef.current) return;
+      const base = sessionRef.current ?? createSession(committedState);
+      if (
+        base.sort?.field === nextSort.field &&
+        base.sort?.direction === nextSort.direction
+      ) {
+        return;
+      }
+      replaceSession({ ...base, sort: nextSort });
+    },
+    [committedState, replaceSession],
+  );
+
   const getDraftFacetValues = useCallback(
     (field: string) =>
       draftEvaluation?.getFacetValues(field) ?? new Map<string, number>(),
     [draftEvaluation],
   );
 
-  const reset = useCallback(() => updateSession({}), [updateSession]);
+  const reset = useCallback(() => {
+    if (!openedRef.current) return;
+    const base = sessionRef.current ?? createSession(committedState);
+    replaceSession({
+      ...base,
+      filters: {},
+      sort: defaultSort ? { ...defaultSort } : undefined,
+    });
+  }, [committedState, defaultSort, replaceSession]);
   const backToOverview = useCallback(() => setFocusedFacetId(null), []);
 
   return {
     opened: effectiveOpened,
     draftFilters,
+    draftSort,
     focusedFacetId,
     pendingCount: draftEvaluation?.matchingCount,
     invalidDraft,
@@ -234,5 +268,6 @@ export function useFacetedBrowserDrawer({
     reset,
     apply,
     setValue,
+    setSort,
   };
 }

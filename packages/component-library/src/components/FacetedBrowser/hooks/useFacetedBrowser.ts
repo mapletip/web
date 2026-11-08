@@ -19,6 +19,8 @@ import {
 
 import type { SortIntent, TableColumn, TableProps } from '@/components/Table';
 
+import type { StateChangeDetails } from '../FacetedBrowser.types';
+
 import {
   EMPTY_FILTERS,
   browseStatesEqual,
@@ -32,11 +34,11 @@ import {
 } from './browseState';
 import type { FacetFilterValue } from './filterTypes';
 import {
+  createSearchFilterFn,
   disabledSearchFilterFn,
   nextSortDirection,
   resolveFields,
   resolveSearchFieldIds,
-  searchFilterFn,
   sortFromSorting,
   sortingFromSort,
   withoutIdentityColumns,
@@ -45,11 +47,13 @@ import {
 import { draftTableFeatures, facetedBrowserFeatures } from './tableFeatures';
 
 export type { BrowseState } from './browseState';
+export type { StateChangeDetails };
 export type {
   FieldFilterFn,
   QueryField,
   QueryFieldAccessor,
   QueryFieldDefinition,
+  SearchMatchOptions,
 } from './querySemantics';
 export type { FacetFilterValue, NumericRangeFilter } from './filterTypes';
 
@@ -85,7 +89,8 @@ export interface UseFacetedBrowserOptions<
   /** Optional canonical state. When set, this is the sole source of committed values. */
   readonly browseState?: BrowseState | undefined;
   /** Receives a complete canonical state transition when `browseState` is supplied. */
-  readonly onBrowseStateChange?: ((state: BrowseState) => void) | undefined;
+  readonly onBrowseStateChange?:
+    ((state: BrowseState, details?: StateChangeDetails) => void) | undefined;
   readonly searchFields?: readonly (keyof TRecord & string)[] | undefined;
   readonly onSortChange?: ((sort: SortIntent) => void) | undefined;
   readonly onPageChange?: ((page: number) => void) | undefined;
@@ -120,8 +125,8 @@ export interface UseFacetedBrowserReturn<
   readonly pageEnd: number;
   /** Current sort status. */
   readonly sort: SortIntent | undefined;
-  /** Update sorting for a column. */
-  readonly setSort: (field: string, direction?: 'asc' | 'desc') => void;
+  /** Update sorting for a column by sort intent. */
+  readonly setSort: (sort: SortIntent) => void;
   /** Set the current 1-based page. */
   readonly setPage: (page: number) => void;
   /** Change the number of results shown per page. */
@@ -142,6 +147,11 @@ export interface UseFacetedBrowserReturn<
   ) => void;
   /** Reset all filters to empty. */
   readonly resetFilters: () => void;
+  /** Atomically commit a drawer draft's filters and sort in a single transition. */
+  readonly commitDraft: (draft: {
+    readonly filters: Record<string, FacetFilterValue>;
+    readonly sort: SortIntent | undefined;
+  }) => void;
   /** Columns currently visible in original declaration order. */
   readonly visibleColumns: readonly TableColumn<TRecord>[];
   /** Column visibility map. */
@@ -273,7 +283,7 @@ export function useFacetedBrowser<TRecord extends Record<string, unknown>>({
   );
 
   const emitState = useCallback(
-    (nextState: BrowseState): boolean => {
+    (nextState: BrowseState, details?: StateChangeDetails): boolean => {
       const next = createBrowseState(nextState, initialPageSize);
       if (browseStatesEqual(latestStateRef.current, next)) return false;
       latestStateRef.current = next;
@@ -283,7 +293,11 @@ export function useFacetedBrowser<TRecord extends Record<string, unknown>>({
             'useFacetedBrowser requires onBrowseStateChange with browseState.',
           );
         }
-        onBrowseStateChange(next);
+        if (details !== undefined) {
+          onBrowseStateChange(next, details);
+        } else {
+          onBrowseStateChange(next);
+        }
         queueMicrotask(() => {
           if (
             browseStatesEqual(latestStateRef.current, next) &&
@@ -324,8 +338,13 @@ export function useFacetedBrowser<TRecord extends Record<string, unknown>>({
     [searchFields, identityField, idAccessor, columns, queryFields],
   );
 
-  const globalFilterFn =
-    searchFields?.length === 0 ? disabledSearchFilterFn : searchFilterFn;
+  const globalFilterFn = useMemo(
+    () =>
+      searchFields?.length === 0
+        ? disabledSearchFilterFn
+        : createSearchFilterFn(fieldMap),
+    [searchFields, fieldMap],
+  );
 
   const tanstackColumns = useMemo(() => {
     const helper = createColumnHelper<typeof facetedBrowserFeatures, TRecord>();
@@ -377,23 +396,47 @@ export function useFacetedBrowser<TRecord extends Record<string, unknown>>({
     [emitState, onPageChange, onSortChange],
   );
 
-  const setSort = useCallback(
-    (field: string, direction?: 'asc' | 'desc') => {
+  const toggleSort = useCallback(
+    (sort: SortIntent) => {
       const state = latestStateRef.current;
       const current = state.sort;
-      const currentField = fieldMap.get(field);
+      const currentField = fieldMap.get(sort.field);
       if (!currentField?.enableSorting) return;
       const nextDirection = nextSortDirection(
         current,
-        field,
+        sort.field,
         currentField?.sortDescFirst,
-        direction,
+        undefined,
       );
 
-      if (current?.field === field && current.direction === nextDirection) {
+      if (
+        current?.field === sort.field &&
+        current.direction === nextDirection
+      ) {
         return;
       }
-      commitSort({ field, direction: nextDirection }, { emitCallback: true });
+      commitSort(
+        { field: sort.field, direction: nextDirection },
+        { emitCallback: true },
+      );
+    },
+    [commitSort, fieldMap],
+  );
+
+  const setSort = useCallback(
+    (sort: SortIntent) => {
+      const state = latestStateRef.current;
+      const current = state.sort;
+      const currentField = fieldMap.get(sort.field);
+      if (!currentField?.enableSorting) return;
+
+      if (
+        current?.field === sort.field &&
+        current.direction === sort.direction
+      ) {
+        return;
+      }
+      commitSort(sort, { emitCallback: true });
     },
     [commitSort, fieldMap],
   );
@@ -486,6 +529,40 @@ export function useFacetedBrowser<TRecord extends Record<string, unknown>>({
   const resetFilters = useCallback(() => {
     setFilters({});
   }, [setFilters]);
+
+  const commitDraft = useCallback(
+    ({
+      filters,
+      sort,
+    }: {
+      readonly filters: Record<string, FacetFilterValue>;
+      readonly sort: SortIntent | undefined;
+    }) => {
+      const current = latestStateRef.current;
+      const nextFilters = normalizeFilters(filters);
+      const filtersChanged = !filtersEqual(current.filters, nextFilters);
+      const sortChanged =
+        current.sort?.field !== sort?.field ||
+        current.sort?.direction !== sort?.direction;
+
+      if (!filtersChanged && !sortChanged) return;
+
+      const nextState: BrowseState = {
+        search: current.search,
+        filters: nextFilters,
+        page: 1,
+        pageSize: current.pageSize,
+        hiddenColumns: current.hiddenColumns,
+        ...(sort ? { sort } : {}),
+      };
+      const changed = emitState(nextState);
+      if (!changed) return;
+      if (filtersChanged) onFiltersChange?.(nextFilters);
+      if (sortChanged && sort) onSortChange?.(sort);
+      if (current.page !== 1) onPageChange?.(1);
+    },
+    [emitState, onFiltersChange, onPageChange, onSortChange],
+  );
 
   const setHiddenColumns = useCallback(
     (nextHiddenColumns: readonly string[]) => {
@@ -673,7 +750,9 @@ export function useFacetedBrowser<TRecord extends Record<string, unknown>>({
     const key = `${canonicalState.page}:${pageCount}:${records.length}`;
     if (lastClampRef.current === key) return;
     lastClampRef.current = key;
-    if (emitState({ ...canonicalState, page: clampedPage })) {
+    if (
+      emitState({ ...canonicalState, page: clampedPage }, { reason: 'clamp' })
+    ) {
       onPageChange?.(clampedPage);
     }
   }, [canonicalState, emitState, onPageChange, pageCount, records]);
@@ -741,11 +820,6 @@ export function useFacetedBrowser<TRecord extends Record<string, unknown>>({
     ],
   );
 
-  const paginatedRows = table.getRowModel().rows;
-  const processedRecords = useMemo(
-    () => paginatedRows.map((row) => row.original),
-    [paginatedRows],
-  );
   const allFilteredRows = table.getPrePaginatedRowModel().rows;
   const allFilteredRecords = useMemo(
     () => allFilteredRows.map((row) => row.original),
@@ -753,9 +827,38 @@ export function useFacetedBrowser<TRecord extends Record<string, unknown>>({
   );
 
   const totalMatchingCount = allFilteredRecords.length;
-  const page = canonicalState.page;
+  const calculatedPageCount = Math.max(
+    1,
+    Math.ceil(totalMatchingCount / canonicalState.pageSize),
+  );
+  const effectivePage = Math.min(
+    Math.max(1, canonicalState.page),
+    calculatedPageCount,
+  );
+
+  const paginatedRows = useMemo(() => {
+    if (canonicalState.page <= calculatedPageCount) {
+      return table.getRowModel().rows;
+    }
+    const start = (effectivePage - 1) * canonicalState.pageSize;
+    const end = start + canonicalState.pageSize;
+    return allFilteredRows.slice(start, end);
+  }, [
+    allFilteredRows,
+    canonicalState.page,
+    canonicalState.pageSize,
+    calculatedPageCount,
+    effectivePage,
+    table,
+  ]);
+
+  const processedRecords = useMemo(
+    () => paginatedRows.map((row) => row.original),
+    [paginatedRows],
+  );
+
   const { pageStart, pageEnd } = pageWindow(
-    page,
+    effectivePage,
     canonicalState.pageSize,
     totalMatchingCount,
   );
@@ -788,9 +891,9 @@ export function useFacetedBrowser<TRecord extends Record<string, unknown>>({
       // The renderer reports the visual column's direction. Resolve the field's
       // declared/overridden first direction inside the browser so query fields
       // remain authoritative for integrated tables.
-      setSort(nextSort.field);
+      toggleSort(nextSort);
     },
-    [setSort],
+    [toggleSort],
   );
 
   const tableProps = useMemo<UseFacetedBrowserReturn<TRecord>['tableProps']>(
@@ -823,8 +926,8 @@ export function useFacetedBrowser<TRecord extends Record<string, unknown>>({
     allFilteredRecords,
     totalMatchingCount,
     totalRecordCount: records.length,
-    page,
-    pageCount: Math.max(1, pageCount),
+    page: effectivePage,
+    pageCount: calculatedPageCount,
     pageSize: canonicalState.pageSize,
     pageStart,
     pageEnd,
@@ -837,6 +940,7 @@ export function useFacetedBrowser<TRecord extends Record<string, unknown>>({
     setFilter,
     setFilters,
     resetFilters,
+    commitDraft,
     visibleColumns,
     columnVisibility,
     setColumnVisibility,

@@ -12,7 +12,7 @@ export interface FilterDrawerProps {
   readonly onApply: () => void;
   /** Close and discard the draft: Cancel, Escape, overlay, host-driven close. */
   readonly onCancel: () => void;
-  /** Clear the draft's filters; the drawer stays open. */
+  /** Reset the staged drawer draft; the drawer stays open. */
   readonly onReset: () => void;
   /** Mantine transition hook for host-managed focus when a drawer view opens. */
   readonly onEnterTransitionEnd?: () => void;

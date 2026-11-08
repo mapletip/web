@@ -1,0 +1,7 @@
+/* Section label shared by facet controls and the drawer's Sort select. */
+.label {
+  font-weight: 600;
+  font-size: var(--mantine-font-size-sm);
+  color: var(--mantine-color-text);
+  margin-bottom: var(--mantine-spacing-xs);
+}

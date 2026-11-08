@@ -6,12 +6,15 @@ import {
   Popover,
   Select,
   Stack,
+  type StyleProp,
   Text,
 } from '@mantine/core';
 import { Gear } from '@phosphor-icons/react';
 import { useMemo, type ReactElement } from 'react';
 
-import type { TableColumn } from '@/components/Table';
+import labelClasses from '@/components/FacetedBrowser/FacetControls/FacetLabel.module.css';
+import type { BrowseSortOption } from '@/components/FacetedBrowser/FacetedBrowser.types';
+import type { SortIntent, TableColumn } from '@/components/Table';
 
 function sameFields(
   left: readonly string[],
@@ -76,6 +79,70 @@ export function PageSizeSelect({
         w={76}
       />
     </Group>
+  );
+}
+
+export interface SortSelectProps {
+  readonly recordNoun: string;
+  readonly sortOptions: readonly BrowseSortOption[];
+  readonly currentSort?: SortIntent | undefined;
+  readonly onChange: (sort: SortIntent) => void;
+  readonly label?: string | undefined;
+  readonly 'aria-label'?: string | undefined;
+  /** Defaults to the longest option label, so the control never truncates. */
+  readonly w?: StyleProp<number | string> | undefined;
+}
+
+/** Room for Mantine's input padding and chevron beside the label text. */
+const SORT_SELECT_CHROME = '3rem';
+
+export function SortSelect({
+  recordNoun,
+  sortOptions,
+  currentSort,
+  onChange,
+  label,
+  'aria-label': ariaLabel,
+  w,
+}: SortSelectProps): ReactElement {
+  const selectedValue = currentSort
+    ? `${currentSort.field}:${currentSort.direction}`
+    : null;
+
+  const data = useMemo(
+    () =>
+      sortOptions.map((opt) => ({
+        value: `${opt.field}:${opt.direction}`,
+        label: opt.label,
+      })),
+    [sortOptions],
+  );
+  const longestLabel = Math.max(
+    ...sortOptions.map((option) => option.label.length),
+  );
+
+  return (
+    <Select
+      {...(label ? { label } : {})}
+      {...(label ? {} : { 'aria-label': ariaLabel ?? `Sort ${recordNoun}` })}
+      size="sm"
+      checkIconPosition="left"
+      withAlignedLabels
+      allowDeselect={false}
+      value={selectedValue}
+      data={data}
+      onChange={(value) => {
+        if (!value) return;
+        const opt = sortOptions.find(
+          (o) => `${o.field}:${o.direction}` === value,
+        );
+        if (opt) {
+          onChange({ field: opt.field, direction: opt.direction });
+        }
+      }}
+      w={w ?? `calc(${longestLabel}ch + ${SORT_SELECT_CHROME})`}
+      classNames={{ label: labelClasses['label'] ?? '' }}
+    />
   );
 }
 
