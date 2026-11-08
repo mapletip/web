@@ -1829,8 +1829,8 @@ describe('useFacetedBrowser', () => {
             { id: 'name' },
             {
               id: 'id',
-              searchMatch: (val, query) =>
-                String(val) === query || Number(val) === Number(query),
+              searchMatch: ({ value, query }) =>
+                String(value) === query || Number(value) === Number(query),
             },
           ],
           search,

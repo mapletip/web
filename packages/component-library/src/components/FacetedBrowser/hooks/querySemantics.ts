@@ -21,6 +21,11 @@ import { facetedBrowserFeatures } from './tableFeatures';
 export type QueryFieldAccessor<TRecord> =
   (keyof TRecord & string) | ((row: TRecord) => unknown);
 
+export interface SearchMatchOptions {
+  readonly value: unknown;
+  readonly query: string;
+}
+
 export interface QueryField<TRecord extends Record<string, unknown>> {
   readonly id: string;
   readonly accessor?: QueryFieldAccessor<TRecord>;
@@ -32,7 +37,11 @@ export interface QueryField<TRecord extends Record<string, unknown>> {
     columnId: string,
     filterValue: unknown,
   ) => boolean;
-  readonly searchMatch?: (value: unknown, query: string) => boolean;
+  /**
+   * Custom matcher for global search. The query string is already trimmed and
+   * lower-cased.
+   */
+  readonly searchMatch?: (options: SearchMatchOptions) => boolean;
 }
 
 export type QueryFieldDefinition<TRecord extends Record<string, unknown>> =
@@ -62,8 +71,11 @@ export interface ResolvedField<TRecord extends Record<string, unknown>> {
   readonly filterFn: FieldFilterFn<TRecord>;
   readonly getUniqueValues: (row: TRecord) => readonly unknown[];
   readonly isIdentity: boolean;
-  readonly searchMatch?:
-    ((value: unknown, query: string) => boolean) | undefined;
+  /**
+   * Custom matcher for global search. The query string is already trimmed and
+   * lower-cased.
+   */
+  readonly searchMatch?: ((options: SearchMatchOptions) => boolean) | undefined;
 }
 
 function searchValueMatches(value: unknown, query: string): boolean {
@@ -94,7 +106,7 @@ export function createSearchFilterFn<
         return true;
       const field = columnId ? fieldMap.get(columnId) : undefined;
       if (field?.searchMatch) {
-        return field.searchMatch(dataValue, filterValue);
+        return field.searchMatch({ value: dataValue, query: filterValue });
       }
       return searchValueMatches(dataValue, filterValue);
     },

@@ -53,6 +53,7 @@ export type {
   QueryField,
   QueryFieldAccessor,
   QueryFieldDefinition,
+  SearchMatchOptions,
 } from './querySemantics';
 export type { FacetFilterValue, NumericRangeFilter } from './filterTypes';
 

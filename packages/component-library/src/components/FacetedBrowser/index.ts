@@ -25,6 +25,7 @@ export type {
   QueryField,
   QueryFieldAccessor,
   QueryFieldDefinition,
+  SearchMatchOptions,
   UseFacetedBrowserOptions,
   UseFacetedBrowserReturn,
 } from '@/components/FacetedBrowser/hooks/useFacetedBrowser';
