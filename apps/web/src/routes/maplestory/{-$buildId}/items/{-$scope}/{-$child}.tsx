@@ -39,12 +39,13 @@ function ItemBrowseLeaf() {
   const search = Route.useSearch();
   const navigate = Route.useNavigate();
   const { buildId, category } = parseItemRouteParams(params);
-  const { rows } = itemsRouteApi.useLoaderData();
+  const { rows, coverage } = itemsRouteApi.useLoaderData();
 
   return (
     <ItemBrowse
       buildId={buildId}
       rows={rows}
+      coverage={coverage}
       category={category}
       search={search}
       onSearchChange={({ search: nextSearch, replace }) => {

@@ -1,6 +1,8 @@
+import type { FacetDefinition } from '@mapletip/component-library';
 import { act, render } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import type { ItemRow } from '../../project';
 import { validateSearch, type ItemBrowseSearch } from '../../search-params';
 import {
   useItemBrowseUrlState,
@@ -11,15 +13,17 @@ import {
 describe('useItemBrowseUrlState', () => {
   function setup({
     search = validateSearch({}),
+    facets = [],
     onSearchChange = vi.fn(),
   }: {
     readonly search?: ItemBrowseSearch;
+    readonly facets?: readonly FacetDefinition<ItemRow>[];
     readonly onSearchChange?: (options: OnSearchChangeOptions) => void;
   } = {}) {
     let latestResult: UseItemBrowseUrlStateResult | undefined;
 
     function TestConsumer() {
-      latestResult = useItemBrowseUrlState({ search, onSearchChange });
+      latestResult = useItemBrowseUrlState({ search, facets, onSearchChange });
       return null;
     }
 
@@ -70,6 +74,43 @@ describe('useItemBrowseUrlState', () => {
 
     expect(onSearchChange).toHaveBeenCalledWith({
       search: { q: '', page: 2, pageSize: 50, sort: 'name-asc' },
+      replace: false,
+    });
+  });
+
+  it('pushes facet changes with active options and resets the page', () => {
+    const facets: readonly FacetDefinition<ItemRow>[] = [
+      {
+        id: 'types',
+        field: 'types',
+        label: 'Item type',
+        kind: 'multi-select',
+        options: [{ value: 'potion', label: 'Potion' }],
+      },
+    ];
+    const onSearchChange = vi.fn();
+    const { getResult } = setup({
+      search: validateSearch({ page: 4 }),
+      facets,
+      onSearchChange,
+    });
+
+    act(() => {
+      getResult().handleStateChange({
+        ...getResult().browseState,
+        page: 1,
+        filters: { types: ['potion'] },
+      });
+    });
+
+    expect(onSearchChange).toHaveBeenCalledWith({
+      search: {
+        q: '',
+        page: 1,
+        pageSize: 50,
+        sort: 'name-asc',
+        types: ['potion'],
+      },
       replace: false,
     });
   });

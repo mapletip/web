@@ -40,7 +40,21 @@ const { fixtureRows } = vi.hoisted(() => {
 });
 
 vi.mock('../load', () => ({
-  loadItemBrowse: vi.fn().mockResolvedValue({ rows: fixtureRows }),
+  loadItemBrowse: vi.fn().mockResolvedValue({
+    rows: fixtureRows,
+    coverage: {
+      relationships: {
+        'cash-shop-listing': 'complete',
+        'found-in-container': 'complete',
+        'made-by-recipe': 'complete',
+        'monster-drop': 'partial',
+        'needed-for-quest': 'complete',
+        'quest-reward': 'complete',
+        'used-in-recipe': 'complete',
+      },
+      scrollTier: 'complete',
+    },
+  }),
 }));
 
 describe('Items Browse server rendering', () => {

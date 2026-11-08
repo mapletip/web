@@ -75,7 +75,7 @@ export function getItemNavTree({
     }
     for (const scopeSlug of NON_ALL_SCOPES) {
       const scope = ITEM_SCOPES[scopeSlug];
-      if (scope.itemClasses.includes(row.itemClass)) {
+      if (scope.itemClasses.some((itemClass) => itemClass === row.itemClass)) {
         const child = assignChild(row, scope);
         if (child) {
           const key = `${scopeSlug}/${child.slug}`;
