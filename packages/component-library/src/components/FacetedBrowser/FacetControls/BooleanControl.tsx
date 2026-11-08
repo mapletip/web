@@ -3,7 +3,7 @@ import type { ReactElement } from 'react';
 
 import type { FacetFilterValue } from '@/components/FacetedBrowser/hooks/filterTypes';
 
-import { FACET_LABEL_STYLES } from './types';
+import labelClasses from './FacetLabel.module.css';
 
 export interface BooleanControlProps {
   readonly label: string;
@@ -27,7 +27,7 @@ export function BooleanControl({
       withAlignedLabels
       value={typeof value === 'boolean' ? String(value) : null}
       w={200}
-      styles={FACET_LABEL_STYLES}
+      classNames={{ label: labelClasses.label }}
       data={[
         { value: 'true', label: `Yes (${counts.get('true') ?? 0})` },
         { value: 'false', label: `No (${counts.get('false') ?? 0})` },

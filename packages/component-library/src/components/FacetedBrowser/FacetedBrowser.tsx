@@ -464,7 +464,6 @@ export function FacetedBrowser<TRecord extends Record<string, unknown>>(
               sortOptions={sortOptions}
               currentSort={browseState.sort}
               onChange={browser.setSort}
-              w={{ base: '100%', md: 230 }}
             />
           </Group>
         </Box>

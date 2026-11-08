@@ -12,7 +12,7 @@ import {
 import { Gear } from '@phosphor-icons/react';
 import { useMemo, type ReactElement } from 'react';
 
-import { FACET_LABEL_STYLES } from '@/components/FacetedBrowser/FacetControls/types';
+import labelClasses from '@/components/FacetedBrowser/FacetControls/FacetLabel.module.css';
 import type { BrowseSortOption } from '@/components/FacetedBrowser/FacetedBrowser.types';
 import type { SortIntent, TableColumn } from '@/components/Table';
 
@@ -89,8 +89,12 @@ export interface SortSelectProps {
   readonly onChange: (sort: SortIntent) => void;
   readonly label?: string | undefined;
   readonly 'aria-label'?: string | undefined;
+  /** Defaults to the longest option label, so the control never truncates. */
   readonly w?: StyleProp<number | string> | undefined;
 }
+
+/** Room for Mantine's input padding and chevron beside the label text. */
+const SORT_SELECT_CHROME = '3rem';
 
 export function SortSelect({
   recordNoun,
@@ -99,7 +103,7 @@ export function SortSelect({
   onChange,
   label,
   'aria-label': ariaLabel,
-  w = '100%',
+  w,
 }: SortSelectProps): ReactElement {
   const selectedValue = currentSort
     ? `${currentSort.field}:${currentSort.direction}`
@@ -112,6 +116,9 @@ export function SortSelect({
         label: opt.label,
       })),
     [sortOptions],
+  );
+  const longestLabel = Math.max(
+    ...sortOptions.map((option) => option.label.length),
   );
 
   return (
@@ -133,8 +140,8 @@ export function SortSelect({
           onChange({ field: opt.field, direction: opt.direction });
         }
       }}
-      w={w}
-      styles={FACET_LABEL_STYLES}
+      w={w ?? `calc(${longestLabel}ch + ${SORT_SELECT_CHROME})`}
+      classNames={{ label: labelClasses.label }}
     />
   );
 }
