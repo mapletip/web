@@ -25,11 +25,16 @@
   min-height: 28px;
   padding-block: 4px;
   padding-inline: var(--mantine-spacing-sm);
+  border: 0;
   border-radius: var(--mantine-radius-sm);
+  background: transparent;
   color: var(--mapletip-color-ink);
-  text-decoration: none;
+  font: inherit;
   font-size: var(--mantine-font-size-sm);
   line-height: 1.4;
+  text-align: start;
+  text-decoration: none;
+  cursor: pointer;
   transition:
     background-color 150ms ease,
     color 150ms ease;

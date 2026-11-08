@@ -284,6 +284,8 @@ describe('responsive navigation slot', () => {
     categoryLabel: 'Clothing',
     subCategoryLabel: 'Shirts',
     items: ['Clothing', 'Electronics'],
+    currentId: 'clothing',
+    apply: vi.fn(),
   };
 
   it('renders the rail when navigation exists even with zero facets, without a Filters heading and with navigation.label aside aria-label', () => {
@@ -297,6 +299,8 @@ describe('responsive navigation slot', () => {
           navigation={{
             label: genericNavigation.label,
             currentLabel: genericNavigation.rootLabel,
+            currentId: genericNavigation.currentId,
+            apply: genericNavigation.apply,
             render: () => (
               <nav aria-label={genericNavigation.label}>
                 <ul>
@@ -343,6 +347,8 @@ describe('responsive navigation slot', () => {
           navigation={{
             label: genericNavigation.label,
             currentLabel: genericNavigation.categoryLabel,
+            currentId: genericNavigation.currentId,
+            apply: genericNavigation.apply,
             render: () => (
               <nav aria-label={genericNavigation.label}>
                 <span>{genericNavigation.label}</span>
@@ -440,6 +446,8 @@ describe('responsive navigation slot', () => {
           navigation={{
             label: genericNavigation.label,
             currentLabel: genericNavigation.subCategoryLabel,
+            currentId: genericNavigation.currentId,
+            apply: genericNavigation.apply,
             render: () => <div>Nav Body</div>,
           }}
           presentation="cards"
@@ -478,6 +486,8 @@ describe('responsive navigation slot', () => {
           navigation={{
             label: genericNavigation.label,
             currentLabel: genericNavigation.subCategoryLabel,
+            currentId: genericNavigation.currentId,
+            apply: genericNavigation.apply,
             currentIcon: <span data-testid="chip-icon">custom-icon</span>,
             render: () => <div>Nav Body</div>,
           }}
@@ -517,6 +527,8 @@ describe('responsive navigation slot', () => {
           navigation={{
             label: genericNavigation.label,
             currentLabel: genericNavigation.subCategoryLabel,
+            currentId: genericNavigation.currentId,
+            apply: genericNavigation.apply,
             render: () => <div>Nav Body</div>,
           }}
           presentation="cards"
@@ -567,8 +579,8 @@ describe('responsive navigation slot', () => {
     ).toBeVisible();
   });
 
-  it('opens separate navigation drawer on chip click and closes on onNavigate', async () => {
-    let capturedOnNavigate: (() => void) | undefined;
+  it('opens separate navigation drawer on chip click and closes on cancel', async () => {
+    const apply = vi.fn();
 
     render(
       <MantineProvider>
@@ -580,22 +592,26 @@ describe('responsive navigation slot', () => {
           navigation={{
             label: genericNavigation.label,
             currentLabel: genericNavigation.subCategoryLabel,
-            render: ({ onNavigate }) => {
-              capturedOnNavigate = onNavigate;
-              return (
-                <div>
-                  <span>Category Content</span>
+            currentId: 'clothing',
+            apply,
+            render: (context) => (
+              <div>
+                <span>Category Content</span>
+                {context.mode === 'drawer' ? (
                   <button
                     type="button"
                     onClick={() => {
-                      onNavigate?.();
+                      context.onSelect(
+                        { id: 'clothing/shirts', count: 10 },
+                        { isLeaf: true },
+                      );
                     }}
                   >
-                    Click Category
+                    Select Leaf
                   </button>
-                </div>
-              );
-            },
+                ) : null}
+              </div>
+            ),
           }}
           presentation="cards"
           renderCard={(record) => <div>{record.name}</div>}
@@ -625,15 +641,14 @@ describe('responsive navigation slot', () => {
     });
     expect(closeBtn).toBeInTheDocument();
 
-    // Calling onNavigate closes the drawer
-    expect(capturedOnNavigate).toBeDefined();
-    capturedOnNavigate?.();
+    const cancelBtn = screen.getByRole('button', { name: 'Cancel' });
+    fireEvent.click(cancelBtn);
 
     await waitFor(() => {
       expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     });
 
-    // Verify filter drawer Apply/Reset buttons do not exist in this drawer
+    // Verify filter drawer Reset button does not exist in this drawer
     expect(
       screen.queryByRole('button', { name: 'Reset' }),
     ).not.toBeInTheDocument();
@@ -651,6 +666,8 @@ describe('responsive navigation slot', () => {
           navigation={{
             label: genericNavigation.label,
             currentLabel: genericNavigation.subCategoryLabel,
+            currentId: genericNavigation.currentId,
+            apply: genericNavigation.apply,
             render: () => <div>Nav Drawer Body</div>,
           }}
           presentation="cards"

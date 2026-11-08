@@ -381,7 +381,9 @@ export function FacetedBrowser<TRecord extends Record<string, unknown>>(
   const railContent =
     navigation || facets.length > 0 ? (
       <Stack gap="md">
-        {navigation ? navigation.render({ onNavigate: undefined }) : null}
+        {navigation
+          ? navigation.render({ mode: 'rail', onNavigate: undefined })
+          : null}
         {facets.length > 0 ? (
           <>
             <Title order={2} size="h4">
@@ -544,9 +546,19 @@ export function FacetedBrowser<TRecord extends Record<string, unknown>>(
         <NavigationDrawer
           opened={navDrawerOpened}
           title={navigation.label}
+          currentId={navigation.currentId}
+          currentCount={navigation.currentCount}
           onClose={closeNavDrawer}
+          onApply={navigation.apply}
+          history={navigation.history}
         >
-          {navigation.render({ onNavigate: closeNavDrawer })}
+          {({ selectedId, onSelect }) =>
+            navigation.render({
+              mode: 'drawer',
+              selectedId,
+              onSelect,
+            })
+          }
         </NavigationDrawer>
       ) : null}
     </>

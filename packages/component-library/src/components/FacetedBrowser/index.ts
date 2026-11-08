@@ -1,6 +1,10 @@
 export { FacetedBrowser } from '@/components/FacetedBrowser/FacetedBrowser';
 export type {
   FacetedBrowserNavigation,
+  FacetedBrowserNavigationDrawerMeta,
+  FacetedBrowserNavigationDrawerNode,
+  FacetedBrowserNavigationHistory,
+  FacetedBrowserNavigationRenderContext,
   FacetedBrowserProps,
 } from '@/components/FacetedBrowser/FacetedBrowser.types';
 export type {

@@ -6,9 +6,21 @@ import type {
   DrillDownLinkRenderProps,
   DrillDownNavProps,
   DrillDownNode,
+  DrillDownSelectHandler,
 } from './types';
 
 type RowKind = 'ancestor' | 'current' | 'child';
+
+function isLeafNode<TMeta>(
+  node: DrillDownNode<TMeta>,
+  hideEmpty: boolean,
+): boolean {
+  const rawChildren = node.children ?? [];
+  const visibleChildren = hideEmpty
+    ? rawChildren.filter((child) => child.count !== 0)
+    : rawChildren;
+  return visibleChildren.length === 0;
+}
 
 function renderRowContent<TMeta>(
   node: DrillDownNode<TMeta>,
@@ -103,6 +115,31 @@ function renderLinkItem<TMeta>(
   );
 }
 
+function renderButtonItem<TMeta>(
+  node: DrillDownNode<TMeta>,
+  kind: RowKind,
+  reserveIconSlot: boolean,
+  hideEmpty: boolean,
+  onSelect: DrillDownSelectHandler<TMeta>,
+): ReactNode {
+  const isCurrent = kind === 'current';
+  const rowContent = renderRowContent(node, kind, reserveIconSlot);
+  const kindClass = getRowKindClass(kind);
+  const className = `${classes['row']} ${kindClass}`.trim();
+  const isLeaf = isLeafNode(node, hideEmpty);
+
+  return (
+    <button
+      type="button"
+      className={className}
+      aria-current={isCurrent ? 'true' : undefined}
+      onClick={() => onSelect(node, { isLeaf })}
+    >
+      {rowContent}
+    </button>
+  );
+}
+
 export function DrillDownNav<TMeta = undefined>({
   root,
   currentId,
@@ -110,6 +147,7 @@ export function DrillDownNav<TMeta = undefined>({
   hideEmpty = false,
   renderLink,
   onNavigate,
+  onSelect,
 }: DrillDownNavProps<TMeta>): ReactElement {
   const { ancestors, current, children } = resolveDrillDownPath(
     root,
@@ -120,32 +158,31 @@ export function DrillDownNav<TMeta = undefined>({
   const ancestorsHaveIcon = ancestors.some((node) => Boolean(node.icon));
   const childrenHaveIcon = children.some((node) => Boolean(node.icon));
 
+  const renderItem = (
+    node: DrillDownNode<TMeta>,
+    kind: RowKind,
+    reserveIconSlot: boolean,
+  ) => {
+    if (onSelect) {
+      return renderButtonItem(node, kind, reserveIconSlot, hideEmpty, onSelect);
+    }
+    return renderLinkItem(node, kind, reserveIconSlot, onNavigate, renderLink);
+  };
+
   return (
     <nav aria-label={label} className={classes['nav']}>
       <ul className={classes['list']}>
         {ancestors.map((node) => (
           <li key={node.id} className={classes['item']}>
-            {renderLinkItem(
-              node,
-              'ancestor',
-              ancestorsHaveIcon,
-              onNavigate,
-              renderLink,
-            )}
+            {renderItem(node, 'ancestor', ancestorsHaveIcon)}
           </li>
         ))}
         <li key={current.id} className={classes['item']}>
-          {renderLinkItem(current, 'current', false, onNavigate, renderLink)}
+          {renderItem(current, 'current', false)}
         </li>
         {children.map((node) => (
           <li key={node.id} className={classes['item']}>
-            {renderLinkItem(
-              node,
-              'child',
-              childrenHaveIcon,
-              onNavigate,
-              renderLink,
-            )}
+            {renderItem(node, 'child', childrenHaveIcon)}
           </li>
         ))}
       </ul>

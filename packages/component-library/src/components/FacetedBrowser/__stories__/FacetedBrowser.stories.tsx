@@ -405,16 +405,124 @@ export const RailNavigationSlot: Story = {
       navigation={{
         label: 'Categories',
         currentLabel: 'Featured',
+        currentId: 'featured',
+        currentCount: 8,
+        apply: () => {},
         currentIcon: <Sparkle size={20} aria-hidden="true" />,
-        render: ({ onNavigate }) => (
+        render: (context) => (
           <DrillDownNav
             root={demoNavTree}
             currentId="featured"
             label="Categories"
-            {...(onNavigate ? { onNavigate } : {})}
+            {...(context.mode === 'rail' && context.onNavigate
+              ? { onNavigate: context.onNavigate }
+              : {})}
           />
         ),
       }}
     />
   ),
+};
+
+function DrawerNavigationExample() {
+  const [currentId, setCurrentId] = useState('all');
+
+  const currentNode = useMemo(() => {
+    function find(node: DrillDownNode): DrillDownNode | undefined {
+      if (node.id === currentId) return node;
+      if (node.children) {
+        for (const child of node.children) {
+          const res = find(child);
+          if (res) return res;
+        }
+      }
+      return undefined;
+    }
+    return find(demoNavTree) ?? demoNavTree;
+  }, [currentId]);
+
+  return (
+    <BrowserExample
+      navigation={{
+        label: 'Categories',
+        currentLabel: currentNode.label,
+        currentId,
+        currentCount: currentNode.count,
+        apply: (id) => {
+          setCurrentId(id);
+        },
+        currentIcon: <Sparkle size={20} aria-hidden="true" />,
+        render: (context) => {
+          if (context.mode === 'drawer') {
+            return (
+              <DrillDownNav
+                root={demoNavTree}
+                currentId={context.selectedId}
+                label="Categories"
+                onSelect={context.onSelect}
+              />
+            );
+          }
+          return (
+            <DrillDownNav
+              root={demoNavTree}
+              currentId={currentId}
+              label="Categories"
+              {...(context.onNavigate
+                ? { onNavigate: context.onNavigate }
+                : {})}
+            />
+          );
+        },
+      }}
+    />
+  );
+}
+
+export const NavigationDrawerDrillAndApply: Story = {
+  name: 'Navigation drawer drill and apply',
+  render: () => <DrawerNavigationExample />,
+  globals: { viewport: { value: 'mobileBreakpoint', isRotated: false } },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    // 1. Open the navigation drawer from the mobile chip
+    const chip = canvas.getByRole('button', {
+      name: /Categories: All Categories/i,
+    });
+    await userEvent.click(chip);
+
+    // 2. Wait for the navigation drawer dialog to mount in document.body
+    await waitFor(async () => {
+      await expect(screen.getByRole('dialog')).toBeInTheDocument();
+    });
+
+    const dialog = within(screen.getByRole('dialog'));
+
+    // 3. Drill into "Featured" (non-leaf row)
+    const featuredBtn = dialog.getByRole('button', { name: /^Featured/i });
+    await userEvent.click(featuredBtn);
+
+    // 4. Verify drill-down shape: Featured highlighted, back row to All Categories, Spotlight child visible
+    await waitFor(async () => {
+      const activeBtn = dialog.getByRole('button', { name: /^Featured/i });
+      await expect(activeBtn).toHaveAttribute('aria-current', 'true');
+    });
+    await expect(
+      dialog.getByRole('button', { name: /All Categories/i }),
+    ).toBeInTheDocument();
+    const spotlightBtn = dialog.getByRole('button', { name: /Spotlight/i });
+    await expect(spotlightBtn).toBeInTheDocument();
+
+    // 5. Tap leaf row "Spotlight" -> applies immediately and closes
+    await userEvent.click(spotlightBtn);
+
+    // 6. Verify drawer is closed and chip updated to Spotlight
+    await waitFor(async () => {
+      await expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    });
+    await expect(
+      canvas.getByRole('button', { name: /Categories: Spotlight/i }),
+    ).toBeInTheDocument();
+  },
 };

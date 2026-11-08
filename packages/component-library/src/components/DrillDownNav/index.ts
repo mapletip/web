@@ -4,4 +4,6 @@ export type {
   DrillDownLinkRenderProps,
   DrillDownNavProps,
   DrillDownNode,
+  DrillDownSelectHandler,
+  DrillDownSelectMeta,
 } from './types';

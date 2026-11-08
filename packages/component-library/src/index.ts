@@ -30,6 +30,8 @@ export type {
   DrillDownLinkRenderProps,
   DrillDownNavProps,
   DrillDownNode,
+  DrillDownSelectHandler,
+  DrillDownSelectMeta,
 } from '@/components/DrillDownNav';
 export { FacetedBrowser } from '@/components/FacetedBrowser';
 export type {
@@ -40,6 +42,10 @@ export type {
   FacetOption,
   FacetRangeBucket,
   FacetedBrowserNavigation,
+  FacetedBrowserNavigationDrawerMeta,
+  FacetedBrowserNavigationDrawerNode,
+  FacetedBrowserNavigationHistory,
+  FacetedBrowserNavigationRenderContext,
   FacetedBrowserProps,
   QueryFieldDefinition,
 } from '@/components/FacetedBrowser';

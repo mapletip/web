@@ -602,4 +602,190 @@ describe('DrillDownNav component', () => {
     fireEvent.click(childLink);
     expect(onNavigate).toHaveBeenCalledTimes(3);
   });
+
+  describe('select mode (onSelect provided)', () => {
+    it('renders rows as buttons (type="button") instead of links', () => {
+      const onSelect = vi.fn();
+      render(
+        <DrillDownNav
+          root={catalogTree}
+          currentId="clothing"
+          label="Product categories"
+          onSelect={onSelect}
+        />,
+      );
+
+      expect(screen.queryAllByRole('link')).toHaveLength(0);
+      const buttons = screen.getAllByRole('button');
+      expect(buttons.length).toBeGreaterThan(0);
+      for (const btn of buttons) {
+        expect(btn).toHaveAttribute('type', 'button');
+      }
+    });
+
+    it('sets aria-current="true" on the highlighted row, not "page"', () => {
+      const onSelect = vi.fn();
+      render(
+        <DrillDownNav
+          root={catalogTree}
+          currentId="clothing"
+          label="Product categories"
+          onSelect={onSelect}
+        />,
+      );
+
+      const buttons = screen.getAllByRole('button');
+      const currentButtons = buttons.filter(
+        (btn) => btn.getAttribute('aria-current') === 'true',
+      );
+      expect(currentButtons).toHaveLength(1);
+      expect(currentButtons[0]?.textContent).toContain('Clothing');
+
+      // None have aria-current="page"
+      expect(
+        buttons.filter((btn) => btn.getAttribute('aria-current') === 'page'),
+      ).toHaveLength(0);
+    });
+
+    it('does not use renderLink when onSelect is provided', () => {
+      const onSelect = vi.fn();
+      const renderLink = vi.fn();
+      render(
+        <DrillDownNav
+          root={catalogTree}
+          currentId="clothing"
+          label="Product categories"
+          renderLink={renderLink}
+          onSelect={onSelect}
+        />,
+      );
+
+      expect(renderLink).not.toHaveBeenCalled();
+      expect(screen.queryAllByRole('link')).toHaveLength(0);
+    });
+
+    it('passes isLeaf: false when selecting a node with visible children', () => {
+      const onSelect = vi.fn();
+      render(
+        <DrillDownNav
+          root={catalogTree}
+          currentId="all"
+          label="Product categories"
+          onSelect={onSelect}
+        />,
+      );
+
+      // Clothing has children (shirts, pants, empty)
+      const clothingBtn = screen.getByRole('button', { name: /Clothing/ });
+      fireEvent.click(clothingBtn);
+
+      expect(onSelect).toHaveBeenCalledTimes(1);
+      expect(onSelect).toHaveBeenCalledWith(
+        expect.objectContaining({ id: 'clothing' }),
+        { isLeaf: false },
+      );
+    });
+
+    it('passes isLeaf: true when selecting a leaf node with no children', () => {
+      const onSelect = vi.fn();
+      render(
+        <DrillDownNav
+          root={catalogTree}
+          currentId="clothing"
+          label="Product categories"
+          onSelect={onSelect}
+        />,
+      );
+
+      // Shirts has no children
+      const shirtsBtn = screen.getByRole('button', { name: /Shirts/ });
+      fireEvent.click(shirtsBtn);
+
+      expect(onSelect).toHaveBeenCalledTimes(1);
+      expect(onSelect).toHaveBeenCalledWith(
+        expect.objectContaining({ id: 'clothing/shirts' }),
+        { isLeaf: true },
+      );
+    });
+
+    it('passes isLeaf: false for ancestor back row', () => {
+      const onSelect = vi.fn();
+      render(
+        <DrillDownNav
+          root={catalogTree}
+          currentId="clothing"
+          label="Product categories"
+          onSelect={onSelect}
+        />,
+      );
+
+      // Back row to All Products (which has children clothing, electronics, etc.)
+      const backBtn = screen.getByRole('button', { name: 'All Products' });
+      fireEvent.click(backBtn);
+
+      expect(onSelect).toHaveBeenCalledTimes(1);
+      expect(onSelect).toHaveBeenCalledWith(
+        expect.objectContaining({ id: 'all' }),
+        { isLeaf: false },
+      );
+    });
+
+    it('evaluates isLeaf under the active hideEmpty setting', () => {
+      const treeWithZeroChild: DrillDownNode = {
+        id: 'root',
+        label: 'Root',
+        href: '/root',
+        children: [
+          {
+            id: 'parent-of-empty',
+            label: 'Parent Of Empty',
+            href: '/parent',
+            children: [
+              { id: 'zero-child', label: 'Zero', href: '/zero', count: 0 },
+            ],
+          },
+        ],
+      };
+
+      // With hideEmpty=true, parent-of-empty has 0 visible children -> isLeaf: true
+      const onSelectWithHideEmpty = vi.fn();
+      const { rerender } = render(
+        <DrillDownNav
+          root={treeWithZeroChild}
+          currentId="root"
+          label="Categories"
+          hideEmpty
+          onSelect={onSelectWithHideEmpty}
+        />,
+      );
+
+      const parentBtn = screen.getByRole('button', { name: /Parent Of Empty/ });
+      fireEvent.click(parentBtn);
+      expect(onSelectWithHideEmpty).toHaveBeenCalledWith(
+        expect.objectContaining({ id: 'parent-of-empty' }),
+        { isLeaf: true },
+      );
+
+      // With hideEmpty=false, parent-of-empty has 1 child -> isLeaf: false
+      const onSelectWithoutHideEmpty = vi.fn();
+      rerender(
+        <DrillDownNav
+          root={treeWithZeroChild}
+          currentId="root"
+          label="Categories"
+          hideEmpty={false}
+          onSelect={onSelectWithoutHideEmpty}
+        />,
+      );
+
+      const parentBtn2 = screen.getByRole('button', {
+        name: /Parent Of Empty/,
+      });
+      fireEvent.click(parentBtn2);
+      expect(onSelectWithoutHideEmpty).toHaveBeenCalledWith(
+        expect.objectContaining({ id: 'parent-of-empty' }),
+        { isLeaf: false },
+      );
+    });
+  });
 });

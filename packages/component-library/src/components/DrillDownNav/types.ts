@@ -23,6 +23,15 @@ export type DrillDownLinkRenderer<TMeta = undefined> = (
   props: DrillDownLinkRenderProps,
 ) => ReactNode;
 
+export interface DrillDownSelectMeta {
+  readonly isLeaf: boolean;
+}
+
+export type DrillDownSelectHandler<TMeta = undefined> = (
+  node: DrillDownNode<TMeta>,
+  meta: DrillDownSelectMeta,
+) => void;
+
 export interface DrillDownNavProps<TMeta = undefined> {
   readonly root: DrillDownNode<TMeta>;
   readonly currentId: string;
@@ -36,4 +45,10 @@ export interface DrillDownNavProps<TMeta = undefined> {
   readonly hideEmpty?: boolean | undefined;
   readonly renderLink?: DrillDownLinkRenderer<TMeta> | undefined;
   readonly onNavigate?: (() => void) | undefined;
+  /**
+   * Optional select mode. When provided, rows render as buttons (type="button")
+   * that call onSelect instead of links; the highlighted row gets aria-current="true";
+   * renderLink is not used.
+   */
+  readonly onSelect?: DrillDownSelectHandler<TMeta> | undefined;
 }

@@ -5,6 +5,37 @@ import type { BrowseState } from '@/components/FacetedBrowser/hooks/browseState'
 import type { QueryFieldDefinition } from '@/components/FacetedBrowser/hooks/querySemantics';
 import type { TableColumn } from '@/components/Table';
 
+export interface FacetedBrowserNavigationDrawerNode {
+  readonly id: string;
+  readonly count?: number | undefined;
+}
+
+export interface FacetedBrowserNavigationDrawerMeta {
+  readonly isLeaf: boolean;
+}
+
+export type FacetedBrowserNavigationRenderContext =
+  | {
+      readonly mode: 'rail';
+      readonly onNavigate?: (() => void) | undefined;
+      readonly selectedId?: never;
+      readonly onSelect?: never;
+    }
+  | {
+      readonly mode: 'drawer';
+      readonly selectedId: string;
+      readonly onSelect: (
+        node: FacetedBrowserNavigationDrawerNode,
+        meta: FacetedBrowserNavigationDrawerMeta,
+      ) => void;
+      readonly onNavigate?: never;
+    };
+
+export interface FacetedBrowserNavigationHistory {
+  readonly push: () => void;
+  readonly back: () => void;
+}
+
 export interface FacetedBrowserNavigation {
   readonly label: string;
   readonly currentLabel: string;
@@ -12,9 +43,13 @@ export interface FacetedBrowserNavigation {
    * Decorative icon for the current navigation node, shown on the mobile chip.
    */
   readonly currentIcon?: ReactNode;
-  readonly render: (context: {
-    readonly onNavigate: (() => void) | undefined;
-  }) => ReactNode;
+  readonly currentId: string;
+  readonly currentCount?: number | undefined;
+  readonly apply: (id: string, options: { readonly replace: true }) => void;
+  readonly history?: FacetedBrowserNavigationHistory | undefined;
+  readonly render: (
+    context: FacetedBrowserNavigationRenderContext,
+  ) => ReactNode;
 }
 
 interface CommonProps<TRecord extends Record<string, unknown>> {
