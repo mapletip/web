@@ -1,7 +1,12 @@
 import { Title } from '@mantine/core';
 import { DrillDownNav, FacetedBrowser } from '@mapletip/component-library';
-import type { BrowseState, TableColumn } from '@mapletip/component-library';
-import { useMemo, type ReactElement } from 'react';
+import type {
+  BrowseState,
+  FacetedBrowserNavigationHistory,
+  TableColumn,
+} from '@mapletip/component-library';
+import { useRouter } from '@tanstack/react-router';
+import { useCallback, useMemo, type ReactElement } from 'react';
 
 import { BrowsePageShell } from '@/components/BrowsePageShell';
 import { BUILDS, type BuildId } from '@/config/maplekit';
@@ -10,8 +15,10 @@ import { getCategoryRows } from '../categories';
 import { ItemBrowseCard } from '../ItemBrowseCard';
 import { itemPageMetadata } from '../metadata';
 import {
+  DEFAULT_NAV_PARAMS,
   findItemNavNode,
   getItemNavTree,
+  ITEM_NAV_TARGET,
   itemNavId,
   renderItemNavLink,
 } from '../navigation';
@@ -72,6 +79,33 @@ export function ItemBrowse({
   const currentCategoryLabel = currentNode.label;
   const currentIcon = currentNode.icon;
 
+  const router = useRouter();
+
+  const navHistory = useMemo<FacetedBrowserNavigationHistory>(
+    () => ({
+      push: () => {
+        const loc = router.history.location;
+        router.history.push(loc.href, loc.state);
+      },
+      back: () => {
+        router.history.back();
+      },
+    }),
+    [router],
+  );
+
+  const applyNav = useCallback(
+    (id: string, options: { readonly replace: true }) => {
+      const targetNode = findItemNavNode(navTree, id) ?? navTree;
+      void router.navigate({
+        to: ITEM_NAV_TARGET,
+        params: targetNode.meta ?? DEFAULT_NAV_PARAMS,
+        replace: options.replace,
+      });
+    },
+    [navTree, router],
+  );
+
   return (
     <BrowsePageShell>
       <FacetedBrowser
@@ -79,17 +113,36 @@ export function ItemBrowse({
         navigation={{
           label: 'Item categories',
           currentLabel: currentCategoryLabel,
+          currentId,
+          currentCount: currentNode.count,
+          apply: applyNav,
+          history: navHistory,
           ...(currentIcon ? { currentIcon } : {}),
-          render: ({ onNavigate }) => (
-            <DrillDownNav
-              root={navTree}
-              currentId={currentId}
-              label="Item categories"
-              hideEmpty
-              renderLink={renderItemNavLink}
-              {...(onNavigate ? { onNavigate } : {})}
-            />
-          ),
+          render: (context) => {
+            if (context.mode === 'drawer') {
+              return (
+                <DrillDownNav
+                  root={navTree}
+                  currentId={context.selectedId}
+                  label="Item categories"
+                  hideEmpty
+                  onSelect={context.onSelect}
+                />
+              );
+            }
+            return (
+              <DrillDownNav
+                root={navTree}
+                currentId={currentId}
+                label="Item categories"
+                hideEmpty
+                renderLink={renderItemNavLink}
+                {...(context.onNavigate
+                  ? { onNavigate: context.onNavigate }
+                  : {})}
+              />
+            );
+          },
         }}
         records={scopedRows}
         idAccessor="key"

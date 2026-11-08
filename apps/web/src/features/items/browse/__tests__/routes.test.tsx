@@ -5,7 +5,13 @@ import {
   createRouter,
   RouterProvider,
 } from '@tanstack/react-router';
-import { render, screen } from '@testing-library/react';
+import {
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from '@testing-library/react';
 import { renderToString } from 'react-dom/server';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -422,6 +428,55 @@ describe('Items Browse route integration', () => {
     expect(backLinks[0]?.textContent).toContain('← All Items');
     expect(backLinks[1]?.getAttribute('href')).toBe('/maplestory/items/use');
     expect(backLinks[1]?.textContent).toContain('← Use');
+  });
+
+  it('handles mobile category drawer: drill into Use, apply leaf Recovery, back returns to items', async () => {
+    const history = createMemoryHistory({
+      initialEntries: ['/maplestory/items'],
+    });
+    const router = createRouter({ routeTree, history });
+    await router.load();
+
+    render(
+      <MantineProvider>
+        <RouterProvider router={router} />
+      </MantineProvider>,
+    );
+
+    // Open drawer from category chip
+    const chip = screen.getByRole('button', {
+      name: /Item categories: All Items\. Open Item categories/i,
+    });
+    fireEvent.click(chip);
+
+    // Dialog mounts
+    const dialog = await screen.findByRole('dialog');
+    expect(dialog).toBeInTheDocument();
+
+    // In the drawer, rows are buttons. Tap "Use" (non-leaf row)
+    const useBtn = within(dialog).getByRole('button', { name: /^Use/i });
+    fireEvent.click(useBtn);
+
+    // Drawer stays open, shows Use's children, URL unchanged
+    expect(history.location.pathname).toBe('/maplestory/items');
+    expect(
+      within(dialog).getByRole('button', { name: /^Use/i }),
+    ).toHaveAttribute('aria-current', 'true');
+
+    // Tap "Recovery" (leaf row) -> navigates with replace and closes drawer
+    const recoveryBtn = within(dialog).getByRole('button', {
+      name: /^Recovery/i,
+    });
+    fireEvent.click(recoveryBtn);
+
+    await waitFor(() => {
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    });
+    expect(history.location.pathname).toBe('/maplestory/items/use/recovery');
+
+    // History back returns to /maplestory/items
+    history.back();
+    expect(history.location.pathname).toBe('/maplestory/items');
   });
 
   const notFoundUrls = [

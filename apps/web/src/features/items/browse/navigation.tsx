@@ -221,7 +221,7 @@ export function getItemNavTree(
   };
 }
 
-const DEFAULT_NAV_PARAMS: ItemNavRouteParams = {
+export const DEFAULT_NAV_PARAMS: ItemNavRouteParams = {
   buildId: undefined,
   scope: undefined,
   child: undefined,
