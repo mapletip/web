@@ -235,7 +235,7 @@ describe('Items Browse route integration', () => {
         </MantineProvider>,
       );
 
-      // Verify exactly one aria-current="page" across the entire SSR output
+      // The current category has one current link.
       const currentMatches = html.match(/aria-current="page"/g) ?? [];
       expect(currentMatches).toHaveLength(1);
     });
@@ -302,10 +302,9 @@ describe('Items Browse route integration', () => {
       expect(navChip.textContent).toContain(currentLabel);
       expect(navChip.querySelector('img') !== null).toBe(expectedHasIcon);
 
-      // Verify "Filters" button is absent when facets are empty
       expect(
-        screen.queryByRole('button', { name: /Open all filters/i }),
-      ).not.toBeInTheDocument();
+        screen.getByRole('button', { name: /Open all filters/i }),
+      ).toBeInTheDocument();
     });
   }
 

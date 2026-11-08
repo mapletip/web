@@ -5,28 +5,13 @@ import type {
   DrillDownLinkRenderProps,
   DrillDownNode,
 } from '@mapletip/component-library';
-import { itemIconUrl } from '@mapletip/data/items';
 import { Link } from '@tanstack/react-router';
-import type { ComponentProps, ReactElement, ReactNode } from 'react';
+import type { ReactNode } from 'react';
 
-import cashIcon from '@/assets/maplestory/navigation/items-cash-pet-brown-puppy.png?no-inline';
-import etcIcon from '@/assets/maplestory/navigation/items-etc-snail-shell.png?no-inline';
-import setupIcon from '@/assets/maplestory/navigation/items-setup-blue-chair.png?no-inline';
-import useIcon from '@/assets/maplestory/navigation/items-use-red-potion.png?no-inline';
-import {
-  DEFAULT_BUILD_ID,
-  MAPLEKIT_RELEASE,
-  type BuildId,
-} from '@/config/maplekit';
+import { DEFAULT_BUILD_ID, type BuildId } from '@/config/maplekit';
 
-import { assignChild, getCategoryCounts } from './assignment';
-import {
-  ITEM_SCOPES,
-  ITEM_SCOPE_SLUGS,
-  type ItemScopeSlug,
-} from './categories';
-import type { ItemRow } from './project';
 import type { ItemCategorySelection } from './routing';
+import type { ItemBrowseSearch } from './search-params';
 
 export const ITEM_NAV_TARGET =
   '/maplestory/{-$buildId}/items/{-$scope}/{-$child}' as const;
@@ -37,14 +22,14 @@ export interface ItemNavRouteParams {
   readonly child?: string | undefined;
 }
 
-type ScopedItemScopeSlug = Exclude<ItemScopeSlug, 'all'>;
+export interface ItemBuildRouteParamOptions {
+  readonly buildId: BuildId;
+}
 
-const SCOPE_ICONS: Readonly<Record<ScopedItemScopeSlug, string>> = {
-  use: useIcon,
-  etc: etcIcon,
-  setup: setupIcon,
-  cash: cashIcon,
-};
+/** Maps the default build to its canonical unversioned route parameter. */
+export function itemBuildRouteParam({ buildId }: ItemBuildRouteParamOptions) {
+  return buildId === DEFAULT_BUILD_ID ? undefined : buildId;
+}
 
 /**
  * Recursively locates a node by id in a DrillDownNode tree.
@@ -67,20 +52,27 @@ export function findItemNavNode<TMeta = ItemNavRouteParams>(
   return undefined;
 }
 
-/**
- * Renders the decorative 20px img icon for navigation nodes.
- */
-function renderItemNavIcon(src: string): ReactElement<ComponentProps<'img'>> {
-  return (
-    <img
-      src={src}
-      alt=""
-      width={20}
-      height={20}
-      decoding="async"
-      style={{ objectFit: 'contain' }}
-    />
-  );
+export interface GetItemNavPathOptions {
+  readonly root: DrillDownNode<ItemNavRouteParams>;
+  readonly targetId: string;
+}
+
+/** Returns the root-to-node path for a selected navigation item. */
+export function getItemNavPath({ root, targetId }: GetItemNavPathOptions) {
+  function findPath(
+    node: DrillDownNode<ItemNavRouteParams>,
+    parentPath: readonly DrillDownNode<ItemNavRouteParams>[],
+  ): readonly DrillDownNode<ItemNavRouteParams>[] | undefined {
+    const path = [...parentPath, node];
+    if (node.id === targetId) return path;
+    for (const child of node.children ?? []) {
+      const childPath = findPath(child, path);
+      if (childPath) return childPath;
+    }
+    return undefined;
+  }
+
+  return findPath(root, []) ?? [root];
 }
 
 /**
@@ -112,130 +104,31 @@ export function itemNavId(category: ItemCategorySelection): string {
   return category.scope.slug;
 }
 
-const NON_ALL_SCOPES = ITEM_SCOPE_SLUGS.filter(
-  (slug): slug is ScopedItemScopeSlug => slug !== 'all',
-);
-
-/**
- * Builds the declarative DrillDownNode root tree for Items navigation.
- */
-export function getItemNavTree(
-  rows: readonly ItemRow[],
-  buildId: BuildId,
-): DrillDownNode<ItemNavRouteParams> {
-  const counts = getCategoryCounts(rows);
-  const buildParam = buildId === DEFAULT_BUILD_ID ? undefined : buildId;
-
-  const childMemberIcons = new Map<string, Set<string>>();
-  for (const row of rows) {
-    if (!row.icon) {
-      continue;
-    }
-    for (const scopeSlug of NON_ALL_SCOPES) {
-      const scope = ITEM_SCOPES[scopeSlug];
-      if (scope.itemClasses.includes(row.itemClass)) {
-        const child = assignChild(row, scope);
-        if (child) {
-          const key = `${scopeSlug}/${child.slug}`;
-          let set = childMemberIcons.get(key);
-          if (!set) {
-            set = new Set<string>();
-            childMemberIcons.set(key, set);
-          }
-          set.add(row.icon);
-        }
-        break;
-      }
-    }
-  }
-
-  const scopeNodes: readonly DrillDownNode<ItemNavRouteParams>[] =
-    NON_ALL_SCOPES.map((scopeSlug) => {
-      const scopeObj = ITEM_SCOPES[scopeSlug];
-      const scopeCounts = counts[scopeSlug];
-      const scopeParams: ItemNavRouteParams = {
-        buildId: buildParam,
-        scope: scopeSlug,
-        child: undefined,
-      };
-
-      const childNodes: readonly DrillDownNode<ItemNavRouteParams>[] =
-        scopeObj.children.map((child) => {
-          const childParams: ItemNavRouteParams = {
-            buildId: buildParam,
-            scope: scopeSlug,
-            child: child.slug,
-          };
-          let childIcon: ReactElement<ComponentProps<'img'>> | undefined;
-          if (child.iconContentIds) {
-            const memberIcons = childMemberIcons.get(
-              `${scopeSlug}/${child.slug}`,
-            );
-            if (memberIcons) {
-              for (const contentId of child.iconContentIds) {
-                if (memberIcons.has(contentId)) {
-                  childIcon = renderItemNavIcon(
-                    itemIconUrl(MAPLEKIT_RELEASE.baseUrl, contentId),
-                  );
-                  break;
-                }
-              }
-            }
-          }
-
-          return {
-            id: `${scopeSlug}/${child.slug}`,
-            label: child.label,
-            href: buildItemNavHref(childParams),
-            ...(childIcon ? { icon: childIcon } : {}),
-            count: scopeCounts.children[child.slug] ?? 0,
-            meta: childParams,
-          };
-        });
-
-      return {
-        id: scopeSlug,
-        label: scopeObj.label,
-        href: buildItemNavHref(scopeParams),
-        icon: renderItemNavIcon(SCOPE_ICONS[scopeSlug]),
-        count: scopeCounts.total,
-        meta: scopeParams,
-        children: childNodes,
-      };
-    });
-
-  const rootParams: ItemNavRouteParams = {
-    buildId: buildParam,
-    scope: undefined,
-    child: undefined,
-  };
-  return {
-    id: 'all',
-    label: ITEM_SCOPES.all.label,
-    href: buildItemNavHref(rootParams),
-    count: counts.all.total,
-    meta: rootParams,
-    children: scopeNodes,
-  };
-}
-
 export const DEFAULT_NAV_PARAMS: ItemNavRouteParams = {
   buildId: undefined,
   scope: undefined,
   child: undefined,
 };
 
+export interface RenderItemNavLinkOptions {
+  readonly node: DrillDownNode<ItemNavRouteParams>;
+  readonly props: DrillDownLinkRenderProps;
+  readonly search: ItemBrowseSearch;
+}
+
 /**
  * App adapter forwarding DrillDownNav link props to TanStack Link.
  */
-export function renderItemNavLink(
-  node: DrillDownNode<ItemNavRouteParams>,
-  props: DrillDownLinkRenderProps,
-): ReactNode {
+export function renderItemNavLink({
+  node,
+  props,
+  search,
+}: RenderItemNavLinkOptions): ReactNode {
   return (
     <Link
       to={ITEM_NAV_TARGET}
       params={node.meta ?? DEFAULT_NAV_PARAMS}
+      search={search}
       activeOptions={{ exact: true, includeSearch: false }}
       className={props.className}
       aria-current={props['aria-current']}

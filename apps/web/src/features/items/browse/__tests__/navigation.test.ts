@@ -3,12 +3,8 @@ import { describe, expect, it } from 'vitest';
 
 import { getCategoryCounts } from '../assignment';
 import { ITEM_SCOPES } from '../categories';
-import {
-  buildItemNavHref,
-  findItemNavNode,
-  getItemNavTree,
-  itemNavId,
-} from '../navigation';
+import { buildItemNavHref, findItemNavNode, itemNavId } from '../navigation';
+import { getItemNavTree } from '../navigation-tree';
 import type { ItemRow } from '../project';
 
 describe('navigation', () => {
@@ -104,7 +100,7 @@ describe('navigation', () => {
   describe('getItemNavTree', () => {
     it('computes tree structure and counts matching getCategoryCounts', () => {
       const expectedCounts = getCategoryCounts(dummyRows);
-      const root = getItemNavTree(dummyRows, 'cw-launch');
+      const root = getItemNavTree({ rows: dummyRows, buildId: 'cw-launch' });
 
       expect(root.id).toBe('all');
       expect(root.label).toBe('All Items');
@@ -153,7 +149,7 @@ describe('navigation', () => {
     });
 
     it('omits buildId in hrefs and meta for cw-launch', () => {
-      const root = getItemNavTree(dummyRows, 'cw-launch');
+      const root = getItemNavTree({ rows: dummyRows, buildId: 'cw-launch' });
       expect(root.href).toBe('/maplestory/items');
       expect(root.meta?.buildId).toBeUndefined();
 
@@ -169,7 +165,7 @@ describe('navigation', () => {
     });
 
     it('includes buildId in hrefs and meta for gms-v83', () => {
-      const root = getItemNavTree(dummyRows, 'gms-v83');
+      const root = getItemNavTree({ rows: dummyRows, buildId: 'gms-v83' });
       expect(root.href).toBe('/maplestory/gms-v83/items');
       expect(root.meta?.buildId).toBe('gms-v83');
 
@@ -187,7 +183,7 @@ describe('navigation', () => {
     });
 
     it('retains zero-count categories with count 0 and valid href', () => {
-      const root = getItemNavTree(dummyRows, 'cw-launch');
+      const root = getItemNavTree({ rows: dummyRows, buildId: 'cw-launch' });
       const useScope = root.children?.find((c) => c.id === 'use');
       const bulletsChild = useScope?.children?.find(
         (c) => c.id === 'use/bullets',
@@ -206,7 +202,7 @@ describe('navigation', () => {
 
   describe('findItemNavNode', () => {
     it('locates root node by id and confirms it has no icon', () => {
-      const tree = getItemNavTree(dummyRows, 'cw-launch');
+      const tree = getItemNavTree({ rows: dummyRows, buildId: 'cw-launch' });
       const node = findItemNavNode(tree, 'all');
       expect(node).toBeDefined();
       expect(node?.id).toBe('all');
@@ -215,7 +211,7 @@ describe('navigation', () => {
     });
 
     it('locates scope node by id and provides its icon', () => {
-      const tree = getItemNavTree(dummyRows, 'cw-launch');
+      const tree = getItemNavTree({ rows: dummyRows, buildId: 'cw-launch' });
       const node = findItemNavNode(tree, 'use');
       expect(node).toBeDefined();
       expect(node?.id).toBe('use');
@@ -224,7 +220,7 @@ describe('navigation', () => {
     });
 
     it('locates child node by id without icon when rows omit icon', () => {
-      const tree = getItemNavTree(dummyRows, 'cw-launch');
+      const tree = getItemNavTree({ rows: dummyRows, buildId: 'cw-launch' });
       const node = findItemNavNode(tree, 'use/recovery');
       expect(node).toBeDefined();
       expect(node?.id).toBe('use/recovery');
@@ -243,7 +239,7 @@ describe('navigation', () => {
           icon: '07c090345b4e437b6204eb7e234119d7709846f6b263712c7df5121add2bdc71',
         },
       ];
-      const tree = getItemNavTree(rowsWithIcon, 'cw-launch');
+      const tree = getItemNavTree({ rows: rowsWithIcon, buildId: 'cw-launch' });
       const node = findItemNavNode(tree, 'use/recovery');
       expect(node).toBeDefined();
       expect(node?.id).toBe('use/recovery');
@@ -252,7 +248,7 @@ describe('navigation', () => {
     });
 
     it('returns undefined for nonexistent id', () => {
-      const tree = getItemNavTree(dummyRows, 'cw-launch');
+      const tree = getItemNavTree({ rows: dummyRows, buildId: 'cw-launch' });
       expect(findItemNavNode(tree, 'nonexistent')).toBeUndefined();
     });
 
@@ -276,7 +272,7 @@ describe('navigation', () => {
         },
       ];
 
-      const tree = getItemNavTree(rows, 'cw-launch');
+      const tree = getItemNavTree({ rows, buildId: 'cw-launch' });
       const useScope = tree.children?.find((c) => c.id === 'use');
       const recoveryNode = useScope?.children?.find(
         (c) => c.id === 'use/recovery',
@@ -300,7 +296,7 @@ describe('navigation', () => {
         },
       ];
 
-      const tree = getItemNavTree(rows, 'cw-launch');
+      const tree = getItemNavTree({ rows, buildId: 'cw-launch' });
       const useScope = tree.children?.find((c) => c.id === 'use');
       const recoveryNode = useScope?.children?.find(
         (c) => c.id === 'use/recovery',
@@ -324,7 +320,10 @@ describe('navigation', () => {
         },
       ];
 
-      const tree1 = getItemNavTree(powerElixirOnly, 'cw-launch');
+      const tree1 = getItemNavTree({
+        rows: powerElixirOnly,
+        buildId: 'cw-launch',
+      });
       const node1 = findItemNavNode(tree1, 'use/recovery');
       expect(node1?.icon).toBeDefined();
       const iconElement1 = node1?.icon as ReactElement<{ src: string }>;
@@ -345,7 +344,7 @@ describe('navigation', () => {
         },
       ];
 
-      const tree2 = getItemNavTree(bothPresent, 'cw-launch');
+      const tree2 = getItemNavTree({ rows: bothPresent, buildId: 'cw-launch' });
       const node2 = findItemNavNode(tree2, 'use/recovery');
       expect(node2?.icon).toBeDefined();
       const iconElement2 = node2?.icon as ReactElement<{ src: string }>;

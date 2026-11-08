@@ -331,6 +331,9 @@ importers:
       '@mantine/core':
         specifier: 'catalog:'
         version: 9.7.3(@mantine/hooks@9.7.3(react@19.3.1))(@types/react@19.3.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
+      '@mantine/hooks':
+        specifier: 'catalog:'
+        version: 9.7.3(react@19.3.1)
       '@mapletip/component-library':
         specifier: workspace:*
         version: link:../../packages/component-library
