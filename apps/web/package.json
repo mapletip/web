@@ -17,7 +17,7 @@
   "dependencies": {
     "@mantine/core": "catalog:",
     "@mapletip/component-library": "workspace:*",
-    "@mapletip/data": "0.2.0",
+    "@mapletip/data": "0.3.0",
     "@mapletip/theme": "workspace:*",
     "@phosphor-icons/react": "catalog:",
     "@tanstack/react-router": "catalog:",

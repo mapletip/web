@@ -11,6 +11,7 @@ import {
 import {
   ABSENT_FACT,
   fixtureCatalog,
+  fixtureCatalogV21,
   fixtureRecord,
   knownFact,
   UNKNOWN_FACT,
@@ -61,6 +62,17 @@ function sentinelRecord() {
 }
 
 describe('projectMonsterBrowseRows contract-2 tuple mapping', () => {
+  it('projects contract 2.1 sprite facts to the same rows as contract 2.0', () => {
+    const records = [sentinelRecord()];
+    const rowsV20 = projectMonsterBrowseRows(fixtureCatalog(records));
+    const catalogV21 = fixtureCatalogV21({
+      records,
+      sprite: knownFact('fixture-sprite-content-id'),
+    });
+
+    expect(projectMonsterBrowseRows(catalogV21)).toEqual(rowsV20);
+  });
+
   it('reads every projected stat and trait from its own positional slot', () => {
     const rows = projectMonsterBrowseRows(fixtureCatalog([sentinelRecord()]));
     const row = firstRow(rows);
