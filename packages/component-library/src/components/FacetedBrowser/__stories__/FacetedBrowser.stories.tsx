@@ -157,9 +157,8 @@ function BrowserExample({
   );
   const [drawerOpened, setDrawerOpened] = useState(variant === 'drawerOpen');
   const defaultState: BrowseState = {
-    search: '',
-    filters:
-      variant === 'noMatches' ? { group: ['Category with no matches'] } : {},
+    search: variant === 'noMatches' ? 'No matching records' : '',
+    filters: {},
     sort: { field: 'value1', direction: 'desc' },
     page: 1,
     pageSize: 50,

@@ -78,12 +78,11 @@ export function ItemBrowse({
     [rows, category.scope, category.child],
   );
   const facets = useMemo(
-    () => getItemFacets({ category, coverage, rows: scopedRows, roster: rows }),
-    [category, coverage, rows, scopedRows],
+    () => getItemFacets({ category, coverage }),
+    [category, coverage],
   );
   const { browseState, handleStateChange } = useItemBrowseUrlState({
     search,
-    facets,
     onSearchChange,
   });
 
@@ -96,8 +95,7 @@ export function ItemBrowse({
   const currentIcon = currentNode.icon;
   const navPath = getItemNavPath({ root: navTree, targetId: currentId });
   const categorySearch = browseStateToUrl({
-    state: browseState,
-    facets: [],
+    state: { ...browseState, filters: {} },
     includePage: false,
   });
   const router = useRouter();
@@ -200,7 +198,6 @@ export function ItemBrowse({
               to="."
               search={browseStateToUrl({
                 state: { ...state, page },
-                facets,
               })}
               {...routerLinkProps}
               {...(target === undefined ? {} : { target })}

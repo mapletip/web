@@ -1,7 +1,5 @@
-import type { FacetDefinition } from '@mapletip/component-library';
 import { describe, expect, it } from 'vitest';
 
-import type { ItemRow } from '../project';
 import {
   browseStateToUrl,
   ITEM_BROWSE_DEFAULT_SEARCH,
@@ -11,31 +9,8 @@ import {
   validateSearch,
 } from '../search-params';
 
-const facets: readonly FacetDefinition<ItemRow>[] = [
-  {
-    id: 'types',
-    field: 'types',
-    label: 'Item type',
-    kind: 'multi-select',
-    options: [
-      { value: 'potion', label: 'Potion' },
-      { value: 'arrow', label: 'Arrow' },
-    ],
-  },
-  {
-    id: 'hp',
-    field: 'hp',
-    label: 'HP',
-    kind: 'range',
-    buckets: [
-      { value: '50', label: '50', min: 50, max: 50 },
-      { value: '100', label: '100', min: 100, max: 100 },
-    ],
-  },
-];
-
 describe('Items Browse search params', () => {
-  it('validates the four general keys and keeps well-formed facet values', () => {
+  it('validates the four general keys and well-formed facet values', () => {
     expect(
       validateSearch({
         q: 'red potion',
@@ -44,6 +19,7 @@ describe('Items Browse search params', () => {
         sort: 'name-desc',
         types: ['potion', 'arrow'],
         hp: { min: 50, max: 100 },
+        questFlag: true,
         ignored: 'scalar facet value',
       }),
     ).toEqual({
@@ -53,10 +29,11 @@ describe('Items Browse search params', () => {
       sort: 'name-desc',
       types: ['potion', 'arrow'],
       hp: { min: 50, max: 100 },
+      questFlag: true,
     });
   });
 
-  it('coerces numeric array values and rejects malformed facet values', () => {
+  it('keeps facet URL shapes and coerces finite numeric array values', () => {
     expect(
       validateSearch({
         types: [100],
@@ -66,6 +43,9 @@ describe('Items Browse search params', () => {
         reversed: { min: 100, max: 50 },
         infinite: { min: Number.POSITIVE_INFINITY },
         extraRangeKey: { min: 1, step: 2 },
+        boolean: false,
+        scalar: 'drop-me',
+        nonPlainObject: new Date(),
       }),
     ).toEqual({
       q: '',
@@ -73,6 +53,13 @@ describe('Items Browse search params', () => {
       pageSize: 50,
       sort: 'name-asc',
       types: ['100'],
+      empty: [],
+      mixed: ['valid'],
+      noBounds: {},
+      reversed: { min: 100, max: 50 },
+      infinite: { min: Number.POSITIVE_INFINITY },
+      extraRangeKey: { min: 1, step: 2 },
+      boolean: false,
     });
   });
 
@@ -112,53 +99,48 @@ describe('Items Browse search params', () => {
     });
   });
 
-  it('filters URL selections against current options and buckets', () => {
-    const state = urlToBrowseState({
-      search: validateSearch({
-        types: ['potion', 'invalid'],
-        hp: ['50', 'invalid'],
-        unknown: ['potion'],
-      }),
-      facets,
-    });
-    expect(state.filters).toEqual({ types: ['potion'], hp: ['50'] });
-  });
-
-  it('converts custom ranges and emits only active current-category filters', () => {
+  it('maps every validated facet key into state and back to the URL', () => {
     const search = validateSearch({
       q: 'potion',
       page: 3,
       pageSize: 25,
       sort: 'name-desc',
-      types: ['arrow', 'not-an-option'],
+      types: ['arrow', 'potion'],
       hp: { min: 75, max: 125 },
-      unknown: ['drop-me'],
+      questFlag: false,
     });
-    const state = urlToBrowseState({ search, facets });
+    const state = urlToBrowseState({ search });
     expect(state.filters).toEqual({
-      types: ['arrow'],
+      types: ['arrow', 'potion'],
       hp: { min: 75, max: 125 },
+      questFlag: false,
     });
-    expect(browseStateToUrl({ state, facets, includePage: false })).toEqual({
+    expect(browseStateToUrl({ state, includePage: false })).toEqual({
       q: 'potion',
       page: 1,
       pageSize: 25,
       sort: 'name-desc',
-      types: ['arrow'],
+      types: ['arrow', 'potion'],
       hp: { min: 75, max: 125 },
+      questFlag: false,
     });
-    expect(browseStateToUrl({ state, facets: [], includePage: false })).toEqual(
-      {
-        q: 'potion',
-        page: 1,
-        pageSize: 25,
-        sort: 'name-desc',
-      },
-    );
+  });
+
+  it('omits facet keys for category navigation when given general-only state', () => {
+    const state = {
+      ...ITEM_BROWSE_DEFAULT_STATE,
+      filters: { types: ['potion'] },
+    };
+    expect(
+      browseStateToUrl({
+        state: { ...state, filters: {} },
+        includePage: false,
+      }),
+    ).toEqual(ITEM_BROWSE_DEFAULT_SEARCH);
   });
 
   it('restores the shared default browse state when no facets are active', () => {
-    expect(urlToBrowseState({ search: validateSearch({}), facets })).toEqual(
+    expect(urlToBrowseState({ search: validateSearch({}) })).toEqual(
       ITEM_BROWSE_DEFAULT_STATE,
     );
     expect(ITEM_BROWSE_DEFAULT_SEARCH).toEqual({

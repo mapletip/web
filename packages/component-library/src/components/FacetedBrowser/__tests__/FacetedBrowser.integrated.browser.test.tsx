@@ -986,7 +986,7 @@ describe('integrated FacetedBrowser', () => {
 
     await userEvent.click(seeMoreButtons()[0]!);
 
-    expect(railCheckboxes()).toHaveLength(16);
+    expect(railCheckboxes()).toHaveLength(15);
     expect(rail.textContent).toContain('Delta');
     expect(rail.textContent).toContain('See less');
   });
@@ -1017,7 +1017,7 @@ describe('integrated FacetedBrowser', () => {
 
     await userEvent.click(seeMoreButtons()[0]!);
 
-    expect(dialogCheckboxes()).toHaveLength(16);
+    expect(dialogCheckboxes()).toHaveLength(15);
     expect(dialog.textContent).toContain('Delta');
     expect(dialog.textContent).toContain('See less');
   });

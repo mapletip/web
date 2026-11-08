@@ -1,12 +1,9 @@
 import type { ItemBrowseCoverage } from '@mapletip/data/items';
 import { describe, expect, it } from 'vitest';
 
+import { getItemRelationships } from '../categorical-facet-config';
 import { ITEM_SCOPES } from '../categories';
-import {
-  getItemFacets,
-  getItemRelationships,
-  ITEM_QUERY_FIELDS,
-} from '../facets';
+import { getItemFacets, ITEM_QUERY_FIELDS } from '../facets';
 import type { ItemRow } from '../project';
 
 describe('facets', () => {
@@ -73,43 +70,28 @@ describe('facets', () => {
   });
 
   describe('getItemFacets', () => {
-    it('limits facet options to values present in the category population', () => {
+    it('declares labelled options in the label map order', () => {
       const facets = getItemFacets({
         category: { scope: ITEM_SCOPES.use },
         coverage: dummyCoverage,
-        rows: dummyRows,
-        roster: dummyRows,
       });
 
       const typeFacet = facets.find((f) => f.id === 'types');
       expect(typeFacet).toBeDefined();
-      expect(typeFacet?.options).toEqual([
+      expect(typeFacet?.options?.slice(0, 2)).toEqual([
+        { value: 'upgrade-scroll', label: 'Upgrade Scroll' },
         { value: 'arrow', label: 'Arrow' },
-        { value: 'potion', label: 'Potion' },
       ]);
 
       const fnFacet = facets.find((f) => f.id === 'functions');
       expect(fnFacet).toBeDefined();
-      expect(fnFacet?.options).toEqual([
-        { value: 'recovery', label: 'Recovery' },
-      ]);
+      expect(fnFacet?.options?.[0]).toEqual({
+        value: 'upgrade',
+        label: 'Upgrade',
+      });
     });
 
     it('separates potion and food buffs in the Buffs category', () => {
-      const buffRows: readonly ItemRow[] = [
-        {
-          key: 'potion-buff',
-          sourceId: '02000000',
-          itemClass: 'consume',
-          types: ['potion'],
-        },
-        {
-          key: 'food-buff',
-          sourceId: '02000001',
-          itemClass: 'consume',
-          types: ['food-buff'],
-        },
-      ];
       const buffsCategory = {
         scope: ITEM_SCOPES.use,
         child: ITEM_SCOPES.use.children.find((child) => child.slug === 'buffs'),
@@ -118,8 +100,6 @@ describe('facets', () => {
       const facets = getItemFacets({
         category: buffsCategory,
         coverage: dummyCoverage,
-        rows: buffRows,
-        roster: buffRows,
       });
 
       expect(facets).toContainEqual(
@@ -127,8 +107,8 @@ describe('facets', () => {
           id: 'buffType',
           label: 'Buff type',
           options: [
-            { value: 'food-buff', label: 'Food & Buff' },
             { value: 'potion', label: 'Potion' },
+            { value: 'food-buff', label: 'Food & Buff' },
           ],
         }),
       );
@@ -160,18 +140,15 @@ describe('facets', () => {
         },
       ];
 
-      const facets = getItemFacets({
-        category: { scope: ITEM_SCOPES.use },
-        coverage: dummyCoverage,
-        rows: rowsWithPetFn,
-        roster: rowsWithPetFn,
-      });
-      const fnFacet = facets.find((f) => f.id === 'functions');
-      expect(fnFacet).toBeDefined();
-      expect(fnFacet?.options?.some((opt) => opt.value === 'pet')).toBe(false);
-      expect(fnFacet?.options).toEqual([
-        { value: 'recovery', label: 'Recovery' },
-      ]);
+      const functionField = ITEM_QUERY_FIELDS.find(
+        (field) => typeof field === 'object' && field.id === 'functions',
+      );
+      const functionValues =
+        typeof functionField === 'object' &&
+        typeof functionField.accessor === 'function'
+          ? functionField.accessor(rowsWithPetFn[0]!)
+          : [];
+      expect(functionValues).toEqual(['recovery']);
     });
 
     it('labels partial relationship coverage as partial and omits unsupported kinds', () => {
@@ -187,8 +164,6 @@ describe('facets', () => {
       const facetsPartial = getItemFacets({
         category: { scope: ITEM_SCOPES.use },
         coverage: dummyCoverage,
-        rows: dummyRows,
-        roster: dummyRows,
       });
       const relFacet = facetsPartial.find((f) => f.id === 'rel');
       expect(relFacet).toBeDefined();
@@ -205,8 +180,6 @@ describe('facets', () => {
       const facetsUnsupported = getItemFacets({
         category: { scope: ITEM_SCOPES.use },
         coverage: unsupportedCoverage,
-        rows: dummyRows,
-        roster: dummyRows,
       });
       const relFacetUnsup = facetsUnsupported.find((f) => f.id === 'rel');
       expect(
@@ -214,175 +187,64 @@ describe('facets', () => {
       ).toBe(false);
     });
 
-    it('drops no-op options that match every row in the population and omits empty facets', () => {
-      // In Upgrade Scrolls, every scroll has type 'upgrade-scroll'
-      const scrollsCategory = {
-        scope: ITEM_SCOPES.use,
-        child: ITEM_SCOPES.use.children.find((c) => c.slug === 'scrolls'),
-      };
-      const scrollRows: readonly ItemRow[] = [
-        {
-          key: 's1',
-          sourceId: '02040001',
-          name: 'Scroll for Helmet DEF 60%',
-          itemClass: 'consume',
-          types: ['upgrade-scroll'],
-          targetLabel: 'hat',
-          stats: { weaponDefense: 2 },
-          success: 60,
-        },
-        {
-          key: 's2',
-          sourceId: '02040002',
-          name: 'Scroll for Shoes Jump 60%',
-          itemClass: 'consume',
-          types: ['upgrade-scroll'],
-          targetLabel: 'shoes',
-          stats: { jump: 2 },
-          success: 60,
-        },
-      ];
-
-      const facets = getItemFacets({
-        category: scrollsCategory,
-        coverage: dummyCoverage,
-        rows: scrollRows,
-        roster: scrollRows,
-      });
-
-      // 'Item type: Upgrade Scroll (2)' matches 2/2 rows -> dropped -> types facet omitted
-      const typeFacet = facets.find((f) => f.id === 'types');
-      expect(typeFacet).toBeUndefined();
-
-      // scrollSuccess has 60% on 2/2 rows -> dropped -> scrollSuccess facet omitted
-      const successFacet = facets.find((f) => f.id === 'scrollSuccess');
-      expect(successFacet).toBeUndefined();
-
-      // scrollTarget has 'hat' (1/2) and 'shoes' (1/2) -> kept!
-      const targetFacet = facets.find((f) => f.id === 'scrollTarget');
-      expect(targetFacet).toBeDefined();
-      expect(targetFacet?.options).toHaveLength(2);
-    });
-
     it('orders scroll stats with attacks first and uses player labels', () => {
       const scrollsCategory = {
         scope: ITEM_SCOPES.use,
         child: ITEM_SCOPES.use.children.find((c) => c.slug === 'scrolls'),
       };
-      const scrollRows: readonly ItemRow[] = [
-        {
-          key: 's1',
-          sourceId: '02040001',
-          itemClass: 'consume',
-          stats: { strength: 2, weaponAttack: 1 },
-        },
-        {
-          key: 's2',
-          sourceId: '02040002',
-          itemClass: 'consume',
-          stats: { magicAttack: 2, dexterity: 1 },
-        },
-        {
-          key: 's3',
-          sourceId: '02040003',
-          itemClass: 'consume',
-          stats: { luck: 2 },
-        },
-      ];
 
       const facets = getItemFacets({
         category: scrollsCategory,
         coverage: dummyCoverage,
-        rows: scrollRows,
-        roster: scrollRows,
       });
       const statFacet = facets.find((f) => f.id === 'scrollStat');
       expect(statFacet).toBeDefined();
 
       const optionValues = statFacet?.options?.map((opt) => opt.value);
-      // Attacks come first, followed by STR, DEX, INT, LUK
-      expect(optionValues).toEqual([
+      expect(optionValues?.slice(0, 6)).toEqual([
         'weaponAttack',
         'magicAttack',
         'strength',
         'dexterity',
+        'intelligence',
         'luck',
       ]);
 
       const optionLabels = statFacet?.options?.map((opt) => opt.label);
-      expect(optionLabels).toEqual([
+      expect(optionLabels?.slice(0, 6)).toEqual([
         'Weapon ATT',
         'Magic ATT',
         'STR',
         'DEX',
+        'INT',
         'LUK',
       ]);
     });
 
-    it('scrollRisk keeps known 0 as a distinct value and undefined as none', () => {
+    it('declares scrollRisk values for library-derived options', () => {
       const scrollsCategory = {
         scope: ITEM_SCOPES.use,
         child: ITEM_SCOPES.use.children.find((c) => c.slug === 'scrolls'),
       };
-      const scrollRows: readonly ItemRow[] = [
-        {
-          key: 's1',
-          sourceId: '02040001',
-          itemClass: 'consume',
-          cursed: 0,
-        },
-        {
-          key: 's2',
-          sourceId: '02040002',
-          itemClass: 'consume',
-          cursed: 50,
-        },
-        {
-          key: 's3',
-          sourceId: '02040003',
-          itemClass: 'consume',
-        },
-      ];
 
       const facets = getItemFacets({
         category: scrollsCategory,
         coverage: dummyCoverage,
-        rows: scrollRows,
-        roster: scrollRows,
       });
       const riskFacet = facets.find((f) => f.id === 'scrollRisk');
       expect(riskFacet).toBeDefined();
-
-      expect(riskFacet?.options).toEqual([
-        { value: 'none', label: 'No recorded risk' },
-        { value: '0', label: '0% on failure' },
-        { value: '50', label: '50% on failure' },
-      ]);
+      expect(riskFacet?.options).toBeUndefined();
+      expect(riskFacet?.formatOption?.({ value: 'none' })).toBe(
+        'No recorded risk',
+      );
+      expect(riskFacet?.formatOption?.({ value: '0' })).toBe('0% on failure');
     });
 
-    it('hides scrollTier when coverage is unsupported', () => {
+    it('declares no scrollTier options when coverage is unsupported', () => {
       const scrollsCategory = {
         scope: ITEM_SCOPES.use,
         child: ITEM_SCOPES.use.children.find((c) => c.slug === 'scrolls'),
       };
-      const rowsWithTier: readonly ItemRow[] = [
-        {
-          key: 's1',
-          sourceId: '02040001',
-          name: 'Scroll 1',
-          itemClass: 'consume',
-          types: ['upgrade-scroll'],
-          tier: 'lesser',
-        },
-        {
-          key: 's2',
-          sourceId: '02040002',
-          name: 'Scroll 2',
-          itemClass: 'consume',
-          types: ['upgrade-scroll'],
-          tier: 'intermediate',
-        },
-      ];
 
       const unsupportedCov: ItemBrowseCoverage = {
         ...dummyCoverage,
@@ -391,10 +253,10 @@ describe('facets', () => {
       const facetsUnsup = getItemFacets({
         category: scrollsCategory,
         coverage: unsupportedCov,
-        rows: rowsWithTier,
-        roster: rowsWithTier,
       });
-      expect(facetsUnsup.find((f) => f.id === 'scrollTier')).toBeUndefined();
+      expect(facetsUnsup.find((f) => f.id === 'scrollTier')?.options).toEqual(
+        [],
+      );
 
       const supportedCov: ItemBrowseCoverage = {
         ...dummyCoverage,
@@ -403,8 +265,6 @@ describe('facets', () => {
       const facetsSup = getItemFacets({
         category: scrollsCategory,
         coverage: supportedCov,
-        rows: rowsWithTier,
-        roster: rowsWithTier,
       });
       expect(facetsSup.find((f) => f.id === 'scrollTier')).toBeDefined();
     });
@@ -419,47 +279,9 @@ describe('facets', () => {
         child: ITEM_SCOPES.setup.children.find((c) => c.slug === 'chairs'),
       };
 
-      const recoveryRows: readonly ItemRow[] = [
-        {
-          key: 'r1',
-          sourceId: '02000000',
-          name: 'Red Potion',
-          itemClass: 'consume',
-          hp: 50,
-        },
-        {
-          key: 'r2',
-          sourceId: '02000001',
-          name: 'Orange Potion',
-          itemClass: 'consume',
-          hp: 150,
-        },
-      ];
-
-      const chairRows: readonly ItemRow[] = [
-        {
-          key: 'c1',
-          sourceId: '03010000',
-          name: 'Relaxer',
-          itemClass: 'setup',
-          seatHp: 50,
-          seatMp: 10,
-        },
-        {
-          key: 'c2',
-          sourceId: '03010001',
-          name: 'Yellow Chair',
-          itemClass: 'setup',
-          seatHp: 100,
-          seatMp: 20,
-        },
-      ];
-
       const recoveryFacets = getItemFacets({
         category: recoveryCategory,
         coverage: dummyCoverage,
-        rows: recoveryRows,
-        roster: recoveryRows,
       });
       expect(recoveryFacets.find((f) => f.id === 'seatHp')).toBeUndefined();
       expect(recoveryFacets.find((f) => f.id === 'seatMp')).toBeUndefined();
@@ -468,46 +290,17 @@ describe('facets', () => {
       const chairFacets = getItemFacets({
         category: chairsCategory,
         coverage: dummyCoverage,
-        rows: chairRows,
-        roster: chairRows,
       });
       expect(chairFacets.find((f) => f.id === 'seatHp')).toBeDefined();
       expect(chairFacets.find((f) => f.id === 'seatMp')).toBeDefined();
       expect(chairFacets.find((f) => f.id === 'hp')).toBeUndefined();
     });
 
-    it('disambiguates duplicate pet names and handles unresolved and unnamed targets', () => {
+    it('uses player-facing pet names as filter values', () => {
       const petFoodCategory = {
         scope: ITEM_SCOPES.use,
         child: ITEM_SCOPES.use.children.find((c) => c.slug === 'pet-food'),
       };
-
-      const roster: readonly ItemRow[] = [
-        {
-          key: 'pet:dragon-red',
-          sourceId: '5000020',
-          name: 'Baby Dragon',
-          itemClass: 'pet',
-        },
-        {
-          key: 'pet:dragon-blue',
-          sourceId: '5000021',
-          name: 'Baby Dragon',
-          itemClass: 'pet',
-        },
-        {
-          key: 'pet:husky',
-          sourceId: '5000010',
-          name: 'Husky',
-          itemClass: 'pet',
-        },
-        {
-          key: 'pet:unnamed',
-          sourceId: '5000099',
-          itemClass: 'pet',
-        },
-      ];
-
       const foodRows: readonly ItemRow[] = [
         {
           key: 'f1',
@@ -535,40 +328,25 @@ describe('facets', () => {
       const facets = getItemFacets({
         category: petFoodCategory,
         coverage: dummyCoverage,
-        rows: foodRows,
-        roster,
       });
       const petFacet = facets.find((f) => f.id === 'pet');
       expect(petFacet).toBeDefined();
+      expect(petFacet?.options).toBeUndefined();
+      expect(petFacet?.formatOption).toBeUndefined();
 
-      const options = petFacet?.options ?? [];
-      // Colliding names have sourceId appended
-      expect(options).toContainEqual({
-        value: 'pet:dragon-red',
-        label: 'Baby Dragon (5000020)',
-      });
-      expect(options).toContainEqual({
-        value: 'pet:dragon-blue',
-        label: 'Baby Dragon (5000021)',
-      });
-
-      // Unique name stays clean
-      expect(options).toContainEqual({
-        value: 'pet:husky',
-        label: 'Husky',
-      });
-
-      // Unnamed pet gets "Unnamed pet (<source id>)"
-      expect(options).toContainEqual({
-        value: 'pet:unnamed',
-        label: 'Unnamed pet (5000099)',
-      });
-
-      // Unresolved target gets prefixed "unresolved:<id>" value and "Unresolved target <id>" label
-      expect(options).toContainEqual({
-        value: 'unresolved:5000046',
-        label: 'Unresolved target 5000046',
-      });
+      const petQueryField = ITEM_QUERY_FIELDS.find(
+        (field) => typeof field === 'object' && field.id === 'pet',
+      );
+      const petValues =
+        typeof petQueryField === 'object' &&
+        typeof petQueryField.accessor === 'function'
+          ? petQueryField.accessor(foodRows[0]!)
+          : [];
+      expect(petValues).toEqual([
+        'Baby Dragon',
+        'Baby Dragon',
+        'Unresolved pet',
+      ]);
     });
   });
 

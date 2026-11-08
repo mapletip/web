@@ -133,24 +133,3 @@ export const SCROLL_STAT_LABELS: Readonly<Record<string, string>> = {
   craft: 'Craft',
   swim: 'Swim',
 };
-
-export const SCROLL_STAT_ORDER = [
-  'weaponAttack',
-  'magicAttack',
-  'strength',
-  'dexterity',
-  'intelligence',
-  'luck',
-  'maxHp',
-  'maxMp',
-  'weaponDefense',
-  'magicDefense',
-  'accuracy',
-  'avoidability',
-  'speed',
-  'jump',
-  'criticalRate',
-  'criticalDamage',
-  'craft',
-  'swim',
-] as const;

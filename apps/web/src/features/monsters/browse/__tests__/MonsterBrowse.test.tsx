@@ -191,8 +191,11 @@ describe('MonsterBrowse', () => {
     ).not.toBeInTheDocument();
 
     await user.clear(screen.getByRole('textbox', { name: /^Search/u }));
-    await user.click(screen.getByRole('checkbox', { name: /^5–15 \(/u }));
-    await waitFor(() => expect(summaryText()).toBe('2 Monsters'));
+    await user.click(screen.getByRole('checkbox', { name: /^5 \(/u }));
+    await waitFor(() => expect(summaryText()).toBe('1 Monster'));
+    expect(
+      within(cards()).getByRole('heading', { name: 'Sentinel Snail' }),
+    ).toBeInTheDocument();
     expect(within(cards()).queryByText('Red Snail')).not.toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: 'Clear filters' }));

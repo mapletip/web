@@ -230,12 +230,11 @@ describe('Items Browse router state', () => {
     await user.clear(search);
     await user.type(search, '2000000');
     await waitFor(() => {
-      expect(
-        new URL(
-          router.state.location.href,
-          'http://localhost',
-        ).searchParams.has('q'),
-      ).toBe(true);
+      const query = new URL(
+        router.state.location.href,
+        'http://localhost',
+      ).searchParams.get('q');
+      expect(['2000000', '"2000000"']).toContain(query);
     });
     const generatedUrl = router.state.location.href;
     const reloadHistory = createMemoryHistory({
@@ -326,6 +325,31 @@ describe('Items Browse router state', () => {
     expect(replace).toHaveBeenCalled();
   });
 
+  it('replaces an invalid facet value with a URL that omits it', async () => {
+    const history = createMemoryHistory({
+      initialEntries: ['/maplestory/items/use?types=%5B%22unknown%22%5D'],
+    });
+    const replace = vi.spyOn(history, 'replace');
+    const router = createRouter({ routeTree, history });
+    await router.load();
+
+    render(
+      <MantineProvider theme={theme} forceColorScheme="dark">
+        <RouterProvider router={router} />
+      </MantineProvider>,
+    );
+
+    await waitFor(() => {
+      expect(
+        new URL(
+          router.state.location.href,
+          'http://localhost',
+        ).searchParams.has('types'),
+      ).toBe(false);
+    });
+    expect(replace).toHaveBeenCalled();
+  });
+
   it('round-trips a multi-select facet through a JSON URL and reload', async () => {
     const { router, user, unmount } = await mountRoute(
       '/maplestory/items/use?page=2&pageSize=25',
@@ -397,16 +421,6 @@ describe('Items Browse router state', () => {
     expect(screen.getAllByText('Equipment type').length).toBeGreaterThan(0);
     expect(screen.getAllByText('Stat').length).toBeGreaterThan(0);
     expect(screen.getAllByText('Success rate').length).toBeGreaterThan(0);
-  });
-
-  it('drops invalid facet values and ignores valid values absent from the category', async () => {
-    const router = await loadRouter(
-      '/maplestory/items/use?types=%5B%22not-an-option%22%5D&empty=%5B%5D&hp=%7B%22min%22%3A100%2C%22max%22%3A50%7D',
-    );
-    renderRouter(router);
-    expect(
-      screen.getByRole('button', { name: /Filters, 0 active/ }),
-    ).toBeInTheDocument();
   });
 
   it('drops page and facet params from category breadcrumb links', async () => {

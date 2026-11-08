@@ -193,6 +193,7 @@ export function FacetedBrowser<TRecord extends Record<string, unknown>>(
     idAccessor,
     ...(identityField ? { identityField } : {}),
     ...(searchFields ? { searchFields } : {}),
+    facets,
     browseState,
     onBrowseStateChange: changeBrowseState,
   });

@@ -1,11 +1,9 @@
 /** Typed URL search validation and conversion for Items Browse. */
 import type {
   BrowseState,
-  FacetDefinition,
   FacetFilterValue,
 } from '@mapletip/component-library';
 
-import type { ItemRow } from './project';
 import { ITEM_SORT_OPTIONS } from './sort';
 
 interface NumericRangeFilter {
@@ -13,8 +11,7 @@ interface NumericRangeFilter {
   readonly max?: number;
 }
 
-type UrlFacetFilterValue = readonly string[] | NumericRangeFilter;
-type ItemBrowseSearchValue = string | number | UrlFacetFilterValue;
+type ItemBrowseSearchValue = FacetFilterValue;
 
 export interface ItemBrowseSearch extends Record<
   string,
@@ -85,55 +82,37 @@ function parseSort(value: unknown) {
   return ITEM_SORT_OPTIONS.find((option) => sortKey(option) === value);
 }
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) {
+    return false;
+  }
+  const prototype = Reflect.getPrototypeOf(value);
+  return prototype === Object.prototype || prototype === null;
 }
 
-function parseRangeFilter(value: unknown): NumericRangeFilter | undefined {
-  if (!isRecord(value)) return undefined;
-  if (Object.keys(value).some((key) => key !== 'min' && key !== 'max')) {
-    return undefined;
-  }
-
-  const min = value['min'];
-  const max = value['max'];
-  if (min === undefined && max === undefined) return undefined;
-  if (min !== undefined && (typeof min !== 'number' || !Number.isFinite(min))) {
-    return undefined;
-  }
-  if (max !== undefined && (typeof max !== 'number' || !Number.isFinite(max))) {
-    return undefined;
-  }
-  if (typeof min === 'number' && typeof max === 'number' && min > max) {
-    return undefined;
-  }
-  return {
-    ...(typeof min === 'number' ? { min } : {}),
-    ...(typeof max === 'number' ? { max } : {}),
-  };
+function isUnknownArray(value: unknown): value is readonly unknown[] {
+  return Array.isArray(value);
 }
 
-function parseFacetFilter(value: unknown): UrlFacetFilterValue | undefined {
-  if (Array.isArray(value)) {
-    if (value.length === 0) return undefined;
-    const values: string[] = [];
-    for (const entry of value) {
-      if (typeof entry === 'string' && entry.length > 0) {
-        values.push(entry);
-      } else if (typeof entry === 'number' && Number.isFinite(entry)) {
-        values.push(String(entry));
-      } else {
-        return undefined;
+function parseFacetFilter(
+  value: unknown,
+): readonly string[] | NumericRangeFilter | boolean | undefined {
+  if (typeof value === 'boolean') return value;
+  if (isUnknownArray(value)) {
+    return value.flatMap((entry) => {
+      if (typeof entry === 'string') return [entry];
+      if (typeof entry === 'number' && Number.isFinite(entry)) {
+        return [String(entry)];
       }
-    }
-    return values;
+      return [];
+    });
   }
-  return parseRangeFilter(value);
+  return isPlainObject(value) ? value : undefined;
 }
 
 const GENERAL_SEARCH_KEYS = new Set(['q', 'page', 'pageSize', 'sort']);
 
-/** Keeps the four general keys and only well-formed facet values. */
+/** Keeps the four general keys and facet values with supported URL shapes. */
 export function validateSearch(raw: Record<string, unknown>): ItemBrowseSearch {
   const sort = parseSort(raw['sort']) ?? ITEM_BROWSE_DEFAULT_STATE.sort;
   const search: ItemBrowseSearch = {
@@ -152,71 +131,20 @@ export function validateSearch(raw: Record<string, unknown>): ItemBrowseSearch {
   return search;
 }
 
-function getUrlFacetFilterValue(
-  value: ItemBrowseSearchValue | FacetFilterValue | undefined,
-): UrlFacetFilterValue | undefined {
-  if (typeof value === 'object' && value !== null) return value;
-  return undefined;
-}
-
-function activeFacetFilter({
-  facet,
-  value,
-}: {
-  readonly facet: FacetDefinition<ItemRow>;
-  readonly value: UrlFacetFilterValue | undefined;
-}): UrlFacetFilterValue | undefined {
-  if (facet.kind === 'multi-select') {
-    if (!Array.isArray(value)) return undefined;
-    const optionValues = new Set(
-      facet.options?.map((option) => option.value) ?? [],
-    );
-    const selected = value.filter(
-      (entry): entry is string =>
-        typeof entry === 'string' && optionValues.has(entry),
-    );
-    return selected.length > 0 ? selected : undefined;
-  }
-
-  if (facet.kind === 'range') {
-    if (Array.isArray(value)) {
-      if (facet.buckets === undefined || facet.buckets === 'quantile') {
-        return undefined;
-      }
-      const bucketValues = new Set(facet.buckets.map((bucket) => bucket.value));
-      const selected = value.filter(
-        (entry): entry is string =>
-          typeof entry === 'string' && bucketValues.has(entry),
-      );
-      return selected.length > 0 ? selected : undefined;
-    }
-    return value;
-  }
-
-  return undefined;
-}
-
-export interface UrlToBrowseStateOptions {
-  readonly search: ItemBrowseSearch;
-  readonly facets: readonly FacetDefinition<ItemRow>[];
-}
-
 /** Converts validated URL parameters into the current category's browse state. */
 export function urlToBrowseState({
   search,
-  facets,
-}: UrlToBrowseStateOptions): BrowseState {
+}: {
+  readonly search: ItemBrowseSearch;
+}): BrowseState {
   const sort =
     ITEM_SORT_OPTIONS.find((option) => sortKey(option) === search.sort) ??
     ITEM_BROWSE_DEFAULT_STATE.sort;
   const filters: Record<string, FacetFilterValue> = {};
 
-  for (const facet of facets) {
-    const value = activeFacetFilter({
-      facet,
-      value: getUrlFacetFilterValue(search[facet.field]),
-    });
-    if (value !== undefined) filters[facet.field] = value;
+  for (const [field, value] of Object.entries(search)) {
+    if (GENERAL_SEARCH_KEYS.has(field)) continue;
+    filters[field] = value;
   }
 
   return {
@@ -229,37 +157,24 @@ export function urlToBrowseState({
   };
 }
 
-export interface BrowseStateToUrlOptions {
-  readonly state: BrowseState;
-  readonly facets: readonly FacetDefinition<ItemRow>[];
-  readonly includePage?: boolean | undefined;
-}
-
-/** Serializes only active filters declared by the current category's facets. */
+/** Serializes the general query keys and all active facet filters. */
 export function browseStateToUrl({
   state,
-  facets,
   includePage = true,
-}: BrowseStateToUrlOptions): ItemBrowseSearch {
+}: {
+  readonly state: BrowseState;
+  readonly includePage?: boolean | undefined;
+}): ItemBrowseSearch {
   const sort = state.sort ?? ITEM_BROWSE_DEFAULT_STATE.sort;
-  const search: ItemBrowseSearch = {
+  return {
     q: state.search,
     page: includePage ? state.page : ITEM_BROWSE_DEFAULT_STATE.page,
     pageSize: state.pageSize,
     sort: sortKey(sort),
+    ...state.filters,
   };
-
-  for (const facet of facets) {
-    const value = activeFacetFilter({
-      facet,
-      value: getUrlFacetFilterValue(state.filters[facet.field]),
-    });
-    if (value !== undefined) search[facet.field] = value;
-  }
-  return search;
 }
 
 export const ITEM_BROWSE_DEFAULT_SEARCH = browseStateToUrl({
   state: ITEM_BROWSE_DEFAULT_STATE,
-  facets: [],
 });

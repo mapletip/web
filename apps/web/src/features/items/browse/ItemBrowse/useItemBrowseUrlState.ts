@@ -1,12 +1,10 @@
 import { useDebouncedCallback } from '@mantine/hooks';
 import type {
   BrowseState,
-  FacetDefinition,
   StateChangeDetails,
 } from '@mapletip/component-library';
 import { useCallback, useMemo, useState } from 'react';
 
-import type { ItemRow } from '../project';
 import {
   browseStateToUrl,
   urlToBrowseState,
@@ -20,7 +18,6 @@ export interface OnSearchChangeOptions {
 
 export interface UseItemBrowseUrlStateOptions {
   readonly search: ItemBrowseSearch;
-  readonly facets: readonly FacetDefinition<ItemRow>[];
   readonly onSearchChange: (options: OnSearchChangeOptions) => void;
 }
 
@@ -37,13 +34,9 @@ const SEARCH_DEBOUNCE_MS = 150;
 /** Keeps FacetedBrowser state synchronized with typed route search params. */
 export function useItemBrowseUrlState({
   search,
-  facets,
   onSearchChange,
 }: UseItemBrowseUrlStateOptions): UseItemBrowseUrlStateResult {
-  const urlState = useMemo(
-    () => urlToBrowseState({ search, facets }),
-    [facets, search],
-  );
+  const urlState = useMemo(() => urlToBrowseState({ search }), [search]);
   const [localSearchState, setLocalSearchState] = useState(() => ({
     urlSearch: urlState.search,
     value: urlState.search,
@@ -70,7 +63,7 @@ export function useItemBrowseUrlState({
     (nextState: BrowseState, details?: StateChangeDetails) => {
       setHiddenColumns(nextState.hiddenColumns);
       const searchChanged = nextState.search !== localSearch;
-      const nextSearch = browseStateToUrl({ state: nextState, facets });
+      const nextSearch = browseStateToUrl({ state: nextState });
 
       if (searchChanged) {
         setLocalSearchState({
@@ -87,13 +80,7 @@ export function useItemBrowseUrlState({
         replace: details?.reason === 'clamp',
       });
     },
-    [
-      emitDebouncedSearchChange,
-      facets,
-      localSearch,
-      onSearchChange,
-      urlState.search,
-    ],
+    [emitDebouncedSearchChange, localSearch, onSearchChange, urlState.search],
   );
 
   return { browseState, handleStateChange };
