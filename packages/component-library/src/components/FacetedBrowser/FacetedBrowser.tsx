@@ -90,6 +90,7 @@ export function FacetedBrowser<TRecord extends Record<string, unknown>>(
     facets: facetDefinitions = EMPTY_FACETS,
     recordNoun = 'records',
     navigation,
+    railNavigation,
     sortOptions,
     summaryNoun,
     summaryMode = 'page-window',
@@ -393,8 +394,9 @@ export function FacetedBrowser<TRecord extends Record<string, unknown>>(
   const closeNavDrawer = useCallback(() => setNavDrawerOpened(false), []);
 
   const railContent =
-    navigation || facets.length > 0 ? (
+    navigation || railNavigation || facets.length > 0 ? (
       <Stack gap="md">
+        {railNavigation}
         {navigation
           ? navigation.render({ mode: 'rail', onNavigate: undefined })
           : null}
@@ -417,7 +419,11 @@ export function FacetedBrowser<TRecord extends Record<string, unknown>>(
       </Stack>
     ) : undefined;
 
-  const railLabel = navigation ? navigation.label : 'Filters';
+  const railLabel = navigation
+    ? navigation.label
+    : railNavigation
+      ? 'Browse navigation and filters'
+      : 'Filters';
 
   const primaryToolbar = comparisonProps ? (
     <Toolbar

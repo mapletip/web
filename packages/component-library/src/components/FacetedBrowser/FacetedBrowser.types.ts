@@ -84,6 +84,8 @@ interface CommonProps<TRecord extends Record<string, unknown>> {
    * navigation drawer.
    */
   readonly navigation?: FacetedBrowserNavigation;
+  /** Optional custom navigation rendered in the desktop filter rail. */
+  readonly railNavigation?: ReactNode;
   readonly sortOptions?: readonly BrowseSortOption[];
   readonly recordNoun?: string;
   /**
