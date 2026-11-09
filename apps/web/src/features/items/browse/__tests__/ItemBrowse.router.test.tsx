@@ -73,6 +73,13 @@ const { fixtureRows, fixtureCoverage } = vi.hoisted(() => {
       name: 'Snail Shell',
       itemClass: 'etc',
     },
+    {
+      key: 'item:etc:quest',
+      sourceId: '04000001',
+      name: 'Quest Material',
+      itemClass: 'etc',
+      neededForQuestCount: 1,
+    },
     ...Array.from({ length: 50 }, (_, index): ItemRow => ({
       key: `item:extra:${index}`,
       sourceId: String(6000000 + index),
@@ -325,9 +332,11 @@ describe('Items Browse router state', () => {
     expect(replace).toHaveBeenCalled();
   });
 
-  it('replaces an invalid facet value with a URL that omits it', async () => {
+  it('replaces stale facet params with a URL that omits them', async () => {
     const history = createMemoryHistory({
-      initialEntries: ['/maplestory/items/use?types=%5B%22unknown%22%5D'],
+      initialEntries: [
+        '/maplestory/items/use?types=%5B%22potion%22%5D&attack=%7B%22min%22%3A1%7D',
+      ],
     });
     const replace = vi.spyOn(history, 'replace');
     const router = createRouter({ routeTree, history });
@@ -346,19 +355,26 @@ describe('Items Browse router state', () => {
           'http://localhost',
         ).searchParams.has('types'),
       ).toBe(false);
+      expect(
+        new URL(
+          router.state.location.href,
+          'http://localhost',
+        ).searchParams.has('attack'),
+      ).toBe(false);
     });
     expect(replace).toHaveBeenCalled();
   });
 
   it('round-trips a multi-select facet through a JSON URL and reload', async () => {
     const { router, user, unmount } = await mountRoute(
-      '/maplestory/items/use?page=2&pageSize=25',
+      '/maplestory/items/use/scrolls?page=2&pageSize=25',
     );
 
-    await user.click(screen.getByRole('checkbox', { name: /^Potion/ }));
+    await user.click(screen.getByRole('checkbox', { name: /^Hat/ }));
+    expect(screen.getByText('Armor')).toBeInTheDocument();
     await waitFor(() => {
       const url = new URL(router.state.location.href, 'http://localhost');
-      expect(url.searchParams.get('types')).toBe('["potion"]');
+      expect(url.searchParams.get('scrollTarget')).toBe('["hat"]');
       expect(url.searchParams.has('page')).toBe(false);
     });
 
@@ -367,9 +383,9 @@ describe('Items Browse router state', () => {
     unmount();
     renderRouter(reloadedRouter);
 
-    expect(screen.getByRole('checkbox', { name: /^Potion/ })).toBeChecked();
+    expect(screen.getByRole('checkbox', { name: /^Hat/ })).toBeChecked();
     expect(reloadedRouter.state.matches.at(-1)?.search).toMatchObject({
-      types: ['potion'],
+      scrollTarget: ['hat'],
       pageSize: 25,
     });
   });
@@ -379,10 +395,10 @@ describe('Items Browse router state', () => {
       '/maplestory/items/use/recovery',
     );
 
-    await user.click(screen.getByRole('checkbox', { name: /^50/ }));
+    await user.click(screen.getByRole('checkbox', { name: /^1–99/ }));
     await waitFor(() => {
       const url = new URL(router.state.location.href, 'http://localhost');
-      expect(url.searchParams.get('hp')).toBe('["50"]');
+      expect(url.searchParams.get('hp')).toBe('["1-99"]');
     });
 
     const generatedUrl = router.state.location.href;
@@ -390,7 +406,35 @@ describe('Items Browse router state', () => {
     unmount();
     renderRouter(reloadedRouter);
 
-    expect(screen.getByRole('checkbox', { name: /^50/ })).toBeChecked();
+    expect(screen.getByRole('checkbox', { name: /^1–99/ })).toBeChecked();
+  });
+
+  it('loads a fixed HP range from a real URL', async () => {
+    const { router } = await mountRoute(
+      '/maplestory/items/use/recovery?hp=%5B%22100-299%22%5D',
+    );
+
+    expect(screen.getByRole('checkbox', { name: /^100–299/ })).toBeChecked();
+    expect(screen.getByText('Potion 2000000')).toBeInTheDocument();
+    expect(screen.queryByText('Red Potion')).not.toBeInTheDocument();
+    expect(router.state.matches.at(-1)?.search).toMatchObject({
+      hp: ['100-299'],
+    });
+  });
+
+  it('loads the ETC no-recorded-use boolean from a real URL', async () => {
+    const { router } = await mountRoute(
+      '/maplestory/items/etc?noRecordedQuestOrRecipeUse=true',
+    );
+
+    expect(
+      screen.getByRole('combobox', { name: 'No recorded quest or recipe use' }),
+    ).toHaveValue('Yes (1)');
+    expect(screen.getByText('Snail Shell')).toBeInTheDocument();
+    expect(screen.queryByText('Quest Material')).not.toBeInTheDocument();
+    expect(router.state.matches.at(-1)?.search).toMatchObject({
+      noRecordedQuestOrRecipeUse: true,
+    });
   });
 
   it('round-trips a custom range through a JSON URL and reload', async () => {
@@ -399,8 +443,14 @@ describe('Items Browse router state', () => {
     );
 
     await user.click(screen.getByRole('checkbox', { name: 'Custom' }));
-    await user.type(screen.getByRole('textbox', { name: 'HP to' }), '100');
-    await user.type(screen.getByRole('textbox', { name: 'HP from' }), '60');
+    await user.type(
+      screen.getByRole('textbox', { name: 'HP restored to' }),
+      '100',
+    );
+    await user.type(
+      screen.getByRole('textbox', { name: 'HP restored from' }),
+      '60',
+    );
     await waitFor(() => {
       const url = new URL(router.state.location.href, 'http://localhost');
       expect(url.searchParams.get('hp')).toBe('{"min":60,"max":100}');
@@ -411,15 +461,19 @@ describe('Items Browse router state', () => {
     unmount();
     renderRouter(reloadedRouter);
 
-    expect(screen.getByRole('textbox', { name: 'HP from' })).toHaveValue('60');
-    expect(screen.getByRole('textbox', { name: 'HP to' })).toHaveValue('100');
+    expect(
+      screen.getByRole('textbox', { name: 'HP restored from' }),
+    ).toHaveValue('60');
+    expect(screen.getByRole('textbox', { name: 'HP restored to' })).toHaveValue(
+      '100',
+    );
   });
 
   it('shows scroll facets on the real scroll child route', async () => {
     await mountRoute('/maplestory/items/use/scrolls');
 
-    expect(screen.getAllByText('Equipment type').length).toBeGreaterThan(0);
-    expect(screen.getAllByText('Stat').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Equipment slot').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Stat improved').length).toBeGreaterThan(0);
     expect(screen.getAllByText('Success rate').length).toBeGreaterThan(0);
   });
 

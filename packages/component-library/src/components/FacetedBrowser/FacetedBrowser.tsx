@@ -49,7 +49,6 @@ import {
   SortSelect,
   Toolbar,
 } from '@/components/FacetedBrowser/Toolbar/Toolbar';
-import type { SortIntent } from '@/components/Table';
 import { ComparisonTable } from '@/components/Table';
 import {
   deriveTableStorageKey,
@@ -137,10 +136,6 @@ export function FacetedBrowser<TRecord extends Record<string, unknown>>(
   const [internalState, setInternalState] = useState<BrowseState>(() =>
     createBrowseState(controlled ? undefined : defaultState, fallbackSize),
   );
-  const [initialSort] = useState<SortIntent | undefined>(() => {
-    const sort = controlledState?.sort ?? defaultState?.sort;
-    return sort ? { ...sort } : undefined;
-  });
   const [initialDefaultHiddenColumns] = useState(() => [
     ...(defaultState?.hiddenColumns ?? EMPTY_HIDDEN_COLUMNS),
   ]);
@@ -235,7 +230,6 @@ export function FacetedBrowser<TRecord extends Record<string, unknown>>(
     filterIsInvalid,
     evaluateDraft: browser.evaluateDraft,
     commitDraft: browser.commitDraft,
-    defaultSort: initialSort,
   });
 
   const shownDrawerFacet = facets.find(
@@ -253,7 +247,6 @@ export function FacetedBrowser<TRecord extends Record<string, unknown>>(
   }, []);
   const { resetFilters: resetBrowserFilters, clearQuery: clearBrowserQuery } =
     browser;
-  const { reset: resetDrawerDraft } = drawer;
   const clearAllFilters = useCallback(() => {
     resetFacetUi();
     resetBrowserFilters();
@@ -262,10 +255,6 @@ export function FacetedBrowser<TRecord extends Record<string, unknown>>(
     resetFacetUi();
     clearBrowserQuery();
   }, [clearBrowserQuery, resetFacetUi]);
-  const drawerReset = useCallback(() => {
-    resetFacetUi();
-    resetDrawerDraft();
-  }, [resetDrawerDraft, resetFacetUi]);
   const removeChip = useCallback(
     (chip: ActiveFacetChip) => {
       if (chip.removeValue === undefined) {
@@ -566,7 +555,6 @@ export function FacetedBrowser<TRecord extends Record<string, unknown>>(
         applyDisabled={drawer.invalidDraft}
         onApply={drawer.apply}
         onCancel={drawer.close}
-        onReset={drawerReset}
         titleRef={drawerTitleRef}
         onEnterTransitionEnd={() =>
           drawerTitleRef.current?.focus({ preventScroll: true })

@@ -41,7 +41,6 @@ export interface UseFacetedBrowserDrawerOptions {
     filters: Record<string, FacetFilterValue>,
   ) => DraftEvaluation;
   readonly commitDraft: (draft: DraftCommit) => void;
-  readonly defaultSort?: SortIntent | undefined;
 }
 
 function snapshotState(state: BrowseState): BrowseState {
@@ -75,7 +74,6 @@ export interface UseFacetedBrowserDrawerReturn {
   readonly open: (facetId: string | null) => void;
   readonly close: () => void;
   readonly backToOverview: () => void;
-  readonly reset: () => void;
   readonly apply: () => void;
   readonly setValue: (field: string, value: FacetFilterValue) => void;
   readonly setSort: (sort: SortIntent) => void;
@@ -90,7 +88,6 @@ export function useFacetedBrowserDrawer({
   filterIsInvalid,
   evaluateDraft,
   commitDraft,
-  defaultSort,
 }: UseFacetedBrowserDrawerOptions): UseFacetedBrowserDrawerReturn {
   const [session, setSession] = useState<DraftSession | null>(() =>
     opened ? createSession(committedState) : null,
@@ -243,15 +240,6 @@ export function useFacetedBrowserDrawer({
     [draftEvaluation],
   );
 
-  const reset = useCallback(() => {
-    if (!openedRef.current) return;
-    const base = sessionRef.current ?? createSession(committedState);
-    replaceSession({
-      ...base,
-      filters: {},
-      sort: defaultSort ? { ...defaultSort } : undefined,
-    });
-  }, [committedState, defaultSort, replaceSession]);
   const backToOverview = useCallback(() => setFocusedFacetId(null), []);
 
   return {
@@ -265,7 +253,6 @@ export function useFacetedBrowserDrawer({
     open,
     close,
     backToOverview,
-    reset,
     apply,
     setValue,
     setSort,

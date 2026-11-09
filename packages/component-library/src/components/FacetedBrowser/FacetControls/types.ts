@@ -7,6 +7,8 @@ export type FacetSurface = 'rail' | 'drawer';
 export interface FacetOption {
   readonly value: string;
   readonly label: string;
+  /** The host must keep each group's options contiguous; headings follow option order. */
+  readonly group?: string;
 }
 
 export interface FacetOptionWithCount extends FacetOption {

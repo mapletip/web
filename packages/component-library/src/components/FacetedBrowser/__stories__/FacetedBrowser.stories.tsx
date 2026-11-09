@@ -75,11 +75,16 @@ const demoSortOptions: readonly BrowseSortOption[] = [
   },
 ];
 
+function categoryGroup(index: number): string {
+  return index < 2 ? 'Common categories' : 'Other categories';
+}
+
 function BrowserExample({
   variant,
   state,
   onStateChange,
   fillHeight = true,
+  groupedCategories = false,
   navigation,
   sortOptions,
   renderPageLink,
@@ -88,6 +93,7 @@ function BrowserExample({
   readonly state?: BrowseState;
   readonly onStateChange?: (nextState: BrowseState) => void;
   readonly fillHeight?: boolean;
+  readonly groupedCategories?: boolean;
   readonly navigation?: FacetedBrowserNavigation;
   readonly sortOptions?: readonly BrowseSortOption[];
   readonly renderPageLink?: PageLinkRenderer;
@@ -133,9 +139,10 @@ function BrowserExample({
         label: 'Category',
         kind: 'multi-select',
         quick: true,
-        options: demoGroupFacetOptions.map(({ value, label }) => ({
+        options: demoGroupFacetOptions.map(({ value, label }, index) => ({
           value,
           label,
+          ...(groupedCategories ? { group: categoryGroup(index) } : {}),
         })),
       },
       {
@@ -153,7 +160,7 @@ function BrowserExample({
         kind: 'boolean',
       },
     ],
-    [],
+    [groupedCategories],
   );
   const [drawerOpened, setDrawerOpened] = useState(variant === 'drawerOpen');
   const defaultState: BrowseState = {
@@ -213,6 +220,11 @@ function BrowserExample({
 
 export const Default: Story = {
   render: () => <BrowserExample sortOptions={demoSortOptions} />,
+};
+
+export const GroupedOptions: Story = {
+  name: 'Grouped facet options',
+  render: () => <BrowserExample groupedCategories />,
 };
 
 export const Active: Story = {

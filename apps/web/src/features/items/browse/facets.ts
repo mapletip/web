@@ -54,10 +54,18 @@ function deriveFacet({
       typeof config.labels === 'function'
         ? config.labels({ context })
         : config.labels;
+    const optionValues = config.optionOrder ?? Object.keys(labels ?? {});
     const options =
       labels === undefined
         ? undefined
-        : Object.entries(labels).map(([value, label]) => ({ value, label }));
+        : optionValues.flatMap((value) => {
+            const label = labels[value];
+            if (label === undefined) return [];
+            const group = config.groups?.[value];
+            return [
+              { value, label, ...(group === undefined ? {} : { group }) },
+            ];
+          });
     return {
       ...shared,
       kind: 'multi-select',
@@ -72,8 +80,7 @@ function deriveFacet({
     return {
       ...shared,
       kind: 'range',
-      buckets: 'quantile',
-      ...(typeof config.unit === 'string' ? { unit: config.unit } : {}),
+      buckets: config.buckets,
     };
   }
 
@@ -91,8 +98,19 @@ export function getItemFacets({
   coverage,
 }: GetItemFacetsOptions): readonly FacetDefinition<ItemRow>[] {
   const context: CategoricalContext = { coverage };
+  const questRecipeCoverageComplete =
+    coverage.relationships['needed-for-quest'] === 'complete' &&
+    coverage.relationships['used-in-recipe'] === 'complete';
   return getItemFacetFields({
     scope: category.scope.slug,
     childSlug: category.child?.slug,
-  }).map((field) => deriveFacet({ field, context }));
+  }).flatMap((field) => {
+    if (
+      field === 'noRecordedQuestOrRecipeUse' &&
+      !questRecipeCoverageComplete
+    ) {
+      return [];
+    }
+    return [deriveFacet({ field, context })];
+  });
 }

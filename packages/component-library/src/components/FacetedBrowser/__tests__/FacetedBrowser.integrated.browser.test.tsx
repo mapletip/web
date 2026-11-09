@@ -531,7 +531,7 @@ describe('integrated FacetedBrowser', () => {
       .toBe('Category');
   });
 
-  it('resets only the drawer draft and keeps committed search and sort on Apply', async () => {
+  it('discards staged filter and sort changes on Cancel', async () => {
     const changes: BrowseState[] = [];
     const initial: BrowseState = {
       ...state,
@@ -545,7 +545,7 @@ describe('integrated FacetedBrowser', () => {
       { label: 'Value 1 (High to Low)', field: 'value1', direction: 'desc' },
     ];
 
-    function ResettableBrowser() {
+    function StagedBrowser() {
       const [current, setCurrent] = useState(initial);
       return (
         <Browser
@@ -559,7 +559,7 @@ describe('integrated FacetedBrowser', () => {
       );
     }
 
-    await render(<ResettableBrowser />);
+    await render(<StagedBrowser />);
     await page.viewport(375, 812);
     await page.getByRole('button', { name: /^Filters/u }).click();
     expect(page.getByRole('checkbox', { name: /^Alpha \(/u })).toBeChecked();
@@ -569,21 +569,14 @@ describe('integrated FacetedBrowser', () => {
     await page.getByRole('option', { name: 'Value 1 (Low to High)' }).click();
     expect(sortSelect).toHaveValue('Value 1 (Low to High)');
 
-    await page.getByRole('button', { name: 'Reset' }).click();
-    expect(
-      page.getByRole('checkbox', { name: /^Alpha \(/u }),
-    ).not.toBeChecked();
+    await page.getByRole('button', { name: 'Cancel' }).click();
+    expect(page.getByRole('button', { name: /^Filters/u })).toBeVisible();
+    expect(changes).toHaveLength(0);
+
+    await page.getByRole('button', { name: /^Filters/u }).click();
+    expect(page.getByRole('checkbox', { name: /^Alpha \(/u })).toBeChecked();
     expect(sortSelect).toHaveValue('Value 1 (High to Low)');
     expect(changes).toHaveLength(0);
-    await page.getByRole('button', { name: /^Show \d+ records$/u }).click();
-
-    expect(changes).toHaveLength(1);
-    expect(changes[0]).toMatchObject({
-      search: 'Record',
-      filters: {},
-      sort: { field: 'value1', direction: 'desc' },
-      page: 1,
-    });
   });
 
   it('clears a draft when a host closes and reopens the drawer', async () => {

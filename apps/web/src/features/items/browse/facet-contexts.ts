@@ -2,26 +2,29 @@
 import { ITEM_SCOPES, type ItemScopeSlug } from './categories';
 import type { ItemFacetField } from './facet-config';
 
-const DEFAULT_FACETS = ['types', 'functions', 'rel'] as const;
+const SHARED_FACETS = ['quests', 'crafting', 'sources'] as const;
+const RECOVERY_FACETS = [
+  ...SHARED_FACETS,
+  'recoveryRestores',
+  'hp',
+  'mp',
+  'percentageRecovery',
+] as const;
 const SCROLL_FACETS = [
+  ...SHARED_FACETS,
   'scrollTarget',
   'scrollStat',
   'scrollSuccess',
-  'scrollRisk',
-  'scrollTier',
-  'scrollSpecial',
-  'scrollDirect',
-  'rel',
+  'scrollDestructionChance',
 ] as const;
-const PET_FEEDING_FACETS = [
-  'pet',
-  'closeness',
-  'fullness',
-  'tameness',
-  ...DEFAULT_FACETS,
+const ETC_FACETS = [...SHARED_FACETS, 'noRecordedQuestOrRecipeUse'] as const;
+const CHAIR_FACETS = [
+  ...SHARED_FACETS,
+  'chairRestores',
+  'seatHp',
+  'seatMp',
 ] as const;
-const ETC_FACETS = ['questFlag', ...DEFAULT_FACETS] as const;
-const CASH_FACETS = ['kind', ...PET_FEEDING_FACETS] as const;
+const CASH_FACETS = [...SHARED_FACETS, 'cashShop'] as const;
 
 type ScopeChildSlugs = {
   readonly [
@@ -39,34 +42,22 @@ type ItemFacetContexts = {
 };
 
 export const ITEM_FACET_CONTEXTS = {
-  all: { default: DEFAULT_FACETS },
+  all: { default: SHARED_FACETS },
   use: {
-    default: DEFAULT_FACETS,
+    default: SHARED_FACETS,
     children: {
-      recovery: ['hp', 'mp', 'hpPercent', 'mpPercent', ...DEFAULT_FACETS],
+      recovery: RECOVERY_FACETS,
       scrolls: SCROLL_FACETS,
-      // MapleKit gap: item browse rows do not expose individual buff effects.
-      buffs: ['buffType', 'rel'],
-      'throwing-stars': ['attack', ...DEFAULT_FACETS],
-      arrows: ['attack', ...DEFAULT_FACETS],
-      bullets: ['attack', ...DEFAULT_FACETS],
-      'pet-food': PET_FEEDING_FACETS,
     },
   },
-  etc: {
-    default: ETC_FACETS,
-    children: { 'quest-items': ETC_FACETS },
-  },
+  etc: { default: ETC_FACETS },
   setup: {
-    default: DEFAULT_FACETS,
-    children: { chairs: ['seatHp', 'seatMp', ...DEFAULT_FACETS] },
+    default: SHARED_FACETS,
+    children: { chairs: CHAIR_FACETS },
   },
   cash: {
     default: CASH_FACETS,
-    children: {
-      pets: DEFAULT_FACETS,
-      'cash-items': PET_FEEDING_FACETS,
-    },
+    children: { pets: SHARED_FACETS, 'cash-items': CASH_FACETS },
   },
 } satisfies ItemFacetContexts;
 

@@ -1,11 +1,28 @@
-import { Button, Checkbox, Stack } from '@mantine/core';
+import { Button, Checkbox, Stack, Text } from '@mantine/core';
 import type { ReactElement, ReactNode } from 'react';
-import { useState } from 'react';
+import { Fragment, useState } from 'react';
 
 import labelClasses from './FacetLabel.module.css';
 import type { FacetOptionWithCount } from './types';
 
 const DEFAULT_VISIBLE_OPTIONS = 3;
+
+function renderOption(option: FacetOptionWithCount): ReactElement {
+  return (
+    <Checkbox
+      key={option.value}
+      value={option.value}
+      label={
+        <span>
+          {option.label}{' '}
+          <span style={{ color: 'var(--mantine-color-dimmed)' }}>
+            ({option.count})
+          </span>
+        </span>
+      }
+    />
+  );
+}
 
 export interface OptionListProps {
   readonly label: string;
@@ -45,20 +62,21 @@ export function OptionList({
         classNames={{ label: labelClasses['label'] ?? '' }}
       >
         <Stack gap="xs" mt="xs">
-          {visibleOptions.map((option) => (
-            <Checkbox
-              key={option.value}
-              value={option.value}
-              label={
-                <span>
-                  {option.label}{' '}
-                  <span style={{ color: 'var(--mantine-color-dimmed)' }}>
-                    ({option.count})
-                  </span>
-                </span>
-              }
-            />
-          ))}
+          {visibleOptions.map((option, index) => {
+            const previousGroup = visibleOptions[index - 1]?.group;
+            const showGroupHeading =
+              option.group !== undefined && option.group !== previousGroup;
+            return (
+              <Fragment key={option.value}>
+                {showGroupHeading && (
+                  <Text size="xs" fw={600} c="dimmed">
+                    {option.group}
+                  </Text>
+                )}
+                {renderOption(option)}
+              </Fragment>
+            );
+          })}
         </Stack>
       </Checkbox.Group>
       {footer}

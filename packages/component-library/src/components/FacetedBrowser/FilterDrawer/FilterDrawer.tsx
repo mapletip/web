@@ -12,8 +12,6 @@ export interface FilterDrawerProps {
   readonly onApply: () => void;
   /** Close and discard the draft: Cancel, Escape, overlay, host-driven close. */
   readonly onCancel: () => void;
-  /** Reset the staged drawer draft; the drawer stays open. */
-  readonly onReset: () => void;
   /** Mantine transition hook for host-managed focus when a drawer view opens. */
   readonly onEnterTransitionEnd?: () => void;
   /** Back control shown in the header when the host opens a nested filter view. */
@@ -31,7 +29,6 @@ export function FilterDrawer({
   applyDisabled = false,
   onApply,
   onCancel,
-  onReset,
   onEnterTransitionEnd,
   backLabel,
   onBack,
@@ -94,14 +91,9 @@ export function FilterDrawer({
         <Drawer.Body>
           <div className={classes['scroll']}>{children}</div>
           <div className={classes['footer']}>
-            <div className={classes['cancelReset']}>
-              <Button variant="default" onClick={onCancel}>
-                Cancel
-              </Button>
-              <Button variant="subtle" onClick={onReset}>
-                Reset
-              </Button>
-            </div>
+            <Button variant="default" onClick={onCancel}>
+              Cancel
+            </Button>
             <Button disabled={applyDisabled} onClick={onApply}>
               {applyLabel}
             </Button>

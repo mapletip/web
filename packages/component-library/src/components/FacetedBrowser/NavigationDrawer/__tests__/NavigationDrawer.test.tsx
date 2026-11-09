@@ -51,9 +51,7 @@ describe('NavigationDrawer', () => {
       name: 'Show 100 items',
     });
     expect(cancelButton.parentElement).toBe(applyButton.parentElement);
-    expect(cancelButton.parentElement?.className).toContain(
-      classes['footerPair'],
-    );
+    expect(cancelButton.parentElement?.className).toContain(classes['footer']);
   });
 
   it('renders "Show items" when draft count is undefined', () => {

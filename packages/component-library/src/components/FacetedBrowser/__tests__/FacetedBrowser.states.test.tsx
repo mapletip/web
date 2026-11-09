@@ -1008,12 +1008,14 @@ describe('responsive navigation slot', () => {
     });
     expect(filtersBtn).toBeVisible();
 
-    // Opening filter drawer opens filter drawer with Reset/Cancel/Apply
+    // Opening filter drawer shows only Cancel and Apply in its footer.
     fireEvent.click(filtersBtn);
     await waitFor(() => {
       expect(screen.getByRole('dialog')).toBeInTheDocument();
     });
-    expect(screen.getByRole('button', { name: 'Reset' })).toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: 'Reset' }),
+    ).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Cancel' })).toBeInTheDocument();
   });
 });
