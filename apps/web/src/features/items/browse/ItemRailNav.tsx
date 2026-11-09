@@ -57,8 +57,7 @@ export function ItemRailNav({ navScopes }: ItemRailNavProps): ReactElement {
               {hasChildren && (
                 <div className={classes['childrenContainer']}>
                   {scope.children.map((child) => {
-                    const isVisible =
-                      scope.active || (scope.expanded && child.active);
+                    const isVisible = scope.expanded;
                     return (
                       <NavLink
                         key={child.slug}
