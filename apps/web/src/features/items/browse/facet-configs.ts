@@ -205,11 +205,15 @@ export const RANGE_FACETS: readonly RangeFacetConfig[] = [
   { field: 'tameness', label: 'Tameness', getValue: (r) => r.tameness },
   {
     field: 'seatHp',
-    label: 'Seated HP recovery',
+    label: 'HP per 10 sec',
     getValue: (r) => r.seatHp,
     quick: true,
   },
-  { field: 'seatMp', label: 'Seated MP recovery', getValue: (r) => r.seatMp },
+  {
+    field: 'seatMp',
+    label: 'MP per 10 sec',
+    getValue: (r) => r.seatMp,
+  },
 ];
 
 export const CATEGORICAL_FACET_MAP = new Map(

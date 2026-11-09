@@ -77,8 +77,8 @@ const numericColumns = {
   closeness: numCol('closeness', 'Closeness'),
   fullness: numCol('fullness', 'Fullness'),
   tameness: numCol('tameness', 'Tameness'),
-  seatHp: numCol('seatHp', 'Seated HP'),
-  seatMp: numCol('seatMp', 'Seated MP'),
+  seatHp: numCol('seatHp', 'HP per 10 sec'),
+  seatMp: numCol('seatMp', 'MP per 10 sec'),
 };
 
 const REL_TITLES: Readonly<Record<ItemRelationshipKind, string>> = {
