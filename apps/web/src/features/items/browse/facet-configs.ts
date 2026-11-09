@@ -205,13 +205,13 @@ export const RANGE_FACETS: readonly RangeFacetConfig[] = [
   { field: 'tameness', label: 'Tameness', getValue: (r) => r.tameness },
   {
     field: 'seatHp',
-    label: 'HP per 10 sec',
+    label: 'HP Recovered / 10s',
     getValue: (r) => r.seatHp,
     quick: true,
   },
   {
     field: 'seatMp',
-    label: 'MP per 10 sec',
+    label: 'MP Recovered / 10s',
     getValue: (r) => r.seatMp,
   },
 ];

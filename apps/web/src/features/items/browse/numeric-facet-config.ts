@@ -78,13 +78,13 @@ export const ITEM_NUMERIC_FACET_CONFIGS = {
   },
   seatHp: {
     kind: 'range',
-    label: 'HP per 10 sec',
+    label: 'HP Recovered / 10s',
     getValue: (row) => row.seatHp,
     buckets: CHAIR_HP_BUCKETS,
   },
   seatMp: {
     kind: 'range',
-    label: 'MP per 10 sec',
+    label: 'MP Recovered / 10s',
     getValue: (row) => row.seatMp,
     buckets: CHAIR_MP_BUCKETS,
   },

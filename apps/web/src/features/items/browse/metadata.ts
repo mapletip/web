@@ -50,7 +50,7 @@ function getItemDescription(
     return `Browse and compare MapleStory ${buildLabel} pet food by fullness and closeness effects.`;
   }
   if (childSlug === 'chairs') {
-    return `Browse and compare MapleStory ${buildLabel} chairs by HP and MP recovered every 10 seconds.`;
+    return `Browse and compare MapleStory ${buildLabel} chairs by HP Recovered / 10s and MP Recovered / 10s.`;
   }
   if (childSlug === 'quest-items') {
     return `Browse MapleStory ${buildLabel} quest items and requirements.`;
