@@ -154,7 +154,7 @@ export function buildQuantileBuckets({
 
   return merged.map((bound) => ({
     value: `${String(bound.min)}-${String(bound.max)}`,
-    label: `${formatValue({ value: bound.min, unit, valuePrefix })}–${formatValue({ value: bound.max, unit, valuePrefix })}`,
+    label: `${formatValue({ value: bound.min, unit, valuePrefix })}–${formatValue({ value: bound.max, unit })}`,
     min: bound.min,
     max: bound.max,
   }));

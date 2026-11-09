@@ -91,6 +91,20 @@ describe('buildQuantileBuckets', () => {
     ]);
   });
 
+  it('prefixes a quantile range once', () => {
+    const values = Array.from({ length: 40 }, (_, index) => index + 1);
+    const buckets = buildQuantileBuckets({ values, valuePrefix: '+' });
+
+    expect(buckets.map((bucket) => bucket.label)).toEqual([
+      '+1–10',
+      '+11–15',
+      '+16–20',
+      '+21–30',
+      '+31–35',
+      '+36–40',
+    ]);
+  });
+
   it('splits larger domains by population instead of width', () => {
     const values = [1, 5, 12, 30, 45, 60, 88, 120, 199, 200];
     const buckets = buildQuantileBuckets({ values });
