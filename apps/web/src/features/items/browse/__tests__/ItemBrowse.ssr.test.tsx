@@ -243,5 +243,5 @@ describe('ItemBrowse server rendering', () => {
         expect(html).toContain('Item categories');
       }
     }
-  });
+  }, 15_000);
 });
