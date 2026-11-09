@@ -1,4 +1,4 @@
-import { Anchor, Breadcrumbs, Group, Stack, Text, Title } from '@mantine/core';
+import { Anchor, Breadcrumbs, Stack, Text, Title } from '@mantine/core';
 import type { ItemBrowseCoverage } from '@mapletip/data/items';
 import { Link } from '@tanstack/react-router';
 import type { ReactElement } from 'react';
@@ -9,8 +9,6 @@ import { getDropCoverageNotice } from '../facets';
 import { ItemMobileNav } from '../ItemMobileNav';
 import { ITEM_NAV_TARGET, type ItemNavScope } from '../navigation';
 import type { ItemCategorySelection } from '../routing';
-
-import classes from './styles.module.css';
 
 export interface ItemBrowseHeaderProps {
   readonly buildId: BuildId;
@@ -29,14 +27,10 @@ export function ItemBrowseHeader({
   navScopes,
   currentSearch,
 }: ItemBrowseHeaderProps): ReactElement {
-  const isCw = buildId === 'cw-launch';
   const dropNotice = getDropCoverageNotice(coverage, category);
   const navSearch = { ...currentSearch };
   delete navSearch['page'];
-  const buildParam = isCw ? undefined : buildId;
-  const scopeSlug =
-    category.scope.slug === 'all' ? undefined : category.scope.slug;
-  const childSlug = category.child?.slug;
+  const buildParam = buildId === 'cw-launch' ? undefined : buildId;
 
   const breadcrumbs = [
     <Anchor
@@ -114,41 +108,7 @@ export function ItemBrowseHeader({
         {breadcrumbs}
       </Breadcrumbs>
 
-      <Group justify="space-between" align="baseline" wrap="wrap" gap="sm">
-        <Title order={1}>{heading}</Title>
-        <div
-          className={classes['buildSwitcher']}
-          role="group"
-          aria-label="MapleStory game build"
-        >
-          <Link
-            to={ITEM_NAV_TARGET}
-            params={{
-              buildId: undefined,
-              scope: scopeSlug,
-              child: childSlug,
-            }}
-            search={navSearch}
-            className={classes['buildLink']}
-            {...(isCw ? { 'aria-current': 'page' } : {})}
-          >
-            Classic World
-          </Link>
-          <Link
-            to={ITEM_NAV_TARGET}
-            params={{
-              buildId: 'gms-v83',
-              scope: scopeSlug,
-              child: childSlug,
-            }}
-            search={navSearch}
-            className={classes['buildLink']}
-            {...(!isCw ? { 'aria-current': 'page' } : {})}
-          >
-            GMS v83
-          </Link>
-        </div>
-      </Group>
+      <Title order={1}>{heading}</Title>
 
       {dropNotice && (
         <Text size="sm" c="dimmed">
