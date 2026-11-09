@@ -70,10 +70,10 @@ function numCol<K extends NumericItemRowKey>(
 }
 
 const numericColumns = {
-  hp: numCol('hp', 'HP'),
-  mp: numCol('mp', 'MP'),
-  hpPercent: numCol('hpPercent', 'HP %', '%'),
-  mpPercent: numCol('mpPercent', 'MP %', '%'),
+  hp: numCol('hp', 'HP Recovered'),
+  mp: numCol('mp', 'MP Recovered'),
+  hpPercent: numCol('hpPercent', 'HP Recovered %', '%'),
+  mpPercent: numCol('mpPercent', 'MP Recovered %', '%'),
   closeness: numCol('closeness', 'Closeness'),
   fullness: numCol('fullness', 'Fullness'),
   tameness: numCol('tameness', 'Tameness'),
@@ -135,8 +135,8 @@ const relationshipColumns = {
 };
 
 const STATS_SORT_LABELS = {
-  desc: 'Stats: strongest first',
-  asc: 'Stats: weakest first',
+  desc: 'Stats Improved: strongest first',
+  asc: 'Stats Improved: weakest first',
 } as const;
 
 export const COLUMNS = {
@@ -158,7 +158,7 @@ export const COLUMNS = {
     (row) => formatTargetLabel(row.targetLabel),
     { width: 130, nowrap: true, sortable: true },
   ),
-  stats: col('stats', 'Stats', (row) => formatStats(row.stats), {
+  stats: col('stats', 'Stats Improved', (row) => formatStats(row.stats), {
     width: 170,
     sortable: true,
     firstSortDirection: 'desc',
@@ -206,9 +206,14 @@ export const COLUMNS = {
   },
   questFlag: col(
     'questFlag',
-    'Quest flag',
+    'Quest item flag',
     (row) => formatQuestFlag(row.questFlag),
-    { width: 100, sortable: true },
+    {
+      width: 120,
+      sortable: true,
+      fullLabel:
+        'Whether source data marks this as a quest item; it does not show a recorded quest requirement.',
+    },
   ),
   family: col(
     'family',

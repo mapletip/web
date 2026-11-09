@@ -6,6 +6,7 @@
  */
 import type { ItemBrowseCoverage } from '@mapletip/data/items';
 
+import { formatAttackValue } from './column-format';
 import {
   ITEM_FUNCTION_LABELS,
   ITEM_TYPE_LABELS,
@@ -49,6 +50,7 @@ export interface RangeFacetConfig {
   readonly label: string;
   readonly getValue: (row: ItemRow) => number | undefined;
   readonly unit?: string | undefined;
+  readonly formatValue?: ((value: number) => string) | undefined;
   readonly quick?: boolean | undefined;
 }
 
@@ -82,7 +84,7 @@ export const CATEGORICAL_FACETS: readonly CategoricalFacetConfig[] = [
   },
   {
     field: 'scrollStat',
-    label: 'Stat',
+    label: 'Stats Improved',
     values: (row) => (row.stats ? Object.keys(row.stats) : []),
     optionLabel: SCROLL_STAT_LABELS,
     sortOrder: SCROLL_STAT_ORDER,
@@ -101,7 +103,7 @@ export const CATEGORICAL_FACETS: readonly CategoricalFacetConfig[] = [
     values: (row) =>
       row.cursed === undefined ? ['none'] : [String(row.cursed)],
     optionLabel: (val) =>
-      val === 'none' ? 'No recorded risk' : `${val}% on failure`,
+      val === 'none' ? '-' : `${val}% on failure`,
     sortOrder: (a, b) => {
       if (a === 'none') return -1;
       if (b === 'none') return 1;
@@ -156,27 +158,43 @@ export const CATEGORICAL_FACETS: readonly CategoricalFacetConfig[] = [
     field: 'questFlag',
     label: 'Quest item',
     values: (row) => (row.questFlag ? ['quest-flagged'] : []),
-    optionLabel: () => 'Quest-flagged item',
+    optionLabel: () => 'Marked as a quest item',
     quick: true,
   },
 ];
 
 export const RANGE_FACETS: readonly RangeFacetConfig[] = [
-  { field: 'hp', label: 'HP', getValue: (r) => r.hp, quick: true },
-  { field: 'mp', label: 'MP', getValue: (r) => r.mp, quick: true },
+  {
+    field: 'hp',
+    label: 'HP Recovered',
+    getValue: (r) => r.hp,
+    quick: true,
+  },
+  {
+    field: 'mp',
+    label: 'MP Recovered',
+    getValue: (r) => r.mp,
+    quick: true,
+  },
   {
     field: 'hpPercent',
-    label: 'HP %',
+    label: 'HP Recovered %',
     getValue: (r) => r.hpPercent,
     unit: '%',
   },
   {
     field: 'mpPercent',
-    label: 'MP %',
+    label: 'MP Recovered %',
     getValue: (r) => r.mpPercent,
     unit: '%',
   },
-  { field: 'attack', label: 'Attack', getValue: (r) => r.attack, quick: true },
+  {
+    field: 'attack',
+    label: 'Attack',
+    getValue: (r) => r.attack,
+    formatValue: formatAttackValue,
+    quick: true,
+  },
   {
     field: 'closeness',
     label: 'Closeness',

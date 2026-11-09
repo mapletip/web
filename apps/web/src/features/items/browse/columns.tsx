@@ -102,7 +102,7 @@ function adaptColumn(
           </span>
         );
       }
-      return displayValue;
+      return <span className={classes['cellValue']}>{displayValue}</span>;
     },
   };
 }

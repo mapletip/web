@@ -17,6 +17,7 @@ const FORMATTER = new Intl.NumberFormat('en-US');
 export function buildRangeBuckets(
   values: readonly number[],
   unit?: string,
+  formatValue?: (value: number) => string,
 ): readonly FacetRangeBucket[] | undefined {
   const valid = values.filter(
     (v) =>
@@ -30,20 +31,23 @@ export function buildRangeBuckets(
     return undefined;
   }
   const unitSuffix = unit ?? '';
+  const format =
+    formatValue ?? ((value: number) => `${FORMATTER.format(value)}${unitSuffix}`);
   if (distinct.length <= 6) {
     return distinct.map((val) => ({
       value: String(val),
-      label: `${FORMATTER.format(val)}${unitSuffix}`,
+      label: format(val),
       min: val,
       max: val,
     }));
   }
   const quantiles = buildQuantileBuckets({ values: valid });
-  if (unitSuffix.length > 0) {
-    return quantiles.map((bucket) => ({
-      ...bucket,
-      label: `${FORMATTER.format(bucket.min ?? 0)}${unitSuffix}–${FORMATTER.format(bucket.max ?? 0)}${unitSuffix}`,
-    }));
-  }
-  return quantiles;
+  return quantiles.map((bucket) =>
+    bucket.min !== undefined && bucket.max !== undefined
+      ? {
+          ...bucket,
+          label: `${format(bucket.min)}–${format(bucket.max)}`,
+        }
+      : bucket,
+  );
 }

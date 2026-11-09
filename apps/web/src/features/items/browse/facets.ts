@@ -124,7 +124,7 @@ function deriveRangeFacet(
   const values = scopedRows
     .map((r) => cfg.getValue(r))
     .filter((v): v is number => typeof v === 'number' && Number.isFinite(v));
-  const buckets = buildRangeBuckets(values, cfg.unit);
+  const buckets = buildRangeBuckets(values, cfg.unit, cfg.formatValue);
   if (!buckets) return undefined;
   return {
     id: cfg.field,

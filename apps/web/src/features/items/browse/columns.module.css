@@ -1,3 +1,7 @@
+.cellValue {
+  white-space: pre-line;
+}
+
 .identity {
   display: flex;
   align-items: center;

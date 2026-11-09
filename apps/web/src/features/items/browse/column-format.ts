@@ -22,6 +22,8 @@ import type {
 
 export type ItemBrowseCoverageState = ItemBrowseCoverage['scrollTier'];
 
+const LIST_VALUE_SEPARATOR = '\n';
+
 export const SCOPE_LABELS: Readonly<Record<ItemBrowseClass, string>> = {
   consume: ITEM_SCOPES.use.label,
   etc: ITEM_SCOPES.etc.label,
@@ -50,7 +52,7 @@ export function formatStats(stats: ItemRow['stats']): string | undefined {
       parts.push(`${label} ${signed}`);
     }
   }
-  return parts.length > 0 ? parts.join(', ') : undefined;
+  return parts.length > 0 ? parts.join(LIST_VALUE_SEPARATOR) : undefined;
 }
 
 export function formatPets(row: ItemRow): string | undefined {
@@ -59,7 +61,7 @@ export function formatPets(row: ItemRow): string | undefined {
   const unresolved =
     row.unresolvedPetTargets?.map((targetId) => `Unresolved ${targetId}`) ?? [];
   const all = [...named, ...unresolved];
-  return all.length > 0 ? all.join(', ') : undefined;
+  return all.length > 0 ? all.join(LIST_VALUE_SEPARATOR) : undefined;
 }
 
 export function formatList(
@@ -67,7 +69,7 @@ export function formatList(
   labels: Readonly<Record<string, string>>,
 ): string | undefined {
   if (!items || items.length === 0) return undefined;
-  return items.map((item) => labels[item] ?? item).join(', ');
+  return items.map((item) => labels[item] ?? item).join(LIST_VALUE_SEPARATOR);
 }
 
 export const formatTypes = (row: ItemRow) =>
@@ -100,7 +102,7 @@ export function formatSuccess(success: number | undefined): string | undefined {
 }
 
 export function formatCursed(cursed: number | undefined): string | undefined {
-  if (cursed === undefined) return 'No recorded risk';
+  if (cursed === undefined) return '-';
   return `${cursed}% on failure`;
 }
 
@@ -112,9 +114,13 @@ export function formatNum(
   return `${value.toLocaleString('en-US')}${unit}`;
 }
 
+export function formatAttackValue(attack: number): string {
+  return attack >= 0 ? `+${attack}` : String(attack);
+}
+
 export function formatAttack(attack: number | undefined): string | undefined {
   if (attack === undefined) return undefined;
-  return attack >= 0 ? `+${attack}` : String(attack);
+  return formatAttackValue(attack);
 }
 
 export function formatKind(itemClass: ItemBrowseClass): string | undefined {
