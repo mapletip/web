@@ -192,6 +192,7 @@ export function FacetedBrowser<TRecord extends Record<string, unknown>>(
     browseState,
     onBrowseStateChange: changeBrowseState,
   });
+  const canonicalState = browser.canonicalState;
 
   const [internalDrawerOpened, setInternalDrawerOpened] = useState(false);
   const drawerControlled = controlledDrawerOpened !== undefined;
@@ -225,7 +226,7 @@ export function FacetedBrowser<TRecord extends Record<string, unknown>>(
   const drawer = useFacetedBrowserDrawer({
     opened: drawerOpened,
     onOpenedChange: updateDrawerOpened,
-    committedState: browseState,
+    committedState: canonicalState,
     statusActive,
     filterIsInvalid,
     evaluateDraft: browser.evaluateDraft,
@@ -303,16 +304,16 @@ export function FacetedBrowser<TRecord extends Record<string, unknown>>(
     [tableStorageKey, columns, idAccessor, identityField],
   );
   const hasActiveQuery =
-    browseState.search.trim().length > 0 ||
-    Object.keys(browseState.filters).length > 0;
+    canonicalState.search.trim().length > 0 ||
+    Object.keys(canonicalState.filters).length > 0;
 
-  const activeFilterCount = countActiveFilters(browseState.filters);
+  const activeFilterCount = countActiveFilters(canonicalState.filters);
   const quickFacets = facets
     .filter((facet) => facet.quick)
     .map((facet) => ({
       id: facet.id,
       label: facet.label,
-      active: activeValueCount(browseState.filters[facet.field]),
+      active: activeValueCount(canonicalState.filters[facet.field]),
     }));
 
   const { pendingCount, getDraftFacetValues } = drawer;
@@ -357,7 +358,7 @@ export function FacetedBrowser<TRecord extends Record<string, unknown>>(
     ) : undefined;
   const customResults =
     props.presentation === 'custom'
-      ? props.renderResults({ records: browser.records, state: browseState })
+      ? props.renderResults({ records: browser.records, state: canonicalState })
       : undefined;
 
   // A short noun may replace the descriptive `recordNoun` in the summary only.
@@ -405,7 +406,7 @@ export function FacetedBrowser<TRecord extends Record<string, unknown>>(
             <FacetList
               key={facetResetEpoch}
               facets={facets}
-              values={browseState.filters}
+              values={canonicalState.filters}
               records={records}
               surface="rail"
               getCounts={browser.getFacetValues}
@@ -423,7 +424,7 @@ export function FacetedBrowser<TRecord extends Record<string, unknown>>(
       columns={columns}
       idAccessor={idAccessor}
       identityField={comparisonProps.identityField}
-      hiddenColumns={browseState.hiddenColumns}
+      hiddenColumns={canonicalState.hiddenColumns}
       defaultHiddenColumns={initialDefaultHiddenColumns}
       recordNoun={recordNoun}
       pageSize={browser.pageSize}
@@ -452,7 +453,7 @@ export function FacetedBrowser<TRecord extends Record<string, unknown>>(
             <SortSelect
               recordNoun={recordNoun}
               sortOptions={sortOptions}
-              currentSort={browseState.sort}
+              currentSort={canonicalState.sort}
               onChange={browser.setSort}
             />
           </Group>
@@ -465,10 +466,10 @@ export function FacetedBrowser<TRecord extends Record<string, unknown>>(
 
   const effectiveState = useMemo(
     () =>
-      browser.page === browseState.page
-        ? browseState
-        : { ...browseState, page: browser.page },
-    [browseState, browser.page],
+      browser.page === canonicalState.page
+        ? canonicalState
+        : { ...canonicalState, page: browser.page },
+    [canonicalState, browser.page],
   );
 
   const hasSortOptions = sortOptions !== undefined && sortOptions.length > 0;
@@ -488,7 +489,7 @@ export function FacetedBrowser<TRecord extends Record<string, unknown>>(
               aria-label={searchLabel}
               placeholder={searchLabel}
               leftSection={<MagnifyingGlass size={16} aria-hidden="true" />}
-              value={browseState.search}
+              value={canonicalState.search}
               onChange={(event) => browser.setSearch(event.currentTarget.value)}
             />
           </form>
@@ -520,7 +521,7 @@ export function FacetedBrowser<TRecord extends Record<string, unknown>>(
         activeFilters={
           <ActiveFilters
             facets={facets}
-            filters={browseState.filters}
+            filters={canonicalState.filters}
             onRemove={removeChip}
             onClear={clearAllFilters}
           />

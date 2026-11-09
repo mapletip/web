@@ -3,7 +3,7 @@ import { theme } from '@mapletip/theme';
 import { renderToString } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 
-import { FacetedBrowser } from '@/components/FacetedBrowser';
+import { FacetedBrowser, type BrowseState } from '@/components/FacetedBrowser';
 import { NeutralBrowserMarkup } from '@/components/FacetedBrowser/__tests__/fixtures/NeutralBrowserMarkup';
 import { demoRecords } from '@/fixtures/records';
 
@@ -49,6 +49,50 @@ describe('FacetedBrowser server rendering', () => {
     expect(html).not.toContain('<table');
     expect(html).toContain('Record 001');
     expect(html).toContain('href="/records/record-001"');
+  });
+
+  it('renders normalized filter counts and chips for controlled state during SSR', () => {
+    const html = renderToString(
+      <MantineProvider theme={theme} forceColorScheme="dark">
+        <FacetedBrowser
+          title={<h1>Normalized filters</h1>}
+          records={demoRecords.slice(0, 10)}
+          idAccessor="id"
+          queryFields={['group']}
+          facets={[
+            {
+              id: 'category',
+              field: 'group',
+              label: 'Category',
+              kind: 'multi-select',
+              quick: true,
+              options: [{ value: 'Alpha', label: 'Alpha' }],
+            },
+          ]}
+          presentation="cards"
+          renderCard={(record) => <div>{record.name}</div>}
+          state={
+            {
+              search: '',
+              filters: {
+                obsolete: ['legacy'],
+                group: ['not-an-option'],
+              },
+              page: 1,
+              pageSize: 10,
+              hiddenColumns: [],
+            } satisfies BrowseState
+          }
+          onStateChange={() => undefined}
+        />
+      </MantineProvider>,
+    );
+
+    expect(html).toContain('aria-label="Filters, 0 active. Open all filters"');
+    expect(html).toContain('aria-label="Category. Open Category filters"');
+    expect(html).not.toContain('aria-label="Category, 1 active filter.');
+    expect(html).not.toContain('Remove Category: not-an-option');
+    expect(html).not.toContain('not-an-option');
   });
 
   it('renders clamped rows, page number, and window during SSR when page is out of range', () => {

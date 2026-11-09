@@ -107,6 +107,8 @@ export interface UseFacetedBrowserReturn<
 > {
   /** Underlying TanStack Table v9 instance. */
   readonly table: Table<typeof facetedBrowserFeatures, TRecord>;
+  /** Canonical committed state after facet filter normalization. */
+  readonly canonicalState: BrowseState;
   /** Processed records for the current page, consumed by both table and cards. */
   readonly records: readonly TRecord[];
   /** Processed TanStack rows for the current page. */
@@ -956,6 +958,7 @@ export function useFacetedBrowser<TRecord extends Record<string, unknown>>({
 
   return {
     table,
+    canonicalState,
     records: processedRecords,
     rows: paginatedRows,
     allFilteredRecords,

@@ -155,6 +155,54 @@ describe('integrated FacetedBrowser', () => {
     });
   });
 
+  it('keeps chips and active counts aligned with results for invalid controlled filters', async () => {
+    const invalidState: BrowseState = {
+      ...state,
+      filters: {
+        group: ['not-a-category'],
+        obsolete: ['legacy'],
+      },
+    };
+
+    await render(
+      <MantineProvider>
+        <FacetedBrowser
+          title={<h1>Invalid controlled filters</h1>}
+          records={demoRecords}
+          idAccessor="id"
+          queryFields={queryFields}
+          facets={facets}
+          presentation="cards"
+          renderCard={(record) => <a href={record.href}>{record.name}</a>}
+          state={invalidState}
+          onStateChange={() => undefined}
+        />
+      </MantineProvider>,
+    );
+    await page.viewport(375, 812);
+
+    expect(
+      page.getByText(`61–80 of ${demoRecords.length} records`).first(),
+    ).toBeVisible();
+    expect(
+      page.getByRole('button', {
+        name: 'Filters, 0 active. Open all filters',
+      }),
+    ).toBeVisible();
+    expect(
+      page.getByRole('button', { name: 'Category. Open Category filters' }),
+    ).toBeVisible();
+    expect(
+      page.getByRole('button', { name: 'Region. Open Region filters' }),
+    ).toBeVisible();
+    expect(
+      document.querySelector(
+        'button[aria-label="Remove Category: not-a-category"]',
+      ),
+    ).toBeNull();
+    expect(document.body.textContent).not.toContain('Category: not-a-category');
+  });
+
   it('commits sorting and its page reset as one controlled transition', async () => {
     const initial: BrowseState = { ...state, page: 3 };
     const changes: BrowseState[] = [];
