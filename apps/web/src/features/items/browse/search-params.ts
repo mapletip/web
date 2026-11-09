@@ -3,133 +3,109 @@ import type {
   BrowseState,
   FacetFilterValue,
 } from '@mapletip/component-library';
+import { z } from 'zod';
 
 import { ITEM_SORT_OPTIONS } from './sort';
-
-interface NumericRangeFilter {
-  readonly min?: number;
-  readonly max?: number;
-}
-
-type ItemBrowseSearchValue = FacetFilterValue;
-
-export interface ItemBrowseSearch extends Record<
-  string,
-  ItemBrowseSearchValue
-> {
-  readonly q: string;
-  readonly page: number;
-  readonly pageSize: number;
-  readonly sort: string;
-}
 
 export const PAGE_SIZE_OPTIONS = [25, 50, 75, 100] as const;
 
 const MAX_SEARCH_BYTES = 200;
-
-export const ITEM_BROWSE_DEFAULT_STATE = {
-  search: '',
-  filters: {},
-  sort: {
-    field: ITEM_SORT_OPTIONS[0].field,
-    direction: ITEM_SORT_OPTIONS[0].direction,
-  },
-  page: 1,
-  pageSize: 50,
-  hiddenColumns: [],
-} satisfies BrowseState;
 
 interface SortKeyOption {
   readonly field: string;
   readonly direction: string;
 }
 
-function sortKey(option: SortKeyOption): string {
-  return `${option.field}-${option.direction}`;
+function sortKey({ field, direction }: SortKeyOption): string {
+  return `${field}-${direction}`;
 }
 
-function parseSearchQuery(value: unknown): string | undefined {
-  const query =
-    typeof value === 'number' && Number.isFinite(value) ? String(value) : value;
-  if (typeof query !== 'string' || query.length === 0) return undefined;
-  const bytes = new TextEncoder().encode(query).length;
-  return bytes <= MAX_SEARCH_BYTES ? query : undefined;
-}
+const defaultSortKey = sortKey(ITEM_SORT_OPTIONS[0]);
 
-function parseInteger(value: unknown): number | undefined {
-  if (typeof value === 'number' && Number.isInteger(value)) return value;
-  if (typeof value === 'string' && /^\d+$/.test(value)) {
-    return Number.parseInt(value, 10);
-  }
-  return undefined;
-}
+export const ITEM_BROWSE_DEFAULT_SEARCH = {
+  q: '',
+  page: 1,
+  pageSize: 50,
+  sort: defaultSortKey,
+} as const;
 
-function parsePage(value: unknown): number | undefined {
-  const page = parseInteger(value);
-  return page !== undefined && page >= 1 && page <= 9999 ? page : undefined;
-}
+export const ITEM_BROWSE_DEFAULT_STATE = {
+  search: ITEM_BROWSE_DEFAULT_SEARCH.q,
+  filters: {},
+  sort: {
+    field: ITEM_SORT_OPTIONS[0].field,
+    direction: ITEM_SORT_OPTIONS[0].direction,
+  },
+  page: ITEM_BROWSE_DEFAULT_SEARCH.page,
+  pageSize: ITEM_BROWSE_DEFAULT_SEARCH.pageSize,
+  hiddenColumns: [],
+} satisfies BrowseState;
 
-function parsePageSize(value: unknown): number | undefined {
-  const pageSize = parseInteger(value);
-  return pageSize !== undefined &&
-    PAGE_SIZE_OPTIONS.some((option) => option === pageSize)
-    ? pageSize
-    : undefined;
-}
+const facetArraySchema = z
+  .array(
+    z
+      .union([z.string(), z.number().finite().transform(String)])
+      .optional()
+      .catch(undefined),
+  )
+  .transform((values) => values.filter((value) => value !== undefined));
 
-function parseSort(value: unknown) {
-  if (typeof value !== 'string') return undefined;
-  return ITEM_SORT_OPTIONS.find((option) => sortKey(option) === value);
-}
+const facetObjectSchema = z
+  .object({
+    min: z.number().optional(),
+    max: z.number().optional(),
+  })
+  .strict()
+  .transform(({ min, max }) => ({
+    ...(min !== undefined ? { min } : {}),
+    ...(max !== undefined ? { max } : {}),
+  }));
 
-function isPlainObject(value: unknown): value is Record<string, unknown> {
-  if (typeof value !== 'object' || value === null || Array.isArray(value)) {
-    return false;
-  }
-  const prototype = Reflect.getPrototypeOf(value);
-  return prototype === Object.prototype || prototype === null;
-}
+// TanStack types Link `search` from the schema *input*; the identity preprocess
+// keeps facet inputs `unknown` so links can pass library filter values.
+const facetFilterValueSchema = z.preprocess(
+  (value) => value,
+  z
+    .union([facetArraySchema, z.boolean(), facetObjectSchema])
+    .optional()
+    .catch(undefined),
+);
 
-function isUnknownArray(value: unknown): value is readonly unknown[] {
-  return Array.isArray(value);
-}
+const itemBrowseSearchFields = z.object({
+  q: z
+    .union([z.string(), z.number().finite().transform(String)])
+    .refine(
+      (query) => new TextEncoder().encode(query).length <= MAX_SEARCH_BYTES,
+    )
+    .catch(ITEM_BROWSE_DEFAULT_SEARCH.q),
+  page: z.coerce
+    .number()
+    .int()
+    .min(1)
+    .max(9999)
+    .catch(ITEM_BROWSE_DEFAULT_SEARCH.page),
+  pageSize: z.coerce
+    .number()
+    .pipe(z.literal(PAGE_SIZE_OPTIONS))
+    .catch(ITEM_BROWSE_DEFAULT_SEARCH.pageSize),
+  sort: z.literal(ITEM_SORT_OPTIONS.map(sortKey)).catch(defaultSortKey),
+});
 
-function parseFacetFilter(
-  value: unknown,
-): readonly string[] | NumericRangeFilter | boolean | undefined {
-  if (typeof value === 'boolean') return value;
-  if (isUnknownArray(value)) {
-    return value.flatMap((entry) => {
-      if (typeof entry === 'string') return [entry];
-      if (typeof entry === 'number' && Number.isFinite(entry)) {
-        return [String(entry)];
-      }
-      return [];
-    });
-  }
-  return isPlainObject(value) ? value : undefined;
-}
+/** Standard Schema validator for the Items Browse route's search params. */
+export const itemBrowseSearchSchema = itemBrowseSearchFields
+  .catchall(facetFilterValueSchema)
+  .transform(({ q, page, pageSize, sort, ...filters }) => {
+    const definedFilters = Object.entries(filters).reduce<
+      Record<string, FacetFilterValue>
+    >((result, [field, value]) => {
+      if (value !== undefined) result[field] = value;
+      return result;
+    }, {});
 
-const GENERAL_SEARCH_KEYS = new Set(['q', 'page', 'pageSize', 'sort']);
+    return { q, page, pageSize: Number(pageSize), sort, ...definedFilters };
+  });
 
-/** Keeps the four general keys and facet values with supported URL shapes. */
-export function validateSearch(raw: Record<string, unknown>): ItemBrowseSearch {
-  const sort = parseSort(raw['sort']) ?? ITEM_BROWSE_DEFAULT_STATE.sort;
-  const search: ItemBrowseSearch = {
-    q: parseSearchQuery(raw['q']) ?? ITEM_BROWSE_DEFAULT_STATE.search,
-    page: parsePage(raw['page']) ?? ITEM_BROWSE_DEFAULT_STATE.page,
-    pageSize:
-      parsePageSize(raw['pageSize']) ?? ITEM_BROWSE_DEFAULT_STATE.pageSize,
-    sort: sortKey(sort),
-  };
-
-  for (const [field, value] of Object.entries(raw)) {
-    if (GENERAL_SEARCH_KEYS.has(field)) continue;
-    const filter = parseFacetFilter(value);
-    if (filter !== undefined) search[field] = filter;
-  }
-  return search;
-}
+export type ItemBrowseSearch = z.output<typeof itemBrowseSearchSchema>;
 
 /** Converts validated URL parameters into the current category's browse state. */
 export function urlToBrowseState({
@@ -137,23 +113,18 @@ export function urlToBrowseState({
 }: {
   readonly search: ItemBrowseSearch;
 }): BrowseState {
-  const sort =
-    ITEM_SORT_OPTIONS.find((option) => sortKey(option) === search.sort) ??
-    ITEM_BROWSE_DEFAULT_STATE.sort;
-  const filters: Record<string, FacetFilterValue> = {};
-
-  for (const [field, value] of Object.entries(search)) {
-    if (GENERAL_SEARCH_KEYS.has(field)) continue;
-    filters[field] = value;
-  }
+  const { q, page, pageSize, sort, ...parsedFilters } = search;
+  const resolvedSort =
+    ITEM_SORT_OPTIONS.find((option) => sortKey(option) === sort) ??
+    ITEM_SORT_OPTIONS[0];
 
   return {
     ...ITEM_BROWSE_DEFAULT_STATE,
-    search: search.q,
-    filters,
-    page: search.page,
-    pageSize: search.pageSize,
-    sort: { field: sort.field, direction: sort.direction },
+    search: q,
+    filters: parsedFilters,
+    page,
+    pageSize,
+    sort: { field: resolvedSort.field, direction: resolvedSort.direction },
   };
 }
 
@@ -166,15 +137,15 @@ export function browseStateToUrl({
   readonly includePage?: boolean | undefined;
 }): ItemBrowseSearch {
   const sort = state.sort ?? ITEM_BROWSE_DEFAULT_STATE.sort;
+  const sortIndex = ITEM_SORT_OPTIONS.findIndex(
+    (option) =>
+      option.field === sort.field && option.direction === sort.direction,
+  );
   return {
     q: state.search,
-    page: includePage ? state.page : ITEM_BROWSE_DEFAULT_STATE.page,
+    page: includePage ? state.page : ITEM_BROWSE_DEFAULT_SEARCH.page,
     pageSize: state.pageSize,
-    sort: sortKey(sort),
+    sort: sortKey(ITEM_SORT_OPTIONS[sortIndex] ?? ITEM_SORT_OPTIONS[0]),
     ...state.filters,
   };
 }
-
-export const ITEM_BROWSE_DEFAULT_SEARCH = browseStateToUrl({
-  state: ITEM_BROWSE_DEFAULT_STATE,
-});
