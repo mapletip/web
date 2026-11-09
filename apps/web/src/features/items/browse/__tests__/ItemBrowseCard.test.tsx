@@ -1,3 +1,5 @@
+import { MantineProvider } from '@mantine/core';
+import { theme } from '@mapletip/theme';
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 
@@ -13,7 +15,11 @@ const row: ItemRow = {
 
 describe('ItemBrowseCard', () => {
   it('shows the item name without displaying its internal ID', () => {
-    render(<ItemBrowseCard record={row} />);
+    render(
+      <MantineProvider theme={theme}>
+        <ItemBrowseCard record={row} />
+      </MantineProvider>,
+    );
 
     expect(screen.getByRole('heading', { name: 'Red Potion' })).toBeVisible();
     expect(screen.queryByText('ID', { exact: true })).not.toBeInTheDocument();

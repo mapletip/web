@@ -22,7 +22,7 @@ const coverage = {
 };
 
 describe('ItemBrowseCard', () => {
-  it('renders icon, name, ID, and facts from context columns that have a value', () => {
+  it('renders icon, name, and facts from context columns that have a value', () => {
     const scrollCategory = {
       scope: ITEM_SCOPES.use,
       child: ITEM_SCOPES.use.children.find((c) => c.slug === 'upgrade-scrolls'),
@@ -49,17 +49,17 @@ describe('ItemBrowseCard', () => {
     expect(screen.getByRole('heading', { level: 2 })).toHaveTextContent(
       'Scroll for Helmet for DEF 100%',
     );
-    expect(screen.getByText('02040001')).toBeInTheDocument();
+    expect(screen.queryByText('02040001')).not.toBeInTheDocument();
 
     // Facts from scroll columns that have a value
     expect(screen.getByText('Equipment type')).toBeInTheDocument();
     expect(screen.getByText('Hat')).toBeInTheDocument();
-    expect(screen.getByText('Stats')).toBeInTheDocument();
+    expect(screen.getByText('Stats Improved')).toBeInTheDocument();
     expect(screen.getByText('Weapon DEF +1')).toBeInTheDocument();
     expect(screen.getByText('Success')).toBeInTheDocument();
     expect(screen.getByText('100%')).toBeInTheDocument();
     expect(screen.getByText('Destruction risk')).toBeInTheDocument();
-    expect(screen.getByText('No recorded risk')).toBeInTheDocument();
+    expect(screen.getByText('-')).toBeInTheDocument();
   });
 
   it('omits facts without values so cards only show recorded facts', () => {
@@ -92,9 +92,9 @@ describe('ItemBrowseCard', () => {
       </MantineProvider>,
     );
 
-    expect(screen.getByText('HP')).toBeInTheDocument();
+    expect(screen.getByText('HP Recovered')).toBeInTheDocument();
     expect(screen.getByText('100')).toBeInTheDocument();
-    expect(screen.queryByText('MP')).not.toBeInTheDocument();
+    expect(screen.queryByText('MP Recovered')).not.toBeInTheDocument();
     expect(screen.queryByText('Not recorded')).not.toBeInTheDocument();
   });
 
@@ -115,7 +115,7 @@ describe('ItemBrowseCard', () => {
     expect(screen.getByRole('heading', { level: 2 })).toHaveTextContent(
       'Plain Snail Shell',
     );
-    expect(screen.getByText('04000000')).toBeInTheDocument();
+    expect(screen.queryByText('04000000')).not.toBeInTheDocument();
     expect(screen.queryByRole('definition')).not.toBeInTheDocument();
   });
 
@@ -135,6 +135,6 @@ describe('ItemBrowseCard', () => {
     expect(screen.getByRole('heading', { level: 2 })).toHaveTextContent(
       'Unnamed item',
     );
-    expect(screen.getByText('09999999')).toBeInTheDocument();
+    expect(screen.queryByText('09999999')).not.toBeInTheDocument();
   });
 });

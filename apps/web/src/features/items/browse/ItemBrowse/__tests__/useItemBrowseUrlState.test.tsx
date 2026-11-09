@@ -8,6 +8,7 @@ import {
   RouterProvider,
 } from '@tanstack/react-router';
 import { act, render } from '@testing-library/react';
+import { useState } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 
 import type { BrowseContext, ItemBrowseSearch } from '../../search-params';
@@ -36,11 +37,24 @@ describe('useItemBrowseUrlState', () => {
     ) => void;
   }) {
     let latestResult!: UseItemBrowseUrlStateResult;
+    let updateSearch!: (
+      nextSearch: ItemBrowseSearch,
+      nextResetKey?: string,
+    ) => void;
+    let currentSearch = searchProp;
+    let stateResetKey = 'test';
 
     function TestConsumer() {
+      const [, setVersion] = useState(0);
+      updateSearch = (nextSearch, nextResetKey = stateResetKey) => {
+        currentSearch = nextSearch;
+        stateResetKey = nextResetKey;
+        setVersion((version) => version + 1);
+      };
       latestResult = useItemBrowseUrlState({
-        searchProp,
+        searchProp: currentSearch,
         browseContext: dummyContext,
+        stateResetKey,
         onSearchChange,
       });
       return null;
@@ -65,6 +79,8 @@ describe('useItemBrowseUrlState', () => {
 
     return {
       getResult: () => latestResult,
+      updateSearch: (nextSearch: ItemBrowseSearch, nextResetKey?: string) =>
+        updateSearch(nextSearch, nextResetKey),
       router,
     };
   }
@@ -72,17 +88,22 @@ describe('useItemBrowseUrlState', () => {
   it('debounces text search typing and uses replace: true', async () => {
     vi.useFakeTimers();
     const onSearchChange = vi.fn();
-    const { getResult } = await setup({ onSearchChange });
+    const { getResult } = await setup({
+      searchProp: { page: 2 },
+      onSearchChange,
+    });
 
     act(() => {
       getResult().handleStateChange({
         ...getResult().browseState,
         search: 'pot',
+        page: 1,
       });
     });
 
     // Immediate local search
     expect(getResult().localSearch).toBe('pot');
+    expect(getResult().browseState.page).toBe(1);
     expect(onSearchChange).not.toHaveBeenCalled();
 
     // After debounce
@@ -123,6 +144,64 @@ describe('useItemBrowseUrlState', () => {
     });
 
     expect(onSearchChange).toHaveBeenCalledWith({}, true);
+  });
+
+  it('cancels a debounced search when the URL changes externally', async () => {
+    vi.useFakeTimers();
+    const onSearchChange = vi.fn();
+    const { getResult, updateSearch } = await setup({
+      searchProp: { q: 'old', page: 2 },
+      onSearchChange,
+    });
+
+    act(() => {
+      getResult().handleStateChange({
+        ...getResult().browseState,
+        search: 'draft',
+        page: 1,
+      });
+    });
+
+    act(() => {
+      updateSearch({ q: 'back', page: 3 });
+    });
+    act(() => {
+      vi.advanceTimersByTime(150);
+    });
+
+    expect(getResult().localSearch).toBe('back');
+    expect(getResult().browseState.page).toBe(3);
+    expect(onSearchChange).not.toHaveBeenCalled();
+    vi.useRealTimers();
+  });
+
+  it('resets pending state when the route context changes', async () => {
+    vi.useFakeTimers();
+    const onSearchChange = vi.fn();
+    const { getResult, updateSearch } = await setup({
+      searchProp: { q: 'old', page: 2 },
+      onSearchChange,
+    });
+
+    act(() => {
+      getResult().handleStateChange({
+        ...getResult().browseState,
+        search: 'draft',
+        page: 1,
+      });
+    });
+
+    act(() => {
+      updateSearch({ q: 'old', page: 2 }, 'other-route');
+    });
+    act(() => {
+      vi.advanceTimersByTime(150);
+    });
+
+    expect(getResult().localSearch).toBe('old');
+    expect(getResult().browseState.page).toBe(2);
+    expect(onSearchChange).not.toHaveBeenCalled();
+    vi.useRealTimers();
   });
 
   it('builds real location href for getPageHref', async () => {

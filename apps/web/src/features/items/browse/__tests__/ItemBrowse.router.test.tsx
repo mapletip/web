@@ -158,7 +158,7 @@ describe('ItemBrowse real router interactions', () => {
     expect(allItemsMobile).not.toHaveAttribute('aria-current');
   });
 
-  it('drill-down: shows all children on scope page, but only selected child on child page', async () => {
+  it('keeps populated child links visible on scope and child pages', async () => {
     const scopeHistory = createMemoryHistory({
       initialEntries: ['/maplestory/items/use'],
     });
@@ -209,7 +209,7 @@ describe('ItemBrowse real router interactions', () => {
 
     expect(activeChildLink).toBeVisible();
     expect(siblingChildLink).not.toBeNull();
-    expect(siblingChildLink).toHaveStyle({ display: 'none' });
+    expect(siblingChildLink).toBeVisible();
   });
 
   it('round-trips one multi-select and one open-ended range facet through the real router', async () => {

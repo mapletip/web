@@ -56,6 +56,25 @@ describe('search-params', () => {
           { value: '100', label: '100%' },
         ],
       },
+      {
+        id: 'pet',
+        field: 'pet',
+        label: 'Compatible pets',
+        kind: 'multi-select',
+      },
+      {
+        id: 'dynamicAttack',
+        field: 'dynamicAttack',
+        label: 'Attack',
+        kind: 'range',
+        buckets: 'quantile',
+      },
+      {
+        id: 'percentageRecovery',
+        field: 'percentageRecovery',
+        label: 'Percentage recovery',
+        kind: 'boolean',
+      },
     ],
     sortOptions: [
       { label: 'Name (A–Z)', field: 'name', direction: 'asc' },
@@ -232,6 +251,23 @@ describe('search-params', () => {
       expect(state.filters['unrelatedFacet']).toBeUndefined();
     });
 
+    it('parses values from dynamic facets and boolean controls', () => {
+      const state = urlToBrowseState(
+        {
+          pet: 'pet:husky',
+          dynamicAttack: '10-20',
+          percentageRecovery: 'true',
+        },
+        dummyContext,
+      );
+
+      expect(state.filters).toEqual({
+        pet: ['pet:husky'],
+        dynamicAttack: ['10-20'],
+        percentageRecovery: true,
+      });
+    });
+
     it('parses open-ended ranges and drops invalid ranges where min > max', () => {
       const minOnly = urlToBrowseState({ attackMin: 10 }, dummyContext);
       expect(minOnly.filters['attack']).toEqual({ min: 10 });
@@ -280,6 +316,27 @@ describe('search-params', () => {
         sort: 'sourceId-asc',
         types: 'arrow,potion',
       });
+    });
+
+    it('round-trips dynamic range and boolean facet values', () => {
+      const state = {
+        ...urlToBrowseState({}, dummyContext),
+        filters: {
+          pet: ['pet:husky'],
+          dynamicAttack: ['10-20'],
+          percentageRecovery: false,
+        },
+      };
+      const serialized = browseStateToUrl(state, dummyContext);
+
+      expect(serialized).toEqual({
+        pet: 'pet:husky',
+        dynamicAttack: '10-20',
+        percentageRecovery: false,
+      });
+      expect(urlToBrowseState(serialized, dummyContext).filters).toEqual(
+        state.filters,
+      );
     });
 
     it('serializes open-ended inclusive ranges and round trips safely', () => {

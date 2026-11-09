@@ -53,6 +53,8 @@ export interface FacetDefinition<TRecord extends Record<string, unknown>> {
    * used when `buckets` is `'quantile'`.
    */
   readonly unit?: string;
+  /** Prefix rendered before generated range values, such as `+` for attack. */
+  readonly valuePrefix?: string;
   /**
    * Range presets for a `kind: 'range'` facet. `'quantile'` creates one exact
    * bucket per distinct value when there are at most six; above six it derives

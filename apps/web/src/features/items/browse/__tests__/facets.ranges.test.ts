@@ -2,7 +2,17 @@ import type { ItemBrowseCoverage } from '@mapletip/data/items';
 import { describe, expect, it } from 'vitest';
 
 import { ITEM_SCOPES } from '../categories';
-import { getItemFacets } from '../facets';
+import { getItemFacets as declareItemFacets } from '../facets';
+import type { ItemRow } from '../project';
+
+function getItemFacets(
+  category: Parameters<typeof declareItemFacets>[0]['category'],
+  coverage: ItemBrowseCoverage,
+  rows: readonly ItemRow[],
+  roster: readonly ItemRow[] = rows,
+) {
+  return declareItemFacets({ category, coverage, roster });
+}
 
 const coverage: ItemBrowseCoverage = {
   relationships: {
@@ -20,23 +30,33 @@ const coverage: ItemBrowseCoverage = {
 function facetsFor({
   scope,
   childSlug,
+  rows,
 }: {
   readonly scope: 'use' | 'setup';
   readonly childSlug: 'recovery' | 'chairs';
+  readonly rows: readonly ItemRow[];
 }) {
   const categoryScope = ITEM_SCOPES[scope];
-  return getItemFacets({
-    category: {
-      scope: categoryScope,
-      child: categoryScope.children.find(({ slug }) => slug === childSlug),
-    },
-    coverage,
-  });
+  const child = categoryScope.children.find(({ slug }) => slug === childSlug);
+  if (!child) throw new Error(`Missing ${scope}/${childSlug} category`);
+  return getItemFacets({ scope: categoryScope, child }, coverage, rows, rows);
 }
 
-describe('Items Browse fixed range facets', () => {
-  it('uses explicit Recovery buckets and quick facets', () => {
-    const recovery = facetsFor({ scope: 'use', childSlug: 'recovery' });
+describe('Items Browse numeric facets', () => {
+  it('delegates Recovery buckets to the shared facet resolver', () => {
+    const rows: readonly ItemRow[] = [
+      { key: 'a', sourceId: '1', itemClass: 'consume', hp: 50, hpPercent: 10 },
+      { key: 'b', sourceId: '2', itemClass: 'consume', hp: 150, mp: 20 },
+      {
+        key: 'c',
+        sourceId: '3',
+        itemClass: 'consume',
+        hp: 450,
+        mp: 40,
+        mpPercent: 25,
+      },
+    ];
+    const recovery = facetsFor({ scope: 'use', childSlug: 'recovery', rows });
     const hp = recovery.find(({ id }) => id === 'hp');
     const mp = recovery.find(({ id }) => id === 'mp');
 
@@ -44,15 +64,8 @@ describe('Items Browse fixed range facets', () => {
       label: 'Restores',
       quick: true,
     });
-    expect(hp?.buckets).toEqual([
-      { value: '1-99', label: '1–99', min: 1, max: 99 },
-      { value: '100-299', label: '100–299', min: 100, max: 299 },
-      { value: '300-599', label: '300–599', min: 300, max: 599 },
-      { value: '600-999', label: '600–999', min: 600, max: 999 },
-      { value: '1000-1999', label: '1,000–1,999', min: 1000, max: 1999 },
-      { value: '2000+', label: '2,000+', min: 2000 },
-    ]);
-    expect(mp?.buckets).toEqual(hp?.buckets);
+    expect(hp?.buckets).toBe('quantile');
+    expect(mp?.buckets).toBe('quantile');
     expect(hp?.quick).toBe(true);
     expect(mp?.quick).toBeUndefined();
     expect(
@@ -60,26 +73,25 @@ describe('Items Browse fixed range facets', () => {
     ).toMatchObject({ label: 'Percentage recovery', kind: 'boolean' });
   });
 
-  it('uses explicit chair buckets and exposes only Restores as a quick facet', () => {
-    const chairs = facetsFor({ scope: 'setup', childSlug: 'chairs' });
+  it('delegates chair buckets to the shared resolver and keeps Restores quick', () => {
+    const rows: readonly ItemRow[] = [
+      { key: 'a', sourceId: '1', itemClass: 'setup', seatHp: 20 },
+      { key: 'b', sourceId: '2', itemClass: 'setup', seatHp: 50, seatMp: 40 },
+      { key: 'c', sourceId: '3', itemClass: 'setup', seatMp: 10 },
+    ];
+    const chairs = facetsFor({ scope: 'setup', childSlug: 'chairs', rows });
     expect(chairs.find(({ id }) => id === 'chairRestores')).toMatchObject({
       label: 'Restores',
       quick: true,
     });
-    expect(chairs.find(({ id }) => id === 'seatHp')?.buckets).toEqual([
-      { value: '1-29', label: '1–29', min: 1, max: 29 },
-      { value: '30-39', label: '30–39', min: 30, max: 39 },
-      { value: '40-49', label: '40–49', min: 40, max: 49 },
-      { value: '50-59', label: '50–59', min: 50, max: 59 },
-      { value: '60+', label: '60+', min: 60 },
-    ]);
-    expect(chairs.find(({ id }) => id === 'seatMp')?.buckets).toEqual([
-      { value: '1-19', label: '1–19', min: 1, max: 19 },
-      { value: '20-29', label: '20–29', min: 20, max: 29 },
-      { value: '30-39', label: '30–39', min: 30, max: 39 },
-      { value: '40-59', label: '40–59', min: 40, max: 59 },
-      { value: '60+', label: '60+', min: 60 },
-    ]);
+    expect(chairs.find(({ id }) => id === 'seatHp')?.buckets).toBe('quantile');
+    expect(chairs.find(({ id }) => id === 'seatMp')?.buckets).toBe('quantile');
+    expect(chairs.find(({ id }) => id === 'seatHp')?.label).toBe(
+      'HP Recovered / 10s',
+    );
+    expect(chairs.find(({ id }) => id === 'seatMp')?.label).toBe(
+      'MP Recovered / 10s',
+    );
     expect(chairs.find(({ id }) => id === 'seatHp')?.quick).toBeUndefined();
     expect(chairs.find(({ id }) => id === 'seatMp')?.quick).toBeUndefined();
   });

@@ -125,7 +125,7 @@ describe('ItemBrowse server rendering', () => {
 
     // Filtered row matches
     expect(html).toContain('Subi Throwing-Stars');
-    expect(html).toContain('02070000');
+    expect(html).not.toContain('02070000');
 
     // Items outside this child category are not rendered in the results
     expect(html).not.toContain('Red Potion');
@@ -144,7 +144,7 @@ describe('ItemBrowse server rendering', () => {
 
     // 3. Rail and mobile links
     expect(html).toContain('href="/maplestory/items/use/throwing-stars"');
-    expect(html).toContain('href="/maplestory/items/use/arrows"');
+    expect(html).not.toContain('href="/maplestory/items/use/arrows"');
     expect(html).toContain('href="/maplestory/items/etc"');
 
     // 4. Scope and child counts present in SSR HTML
@@ -184,9 +184,9 @@ describe('ItemBrowse server rendering', () => {
     // Rail landmark with accessible name
     expect(html).toContain('aria-label="Item categories"');
 
-    // All category child links are in SSR HTML even when on All Items
+    // Populated category child links are in SSR HTML even when on All Items
     expect(html).toContain('href="/maplestory/items/use/throwing-stars"');
-    expect(html).toContain('href="/maplestory/items/use/arrows"');
+    expect(html).not.toContain('href="/maplestory/items/use/arrows"');
     expect(html).toContain('href="/maplestory/items/use/potions"');
 
     // Active link has aria-current="page"

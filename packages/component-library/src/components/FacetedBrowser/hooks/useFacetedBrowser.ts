@@ -779,7 +779,10 @@ export function useFacetedBrowser<TRecord extends Record<string, unknown>>({
       lastClampRef.current = undefined;
       return;
     }
-    const nextState = { ...canonicalState, page: clampedPage };
+    const nextState = {
+      ...canonicalState,
+      page: Math.min(canonicalState.page, clampedPage),
+    };
     const previousClamp = lastClampRef.current;
     if (
       previousClamp !== undefined &&

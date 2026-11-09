@@ -55,7 +55,7 @@ describe('itemPageMetadata', () => {
       heading: 'MapleStory Classic World Chairs',
       title: 'MapleStory Classic World Chairs – MapleTip',
       description:
-        'Browse and compare MapleStory Classic World chairs by seated HP and MP recovery.',
+        'Browse and compare MapleStory Classic World chairs by HP Recovered / 10s and MP Recovered / 10s.',
       canonicalUrl: 'https://mapletip.com/maplestory/items/setup/chairs',
       robots: 'index,follow',
     });

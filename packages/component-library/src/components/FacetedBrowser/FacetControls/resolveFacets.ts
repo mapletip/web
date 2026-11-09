@@ -131,7 +131,11 @@ function resolveFacet<TRecord extends Record<string, unknown>>({
     if (facet.buckets !== 'quantile') return facet;
     return {
       ...facet,
-      buckets: buildQuantileBuckets({ values, unit: facet.unit }),
+      buckets: buildQuantileBuckets({
+        values,
+        unit: facet.unit,
+        valuePrefix: facet.valuePrefix,
+      }),
     };
   }
 

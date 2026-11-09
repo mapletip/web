@@ -46,18 +46,6 @@ export const ITEM_FUNCTION_LABELS: Readonly<
   recovery: 'Recovery',
 };
 
-export const RELATIONSHIP_LABELS: Readonly<
-  Record<ItemRelationshipKind, string>
-> = {
-  'cash-shop-listing': 'Cash Shop Listing',
-  'found-in-container': 'Found in Container',
-  'made-by-recipe': 'Made by Recipe',
-  'monster-drop': 'Monster Drop',
-  'needed-for-quest': 'Needed for Quest',
-  'quest-reward': 'Quest Reward',
-  'used-in-recipe': 'Used in Recipe',
-};
-
 export const UPGRADE_TARGET_LABELS: Readonly<
   Record<ItemBrowseUpgradeTarget, string>
 > = {

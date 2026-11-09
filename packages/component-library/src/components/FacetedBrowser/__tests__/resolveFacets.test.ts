@@ -12,6 +12,7 @@ interface FacetRecord extends Record<string, unknown> {
   readonly exact: number;
   readonly large: number;
   readonly percent: number;
+  readonly prefixed: number;
   readonly single: number;
   readonly tags: readonly string[];
   readonly dynamicTags: readonly string[];
@@ -26,6 +27,7 @@ const records: readonly FacetRecord[] = [
     exact: 10,
     large: 1,
     percent: 10,
+    prefixed: 10,
     single: 3,
     tags: ['fire', 'always'],
     dynamicTags: ['fire', 'always'],
@@ -38,6 +40,7 @@ const records: readonly FacetRecord[] = [
     exact: 20,
     large: 2,
     percent: 20,
+    prefixed: 20,
     single: 3,
     tags: ['water', 'always'],
     dynamicTags: ['water', 'always'],
@@ -50,6 +53,7 @@ const records: readonly FacetRecord[] = [
     exact: 30,
     large: 3,
     percent: 30,
+    prefixed: 30,
     single: 3,
     tags: ['fire', 'always'],
     dynamicTags: ['fire', 'always'],
@@ -62,6 +66,7 @@ const records: readonly FacetRecord[] = [
     exact: 40,
     large: 4,
     percent: 40,
+    prefixed: 40,
     single: 3,
     tags: ['water', 'always'],
     dynamicTags: ['water', 'always'],
@@ -74,6 +79,7 @@ const records: readonly FacetRecord[] = [
     exact: 50,
     large: 5,
     percent: 50,
+    prefixed: 50,
     single: 3,
     tags: ['fire', 'always'],
     dynamicTags: ['fire', 'always'],
@@ -86,6 +92,7 @@ const records: readonly FacetRecord[] = [
     exact: 60,
     large: 6,
     percent: 60,
+    prefixed: 60,
     single: 3,
     tags: ['water', 'always'],
     dynamicTags: ['water', 'always'],
@@ -98,6 +105,7 @@ const records: readonly FacetRecord[] = [
     exact: 60,
     large: 7,
     percent: 60,
+    prefixed: 60,
     single: 3,
     tags: ['water', 'always'],
     dynamicTags: ['water', 'always'],
@@ -111,6 +119,7 @@ const queryFields: readonly QueryFieldDefinition<FacetRecord>[] = [
   { id: 'exact', accessor: 'exact' },
   { id: 'large', accessor: 'large' },
   { id: 'percent', accessor: 'percent' },
+  { id: 'prefixed', accessor: 'prefixed' },
   { id: 'single', accessor: 'single' },
   { id: 'tags', accessor: 'tags' },
   { id: 'dynamicTags', accessor: 'dynamicTags' },
@@ -141,6 +150,14 @@ const facets: readonly FacetDefinition<FacetRecord>[] = [
     kind: 'range',
     buckets: 'quantile',
     unit: '%',
+  },
+  {
+    id: 'prefixed',
+    field: 'prefixed',
+    label: 'Prefixed',
+    kind: 'range',
+    buckets: 'quantile',
+    valuePrefix: '+',
   },
   { id: 'single', field: 'single', label: 'Single', kind: 'range' },
   {
@@ -230,6 +247,15 @@ describe('resolveFacets', () => {
       '50%',
       '60%',
     ]);
+
+    const prefixed = resolved.facets.find((facet) => facet.id === 'prefixed');
+    expect(
+      prefixed?.kind === 'range' &&
+        prefixed.buckets !== undefined &&
+        typeof prefixed.buckets !== 'string'
+        ? prefixed.buckets.map((bucket) => bucket.label)
+        : [],
+    ).toEqual(['+10', '+20', '+30', '+40', '+50', '+60']);
   });
 
   it('prunes options and facets from the complete record set', () => {

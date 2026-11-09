@@ -1,11 +1,4 @@
-import {
-  Box,
-  Divider,
-  Group,
-  Stack,
-  Text,
-  TextInput,
-} from '@mantine/core';
+import { Box, Divider, Group, Stack, Text, TextInput } from '@mantine/core';
 import { MagnifyingGlass } from '@phosphor-icons/react';
 import type { MouseEvent as ReactMouseEvent, ReactElement } from 'react';
 import { useCallback, useMemo, useRef, useState } from 'react';
@@ -413,11 +406,9 @@ export function FacetedBrowser<TRecord extends Record<string, unknown>>(
       </Stack>
     ) : undefined;
 
-  const railLabel = navigation
-    ? navigation.label
-    : railNavigation
-      ? 'Browse navigation and filters'
-      : 'Filters';
+  const railLabel =
+    navigation?.label ??
+    (railNavigation ? 'Browse navigation and filters' : 'Filters');
 
   const primaryToolbar = comparisonProps ? (
     <Toolbar

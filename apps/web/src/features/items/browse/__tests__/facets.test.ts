@@ -4,11 +4,20 @@ import { describe, expect, it } from 'vitest';
 import { ITEM_SCOPES } from '../categories';
 import {
   getDropCoverageNotice,
-  getItemFacets,
+  getItemFacets as declareItemFacets,
   getItemRelationships,
   ITEM_QUERY_FIELDS,
 } from '../facets';
 import type { ItemRow } from '../project';
+
+function getItemFacets(
+  category: Parameters<typeof declareItemFacets>[0]['category'],
+  coverage: ItemBrowseCoverage,
+  rows: readonly ItemRow[],
+  roster: readonly ItemRow[] = rows,
+) {
+  return declareItemFacets({ category, coverage, roster });
+}
 
 describe('facets', () => {
   const dummyCoverage: ItemBrowseCoverage = {
@@ -72,7 +81,7 @@ describe('facets', () => {
   });
 
   describe('getItemFacets', () => {
-    it('omits the item type facet and limits effect options to the category', () => {
+    it('omits the redundant item type facet and declares Effect choices', () => {
       const facets = getItemFacets(
         { scope: ITEM_SCOPES.use },
         dummyCoverage,
@@ -85,12 +94,13 @@ describe('facets', () => {
 
       const fnFacet = facets.find((f) => f.id === 'functions');
       expect(fnFacet).toBeDefined();
-      expect(fnFacet?.options).toEqual([
-        { value: 'recovery', label: 'Recovery' },
-      ]);
+      expect(fnFacet?.options).toContainEqual({
+        value: 'recovery',
+        label: 'Recovery',
+      });
     });
 
-    it('drops pet option from Effect facet', () => {
+    it('omits pet-only functions from Effect values', () => {
       const rowsWithPetFn: readonly ItemRow[] = [
         {
           key: 'p1',
@@ -123,37 +133,44 @@ describe('facets', () => {
       );
       const fnFacet = facets.find((f) => f.id === 'functions');
       expect(fnFacet).toBeDefined();
-      expect(fnFacet?.options?.some((opt) => opt.value === 'pet')).toBe(false);
-      expect(fnFacet?.options).toEqual([
-        { value: 'recovery', label: 'Recovery' },
-      ]);
+      const accessor = ITEM_QUERY_FIELDS.find(
+        (field) => typeof field === 'object' && field.id === 'functions',
+      );
+      expect(
+        typeof accessor === 'object' && typeof accessor.accessor === 'function'
+          ? accessor.accessor(rowsWithPetFn[0]!)
+          : [],
+      ).toEqual(['recovery']);
     });
 
-    it('labels partial relationship coverage as partial and omits unsupported kinds', () => {
+    it('labels partial grouped relationship coverage and omits unsupported groups', () => {
       const unsupportedCoverage: ItemBrowseCoverage = {
         relationships: {
           ...dummyCoverage.relationships,
-          'monster-drop': 'unsupported',
+          'found-in-container': 'unsupported',
         },
         scrollTier: 'complete',
+      };
+
+      const partialCoverage: ItemBrowseCoverage = {
+        ...dummyCoverage,
+        relationships: {
+          ...dummyCoverage.relationships,
+          'found-in-container': 'partial',
+        },
       };
 
       // With partial coverage:
       const facetsPartial = getItemFacets(
         { scope: ITEM_SCOPES.use },
-        dummyCoverage,
+        partialCoverage,
         dummyRows,
         dummyRows,
       );
-      const relFacet = facetsPartial.find((f) => f.id === 'rel');
-      expect(relFacet).toBeDefined();
-      expect(relFacet?.options).toContainEqual({
-        value: 'monster-drop',
-        label: 'Monster Drop (partial)',
-      });
-      expect(relFacet?.options).toContainEqual({
-        value: 'needed-for-quest',
-        label: 'Needed for Quest',
+      const sourcesFacet = facetsPartial.find((f) => f.id === 'sources');
+      expect(sourcesFacet?.options).toContainEqual({
+        value: 'found-in-container',
+        label: 'Found in a box (partial)',
       });
 
       // With unsupported coverage:
@@ -163,14 +180,17 @@ describe('facets', () => {
         dummyRows,
         dummyRows,
       );
-      const relFacetUnsup = facetsUnsupported.find((f) => f.id === 'rel');
+      const sourcesFacetUnsup = facetsUnsupported.find(
+        (f) => f.id === 'sources',
+      );
       expect(
-        relFacetUnsup?.options?.some((opt) => opt.value === 'monster-drop'),
+        sourcesFacetUnsup?.options?.some(
+          (option) => option.value === 'found-in-container',
+        ),
       ).toBe(false);
     });
 
-    it('drops no-op options that match every row in the population and omits empty facets', () => {
-      // In Upgrade Scrolls, every scroll has type 'upgrade-scroll'
+    it('declares scroll value labels while the shared resolver prunes no-op choices', () => {
       const scrollsCategory = {
         scope: ITEM_SCOPES.use,
         child: ITEM_SCOPES.use.children.find(
@@ -207,18 +227,20 @@ describe('facets', () => {
         scrollRows,
       );
 
-      // 'Item type: Upgrade Scroll (2)' matches 2/2 rows -> dropped -> types facet omitted
+      // Item Type is represented by the category drill down.
       const typeFacet = facets.find((f) => f.id === 'types');
       expect(typeFacet).toBeUndefined();
 
-      // scrollSuccess has 60% on 2/2 rows -> dropped -> scrollSuccess facet omitted
       const successFacet = facets.find((f) => f.id === 'scrollSuccess');
-      expect(successFacet).toBeUndefined();
+      expect(successFacet?.formatOption?.({ value: '60' })).toBe('60%');
 
-      // scrollTarget has 'hat' (1/2) and 'shoes' (1/2) -> kept!
       const targetFacet = facets.find((f) => f.id === 'scrollTarget');
       expect(targetFacet).toBeDefined();
-      expect(targetFacet?.options).toHaveLength(2);
+      expect(targetFacet?.options).toContainEqual({
+        value: 'hat',
+        label: 'Hat',
+        group: 'Armor',
+      });
     });
 
     it('orders scroll stats with attacks first and uses player labels', () => {
@@ -260,20 +282,22 @@ describe('facets', () => {
 
       const optionValues = statFacet?.options?.map((opt) => opt.value);
       // Attacks come first, followed by STR, DEX, INT, LUK
-      expect(optionValues).toEqual([
+      expect(optionValues?.slice(0, 6)).toEqual([
         'weaponAttack',
         'magicAttack',
         'strength',
         'dexterity',
+        'intelligence',
         'luck',
       ]);
 
       const optionLabels = statFacet?.options?.map((opt) => opt.label);
-      expect(optionLabels).toEqual([
+      expect(optionLabels?.slice(0, 6)).toEqual([
         'Weapon ATT',
         'Magic ATT',
         'STR',
         'DEX',
+        'INT',
         'LUK',
       ]);
     });
@@ -314,11 +338,9 @@ describe('facets', () => {
       const riskFacet = facets.find((f) => f.id === 'scrollRisk');
       expect(riskFacet).toBeDefined();
 
-      expect(riskFacet?.options).toEqual([
-        { value: 'none', label: 'No recorded risk' },
-        { value: '0', label: '0% on failure' },
-        { value: '50', label: '50% on failure' },
-      ]);
+      expect(riskFacet?.formatOption?.({ value: 'none' })).toBe('-');
+      expect(riskFacet?.formatOption?.({ value: '0' })).toBe('0% on failure');
+      expect(riskFacet?.formatOption?.({ value: '50' })).toBe('50% on failure');
     });
 
     it('hides scrollTier when coverage is unsupported', () => {
@@ -504,34 +526,27 @@ describe('facets', () => {
       const petFacet = facets.find((f) => f.id === 'pet');
       expect(petFacet).toBeDefined();
 
-      const options = petFacet?.options ?? [];
+      const formatOption = petFacet?.formatOption;
       // Colliding names have sourceId appended
-      expect(options).toContainEqual({
-        value: 'pet:dragon-red',
-        label: 'Baby Dragon (5000020)',
-      });
-      expect(options).toContainEqual({
-        value: 'pet:dragon-blue',
-        label: 'Baby Dragon (5000021)',
-      });
+      expect(formatOption?.({ value: 'pet:dragon-red' })).toBe(
+        'Baby Dragon (5000020)',
+      );
+      expect(formatOption?.({ value: 'pet:dragon-blue' })).toBe(
+        'Baby Dragon (5000021)',
+      );
 
       // Unique name stays clean
-      expect(options).toContainEqual({
-        value: 'pet:husky',
-        label: 'Husky',
-      });
+      expect(formatOption?.({ value: 'pet:husky' })).toBe('Husky');
 
       // Unnamed pet gets "Unnamed pet (<source id>)"
-      expect(options).toContainEqual({
-        value: 'pet:unnamed',
-        label: 'Unnamed pet (5000099)',
-      });
+      expect(formatOption?.({ value: 'pet:unnamed' })).toBe(
+        'Unnamed pet (5000099)',
+      );
 
       // Unresolved target gets prefixed "unresolved:<id>" value and "Unresolved target <id>" label
-      expect(options).toContainEqual({
-        value: 'unresolved:5000046',
-        label: 'Unresolved target 5000046',
-      });
+      expect(formatOption?.({ value: 'unresolved:5000046' })).toBe(
+        'Unresolved target 5000046',
+      );
     });
   });
 

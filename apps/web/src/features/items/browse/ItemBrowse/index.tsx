@@ -61,8 +61,8 @@ export function ItemBrowse({
   );
 
   const facets = useMemo(
-    () => getItemFacets(category, coverage, scopedRows, rows),
-    [category, coverage, scopedRows, rows],
+    () => getItemFacets({ category, coverage, roster: rows }),
+    [category, coverage, rows],
   );
 
   const browseContext = useMemo<BrowseContext>(
@@ -83,6 +83,7 @@ export function ItemBrowse({
   } = useItemBrowseUrlState({
     searchProp,
     browseContext,
+    stateResetKey: `${buildId}:${contextKey}`,
     onSearchChange,
   });
 
@@ -144,7 +145,11 @@ export function ItemBrowse({
         )}
         state={browseState}
         onStateChange={handleStateChange}
-        getPageHref={getPageHref}
+        renderPageLink={({ page, state, props }) => (
+          <a {...props} href={getPageHref(page, state)}>
+            {props.children ?? page}
+          </a>
+        )}
         emptyState={emptyState}
       />
     </BrowsePageShell>

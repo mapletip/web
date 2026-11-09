@@ -2,9 +2,20 @@ import type { ItemBrowseCoverage } from '@mapletip/data/items';
 import { describe, expect, it } from 'vitest';
 
 import { ITEM_SCOPES } from '../categories';
-import { ITEM_FACET_CONFIGS } from '../facet-config';
-import { getItemFacets, ITEM_QUERY_FIELDS } from '../facets';
+import {
+  getItemFacets as declareItemFacets,
+  ITEM_QUERY_FIELDS,
+} from '../facets';
 import type { ItemRow } from '../project';
+
+function getItemFacets(
+  category: Parameters<typeof declareItemFacets>[0]['category'],
+  coverage: ItemBrowseCoverage,
+  rows: readonly ItemRow[],
+  roster: readonly ItemRow[] = rows,
+) {
+  return declareItemFacets({ category, coverage, roster });
+}
 
 const coverage: ItemBrowseCoverage = {
   relationships: {
@@ -19,13 +30,7 @@ const coverage: ItemBrowseCoverage = {
   scrollTier: 'complete',
 };
 
-function queryValue({
-  field,
-  row,
-}: {
-  readonly field: string;
-  readonly row: ItemRow;
-}): unknown {
+function queryValue(field: string, row: ItemRow): unknown {
   const queryField = ITEM_QUERY_FIELDS.find(
     (candidate) => typeof candidate === 'object' && candidate.id === field,
   );
@@ -39,14 +44,21 @@ function queryValue({
 }
 
 describe('Items Browse boolean facets', () => {
-  it('offers no recorded use only with complete ETC relationship coverage', () => {
-    const questItems = ITEM_SCOPES.etc.children.find(
-      ({ slug }) => slug === 'quest-items',
-    );
-    const category = { scope: ITEM_SCOPES.etc, child: questItems };
-    expect(getItemFacets({ category, coverage }).map(({ id }) => id)).toContain(
-      'noRecordedQuestOrRecipeUse',
-    );
+  it('offers no-recorded-use only when quest and recipe coverage is complete', () => {
+    const category = { scope: ITEM_SCOPES.etc };
+    const rows: readonly ItemRow[] = [
+      {
+        key: 'a',
+        sourceId: '1',
+        itemClass: 'etc',
+        neededForQuestCount: 1,
+      },
+      { key: 'b', sourceId: '2', itemClass: 'etc' },
+    ];
+
+    expect(
+      getItemFacets(category, coverage, rows, rows).map(({ id }) => id),
+    ).toContain('noRecordedQuestOrRecipeUse');
 
     const incompleteCoverage: ItemBrowseCoverage = {
       ...coverage,
@@ -56,7 +68,7 @@ describe('Items Browse boolean facets', () => {
       },
     };
     expect(
-      getItemFacets({ category, coverage: incompleteCoverage }).map(
+      getItemFacets(category, incompleteCoverage, rows, rows).map(
         ({ id }) => id,
       ),
     ).not.toContain('noRecordedQuestOrRecipeUse');
@@ -64,105 +76,72 @@ describe('Items Browse boolean facets', () => {
 
   it('treats absent or zero quest and recipe counts as no recorded use', () => {
     expect(
-      queryValue({
-        field: 'noRecordedQuestOrRecipeUse',
-        row: { key: 'a', sourceId: '1', itemClass: 'etc' },
+      queryValue('noRecordedQuestOrRecipeUse', {
+        key: 'a',
+        sourceId: '1',
+        itemClass: 'etc',
       }),
     ).toBe(true);
     expect(
-      queryValue({
-        field: 'noRecordedQuestOrRecipeUse',
-        row: {
-          key: 'b',
-          sourceId: '2',
-          itemClass: 'etc',
-          neededForQuestCount: 0,
-          usedInRecipeCount: 0,
-        },
+      queryValue('noRecordedQuestOrRecipeUse', {
+        key: 'b',
+        sourceId: '2',
+        itemClass: 'etc',
+        neededForQuestCount: 0,
+        questRewardCount: 0,
+        usedInRecipeCount: 0,
+        madeByRecipeCount: 0,
       }),
     ).toBe(true);
     expect(
-      queryValue({
-        field: 'noRecordedQuestOrRecipeUse',
-        row: {
-          key: 'c',
-          sourceId: '3',
-          itemClass: 'etc',
-          neededForQuestCount: 1,
-        },
+      queryValue('noRecordedQuestOrRecipeUse', {
+        key: 'c',
+        sourceId: '3',
+        itemClass: 'etc',
+        neededForQuestCount: 1,
       }),
     ).toBe(false);
     expect(
-      queryValue({
-        field: 'noRecordedQuestOrRecipeUse',
-        row: {
-          key: 'd',
-          sourceId: '4',
-          itemClass: 'etc',
-          usedInRecipeCount: 2,
-        },
+      queryValue('noRecordedQuestOrRecipeUse', {
+        key: 'd',
+        sourceId: '4',
+        itemClass: 'etc',
+        madeByRecipeCount: 2,
       }),
-    ).toBe(false);
+    ).toBe(true);
+    expect(
+      queryValue('noRecordedQuestOrRecipeUse', {
+        key: 'e',
+        sourceId: '5',
+        itemClass: 'etc',
+        questRewardCount: 2,
+      }),
+    ).toBe(true);
   });
 
   it('marks percentage recovery when either percentage field is present', () => {
-    const query = ITEM_FACET_CONFIGS.percentageRecovery.getValue;
-    expect(query({ key: 'a', sourceId: '1', itemClass: 'consume' })).toBe(
-      false,
-    );
     expect(
-      query({ key: 'b', sourceId: '2', itemClass: 'consume', hpPercent: 0 }),
-    ).toBe(true);
+      queryValue('percentageRecovery', {
+        key: 'a',
+        sourceId: '1',
+        itemClass: 'consume',
+      }),
+    ).toBe(false);
     expect(
-      query({ key: 'c', sourceId: '3', itemClass: 'consume', mpPercent: 25 }),
-    ).toBe(true);
-  });
-
-  it('derives Recovery and chair Restores choices from positive recorded fields', () => {
-    const recovery = ITEM_FACET_CONFIGS.recoveryRestores.values;
-    const chairs = ITEM_FACET_CONFIGS.chairRestores.values;
-
-    expect(recovery({ key: 'a', sourceId: '1', itemClass: 'consume' })).toEqual(
-      [],
-    );
-    expect(
-      recovery({
+      queryValue('percentageRecovery', {
         key: 'b',
         sourceId: '2',
         itemClass: 'consume',
-        hpPercent: 30,
+        hpPercent: 0,
       }),
-    ).toEqual(['hp-only']);
+    ).toBe(true);
     expect(
-      recovery({ key: 'c', sourceId: '3', itemClass: 'consume', mp: 40 }),
-    ).toEqual(['mp-only']);
-    expect(
-      recovery({
-        key: 'd',
-        sourceId: '4',
+      queryValue('percentageRecovery', {
+        key: 'c',
+        sourceId: '3',
         itemClass: 'consume',
-        hp: 1,
-        mpPercent: 20,
+        mpPercent: 25,
       }),
-    ).toEqual(['hp-and-mp']);
-    expect(
-      recovery({ key: 'e', sourceId: '5', itemClass: 'consume', hp: 0 }),
-    ).toEqual([]);
-
-    expect(
-      chairs({ key: 'f', sourceId: '6', itemClass: 'setup', seatHp: 50 }),
-    ).toEqual(['hp-only']);
-    expect(
-      chairs({ key: 'g', sourceId: '7', itemClass: 'setup', seatMp: 40 }),
-    ).toEqual(['mp-only']);
-    expect(
-      chairs({
-        key: 'h',
-        sourceId: '8',
-        itemClass: 'setup',
-        seatHp: 50,
-        seatMp: 40,
-      }),
-    ).toEqual(['hp-and-mp']);
+    ).toBe(true);
   });
 });

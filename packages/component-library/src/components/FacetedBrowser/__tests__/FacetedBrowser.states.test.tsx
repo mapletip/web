@@ -648,7 +648,7 @@ describe('responsive navigation slot', () => {
     ).not.toBeInTheDocument();
   });
 
-  it('renders navigation above the Filters heading and facet list when facets exist', () => {
+  it('renders navigation above the facet list without a Filters heading', () => {
     const { container } = render(
       <MantineProvider>
         <FacetedBrowser
@@ -687,13 +687,12 @@ describe('responsive navigation slot', () => {
     const nav = screen.getByRole('navigation', {
       name: genericNavigation.label,
     });
-    const filtersHeading = screen.getByRole('heading', { name: 'Filters' });
-
+    const categoryFacet = screen.getAllByText('Category')[0]!;
     expect(nav).toBeVisible();
-    expect(filtersHeading).toBeVisible();
+    expect(screen.queryByRole('heading', { name: 'Filters' })).toBeNull();
 
     expect(
-      nav.compareDocumentPosition(filtersHeading) &
+      nav.compareDocumentPosition(categoryFacet) &
         Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();
   });

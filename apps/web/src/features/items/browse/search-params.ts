@@ -63,6 +63,13 @@ function parseNumber(val: unknown): number | undefined {
   return undefined;
 }
 
+function parseBoolean(val: unknown): boolean | undefined {
+  if (typeof val === 'boolean') return val;
+  if (val === 'true') return true;
+  if (val === 'false') return false;
+  return undefined;
+}
+
 function parsePage(val: unknown): number | undefined {
   const num = parseInteger(val);
   return num !== undefined && num >= 1 && num <= 9999 ? num : undefined;
@@ -129,6 +136,10 @@ export function validateSearch(raw: Record<string, unknown>): ItemBrowseSearch {
       result[key] = value;
       continue;
     }
+    if (typeof value === 'boolean') {
+      result[key] = value;
+      continue;
+    }
     const list = parseStringList(value);
     if (list.length > 0) result[key] = list.join(',');
   }
@@ -145,18 +156,29 @@ function parseFacetFilters(
   for (const facet of facets) {
     if (facet.kind === 'multi-select') {
       const values = parseStringList(search[facet.field]);
-      if (values.length > 0) {
-        const validOptions = new Set(facet.options?.map((opt) => opt.value));
-        const validValues = values.filter((v) => validOptions.has(v));
-        if (validValues.length > 0) filters[facet.field] = validValues;
-      }
+      const validValues =
+        facet.options === undefined
+          ? values
+          : values.filter(
+              (value) =>
+                facet.options?.some((option) => option.value === value) ??
+                false,
+            );
+      if (validValues.length > 0) filters[facet.field] = validValues;
+    } else if (facet.kind === 'boolean') {
+      const value = parseBoolean(search[facet.field]);
+      if (value !== undefined) filters[facet.field] = value;
     } else if (facet.kind === 'range') {
       const bucketValues = parseStringList(search[facet.field]);
-      if (bucketValues.length > 0 && Array.isArray(facet.buckets)) {
-        const bucketList: readonly FacetRangeBucket[] = facet.buckets;
-        const validBuckets = new Set(bucketList.map((b) => b.value));
-        const validValues = bucketValues.filter((v) => validBuckets.has(v));
-        if (validValues.length > 0) filters[facet.field] = validValues;
+      if (bucketValues.length > 0 && facet.buckets !== undefined) {
+        if (facet.buckets === 'quantile') {
+          filters[facet.field] = bucketValues;
+        } else {
+          const bucketList: readonly FacetRangeBucket[] = facet.buckets;
+          const validBuckets = new Set(bucketList.map((b) => b.value));
+          const validValues = bucketValues.filter((v) => validBuckets.has(v));
+          if (validValues.length > 0) filters[facet.field] = validValues;
+        }
       } else {
         const minNum = parseNumber(search[`${facet.field}Min`]);
         const maxNum = parseNumber(search[`${facet.field}Max`]);
@@ -229,7 +251,9 @@ export function browseStateToUrl(
 
   for (const facet of context.facets) {
     const val = state.filters[facet.field];
-    if (isStringArray(val) && val.length > 0) {
+    if (facet.kind === 'boolean' && typeof val === 'boolean') {
+      url[facet.field] = val;
+    } else if (isStringArray(val) && val.length > 0) {
       const first = val[0];
       if (
         val.length === 1 &&

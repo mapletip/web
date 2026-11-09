@@ -62,13 +62,13 @@ describe('FacetedBrowser filter normalization', () => {
       search: '',
       filters: {
         unknownField: ['unknown'],
-        group: ['fixture', 'missing-option'],
+        group: ['missing-option'],
         level: ['missing-bucket'],
         rating: { min: 10, max: 5 },
         boss: { min: 0 },
       },
       page: 1,
-      pageSize: 20,
+      pageSize: 2,
       hiddenColumns: [],
     };
 
@@ -90,7 +90,7 @@ describe('FacetedBrowser filter normalization', () => {
 
     await waitFor(() => expect(onStateChange).toHaveBeenCalledTimes(1));
     expect(onStateChange).toHaveBeenCalledWith(
-      expect.objectContaining({ filters: { group: ['fixture'] } }),
+      expect.objectContaining({ filters: {}, page: 1 }),
       { reason: 'clamp' },
     );
   });

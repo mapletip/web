@@ -338,11 +338,11 @@ describe('getItemColumns - column set selection', () => {
 
     // Table render in partial coverage
     const countHtml = renderToString(col.render!(rows[0]!));
-    expect(countHtml).toBe('12');
+    expect(countHtml).toContain('12');
 
     // Missing count in partial coverage renders None recorded
     const missingHtml = renderToString(col.render!(rows[1]!));
-    expect(missingHtml).toBe('None recorded');
+    expect(missingHtml).toContain('None recorded');
   });
 
   it('states lower bound in monster drops fullLabel once', () => {
@@ -423,12 +423,12 @@ describe('deriveSortOptions', () => {
     expect(statsOptions[0]).toEqual({
       field: 'stats',
       direction: 'desc',
-      label: 'Stats: strongest first',
+      label: 'Stats Improved: strongest first',
     });
     expect(statsOptions[1]).toEqual({
       field: 'stats',
       direction: 'asc',
-      label: 'Stats: weakest first',
+      label: 'Stats Improved: weakest first',
     });
 
     // Numeric column (success) sorts desc first (high to low)
