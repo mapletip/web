@@ -2,6 +2,12 @@
   white-space: pre-line;
 }
 
+.wrappingHeader :global(.mantine-datatable-header-cell-sortable-text) {
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+}
+
 .identity {
   display: flex;
   align-items: center;

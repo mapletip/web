@@ -115,6 +115,7 @@ export function ItemBrowse({
   );
 
   const railNav = <ItemRailNav navScopes={navScopes} />;
+  const tableStorageVersion = category.child?.slug === 'chairs' ? 'v2' : 'v1';
 
   return (
     <BrowsePageShell>
@@ -137,7 +138,7 @@ export function ItemBrowse({
         pageSizeOptions={PAGE_SIZE_OPTIONS}
         presentation="comparison"
         fillHeight
-        tableStorageKey={`mapletip:web:items:${buildId}:${contextKey}:v1`}
+        tableStorageKey={`mapletip:web:items:${buildId}:${contextKey}:${tableStorageVersion}`}
         renderCard={(record) => (
           <ItemBrowseCard record={record} facts={facts} />
         )}

@@ -35,6 +35,7 @@ export interface ColumnConfig {
   readonly fullLabel?: string;
   readonly width?: number;
   readonly nowrap?: boolean;
+  readonly headerWrap?: boolean;
   readonly numeric?: boolean;
   readonly sortable?: boolean;
   readonly firstSortDirection?: 'asc' | 'desc';
@@ -63,9 +64,11 @@ function numCol<K extends NumericItemRowKey>(
   key: K,
   title: string,
   unit = '',
+  options?: Pick<ColumnConfig, 'headerWrap' | 'width'>,
 ): ColumnConfig {
   return col(key, title, (row) => formatNum(row[key], unit), {
     numeric: true,
+    ...options,
   });
 }
 
@@ -77,8 +80,14 @@ const numericColumns = {
   closeness: numCol('closeness', 'Closeness'),
   fullness: numCol('fullness', 'Fullness'),
   tameness: numCol('tameness', 'Tameness'),
-  seatHp: numCol('seatHp', 'HP Recovered / 10s'),
-  seatMp: numCol('seatMp', 'MP Recovered / 10s'),
+  seatHp: numCol('seatHp', 'HP Recovered / 10s', '', {
+    width: 180,
+    headerWrap: true,
+  }),
+  seatMp: numCol('seatMp', 'MP Recovered / 10s', '', {
+    width: 180,
+    headerWrap: true,
+  }),
 };
 
 const REL_TITLES: Readonly<Record<ItemRelationshipKind, string>> = {

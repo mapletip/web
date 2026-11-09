@@ -86,6 +86,9 @@ function adaptColumn(
     ...(config.fullLabel ? { fullLabel: config.fullLabel } : {}),
     ...(width !== undefined ? { width } : {}),
     ...(config.nowrap ? { nowrap: true } : {}),
+    ...(config.headerWrap
+      ? { headerClassName: classes['wrappingHeader'] }
+      : {}),
     ...(isNumeric ? { numeric: true, textAlign: 'right' as const } : {}),
     ...(isSortable ? { sortable: true } : {}),
     ...(config.firstSortDirection
