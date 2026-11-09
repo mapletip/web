@@ -114,7 +114,7 @@ export function formatNum(
 
 export function formatAttack(attack: number | undefined): string | undefined {
   if (attack === undefined) return undefined;
-  return attack > 0 ? `+${attack}` : String(attack);
+  return attack >= 0 ? `+${attack}` : String(attack);
 }
 
 export function formatKind(itemClass: ItemBrowseClass): string | undefined {

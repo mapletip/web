@@ -17,6 +17,9 @@ export function ItemRailNav({ navScopes }: ItemRailNavProps): ReactElement {
           Inventory
         </Title>
         {navScopes.map((scope) => {
+          const visibleChildren = scope.children.filter(
+            (child) => !child.zeroCount,
+          );
           const icon = (
             <img
               src={scope.icon}
@@ -33,7 +36,7 @@ export function ItemRailNav({ navScopes }: ItemRailNavProps): ReactElement {
             </Text>
           );
 
-          const hasChildren = scope.children.length > 0;
+          const hasChildren = visibleChildren.length > 0;
 
           return (
             <div key={scope.slug}>
@@ -56,7 +59,7 @@ export function ItemRailNav({ navScopes }: ItemRailNavProps): ReactElement {
               />
               {hasChildren && (
                 <div className={classes['childrenContainer']}>
-                  {scope.children.map((child) => {
+                  {visibleChildren.map((child) => {
                     const isVisible = scope.expanded;
                     return (
                       <NavLink
@@ -74,14 +77,7 @@ export function ItemRailNav({ navScopes }: ItemRailNavProps): ReactElement {
                           />
                         )}
                         label={child.label}
-                        rightSection={
-                          <Text
-                            size="xs"
-                            {...(child.zeroCount ? { c: 'dimmed' } : {})}
-                          >
-                            {child.count}
-                          </Text>
-                        }
+                        rightSection={<Text size="xs">{child.count}</Text>}
                         active={child.active}
                         disableRightSectionRotation
                         style={isVisible ? undefined : { display: 'none' }}

@@ -5,7 +5,6 @@ import {
   Stack,
   Text,
   TextInput,
-  Title,
 } from '@mantine/core';
 import { MagnifyingGlass } from '@phosphor-icons/react';
 import type { MouseEvent as ReactMouseEvent, ReactElement } from 'react';
@@ -401,20 +400,15 @@ export function FacetedBrowser<TRecord extends Record<string, unknown>>(
           ? navigation.render({ mode: 'rail', onNavigate: undefined })
           : null}
         {facets.length > 0 ? (
-          <>
-            <Title order={2} size="h4">
-              Filters
-            </Title>
-            <FacetList
-              key={facetResetEpoch}
-              facets={facets}
-              values={canonicalState.filters}
-              records={records}
-              surface="rail"
-              getCounts={browser.getFacetValues}
-              onChange={browser.setFilter}
-            />
-          </>
+          <FacetList
+            key={facetResetEpoch}
+            facets={facets}
+            values={canonicalState.filters}
+            records={records}
+            surface="rail"
+            getCounts={browser.getFacetValues}
+            onChange={browser.setFilter}
+          />
         ) : null}
       </Stack>
     ) : undefined;

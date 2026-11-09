@@ -43,7 +43,6 @@ export function ItemIdentity({
         <span className={classes['identityName']} title={displayName}>
           {displayName}
         </span>
-        <span className={classes['identityId']}>{record.sourceId}</span>
       </div>
     </div>
   );

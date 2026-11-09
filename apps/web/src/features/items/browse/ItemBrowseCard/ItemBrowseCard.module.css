@@ -35,13 +35,6 @@
   word-break: break-word;
 }
 
-.sourceId {
-  font-size: 0.75rem;
-  color: var(--mantine-color-dimmed);
-  font-variant-numeric: tabular-nums;
-  line-height: 1.2;
-}
-
 .facts {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

@@ -11,7 +11,8 @@ export interface ItemMobileNavProps {
 
 export function ItemMobileNav({ navScopes }: ItemMobileNavProps): ReactElement {
   const expandedScope = navScopes.find((s) => s.expanded);
-  const children = expandedScope?.children ?? [];
+  const children =
+    expandedScope?.children.filter((child) => !child.zeroCount) ?? [];
 
   return (
     <Box hiddenFrom="md" className={classes['root']}>
@@ -47,14 +48,10 @@ export function ItemMobileNav({ navScopes }: ItemMobileNavProps): ReactElement {
               params={child.params}
               search={child.search}
               activeOptions={{ exact: true, includeSearch: false }}
-              className={`${classes['childChip']} ${
-                child.zeroCount ? classes['childChipDimmed'] : ''
-              }`}
+              className={classes['childChip']}
             >
               <span>{child.label}</span>
-              <Text size="xs" {...(child.zeroCount ? { c: 'dimmed' } : {})}>
-                {child.count}
-              </Text>
+              <Text size="xs">{child.count}</Text>
             </Link>
           ))}
         </nav>

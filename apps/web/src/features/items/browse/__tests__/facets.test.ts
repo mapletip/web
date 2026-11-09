@@ -72,7 +72,7 @@ describe('facets', () => {
   });
 
   describe('getItemFacets', () => {
-    it('limits facet options to values present in the category population', () => {
+    it('omits the item type facet and limits effect options to the category', () => {
       const facets = getItemFacets(
         { scope: ITEM_SCOPES.use },
         dummyCoverage,
@@ -81,11 +81,7 @@ describe('facets', () => {
       );
 
       const typeFacet = facets.find((f) => f.id === 'types');
-      expect(typeFacet).toBeDefined();
-      expect(typeFacet?.options).toEqual([
-        { value: 'arrow', label: 'Arrow' },
-        { value: 'potion', label: 'Potion' },
-      ]);
+      expect(typeFacet).toBeUndefined();
 
       const fnFacet = facets.find((f) => f.id === 'functions');
       expect(fnFacet).toBeDefined();

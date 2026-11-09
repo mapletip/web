@@ -18,10 +18,3 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-
-.identityId {
-  font-size: 0.75rem;
-  color: var(--mantine-color-dimmed);
-  font-variant-numeric: tabular-nums;
-  line-height: 1.2;
-}

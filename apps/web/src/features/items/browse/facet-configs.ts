@@ -202,7 +202,7 @@ export const RANGE_FACET_MAP = new Map(
   RANGE_FACETS.map((facet) => [facet.field, facet]),
 );
 
-export const DEFAULT_FACETS = ['types', 'functions', 'rel'] as const;
+export const DEFAULT_FACETS = ['functions', 'rel'] as const;
 
 export const SCROLL_FACETS = [
   'scrollTarget',

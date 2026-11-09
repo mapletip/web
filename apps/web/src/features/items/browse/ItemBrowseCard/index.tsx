@@ -31,7 +31,6 @@ export function ItemBrowseCard({
         <ItemIcon icon={record.icon} />
         <div className={classes['headerText']}>
           <h2 className={classes['name']}>{displayName}</h2>
-          <span className={classes['sourceId']}>{record.sourceId}</span>
         </div>
       </div>
 

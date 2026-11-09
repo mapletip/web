@@ -38,7 +38,7 @@ export function buildRangeBuckets(
       max: val,
     }));
   }
-  const quantiles = buildQuantileBuckets(valid);
+  const quantiles = buildQuantileBuckets({ values: valid });
   if (unitSuffix.length > 0) {
     return quantiles.map((bucket) => ({
       ...bucket,

@@ -105,7 +105,3 @@
 .childChip[aria-current='page'] span {
   color: var(--mapletip-color-brand-text) !important;
 }
-
-.childChipDimmed {
-  opacity: 0.6;
-}
