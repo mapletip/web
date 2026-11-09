@@ -1,12 +1,12 @@
 import type { FacetRangeBucket } from './types';
 
 /**
- * Deterministic equal-population buckets for finite, non-negative integer
- * values.
+ * Deterministic readable buckets for finite, non-negative integer values.
  *
  * Heavy-tailed numeric fields (monster HP spans 30 → 2.1 billion) make
  * equal-width buckets useless: one bucket holds almost every row and the rest are
- * effectively empty. Quantile cuts keep one bucket from dominating.
+ * effectively empty. Quantile cuts keep one bucket from dominating. Small
+ * domains use exact values so a preset never combines distinct choices.
  *
  * Raw order statistics ("765–1,721") are then rounded outward onto a shared grid
  * (5s below 100, then 25s, 250s, …) so labels are scannable while staying narrow
@@ -25,6 +25,16 @@ import type { FacetRangeBucket } from './types';
 const TARGET_BUCKETS = 6;
 const MIN_GRID_STEP = 5;
 const FORMATTER = new Intl.NumberFormat('en-US');
+
+function formatValue({
+  value,
+  unit,
+}: {
+  readonly value: number;
+  readonly unit?: string | undefined;
+}): string {
+  return `${FORMATTER.format(value)}${unit ?? ''}`;
+}
 
 function assertSupportedValue(value: number): void {
   if (!Number.isFinite(value) || value < 0 || !Number.isInteger(value)) {
@@ -80,13 +90,29 @@ function cutPoints(sorted: readonly number[]): number[] {
   return cuts;
 }
 
-export function buildQuantileBuckets(
-  values: readonly number[],
-): readonly FacetRangeBucket[] {
+export interface BuildQuantileBucketsOptions {
+  readonly values: readonly number[];
+  readonly unit?: string | undefined;
+}
+
+export function buildQuantileBuckets({
+  values,
+  unit,
+}: BuildQuantileBucketsOptions): readonly FacetRangeBucket[] {
   for (const value of values) assertSupportedValue(value);
   if (values.length === 0) return [];
 
   const sorted = [...values].sort((left, right) => left - right);
+  const distinct = [...new Set(sorted)];
+  if (distinct.length <= TARGET_BUCKETS) {
+    return distinct.map((value) => ({
+      value: String(value),
+      label: formatValue({ value, unit }),
+      min: value,
+      max: value,
+    }));
+  }
+
   const observedMin = sorted[0]!;
   const observedMax = sorted.at(-1)!;
 
@@ -124,7 +150,7 @@ export function buildQuantileBuckets(
 
   return merged.map((bound) => ({
     value: `${String(bound.min)}-${String(bound.max)}`,
-    label: `${FORMATTER.format(bound.min)}–${FORMATTER.format(bound.max)}`,
+    label: `${formatValue({ value: bound.min, unit })}–${formatValue({ value: bound.max, unit })}`,
     min: bound.min,
     max: bound.max,
   }));

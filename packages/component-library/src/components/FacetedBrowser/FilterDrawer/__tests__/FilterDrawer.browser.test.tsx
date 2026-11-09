@@ -23,7 +23,6 @@ function Harness({ onCancel }: { readonly onCancel: () => void }) {
         applyLabel="Show results"
         onApply={() => undefined}
         onCancel={onCancel}
-        onReset={() => undefined}
       >
         <div style={{ height: '800px' }}>
           <p>Tall filter options content</p>

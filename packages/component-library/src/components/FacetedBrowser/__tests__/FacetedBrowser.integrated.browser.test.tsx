@@ -155,6 +155,54 @@ describe('integrated FacetedBrowser', () => {
     });
   });
 
+  it('keeps chips and active counts aligned with results for invalid controlled filters', async () => {
+    const invalidState: BrowseState = {
+      ...state,
+      filters: {
+        group: ['not-a-category'],
+        obsolete: ['legacy'],
+      },
+    };
+
+    await render(
+      <MantineProvider>
+        <FacetedBrowser
+          title={<h1>Invalid controlled filters</h1>}
+          records={demoRecords}
+          idAccessor="id"
+          queryFields={queryFields}
+          facets={facets}
+          presentation="cards"
+          renderCard={(record) => <a href={record.href}>{record.name}</a>}
+          state={invalidState}
+          onStateChange={() => undefined}
+        />
+      </MantineProvider>,
+    );
+    await page.viewport(375, 812);
+
+    expect(
+      page.getByText(`61–80 of ${demoRecords.length} records`).first(),
+    ).toBeVisible();
+    expect(
+      page.getByRole('button', {
+        name: 'Filters, 0 active. Open all filters',
+      }),
+    ).toBeVisible();
+    expect(
+      page.getByRole('button', { name: 'Category. Open Category filters' }),
+    ).toBeVisible();
+    expect(
+      page.getByRole('button', { name: 'Region. Open Region filters' }),
+    ).toBeVisible();
+    expect(
+      document.querySelector(
+        'button[aria-label="Remove Category: not-a-category"]',
+      ),
+    ).toBeNull();
+    expect(document.body.textContent).not.toContain('Category: not-a-category');
+  });
+
   it('commits sorting and its page reset as one controlled transition', async () => {
     const initial: BrowseState = { ...state, page: 3 };
     const changes: BrowseState[] = [];
@@ -531,7 +579,7 @@ describe('integrated FacetedBrowser', () => {
       .toBe('Category');
   });
 
-  it('resets only the drawer draft and keeps committed search and sort on Apply', async () => {
+  it('discards staged filter and sort changes on Cancel', async () => {
     const changes: BrowseState[] = [];
     const initial: BrowseState = {
       ...state,
@@ -545,7 +593,7 @@ describe('integrated FacetedBrowser', () => {
       { label: 'Value 1 (High to Low)', field: 'value1', direction: 'desc' },
     ];
 
-    function ResettableBrowser() {
+    function StagedBrowser() {
       const [current, setCurrent] = useState(initial);
       return (
         <Browser
@@ -559,7 +607,7 @@ describe('integrated FacetedBrowser', () => {
       );
     }
 
-    await render(<ResettableBrowser />);
+    await render(<StagedBrowser />);
     await page.viewport(375, 812);
     await page.getByRole('button', { name: /^Filters/u }).click();
     expect(page.getByRole('checkbox', { name: /^Alpha \(/u })).toBeChecked();
@@ -569,21 +617,14 @@ describe('integrated FacetedBrowser', () => {
     await page.getByRole('option', { name: 'Value 1 (Low to High)' }).click();
     expect(sortSelect).toHaveValue('Value 1 (Low to High)');
 
-    await page.getByRole('button', { name: 'Reset' }).click();
-    expect(
-      page.getByRole('checkbox', { name: /^Alpha \(/u }),
-    ).not.toBeChecked();
+    await page.getByRole('button', { name: 'Cancel' }).click();
+    expect(page.getByRole('button', { name: /^Filters/u })).toBeVisible();
+    expect(changes).toHaveLength(0);
+
+    await page.getByRole('button', { name: /^Filters/u }).click();
+    expect(page.getByRole('checkbox', { name: /^Alpha \(/u })).toBeChecked();
     expect(sortSelect).toHaveValue('Value 1 (High to Low)');
     expect(changes).toHaveLength(0);
-    await page.getByRole('button', { name: /^Show \d+ records$/u }).click();
-
-    expect(changes).toHaveLength(1);
-    expect(changes[0]).toMatchObject({
-      search: 'Record',
-      filters: {},
-      sort: { field: 'value1', direction: 'desc' },
-      page: 1,
-    });
   });
 
   it('clears a draft when a host closes and reopens the drawer', async () => {
@@ -986,7 +1027,7 @@ describe('integrated FacetedBrowser', () => {
 
     await userEvent.click(seeMoreButtons()[0]!);
 
-    expect(railCheckboxes()).toHaveLength(16);
+    expect(railCheckboxes()).toHaveLength(15);
     expect(rail.textContent).toContain('Delta');
     expect(rail.textContent).toContain('See less');
   });
@@ -1017,7 +1058,7 @@ describe('integrated FacetedBrowser', () => {
 
     await userEvent.click(seeMoreButtons()[0]!);
 
-    expect(dialogCheckboxes()).toHaveLength(16);
+    expect(dialogCheckboxes()).toHaveLength(15);
     expect(dialog.textContent).toContain('Delta');
     expect(dialog.textContent).toContain('See less');
   });

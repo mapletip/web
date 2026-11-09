@@ -2,9 +2,9 @@ import { Text } from '@mantine/core';
 import { DrillDownNav, FacetedBrowser } from '@mapletip/component-library';
 import type {
   FacetedBrowserNavigationHistory,
-  QueryFieldDefinition,
   TableColumn,
 } from '@mapletip/component-library';
+import type { ItemBrowseCoverage } from '@mapletip/data/items';
 import { Link, useRouter } from '@tanstack/react-router';
 import { useCallback, useMemo, type ReactElement } from 'react';
 
@@ -12,6 +12,7 @@ import { BrowsePageShell } from '@/components/BrowsePageShell';
 import { BUILDS, type BuildId } from '@/config/maplekit';
 
 import { getCategoryRows } from '../assignment';
+import { getItemFacets, ITEM_QUERY_FIELDS } from '../facets';
 import { ItemBrowseCard } from '../ItemBrowseCard';
 import { ItemBrowseHeader } from '../ItemBrowseHeader';
 import { itemPageMetadata } from '../metadata';
@@ -26,7 +27,6 @@ import {
 import { getItemNavTree } from '../navigation-tree';
 import type { ItemRow } from '../project';
 import type { ItemCategorySelection } from '../routing';
-import { matchSourceId } from '../search';
 import { browseStateToUrl, PAGE_SIZE_OPTIONS } from '../search-params';
 import type { ItemBrowseSearch } from '../search-params';
 import { ITEM_SORT_OPTIONS } from '../sort';
@@ -39,6 +39,7 @@ import {
 export interface ItemBrowseProps {
   readonly buildId: BuildId;
   readonly rows: readonly ItemRow[];
+  readonly coverage: ItemBrowseCoverage;
   readonly category: ItemCategorySelection;
   readonly search: ItemBrowseSearch;
   readonly onSearchChange: (options: OnSearchChangeOptions) => void;
@@ -56,31 +57,17 @@ export const itemBrowseColumns: readonly TableColumn<ItemRow>[] = [
 
 const SUMMARY_NOUN = { one: 'Item', other: 'Items' } as const;
 
-/** Search-only exact item-ID match; the ID is never displayed. */
-const ITEM_QUERY_FIELDS: readonly QueryFieldDefinition<ItemRow>[] = [
-  {
-    id: 'sourceId',
-    accessor: 'sourceId',
-    searchMatch: ({ value, query }) =>
-      typeof value === 'string' && matchSourceId({ sourceId: value, query }),
-  },
-];
-
 /** Renders a controlled Items catalog page with shareable URL state. */
 export function ItemBrowse({
   buildId,
   rows,
+  coverage,
   category,
   search,
   onSearchChange,
 }: ItemBrowseProps): ReactElement {
   const buildLabel = BUILDS[buildId].label;
   const { heading } = itemPageMetadata(buildId, category);
-  const { browseState, handleStateChange } = useItemBrowseUrlState({
-    search,
-    onSearchChange,
-  });
-
   const scopedRows = useMemo(
     () =>
       getCategoryRows({
@@ -90,6 +77,14 @@ export function ItemBrowse({
       }),
     [rows, category.scope, category.child],
   );
+  const facets = useMemo(
+    () => getItemFacets({ category, coverage }),
+    [category, coverage],
+  );
+  const { browseState, handleStateChange } = useItemBrowseUrlState({
+    search,
+    onSearchChange,
+  });
 
   const navTree = useMemo(
     () => getItemNavTree({ rows, buildId }),
@@ -100,7 +95,7 @@ export function ItemBrowse({
   const currentIcon = currentNode.icon;
   const navPath = getItemNavPath({ root: navTree, targetId: currentId });
   const categorySearch = browseStateToUrl({
-    state: browseState,
+    state: { ...browseState, filters: {} },
     includePage: false,
   });
   const router = useRouter();
@@ -181,7 +176,8 @@ export function ItemBrowse({
         identityField="name"
         columns={itemBrowseColumns}
         queryFields={ITEM_QUERY_FIELDS}
-        facets={[]}
+        searchFields={['name', 'sourceId']}
+        facets={facets}
         sortOptions={ITEM_SORT_OPTIONS}
         recordNoun={`${buildLabel} items`}
         summaryMode="total"
@@ -200,7 +196,9 @@ export function ItemBrowse({
             <Link
               from={ITEM_NAV_TARGET}
               to="."
-              search={browseStateToUrl({ state: { ...state, page } })}
+              search={browseStateToUrl({
+                state: { ...state, page },
+              })}
               {...routerLinkProps}
               {...(target === undefined ? {} : { target })}
               {...(disabled === undefined ? {} : { disabled })}

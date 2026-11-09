@@ -18,7 +18,6 @@ async function mount(extra: Partial<FilterDrawerProps> = {}) {
   const handlers = {
     onApply: vi.fn(),
     onCancel: vi.fn(),
-    onReset: vi.fn(),
   };
   render(
     <MantineProvider>
@@ -71,7 +70,6 @@ function StagedFilterHarness({
           setDraft(committed);
           setOpened(false);
         }}
-        onReset={() => setDraft([])}
       >
         <Checkbox.Group value={draft} onChange={setDraft} label="Options">
           <Checkbox value="first" label="First option" />
@@ -136,21 +134,12 @@ describe('FilterDrawer', () => {
     await vi.waitFor(() => expect(onCancel).toHaveBeenCalledTimes(2));
   });
 
-  it('calls onReset and stays open', async () => {
-    const { onReset, onCancel } = await mount();
-    await userEvent.click(button('Reset'));
-    expect(onReset).toHaveBeenCalledTimes(1);
-    expect(onCancel).not.toHaveBeenCalled();
-    expect(document.querySelector('[role="dialog"]')).not.toBeNull();
-  });
-
-  it('places Reset immediately after Cancel and before Apply', async () => {
+  it('shows only Cancel and the matching item count in the footer', async () => {
     await mount();
     const footer = document.querySelector<HTMLElement>('[class*="footer"]')!;
     const buttons = [...footer.querySelectorAll('button')];
     expect(buttons.map((control) => control.textContent)).toEqual([
       'Cancel',
-      'Reset',
       'Show results',
     ]);
   });
@@ -197,7 +186,7 @@ describe('FilterDrawer', () => {
     );
   });
 
-  it('discards on cancel and clears on reset', async () => {
+  it('discards the staged draft on cancel and retains it while open', async () => {
     const onCommit = vi.fn();
     render(
       <MantineProvider>
@@ -210,7 +199,7 @@ describe('FilterDrawer', () => {
       name: 'First option',
     });
     await userEvent.click(firstOption);
-    await userEvent.click(button('Reset'));
+    expect(button('Show 91 records')).toBeInTheDocument();
     await userEvent.click(button('Cancel'));
     expect(onCommit).not.toHaveBeenCalled();
 
@@ -220,16 +209,10 @@ describe('FilterDrawer', () => {
     });
     expect(reopened).not.toBeChecked();
     await userEvent.click(reopened);
-    await userEvent.click(button('Reset'));
-    expect(
-      screen.getByRole('checkbox', { name: 'First option' }),
-    ).not.toBeChecked();
-    expect(screen.getByRole('dialog', { name: 'Filters' })).toBeInTheDocument();
-
     await userEvent.click(
       screen.getByRole('checkbox', { name: 'Second option' }),
     );
-    expect(button('Show 91 records')).toBeInTheDocument();
+    expect(button('Show 82 records')).toBeInTheDocument();
   });
 
   it('keeps scope navigation as a real link and discards the staged draft', async () => {
@@ -272,7 +255,6 @@ describe('FilterDrawer', () => {
           applyDisabled
           onApply={onApply}
           onCancel={() => {}}
-          onReset={() => {}}
         >
           <div>
             <label htmlFor="min-lvl">Min level</label>

@@ -9,7 +9,7 @@ import { itemPageMetadata } from '@/features/items/browse/metadata';
 import { parseItemRouteParams } from '@/features/items/browse/routing';
 import {
   ITEM_BROWSE_DEFAULT_SEARCH,
-  validateSearch,
+  itemBrowseSearchSchema,
 } from '@/features/items/browse/search-params';
 
 const itemsRouteApi = getRouteApi('/maplestory/{-$buildId}/items');
@@ -17,7 +17,7 @@ const itemsRouteApi = getRouteApi('/maplestory/{-$buildId}/items');
 export const Route = createFileRoute(
   '/maplestory/{-$buildId}/items/{-$scope}/{-$child}',
 )({
-  validateSearch,
+  validateSearch: itemBrowseSearchSchema,
   search: {
     middlewares: [stripSearchParams(ITEM_BROWSE_DEFAULT_SEARCH)],
   },
@@ -39,12 +39,13 @@ function ItemBrowseLeaf() {
   const search = Route.useSearch();
   const navigate = Route.useNavigate();
   const { buildId, category } = parseItemRouteParams(params);
-  const { rows } = itemsRouteApi.useLoaderData();
+  const { rows, coverage } = itemsRouteApi.useLoaderData();
 
   return (
     <ItemBrowse
       buildId={buildId}
       rows={rows}
+      coverage={coverage}
       category={category}
       search={search}
       onSearchChange={({ search: nextSearch, replace }) => {

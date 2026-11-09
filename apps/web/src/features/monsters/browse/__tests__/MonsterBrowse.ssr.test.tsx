@@ -145,10 +145,10 @@ describe('MonsterBrowse server rendering', () => {
     expect(html).toContain('EXP / 100 HP');
     expect(html).toContain('Experience per 100 HP');
     expect(html).toContain('104.76');
-    // Quantile presets are derived deterministically during SSR from the same
-    // records and accessors the client uses (levels 1, 20, 41 here).
-    expect(html).toContain('1–40');
-    expect(html).toContain('41–45');
+    // With three distinct values, the range facet renders exact-value buckets
+    // during SSR instead of quantile ranges.
+    expect(html).not.toContain('1–40');
+    expect(html).not.toContain('41–45');
     // One record has no known HP, so its ratio is unavailable: the numeric
     // column and the mobile card show a bare dash instead of a word.
     expect(html).toContain('>-</td>');

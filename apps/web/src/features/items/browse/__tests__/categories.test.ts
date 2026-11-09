@@ -95,8 +95,11 @@ describe('category model and predicates', () => {
     expect(
       ITEM_SCOPES.setup.children.some((c) => c.slug === 'event-items'),
     ).toBe(true);
+    const invalidHolidaySlug: string = 'holiday-ornaments';
     expect(
-      ITEM_SCOPES.setup.children.some((c) => c.slug === 'holiday-ornaments'),
+      ITEM_SCOPES.setup.children.some(
+        (child) => child.slug === invalidHolidaySlug,
+      ),
     ).toBe(false);
     expect(ITEM_SCOPES.setup.children.some((c) => c.slug === 'chairs')).toBe(
       true,
@@ -454,10 +457,11 @@ describe('category model and predicates', () => {
         childSum,
         `sum(child counts) for ${scope.slug} must match scope total`,
       ).toBe(summary.total);
-      expect(summary.total).toBe(
-        fixtureRows.filter((r) => scope.itemClasses.includes(r.itemClass))
-          .length,
-      );
+      expect(
+        fixtureRows.filter((row) =>
+          scope.itemClasses.some((itemClass) => itemClass === row.itemClass),
+        ).length,
+      ).toBe(summary.total);
     }
   });
 

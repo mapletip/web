@@ -1,7 +1,7 @@
 import { byType, otherChild } from './builders';
 import type { ItemCategoryScope } from './types';
 
-export const etcScope: ItemCategoryScope = {
+export const etcScope = {
   slug: 'etc',
   label: 'ETC',
   itemClasses: ['etc'],
@@ -57,4 +57,4 @@ export const etcScope: ItemCategoryScope = {
       ],
     }),
   ],
-};
+} satisfies ItemCategoryScope<'etc'>;

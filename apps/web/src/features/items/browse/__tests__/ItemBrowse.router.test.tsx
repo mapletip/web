@@ -5,7 +5,7 @@ import {
   createRouter,
   RouterProvider,
 } from '@tanstack/react-router';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -15,31 +15,70 @@ import { DEFAULT_NAV_PARAMS, ITEM_NAV_TARGET } from '../navigation';
 import type { ItemRow } from '../project';
 import { ITEM_BROWSE_DEFAULT_SEARCH } from '../search-params';
 
-const { fixtureRows } = vi.hoisted(() => {
+const { fixtureRows, fixtureCoverage } = vi.hoisted(() => {
   const rows: readonly ItemRow[] = [
     {
       key: 'item:02000000',
       sourceId: '02000000',
       name: 'Red Potion',
       itemClass: 'consume',
+      types: ['potion'],
+      functions: ['recovery'],
+      hp: 50,
     },
     {
       key: 'item:02070000',
       sourceId: '02070000',
       name: 'Subi Throwing-Stars',
       itemClass: 'consume',
+      types: ['throwing-star'],
+      attack: 1,
     },
     {
       key: 'item:digit-name',
       sourceId: '02000001',
       name: 'Potion 2000000',
       itemClass: 'consume',
+      types: ['potion'],
+      functions: ['recovery'],
+      hp: 100,
+    },
+    {
+      key: 'item:scroll:helmet',
+      sourceId: '02040001',
+      name: 'Scroll for Helmet DEF 60%',
+      itemClass: 'consume',
+      types: ['upgrade-scroll'],
+      targetLabel: 'hat',
+      success: 60,
+      cursed: 0,
+      tier: 'lesser',
+      stats: { weaponDefense: 2 },
+      directTargetCount: 1,
+    },
+    {
+      key: 'item:scroll:shoes',
+      sourceId: '02040002',
+      name: 'Scroll for Shoes Jump 100%',
+      itemClass: 'consume',
+      types: ['upgrade-scroll'],
+      targetLabel: 'shoes',
+      success: 100,
+      tier: 'intermediate',
+      stats: { jump: 2 },
     },
     {
       key: 'item:04000000',
       sourceId: '04000000',
       name: 'Snail Shell',
       itemClass: 'etc',
+    },
+    {
+      key: 'item:etc:quest',
+      sourceId: '04000001',
+      name: 'Quest Material',
+      itemClass: 'etc',
+      neededForQuestCount: 1,
     },
     ...Array.from({ length: 50 }, (_, index): ItemRow => ({
       key: `item:extra:${index}`,
@@ -48,17 +87,51 @@ const { fixtureRows } = vi.hoisted(() => {
       itemClass: 'consume',
     })),
   ];
-  return { fixtureRows: rows };
+  const coverage = {
+    relationships: {
+      'cash-shop-listing': 'complete',
+      'found-in-container': 'complete',
+      'made-by-recipe': 'complete',
+      'monster-drop': 'partial',
+      'needed-for-quest': 'complete',
+      'quest-reward': 'complete',
+      'used-in-recipe': 'complete',
+    },
+    scrollTier: 'complete',
+  } as const;
+  return { fixtureRows: rows, fixtureCoverage: coverage };
 });
 
 vi.mock('../load', () => ({
-  loadItemBrowse: vi.fn().mockResolvedValue({ rows: fixtureRows }),
+  loadItemBrowse: vi
+    .fn()
+    .mockResolvedValue({ rows: fixtureRows, coverage: fixtureCoverage }),
 }));
 
 describe('Items Browse router state', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
+
+  async function loadRouter(initialEntry: string) {
+    const history = createMemoryHistory({ initialEntries: [initialEntry] });
+    const router = createRouter({ routeTree, history });
+    await router.load();
+    return router;
+  }
+
+  function renderRouter(router: Awaited<ReturnType<typeof loadRouter>>) {
+    return render(
+      <MantineProvider theme={theme} forceColorScheme="dark">
+        <RouterProvider router={router} />
+      </MantineProvider>,
+    );
+  }
+
+  async function mountRoute(initialEntry: string) {
+    const router = await loadRouter(initialEntry);
+    return { router, ...renderRouter(router), user: userEvent.setup() };
+  }
 
   it('renders pagination as real links with serializable search state', async () => {
     const history = createMemoryHistory({
@@ -164,12 +237,11 @@ describe('Items Browse router state', () => {
     await user.clear(search);
     await user.type(search, '2000000');
     await waitFor(() => {
-      expect(
-        new URL(
-          router.state.location.href,
-          'http://localhost',
-        ).searchParams.has('q'),
-      ).toBe(true);
+      const query = new URL(
+        router.state.location.href,
+        'http://localhost',
+      ).searchParams.get('q');
+      expect(['2000000', '"2000000"']).toContain(query);
     });
     const generatedUrl = router.state.location.href;
     const reloadHistory = createMemoryHistory({
@@ -258,5 +330,173 @@ describe('Items Browse router state', () => {
       ).toBe('3');
     });
     expect(replace).toHaveBeenCalled();
+  });
+
+  it('replaces stale facet params with a URL that omits them', async () => {
+    const history = createMemoryHistory({
+      initialEntries: [
+        '/maplestory/items/use?types=%5B%22potion%22%5D&attack=%7B%22min%22%3A1%7D',
+      ],
+    });
+    const replace = vi.spyOn(history, 'replace');
+    const router = createRouter({ routeTree, history });
+    await router.load();
+
+    render(
+      <MantineProvider theme={theme} forceColorScheme="dark">
+        <RouterProvider router={router} />
+      </MantineProvider>,
+    );
+
+    await waitFor(() => {
+      expect(
+        new URL(
+          router.state.location.href,
+          'http://localhost',
+        ).searchParams.has('types'),
+      ).toBe(false);
+      expect(
+        new URL(
+          router.state.location.href,
+          'http://localhost',
+        ).searchParams.has('attack'),
+      ).toBe(false);
+    });
+    expect(replace).toHaveBeenCalled();
+  });
+
+  it('round-trips a multi-select facet through a JSON URL and reload', async () => {
+    const { router, user, unmount } = await mountRoute(
+      '/maplestory/items/use/scrolls?page=2&pageSize=25',
+    );
+
+    await user.click(screen.getByRole('checkbox', { name: /^Hat/ }));
+    expect(screen.getByText('Armor')).toBeInTheDocument();
+    await waitFor(() => {
+      const url = new URL(router.state.location.href, 'http://localhost');
+      expect(url.searchParams.get('scrollTarget')).toBe('["hat"]');
+      expect(url.searchParams.has('page')).toBe(false);
+    });
+
+    const generatedUrl = router.state.location.href;
+    const reloadedRouter = await loadRouter(generatedUrl);
+    unmount();
+    renderRouter(reloadedRouter);
+
+    expect(screen.getByRole('checkbox', { name: /^Hat/ })).toBeChecked();
+    expect(reloadedRouter.state.matches.at(-1)?.search).toMatchObject({
+      scrollTarget: ['hat'],
+      pageSize: 25,
+    });
+  });
+
+  it('round-trips a bucket selection through a JSON URL and reload', async () => {
+    const { router, user, unmount } = await mountRoute(
+      '/maplestory/items/use/recovery',
+    );
+
+    await user.click(screen.getByRole('checkbox', { name: /^1–99/ }));
+    await waitFor(() => {
+      const url = new URL(router.state.location.href, 'http://localhost');
+      expect(url.searchParams.get('hp')).toBe('["1-99"]');
+    });
+
+    const generatedUrl = router.state.location.href;
+    const reloadedRouter = await loadRouter(generatedUrl);
+    unmount();
+    renderRouter(reloadedRouter);
+
+    expect(screen.getByRole('checkbox', { name: /^1–99/ })).toBeChecked();
+  });
+
+  it('loads a fixed HP range from a real URL', async () => {
+    const { router } = await mountRoute(
+      '/maplestory/items/use/recovery?hp=%5B%22100-299%22%5D',
+    );
+
+    expect(screen.getByRole('checkbox', { name: /^100–299/ })).toBeChecked();
+    expect(screen.getByText('Potion 2000000')).toBeInTheDocument();
+    expect(screen.queryByText('Red Potion')).not.toBeInTheDocument();
+    expect(router.state.matches.at(-1)?.search).toMatchObject({
+      hp: ['100-299'],
+    });
+  });
+
+  it('loads the ETC no-recorded-use boolean from a real URL', async () => {
+    const { router } = await mountRoute(
+      '/maplestory/items/etc?noRecordedQuestOrRecipeUse=true',
+    );
+
+    expect(
+      screen.getByRole('combobox', { name: 'No recorded quest or recipe use' }),
+    ).toHaveValue('Yes (1)');
+    expect(screen.getByText('Snail Shell')).toBeInTheDocument();
+    expect(screen.queryByText('Quest Material')).not.toBeInTheDocument();
+    expect(router.state.matches.at(-1)?.search).toMatchObject({
+      noRecordedQuestOrRecipeUse: true,
+    });
+  });
+
+  it('round-trips a custom range through a JSON URL and reload', async () => {
+    const { router, user, unmount } = await mountRoute(
+      '/maplestory/items/use/recovery',
+    );
+
+    await user.click(screen.getByRole('checkbox', { name: 'Custom' }));
+    await user.type(
+      screen.getByRole('textbox', { name: 'HP restored to' }),
+      '100',
+    );
+    await user.type(
+      screen.getByRole('textbox', { name: 'HP restored from' }),
+      '60',
+    );
+    await waitFor(() => {
+      const url = new URL(router.state.location.href, 'http://localhost');
+      expect(url.searchParams.get('hp')).toBe('{"min":60,"max":100}');
+    });
+
+    const generatedUrl = router.state.location.href;
+    const reloadedRouter = await loadRouter(generatedUrl);
+    unmount();
+    renderRouter(reloadedRouter);
+
+    expect(
+      screen.getByRole('textbox', { name: 'HP restored from' }),
+    ).toHaveValue('60');
+    expect(screen.getByRole('textbox', { name: 'HP restored to' })).toHaveValue(
+      '100',
+    );
+  });
+
+  it('shows scroll facets on the real scroll child route', async () => {
+    await mountRoute('/maplestory/items/use/scrolls');
+
+    expect(screen.getAllByText('Equipment slot').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Stat improved').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Success rate').length).toBeGreaterThan(0);
+  });
+
+  it('drops page and facet params from category breadcrumb links', async () => {
+    const { router, user } = await mountRoute(
+      '/maplestory/items/use?q=Extra&page=2&pageSize=25&sort=name-desc&types=%5B%22not-an-option%22%5D',
+    );
+    const breadcrumb = screen.getByLabelText('Breadcrumb');
+    const allItems = within(breadcrumb).getByRole('link', {
+      name: 'All Items',
+    });
+    await user.click(allItems);
+
+    await waitFor(() => {
+      expect(
+        new URL(router.state.location.href, 'http://localhost').pathname,
+      ).toBe('/maplestory/items');
+    });
+    const url = new URL(router.state.location.href, 'http://localhost');
+    expect(url.searchParams.get('q')).toBe('Extra');
+    expect(url.searchParams.get('pageSize')).toBe('25');
+    expect(url.searchParams.get('sort')).toBe('name-desc');
+    expect(url.searchParams.has('page')).toBe(false);
+    expect(url.searchParams.has('types')).toBe(false);
   });
 });

@@ -1,6 +1,6 @@
 import type { ItemCategoryScope } from './types';
 
-export const cashScope: ItemCategoryScope = {
+export const cashScope = {
   slug: 'cash',
   label: 'Cash',
   itemClasses: ['cash', 'pet'],
@@ -24,4 +24,4 @@ export const cashScope: ItemCategoryScope = {
       ],
     },
   ],
-};
+} satisfies ItemCategoryScope<'cash'>;

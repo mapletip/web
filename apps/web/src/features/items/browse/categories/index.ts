@@ -15,20 +15,20 @@ import { setupScope } from './setup';
 import type { ItemCategoryScope, ItemScopeSlug } from './types';
 import { useScope } from './use';
 
-export const allScope: ItemCategoryScope = {
+export const allScope = {
   slug: 'all',
   label: 'All Items',
   itemClasses: ['consume', 'etc', 'setup', 'cash', 'pet'],
   children: [],
-};
+} satisfies ItemCategoryScope<'all', readonly []>;
 
-export const ITEM_SCOPES: Readonly<Record<ItemScopeSlug, ItemCategoryScope>> = {
+export const ITEM_SCOPES = {
   all: allScope,
   use: useScope,
   etc: etcScope,
   setup: setupScope,
   cash: cashScope,
-};
+} satisfies Readonly<Record<ItemScopeSlug, ItemCategoryScope>>;
 
 export { ITEM_SCOPE_SLUGS } from './types';
 export type {

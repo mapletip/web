@@ -19,6 +19,8 @@ import {
 
 import type { SortIntent, TableColumn, TableProps } from '@/components/Table';
 
+import { normalizeFacetFilters } from '../FacetControls/normalizeFacetFilters';
+import type { FacetDefinition } from '../FacetControls/types';
 import type { StateChangeDetails } from '../FacetedBrowser.types';
 
 import {
@@ -82,6 +84,8 @@ export interface UseFacetedBrowserOptions<
   readonly defaultPage?: number | undefined;
   readonly defaultSort?: SortIntent | undefined;
   readonly defaultFilters?: Record<string, FacetFilterValue> | undefined;
+  /** Resolved facets used to validate controlled and initial filters. */
+  readonly facets?: readonly FacetDefinition<TRecord>[] | undefined;
   readonly defaultHiddenColumns?: readonly string[] | undefined;
   /** Controlled search query. Pair with `onSearchChange` for `setSearch()` support. */
   readonly search?: string | undefined;
@@ -103,6 +107,8 @@ export interface UseFacetedBrowserReturn<
 > {
   /** Underlying TanStack Table v9 instance. */
   readonly table: Table<typeof facetedBrowserFeatures, TRecord>;
+  /** Canonical committed state after facet filter normalization. */
+  readonly canonicalState: BrowseState;
   /** Processed records for the current page, consumed by both table and cards. */
   readonly records: readonly TRecord[];
   /** Processed TanStack rows for the current page. */
@@ -195,6 +201,7 @@ export function useFacetedBrowser<TRecord extends Record<string, unknown>>({
   defaultPage = 1,
   defaultSort,
   defaultFilters = EMPTY_FILTERS,
+  facets,
   defaultHiddenColumns = EMPTY_HIDDEN_COLUMNS,
   search,
   onSearchChange,
@@ -220,7 +227,7 @@ export function useFacetedBrowser<TRecord extends Record<string, unknown>>({
   );
 
   const sourceState = browseState ?? internalState;
-  const canonicalState = useMemo(
+  const inputState = useMemo(
     () =>
       createBrowseState(
         {
@@ -236,6 +243,19 @@ export function useFacetedBrowser<TRecord extends Record<string, unknown>>({
       internalState.search,
       initialPageSize,
     ],
+  );
+  const canonicalState = useMemo(
+    () =>
+      facets === undefined
+        ? inputState
+        : {
+            ...inputState,
+            filters: normalizeFacetFilters({
+              facets,
+              filters: inputState.filters,
+            }),
+          },
+    [facets, inputState],
   );
   // Event handlers can fire more than once before React commits (for example,
   // two facet removals in one handler). Mirror the last transition so those
@@ -285,7 +305,12 @@ export function useFacetedBrowser<TRecord extends Record<string, unknown>>({
   const emitState = useCallback(
     (nextState: BrowseState, details?: StateChangeDetails): boolean => {
       const next = createBrowseState(nextState, initialPageSize);
-      if (browseStatesEqual(latestStateRef.current, next)) return false;
+      if (
+        browseStatesEqual(latestStateRef.current, next) &&
+        details?.reason !== 'clamp'
+      ) {
+        return false;
+      }
       latestStateRef.current = next;
       if (browseState) {
         if (!onBrowseStateChange) {
@@ -735,27 +760,39 @@ export function useFacetedBrowser<TRecord extends Record<string, unknown>>({
   // page while records or filters are replaced. One correction per state/data
   // combination; the key also absorbs StrictMode's repeated effect setup.
   const pageCount = table.getPageCount();
-  const lastClampRef = useRef('');
+  const lastClampRef = useRef<
+    { readonly source: BrowseState; readonly next: BrowseState } | undefined
+  >(undefined);
   const lastRecordsRef = useRef(records);
   useEffect(() => {
     if (lastRecordsRef.current !== records) {
       lastRecordsRef.current = records;
-      lastClampRef.current = '';
+      lastClampRef.current = undefined;
     }
     const clampedPage = Math.max(1, pageCount);
-    if (canonicalState.page <= clampedPage) {
-      lastClampRef.current = '';
+    const filtersNeedClamp = !filtersEqual(
+      inputState.filters,
+      canonicalState.filters,
+    );
+    const pageNeedsClamp = canonicalState.page > clampedPage;
+    if (!filtersNeedClamp && !pageNeedsClamp) {
+      lastClampRef.current = undefined;
       return;
     }
-    const key = `${canonicalState.page}:${pageCount}:${records.length}`;
-    if (lastClampRef.current === key) return;
-    lastClampRef.current = key;
+    const nextState = { ...canonicalState, page: clampedPage };
+    const previousClamp = lastClampRef.current;
     if (
-      emitState({ ...canonicalState, page: clampedPage }, { reason: 'clamp' })
+      previousClamp !== undefined &&
+      browseStatesEqual(previousClamp.source, inputState) &&
+      browseStatesEqual(previousClamp.next, nextState)
     ) {
+      return;
+    }
+    lastClampRef.current = { source: inputState, next: nextState };
+    if (emitState(nextState, { reason: 'clamp' }) && pageNeedsClamp) {
       onPageChange?.(clampedPage);
     }
-  }, [canonicalState, emitState, onPageChange, pageCount, records]);
+  }, [canonicalState, emitState, inputState, onPageChange, pageCount, records]);
 
   const getFacetValues = useCallback(
     (field: string): Map<string, number> => {
@@ -921,6 +958,7 @@ export function useFacetedBrowser<TRecord extends Record<string, unknown>>({
 
   return {
     table,
+    canonicalState,
     records: processedRecords,
     rows: paginatedRows,
     allFilteredRecords,

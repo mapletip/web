@@ -1,10 +1,15 @@
 import { buildQuantileBuckets } from '@/components/FacetedBrowser/FacetControls/quantileBuckets';
 import { createRangeBucketFilterFn } from '@/components/FacetedBrowser/FacetControls/rangeBucketFilterFn';
-import type { FacetDefinition } from '@/components/FacetedBrowser/FacetControls/types';
+import type {
+  FacetDefinition,
+  FacetOption,
+} from '@/components/FacetedBrowser/FacetControls/types';
 import type {
   QueryFieldDefinition,
   ResolvedField,
 } from '@/components/FacetedBrowser/hooks/querySemantics';
+
+const NATURAL_COLLATOR = new Intl.Collator(undefined, { numeric: true });
 
 /**
  * A range facet that carries buckets is the single source of bucket semantics:
@@ -86,12 +91,82 @@ export interface ResolvedFacets<TRecord extends Record<string, unknown>> {
   readonly queryFields: readonly QueryFieldDefinition<TRecord>[];
 }
 
+function countStringValues<TRecord extends Record<string, unknown>>({
+  records,
+  field,
+}: {
+  readonly records: readonly TRecord[];
+  readonly field: ResolvedField<TRecord>;
+}): Map<string, number> {
+  const counts = new Map<string, number>();
+  for (const record of records) {
+    const values = new Set(
+      field
+        .getUniqueValues(record)
+        .filter((value): value is string => typeof value === 'string'),
+    );
+    for (const value of values) counts.set(value, (counts.get(value) ?? 0) + 1);
+  }
+  return counts;
+}
+
+function resolveFacet<TRecord extends Record<string, unknown>>({
+  facet,
+  records,
+  field,
+}: {
+  readonly facet: FacetDefinition<TRecord>;
+  readonly records: readonly TRecord[];
+  readonly field: ResolvedField<TRecord>;
+}): FacetDefinition<TRecord> | undefined {
+  if (facet.kind === 'range') {
+    const values = records.flatMap((record) => {
+      const value = field.accessorFn(record);
+      return typeof value === 'number' ? [value] : [];
+    });
+    const distinctValues = new Set(
+      values.filter((value) => Number.isFinite(value)),
+    );
+    if (distinctValues.size < 2) return undefined;
+    if (facet.buckets !== 'quantile') return facet;
+    return {
+      ...facet,
+      buckets: buildQuantileBuckets({ values, unit: facet.unit }),
+    };
+  }
+
+  if (facet.kind === 'boolean') {
+    if (records.length === 0) return facet;
+    const firstValue = field.accessorFn(records[0]!);
+    return records.every((record) =>
+      Object.is(field.accessorFn(record), firstValue),
+    )
+      ? undefined
+      : facet;
+  }
+
+  const counts = countStringValues({ records, field });
+  const declaredOptions =
+    facet.options ??
+    [...counts.entries()]
+      .filter(([, count]) => count > 0 && count < records.length)
+      .sort(([left], [right]) => NATURAL_COLLATOR.compare(left, right))
+      .map(([value]) => ({
+        value,
+        label: facet.formatOption ? facet.formatOption({ value }) : value,
+      }));
+  const options: FacetOption[] = declaredOptions.filter((option) => {
+    const count = counts.get(option.value) ?? 0;
+    return count > 0 && count < records.length;
+  });
+  return options.length > 0 ? { ...facet, options } : undefined;
+}
+
 /**
- * The single place that turns declared facets into effective ones: quantile
- * buckets are generated from the resolved field accessors over the complete
- * record set, facet definitions are validated, and any bucket-bearing facet is
- * paired with its filtering semantics. UI, chips, counts and filters all consume
- * this result, so their boundaries cannot diverge.
+ * The single place that turns declared facets into effective ones: range
+ * buckets and option pruning use the complete record set, facet definitions are
+ * validated, and any bucket-bearing facet is paired with its filtering
+ * semantics. UI, chips, counts and filters all consume this result.
  */
 export function resolveFacets<TRecord extends Record<string, unknown>>({
   facets,
@@ -99,22 +174,13 @@ export function resolveFacets<TRecord extends Record<string, unknown>>({
   records,
   fieldAccessors,
 }: ResolveFacetsOptions<TRecord>): ResolvedFacets<TRecord> {
-  const effectiveFacets = facets.map((facet) => {
-    if (facet.kind !== 'range' || facet.buckets !== 'quantile') return facet;
-    const accessor = fieldAccessors.get(facet.field)?.accessorFn;
-    if (accessor === undefined) {
-      throw new Error(
-        `FacetedBrowser: facet "${facet.id}" uses quantile buckets but field "${facet.field}" is not registered.`,
-      );
-    }
-    const values = records.flatMap((record) => {
-      const value = accessor(record);
-      return typeof value === 'number' ? [value] : [];
-    });
-    return { ...facet, buckets: buildQuantileBuckets(values) };
+  validateFacets(facets, new Set(fieldAccessors.keys()));
+  const effectiveFacets = facets.flatMap((facet) => {
+    const field = fieldAccessors.get(facet.field);
+    if (field === undefined) return [];
+    const resolved = resolveFacet({ facet, records, field });
+    return resolved === undefined ? [] : [resolved];
   });
-
-  validateFacets(effectiveFacets, new Set(fieldAccessors.keys()));
   return {
     facets: effectiveFacets,
     queryFields: withBucketFilters(effectiveFacets, queryFields),

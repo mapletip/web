@@ -24,11 +24,11 @@ interface LevelRecord extends Record<string, unknown> {
 
 const rows: readonly LevelRecord[] = [
   { id: 'a', name: 'Alpha', level: 5, boss: true, group: 'fixture' },
-  { id: 'b', name: 'Bravo', level: 12, boss: false, group: 'fixture' },
+  { id: 'b', name: 'Bravo', level: 12, boss: false, group: 'other' },
   { id: 'c', name: 'Charlie', level: 25, boss: true, group: 'fixture' },
-  { id: 'd', name: 'Delta', level: 41, boss: false, group: 'fixture' },
+  { id: 'd', name: 'Delta', level: 41, boss: false, group: 'other' },
   { id: 'e', name: 'Echo', level: 60, boss: false, group: 'fixture' },
-  { id: 'f', name: 'Foxtrot', level: 90, boss: false, group: 'fixture' },
+  { id: 'f', name: 'Foxtrot', level: 90, boss: false, group: 'other' },
 ];
 
 // One more bucket than the control's default limit of 3, so "See more" has
@@ -71,7 +71,10 @@ const facetsWithGroup: readonly FacetDefinition<LevelRecord>[] = [
     field: 'group',
     label: 'Group',
     kind: 'multi-select',
-    options: [{ value: 'fixture', label: 'Fixture' }],
+    options: [
+      { value: 'fixture', label: 'Fixture' },
+      { value: 'other', label: 'Other' },
+    ],
   },
 ];
 
@@ -646,7 +649,7 @@ describe('bucket facets over computed query fields', () => {
     ).toEqual(['Bravo']);
   });
 
-  it('derives quantile buckets from a computed accessor', async () => {
+  it('derives exact small-domain buckets from a computed accessor', async () => {
     render(<ComputedBrowser facets={computedQuantileFacets} />);
 
     // Scores are 300, 200, 100 from the accessor (never `row.score`).
@@ -654,11 +657,13 @@ describe('bucket facets over computed query fields', () => {
       screen
         .getAllByRole('checkbox')
         .map((element) =>
-          (element as HTMLInputElement).labels?.[0]?.textContent?.trim(),
+          element instanceof HTMLInputElement
+            ? element.labels?.[0]?.textContent?.trim()
+            : undefined,
         ),
-    ).toEqual(['100–200 (2)', '201–300 (1)', 'Custom']);
+    ).toEqual(['100 (1)', '200 (1)', '300 (1)', 'Custom']);
 
-    await userEvent.click(screen.getByRole('checkbox', { name: /^201–300/u }));
+    await userEvent.click(screen.getByRole('checkbox', { name: /^300/u }));
     // Alpha's computed score is 300; the record itself has no `score` field.
     expect(
       screen.getAllByRole('listitem').map((item) => item.textContent),
@@ -687,26 +692,26 @@ describe('bucket facets over computed query fields', () => {
 });
 
 describe('quantile bucket facets', () => {
-  it('derives readable buckets from the complete records and filters with them', async () => {
+  it('uses exact values for a small domain and filters with them', async () => {
     render(<LevelBrowser facets={quantileFacets} />);
 
-    // Levels 5,12,25,41,60,90 → five quantiles merge into four readable ranges.
     expect(levelFacetLabels()).toEqual([
-      '5–15 (2)',
-      '16–40 (1)',
-      '41–60 (2)',
+      '5 (1)',
+      '12 (1)',
+      '25 (1)',
       'Custom',
       'See more',
     ]);
 
-    await userEvent.click(screen.getByRole('checkbox', { name: /^41–60 \(/u }));
-    expect(resultNames()).toEqual(['Delta', 'Echo']);
+    await userEvent.click(seeMore());
+    await userEvent.click(screen.getByRole('checkbox', { name: /^41 \(/u }));
+    expect(resultNames()).toEqual(['Delta']);
 
-    await userEvent.click(screen.getByRole('checkbox', { name: /^5–15 \(/u }));
-    expect(resultNames()).toEqual(['Alpha', 'Bravo', 'Delta', 'Echo']);
+    await userEvent.click(screen.getByRole('checkbox', { name: /^5 \(/u }));
+    expect(resultNames()).toEqual(['Alpha', 'Delta']);
     // Chip labels use the same generated boundaries as the filter.
     expect(
-      screen.getByRole('button', { name: 'Remove Level: 41–60' }),
+      screen.getByRole('button', { name: 'Remove Level: 41' }),
     ).toBeInTheDocument();
   });
 
@@ -717,7 +722,16 @@ describe('quantile bucket facets', () => {
     await userEvent.click(
       screen.getByRole('checkbox', { name: /^Fixture \(/u }),
     );
-    // Boundaries come from all records, not the filtered result set.
-    expect(levelFacetLabels()).toEqual(labelsBefore);
+    // Boundaries come from all records while counts stay contextual.
+    expect(
+      levelFacetLabels().map((label) => label.replace(/ \(\d+\)$/u, '')),
+    ).toEqual(labelsBefore.map((label) => label.replace(/ \(\d+\)$/u, '')));
+    expect(levelFacetLabels()).toEqual([
+      '1–20 (1)',
+      '21–40 (1)',
+      '41–60 (1)',
+      'Custom',
+      'See more',
+    ]);
   });
 });

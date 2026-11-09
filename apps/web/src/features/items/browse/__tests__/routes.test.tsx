@@ -81,7 +81,18 @@ const { mockRows } = vi.hoisted(() => {
 vi.mock('../load', () => ({
   loadItemBrowse: vi.fn().mockResolvedValue({
     rows: mockRows,
-    coverage: {},
+    coverage: {
+      relationships: {
+        'cash-shop-listing': 'complete',
+        'found-in-container': 'complete',
+        'made-by-recipe': 'complete',
+        'monster-drop': 'partial',
+        'needed-for-quest': 'complete',
+        'quest-reward': 'complete',
+        'used-in-recipe': 'complete',
+      },
+      scrollTier: 'complete',
+    },
   }),
 }));
 

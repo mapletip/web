@@ -1,7 +1,10 @@
 import { act, render } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { validateSearch, type ItemBrowseSearch } from '../../search-params';
+import {
+  itemBrowseSearchSchema,
+  type ItemBrowseSearch,
+} from '../../search-params';
 import {
   useItemBrowseUrlState,
   type OnSearchChangeOptions,
@@ -10,7 +13,7 @@ import {
 
 describe('useItemBrowseUrlState', () => {
   function setup({
-    search = validateSearch({}),
+    search = itemBrowseSearchSchema.parse({}),
     onSearchChange = vi.fn(),
   }: {
     readonly search?: ItemBrowseSearch;
@@ -74,10 +77,37 @@ describe('useItemBrowseUrlState', () => {
     });
   });
 
+  it('pushes facet changes with active options and resets the page', () => {
+    const onSearchChange = vi.fn();
+    const { getResult } = setup({
+      search: itemBrowseSearchSchema.parse({ page: 4 }),
+      onSearchChange,
+    });
+
+    act(() => {
+      getResult().handleStateChange({
+        ...getResult().browseState,
+        page: 1,
+        filters: { types: ['potion'] },
+      });
+    });
+
+    expect(onSearchChange).toHaveBeenCalledWith({
+      search: {
+        q: '',
+        page: 1,
+        pageSize: 50,
+        sort: 'name-asc',
+        types: ['potion'],
+      },
+      replace: false,
+    });
+  });
+
   it('replaces clamp corrections', () => {
     const onSearchChange = vi.fn();
     const { getResult } = setup({
-      search: validateSearch({ page: 3 }),
+      search: itemBrowseSearchSchema.parse({ page: 3 }),
       onSearchChange,
     });
 

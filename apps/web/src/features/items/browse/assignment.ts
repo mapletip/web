@@ -129,7 +129,7 @@ export function getCategoryCounts(rows: readonly ItemRow[]): CategoryCounts {
       counts.all.total++;
     }
     for (const scope of NON_ALL_SCOPES) {
-      if (scope.itemClasses.includes(row.itemClass)) {
+      if (scope.itemClasses.some((itemClass) => itemClass === row.itemClass)) {
         counts[scope.slug].total++;
         const child = assignChild(row, scope);
         if (child) {
