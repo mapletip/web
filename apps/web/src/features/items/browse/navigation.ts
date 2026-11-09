@@ -53,6 +53,13 @@ export interface ItemNavScope {
   readonly search: Record<string, unknown>;
 }
 
+interface ItemNavDataOptions {
+  readonly rows: readonly ItemRow[];
+  readonly category: ItemCategorySelection;
+  readonly buildId: BuildId;
+  readonly search?: Record<string, unknown> | undefined;
+}
+
 const SCOPE_ICONS: Readonly<Record<ItemScopeSlug, string>> = {
   all: allItemsIcon,
   use: useIcon,
@@ -61,16 +68,16 @@ const SCOPE_ICONS: Readonly<Record<ItemScopeSlug, string>> = {
   cash: cashIcon,
 };
 
-export function getItemNavData(
-  allRows: readonly ItemRow[],
-  currentCategory: ItemCategorySelection,
-  buildId: BuildId,
-  currentSearch?: Record<string, unknown>,
-): readonly ItemNavScope[] {
-  const counts = getCategoryCounts(allRows);
-  const currentScopeSlug = currentCategory.scope.slug;
-  const currentChildSlug = currentCategory.child?.slug;
-  const navSearch = { ...currentSearch };
+export function getItemNavData({
+  rows,
+  category,
+  buildId,
+  search,
+}: ItemNavDataOptions): readonly ItemNavScope[] {
+  const counts = getCategoryCounts(rows);
+  const currentScopeSlug = category.scope.slug;
+  const currentChildSlug = category.child?.slug;
+  const navSearch = { ...search };
   delete navSearch['page'];
   const buildParam = buildId === 'cw-launch' ? undefined : buildId;
 

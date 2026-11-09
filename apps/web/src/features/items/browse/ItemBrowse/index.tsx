@@ -88,7 +88,7 @@ export function ItemBrowse({
   });
 
   const navScopes = useMemo(
-    () => getItemNavData(rows, category, buildId, urlSearch),
+    () => getItemNavData({ rows, category, buildId, search: urlSearch }),
     [rows, category, buildId, urlSearch],
   );
 
