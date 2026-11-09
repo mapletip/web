@@ -5,7 +5,10 @@ import { itemPageMetadata } from '../metadata';
 
 describe('itemPageMetadata', () => {
   it('generates canonical all items metadata', () => {
-    const meta = itemPageMetadata('cw-launch', { scope: ITEM_SCOPES.all });
+    const meta = itemPageMetadata({
+      buildId: 'cw-launch',
+      category: { scope: ITEM_SCOPES.all },
+    });
     expect(meta).toEqual({
       heading: 'MapleStory Classic World Items',
       title: 'MapleStory Classic World Items – MapleTip',
@@ -16,7 +19,10 @@ describe('itemPageMetadata', () => {
   });
 
   it('generates versioned scope metadata', () => {
-    const meta = itemPageMetadata('gms-v83', { scope: ITEM_SCOPES.use });
+    const meta = itemPageMetadata({
+      buildId: 'gms-v83',
+      category: { scope: ITEM_SCOPES.use },
+    });
     expect(meta).toEqual({
       heading: 'MapleStory GMS v83 Use Items',
       title: 'MapleStory GMS v83 Use Items – MapleTip',
@@ -30,9 +36,12 @@ describe('itemPageMetadata', () => {
     const child = ITEM_SCOPES.use.children.find((c) => c.slug === 'potions');
     expect(child).toBeDefined();
     if (!child) return;
-    const meta = itemPageMetadata('gms-v83', {
-      scope: ITEM_SCOPES.use,
-      child,
+    const meta = itemPageMetadata({
+      buildId: 'gms-v83',
+      category: {
+        scope: ITEM_SCOPES.use,
+        child,
+      },
     });
     expect(meta).toEqual({
       heading: 'MapleStory GMS v83 Potions',
@@ -47,9 +56,12 @@ describe('itemPageMetadata', () => {
     const child = ITEM_SCOPES.setup.children.find((c) => c.slug === 'chairs');
     expect(child).toBeDefined();
     if (!child) return;
-    const meta = itemPageMetadata('cw-launch', {
-      scope: ITEM_SCOPES.setup,
-      child,
+    const meta = itemPageMetadata({
+      buildId: 'cw-launch',
+      category: {
+        scope: ITEM_SCOPES.setup,
+        child,
+      },
     });
     expect(meta).toEqual({
       heading: 'MapleStory Classic World Chairs',
@@ -67,12 +79,12 @@ describe('itemPageMetadata', () => {
     );
     expect(bulletsChild).toBeDefined();
     if (!bulletsChild) return;
-    const meta = itemPageMetadata(
-      'cw-launch',
-      { scope: ITEM_SCOPES.use, child: bulletsChild },
-      {},
-      0,
-    );
+    const meta = itemPageMetadata({
+      buildId: 'cw-launch',
+      category: { scope: ITEM_SCOPES.use, child: bulletsChild },
+      search: {},
+      count: 0,
+    });
     expect(meta.robots).toBe('noindex,follow');
     expect(meta.canonicalUrl).toBe(
       'https://mapletip.com/maplestory/items/use/bullets',
@@ -87,42 +99,42 @@ describe('itemPageMetadata', () => {
     if (!child) return;
 
     // Search query
-    const searchMeta = itemPageMetadata(
-      'cw-launch',
-      { scope: ITEM_SCOPES.use, child },
-      { q: 'ilbi' },
-      1,
-    );
+    const searchMeta = itemPageMetadata({
+      buildId: 'cw-launch',
+      category: { scope: ITEM_SCOPES.use, child },
+      search: { q: 'ilbi' },
+      count: 1,
+    });
     expect(searchMeta.robots).toBe('noindex,follow');
     expect(searchMeta.canonicalUrl).toBe(
       'https://mapletip.com/maplestory/items/use/throwing-stars',
     );
 
     // Page > 1
-    const pagedMeta = itemPageMetadata(
-      'cw-launch',
-      { scope: ITEM_SCOPES.use, child },
-      { page: 2 },
-      100,
-    );
+    const pagedMeta = itemPageMetadata({
+      buildId: 'cw-launch',
+      category: { scope: ITEM_SCOPES.use, child },
+      search: { page: 2 },
+      count: 100,
+    });
     expect(pagedMeta.robots).toBe('noindex,follow');
 
     // Custom sort
-    const sortedMeta = itemPageMetadata(
-      'cw-launch',
-      { scope: ITEM_SCOPES.use, child },
-      { sort: 'attack-desc' },
-      100,
-    );
+    const sortedMeta = itemPageMetadata({
+      buildId: 'cw-launch',
+      category: { scope: ITEM_SCOPES.use, child },
+      search: { sort: 'attack-desc' },
+      count: 100,
+    });
     expect(sortedMeta.robots).toBe('noindex,follow');
 
     // Clean page is indexable
-    const cleanMeta = itemPageMetadata(
-      'cw-launch',
-      { scope: ITEM_SCOPES.use, child },
-      {},
-      100,
-    );
+    const cleanMeta = itemPageMetadata({
+      buildId: 'cw-launch',
+      category: { scope: ITEM_SCOPES.use, child },
+      search: {},
+      count: 100,
+    });
     expect(cleanMeta.robots).toBe('index,follow');
   });
 });

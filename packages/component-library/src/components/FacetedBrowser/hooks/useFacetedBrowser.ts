@@ -427,12 +427,12 @@ export function useFacetedBrowser<TRecord extends Record<string, unknown>>({
       const current = state.sort;
       const currentField = fieldMap.get(sort.field);
       if (!currentField?.enableSorting) return;
-      const nextDirection = nextSortDirection(
+      const nextDirection = nextSortDirection({
         current,
-        sort.field,
-        currentField?.sortDescFirst,
-        undefined,
-      );
+        field: sort.field,
+        fieldSortDescFirst: currentField.sortDescFirst,
+        direction: undefined,
+      });
 
       if (
         current?.field === sort.field &&

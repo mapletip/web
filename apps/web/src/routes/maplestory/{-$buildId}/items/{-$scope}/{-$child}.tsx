@@ -25,12 +25,12 @@ export const Route = createFileRoute(
     const count = loaderData
       ? getCategoryRows(loaderData.rows, category.scope, category.child).length
       : undefined;
-    const { title, description, robots, canonicalUrl } = itemPageMetadata(
+    const { title, description, robots, canonicalUrl } = itemPageMetadata({
       buildId,
       category,
-      match.search,
+      search: match.search,
       count,
-    );
+    });
     return {
       meta: [
         { title },

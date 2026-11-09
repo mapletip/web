@@ -2,17 +2,8 @@ import type { ItemBrowseCoverage } from '@mapletip/data/items';
 import { describe, expect, it } from 'vitest';
 
 import { ITEM_SCOPES } from '../categories';
-import { getItemFacets as declareItemFacets } from '../facets';
+import { getItemFacets } from '../facets';
 import type { ItemRow } from '../project';
-
-function getItemFacets(
-  category: Parameters<typeof declareItemFacets>[0]['category'],
-  coverage: ItemBrowseCoverage,
-  rows: readonly ItemRow[],
-  roster: readonly ItemRow[] = rows,
-) {
-  return declareItemFacets({ category, coverage, roster });
-}
 
 const coverage: ItemBrowseCoverage = {
   relationships: {
@@ -39,7 +30,11 @@ function facetsFor({
   const categoryScope = ITEM_SCOPES[scope];
   const child = categoryScope.children.find(({ slug }) => slug === childSlug);
   if (!child) throw new Error(`Missing ${scope}/${childSlug} category`);
-  return getItemFacets({ scope: categoryScope, child }, coverage, rows, rows);
+  return getItemFacets({
+    category: { scope: categoryScope, child },
+    coverage,
+    roster: rows,
+  });
 }
 
 describe('Items Browse numeric facets', () => {

@@ -4,20 +4,11 @@ import { describe, expect, it } from 'vitest';
 import { ITEM_SCOPES } from '../categories';
 import {
   getDropCoverageNotice,
-  getItemFacets as declareItemFacets,
+  getItemFacets,
   getItemRelationships,
   ITEM_QUERY_FIELDS,
 } from '../facets';
 import type { ItemRow } from '../project';
-
-function getItemFacets(
-  category: Parameters<typeof declareItemFacets>[0]['category'],
-  coverage: ItemBrowseCoverage,
-  rows: readonly ItemRow[],
-  roster: readonly ItemRow[] = rows,
-) {
-  return declareItemFacets({ category, coverage, roster });
-}
 
 describe('facets', () => {
   const dummyCoverage: ItemBrowseCoverage = {
@@ -82,12 +73,11 @@ describe('facets', () => {
 
   describe('getItemFacets', () => {
     it('omits the redundant item type facet and declares Effect choices', () => {
-      const facets = getItemFacets(
-        { scope: ITEM_SCOPES.use },
-        dummyCoverage,
-        dummyRows,
-        dummyRows,
-      );
+      const facets = getItemFacets({
+        category: { scope: ITEM_SCOPES.use },
+        coverage: dummyCoverage,
+        roster: dummyRows,
+      });
 
       const typeFacet = facets.find((f) => f.id === 'types');
       expect(typeFacet).toBeUndefined();
@@ -125,12 +115,11 @@ describe('facets', () => {
         },
       ];
 
-      const facets = getItemFacets(
-        { scope: ITEM_SCOPES.use },
-        dummyCoverage,
-        rowsWithPetFn,
-        rowsWithPetFn,
-      );
+      const facets = getItemFacets({
+        category: { scope: ITEM_SCOPES.use },
+        coverage: dummyCoverage,
+        roster: rowsWithPetFn,
+      });
       const fnFacet = facets.find((f) => f.id === 'functions');
       expect(fnFacet).toBeDefined();
       const accessor = ITEM_QUERY_FIELDS.find(
@@ -161,12 +150,11 @@ describe('facets', () => {
       };
 
       // With partial coverage:
-      const facetsPartial = getItemFacets(
-        { scope: ITEM_SCOPES.use },
-        partialCoverage,
-        dummyRows,
-        dummyRows,
-      );
+      const facetsPartial = getItemFacets({
+        category: { scope: ITEM_SCOPES.use },
+        coverage: partialCoverage,
+        roster: dummyRows,
+      });
       const sourcesFacet = facetsPartial.find((f) => f.id === 'sources');
       expect(sourcesFacet?.options).toContainEqual({
         value: 'found-in-container',
@@ -174,12 +162,11 @@ describe('facets', () => {
       });
 
       // With unsupported coverage:
-      const facetsUnsupported = getItemFacets(
-        { scope: ITEM_SCOPES.use },
-        unsupportedCoverage,
-        dummyRows,
-        dummyRows,
-      );
+      const facetsUnsupported = getItemFacets({
+        category: { scope: ITEM_SCOPES.use },
+        coverage: unsupportedCoverage,
+        roster: dummyRows,
+      });
       const sourcesFacetUnsup = facetsUnsupported.find(
         (f) => f.id === 'sources',
       );
@@ -220,12 +207,11 @@ describe('facets', () => {
         },
       ];
 
-      const facets = getItemFacets(
-        scrollsCategory,
-        dummyCoverage,
-        scrollRows,
-        scrollRows,
-      );
+      const facets = getItemFacets({
+        category: scrollsCategory,
+        coverage: dummyCoverage,
+        roster: scrollRows,
+      });
 
       // Item Type is represented by the category drill down.
       const typeFacet = facets.find((f) => f.id === 'types');
@@ -271,12 +257,11 @@ describe('facets', () => {
         },
       ];
 
-      const facets = getItemFacets(
-        scrollsCategory,
-        dummyCoverage,
-        scrollRows,
-        scrollRows,
-      );
+      const facets = getItemFacets({
+        category: scrollsCategory,
+        coverage: dummyCoverage,
+        roster: scrollRows,
+      });
       const statFacet = facets.find((f) => f.id === 'scrollStat');
       expect(statFacet).toBeDefined();
 
@@ -329,12 +314,11 @@ describe('facets', () => {
         },
       ];
 
-      const facets = getItemFacets(
-        scrollsCategory,
-        dummyCoverage,
-        scrollRows,
-        scrollRows,
-      );
+      const facets = getItemFacets({
+        category: scrollsCategory,
+        coverage: dummyCoverage,
+        roster: scrollRows,
+      });
       const riskFacet = facets.find((f) => f.id === 'scrollRisk');
       expect(riskFacet).toBeDefined();
 
@@ -373,24 +357,22 @@ describe('facets', () => {
         ...dummyCoverage,
         scrollTier: 'unsupported',
       };
-      const facetsUnsup = getItemFacets(
-        scrollsCategory,
-        unsupportedCov,
-        rowsWithTier,
-        rowsWithTier,
-      );
+      const facetsUnsup = getItemFacets({
+        category: scrollsCategory,
+        coverage: unsupportedCov,
+        roster: rowsWithTier,
+      });
       expect(facetsUnsup.find((f) => f.id === 'scrollTier')).toBeUndefined();
 
       const supportedCov: ItemBrowseCoverage = {
         ...dummyCoverage,
         scrollTier: 'complete',
       };
-      const facetsSup = getItemFacets(
-        scrollsCategory,
-        supportedCov,
-        rowsWithTier,
-        rowsWithTier,
-      );
+      const facetsSup = getItemFacets({
+        category: scrollsCategory,
+        coverage: supportedCov,
+        roster: rowsWithTier,
+      });
       expect(facetsSup.find((f) => f.id === 'scrollTier')).toBeDefined();
     });
 
@@ -440,22 +422,20 @@ describe('facets', () => {
         },
       ];
 
-      const recoveryFacets = getItemFacets(
-        recoveryCategory,
-        dummyCoverage,
-        recoveryRows,
-        recoveryRows,
-      );
+      const recoveryFacets = getItemFacets({
+        category: recoveryCategory,
+        coverage: dummyCoverage,
+        roster: recoveryRows,
+      });
       expect(recoveryFacets.find((f) => f.id === 'seatHp')).toBeUndefined();
       expect(recoveryFacets.find((f) => f.id === 'seatMp')).toBeUndefined();
       expect(recoveryFacets.find((f) => f.id === 'hp')).toBeDefined();
 
-      const chairFacets = getItemFacets(
-        chairsCategory,
-        dummyCoverage,
-        chairRows,
-        chairRows,
-      );
+      const chairFacets = getItemFacets({
+        category: chairsCategory,
+        coverage: dummyCoverage,
+        roster: chairRows,
+      });
       expect(chairFacets.find((f) => f.id === 'seatHp')).toBeDefined();
       expect(chairFacets.find((f) => f.id === 'seatMp')).toBeDefined();
       expect(chairFacets.find((f) => f.id === 'hp')).toBeUndefined();
@@ -493,36 +473,11 @@ describe('facets', () => {
         },
       ];
 
-      const foodRows: readonly ItemRow[] = [
-        {
-          key: 'f1',
-          sourceId: '02120000',
-          name: 'Dragon Food',
-          itemClass: 'consume',
-          petTargets: [
-            { key: 'pet:dragon-red', name: 'Baby Dragon' },
-            { key: 'pet:dragon-blue', name: 'Baby Dragon' },
-          ],
-          unresolvedPetTargets: ['5000046'],
-        },
-        {
-          key: 'f2',
-          sourceId: '02120001',
-          name: 'Dog Food',
-          itemClass: 'consume',
-          petTargets: [
-            { key: 'pet:husky', name: 'Husky' },
-            { key: 'pet:unnamed' },
-          ],
-        },
-      ];
-
-      const facets = getItemFacets(
-        petFoodCategory,
-        dummyCoverage,
-        foodRows,
-        roster,
-      );
+      const facets = getItemFacets({
+        category: petFoodCategory,
+        coverage: dummyCoverage,
+        roster: roster,
+      });
       const petFacet = facets.find((f) => f.id === 'pet');
       expect(petFacet).toBeDefined();
 

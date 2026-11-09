@@ -203,12 +203,17 @@ function resolveAccessor<TRecord extends Record<string, unknown>>(
   return existing?.accessorFn ?? ((row) => row[id]);
 }
 
-function fieldFromQuery<TRecord extends Record<string, unknown>>(
-  queryField: QueryFieldDefinition<TRecord>,
-  existing: ResolvedField<TRecord> | undefined,
-  idAccessor: keyof TRecord & string,
-  identityField: (keyof TRecord & string) | undefined,
-): ResolvedField<TRecord> {
+function fieldFromQuery<TRecord extends Record<string, unknown>>({
+  queryField,
+  existing,
+  idAccessor,
+  identityField,
+}: {
+  readonly queryField: QueryFieldDefinition<TRecord>;
+  readonly existing: ResolvedField<TRecord> | undefined;
+  readonly idAccessor: keyof TRecord & string;
+  readonly identityField: (keyof TRecord & string) | undefined;
+}): ResolvedField<TRecord> {
   const definition = typeof queryField === 'string' ? undefined : queryField;
   const id = typeof queryField === 'string' ? queryField : definition!.id;
   const configuredAccessor = definition?.accessor;
@@ -240,12 +245,17 @@ function fieldFromQuery<TRecord extends Record<string, unknown>>(
   };
 }
 
-function fieldFromKey<TRecord extends Record<string, unknown>>(
-  field: keyof TRecord & string,
-  accessorFn: (row: TRecord) => unknown,
-  isIdentity: boolean,
-  enableSorting: boolean,
-): ResolvedField<TRecord> {
+function fieldFromKey<TRecord extends Record<string, unknown>>({
+  field,
+  accessorFn,
+  isIdentity,
+  enableSorting,
+}: {
+  readonly field: keyof TRecord & string;
+  readonly accessorFn: (row: TRecord) => unknown;
+  readonly isIdentity: boolean;
+  readonly enableSorting: boolean;
+}): ResolvedField<TRecord> {
   return {
     id: field,
     title: undefined,
@@ -285,21 +295,36 @@ export function resolveFields<TRecord extends Record<string, unknown>>({
     const id = typeof queryField === 'string' ? queryField : queryField.id;
     fields.set(
       id,
-      fieldFromQuery(queryField, fields.get(id), idAccessor, identityField),
+      fieldFromQuery({
+        queryField,
+        existing: fields.get(id),
+        idAccessor,
+        identityField,
+      }),
     );
   }
 
   if (!fields.has(idAccessor)) {
     fields.set(
       idAccessor,
-      fieldFromKey(idAccessor, (row) => row[idAccessor], true, true),
+      fieldFromKey({
+        field: idAccessor,
+        accessorFn: (row) => row[idAccessor],
+        isIdentity: true,
+        enableSorting: true,
+      }),
     );
   }
 
   if (identityField !== undefined && !fields.has(identityField)) {
     fields.set(
       identityField,
-      fieldFromKey(identityField, (row) => row[identityField], true, true),
+      fieldFromKey({
+        field: identityField,
+        accessorFn: (row) => row[identityField],
+        isIdentity: true,
+        enableSorting: true,
+      }),
     );
   }
 
@@ -307,12 +332,12 @@ export function resolveFields<TRecord extends Record<string, unknown>>({
     if (fields.has(field)) continue;
     fields.set(
       field,
-      fieldFromKey(
+      fieldFromKey({
         field,
-        (row) => row[field],
-        field === idAccessor || field === identityField,
-        false,
-      ),
+        accessorFn: (row) => row[field],
+        isIdentity: field === idAccessor || field === identityField,
+        enableSorting: false,
+      }),
     );
   }
 
@@ -370,13 +395,18 @@ export function sortFromSorting(
  * Next direction for a header toggle: an explicit host request wins, a click on
  * the active field flips, and a new field starts from its declared preference.
  */
-export function nextSortDirection(
-  current:
-    { readonly field: string; readonly direction: 'asc' | 'desc' } | undefined,
-  field: string,
-  fieldSortDescFirst: boolean | undefined,
-  direction: 'asc' | 'desc' | undefined,
-): 'asc' | 'desc' {
+export function nextSortDirection({
+  current,
+  field,
+  fieldSortDescFirst,
+  direction,
+}: {
+  readonly current:
+    { readonly field: string; readonly direction: 'asc' | 'desc' } | undefined;
+  readonly field: string;
+  readonly fieldSortDescFirst: boolean | undefined;
+  readonly direction: 'asc' | 'desc' | undefined;
+}): 'asc' | 'desc' {
   if (direction !== undefined) return direction;
   if (current?.field === field) {
     return current.direction === 'asc' ? 'desc' : 'asc';

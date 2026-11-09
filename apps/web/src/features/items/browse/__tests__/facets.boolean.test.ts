@@ -2,20 +2,8 @@ import type { ItemBrowseCoverage } from '@mapletip/data/items';
 import { describe, expect, it } from 'vitest';
 
 import { ITEM_SCOPES } from '../categories';
-import {
-  getItemFacets as declareItemFacets,
-  ITEM_QUERY_FIELDS,
-} from '../facets';
+import { getItemFacets, ITEM_QUERY_FIELDS } from '../facets';
 import type { ItemRow } from '../project';
-
-function getItemFacets(
-  category: Parameters<typeof declareItemFacets>[0]['category'],
-  coverage: ItemBrowseCoverage,
-  rows: readonly ItemRow[],
-  roster: readonly ItemRow[] = rows,
-) {
-  return declareItemFacets({ category, coverage, roster });
-}
 
 const coverage: ItemBrowseCoverage = {
   relationships: {
@@ -57,7 +45,11 @@ describe('Items Browse boolean facets', () => {
     ];
 
     expect(
-      getItemFacets(category, coverage, rows, rows).map(({ id }) => id),
+      getItemFacets({
+        category: category,
+        coverage: coverage,
+        roster: rows,
+      }).map(({ id }) => id),
     ).toContain('noRecordedQuestOrRecipeUse');
 
     const incompleteCoverage: ItemBrowseCoverage = {
@@ -68,9 +60,11 @@ describe('Items Browse boolean facets', () => {
       },
     };
     expect(
-      getItemFacets(category, incompleteCoverage, rows, rows).map(
-        ({ id }) => id,
-      ),
+      getItemFacets({
+        category: category,
+        coverage: incompleteCoverage,
+        roster: rows,
+      }).map(({ id }) => id),
     ).not.toContain('noRecordedQuestOrRecipeUse');
   });
 

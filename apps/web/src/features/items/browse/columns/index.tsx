@@ -1,12 +1,18 @@
 /**
  * Column derivation, table adaptation, and sort options for Items Browse.
  */
+import { Thumbnail } from '@mapletip/component-library';
 import type {
   BrowseSortOption,
   TableColumn,
 } from '@mapletip/component-library';
-import type { ItemBrowseCoverage } from '@mapletip/data/items';
+import { itemIconUrl, type ItemBrowseCoverage } from '@mapletip/data/items';
 import type { ReactElement } from 'react';
+
+import { MAPLEKIT_RELEASE } from '@/config/maplekit';
+
+import type { ItemRow } from '../project';
+import { itemCategoryContextKey, type ItemCategorySelection } from '../routing';
 
 import {
   COLUMNS,
@@ -14,11 +20,8 @@ import {
   DEFAULT_CONTEXT_COLUMNS,
   type ColumnConfig,
   type ColumnKey,
-} from './column-configs';
-import classes from './columns.module.css';
-import { ItemIcon } from './ItemIcon';
-import type { ItemRow } from './project';
-import { itemCategoryContextKey, type ItemCategorySelection } from './routing';
+} from './configs';
+import classes from './styles.module.css';
 
 export interface ItemTableColumn extends TableColumn<ItemRow> {
   readonly sortLabels?: { readonly asc: string; readonly desc: string };
@@ -36,9 +39,12 @@ export function ItemIdentity({
   readonly record: ItemRow;
 }): ReactElement {
   const displayName = record.name ?? 'Unnamed item';
+  const iconSrc = record.icon
+    ? itemIconUrl(MAPLEKIT_RELEASE.baseUrl, record.icon)
+    : undefined;
   return (
     <div className={classes['identity']}>
-      <ItemIcon icon={record.icon} />
+      <Thumbnail src={iconSrc} size={32} />
       <div className={classes['identityText']}>
         <span className={classes['identityName']} title={displayName}>
           {displayName}

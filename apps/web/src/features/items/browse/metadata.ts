@@ -12,6 +12,13 @@ export interface ItemPageMetadata {
   readonly robots: 'index,follow' | 'noindex,follow';
 }
 
+interface ItemPageMetadataOptions {
+  readonly buildId: BuildId;
+  readonly category: ItemCategorySelection;
+  readonly search?: ItemBrowseSearch | undefined;
+  readonly count?: number | undefined;
+}
+
 export function itemCategoryPath(
   buildId: BuildId,
   category: ItemCategorySelection,
@@ -102,12 +109,12 @@ export function isCleanItemSearch(search?: ItemBrowseSearch): boolean {
   return true;
 }
 
-export function itemPageMetadata(
-  buildId: BuildId,
-  category: ItemCategorySelection,
-  search?: ItemBrowseSearch,
-  count?: number,
-): ItemPageMetadata {
+export function itemPageMetadata({
+  buildId,
+  category,
+  search,
+  count,
+}: ItemPageMetadataOptions): ItemPageMetadata {
   const { label: buildLabel } = BUILDS[buildId];
   const topic =
     category.child?.label ??

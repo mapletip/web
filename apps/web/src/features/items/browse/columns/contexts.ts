@@ -1,7 +1,7 @@
 /**
  * Context sets (visible and optional columns per category) for Items Browse.
  */
-import type { ColumnKey } from './column-configs';
+import type { ColumnKey } from './configs';
 
 export interface ContextColumnConfig {
   readonly visible: readonly ColumnKey[];

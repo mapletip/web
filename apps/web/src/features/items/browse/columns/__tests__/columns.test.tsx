@@ -2,15 +2,15 @@ import type { ItemBrowseCoverage } from '@mapletip/data/items';
 import { renderToString } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 
-import { ITEM_SCOPES } from '../categories';
-import { CONTEXT_COLUMNS } from '../column-contexts';
-import { deriveSortOptions, getItemColumns } from '../columns';
-import type { ItemRow } from '../project';
+import { deriveSortOptions, getItemColumns } from '..';
+import { ITEM_SCOPES } from '../../categories';
+import type { ItemRow } from '../../project';
 import {
   computeScrollStatsSortValue,
   DEFAULT_ITEM_SORT,
   STAT_PRIORITY_MULTIPLIER,
-} from '../sort';
+} from '../../sort';
+import { CONTEXT_COLUMNS } from '../contexts';
 
 const mockCoverage: ItemBrowseCoverage = {
   scrollTier: 'complete',

@@ -2,8 +2,9 @@ import { Box, Text } from '@mantine/core';
 import { Link } from '@tanstack/react-router';
 import type { ReactElement } from 'react';
 
-import classes from './ItemMobileNav.module.css';
-import type { ItemNavScope } from './navigation';
+import type { ItemNavScope } from '../navigation';
+
+import classes from './styles.module.css';
 
 export interface ItemMobileNavProps {
   readonly navScopes: readonly ItemNavScope[];

@@ -151,7 +151,7 @@ describe('ItemBrowse server rendering', () => {
     expect(html).toContain('Throwing Stars');
   });
 
-  it('renders exact-ID notice when an item ID belongs to another scope', async () => {
+  it('keeps exact-ID search results within the current scope without a notice', async () => {
     const history = createMemoryHistory({
       initialEntries: ['/maplestory/items/etc?q=02000000'],
     });
@@ -164,7 +164,7 @@ describe('ItemBrowse server rendering', () => {
       </MantineProvider>,
     );
 
-    expect(html).toContain('Item 02000000 is in');
+    expect(html).not.toContain('Item 02000000 is in');
     expect(html).toContain('href="/maplestory/items/use?q=02000000"');
   });
 

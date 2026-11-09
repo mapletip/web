@@ -3,7 +3,7 @@
  */
 import type { ItemBrowseCoverage } from '@mapletip/data/items';
 
-import { ITEM_SCOPES } from './categories';
+import { ITEM_SCOPES } from '../categories';
 import {
   ITEM_FUNCTION_LABELS,
   ITEM_TYPE_LABELS,
@@ -12,13 +12,13 @@ import {
   UPGRADE_SPECIAL_LABELS,
   UPGRADE_TARGET_LABELS,
   UPGRADE_TIER_LABELS,
-} from './labels';
+} from '../labels';
 import type {
   ItemBrowseClass,
   ItemBrowseUpgradeTarget,
   ItemBrowseUpgradeTier,
   ItemRow,
-} from './project';
+} from '../project';
 
 export type ItemBrowseCoverageState = ItemBrowseCoverage['scrollTier'];
 

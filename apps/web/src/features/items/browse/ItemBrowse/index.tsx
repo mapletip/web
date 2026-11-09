@@ -16,7 +16,6 @@ import { itemPageMetadata } from '../metadata';
 import { getItemNavData } from '../navigation';
 import type { ItemRow } from '../project';
 import { itemCategoryContextKey, type ItemCategorySelection } from '../routing';
-import { findExactIdNotice } from '../search';
 import {
   PAGE_SIZE_OPTIONS,
   type BrowseContext,
@@ -48,7 +47,7 @@ export function ItemBrowse({
 }: ItemBrowseProps): ReactElement {
   const label = BUILDS[buildId].label;
   const contextKey = itemCategoryContextKey(category);
-  const { heading } = itemPageMetadata(buildId, category);
+  const { heading } = itemPageMetadata({ buildId, category });
 
   const scopedRows = useMemo(
     () => getCategoryRows(rows, category.scope, category.child),
@@ -74,27 +73,17 @@ export function ItemBrowse({
     [facets, sortOptions, defaultHiddenColumns],
   );
 
-  const {
-    browseState,
-    localSearch,
-    urlSearch,
-    handleStateChange,
-    getPageHref,
-  } = useItemBrowseUrlState({
-    searchProp,
-    browseContext,
-    stateResetKey: `${buildId}:${contextKey}`,
-    onSearchChange,
-  });
+  const { browseState, urlSearch, handleStateChange, getPageHref } =
+    useItemBrowseUrlState({
+      searchProp,
+      browseContext,
+      stateResetKey: `${buildId}:${contextKey}`,
+      onSearchChange,
+    });
 
   const navScopes = useMemo(
     () => getItemNavData({ rows, category, buildId, search: urlSearch }),
     [rows, category, buildId, urlSearch],
-  );
-
-  const exactIdNotice = useMemo(
-    () => findExactIdNotice(localSearch, rows, category, buildId),
-    [localSearch, rows, category, buildId],
   );
 
   const emptyState = useMemo(() => {
@@ -111,7 +100,6 @@ export function ItemBrowse({
       heading={heading}
       navScopes={navScopes}
       currentSearch={urlSearch}
-      exactIdNotice={exactIdNotice}
     />
   );
 

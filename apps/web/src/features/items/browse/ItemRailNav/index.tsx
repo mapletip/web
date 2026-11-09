@@ -2,8 +2,9 @@ import { NavLink, Stack, Text, Title } from '@mantine/core';
 import { Link } from '@tanstack/react-router';
 import type { ReactElement } from 'react';
 
-import classes from './ItemRailNav.module.css';
-import type { ItemNavScope } from './navigation';
+import type { ItemNavScope } from '../navigation';
+
+import classes from './styles.module.css';
 
 export interface ItemRailNavProps {
   readonly navScopes: readonly ItemNavScope[];

@@ -1,7 +1,10 @@
+import { Thumbnail } from '@mapletip/component-library';
+import { itemIconUrl } from '@mapletip/data/items';
 import type { ReactElement } from 'react';
 
+import { MAPLEKIT_RELEASE } from '@/config/maplekit';
+
 import type { ItemFactDescriptor } from '../columns';
-import { ItemIcon } from '../ItemIcon';
 import type { ItemRow } from '../project';
 
 import classes from './ItemBrowseCard.module.css';
@@ -16,6 +19,9 @@ export function ItemBrowseCard({
   facts = [],
 }: ItemBrowseCardProps): ReactElement {
   const displayName = record.name ?? 'Unnamed item';
+  const iconSrc = record.icon
+    ? itemIconUrl(MAPLEKIT_RELEASE.baseUrl, record.icon)
+    : undefined;
   const visibleFacts = facts
     .map((fact) => {
       const value = fact.value(record);
@@ -28,7 +34,7 @@ export function ItemBrowseCard({
   return (
     <article className={classes['card']}>
       <div className={classes['header']}>
-        <ItemIcon icon={record.icon} />
+        <Thumbnail src={iconSrc} size={32} />
         <div className={classes['headerText']}>
           <h2 className={classes['name']}>{displayName}</h2>
         </div>

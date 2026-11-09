@@ -5,13 +5,12 @@ import type { ReactElement } from 'react';
 
 import type { BuildId } from '@/config/maplekit';
 
-import { ExactIdNotice } from './ExactIdNotice';
-import { getDropCoverageNotice } from './facets';
-import classes from './ItemBrowseHeader.module.css';
-import { ItemMobileNav } from './ItemMobileNav';
-import { ITEM_NAV_TARGET, type ItemNavScope } from './navigation';
-import type { ItemCategorySelection } from './routing';
-import type { ExactIdNoticeState } from './search';
+import { getDropCoverageNotice } from '../facets';
+import { ItemMobileNav } from '../ItemMobileNav';
+import { ITEM_NAV_TARGET, type ItemNavScope } from '../navigation';
+import type { ItemCategorySelection } from '../routing';
+
+import classes from './styles.module.css';
 
 export interface ItemBrowseHeaderProps {
   readonly buildId: BuildId;
@@ -20,7 +19,6 @@ export interface ItemBrowseHeaderProps {
   readonly heading: string;
   readonly navScopes: readonly ItemNavScope[];
   readonly currentSearch?: Record<string, unknown> | undefined;
-  readonly exactIdNotice: ExactIdNoticeState | null;
 }
 
 export function ItemBrowseHeader({
@@ -30,7 +28,6 @@ export function ItemBrowseHeader({
   heading,
   navScopes,
   currentSearch,
-  exactIdNotice,
 }: ItemBrowseHeaderProps): ReactElement {
   const isCw = buildId === 'cw-launch';
   const dropNotice = getDropCoverageNotice(coverage, category);
@@ -160,10 +157,6 @@ export function ItemBrowseHeader({
       )}
 
       <ItemMobileNav navScopes={navScopes} />
-
-      {exactIdNotice && (
-        <ExactIdNotice notice={exactIdNotice} buildId={buildId} />
-      )}
     </Stack>
   );
 }
