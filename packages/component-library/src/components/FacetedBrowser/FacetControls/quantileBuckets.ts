@@ -28,12 +28,14 @@ const FORMATTER = new Intl.NumberFormat('en-US');
 
 function formatValue({
   value,
+  valuePrefix,
   unit,
 }: {
   readonly value: number;
+  readonly valuePrefix?: string | undefined;
   readonly unit?: string | undefined;
 }): string {
-  return `${FORMATTER.format(value)}${unit ?? ''}`;
+  return `${valuePrefix ?? ''}${FORMATTER.format(value)}${unit ?? ''}`;
 }
 
 function assertSupportedValue(value: number): void {
@@ -92,11 +94,13 @@ function cutPoints(sorted: readonly number[]): number[] {
 
 export interface BuildQuantileBucketsOptions {
   readonly values: readonly number[];
+  readonly valuePrefix?: string | undefined;
   readonly unit?: string | undefined;
 }
 
 export function buildQuantileBuckets({
   values,
+  valuePrefix,
   unit,
 }: BuildQuantileBucketsOptions): readonly FacetRangeBucket[] {
   for (const value of values) assertSupportedValue(value);
@@ -107,7 +111,7 @@ export function buildQuantileBuckets({
   if (distinct.length <= TARGET_BUCKETS) {
     return distinct.map((value) => ({
       value: String(value),
-      label: formatValue({ value, unit }),
+      label: formatValue({ value, valuePrefix, unit }),
       min: value,
       max: value,
     }));
@@ -150,7 +154,7 @@ export function buildQuantileBuckets({
 
   return merged.map((bound) => ({
     value: `${String(bound.min)}-${String(bound.max)}`,
-    label: `${formatValue({ value: bound.min, unit })}–${formatValue({ value: bound.max, unit })}`,
+    label: `${formatValue({ value: bound.min, valuePrefix, unit })}–${formatValue({ value: bound.max, unit })}`,
     min: bound.min,
     max: bound.max,
   }));

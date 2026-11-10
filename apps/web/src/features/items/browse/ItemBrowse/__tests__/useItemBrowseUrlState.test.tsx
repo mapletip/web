@@ -5,6 +5,7 @@ import {
   itemBrowseSearchSchema,
   type ItemBrowseSearch,
 } from '../../search-params';
+import { ITEM_SORT_OPTIONS } from '../../sort';
 import {
   useItemBrowseUrlState,
   type OnSearchChangeOptions,
@@ -15,14 +16,26 @@ describe('useItemBrowseUrlState', () => {
   function setup({
     search = itemBrowseSearchSchema.parse({}),
     onSearchChange = vi.fn(),
+    contextKey = 'all',
+    defaultHiddenColumns = [],
+    sortOptions = ITEM_SORT_OPTIONS,
   }: {
     readonly search?: ItemBrowseSearch;
     readonly onSearchChange?: (options: OnSearchChangeOptions) => void;
+    readonly contextKey?: string;
+    readonly defaultHiddenColumns?: readonly string[];
+    readonly sortOptions?: typeof ITEM_SORT_OPTIONS;
   } = {}) {
     let latestResult: UseItemBrowseUrlStateResult | undefined;
 
     function TestConsumer() {
-      latestResult = useItemBrowseUrlState({ search, onSearchChange });
+      latestResult = useItemBrowseUrlState({
+        search,
+        onSearchChange,
+        contextKey,
+        defaultHiddenColumns,
+        sortOptions,
+      });
       return null;
     }
 
@@ -75,6 +88,15 @@ describe('useItemBrowseUrlState', () => {
       search: { q: '', page: 2, pageSize: 50, sort: 'name-asc' },
       replace: false,
     });
+  });
+
+  it('initializes the current context column visibility defaults', () => {
+    const { getResult } = setup({
+      contextKey: 'use:scrolls',
+      defaultHiddenColumns: ['specials'],
+    });
+
+    expect(getResult().browseState.hiddenColumns).toEqual(['specials']);
   });
 
   it('pushes facet changes with active options and resets the page', () => {

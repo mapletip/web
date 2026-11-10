@@ -1,0 +1,218 @@
+/**
+ * Column derivation, table adaptation, and sort options for Items Browse.
+ */
+import { Thumbnail } from '@mapletip/component-library';
+import type {
+  BrowseSortOption,
+  TableColumn,
+} from '@mapletip/component-library';
+import { itemIconUrl, type ItemBrowseCoverage } from '@mapletip/data/items';
+import type { ReactElement } from 'react';
+
+import { MAPLEKIT_RELEASE } from '@/config/maplekit';
+
+import type { ItemRow } from '../project';
+import type { ItemCategorySelection } from '../routing';
+
+import {
+  COLUMNS,
+  CONTEXT_COLUMNS,
+  DEFAULT_CONTEXT_COLUMNS,
+  type ColumnConfig,
+  type ColumnKey,
+} from './configs';
+import classes from './styles.module.css';
+
+export interface ItemTableColumn extends TableColumn<ItemRow> {
+  readonly sortLabels?: { readonly asc: string; readonly desc: string };
+}
+
+export interface ItemFactDescriptor {
+  readonly key: string;
+  readonly title: string;
+  readonly value: (row: ItemRow) => string | undefined;
+}
+
+export function itemColumnContextKey({
+  category,
+}: {
+  readonly category: ItemCategorySelection;
+}): string {
+  return category.child
+    ? `${category.scope.slug}:${category.child.slug}`
+    : category.scope.slug;
+}
+
+export function ItemIdentity({
+  record,
+}: {
+  readonly record: ItemRow;
+}): ReactElement {
+  const displayName = record.name ?? 'Unnamed item';
+  const iconSrc = record.icon
+    ? itemIconUrl(MAPLEKIT_RELEASE.baseUrl, record.icon)
+    : undefined;
+  return (
+    <div className={classes['identity']}>
+      <Thumbnail src={iconSrc} size={32} />
+      <div className={classes['identityText']}>
+        <span className={classes['identityName']} title={displayName}>
+          {displayName}
+        </span>
+      </div>
+    </div>
+  );
+}
+
+export function shouldIncludeColumn({
+  column,
+  rows,
+  coverage,
+}: {
+  readonly column: ColumnConfig;
+  readonly rows: readonly ItemRow[];
+  readonly coverage: ItemBrowseCoverage;
+}): boolean {
+  if (column.key === 'name') return true;
+  if (rows.length === 0) return false;
+  if (column.alwaysShow) return true;
+  if (
+    column.relationshipKind &&
+    coverage.relationships[column.relationshipKind] === 'unsupported'
+  ) {
+    return false;
+  }
+
+  const values = rows.map((row) => column.value(row, coverage));
+  const hasValue = values.some((value) => value !== undefined);
+  if (!hasValue) return false;
+  if (rows.length === 1) return true;
+
+  const firstValue = values[0];
+  const allShareSameValue = values.every((value) => value === firstValue);
+  return !allShareSameValue;
+}
+
+function adaptColumn(
+  config: ColumnConfig,
+  coverage: ItemBrowseCoverage,
+): ItemTableColumn {
+  const isNumeric = config.numeric ?? false;
+  const isSortable = config.sortable ?? isNumeric;
+  const width = config.width ?? (isNumeric ? 100 : undefined);
+
+  return {
+    accessor: config.accessor,
+    title: config.title,
+    ...(config.fullLabel ? { fullLabel: config.fullLabel } : {}),
+    ...(width !== undefined ? { width } : {}),
+    ...(config.nowrap ? { nowrap: true } : {}),
+    ...(isNumeric ? { numeric: true, textAlign: 'right' as const } : {}),
+    ...(isSortable ? { sortable: true } : {}),
+    ...(config.firstSortDirection
+      ? { firstSortDirection: config.firstSortDirection }
+      : {}),
+    ...(config.sortLabels ? { sortLabels: config.sortLabels } : {}),
+    render: (row) => {
+      if (config.key === 'name') return <ItemIdentity record={row} />;
+      const displayValue = config.value(row, coverage);
+      if (displayValue === undefined) {
+        return (
+          <span title="Not recorded" aria-label="Not recorded">
+            —
+          </span>
+        );
+      }
+      return <span className={classes['cellValue']}>{displayValue}</span>;
+    },
+  };
+}
+
+export interface GetItemColumnsResult {
+  readonly columns: readonly ItemTableColumn[];
+  readonly defaultHiddenColumns: readonly string[];
+  readonly sortOptions: readonly BrowseSortOption[];
+  readonly facts: readonly ItemFactDescriptor[];
+}
+
+export function getItemColumns({
+  category,
+  coverage,
+  rows,
+}: {
+  readonly category: ItemCategorySelection;
+  readonly coverage: ItemBrowseCoverage;
+  readonly rows: readonly ItemRow[];
+}): GetItemColumnsResult {
+  const contextKey = itemColumnContextKey({ category });
+  const context =
+    CONTEXT_COLUMNS[contextKey] ??
+    CONTEXT_COLUMNS[category.scope.slug] ??
+    DEFAULT_CONTEXT_COLUMNS;
+
+  const optionalKeys = (context.optional ?? []).filter(
+    (key) => !context.visible.includes(key),
+  );
+  const candidateKeys: ColumnKey[] = [...context.visible, ...optionalKeys];
+  const defaultHidden = new Set<string>(optionalKeys);
+
+  const columns: ItemTableColumn[] = [];
+  const defaultHiddenColumns: string[] = [];
+  const facts: ItemFactDescriptor[] = [];
+
+  for (const key of candidateKeys) {
+    const config = COLUMNS[key];
+    if (shouldIncludeColumn({ column: config, rows, coverage })) {
+      columns.push(adaptColumn(config, coverage));
+      if (defaultHidden.has(key)) {
+        defaultHiddenColumns.push(config.accessor);
+      }
+      if (config.key !== 'name') {
+        facts.push({
+          key: config.key,
+          title: config.title,
+          value: (row) => config.value(row, coverage),
+        });
+      }
+    }
+  }
+
+  return {
+    columns,
+    defaultHiddenColumns,
+    sortOptions: deriveSortOptions(columns),
+    facts,
+  };
+}
+
+export function deriveSortOptions(
+  columns: readonly ItemTableColumn[],
+): readonly BrowseSortOption[] {
+  return columns
+    .filter((column) => column.sortable)
+    .flatMap((column) => {
+      const isNumeric = column.numeric ?? false;
+      const primary = column.firstSortDirection ?? (isNumeric ? 'desc' : 'asc');
+      const secondary = primary === 'desc' ? 'asc' : 'desc';
+      const getLabel = (direction: 'asc' | 'desc') => {
+        if (column.sortLabels) {
+          return column.sortLabels[direction];
+        }
+        return isNumeric
+          ? `${column.title}: ${direction === 'desc' ? 'high to low' : 'low to high'}`
+          : `${column.title} (${direction === 'asc' ? 'A–Z' : 'Z–A'})`;
+      };
+      return [
+        {
+          field: column.accessor,
+          direction: primary,
+          label: getLabel(primary),
+        },
+        {
+          field: column.accessor,
+          direction: secondary,
+          label: getLabel(secondary),
+        },
+      ];
+    });
+}

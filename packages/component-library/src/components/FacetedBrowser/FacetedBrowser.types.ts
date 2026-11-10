@@ -76,6 +76,8 @@ interface CommonProps<TRecord extends Record<string, unknown>> {
   readonly queryFields?: readonly QueryFieldDefinition<TRecord>[];
   readonly searchFields?: readonly (keyof TRecord & string)[];
   readonly facets?: readonly FacetDefinition<TRecord>[];
+  /** Hides the desktop rail's visible "Filters" heading while keeping its label. */
+  readonly showFilterHeading?: boolean;
   /**
    * Optional responsive category navigation configuration.
    *

@@ -17,6 +17,7 @@ const SCROLL_FACETS = [
   'scrollSuccess',
   'scrollDestructionChance',
 ] as const;
+const PROJECTILE_FACETS = [...SHARED_FACETS, 'attack'] as const;
 const ETC_FACETS = [...SHARED_FACETS, 'noRecordedQuestOrRecipeUse'] as const;
 const CHAIR_FACETS = [
   ...SHARED_FACETS,
@@ -48,6 +49,9 @@ export const ITEM_FACET_CONTEXTS = {
     children: {
       recovery: RECOVERY_FACETS,
       scrolls: SCROLL_FACETS,
+      'throwing-stars': PROJECTILE_FACETS,
+      arrows: PROJECTILE_FACETS,
+      bullets: PROJECTILE_FACETS,
     },
   },
   etc: { default: ETC_FACETS },

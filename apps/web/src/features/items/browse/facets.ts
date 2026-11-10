@@ -12,9 +12,11 @@ import {
   type ItemFacetField,
 } from './facet-config';
 import { getItemFacetFields } from './facet-contexts';
+import { UPGRADE_TARGET_LABELS } from './labels';
 import type { ItemRow } from './project';
 import type { ItemCategorySelection } from './routing';
 import { matchSourceId } from './search';
+import { computeScrollStatsSortValue } from './sort';
 
 /** The sole query-field list includes facet values and hidden exact item IDs. */
 export const ITEM_QUERY_FIELDS: readonly QueryFieldDefinition<ItemRow>[] = [
@@ -29,6 +31,14 @@ export const ITEM_QUERY_FIELDS: readonly QueryFieldDefinition<ItemRow>[] = [
     accessor: (row) => row.sourceId,
     searchMatch: ({ value, query }) =>
       typeof value === 'string' && matchSourceId({ sourceId: value, query }),
+  },
+  { id: 'stats', accessor: computeScrollStatsSortValue },
+  {
+    id: 'targetLabel',
+    accessor: (row) =>
+      row.targetLabel
+        ? (UPGRADE_TARGET_LABELS[row.targetLabel] ?? row.targetLabel)
+        : undefined,
   },
 ];
 
@@ -81,6 +91,10 @@ function deriveFacet({
       ...shared,
       kind: 'range',
       buckets: config.buckets,
+      ...(config.valuePrefix === undefined
+        ? {}
+        : { valuePrefix: config.valuePrefix }),
+      ...(config.unit === undefined ? {} : { unit: config.unit }),
     };
   }
 

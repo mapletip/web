@@ -1,5 +1,6 @@
 /** Typed URL search validation and conversion for Items Browse. */
 import type {
+  BrowseSortOption,
   BrowseState,
   FacetFilterValue,
 } from '@mapletip/component-library';
@@ -88,7 +89,11 @@ const itemBrowseSearchFields = z.object({
     .number()
     .pipe(z.literal(PAGE_SIZE_OPTIONS))
     .catch(ITEM_BROWSE_DEFAULT_SEARCH.pageSize),
-  sort: z.literal(ITEM_SORT_OPTIONS.map(sortKey)).catch(defaultSortKey),
+  sort: z
+    .string()
+    .max(100)
+    .regex(/^[A-Za-z][A-Za-z0-9]*-(?:asc|desc)$/u)
+    .catch(defaultSortKey),
 });
 
 /** Standard Schema validator for the Items Browse route's search params. */
@@ -110,12 +115,15 @@ export type ItemBrowseSearch = z.output<typeof itemBrowseSearchSchema>;
 /** Converts validated URL parameters into the current category's browse state. */
 export function urlToBrowseState({
   search,
+  sortOptions = ITEM_SORT_OPTIONS,
 }: {
   readonly search: ItemBrowseSearch;
+  readonly sortOptions?: readonly BrowseSortOption[];
 }): BrowseState {
   const { q, page, pageSize, sort, ...parsedFilters } = search;
   const resolvedSort =
-    ITEM_SORT_OPTIONS.find((option) => sortKey(option) === sort) ??
+    sortOptions.find((option) => sortKey(option) === sort) ??
+    sortOptions[0] ??
     ITEM_SORT_OPTIONS[0];
 
   return {
@@ -132,12 +140,14 @@ export function urlToBrowseState({
 export function browseStateToUrl({
   state,
   includePage = true,
+  sortOptions = ITEM_SORT_OPTIONS,
 }: {
   readonly state: BrowseState;
   readonly includePage?: boolean | undefined;
+  readonly sortOptions?: readonly BrowseSortOption[];
 }): ItemBrowseSearch {
   const sort = state.sort ?? ITEM_BROWSE_DEFAULT_STATE.sort;
-  const sortIndex = ITEM_SORT_OPTIONS.findIndex(
+  const sortIndex = sortOptions.findIndex(
     (option) =>
       option.field === sort.field && option.direction === sort.direction,
   );
@@ -145,7 +155,9 @@ export function browseStateToUrl({
     q: state.search,
     page: includePage ? state.page : ITEM_BROWSE_DEFAULT_SEARCH.page,
     pageSize: state.pageSize,
-    sort: sortKey(ITEM_SORT_OPTIONS[sortIndex] ?? ITEM_SORT_OPTIONS[0]),
+    sort: sortKey(
+      sortOptions[sortIndex] ?? sortOptions[0] ?? ITEM_SORT_OPTIONS[0],
+    ),
     ...state.filters,
   };
 }

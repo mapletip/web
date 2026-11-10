@@ -698,6 +698,45 @@ describe('responsive navigation slot', () => {
     ).toBeTruthy();
   });
 
+  it('can hide the visible Filters heading while retaining the navigation label', () => {
+    const { container } = render(
+      <MantineProvider>
+        <FacetedBrowser
+          title={<h1>Catalog</h1>}
+          records={demoRecords}
+          idAccessor="id"
+          queryFields={queryFields}
+          facets={facets}
+          showFilterHeading={false}
+          navigation={{
+            label: genericNavigation.label,
+            currentLabel: genericNavigation.categoryLabel,
+            currentId: genericNavigation.currentId,
+            apply: genericNavigation.apply,
+            render: () => <nav aria-label={genericNavigation.label} />,
+          }}
+          presentation="cards"
+          renderCard={(record) => <div>{record.name}</div>}
+          defaultState={{
+            search: '',
+            filters: {},
+            page: 1,
+            pageSize: 20,
+            hiddenColumns: [],
+          }}
+        />
+      </MantineProvider>,
+    );
+
+    expect(container.querySelector('aside')).toHaveAttribute(
+      'aria-label',
+      genericNavigation.label,
+    );
+    expect(
+      screen.queryByRole('heading', { name: 'Filters' }),
+    ).not.toBeInTheDocument();
+  });
+
   it('renders no aside when neither navigation nor facets exist', () => {
     const { container } = render(
       <MantineProvider>

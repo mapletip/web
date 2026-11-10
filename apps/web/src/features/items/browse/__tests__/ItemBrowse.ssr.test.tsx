@@ -82,6 +82,27 @@ describe('Items Browse server rendering', () => {
     expect(html).toContain('ETC');
     expect(html).not.toContain('Home');
     expect(html).toContain('aria-current="page"');
+    expect(html).toContain('name="robots" content="noindex,follow"');
+    expect(html).not.toMatch(/<h2[^>]*>Filters<\/h2>/u);
+  });
+
+  it('marks a clean default-build category as indexable', async () => {
+    const router = createRouter({
+      routeTree,
+      history: createMemoryHistory({ initialEntries: ['/maplestory/items'] }),
+    });
+    await router.load();
+
+    const html = renderToString(
+      <MantineProvider theme={theme} forceColorScheme="dark">
+        <RouterProvider router={router} />
+      </MantineProvider>,
+    );
+
+    expect(html).toContain('name="robots" content="index,follow"');
+    expect(html).toContain(
+      'rel="canonical" href="https://mapletip.com/maplestory/items"',
+    );
   });
 
   it('shows the custom empty state only for a category with no rows', async () => {

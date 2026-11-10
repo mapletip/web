@@ -74,6 +74,12 @@ function expectedFacetIds(category: ItemCategorySelection): readonly string[] {
       'scrollDestructionChance',
     );
   }
+  if (
+    category.scope.slug === 'use' &&
+    ['throwing-stars', 'arrows', 'bullets'].includes(childSlug ?? '')
+  ) {
+    expected.push('attack');
+  }
   if (category.scope.slug === 'setup' && childSlug === 'chairs') {
     expected.push('chairRestores', 'seatHp', 'seatMp');
   }

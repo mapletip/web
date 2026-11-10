@@ -7,7 +7,9 @@ export interface RangeFacetConfig {
   readonly kind: 'range';
   readonly label: string;
   readonly getValue: (row: ItemRow) => number | undefined;
-  readonly buckets: readonly FacetRangeBucket[];
+  readonly buckets: readonly FacetRangeBucket[] | 'quantile';
+  readonly valuePrefix?: string;
+  readonly unit?: string;
   readonly quick?: boolean;
 }
 
@@ -25,8 +27,8 @@ const RECOVERY_BUCKETS = [
   { value: '100-299', label: '100–299', min: 100, max: 299 },
   { value: '300-599', label: '300–599', min: 300, max: 599 },
   { value: '600-999', label: '600–999', min: 600, max: 999 },
-  { value: '1000-1999', label: '1,000–1,999', min: 1000, max: 1999 },
-  { value: '2000+', label: '2,000+', min: 2000 },
+  { value: '1000-1999', label: '1000–1999', min: 1000, max: 1999 },
+  { value: '2000+', label: '2000+', min: 2000 },
 ] as const satisfies readonly FacetRangeBucket[];
 
 const CHAIR_HP_BUCKETS = [
@@ -75,6 +77,13 @@ export const ITEM_NUMERIC_FACET_CONFIGS = {
     label: 'MP restored',
     getValue: (row) => row.mp,
     buckets: RECOVERY_BUCKETS,
+  },
+  attack: {
+    kind: 'range',
+    label: 'Attack',
+    getValue: (row) => row.attack,
+    buckets: 'quantile',
+    valuePrefix: '+',
   },
   seatHp: {
     kind: 'range',

@@ -26,8 +26,12 @@ export const Route = createFileRoute(
   },
   head: ({ params }) => {
     const { buildId, category } = parseItemRouteParams(params);
-    const { title, description } = itemPageMetadata(buildId, category);
+    const { title, description, canonicalUrl } = itemPageMetadata({
+      buildId,
+      category,
+    });
     return {
+      links: [{ rel: 'canonical', href: canonicalUrl }],
       meta: [{ title }, { name: 'description', content: description }],
     };
   },

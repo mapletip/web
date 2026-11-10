@@ -102,7 +102,7 @@ describe('Items Browse search params', () => {
     });
   });
 
-  it('accepts only configured page sizes and name sort options', () => {
+  it('accepts well-formed column sort keys and falls back outside a context', () => {
     for (const pageSize of PAGE_SIZE_OPTIONS) {
       expect(itemBrowseSearchSchema.parse({ pageSize })).toMatchObject({
         pageSize,
@@ -117,7 +117,23 @@ describe('Items Browse search params', () => {
     expect(
       itemBrowseSearchSchema.parse({ sort: 'sourceId-asc' }),
     ).toMatchObject({
-      sort: 'name-asc',
+      sort: 'sourceId-asc',
+    });
+  });
+
+  it('round-trips a context-specific sort and defaults it in other contexts', () => {
+    const sortOptions = [
+      { label: 'Name (A–Z)', field: 'name', direction: 'asc' },
+      { label: 'Attack: high to low', field: 'attack', direction: 'desc' },
+    ] as const;
+    const search = itemBrowseSearchSchema.parse({ sort: 'attack-desc' });
+    const state = urlToBrowseState({ search, sortOptions });
+
+    expect(state.sort).toEqual({ field: 'attack', direction: 'desc' });
+    expect(browseStateToUrl({ state, sortOptions }).sort).toBe('attack-desc');
+    expect(urlToBrowseState({ search }).sort).toEqual({
+      field: 'name',
+      direction: 'asc',
     });
   });
 

@@ -49,8 +49,8 @@ describe('Items Browse fixed range facets', () => {
       { value: '100-299', label: '100–299', min: 100, max: 299 },
       { value: '300-599', label: '300–599', min: 300, max: 599 },
       { value: '600-999', label: '600–999', min: 600, max: 999 },
-      { value: '1000-1999', label: '1,000–1,999', min: 1000, max: 1999 },
-      { value: '2000+', label: '2,000+', min: 2000 },
+      { value: '1000-1999', label: '1000–1999', min: 1000, max: 1999 },
+      { value: '2000+', label: '2000+', min: 2000 },
     ]);
     expect(mp?.buckets).toEqual(hp?.buckets);
     expect(hp?.quick).toBe(true);
@@ -82,5 +82,25 @@ describe('Items Browse fixed range facets', () => {
     ]);
     expect(chairs.find(({ id }) => id === 'seatHp')?.quick).toBeUndefined();
     expect(chairs.find(({ id }) => id === 'seatMp')?.quick).toBeUndefined();
+  });
+
+  it('prefixes generated projectile attack ranges once', () => {
+    const child = ITEM_SCOPES.use.children.find(
+      ({ slug }) => slug === 'throwing-stars',
+    );
+    expect(child).toBeDefined();
+    if (!child) return;
+
+    const attack = getItemFacets({
+      category: { scope: ITEM_SCOPES.use, child },
+      coverage,
+    }).find(({ id }) => id === 'attack');
+
+    expect(attack).toMatchObject({
+      label: 'Attack',
+      kind: 'range',
+      buckets: 'quantile',
+      valuePrefix: '+',
+    });
   });
 });
