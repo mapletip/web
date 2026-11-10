@@ -88,6 +88,7 @@ export function FacetedBrowser<TRecord extends Record<string, unknown>>(
     queryFields,
     searchFields,
     facets: facetDefinitions = EMPTY_FACETS,
+    showFilterHeading = true,
     recordNoun = 'records',
     navigation,
     sortOptions,
@@ -400,9 +401,11 @@ export function FacetedBrowser<TRecord extends Record<string, unknown>>(
           : null}
         {facets.length > 0 ? (
           <>
-            <Title order={2} size="h4">
-              Filters
-            </Title>
+            {showFilterHeading ? (
+              <Title order={2} size="h4">
+                Filters
+              </Title>
+            ) : null}
             <FacetList
               key={facetResetEpoch}
               facets={facets}

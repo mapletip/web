@@ -133,6 +133,7 @@ const facets: readonly FacetDefinition<FacetRecord>[] = [
     label: 'Large',
     kind: 'range',
     buckets: 'quantile',
+    valuePrefix: '+',
   },
   {
     id: 'percent',
@@ -213,6 +214,10 @@ describe('resolveFacets', () => {
     }
     expect(large.buckets.length).toBeLessThan(7);
     expect(large.buckets[0]?.value).not.toBe('1');
+    expect(large.buckets.map((bucket) => bucket.label)).toEqual([
+      '+1–5',
+      '+6–10',
+    ]);
 
     const percent = resolved.facets.find((facet) => facet.id === 'percent');
     if (

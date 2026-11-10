@@ -91,6 +91,16 @@ describe('buildQuantileBuckets', () => {
     ]);
   });
 
+  it('prefixes both bounds once without changing range values', () => {
+    const buckets = buildQuantileBuckets({
+      values: Array.from({ length: 10 }, (_, index) => index + 1),
+      valuePrefix: '+',
+    });
+
+    expect(buckets.map((bucket) => bucket.label)).toEqual(['+1–5', '+6–10']);
+    expect(buckets.map((bucket) => bucket.value)).toEqual(['1-5', '6-10']);
+  });
+
   it('splits larger domains by population instead of width', () => {
     const values = [1, 5, 12, 30, 45, 60, 88, 120, 199, 200];
     const buckets = buildQuantileBuckets({ values });

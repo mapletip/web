@@ -3,7 +3,26 @@
  *
  * Raw WZ and contract keys never leak into the player interface.
  */
-import type { ItemBrowseUpgradeTarget } from './project';
+import type {
+  ItemBrowseFunction,
+  ItemBrowseScrollDeltas,
+  ItemBrowseUpgradeSpecial,
+  ItemBrowseUpgradeTarget,
+  ItemBrowseUpgradeTier,
+} from './project';
+
+export const ITEM_FUNCTION_LABELS: Readonly<
+  Record<ItemBrowseFunction, string>
+> = {
+  upgrade: 'Upgrade',
+  skill: 'Skill',
+  summon: 'Summon',
+  'reward-container': 'Reward Container',
+  'monster-card': 'Monster Card',
+  readable: 'Book & Scroll',
+  pet: 'Pet',
+  recovery: 'Recovery',
+};
 
 export const UPGRADE_TARGET_LABELS: Readonly<
   Record<ItemBrowseUpgradeTarget, string>
@@ -61,3 +80,43 @@ export const SCROLL_STAT_LABELS: Readonly<Record<string, string>> = {
   craft: 'Craft',
   swim: 'Swim',
 };
+
+export const UPGRADE_TIER_LABELS: Readonly<
+  Record<ItemBrowseUpgradeTier, string>
+> = {
+  lesser: 'Lesser',
+  intermediate: 'Intermediate',
+  greater: 'Greater',
+  chaos: 'Chaos',
+};
+
+export const UPGRADE_SPECIAL_LABELS: Readonly<
+  Record<ItemBrowseUpgradeSpecial, string>
+> = {
+  'clean-slate': 'Clean Slate',
+  chaos: 'Chaos',
+  'anti-slip': 'Anti-Slip',
+  'warm-support': 'Warm Support',
+  'randomized-stats': 'Randomized Stats',
+};
+
+export const SCROLL_STAT_ORDER = [
+  'weaponAttack',
+  'magicAttack',
+  'strength',
+  'dexterity',
+  'intelligence',
+  'luck',
+  'maxHp',
+  'maxMp',
+  'weaponDefense',
+  'magicDefense',
+  'accuracy',
+  'avoidability',
+  'speed',
+  'jump',
+  'criticalRate',
+  'criticalDamage',
+  'craft',
+  'swim',
+] as const satisfies readonly (keyof ItemBrowseScrollDeltas)[];

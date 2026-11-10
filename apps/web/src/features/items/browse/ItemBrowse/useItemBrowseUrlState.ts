@@ -1,6 +1,7 @@
 import { useDebouncedCallback } from '@mantine/hooks';
 import type {
   BrowseState,
+  BrowseSortOption,
   StateChangeDetails,
 } from '@mapletip/component-library';
 import { useCallback, useMemo, useState } from 'react';
@@ -19,6 +20,9 @@ export interface OnSearchChangeOptions {
 export interface UseItemBrowseUrlStateOptions {
   readonly search: ItemBrowseSearch;
   readonly onSearchChange: (options: OnSearchChangeOptions) => void;
+  readonly contextKey: string;
+  readonly defaultHiddenColumns: readonly string[];
+  readonly sortOptions: readonly BrowseSortOption[];
 }
 
 export interface UseItemBrowseUrlStateResult {
@@ -35,13 +39,23 @@ const SEARCH_DEBOUNCE_MS = 150;
 export function useItemBrowseUrlState({
   search,
   onSearchChange,
+  contextKey,
+  defaultHiddenColumns,
+  sortOptions,
 }: UseItemBrowseUrlStateOptions): UseItemBrowseUrlStateResult {
-  const urlState = useMemo(() => urlToBrowseState({ search }), [search]);
+  const urlState = useMemo(
+    () => urlToBrowseState({ search, sortOptions }),
+    [search, sortOptions],
+  );
   const [localSearchState, setLocalSearchState] = useState(() => ({
     urlSearch: urlState.search,
     value: urlState.search,
   }));
-  const [hiddenColumns, setHiddenColumns] = useState<readonly string[]>([]);
+  const [hiddenColumnsByContext, setHiddenColumnsByContext] = useState<
+    Readonly<Record<string, readonly string[]>>
+  >(() => ({ [contextKey]: defaultHiddenColumns }));
+  const hiddenColumns =
+    hiddenColumnsByContext[contextKey] ?? defaultHiddenColumns;
   const localSearch =
     localSearchState.urlSearch === urlState.search
       ? localSearchState.value
@@ -61,9 +75,12 @@ export function useItemBrowseUrlState({
 
   const handleStateChange = useCallback(
     (nextState: BrowseState, details?: StateChangeDetails) => {
-      setHiddenColumns(nextState.hiddenColumns);
+      setHiddenColumnsByContext((previous) => ({
+        ...previous,
+        [contextKey]: nextState.hiddenColumns,
+      }));
       const searchChanged = nextState.search !== localSearch;
-      const nextSearch = browseStateToUrl({ state: nextState });
+      const nextSearch = browseStateToUrl({ state: nextState, sortOptions });
 
       if (searchChanged) {
         setLocalSearchState({
@@ -80,7 +97,14 @@ export function useItemBrowseUrlState({
         replace: details?.reason === 'clamp',
       });
     },
-    [emitDebouncedSearchChange, localSearch, onSearchChange, urlState.search],
+    [
+      contextKey,
+      emitDebouncedSearchChange,
+      localSearch,
+      onSearchChange,
+      sortOptions,
+      urlState.search,
+    ],
   );
 
   return { browseState, handleStateChange };
