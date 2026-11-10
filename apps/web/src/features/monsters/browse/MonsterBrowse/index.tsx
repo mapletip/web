@@ -80,13 +80,17 @@ function flagColumn(
 //
 // Exported for the feature's own unit tests (column metadata is data), never
 // through the public barrel.
+const identityCellClassName = classes['identityCell'];
+
 export const monsterBrowseColumns: readonly TableColumn<MonsterBrowseRow>[] = [
   {
     accessor: 'name',
     title: 'Name',
     sortable: true,
     firstSortDirection: 'asc',
-    cellClassName: classes['identityCell'],
+    ...(identityCellClassName !== undefined
+      ? { cellClassName: identityCellClassName }
+      : {}),
     render: (record) => (
       <div
         className={classes['identity']}
