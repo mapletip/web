@@ -86,6 +86,7 @@ export const monsterBrowseColumns: readonly TableColumn<MonsterBrowseRow>[] = [
     title: 'Name',
     sortable: true,
     firstSortDirection: 'asc',
+    cellClassName: classes['identityCell'],
     render: (record) => (
       <div
         className={classes['identity']}
@@ -134,6 +135,7 @@ function dropExpansionControl({
       variant={expanded ? 'light' : 'default'}
       size="compact-sm"
       radius="sm"
+      px={4}
       leftSection={<Package size={14} aria-hidden="true" />}
       classNames={{
         section: dropClasses['triggerSection'],
@@ -273,6 +275,7 @@ export function MonsterBrowse({
         summaryNoun={SUMMARY_NOUN}
         pageSizeOptions={[25, 50, 100]}
         presentation="comparison"
+        tableVerticalSpacing={4}
         // No `tableMaxHeight`: the table fills the height this page hands it, so its own
         // scroll region is the page's vertical scroll region on desktop.
         fillHeight
