@@ -182,7 +182,7 @@ export function ItemBrowse({
             },
           }}
           records={scopedRows}
-          idAccessor="key"
+          idAccessor="sourceId"
           identityField="name"
           columns={presentation.columns}
           queryFields={ITEM_QUERY_FIELDS}

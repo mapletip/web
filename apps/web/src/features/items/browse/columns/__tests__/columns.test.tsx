@@ -50,7 +50,6 @@ describe('Items Browse columns', () => {
     const selected = category({ scope: 'use', child: 'scrolls' });
     const rows: readonly ItemRow[] = [
       {
-        key: 'scroll-a',
         sourceId: '02040001',
         itemClass: 'consume',
         name: 'Scroll A',
@@ -92,13 +91,11 @@ describe('Items Browse columns', () => {
   it('omits scroll tiers and unsupported relationship columns for the build', () => {
     const rows: readonly ItemRow[] = [
       {
-        key: 'item-a',
         sourceId: '04000001',
         itemClass: 'etc',
         monsterDropCount: 2,
       },
       {
-        key: 'item-b',
         sourceId: '04000002',
         itemClass: 'etc',
         monsterDropCount: 1,
@@ -118,7 +115,6 @@ describe('Items Browse columns', () => {
   it('keeps projectile attack signed in cells and sorts by the raw number', () => {
     const selected = category({ scope: 'use', child: 'throwing-stars' });
     const row: ItemRow = {
-      key: 'star-a',
       sourceId: '2070001',
       itemClass: 'consume',
       attack: 15,
@@ -126,7 +122,7 @@ describe('Items Browse columns', () => {
     const result = getItemColumns({
       category: selected,
       coverage,
-      rows: [row, { ...row, key: 'star-b', attack: 20 }],
+      rows: [row, { ...row, attack: 20 }],
     });
     const attackColumn = result.columns.find(
       (column) => column.accessor === 'attack',
@@ -139,18 +135,32 @@ describe('Items Browse columns', () => {
     ).toContain('attack-desc');
   });
 
+  it('keeps source IDs out of compatible pet labels', () => {
+    const row: ItemRow = {
+      sourceId: '02120000',
+      itemClass: 'consume',
+      petTargets: [
+        { sourceId: '5000020', name: 'Baby Dragon' },
+        { sourceId: '5000098' },
+      ],
+      unresolvedPetTargets: ['5000046'],
+    };
+
+    expect(COLUMNS.petTargets.value(row, coverage)).toBe(
+      'Baby Dragon\nUnnamed pet\nUnresolved pet',
+    );
+  });
+
   it('keeps chair recovery headers on one line at a readable width', () => {
     const selected = category({ scope: 'setup', child: 'chairs' });
     const rows: readonly ItemRow[] = [
       {
-        key: 'chair-a',
         sourceId: '3010000',
         itemClass: 'setup',
         seatHp: 10,
         seatMp: 5,
       },
       {
-        key: 'chair-b',
         sourceId: '3010001',
         itemClass: 'setup',
         seatHp: 20,
@@ -169,13 +179,11 @@ describe('Items Browse columns', () => {
 
   it('sorts scroll stats by player priority and does not group numbers with commas', () => {
     const weaponAttack: ItemRow = {
-      key: 'scroll-a',
       sourceId: '02040001',
       itemClass: 'consume',
       stats: { weaponAttack: 1 },
     };
     const strength: ItemRow = {
-      key: 'scroll-b',
       sourceId: '02040002',
       itemClass: 'consume',
       stats: { strength: 100 },

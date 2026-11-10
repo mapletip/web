@@ -18,7 +18,6 @@ import { ITEM_BROWSE_DEFAULT_SEARCH } from '../search-params';
 const { fixtureRows, fixtureCoverage } = vi.hoisted(() => {
   const rows: readonly ItemRow[] = [
     {
-      key: 'item:02000000',
       sourceId: '02000000',
       name: 'Red Potion',
       itemClass: 'consume',
@@ -27,7 +26,6 @@ const { fixtureRows, fixtureCoverage } = vi.hoisted(() => {
       hp: 50,
     },
     {
-      key: 'item:02070000',
       sourceId: '02070000',
       name: 'Subi Throwing-Stars',
       itemClass: 'consume',
@@ -35,7 +33,6 @@ const { fixtureRows, fixtureCoverage } = vi.hoisted(() => {
       attack: 1,
     },
     {
-      key: 'item:digit-name',
       sourceId: '02000001',
       name: 'Potion 2000000',
       itemClass: 'consume',
@@ -44,7 +41,6 @@ const { fixtureRows, fixtureCoverage } = vi.hoisted(() => {
       hp: 100,
     },
     {
-      key: 'item:scroll:helmet',
       sourceId: '02040001',
       name: 'Scroll for Helmet DEF 60%',
       itemClass: 'consume',
@@ -57,7 +53,6 @@ const { fixtureRows, fixtureCoverage } = vi.hoisted(() => {
       directTargetCount: 1,
     },
     {
-      key: 'item:scroll:shoes',
       sourceId: '02040002',
       name: 'Scroll for Shoes Jump 100%',
       itemClass: 'consume',
@@ -68,20 +63,17 @@ const { fixtureRows, fixtureCoverage } = vi.hoisted(() => {
       stats: { jump: 2 },
     },
     {
-      key: 'item:04000000',
       sourceId: '04000000',
       name: 'Snail Shell',
       itemClass: 'etc',
     },
     {
-      key: 'item:etc:quest',
       sourceId: '04000001',
       name: 'Quest Material',
       itemClass: 'etc',
       neededForQuestCount: 1,
     },
     ...Array.from({ length: 50 }, (_, index): ItemRow => ({
-      key: `item:extra:${index}`,
       sourceId: String(6000000 + index),
       name: `Extra Item ${index + 1}`,
       itemClass: 'consume',

@@ -33,6 +33,8 @@ describe('projectItemBrowseRows', () => {
 
     expect(rows[0]?.name).toBeUndefined();
     expect(rows[0]?.icon).toBe('b'.repeat(64));
+    expect(rows[0]?.sourceId).toBe('02000001');
+    expect('key' in (rows[0] ?? {})).toBe(false);
 
     expect(rows[1]?.name).toBeUndefined();
     expect(rows[1]?.icon).toBeUndefined();
@@ -85,7 +87,7 @@ describe('projectItemBrowseRows', () => {
     expect(rowWithTargets?.directTargetCount).toBe(2);
   });
 
-  it('resolves pet targets preserving key identity, distinct same-named pets, and unnamed pets without invented names', () => {
+  it('resolves pet targets by source ID, preserving distinct same-named pets and unnamed pets', () => {
     const dragonPetA = 'item:pet:dragon-black';
     const dragonPetB = 'item:pet:dragon-red';
     const unnamedPetA = 'item:pet:unnamed-1';
@@ -140,10 +142,10 @@ describe('projectItemBrowseRows', () => {
 
     // Two distinct pets sharing the same name stay separate; unnamed pets keep no invented name
     expect(food?.petTargets).toEqual([
-      { key: dragonPetA, name: 'Baby Dragon' },
-      { key: dragonPetB, name: 'Baby Dragon' },
-      { key: unnamedPetA },
-      { key: unnamedPetB },
+      { sourceId: '5000020', name: 'Baby Dragon' },
+      { sourceId: '5000021', name: 'Baby Dragon' },
+      { sourceId: '5000098' },
+      { sourceId: '5000099' },
     ]);
 
     // Unresolved targets stay separate

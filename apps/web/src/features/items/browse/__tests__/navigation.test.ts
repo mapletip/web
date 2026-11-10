@@ -10,7 +10,6 @@ import type { ItemRow } from '../project';
 describe('navigation', () => {
   const dummyRows: readonly ItemRow[] = [
     {
-      key: 'consume:02000000',
       sourceId: '02000000',
       name: 'Red Potion',
       itemClass: 'consume',
@@ -18,33 +17,28 @@ describe('navigation', () => {
       functions: ['recovery'],
     },
     {
-      key: 'consume:02070000',
       sourceId: '02070000',
       name: 'Subi Throwing-Stars',
       itemClass: 'consume',
       types: ['throwing-star'],
     },
     {
-      key: 'consume:02999999',
       sourceId: '02999999',
       name: 'Mysterious Use Item',
       itemClass: 'consume',
     },
     {
-      key: 'etc:04000000',
       sourceId: '04000000',
       name: 'Snail Shell',
       itemClass: 'etc',
     },
     {
-      key: 'setup:03000000',
       sourceId: '03000000',
       name: 'Blue Chair',
       itemClass: 'setup',
       types: ['chair'],
     },
     {
-      key: 'pet:5000000',
       sourceId: '5000000',
       name: 'Brown Puppy',
       itemClass: 'pet',
@@ -232,7 +226,6 @@ describe('navigation', () => {
       const rowsWithIcon: readonly ItemRow[] = [
         ...dummyRows,
         {
-          key: 'consume:02000004:icon',
           sourceId: '02000004',
           itemClass: 'consume',
           functions: ['recovery'],
@@ -257,14 +250,12 @@ describe('navigation', () => {
       // Case 2: Another category member carries recovery's preferred icon
       const rows: readonly ItemRow[] = [
         {
-          key: 'recovery-unknown-icon',
           sourceId: '02000000',
           itemClass: 'consume',
           functions: ['recovery'],
           icon: 'ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff',
         },
         {
-          key: 'etc-item-with-elixir-icon',
           sourceId: '04000000',
           itemClass: 'etc',
           types: ['monster-material'],
@@ -288,7 +279,6 @@ describe('navigation', () => {
     it('resolves the icon when a member carries a preferred content ID', () => {
       const rows: readonly ItemRow[] = [
         {
-          key: 'elixir-item',
           sourceId: '02000004',
           itemClass: 'consume',
           functions: ['recovery'],
@@ -312,7 +302,6 @@ describe('navigation', () => {
     it('respects preference order when resolving icons', () => {
       const powerElixirOnly: readonly ItemRow[] = [
         {
-          key: 'power-elixir-item',
           sourceId: '02000005',
           itemClass: 'consume',
           functions: ['recovery'],
@@ -336,7 +325,6 @@ describe('navigation', () => {
       const bothPresent: readonly ItemRow[] = [
         ...powerElixirOnly,
         {
-          key: 'elixir-item',
           sourceId: '02000004',
           itemClass: 'consume',
           functions: ['recovery'],

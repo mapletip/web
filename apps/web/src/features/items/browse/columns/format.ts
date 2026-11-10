@@ -55,9 +55,9 @@ export function formatStats(stats: ItemRow['stats']): string | undefined {
 
 export function formatPets(row: ItemRow): string | undefined {
   const named =
-    row.petTargets?.map((target) => target.name ?? target.key) ?? [];
+    row.petTargets?.map((target) => target.name ?? 'Unnamed pet') ?? [];
   const unresolved =
-    row.unresolvedPetTargets?.map((targetId) => `Unresolved ${targetId}`) ?? [];
+    row.unresolvedPetTargets?.map(() => 'Unresolved pet') ?? [];
   const all = [...named, ...unresolved];
   return all.length > 0 ? all.join(LIST_VALUE_SEPARATOR) : undefined;
 }

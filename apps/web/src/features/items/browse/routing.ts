@@ -27,9 +27,16 @@ export interface ItemCategorySelection {
   readonly child?: ItemCategoryChild | undefined;
 }
 
-export interface ParsedItemRoute {
+interface ParsedItemRoute {
   readonly buildId: BuildId;
   readonly category: ItemCategorySelection;
+}
+
+function guardNotFound(condition: boolean): asserts condition {
+  if (!condition) {
+    // eslint-disable-next-line @typescript-eslint/only-throw-error
+    throw notFound();
+  }
 }
 
 /**
@@ -50,31 +57,17 @@ export function parseItemRouteParams(params: ItemRouteParams): ParsedItemRoute {
   const { scope, child } = params;
 
   if (scope === undefined) {
-    if (child !== undefined) {
-      // eslint-disable-next-line @typescript-eslint/only-throw-error
-      throw notFound();
-    }
+    guardNotFound(child === undefined);
     return { buildId, category: { scope: ITEM_SCOPES.all } };
   }
 
-  if (scope === 'all') {
-    // eslint-disable-next-line @typescript-eslint/only-throw-error
-    throw notFound();
-  }
-
-  if (!isItemScope(scope)) {
-    // eslint-disable-next-line @typescript-eslint/only-throw-error
-    throw notFound();
-  }
+  guardNotFound(scope !== 'all' && isItemScope(scope));
 
   const scopeObj = ITEM_SCOPES[scope];
 
   if (child !== undefined) {
     const childObj = scopeObj.children.find((c) => c.slug === child);
-    if (!childObj) {
-      // eslint-disable-next-line @typescript-eslint/only-throw-error
-      throw notFound();
-    }
+    guardNotFound(childObj !== undefined);
     return { buildId, category: { scope: scopeObj, child: childObj } };
   }
 

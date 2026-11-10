@@ -27,49 +27,42 @@ import { parseItemRouteParams } from '../routing';
 const { mockRows } = vi.hoisted(() => {
   const rows: readonly ItemRow[] = [
     {
-      key: 'item:use:scroll',
       sourceId: '02040000',
       itemClass: 'consume',
       types: ['upgrade-scroll'],
       icon: '3a453e4e40b44d9358f9348abdda896b64ecc046a52e5b07a2388bdbd7dc8601',
     },
     {
-      key: 'item:use:recovery',
       sourceId: '02000004',
       itemClass: 'consume',
       functions: ['recovery'],
       icon: '07c090345b4e437b6204eb7e234119d7709846f6b263712c7df5121add2bdc71',
     },
     {
-      key: 'item:use:stars',
       sourceId: '02070000',
       itemClass: 'consume',
       types: ['throwing-star'],
       icon: 'f77172ea2f08e2e8586c8d2a208c3614cbf112a09796609f9b4fc5c8affb5e0e',
     },
     {
-      key: 'item:use:potion',
       sourceId: '02000003',
       itemClass: 'consume',
       types: ['potion'],
       icon: '8e3e5f732599bc6a681e939e526ab134619cdb6711dfa52a7f7011e4e2f4d5b6',
     },
     {
-      key: 'item:etc:quest',
       sourceId: '04031001',
       itemClass: 'etc',
       neededForQuestCount: 1,
       icon: '63df4ceb3580419b2ae1db57f001573eac4fe068edfe5aeea17c4ce734de0f7a',
     },
     {
-      key: 'item:setup:chair',
       sourceId: '03010007',
       itemClass: 'setup',
       types: ['chair'],
       icon: '15ceb9596a6bdc8f61f8aa1382292f3b428a30281315b83ed0499c5d0492e120',
     },
     {
-      key: 'item:cash:pet',
       sourceId: '5000002',
       itemClass: 'pet',
       icon: '7cb4e8cd5e402cc35d7bd6d51dafb1800670816463425b50525f091accdde43e',
