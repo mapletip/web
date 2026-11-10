@@ -7,7 +7,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   formatMonsterFact,
-  projectMonsterBrowseRows,
+  projectMonsterBrowseRows as projectCatalogRows,
   projectMonsterDropItemOptions,
   UNNAMED_MONSTER_LABEL,
   type MonsterBrowseRow,
@@ -16,6 +16,7 @@ import {
 
 import {
   ABSENT_FACT,
+  emptyDropBrowseFixture,
   fixtureCatalog,
   fixtureRecord,
   knownFact,
@@ -28,6 +29,13 @@ function firstRow(rows: readonly MonsterBrowseRow[]): MonsterBrowseRow {
   const [row] = rows;
   if (row === undefined) throw new Error('Fixture produced no rows.');
   return row;
+}
+
+function projectRows(
+  catalog: StaticMonsterCatalog,
+  dropBrowse: MonsterDropBrowseV1 = emptyDropBrowseFixture(),
+): readonly MonsterBrowseRow[] {
+  return projectCatalogRows(catalog, dropBrowse);
 }
 
 /**
@@ -67,11 +75,11 @@ function sentinelRecord(input: Pick<FixtureRecordInput, 'sprite'> = {}) {
   });
 }
 
-describe('projectMonsterBrowseRows contract-2.1 tuple mapping', () => {
+describe('projectMonsterBrowseRows contract-2.2 tuple mapping', () => {
   it('projects known sprite content IDs without treating them as display facts', () => {
     const contentId = 'a'.repeat(64);
     const row = firstRow(
-      projectMonsterBrowseRows(
+      projectRows(
         fixtureCatalog({
           records: [sentinelRecord({ sprite: knownFact(contentId) })],
         }),
@@ -85,9 +93,7 @@ describe('projectMonsterBrowseRows contract-2.1 tuple mapping', () => {
   it('omits non-known sprite states without recording them as display facts', () => {
     for (const sprite of [UNKNOWN_FACT, ABSENT_FACT, UNSUPPORTED_FACT]) {
       const row = firstRow(
-        projectMonsterBrowseRows(
-          fixtureCatalog({ records: [sentinelRecord({ sprite })] }),
-        ),
+        projectRows(fixtureCatalog({ records: [sentinelRecord({ sprite })] })),
       );
 
       expect(row).not.toHaveProperty('sprite');
@@ -95,30 +101,29 @@ describe('projectMonsterBrowseRows contract-2.1 tuple mapping', () => {
     }
   });
 
-  it('rejects a contract 2.0 catalog', () => {
-    const catalogV21 = fixtureCatalog({ records: [sentinelRecord()] });
-    const catalogV20: StaticMonsterCatalog = {
-      contractVersion: '2.0',
-      format: catalogV21.format,
-      recordCount: catalogV21.recordCount,
-      records: catalogV21.records.map((record) => ({
+  it('requires the SDK-supported drop-summary catalog shape', () => {
+    const catalogV22 = fixtureCatalog({ records: [sentinelRecord()] });
+    const catalogV21: StaticMonsterCatalog = {
+      contractVersion: '2.1',
+      format: catalogV22.format,
+      recordCount: catalogV22.recordCount,
+      records: catalogV22.records.map((record) => ({
         key: record.key,
         name: record.name,
         stats: record.stats,
         traits: record.traits,
         elements: record.elements,
         relationships: record.relationships,
+        sprite: record.sprite,
       })),
-      scope: catalogV21.scope,
-    };
+      scope: catalogV22.scope,
+    } as unknown as StaticMonsterCatalog;
 
-    expect(() => projectMonsterBrowseRows(catalogV20)).toThrow('contract-2.1');
+    expect(() => projectRows(catalogV21)).toThrow('drop summaries');
   });
 
   it('reads every projected stat and trait from its own positional slot', () => {
-    const rows = projectMonsterBrowseRows(
-      fixtureCatalog({ records: [sentinelRecord()] }),
-    );
+    const rows = projectRows(fixtureCatalog({ records: [sentinelRecord()] }));
     const row = firstRow(rows);
 
     expect(row.key).toBe('fixture:monster:001');
@@ -152,7 +157,7 @@ describe('projectMonsterBrowseRows contract-2.1 tuple mapping', () => {
 
   it('does not project the traits and collections deliberately left out', () => {
     const row = firstRow(
-      projectMonsterBrowseRows(fixtureCatalog({ records: [sentinelRecord()] })),
+      projectRows(fixtureCatalog({ records: [sentinelRecord()] })),
     );
 
     for (const omitted of [
@@ -175,10 +180,8 @@ describe('Monster drop projection', () => {
     drops: MonsterCatalogV2_2['records'][number]['drops'],
     {
       historicalDrops = 'supported',
-      nativeDropsAbsentCoverageKey = 'fixture.native-drops-coverage',
     }: {
       readonly historicalDrops?: 'supported' | 'unsupported';
-      readonly nativeDropsAbsentCoverageKey?: string | null;
     } = {},
   ): StaticMonsterCatalog {
     const base = fixtureCatalog({ records: [sentinelRecord()] });
@@ -188,7 +191,6 @@ describe('Monster drop projection', () => {
       browseCoverage: {
         historicalDrops,
         locationScope: 'client-placements',
-        nativeDropsAbsentCoverageKey,
       },
       records: base.records.map((record) => ({
         ...record,
@@ -233,18 +235,18 @@ describe('Monster drop projection', () => {
     };
   }
 
-  it('keeps old catalog summaries unavailable instead of inventing zero counts', () => {
+  it('preserves unknown summary states instead of inventing zero counts', () => {
     const row = firstRow(
-      projectMonsterBrowseRows(fixtureCatalog({ records: [sentinelRecord()] })),
+      projectRows(fixtureCatalog({ records: [sentinelRecord()] })),
     );
 
-    expect(row.drops.native).toEqual({ state: 'unavailable' });
-    expect(row.drops.historical).toEqual({ state: 'unavailable' });
+    expect(row.drops.native).toEqual({ state: 'unknown' });
+    expect(row.drops.historical).toEqual({ state: 'unknown' });
   });
 
   it('preserves native unknown and historical count/source independently', () => {
     const row = firstRow(
-      projectMonsterBrowseRows(
+      projectRows(
         catalogV22({
           native: { state: 'unknown' },
           historical: {
@@ -264,9 +266,9 @@ describe('Monster drop projection', () => {
     });
   });
 
-  it('retains absent coverage and distinguishes an observed zero count', () => {
+  it('preserves absent state and distinguishes an observed zero count', () => {
     const absent = firstRow(
-      projectMonsterBrowseRows(
+      projectRows(
         catalogV22({
           native: { state: 'absent' },
           historical: { state: 'absent' },
@@ -274,7 +276,7 @@ describe('Monster drop projection', () => {
       ),
     );
     const zero = firstRow(
-      projectMonsterBrowseRows(
+      projectRows(
         catalogV22({
           native: { state: 'known', count: 0, lowerBound: false },
           historical: { state: 'absent' },
@@ -282,10 +284,7 @@ describe('Monster drop projection', () => {
       ),
     );
 
-    expect(absent.drops.native).toEqual({
-      state: 'absent',
-      coverageKey: 'fixture.native-drops-coverage',
-    });
+    expect(absent.drops.native).toEqual({ state: 'absent' });
     expect(zero.drops.native).toEqual({
       state: 'known',
       count: 0,
@@ -295,7 +294,7 @@ describe('Monster drop projection', () => {
 
   it('does not turn a missing historical summary into an absent count', () => {
     const unsupported = firstRow(
-      projectMonsterBrowseRows(
+      projectRows(
         catalogV22(
           { native: { state: 'unsupported' } },
           { historicalDrops: 'unsupported' },
@@ -303,9 +302,7 @@ describe('Monster drop projection', () => {
       ),
     );
     const unknown = firstRow(
-      projectMonsterBrowseRows(
-        catalogV22({ native: { state: 'unsupported' } }),
-      ),
+      projectRows(catalogV22({ native: { state: 'unsupported' } })),
     );
 
     expect(unsupported.drops.historical).toEqual({ state: 'unsupported' });
@@ -315,7 +312,7 @@ describe('Monster drop projection', () => {
   it('keeps unresolved entries but exposes only resolved item keys to filtering', () => {
     const drops = dropBrowseFixture();
     const row = firstRow(
-      projectMonsterBrowseRows(
+      projectRows(
         catalogV22({
           native: { state: 'known', count: 1, lowerBound: true },
           historical: { state: 'known', count: 1, sourceBuilds: ['gms-v83'] },
@@ -334,7 +331,6 @@ describe('Monster drop projection', () => {
       itemKey: 'fixture:item:known',
       assertionKind: 'historical-overlay',
       sourceBuild: 'gms-v83',
-      confidence: 'maybe',
     });
     expect(row.drops.itemKeys).toEqual(['fixture:item:known']);
   });
@@ -394,9 +390,7 @@ describe('monster fact states', () => {
     ],
   });
 
-  const row = firstRow(
-    projectMonsterBrowseRows(fixtureCatalog({ records: [record] })),
-  );
+  const row = firstRow(projectRows(fixtureCatalog({ records: [record] })));
 
   it('keeps a known false distinct from every non-known state', () => {
     expect(row.boss).toBe(false);
@@ -453,7 +447,7 @@ describe('derived EXP per 100 HP', () => {
   /** One record whose only interesting facts are HP and EXP. */
   function ratioRow(hp: StatFact, exp: StatFact): MonsterBrowseRow {
     return firstRow(
-      projectMonsterBrowseRows(
+      projectRows(
         fixtureCatalog({
           records: [
             fixtureRecord({
@@ -585,7 +579,7 @@ describe('full roster projection', () => {
   });
 
   it('projects exactly the declared number of records without slicing', () => {
-    const rows = projectMonsterBrowseRows(fixtureCatalog({ records }));
+    const rows = projectRows(fixtureCatalog({ records }));
 
     expect(rows).toHaveLength(5);
     expect(rows.map((row) => row.key)).toEqual([

@@ -19,7 +19,7 @@ import {
 } from '@phosphor-icons/react';
 import { useId, useState, type KeyboardEvent, type ReactElement } from 'react';
 
-import { BUILDS, isBuildId } from '@/config/maplekit';
+import { BUILDS, isBuildId, type BuildId } from '@/config/maplekit';
 
 import classes from './MonsterDrops.module.css';
 import { MonsterSprite } from './MonsterSprite';
@@ -40,30 +40,23 @@ const CATEGORY_ORDER = [
   'Other',
 ] as const;
 
-export function dropListingCountText(
-  record: MonsterBrowseRow,
-  dropBrowseAvailable: boolean,
-): string {
+export function dropListingCountText(record: MonsterBrowseRow): string {
   const count = record.drops.entries.length;
   if (count > 0) {
     return `${count.toLocaleString('en-US')} ${count === 1 ? 'drop' : 'drops'}`;
   }
-  return dropBrowseAvailable ? '0' : 'Drops unavailable';
+  return '0';
 }
 
 export function dropListingActionLabel(
   record: MonsterBrowseRow,
   expanded: boolean,
-  dropBrowseAvailable: boolean,
 ): string {
-  return `${record.name}, ${dropListingCountText(record, dropBrowseAvailable)}. ${expanded ? 'Hide' : 'Show'} drops.`;
+  return `${record.name}, ${dropListingCountText(record)}. ${expanded ? 'Hide' : 'Show'} drops.`;
 }
 
-function dropDrawerActionLabel(
-  record: MonsterBrowseRow,
-  dropBrowseAvailable: boolean,
-): string {
-  return dropListingActionLabel(record, false, dropBrowseAvailable);
+function dropDrawerActionLabel(record: MonsterBrowseRow): string {
+  return dropListingActionLabel(record, false);
 }
 
 function buildLabel(buildId: string): string {
@@ -93,8 +86,7 @@ function nativeDropLabel(fact: MonsterDropCountFact): string {
   }
   if (fact.state === 'absent') return 'No native source';
   if (fact.state === 'unknown') return 'Unknown';
-  if (fact.state === 'unsupported') return 'Unsupported';
-  return 'Unavailable for this release';
+  return 'Unsupported';
 }
 
 function historicalDropLabel(fact: MonsterHistoricalDropCountFact): string {
@@ -104,8 +96,7 @@ function historicalDropLabel(fact: MonsterHistoricalDropCountFact): string {
   }
   if (fact.state === 'absent') return 'None recorded';
   if (fact.state === 'unknown') return 'Unknown';
-  if (fact.state === 'unsupported') return 'Unsupported';
-  return 'Unavailable for this release';
+  return 'Unsupported';
 }
 
 export function MonsterDropSummary({
@@ -151,16 +142,13 @@ function itemReferenceLabel(state: string): string | undefined {
 
 function dropSourceLabel(
   entry: MonsterDropEntry,
-  targetBuildLabel: string,
+  buildId: BuildId,
 ): string | undefined {
   // The published drop roster omits source type. The released GMS v83 native
   // assertions and CW historical overlays attributed to GMS v83 are sourced
   // from the Monster Book, as established by the source projection contract.
-  if (
-    entry.assertionKind === 'native' &&
-    targetBuildLabel === BUILDS['gms-v83'].label
-  ) {
-    return `${targetBuildLabel} Monster Book`;
+  if (entry.assertionKind === 'native' && buildId === 'gms-v83') {
+    return `${BUILDS[buildId].label} Monster Book`;
   }
   if (entry.sourceBuild !== undefined) {
     const label = buildLabel(entry.sourceBuild);
@@ -171,17 +159,17 @@ function dropSourceLabel(
 
 function DropCertaintyDisclosure({
   entry,
-  targetBuildLabel,
+  buildId,
   onClose,
 }: {
   readonly entry: MonsterDropEntry;
-  readonly targetBuildLabel: string;
+  readonly buildId: BuildId;
   readonly onClose?: () => void;
 }): ReactElement {
   const confirmed = entry.assertionKind === 'native';
   const stateLabel = confirmed ? 'Confirmed' : 'Maybe';
   const actionLabel = `Show ${confirmed ? 'confirmed' : 'unconfirmed'} drop details for ${entry.itemName}`;
-  const sourceLabel = dropSourceLabel(entry, targetBuildLabel);
+  const sourceLabel = dropSourceLabel(entry, buildId);
 
   function handleEscape(event: KeyboardEvent<HTMLElement>): void {
     if (
@@ -256,20 +244,14 @@ function matchesDropSearch(entry: MonsterDropEntry, query: string): boolean {
 
 function MonsterDropEntries({
   record,
-  dropBrowseAvailable,
-  targetBuildLabel,
+  buildId,
   onClose,
 }: {
   readonly record: MonsterBrowseRow;
-  readonly dropBrowseAvailable: boolean;
-  readonly targetBuildLabel: string;
+  readonly buildId: BuildId;
   readonly onClose?: () => void;
 }): ReactElement {
   const [search, setSearch] = useState('');
-
-  if (!dropBrowseAvailable) {
-    return <Text size="sm">Drop listing unavailable for this release.</Text>;
-  }
 
   if (record.drops.entries.length === 0) {
     return <Text size="sm">No drops have been recorded for this monster</Text>;
@@ -354,7 +336,7 @@ function MonsterDropEntries({
                         </Text>
                         <DropCertaintyDisclosure
                           entry={entry}
-                          targetBuildLabel={targetBuildLabel}
+                          buildId={buildId}
                           {...(onClose === undefined ? {} : { onClose })}
                         />
                       </Group>
@@ -377,18 +359,14 @@ function MonsterDropEntries({
 
 export function MonsterDropListing({
   record,
-  dropBrowseAvailable,
-  targetBuildLabel,
+  buildId,
   onClose,
 }: {
   readonly record: MonsterBrowseRow;
-  readonly dropBrowseAvailable: boolean;
-  readonly targetBuildLabel: string;
+  readonly buildId: BuildId;
   readonly onClose: () => void;
 }): ReactElement {
-  const countText = dropBrowseAvailable
-    ? `Drops (${record.drops.entries.length.toLocaleString('en-US')})`
-    : 'Drops unavailable';
+  const countText = `Drops (${record.drops.entries.length.toLocaleString('en-US')})`;
 
   return (
     <section
@@ -414,28 +392,21 @@ export function MonsterDropListing({
           className={classes['panelClose']}
         />
       </Group>
-      <MonsterDropEntries
-        record={record}
-        dropBrowseAvailable={dropBrowseAvailable}
-        targetBuildLabel={targetBuildLabel}
-        onClose={onClose}
-      />
+      <MonsterDropEntries record={record} buildId={buildId} onClose={onClose} />
     </section>
   );
 }
 
 export function MonsterDropDrawerControl({
   record,
-  dropBrowseAvailable,
-  targetBuildLabel,
+  buildId,
 }: {
   readonly record: MonsterBrowseRow;
-  readonly dropBrowseAvailable: boolean;
-  readonly targetBuildLabel: string;
+  readonly buildId: BuildId;
 }): ReactElement {
   const [opened, setOpened] = useState(false);
   const drawerId = useId();
-  const actionLabel = dropDrawerActionLabel(record, dropBrowseAvailable);
+  const actionLabel = dropDrawerActionLabel(record);
   const levelLabel =
     record.level === undefined ? 'Level unknown' : `Level ${record.level}`;
 
@@ -458,9 +429,7 @@ export function MonsterDropDrawerControl({
         title={actionLabel}
         onClick={() => setOpened(true)}
       >
-        {dropBrowseAvailable
-          ? record.drops.entries.length.toLocaleString('en-US')
-          : 'Unavailable'}
+        {record.drops.entries.length.toLocaleString('en-US')}
       </Button>
       <Drawer
         id={drawerId}
@@ -492,14 +461,11 @@ export function MonsterDropDrawerControl({
       >
         <Stack gap="sm">
           <Title order={3} size="sm">
-            {dropBrowseAvailable
-              ? `Drops (${record.drops.entries.length.toLocaleString('en-US')})`
-              : 'Drops unavailable'}
+            {`Drops (${record.drops.entries.length.toLocaleString('en-US')})`}
           </Title>
           <MonsterDropEntries
             record={record}
-            dropBrowseAvailable={dropBrowseAvailable}
-            targetBuildLabel={targetBuildLabel}
+            buildId={buildId}
             onClose={() => setOpened(false)}
           />
         </Stack>

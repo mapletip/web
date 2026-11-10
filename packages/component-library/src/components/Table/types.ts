@@ -39,7 +39,9 @@ export type SortIntent = {
   readonly direction: 'asc' | 'desc';
 };
 
-export interface RowExpansionControlContext<TRow extends Record<string, unknown>> {
+export interface RowExpansionControlContext<
+  TRow extends Record<string, unknown>,
+> {
   readonly record: TRow;
   readonly expanded: boolean;
   readonly controlsId: string;

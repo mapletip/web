@@ -14,9 +14,13 @@ vi.mock('@mapletip/data/release', () => ({ openRelease }));
 
 function catalogFixture() {
   return {
-    contractVersion: '2.1',
+    contractVersion: '2.2',
     format: 'mapletip.monster-catalog-2',
     recordCount: 1,
+    browseCoverage: {
+      historicalDrops: 'supported',
+      locationScope: 'client-placements',
+    },
     records: [
       {
         key: 'fixture:monster:001',
@@ -26,6 +30,8 @@ function catalogFixture() {
         traits: Array.from({ length: 9 }, () => ({ state: 'unknown' })),
         elements: { state: 'unknown' },
         relationships: { state: 'unknown' },
+        drops: { native: { state: 'unknown' } },
+        locations: { state: 'absent' },
       },
     ],
     scope: { build_id: 'cw-launch', family_id: 'classic-world' },
@@ -53,17 +59,18 @@ function dropBrowseFixture(): MonsterDropBrowseV1 {
   };
 }
 
-function setProduct(manifest: Record<string, unknown>) {
+function setProduct() {
   openRelease.mockResolvedValue({ openBuild });
-  openBuild.mockResolvedValue({ manifest, loadCatalog, loadDropBrowse });
+  openBuild.mockResolvedValue({ loadCatalog, loadDropBrowse });
   loadCatalog.mockResolvedValue(catalogFixture());
 }
 
 describe('loadMonsterBrowse', () => {
   beforeEach(() => vi.clearAllMocks());
 
-  it('keeps old pinned catalogs usable and marks their drop data unavailable', async () => {
-    setProduct({ requiredClientCapabilities: [], dropBrowse: null });
+  it('loads catalog and drops from one opened build product', async () => {
+    setProduct();
+    loadDropBrowse.mockResolvedValue(dropBrowseFixture());
     const controller = new AbortController();
 
     const browse = await loadMonsterBrowse('cw-launch', controller.signal);
@@ -75,28 +82,8 @@ describe('loadMonsterBrowse', () => {
     });
     expect(openBuild).toHaveBeenCalledWith('cw-launch');
     expect(loadCatalog).toHaveBeenCalledWith({ signal: controller.signal });
-    expect(loadDropBrowse).not.toHaveBeenCalled();
-    expect(browse.rows).toHaveLength(1);
-    expect(browse.rows[0]?.drops.native).toEqual({ state: 'unavailable' });
-    expect(browse.dropBrowseAvailable).toBe(false);
-    expect(browse.dropItemOptions).toEqual([]);
-  });
-
-  it('loads the manifest-advertised drop browse through the same product client', async () => {
-    setProduct({
-      requiredClientCapabilities: ['monster-drop-browse-v1'],
-      dropBrowse: { path: 'drop-browse.json' },
-    });
-    loadDropBrowse.mockResolvedValue(dropBrowseFixture());
-    const controller = new AbortController();
-
-    const browse = await loadMonsterBrowse('cw-launch', controller.signal);
-
-    expect(openRelease).toHaveBeenCalledTimes(1);
-    expect(openBuild).toHaveBeenCalledTimes(1);
-    expect(loadCatalog).toHaveBeenCalledWith({ signal: controller.signal });
     expect(loadDropBrowse).toHaveBeenCalledWith({ signal: controller.signal });
-    expect(browse.dropBrowseAvailable).toBe(true);
+    expect(browse.rows).toHaveLength(1);
     expect(browse.dropItemOptions).toEqual([
       { value: 'fixture:item:red-potion', label: 'Red Potion' },
     ]);
@@ -104,11 +91,8 @@ describe('loadMonsterBrowse', () => {
     expect(browse.rows[0]?.drops.itemKeys).toEqual(['fixture:item:red-potion']);
   });
 
-  it('lets SDK errors propagate when a manifest only partly advertises drops', async () => {
-    setProduct({
-      requiredClientCapabilities: [],
-      dropBrowse: { path: 'drops.json' },
-    });
+  it('propagates SDK drop artifact errors', async () => {
+    setProduct();
     const failure = Object.assign(new Error('unsupported capability'), {
       code: 'UNSUPPORTED_CAPABILITY',
     });
@@ -118,7 +102,7 @@ describe('loadMonsterBrowse', () => {
   });
 
   it('propagates catalog verification failures', async () => {
-    setProduct({ requiredClientCapabilities: [], dropBrowse: null });
+    setProduct();
     const failure = Object.assign(new Error('integrity'), {
       code: 'INTEGRITY_ERROR',
     });

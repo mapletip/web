@@ -205,7 +205,7 @@ describe('Table DataTable mechanics', () => {
     const resizedHandle = header.querySelector<HTMLElement>(
       '.mantine-datatable-header-resizable-handle',
     )!;
-    resizedHandle.dispatchEvent(new MouseEvent('dblclick', { bubbles: true }));
+    await userEvent.dblClick(resizedHandle);
     await vi.waitFor(
       () => {
         expect(

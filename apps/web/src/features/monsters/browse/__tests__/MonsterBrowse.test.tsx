@@ -22,6 +22,7 @@ import {
   fixtureCatalog,
   fixtureRecord,
   knownFact,
+  emptyDropBrowseFixture,
 } from './monsterCatalogFixture';
 
 /**
@@ -90,15 +91,14 @@ const rows = projectMonsterBrowseRows(
       record({ key: '004', name: 'Blue Snail', level: 40, hp: 100, exp: 20 }),
     ],
   }),
+  emptyDropBrowseFixture(),
 );
 
 function mountBrowse({
   browseRows = rows,
-  dropBrowseAvailable = false,
   dropItemOptions = [],
 }: {
   readonly browseRows?: readonly MonsterBrowseRow[];
-  readonly dropBrowseAvailable?: boolean;
   readonly dropItemOptions?: readonly MonsterDropItemOption[];
 } = {}) {
   return render(
@@ -106,7 +106,6 @@ function mountBrowse({
       <MonsterBrowse
         buildId={DEFAULT_BUILD_ID}
         rows={browseRows}
-        dropBrowseAvailable={dropBrowseAvailable}
         dropItemOptions={dropItemOptions}
       />
     </MantineProvider>,
@@ -196,8 +195,10 @@ describe('MonsterBrowse', () => {
       ).queryByRole('columnheader', { name: 'Drops' }),
     ).not.toBeInTheDocument();
     expect(
-      within(cards()).getAllByText('Unavailable for this release'),
-    ).not.toHaveLength(0);
+      within(cards()).getAllByLabelText(
+        'Native drops: Unknown. Historical drops: Unknown.',
+      ),
+    ).toHaveLength(4);
   });
 
   it('shows historical drop evidence in the mobile relationship drawer', async () => {
@@ -207,7 +208,7 @@ describe('MonsterBrowse', () => {
     const historicalRow: MonsterBrowseRow = {
       ...first,
       drops: {
-        native: { state: 'absent', coverageKey: 'fixture.no-native-source' },
+        native: { state: 'absent' },
         historical: {
           state: 'known',
           count: 1,
@@ -220,12 +221,11 @@ describe('MonsterBrowse', () => {
             itemName: 'Unknown item name',
             assertionKind: 'historical-overlay',
             sourceBuild: 'gms-v83',
-            confidence: 'maybe',
           },
         ],
       },
     };
-    mountBrowse({ browseRows: [historicalRow], dropBrowseAvailable: true });
+    mountBrowse({ browseRows: [historicalRow] });
 
     const card = within(cards()).getByRole('article');
     expect(card).toHaveTextContent('Native: No native source');
@@ -270,7 +270,6 @@ describe('MonsterBrowse', () => {
     });
     mountBrowse({
       browseRows,
-      dropBrowseAvailable: true,
       dropItemOptions: [
         { value: 'fixture:item:red', label: 'Red Potion' },
         { value: 'fixture:item:blue', label: 'Blue Potion' },

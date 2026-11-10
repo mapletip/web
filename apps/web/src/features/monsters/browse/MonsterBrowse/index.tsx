@@ -14,9 +14,9 @@ import { BrowsePageShell } from '@/components/BrowsePageShell';
 import { BUILDS, type BuildId } from '@/config/maplekit';
 
 import classes from '../MonsterBrowse.module.css';
-import dropClasses from '../MonsterDrops.module.css';
 import { MonsterBrowseCard } from '../MonsterBrowseCard';
 import { dropListingActionLabel, MonsterDropListing } from '../MonsterDrops';
+import dropClasses from '../MonsterDrops.module.css';
 import { MONSTER_SPRITE_SIZE, MonsterSprite } from '../MonsterSprite';
 import {
   formatMonsterFact,
@@ -28,7 +28,6 @@ import {
 export interface MonsterBrowseProps {
   readonly buildId: BuildId;
   readonly rows: readonly MonsterBrowseRow[];
-  readonly dropBrowseAvailable: boolean;
   readonly dropItemOptions: readonly MonsterDropItemOption[];
 }
 
@@ -122,16 +121,13 @@ export const monsterBrowseColumns: readonly TableColumn<MonsterBrowseRow>[] = [
 const SUMMARY_NOUN = { one: 'Monster', other: 'Monsters' } as const;
 const MONSTER_NAME_INDENT = `calc(${MONSTER_SPRITE_SIZE}px + var(--mantine-spacing-xs))`;
 
-function dropExpansionControl(
-  {
-    record,
-    expanded,
-    controlsId,
-    onToggle,
-  }: RowExpansionControlContext<MonsterBrowseRow>,
-  dropBrowseAvailable: boolean,
-): ReactElement {
-  const label = dropListingActionLabel(record, expanded, dropBrowseAvailable);
+function dropExpansionControl({
+  record,
+  expanded,
+  controlsId,
+  onToggle,
+}: RowExpansionControlContext<MonsterBrowseRow>): ReactElement {
+  const label = dropListingActionLabel(record, expanded);
   return (
     <Button
       type="button"
@@ -159,9 +155,7 @@ function dropExpansionControl(
         onToggle();
       }}
     >
-      {dropBrowseAvailable
-        ? record.drops.entries.length.toLocaleString('en-US')
-        : 'Unavailable'}
+      {record.drops.entries.length.toLocaleString('en-US')}
     </Button>
   );
 }
@@ -251,23 +245,17 @@ const defaultState: BrowseState = {
 export function MonsterBrowse({
   buildId,
   rows,
-  dropBrowseAvailable,
   dropItemOptions,
 }: MonsterBrowseProps): ReactElement {
   const label = BUILDS[buildId].label;
-  const queryFields: readonly QueryFieldDefinition<MonsterBrowseRow>[] =
-    dropBrowseAvailable
-      ? [
-          {
-            id: 'dropItemKeys',
-            accessor: (record) => record.drops.itemKeys,
-            sortable: false,
-          },
-        ]
-      : [];
-  const browseFacets = dropBrowseAvailable
-    ? [...facets, dropItemFacet(dropItemOptions)]
-    : facets;
+  const queryFields: readonly QueryFieldDefinition<MonsterBrowseRow>[] = [
+    {
+      id: 'dropItemKeys',
+      accessor: (record) => record.drops.itemKeys,
+      sortable: false,
+    },
+  ];
+  const browseFacets = [...facets, dropItemFacet(dropItemOptions)];
 
   return (
     <BrowsePageShell>
@@ -290,23 +278,16 @@ export function MonsterBrowse({
         fillHeight
         tableStorageKey={`mapletip:web:monsters:${buildId}:v1`}
         renderCard={(record) => (
-          <MonsterBrowseCard
-            record={record}
-            dropBrowseAvailable={dropBrowseAvailable}
-            targetBuildLabel={label}
-          />
+          <MonsterBrowseCard record={record} buildId={buildId} />
         )}
         rowExpansionContent={(record, { onClose }) => (
           <MonsterDropListing
             record={record}
-            dropBrowseAvailable={dropBrowseAvailable}
-            targetBuildLabel={label}
+            buildId={buildId}
             onClose={onClose}
           />
         )}
-        rowExpansionControl={(context) =>
-          dropExpansionControl(context, dropBrowseAvailable)
-        }
+        rowExpansionControl={(context) => dropExpansionControl(context)}
         defaultState={defaultState}
       />
     </BrowsePageShell>

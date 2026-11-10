@@ -1,6 +1,8 @@
 import { Group, Stack } from '@mantine/core';
 import type { ReactElement } from 'react';
 
+import type { BuildId } from '@/config/maplekit';
+
 import { MonsterDropDrawerControl, MonsterDropSummary } from '../MonsterDrops';
 import { MonsterSprite } from '../MonsterSprite';
 import {
@@ -26,12 +28,10 @@ const summaryFacts: readonly {
 
 export function MonsterBrowseCard({
   record,
-  dropBrowseAvailable,
-  targetBuildLabel = 'this build',
+  buildId,
 }: {
   readonly record: MonsterBrowseRow;
-  readonly dropBrowseAvailable: boolean;
-  readonly targetBuildLabel?: string;
+  readonly buildId: BuildId;
 }): ReactElement {
   return (
     <article className={classes['card']}>
@@ -39,11 +39,7 @@ export function MonsterBrowseCard({
         <MonsterSprite sprite={record.sprite} />
         <Stack gap={4} align="flex-start" className={classes['identity']}>
           <h2 className={classes['name']}>{record.name}</h2>
-          <MonsterDropDrawerControl
-            record={record}
-            dropBrowseAvailable={dropBrowseAvailable}
-            targetBuildLabel={targetBuildLabel}
-          />
+          <MonsterDropDrawerControl record={record} buildId={buildId} />
         </Stack>
       </Group>
       <dl className={classes['facts']} aria-label={`${record.name} facts`}>

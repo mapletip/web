@@ -1,7 +1,10 @@
-/** Deterministic contract-2.1 catalog fixtures for tests. */
-import type { MonsterCatalogV2_1 } from '@mapletip/data/monsters';
+/** Deterministic drop-summary catalog fixtures for tests. */
+import type {
+  MonsterCatalogV2_2,
+  MonsterDropBrowseV1,
+} from '@mapletip/data/monsters';
 
-type MonsterRecord = MonsterCatalogV2_1['records'][number];
+type MonsterRecord = MonsterCatalogV2_2['records'][number];
 
 export function knownFact<T>(value: T): { state: 'known'; value: T } {
   return { state: 'known', value };
@@ -30,6 +33,8 @@ export function fixtureRecord(input: FixtureRecordInput): MonsterRecord {
     traits: input.traits,
     elements: { state: 'unknown' },
     relationships: { state: 'unknown' },
+    drops: { native: { state: 'unknown' } },
+    locations: { state: 'absent' },
     sprite: input.sprite ?? UNKNOWN_FACT,
   };
 }
@@ -46,15 +51,29 @@ export function fixtureCatalog({
   buildId,
   familyId,
   recordCount,
-}: FixtureCatalogInput): MonsterCatalogV2_1 {
+}: FixtureCatalogInput): MonsterCatalogV2_2 {
   return {
-    contractVersion: '2.1',
+    contractVersion: '2.2',
     format: 'mapletip.monster-catalog-2',
     recordCount: recordCount ?? records.length,
+    browseCoverage: {
+      historicalDrops: 'supported',
+      locationScope: 'client-placements',
+    },
     records: [...records],
     scope: {
       build_id: buildId ?? 'cw-launch',
       family_id: familyId ?? 'classic-world',
     },
+  };
+}
+
+export function emptyDropBrowseFixture(): MonsterDropBrowseV1 {
+  return {
+    format: 'mapletip.monster-drop-browse',
+    contractVersion: '1.0',
+    scope: { build_id: 'cw-launch', family_id: 'classic-world' },
+    items: [],
+    records: {},
   };
 }

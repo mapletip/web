@@ -3,6 +3,8 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 
+import { DEFAULT_BUILD_ID, type BuildId } from '@/config/maplekit';
+
 import { MonsterBrowseCard } from '../MonsterBrowseCard';
 import { MonsterDropListing } from '../MonsterDrops';
 import type { MonsterBrowseRow } from '../project';
@@ -27,8 +29,8 @@ function knownRow(): MonsterBrowseRow {
     bodyAttack: true,
     factStates: {},
     drops: {
-      native: { state: 'unavailable' },
-      historical: { state: 'unavailable' },
+      native: { state: 'unknown' },
+      historical: { state: 'unknown' },
       entries: [],
       itemKeys: [],
     },
@@ -51,7 +53,7 @@ function unknownRow(): MonsterBrowseRow {
     },
     drops: {
       native: { state: 'unknown' },
-      historical: { state: 'unavailable' },
+      historical: { state: 'unknown' },
       entries: [],
       itemKeys: [],
     },
@@ -77,13 +79,13 @@ function factTitles(): readonly string[] {
     .map((element) => element.getAttribute('title') ?? '');
 }
 
-function renderCard(record: MonsterBrowseRow, dropBrowseAvailable = false) {
+function renderCard(
+  record: MonsterBrowseRow,
+  buildId: BuildId = DEFAULT_BUILD_ID,
+) {
   return render(
     <MantineProvider>
-      <MonsterBrowseCard
-        record={record}
-        dropBrowseAvailable={dropBrowseAvailable}
-      />
+      <MonsterBrowseCard record={record} buildId={buildId} />
     </MantineProvider>,
   );
 }
@@ -123,7 +125,7 @@ describe('MonsterBrowseCard', () => {
       'No',
       'Yes',
       'Yes',
-      'Native: Unavailable for this releaseHistorical: Unavailable for this release',
+      'Native: UnknownHistorical: Unknown',
     ]);
     expect(factTitles()).toEqual([
       'Level: 5',
@@ -154,7 +156,7 @@ describe('MonsterBrowseCard', () => {
       'Unknown',
       'Not recorded',
       'Unavailable',
-      'Native: UnknownHistorical: Unavailable for this release',
+      'Native: UnknownHistorical: Unknown',
     ]);
   });
 
@@ -180,12 +182,11 @@ describe('MonsterBrowseCard', () => {
             itemName: 'Unknown item name',
             assertionKind: 'historical-overlay',
             sourceBuild: 'gms-v83',
-            confidence: 'maybe',
           },
         ],
       },
     };
-    renderCard(row, true);
+    renderCard(row);
 
     expect(screen.getByText(/At least 1 \(partial coverage\)/u)).toBeVisible();
     expect(
@@ -249,32 +250,9 @@ describe('MonsterBrowseCard', () => {
     await waitFor(() => expect(expandButton).toHaveFocus());
   });
 
-  it('labels an unavailable empty listing as unavailable', async () => {
+  it('shows zero for an empty roster when count facts are unknown', async () => {
     const user = userEvent.setup();
     renderCard(unknownRow());
-
-    await user.click(
-      screen.getByRole('button', {
-        name: 'Sentinel Unknown, Drops unavailable. Show drops.',
-      }),
-    );
-
-    await waitFor(() =>
-      expect(
-        screen.getByRole('heading', { name: 'Drops unavailable' }),
-      ).toBeVisible(),
-    );
-    expect(
-      screen.getByText('Drop listing unavailable for this release.'),
-    ).toBeVisible();
-    expect(
-      screen.queryByRole('heading', { name: 'Drops (0)' }),
-    ).not.toBeInTheDocument();
-  });
-
-  it('shows zero for an available empty roster when count facts are unknown', async () => {
-    const user = userEvent.setup();
-    renderCard(unknownRow(), true);
 
     const trigger = screen.getByRole('button', {
       name: 'Sentinel Unknown, 0. Show drops.',
@@ -295,7 +273,7 @@ describe('MonsterBrowseCard', () => {
     const row: MonsterBrowseRow = {
       ...knownRow(),
       drops: {
-        native: { state: 'absent', coverageKey: 'fixture.no-native-source' },
+        native: { state: 'absent' },
         historical: { state: 'known', count: 1, sourceBuilds: ['gms-v83'] },
         itemKeys: [],
         entries: [
@@ -304,7 +282,6 @@ describe('MonsterBrowseCard', () => {
             itemName: 'Green Headband',
             assertionKind: 'historical-overlay',
             sourceBuild: 'gms-v83',
-            confidence: 'maybe',
           },
         ],
       },
@@ -314,8 +291,7 @@ describe('MonsterBrowseCard', () => {
       <MantineProvider>
         <MonsterDropListing
           record={row}
-          dropBrowseAvailable
-          targetBuildLabel="Classic World"
+          buildId={DEFAULT_BUILD_ID}
           onClose={onClose}
         />
       </MantineProvider>,
@@ -370,12 +346,7 @@ describe('MonsterBrowseCard', () => {
     };
     render(
       <MantineProvider>
-        <MonsterDropListing
-          record={row}
-          dropBrowseAvailable
-          targetBuildLabel="GMS v83"
-          onClose={vi.fn()}
-        />
+        <MonsterDropListing record={row} buildId="gms-v83" onClose={vi.fn()} />
       </MantineProvider>,
     );
 
@@ -415,8 +386,7 @@ describe('MonsterBrowseCard', () => {
       <MantineProvider>
         <MonsterDropListing
           record={row}
-          dropBrowseAvailable
-          targetBuildLabel="Classic World"
+          buildId={DEFAULT_BUILD_ID}
           onClose={vi.fn()}
         />
       </MantineProvider>,
@@ -436,7 +406,7 @@ describe('MonsterBrowseCard', () => {
     const row: MonsterBrowseRow = {
       ...knownRow(),
       drops: {
-        native: { state: 'absent', coverageKey: 'fixture.no-native-source' },
+        native: { state: 'absent' },
         historical: { state: 'known', count: 1, sourceBuilds: ['gms-v83'] },
         itemKeys: [],
         entries: [
@@ -445,12 +415,11 @@ describe('MonsterBrowseCard', () => {
             itemName: 'Green Headband',
             assertionKind: 'historical-overlay',
             sourceBuild: 'gms-v83',
-            confidence: 'maybe',
           },
         ],
       },
     };
-    renderCard(row, true);
+    renderCard(row);
 
     await user.click(
       screen.getByRole('button', {

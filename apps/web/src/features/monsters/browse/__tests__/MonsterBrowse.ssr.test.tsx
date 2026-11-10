@@ -10,6 +10,7 @@ import { projectMonsterBrowseRows } from '../project';
 
 import {
   ABSENT_FACT,
+  emptyDropBrowseFixture,
   fixtureCatalog,
   fixtureRecord,
   knownFact,
@@ -103,6 +104,7 @@ const fixtureRecords = [
 function renderBrowseHtml(): string {
   const rows = projectMonsterBrowseRows(
     fixtureCatalog({ records: fixtureRecords }),
+    emptyDropBrowseFixture(),
   );
 
   // The page takes its rows as props and uses no router hooks, so plain server
@@ -112,7 +114,6 @@ function renderBrowseHtml(): string {
       <MonsterBrowse
         buildId={DEFAULT_BUILD_ID}
         rows={rows}
-        dropBrowseAvailable={false}
         dropItemOptions={[]}
       />
     </MantineProvider>,
@@ -160,7 +161,6 @@ describe('MonsterBrowse server rendering', () => {
     expect(html).toContain('EXP / 100 HP: -');
     expect(html).toContain('Unknown');
     expect(html).toContain('Not recorded');
-    expect(html).toContain('Unavailable for this release');
     expect(html).not.toContain('0 native');
   });
 });
