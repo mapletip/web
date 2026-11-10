@@ -276,6 +276,9 @@ export function MonsterBrowse({
         pageSizeOptions={[25, 50, 100]}
         presentation="comparison"
         tableVerticalSpacing={4}
+        // No `tableMaxHeight`: the table fills the height this page hands it, so its own
+        // scroll region is the page's vertical scroll region on desktop.
+        fillHeight
         tableStorageKey={`mapletip:web:monsters:${buildId}:v1`}
         renderCard={(record) => (
           <MonsterBrowseCard record={record} buildId={buildId} />
