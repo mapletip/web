@@ -39,7 +39,7 @@ export function MonsterDropDrawerControl({
         aria-expanded={opened}
         aria-controls={drawerId}
         aria-label={actionLabel}
-        title={actionLabel}
+        title={`${record.drops.entries.length.toLocaleString('en-US')} Drops`}
         onClick={() => setOpened(true)}
       >
         {record.drops.entries.length.toLocaleString('en-US')}
@@ -62,7 +62,7 @@ export function MonsterDropDrawerControl({
             <Stack gap={0}>
               <Text fw={600}>{record.name}</Text>
               <Text size="xs" c="dimmed">
-                {levelLabel} · Monster relationships
+                {levelLabel}
               </Text>
             </Stack>
           </Group>

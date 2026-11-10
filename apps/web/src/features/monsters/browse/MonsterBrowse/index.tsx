@@ -142,7 +142,7 @@ function dropExpansionControl({
       aria-expanded={expanded}
       aria-controls={controlsId}
       aria-label={label}
-      title={label}
+      title={`${record.drops.entries.length.toLocaleString('en-US')} Drops`}
       style={{ marginInlineStart: MONSTER_NAME_INDENT }}
       onKeyDown={(event) => {
         if (!expanded || event.key !== 'Escape') return;

@@ -1,4 +1,4 @@
-import { Group, Stack } from '@mantine/core';
+import { Group } from '@mantine/core';
 import type { ReactElement } from 'react';
 
 import type { BuildId } from '@/config/maplekit';
@@ -37,10 +37,8 @@ export function MonsterBrowseCard({
     <article className={classes['card']}>
       <Group gap="xs" wrap="nowrap" align="flex-start">
         <MonsterSprite sprite={record.sprite} />
-        <Stack gap={4} align="flex-start" className={classes['identity']}>
-          <h2 className={classes['name']}>{record.name}</h2>
-          <MonsterDropDrawerControl record={record} buildId={buildId} />
-        </Stack>
+        <h2 className={classes['name']}>{record.name}</h2>
+        <MonsterDropDrawerControl record={record} buildId={buildId} />
       </Group>
       <dl className={classes['facts']} aria-label={`${record.name} facts`}>
         {summaryFacts.map(({ id, label }) => {
