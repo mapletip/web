@@ -8,7 +8,11 @@ import type {
   PageLinkRenderProps,
   PageLinkRenderer,
 } from '@/components/FacetedBrowser/Pagination/Pagination';
-import type { TableColumn } from '@/components/Table';
+import type {
+  RowExpansionContentContext,
+  RowExpansionControl,
+  TableColumn,
+} from '@/components/Table';
 
 export type { PageLinkRenderOptions, PageLinkRenderProps, PageLinkRenderer };
 
@@ -170,7 +174,11 @@ type PresentationProps<TRecord extends Record<string, unknown>> =
       readonly tableLabel?: string;
       /** Optional maximum height for DataTable's internal table scroll area. */
       readonly tableMaxHeight?: number | string;
-      readonly rowExpansionContent?: (record: TRecord) => ReactNode;
+      readonly rowExpansionContent?: (
+        record: TRecord,
+        context: RowExpansionContentContext,
+      ) => ReactNode;
+      readonly rowExpansionControl?: RowExpansionControl<TRecord>;
     }
   | {
       readonly presentation: 'cards';

@@ -1,6 +1,9 @@
 import { Group } from '@mantine/core';
 import type { ReactElement } from 'react';
 
+import type { BuildId } from '@/config/maplekit';
+
+import { MonsterDropDrawerControl } from '../MonsterDrops';
 import { MonsterSprite } from '../MonsterSprite';
 import {
   formatMonsterFact,
@@ -25,14 +28,17 @@ const summaryFacts: readonly {
 
 export function MonsterBrowseCard({
   record,
+  buildId,
 }: {
   readonly record: MonsterBrowseRow;
+  readonly buildId: BuildId;
 }): ReactElement {
   return (
     <article className={classes['card']}>
-      <Group gap="xs" wrap="nowrap">
+      <Group gap="xs" wrap="nowrap" align="flex-start">
         <MonsterSprite sprite={record.sprite} />
         <h2 className={classes['name']}>{record.name}</h2>
+        <MonsterDropDrawerControl record={record} buildId={buildId} />
       </Group>
       <dl className={classes['facts']} aria-label={`${record.name} facts`}>
         {summaryFacts.map(({ id, label }) => {

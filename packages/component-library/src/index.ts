@@ -1,6 +1,9 @@
 export { ComparisonTable, Table } from '@/components/Table';
 export type {
   ComparisonTableProps,
+  RowExpansionControl,
+  RowExpansionControlContext,
+  RowExpansionContentContext,
   SortIntent,
   TableColumn,
   TableName,

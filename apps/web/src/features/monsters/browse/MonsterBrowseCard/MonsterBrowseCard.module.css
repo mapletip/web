@@ -9,6 +9,7 @@
 }
 
 .name {
+  flex: 1;
   min-width: 0;
   margin: 0;
   font-size: var(--mantine-font-size-md);

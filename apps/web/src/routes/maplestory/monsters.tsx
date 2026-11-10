@@ -24,7 +24,7 @@ export const Route = createFileRoute('/maplestory/monsters')({
 });
 
 function MonsterBrowsePage() {
-  const rows = Route.useLoaderData();
+  const browse = Route.useLoaderData();
 
-  return <MonsterBrowse buildId={DEFAULT_BUILD_ID} rows={rows} />;
+  return <MonsterBrowse buildId={DEFAULT_BUILD_ID} {...browse} />;
 }

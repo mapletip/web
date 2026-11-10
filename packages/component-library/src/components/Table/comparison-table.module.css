@@ -41,9 +41,24 @@
   font-weight: var(--mapletip-table-title-weight, inherit);
 }
 
+/*
+ * DataTable layers pinned columns at their configured base and its sticky
+ * header at base + 2. Keep full-height column emphasis at base + 1, row details
+ * at base + 2, and the header one layer higher so the highlight cannot tint
+ * expanded content while scrolling cannot cover the header.
+ */
+.comparison :global(.mantine-datatable-row-expansion-cell) {
+  position: relative;
+  z-index: calc(var(--mantine-datatable-pinned-column-z-index, 2) + 2);
+}
+
+.comparison :global(.mantine-datatable-header) {
+  z-index: calc(var(--mantine-datatable-pinned-column-z-index, 2) + 3);
+}
+
 @media (hover: hover) and (pointer: fine) {
   .columnHoverCell[data-pinned]:hover {
-    z-index: 3;
+    z-index: calc(var(--mantine-datatable-pinned-column-z-index, 2) + 1);
   }
 
   .columnHoverCell:hover::before {

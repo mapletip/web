@@ -27,7 +27,7 @@ export const Route = createFileRoute('/maplestory/$buildId/monsters')({
 
 function VersionedMonsters() {
   const { buildId } = Route.useParams();
-  const rows = Route.useLoaderData();
+  const browse = Route.useLoaderData();
 
-  return <MonsterBrowse buildId={supportedBuild(buildId)} rows={rows} />;
+  return <MonsterBrowse buildId={supportedBuild(buildId)} {...browse} />;
 }

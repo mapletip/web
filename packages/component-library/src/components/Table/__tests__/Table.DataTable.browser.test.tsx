@@ -6,7 +6,7 @@ import { page, userEvent } from 'vitest/browser';
 import { render } from 'vitest-browser-react';
 
 import '@/styles.css';
-import { Table } from '@/components/Table';
+import { ComparisonTable, Table } from '@/components/Table';
 import type { TableColumn } from '@/components/Table';
 
 interface DetailRecord extends Record<string, unknown> {
@@ -65,6 +65,46 @@ function ControlledExpandableTable(): ReactElement {
       )}
       expandedRowIds={expandedRowIds}
       onExpandedRowIdsChange={setExpandedRowIds}
+    />
+  );
+}
+
+function CustomTriggerExpandableTable({
+  closeTwice = false,
+}: {
+  readonly closeTwice?: boolean;
+}): ReactElement {
+  return (
+    <Table<DetailRecord>
+      ariaLabel="Custom trigger records"
+      records={records}
+      columns={columns}
+      idAccessor="id"
+      rowExpansionContent={(record, { onClose }) => (
+        <div data-testid={`custom-details-${record.id}`}>
+          <span>Details for {record.name}</span>
+          <button
+            type="button"
+            onClick={() => {
+              onClose();
+              if (closeTwice) onClose();
+            }}
+          >
+            Close details for {record.name}
+          </button>
+        </div>
+      )}
+      rowExpansionControl={({ record, expanded, controlsId, onToggle }) => (
+        <button
+          type="button"
+          aria-expanded={expanded}
+          aria-controls={controlsId}
+          aria-label={`${expanded ? 'Hide' : 'Show'} details for ${record.name}`}
+          onClick={onToggle}
+        >
+          {expanded ? 'Hide' : 'Show'}
+        </button>
+      )}
     />
   );
 }
@@ -169,7 +209,7 @@ describe('Table DataTable mechanics', () => {
     const resizedHandle = header.querySelector<HTMLElement>(
       '.mantine-datatable-header-resizable-handle',
     )!;
-    resizedHandle.dispatchEvent(new MouseEvent('dblclick', { bubbles: true }));
+    await userEvent.dblClick(resizedHandle);
     await vi.waitFor(
       () => {
         expect(
@@ -346,6 +386,14 @@ describe('Table DataTable mechanics', () => {
         document.querySelector('[data-testid="details-one"]'),
       ).not.toBeNull(),
     );
+    const defaultTrigger = page
+      .getByRole('button', { name: 'Collapse details for One' })
+      .element();
+    const identityLink = page.getByRole('link', { name: 'One' }).element();
+    const triggerRect = defaultTrigger.getBoundingClientRect();
+    const identityRect = identityLink.getBoundingClientRect();
+    expect(triggerRect.right).toBeLessThanOrEqual(identityRect.left);
+    expect(triggerRect.bottom).toBeGreaterThan(identityRect.top);
     expect(
       document.querySelector('.mantine-datatable-row-expansion-cell'),
     ).not.toBeNull();
@@ -367,6 +415,164 @@ describe('Table DataTable mechanics', () => {
     await vi.waitFor(() =>
       expect(document.querySelector('[data-testid="details-one"]')).toBeNull(),
     );
+  });
+
+  it('uses a host-rendered button while Table keeps expansion state', async () => {
+    await render(
+      <MantineProvider
+        theme={theme}
+        cssVariablesResolver={cssVariablesResolver}
+        forceColorScheme="dark"
+      >
+        <CustomTriggerExpandableTable />
+      </MantineProvider>,
+    );
+
+    const expandButton = page.getByRole('button', {
+      name: 'Show details for One',
+    });
+    const controlsId = expandButton.element().getAttribute('aria-controls');
+    expect(controlsId).not.toBeNull();
+    await expandButton.click();
+
+    await vi.waitFor(() =>
+      expect(
+        document.querySelector('[data-testid="custom-details-one"]'),
+      ).not.toBeNull(),
+    );
+    expect(
+      page
+        .getByRole('button', { name: 'Hide details for One' })
+        .element()
+        .getAttribute('aria-expanded'),
+    ).toBe('true');
+    expect(document.getElementById(controlsId!)).not.toBeNull();
+    const customTrigger = page
+      .getByRole('button', { name: 'Hide details for One' })
+      .element();
+    const identityLink = page.getByRole('link', { name: 'One' }).element();
+    expect(customTrigger.getBoundingClientRect().top).toBeGreaterThanOrEqual(
+      identityLink.getBoundingClientRect().bottom,
+    );
+
+    await page.getByRole('button', { name: 'Close details for One' }).click();
+    await vi.waitFor(() =>
+      expect(
+        document.querySelector('[data-testid="custom-details-one"]'),
+      ).toBeNull(),
+    );
+    expect(
+      page
+        .getByRole('button', { name: 'Show details for One' })
+        .element()
+        .getAttribute('aria-expanded'),
+    ).toBe('false');
+    await expect
+      .element(page.getByRole('button', { name: 'Show details for One' }))
+      .toHaveFocus();
+  });
+
+  it('keeps a custom expansion closed when close is requested twice', async () => {
+    await render(
+      <MantineProvider
+        theme={theme}
+        cssVariablesResolver={cssVariablesResolver}
+        forceColorScheme="dark"
+      >
+        <CustomTriggerExpandableTable closeTwice />
+      </MantineProvider>,
+    );
+
+    await page.getByRole('button', { name: 'Show details for One' }).click();
+    await page.getByRole('button', { name: 'Close details for One' }).click();
+
+    await vi.waitFor(() =>
+      expect(
+        document.querySelector('[data-testid="custom-details-one"]'),
+      ).toBeNull(),
+    );
+    await expect
+      .element(page.getByRole('button', { name: 'Show details for One' }))
+      .toHaveAttribute('aria-expanded', 'false');
+  });
+
+  it('keeps expanded content above column hover and the sticky header above both', async () => {
+    await render(
+      <MantineProvider
+        theme={theme}
+        cssVariablesResolver={cssVariablesResolver}
+        forceColorScheme="dark"
+      >
+        <ComparisonTable<DetailRecord>
+          ariaLabel="Expandable comparison records"
+          records={records}
+          columns={columns}
+          idAccessor="id"
+          identityField="name"
+          maxHeight={120}
+          rowExpansionContent={(record) => (
+            <div
+              data-testid={`comparison-details-${record.id}`}
+              style={{
+                height: 240,
+                backgroundColor: 'var(--mantine-color-body)',
+              }}
+            >
+              Details for {record.name}
+            </div>
+          )}
+        />
+      </MantineProvider>,
+    );
+
+    await page.getByRole('button', { name: 'Expand details for One' }).click();
+    await vi.waitFor(() => {
+      expect(
+        document.querySelector('[data-testid="comparison-details-one"]'),
+      ).not.toBeNull();
+    });
+
+    const expansionCell = document.querySelector<HTMLElement>(
+      '.mantine-datatable-row-expansion-cell',
+    )!;
+    const viewport = document.querySelector<HTMLElement>(
+      '[data-scrollarea-viewport="true"]',
+    )!;
+    const header = document.querySelector<HTMLElement>('thead')!;
+    const identityCell = document.querySelector<HTMLElement>(
+      'tbody tr:first-child td[data-pinned]',
+    )!;
+
+    await userEvent.hover(identityCell);
+    expect(getComputedStyle(identityCell, '::before').content).toBe('""');
+    const identityLayer = Number(getComputedStyle(identityCell).zIndex);
+    const expansionLayer = Number(getComputedStyle(expansionCell).zIndex);
+    const headerLayer = Number(getComputedStyle(header).zIndex);
+    expect(expansionLayer).toBeGreaterThan(identityLayer);
+    expect(headerLayer).toBeGreaterThan(expansionLayer);
+
+    await vi.waitFor(() =>
+      expect(viewport.scrollHeight).toBeGreaterThan(viewport.clientHeight),
+    );
+    const viewportRect = viewport.getBoundingClientRect();
+    const expansionRect = expansionCell.getBoundingClientRect();
+    viewport.scrollTop += expansionRect.top - viewportRect.top - 8;
+    await vi.waitFor(() => {
+      expect(viewport.scrollTop).toBeGreaterThan(0);
+      const stickyHeaderRect = header.getBoundingClientRect();
+      const scrolledExpansionRect = expansionCell.getBoundingClientRect();
+      expect(scrolledExpansionRect.top).toBeLessThan(stickyHeaderRect.bottom);
+      expect(scrolledExpansionRect.bottom).toBeGreaterThan(
+        stickyHeaderRect.top,
+      );
+    });
+
+    const stickyHeaderRect = header.getBoundingClientRect();
+    const headerHit = document.elementFromPoint(
+      stickyHeaderRect.left + 8,
+      stickyHeaderRect.top + stickyHeaderRect.height / 2,
+    );
+    expect(headerHit?.closest('thead')).not.toBeNull();
   });
 
   it('scopes expansion control ids to each table instance', async () => {

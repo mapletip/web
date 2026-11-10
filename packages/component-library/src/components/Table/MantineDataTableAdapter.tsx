@@ -74,6 +74,7 @@ export function MantineDataTableAdapter<TRow extends Record<string, unknown>>({
   emptyState,
   noRecordsText = 'No records found',
   rowExpansionContent,
+  rowExpansionControl,
   expandedRowIds,
   onExpandedRowIdsChange,
   allowMultipleExpandedRows,
@@ -143,6 +144,26 @@ export function MantineDataTableAdapter<TRow extends Record<string, unknown>>({
     ],
   );
 
+  const closeExpandedRecord = useCallback(
+    (record: TRow, collapse: () => void) => {
+      const recordId = record[idAccessor];
+      collapse();
+
+      if (typeof window !== 'undefined') {
+        window.requestAnimationFrame(() => {
+          const controlsId = expansionIdFor(recordId);
+          const trigger = Array.from(
+            document.querySelectorAll<HTMLElement>('[aria-controls]'),
+          ).find(
+            (element) => element.getAttribute('aria-controls') === controlsId,
+          );
+          trigger?.focus();
+        });
+      }
+    },
+    [expansionIdFor, idAccessor],
+  );
+
   const orderedColumns = useMemo<readonly TableColumn<TRow>[]>(() => {
     if (pinnedIdentity === undefined) return [...columns];
 
@@ -184,7 +205,21 @@ export function MantineDataTableAdapter<TRow extends Record<string, unknown>>({
           const expanded = effectiveExpandedRowIds.some(
             (expandedId) => expandedId === recordId,
           );
-          return (
+          const controlsId = expansionIdFor(recordId);
+
+          return rowExpansionControl !== undefined ? (
+            <span
+              className={`${classes['expansionCell']} ${classes['customExpansionCell']}`}
+            >
+              {renderColumnContent(record)}
+              {rowExpansionControl({
+                record,
+                expanded,
+                controlsId,
+                onToggle: () => toggleExpandedRecord(record),
+              })}
+            </span>
+          ) : (
             <span className={classes['expansionCell']}>
               <ActionIcon
                 type="button"
@@ -192,7 +227,7 @@ export function MantineDataTableAdapter<TRow extends Record<string, unknown>>({
                 size={24}
                 radius="sm"
                 aria-expanded={expanded}
-                aria-controls={expansionIdFor(recordId)}
+                aria-controls={controlsId}
                 aria-label={`${expanded ? 'Collapse' : 'Expand'} details for ${String(record[column.accessor])}`}
                 onClick={(event) => {
                   event.stopPropagation();
@@ -243,6 +278,7 @@ export function MantineDataTableAdapter<TRow extends Record<string, unknown>>({
     pinnedIdentity,
     resizable,
     rowExpansionContent,
+    rowExpansionControl,
     toggleExpandedRecord,
   ]);
 
@@ -285,10 +321,12 @@ export function MantineDataTableAdapter<TRow extends Record<string, unknown>>({
       ...(allowMultipleExpandedRows !== undefined
         ? { allowMultiple: allowMultipleExpandedRows }
         : {}),
-      content: ({ record }) => {
+      content: ({ record, collapse }) => {
         return (
           <div id={expansionIdFor(record[idAccessor])}>
-            {rowExpansionContent(record)}
+            {rowExpansionContent(record, {
+              onClose: () => closeExpandedRecord(record, collapse),
+            })}
           </div>
         );
       },
@@ -304,12 +342,18 @@ export function MantineDataTableAdapter<TRow extends Record<string, unknown>>({
     expansionIdFor,
     handleExpandedRowIdsChange,
     idAccessor,
+    closeExpandedRecord,
     rowExpansionContent,
   ]);
 
   if (rowExpansionContent === undefined && expandedRowIds !== undefined) {
     throw new Error(
       'Table expandedRowIds requires rowExpansionContent to be provided.',
+    );
+  }
+  if (rowExpansionContent === undefined && rowExpansionControl !== undefined) {
+    throw new Error(
+      'Table rowExpansionControl requires rowExpansionContent to be provided.',
     );
   }
   if (

@@ -8,3 +8,9 @@
   min-width: 0;
   gap: var(--mantine-spacing-xs);
 }
+
+.customExpansionCell {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}

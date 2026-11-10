@@ -1,8 +1,12 @@
 import { MantineProvider } from '@mantine/core';
-import { render, screen } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { describe, expect, it, vi } from 'vitest';
+
+import { DEFAULT_BUILD_ID, type BuildId } from '@/config/maplekit';
 
 import { MonsterBrowseCard } from '../MonsterBrowseCard';
+import { MonsterDropListing } from '../MonsterDrops';
 import type { MonsterBrowseRow } from '../project';
 
 /**
@@ -24,6 +28,10 @@ function knownRow(): MonsterBrowseRow {
     undead: true,
     bodyAttack: true,
     factStates: {},
+    drops: {
+      entries: [],
+      itemKeys: [],
+    },
   };
 }
 
@@ -40,6 +48,10 @@ function unknownRow(): MonsterBrowseRow {
       boss: 'unknown',
       undead: 'absent',
       bodyAttack: 'unsupported',
+    },
+    drops: {
+      entries: [],
+      itemKeys: [],
     },
   };
 }
@@ -63,10 +75,13 @@ function factTitles(): readonly string[] {
     .map((element) => element.getAttribute('title') ?? '');
 }
 
-function renderCard(record: MonsterBrowseRow) {
+function renderCard(
+  record: MonsterBrowseRow,
+  buildId: BuildId = DEFAULT_BUILD_ID,
+) {
   return render(
     <MantineProvider>
-      <MonsterBrowseCard record={record} />
+      <MonsterBrowseCard record={record} buildId={buildId} />
     </MantineProvider>,
   );
 }
@@ -135,5 +150,271 @@ describe('MonsterBrowseCard', () => {
     const list = screen.getAllByRole('definition')[0]?.closest('dl');
     expect(list).toHaveAttribute('aria-label', 'Sentinel Snail facts');
     expect(document.querySelectorAll('a')).toHaveLength(0);
+  });
+
+  it('opens the drop drawer without guessing unresolved item keys', async () => {
+    const user = userEvent.setup();
+    const row: MonsterBrowseRow = {
+      ...knownRow(),
+      drops: {
+        itemKeys: [],
+        entries: [
+          {
+            itemRefState: 'ambiguous',
+            itemName: 'Unknown item name',
+            assertionKind: 'historical-overlay',
+            sourceBuild: 'gms-v83',
+          },
+        ],
+      },
+    };
+    renderCard(row);
+
+    const expandButton = screen.getByRole('button', {
+      name: 'Sentinel Snail, 1 drop. Show drops.',
+    });
+    expect(expandButton).toHaveAttribute('aria-expanded', 'false');
+    expect(expandButton).toHaveTextContent('1');
+    expect(expandButton).toHaveAttribute('data-variant', 'default');
+    expect(expandButton).toHaveAttribute('aria-haspopup', 'dialog');
+
+    await user.click(expandButton);
+    expect(expandButton).toHaveAttribute('aria-expanded', 'true');
+    expect(expandButton).toHaveAttribute('data-variant', 'light');
+    const drawer = await screen.findByRole('dialog', {
+      name: /Sentinel Snail/u,
+    });
+    await waitFor(() => expect(drawer).toBeVisible());
+    expect(screen.getByRole('heading', { name: 'Drops (1)' })).toBeVisible();
+    await waitFor(() =>
+      expect(screen.getByText(/Unknown item name/u)).toBeVisible(),
+    );
+    expect(screen.getByText(/Ambiguous item reference/u)).toBeVisible();
+    expect(
+      screen.getByRole('group', { name: 'Drop certainty legend' }),
+    ).toHaveTextContent('Confirmed');
+    expect(
+      screen.getByRole('group', { name: 'Drop certainty legend' }),
+    ).toHaveTextContent('Unconfirmed');
+    const uncertaintyButton = screen.getByRole('button', {
+      name: 'Show unconfirmed drop details for Unknown item name',
+    });
+    expect(uncertaintyButton).toHaveAttribute('data-confirmed', 'false');
+    const legendStatus = screen
+      .getByRole('group', { name: 'Drop certainty legend' })
+      .querySelector('[data-confirmed="false"]');
+    expect(legendStatus?.className).toContain('certainty');
+    expect(uncertaintyButton.className).toContain('certainty');
+    expect(
+      screen.queryByText(/Historical · GMS v83 · maybe/u),
+    ).not.toBeInTheDocument();
+
+    const search = screen.getByRole('textbox', {
+      name: 'Search items',
+    });
+    await user.type(search, 'no match');
+    expect(screen.getByText('No drop entries match “no match”.')).toBeVisible();
+    await user.clear(search);
+    expect(screen.getByText(/Unknown item name/u)).toBeVisible();
+
+    await user.click(
+      screen.getByRole('button', { name: 'Close Drops for Sentinel Snail' }),
+    );
+    await waitFor(() =>
+      expect(expandButton).toHaveAttribute('aria-expanded', 'false'),
+    );
+    await waitFor(() => expect(expandButton).toHaveFocus());
+  });
+
+  it('shows zero for an empty roster when count facts are unknown', async () => {
+    const user = userEvent.setup();
+    renderCard(unknownRow());
+
+    const trigger = screen.getByRole('button', {
+      name: 'Sentinel Unknown, 0. Show drops.',
+    });
+    expect(trigger).toHaveTextContent('0');
+    await user.click(trigger);
+
+    await waitFor(() =>
+      expect(screen.getByRole('heading', { name: 'Drops (0)' })).toBeVisible(),
+    );
+    expect(
+      screen.getByText('No drops have been recorded for this monster'),
+    ).toBeVisible();
+  });
+
+  it('closes a status popover before its containing desktop drops panel', async () => {
+    const user = userEvent.setup();
+    const row: MonsterBrowseRow = {
+      ...knownRow(),
+      drops: {
+        itemKeys: [],
+        entries: [
+          {
+            itemRefState: 'resolved',
+            itemName: 'Green Headband',
+            assertionKind: 'historical-overlay',
+            sourceBuild: 'gms-v83',
+          },
+        ],
+      },
+    };
+    const onClose = vi.fn();
+    render(
+      <MantineProvider>
+        <MonsterDropListing
+          record={row}
+          buildId={DEFAULT_BUILD_ID}
+          onClose={onClose}
+        />
+      </MantineProvider>,
+    );
+
+    const statusButton = screen.getByRole('button', {
+      name: 'Show unconfirmed drop details for Green Headband',
+    });
+    await user.hover(statusButton);
+    expect(statusButton).toHaveAttribute('aria-expanded', 'true');
+    await waitFor(() =>
+      expect(
+        screen.getByText('Source: GMS v83 Monster Book.'),
+      ).toBeInTheDocument(),
+    );
+    await user.keyboard('{Escape}');
+    await waitFor(() =>
+      expect(statusButton).toHaveAttribute('aria-expanded', 'false'),
+    );
+    expect(onClose).not.toHaveBeenCalled();
+
+    statusButton.focus();
+    expect(
+      document.querySelector('table[aria-label="Drop sources"]'),
+    ).toBeNull();
+    expect(statusButton).toHaveFocus();
+
+    await user.keyboard('{Escape}');
+    expect(onClose).toHaveBeenCalledOnce();
+
+    await user.click(screen.getByRole('textbox', { name: 'Search items' }));
+    await user.keyboard('{Escape}');
+    expect(onClose).toHaveBeenCalledTimes(2);
+  });
+
+  it('uses the current build as the source for a confirmed drop', async () => {
+    const user = userEvent.setup();
+    const row: MonsterBrowseRow = {
+      ...knownRow(),
+      drops: {
+        itemKeys: [],
+        entries: [
+          {
+            itemRefState: 'resolved',
+            itemName: 'Red Potion',
+            assertionKind: 'native',
+          },
+        ],
+      },
+    };
+    render(
+      <MantineProvider>
+        <MonsterDropListing record={row} buildId="gms-v83" onClose={vi.fn()} />
+      </MantineProvider>,
+    );
+
+    const statusButton = screen.getByRole('button', {
+      name: 'Show confirmed drop details for Red Potion',
+    });
+    await user.click(statusButton);
+    expect(statusButton).toHaveAttribute('aria-expanded', 'true');
+    await waitFor(() =>
+      expect(
+        screen.getByText('Source: GMS v83 Monster Book.'),
+      ).toBeInTheDocument(),
+    );
+    expect(
+      document.querySelector('table[aria-label="Drop sources"]'),
+    ).toBeNull();
+  });
+
+  it('omits source attribution when a historical entry has no source build', async () => {
+    const user = userEvent.setup();
+    const row: MonsterBrowseRow = {
+      ...knownRow(),
+      drops: {
+        itemKeys: [],
+        entries: [
+          {
+            itemRefState: 'resolved',
+            itemName: 'Unknown source drop',
+            assertionKind: 'historical-overlay',
+          },
+        ],
+      },
+    };
+    render(
+      <MantineProvider>
+        <MonsterDropListing
+          record={row}
+          buildId={DEFAULT_BUILD_ID}
+          onClose={vi.fn()}
+        />
+      </MantineProvider>,
+    );
+
+    await user.click(
+      screen.getByRole('button', {
+        name: 'Show unconfirmed drop details for Unknown source drop',
+      }),
+    );
+    await waitFor(() => expect(screen.getByText('Maybe')).toBeInTheDocument());
+    expect(screen.queryByText(/^Source:/u)).not.toBeInTheDocument();
+  });
+
+  it('lets Escape close a status popover before the mobile drawer', async () => {
+    const user = userEvent.setup();
+    const row: MonsterBrowseRow = {
+      ...knownRow(),
+      drops: {
+        itemKeys: [],
+        entries: [
+          {
+            itemRefState: 'resolved',
+            itemName: 'Green Headband',
+            assertionKind: 'historical-overlay',
+            sourceBuild: 'gms-v83',
+          },
+        ],
+      },
+    };
+    renderCard(row);
+
+    await user.click(
+      screen.getByRole('button', {
+        name: 'Sentinel Snail, 1 drop. Show drops.',
+      }),
+    );
+    const drawer = await screen.findByRole('dialog', {
+      name: /Sentinel Snail/u,
+    });
+    const statusButton = screen.getByRole('button', {
+      name: 'Show unconfirmed drop details for Green Headband',
+    });
+    await user.click(statusButton);
+    expect(statusButton).toHaveAttribute('aria-expanded', 'true');
+    expect(statusButton).toHaveAttribute(
+      'data-mantine-stop-propagation',
+      'true',
+    );
+
+    await user.keyboard('{Escape}');
+    await waitFor(() =>
+      expect(statusButton).toHaveAttribute('aria-expanded', 'false'),
+    );
+    expect(drawer).toBeVisible();
+    expect(statusButton).toHaveFocus();
+
+    await user.keyboard('{Escape}');
+    await waitFor(() => expect(drawer).not.toBeInTheDocument());
   });
 });

@@ -1,9 +1,13 @@
-import type { StaticMonsterCatalog } from '@mapletip/data/monsters';
+import type {
+  MonsterDropBrowseV1,
+  StaticMonsterCatalog,
+} from '@mapletip/data/monsters';
 import { describe, expect, it } from 'vitest';
 
 import {
   formatMonsterFact,
-  projectMonsterBrowseRows,
+  projectMonsterBrowseRows as projectCatalogRows,
+  projectMonsterDropItemOptions,
   UNNAMED_MONSTER_LABEL,
   type MonsterBrowseRow,
   type MonsterFactId,
@@ -11,6 +15,7 @@ import {
 
 import {
   ABSENT_FACT,
+  emptyDropBrowseFixture,
   fixtureCatalog,
   fixtureRecord,
   knownFact,
@@ -23,6 +28,13 @@ function firstRow(rows: readonly MonsterBrowseRow[]): MonsterBrowseRow {
   const [row] = rows;
   if (row === undefined) throw new Error('Fixture produced no rows.');
   return row;
+}
+
+function projectRows(
+  catalog: StaticMonsterCatalog,
+  dropBrowse: MonsterDropBrowseV1 = emptyDropBrowseFixture(),
+): readonly MonsterBrowseRow[] {
+  return projectCatalogRows(catalog, dropBrowse);
 }
 
 /**
@@ -62,11 +74,11 @@ function sentinelRecord(input: Pick<FixtureRecordInput, 'sprite'> = {}) {
   });
 }
 
-describe('projectMonsterBrowseRows contract-2.1 tuple mapping', () => {
+describe('projectMonsterBrowseRows contract-2.2 tuple mapping', () => {
   it('projects known sprite content IDs without treating them as display facts', () => {
     const contentId = 'a'.repeat(64);
     const row = firstRow(
-      projectMonsterBrowseRows(
+      projectRows(
         fixtureCatalog({
           records: [sentinelRecord({ sprite: knownFact(contentId) })],
         }),
@@ -80,9 +92,7 @@ describe('projectMonsterBrowseRows contract-2.1 tuple mapping', () => {
   it('omits non-known sprite states without recording them as display facts', () => {
     for (const sprite of [UNKNOWN_FACT, ABSENT_FACT, UNSUPPORTED_FACT]) {
       const row = firstRow(
-        projectMonsterBrowseRows(
-          fixtureCatalog({ records: [sentinelRecord({ sprite })] }),
-        ),
+        projectRows(fixtureCatalog({ records: [sentinelRecord({ sprite })] })),
       );
 
       expect(row).not.toHaveProperty('sprite');
@@ -90,30 +100,29 @@ describe('projectMonsterBrowseRows contract-2.1 tuple mapping', () => {
     }
   });
 
-  it('rejects a contract 2.0 catalog', () => {
-    const catalogV21 = fixtureCatalog({ records: [sentinelRecord()] });
-    const catalogV20: StaticMonsterCatalog = {
-      contractVersion: '2.0',
-      format: catalogV21.format,
-      recordCount: catalogV21.recordCount,
-      records: catalogV21.records.map((record) => ({
+  it('requires the SDK-supported drop-summary catalog shape', () => {
+    const catalogV22 = fixtureCatalog({ records: [sentinelRecord()] });
+    const catalogV21: StaticMonsterCatalog = {
+      contractVersion: '2.1',
+      format: catalogV22.format,
+      recordCount: catalogV22.recordCount,
+      records: catalogV22.records.map((record) => ({
         key: record.key,
         name: record.name,
         stats: record.stats,
         traits: record.traits,
         elements: record.elements,
         relationships: record.relationships,
+        sprite: record.sprite,
       })),
-      scope: catalogV21.scope,
-    };
+      scope: catalogV22.scope,
+    } as unknown as StaticMonsterCatalog;
 
-    expect(() => projectMonsterBrowseRows(catalogV20)).toThrow('contract-2.1');
+    expect(() => projectRows(catalogV21)).toThrow('drop summaries');
   });
 
   it('reads every projected stat and trait from its own positional slot', () => {
-    const rows = projectMonsterBrowseRows(
-      fixtureCatalog({ records: [sentinelRecord()] }),
-    );
+    const rows = projectRows(fixtureCatalog({ records: [sentinelRecord()] }));
     const row = firstRow(rows);
 
     expect(row.key).toBe('fixture:monster:001');
@@ -147,7 +156,7 @@ describe('projectMonsterBrowseRows contract-2.1 tuple mapping', () => {
 
   it('does not project the traits and collections deliberately left out', () => {
     const row = firstRow(
-      projectMonsterBrowseRows(fixtureCatalog({ records: [sentinelRecord()] })),
+      projectRows(fixtureCatalog({ records: [sentinelRecord()] })),
     );
 
     for (const omitted of [
@@ -162,6 +171,111 @@ describe('projectMonsterBrowseRows contract-2.1 tuple mapping', () => {
     ]) {
       expect(row).not.toHaveProperty(omitted);
     }
+  });
+});
+
+describe('Monster drop projection', () => {
+  function dropBrowseFixture(): MonsterDropBrowseV1 {
+    return {
+      format: 'mapletip.monster-drop-browse',
+      contractVersion: '1.0',
+      scope: { build_id: 'cw-launch', family_id: 'classic-world' },
+      items: [
+        {
+          itemRef: { state: 'ambiguous' },
+          itemName: { state: 'known', value: 'Known but ambiguous potion' },
+          itemClass: { state: 'unknown' },
+          category: { kind: 'unknown' },
+        },
+        {
+          itemRef: { state: 'resolved', key: 'fixture:item:known' },
+          itemName: { state: 'known', value: 'Known item' },
+          itemClass: { state: 'known', value: 'etc' },
+          category: { kind: 'item-class', value: 'etc' },
+        },
+      ],
+      records: {
+        'fixture:monster:001': {
+          entries: [
+            { assertionKind: 'native', item: 0 },
+            {
+              assertionKind: 'historical-overlay',
+              sourceBuild: 'gms-v83',
+              confidence: 'maybe',
+              item: 1,
+            },
+          ],
+        },
+      },
+    };
+  }
+
+  it('keeps unresolved entries but exposes only resolved item keys to filtering', () => {
+    const drops = dropBrowseFixture();
+    const row = firstRow(
+      projectRows(fixtureCatalog({ records: [sentinelRecord()] }), drops),
+    );
+
+    expect(row.drops.entries).toHaveLength(2);
+    expect(row.drops.entries[0]).toMatchObject({
+      itemRefState: 'ambiguous',
+      itemName: 'Known but ambiguous potion',
+      assertionKind: 'native',
+    });
+    expect(row.drops.entries[0]).not.toHaveProperty('itemCategory');
+    expect(row.drops.entries[1]).toMatchObject({
+      itemKey: 'fixture:item:known',
+      assertionKind: 'historical-overlay',
+      sourceBuild: 'gms-v83',
+    });
+    expect(row.drops.itemKeys).toEqual(['fixture:item:known']);
+  });
+
+  it('normalizes equipment slots and leaves unknown categories unclassified', () => {
+    const drops = dropBrowseFixture();
+    drops.items.push({
+      itemRef: { state: 'resolved', key: 'fixture:item:headband' },
+      itemName: { state: 'known', value: 'Green Headband' },
+      itemClass: { state: 'unknown' },
+      category: { kind: 'equip-slot', code: 'cap' },
+    });
+    drops.records['fixture:monster:001']!.entries.push({
+      assertionKind: 'native',
+      item: 2,
+    });
+
+    const row = firstRow(
+      projectRows(fixtureCatalog({ records: [sentinelRecord()] }), drops),
+    );
+
+    expect(row.drops.entries[0]).not.toHaveProperty('itemCategory');
+    expect(row.drops.entries[2]).toMatchObject({
+      itemName: 'Green Headband',
+      itemCategory: 'equipment',
+    });
+  });
+
+  it('builds unique item-filter labels from stable resolved keys', () => {
+    const dropBrowse = dropBrowseFixture();
+    dropBrowse.items[0]!.itemRef = {
+      state: 'resolved',
+      key: 'fixture:item:other',
+    };
+    dropBrowse.items[1]!.itemName = {
+      state: 'known',
+      value: 'Known but ambiguous potion',
+    };
+
+    expect(projectMonsterDropItemOptions(dropBrowse)).toEqual([
+      {
+        value: 'fixture:item:known',
+        label: 'Known but ambiguous potion (fixture:item:known)',
+      },
+      {
+        value: 'fixture:item:other',
+        label: 'Known but ambiguous potion (fixture:item:other)',
+      },
+    ]);
   });
 });
 
@@ -196,9 +310,7 @@ describe('monster fact states', () => {
     ],
   });
 
-  const row = firstRow(
-    projectMonsterBrowseRows(fixtureCatalog({ records: [record] })),
-  );
+  const row = firstRow(projectRows(fixtureCatalog({ records: [record] })));
 
   it('keeps a known false distinct from every non-known state', () => {
     expect(row.boss).toBe(false);
@@ -255,7 +367,7 @@ describe('derived EXP per 100 HP', () => {
   /** One record whose only interesting facts are HP and EXP. */
   function ratioRow(hp: StatFact, exp: StatFact): MonsterBrowseRow {
     return firstRow(
-      projectMonsterBrowseRows(
+      projectRows(
         fixtureCatalog({
           records: [
             fixtureRecord({
@@ -387,7 +499,7 @@ describe('full roster projection', () => {
   });
 
   it('projects exactly the declared number of records without slicing', () => {
-    const rows = projectMonsterBrowseRows(fixtureCatalog({ records }));
+    const rows = projectRows(fixtureCatalog({ records }));
 
     expect(rows).toHaveLength(5);
     expect(rows.map((row) => row.key)).toEqual([

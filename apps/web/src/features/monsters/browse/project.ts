@@ -1,5 +1,5 @@
 /**
- * App-owned projection of a contract-2.1 Monster catalog into flat, sortable,
+ * App-owned projection of a drop-summary Monster catalog into flat, sortable,
  * JSON-serializable browse rows.
  *
  * The mapping is deliberately explicit: contract-2 tuples are positional, so
@@ -7,16 +7,39 @@
  * published contract order. The contract's sprite fact stays separate from
  * displayable facts because only its known content ID affects the thumbnail.
  */
-import { hasMonsterSprites } from '@mapletip/data/monsters';
+import { hasMonsterBrowseSummaries } from '@mapletip/data/monsters';
 import type {
-  MonsterCatalogV2_1,
+  MonsterCatalogV2_2,
+  MonsterCatalogV2_3,
+  MonsterDropBrowseV1,
   StaticMonsterCatalog,
 } from '@mapletip/data/monsters';
 
-type MonsterCatalogRecordV2_1 = MonsterCatalogV2_1['records'][number];
+type MonsterCatalogRecord =
+  MonsterCatalogV2_2['records'][number] | MonsterCatalogV2_3['records'][number];
 
 export type MonsterFactState = 'known' | 'unknown' | 'absent' | 'unsupported';
 export type UnknownFactState = Exclude<MonsterFactState, 'known'>;
+
+export interface MonsterDropEntry {
+  readonly itemKey?: string;
+  readonly itemRefState: string;
+  readonly itemName: string;
+  readonly itemCategory?: string;
+  readonly assertionKind: 'native' | 'historical-overlay';
+  readonly sourceBuild?: string;
+}
+
+export interface MonsterDropItemOption {
+  readonly value: string;
+  readonly label: string;
+}
+
+export interface MonsterDropFacts {
+  readonly entries: readonly MonsterDropEntry[];
+  /** Resolved stable item keys for the shared array facet. */
+  readonly itemKeys: readonly string[];
+}
 
 /** Projected fact IDs. Keep in sync with the column/facet definitions. */
 export type MonsterFactId =
@@ -69,6 +92,7 @@ export interface MonsterBrowseRow extends Record<string, unknown> {
   readonly boss?: boolean;
   readonly undead?: boolean;
   readonly bodyAttack?: boolean;
+  readonly drops: MonsterDropFacts;
   /**
    * Canonical state for every projected fact whose state is NOT `known`.
    * A missing key means `known`. This is what keeps `unknown`, `absent` and
@@ -140,7 +164,10 @@ function readFact<T>(
   return undefined;
 }
 
-function projectRecord(record: MonsterCatalogRecordV2_1): MonsterBrowseRow {
+function projectRecord(
+  record: MonsterCatalogRecord,
+  dropBrowse: MonsterDropBrowseV1,
+): MonsterBrowseRow {
   const factStates: Partial<Record<MonsterFactId, UnknownFactState>> = {};
 
   const name = readFact<string>(record.name, 'name', factStates);
@@ -211,10 +238,22 @@ function projectRecord(record: MonsterCatalogRecordV2_1): MonsterBrowseRow {
     factStates,
   );
 
+  const dropEntries = projectDropEntries(dropBrowse, record.key);
+
   return {
     key: record.key,
     name: name ?? UNNAMED_MONSTER_LABEL,
     factStates,
+    drops: {
+      entries: dropEntries,
+      itemKeys: Array.from(
+        new Set(
+          dropEntries.flatMap((entry) =>
+            entry.itemKey === undefined ? [] : [entry.itemKey],
+          ),
+        ),
+      ),
+    },
     ...(sprite === undefined ? {} : { sprite }),
     ...(level === undefined ? {} : { level }),
     ...(hp === undefined ? {} : { hp }),
@@ -243,14 +282,98 @@ function projectRecord(record: MonsterCatalogRecordV2_1): MonsterBrowseRow {
  */
 export function projectMonsterBrowseRows(
   catalog: StaticMonsterCatalog,
+  dropBrowse: MonsterDropBrowseV1,
 ): readonly MonsterBrowseRow[] {
-  if (!hasMonsterSprites(catalog)) {
+  if (!hasMonsterBrowseSummaries(catalog)) {
     throw new Error(
-      'Monster browse requires a contract-2.1 Monster catalog, but the release supplied an older contract.',
+      'Monster browse requires a Monster catalog with drop summaries.',
     );
   }
 
-  return catalog.records.map((record) => projectRecord(record));
+  return catalog.records.map((record) => projectRecord(record, dropBrowse));
+}
+
+function projectDropEntries(
+  dropBrowse: MonsterDropBrowseV1,
+  monsterKey: string,
+): readonly MonsterDropEntry[] {
+  const record = dropBrowse.records[monsterKey];
+  if (record === undefined) return [];
+
+  return record.entries.map((entry) => {
+    const item = dropBrowse.items[entry.item];
+    if (item === undefined) {
+      throw new Error(
+        `Monster drop browse entry for ${monsterKey} references missing item index ${entry.item}.`,
+      );
+    }
+    const itemKey =
+      item.itemRef.state === 'resolved' &&
+      typeof item.itemRef.key === 'string' &&
+      item.itemRef.key.length > 0
+        ? item.itemRef.key
+        : undefined;
+    let category: string | undefined;
+    if (item.category.kind === 'equip-slot') {
+      category = 'equipment';
+    } else if (item.category.kind === 'item-class') {
+      category = item.category.value;
+    }
+
+    return {
+      ...(itemKey === undefined ? {} : { itemKey }),
+      itemRefState: item.itemRef.state,
+      itemName: formatDropItemName(item.itemName),
+      ...(category === undefined ? {} : { itemCategory: category }),
+      assertionKind: entry.assertionKind,
+      ...(entry.assertionKind === 'historical-overlay'
+        ? {
+            sourceBuild: entry.sourceBuild,
+          }
+        : {}),
+    };
+  });
+}
+
+function formatDropItemName(
+  fact: MonsterDropBrowseV1['items'][number]['itemName'],
+): string {
+  if (fact.state === 'known') return fact.value;
+  if (fact.state === 'unknown') return 'Unknown item name';
+  if (fact.state === 'absent') return 'Item name not recorded';
+  return 'Item name unavailable';
+}
+
+/** Unique, key-valued options for the shared FacetedBrowser item facet. */
+export function projectMonsterDropItemOptions(
+  dropBrowse: MonsterDropBrowseV1,
+): readonly MonsterDropItemOption[] {
+  const resolved = dropBrowse.items.flatMap((item) => {
+    const key = item.itemRef.key;
+    if (
+      item.itemRef.state !== 'resolved' ||
+      typeof key !== 'string' ||
+      key.length === 0
+    ) {
+      return [];
+    }
+    return [{ value: key, label: formatDropItemName(item.itemName) }];
+  });
+
+  const labelCounts = new Map<string, number>();
+  for (const option of resolved) {
+    labelCounts.set(option.label, (labelCounts.get(option.label) ?? 0) + 1);
+  }
+
+  return resolved
+    .map((option) => ({
+      value: option.value,
+      label:
+        labelCounts.get(option.label) === 1
+          ? option.label
+          : `${option.label} (${option.value})`,
+    }))
+    .sort((left, right) => left.label.localeCompare(right.label));
 }
 
 const RATIO_FORMATTER = new Intl.NumberFormat('en-US', {

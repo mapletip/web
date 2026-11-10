@@ -36,11 +36,11 @@ describe('maplekit configuration', () => {
     expect(MAPLEKIT_RELEASE.pin).toMatchObject({
       format: 'mapletip.local-release-pin',
       releaseId:
-        'release-7bc0f9ed742b297bfe89324818820b90b3f963a691ba816539b0fffa0cf6d61b',
-      path: 'v1/releases/6cb6b4ee26f52e2da9b4ea50f7553742ae3b41d2451722497eb91c6102d8ec86.json',
+        'release-199361d8dc65a9df51d5edfa81b691f3a7b41f39b0d1525fe1763caf14134df3',
+      path: 'v1/releases/ede08ca3eb28e1f5ef1663bc2a29408656b69532fb3bba15651a764d83d0c741.json',
       sha256:
-        '6cb6b4ee26f52e2da9b4ea50f7553742ae3b41d2451722497eb91c6102d8ec86',
-      byteLength: 745,
+        'ede08ca3eb28e1f5ef1663bc2a29408656b69532fb3bba15651a764d83d0c741',
+      byteLength: 868,
     });
   });
 });

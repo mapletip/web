@@ -340,6 +340,9 @@ export function FacetedBrowser<TRecord extends Record<string, unknown>>(
       {...(comparisonProps.rowExpansionContent
         ? { rowExpansionContent: comparisonProps.rowExpansionContent }
         : {})}
+      {...(comparisonProps.rowExpansionControl
+        ? { rowExpansionControl: comparisonProps.rowExpansionControl }
+        : {})}
     />
   ) : undefined;
 

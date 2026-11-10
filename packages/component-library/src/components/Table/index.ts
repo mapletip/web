@@ -6,4 +6,7 @@ export type {
   TableColumn,
   TableName,
   TableProps,
+  RowExpansionControl,
+  RowExpansionControlContext,
+  RowExpansionContentContext,
 } from '@/components/Table/types';
