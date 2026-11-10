@@ -7,16 +7,68 @@
  * published contract order. The contract's sprite fact stays separate from
  * displayable facts because only its known content ID affects the thumbnail.
  */
-import { hasMonsterSprites } from '@mapletip/data/monsters';
+import {
+  hasMonsterBrowseSummaries,
+  hasMonsterSprites,
+} from '@mapletip/data/monsters';
 import type {
   MonsterCatalogV2_1,
+  MonsterCatalogV2_2,
+  MonsterCatalogV2_3,
+  MonsterDropBrowseV1,
   StaticMonsterCatalog,
 } from '@mapletip/data/monsters';
 
-type MonsterCatalogRecordV2_1 = MonsterCatalogV2_1['records'][number];
+type MonsterCatalogRecord = Pick<
+  MonsterCatalogV2_1['records'][number],
+  'key' | 'name' | 'stats' | 'traits' | 'sprite'
+>;
+type MonsterDropSummary =
+  | MonsterCatalogV2_2['records'][number]['drops']
+  | MonsterCatalogV2_3['records'][number]['drops'];
 
 export type MonsterFactState = 'known' | 'unknown' | 'absent' | 'unsupported';
 export type UnknownFactState = Exclude<MonsterFactState, 'known'>;
+
+export type MonsterDropCountFact =
+  | {
+      readonly state: 'known';
+      readonly count: number;
+      readonly lowerBound: boolean;
+    }
+  | { readonly state: 'absent'; readonly coverageKey?: string }
+  | { readonly state: 'unknown' | 'unsupported' | 'unavailable' };
+
+export type MonsterHistoricalDropCountFact =
+  | {
+      readonly state: 'known';
+      readonly count: number;
+      readonly sourceBuilds: readonly string[];
+    }
+  | { readonly state: 'absent' | 'unknown' | 'unsupported' | 'unavailable' };
+
+export interface MonsterDropEntry {
+  readonly itemKey?: string;
+  readonly itemRefState: string;
+  readonly itemName: string;
+  readonly itemCategory?: string;
+  readonly assertionKind: 'native' | 'historical-overlay';
+  readonly sourceBuild?: string;
+  readonly confidence?: string;
+}
+
+export interface MonsterDropItemOption {
+  readonly value: string;
+  readonly label: string;
+}
+
+export interface MonsterDropFacts {
+  readonly native: MonsterDropCountFact;
+  readonly historical: MonsterHistoricalDropCountFact;
+  readonly entries: readonly MonsterDropEntry[];
+  /** Resolved stable item keys for the shared array facet. */
+  readonly itemKeys: readonly string[];
+}
 
 /** Projected fact IDs. Keep in sync with the column/facet definitions. */
 export type MonsterFactId =
@@ -69,6 +121,7 @@ export interface MonsterBrowseRow extends Record<string, unknown> {
   readonly boss?: boolean;
   readonly undead?: boolean;
   readonly bodyAttack?: boolean;
+  readonly drops: MonsterDropFacts;
   /**
    * Canonical state for every projected fact whose state is NOT `known`.
    * A missing key means `known`. This is what keeps `unknown`, `absent` and
@@ -140,7 +193,13 @@ function readFact<T>(
   return undefined;
 }
 
-function projectRecord(record: MonsterCatalogRecordV2_1): MonsterBrowseRow {
+function projectRecord(
+  record: MonsterCatalogRecord,
+  dropSummary: MonsterDropSummary | undefined,
+  dropBrowse: MonsterDropBrowseV1 | undefined,
+  nativeAbsentCoverageKey: string | null | undefined,
+  historicalDropsSupported: boolean | undefined,
+): MonsterBrowseRow {
   const factStates: Partial<Record<MonsterFactId, UnknownFactState>> = {};
 
   const name = readFact<string>(record.name, 'name', factStates);
@@ -211,10 +270,32 @@ function projectRecord(record: MonsterCatalogRecordV2_1): MonsterBrowseRow {
     factStates,
   );
 
+  const dropEntries = projectDropEntries(dropBrowse, record.key);
+  const native = projectNativeDropCount(
+    dropSummary?.native,
+    nativeAbsentCoverageKey,
+  );
+  const historical = projectHistoricalDropCount(
+    dropSummary?.historical,
+    historicalDropsSupported,
+  );
+
   return {
     key: record.key,
     name: name ?? UNNAMED_MONSTER_LABEL,
     factStates,
+    drops: {
+      native,
+      historical,
+      entries: dropEntries,
+      itemKeys: Array.from(
+        new Set(
+          dropEntries.flatMap((entry) =>
+            entry.itemKey === undefined ? [] : [entry.itemKey],
+          ),
+        ),
+      ),
+    },
     ...(sprite === undefined ? {} : { sprite }),
     ...(level === undefined ? {} : { level }),
     ...(hp === undefined ? {} : { hp }),
@@ -243,6 +324,7 @@ function projectRecord(record: MonsterCatalogRecordV2_1): MonsterBrowseRow {
  */
 export function projectMonsterBrowseRows(
   catalog: StaticMonsterCatalog,
+  dropBrowse?: MonsterDropBrowseV1,
 ): readonly MonsterBrowseRow[] {
   if (!hasMonsterSprites(catalog)) {
     throw new Error(
@@ -250,7 +332,153 @@ export function projectMonsterBrowseRows(
     );
   }
 
-  return catalog.records.map((record) => projectRecord(record));
+  const summaries = hasMonsterBrowseSummaries(catalog)
+    ? new Map(catalog.records.map((record) => [record.key, record.drops]))
+    : undefined;
+  const browseCoverage =
+    catalog.format === 'mapletip.monster-catalog-2' &&
+    (catalog.contractVersion === '2.2' || catalog.contractVersion === '2.3')
+      ? catalog.browseCoverage
+      : undefined;
+
+  return catalog.records.map((record) =>
+    projectRecord(
+      record,
+      summaries?.get(record.key),
+      dropBrowse,
+      browseCoverage?.nativeDropsAbsentCoverageKey,
+      browseCoverage === undefined
+        ? undefined
+        : browseCoverage.historicalDrops === 'supported',
+    ),
+  );
+}
+
+function projectNativeDropCount(
+  fact: MonsterDropSummary['native'] | undefined,
+  coverageKey: string | null | undefined,
+): MonsterDropCountFact {
+  if (fact === undefined) return { state: 'unavailable' };
+  if (fact.state === 'known') {
+    return {
+      state: 'known',
+      count: fact.count,
+      lowerBound: fact.lowerBound,
+    };
+  }
+  if (fact.state === 'absent') {
+    return {
+      state: 'absent',
+      ...(coverageKey === undefined || coverageKey === null
+        ? {}
+        : { coverageKey }),
+    };
+  }
+  return { state: fact.state };
+}
+
+function projectHistoricalDropCount(
+  fact: MonsterDropSummary['historical'] | undefined | null,
+  supported: boolean | undefined,
+): MonsterHistoricalDropCountFact {
+  if (fact?.state === 'known') {
+    return {
+      state: 'known',
+      count: fact.count,
+      sourceBuilds: fact.sourceBuilds,
+    };
+  }
+  if (fact?.state === 'absent') return { state: 'absent' };
+  if (supported === undefined) return { state: 'unavailable' };
+  return { state: supported ? 'unknown' : 'unsupported' };
+}
+
+function projectDropEntries(
+  dropBrowse: MonsterDropBrowseV1 | undefined,
+  monsterKey: string,
+): readonly MonsterDropEntry[] {
+  if (dropBrowse === undefined) return [];
+
+  const record = dropBrowse.records[monsterKey];
+  if (record === undefined) return [];
+
+  return record.entries.map((entry) => {
+    const item = dropBrowse.items[entry.item];
+    if (item === undefined) {
+      throw new Error(
+        `Monster drop browse entry for ${monsterKey} references missing item index ${entry.item}.`,
+      );
+    }
+    const itemKey =
+      item.itemRef.state === 'resolved' &&
+      typeof item.itemRef.key === 'string' &&
+      item.itemRef.key.length > 0
+        ? item.itemRef.key
+        : undefined;
+    let category: string | undefined;
+    if (item.category.kind === 'equip-slot') {
+      category = item.category.code;
+    } else if (item.category.kind === 'item-class') {
+      category = item.category.value;
+    }
+
+    return {
+      ...(itemKey === undefined ? {} : { itemKey }),
+      itemRefState: item.itemRef.state,
+      itemName: formatDropItemName(item.itemName),
+      ...(category === undefined ? {} : { itemCategory: category }),
+      assertionKind: entry.assertionKind,
+      ...(entry.assertionKind === 'historical-overlay'
+        ? {
+            sourceBuild: entry.sourceBuild,
+            confidence: entry.confidence,
+          }
+        : {}),
+    };
+  });
+}
+
+function formatDropItemName(
+  fact: MonsterDropBrowseV1['items'][number]['itemName'],
+): string {
+  if (fact.state === 'known') return fact.value;
+  if (fact.state === 'unknown') return 'Unknown item name';
+  if (fact.state === 'absent') return 'Item name not recorded';
+  return 'Item name unavailable';
+}
+
+/** Unique, key-valued options for the shared FacetedBrowser item facet. */
+export function projectMonsterDropItemOptions(
+  dropBrowse: MonsterDropBrowseV1 | undefined,
+): readonly MonsterDropItemOption[] {
+  if (dropBrowse === undefined) return [];
+
+  const resolved = dropBrowse.items.flatMap((item) => {
+    const key = item.itemRef.key;
+    if (
+      item.itemRef.state !== 'resolved' ||
+      typeof key !== 'string' ||
+      key.length === 0
+    ) {
+      return [];
+    }
+    return [{ value: key, label: formatDropItemName(item.itemName) }];
+  });
+
+  const labelCounts = new Map<string, number>();
+  for (const option of resolved) {
+    labelCounts.set(option.label, (labelCounts.get(option.label) ?? 0) + 1);
+  }
+
+  return resolved
+    .map((option) => ({
+      value: option.value,
+      label:
+        labelCounts.get(option.label) === 1
+          ? option.label
+          : `${option.label} (${option.value})`,
+    }))
+    .sort((left, right) => left.label.localeCompare(right.label));
 }
 
 const RATIO_FORMATTER = new Intl.NumberFormat('en-US', {

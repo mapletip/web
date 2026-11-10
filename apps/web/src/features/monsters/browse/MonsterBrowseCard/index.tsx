@@ -1,6 +1,7 @@
-import { Group } from '@mantine/core';
+import { Group, Stack } from '@mantine/core';
 import type { ReactElement } from 'react';
 
+import { MonsterDropDrawerControl, MonsterDropSummary } from '../MonsterDrops';
 import { MonsterSprite } from '../MonsterSprite';
 import {
   formatMonsterFact,
@@ -25,14 +26,25 @@ const summaryFacts: readonly {
 
 export function MonsterBrowseCard({
   record,
+  dropBrowseAvailable,
+  targetBuildLabel = 'this build',
 }: {
   readonly record: MonsterBrowseRow;
+  readonly dropBrowseAvailable: boolean;
+  readonly targetBuildLabel?: string;
 }): ReactElement {
   return (
     <article className={classes['card']}>
-      <Group gap="xs" wrap="nowrap">
+      <Group gap="xs" wrap="nowrap" align="flex-start">
         <MonsterSprite sprite={record.sprite} />
-        <h2 className={classes['name']}>{record.name}</h2>
+        <Stack gap={4} align="flex-start" className={classes['identity']}>
+          <h2 className={classes['name']}>{record.name}</h2>
+          <MonsterDropDrawerControl
+            record={record}
+            dropBrowseAvailable={dropBrowseAvailable}
+            targetBuildLabel={targetBuildLabel}
+          />
+        </Stack>
       </Group>
       <dl className={classes['facts']} aria-label={`${record.name} facts`}>
         {summaryFacts.map(({ id, label }) => {
@@ -44,6 +56,12 @@ export function MonsterBrowseCard({
             </div>
           );
         })}
+        <div>
+          <dt>Drops</dt>
+          <dd>
+            <MonsterDropSummary record={record} />
+          </dd>
+        </div>
       </dl>
     </article>
   );

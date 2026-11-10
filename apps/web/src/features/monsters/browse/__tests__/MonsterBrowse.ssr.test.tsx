@@ -109,7 +109,12 @@ function renderBrowseHtml(): string {
   // rendering is the whole contract; no router scaffolding is needed.
   return renderToString(
     <MantineProvider theme={theme} forceColorScheme="dark">
-      <MonsterBrowse buildId={DEFAULT_BUILD_ID} rows={rows} />
+      <MonsterBrowse
+        buildId={DEFAULT_BUILD_ID}
+        rows={rows}
+        dropBrowseAvailable={false}
+        dropItemOptions={[]}
+      />
     </MantineProvider>,
   );
 }
@@ -155,5 +160,7 @@ describe('MonsterBrowse server rendering', () => {
     expect(html).toContain('EXP / 100 HP: -');
     expect(html).toContain('Unknown');
     expect(html).toContain('Not recorded');
+    expect(html).toContain('Unavailable for this release');
+    expect(html).not.toContain('0 native');
   });
 });

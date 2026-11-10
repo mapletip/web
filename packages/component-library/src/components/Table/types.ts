@@ -39,6 +39,22 @@ export type SortIntent = {
   readonly direction: 'asc' | 'desc';
 };
 
+export interface RowExpansionControlContext<TRow extends Record<string, unknown>> {
+  readonly record: TRow;
+  readonly expanded: boolean;
+  readonly controlsId: string;
+  readonly onToggle: () => void;
+}
+
+export interface RowExpansionContentContext {
+  /** Close the current row while leaving expansion state owned by Table. */
+  readonly onClose: () => void;
+}
+
+export type RowExpansionControl<TRow extends Record<string, unknown>> = (
+  context: RowExpansionControlContext<TRow>,
+) => ReactNode;
+
 export type TableProps<TRow extends Record<string, unknown>> = {
   /** Current-page records, already ordered by the host (TanStack). Never re-sorted here. */
   readonly records: readonly TRow[];
@@ -79,7 +95,12 @@ export type TableProps<TRow extends Record<string, unknown>> = {
   readonly emptyState?: ReactNode;
   readonly noRecordsText?: string;
   /** Host-owned detail content rendered through DataTable's rowExpansion API. */
-  readonly rowExpansionContent?: (record: TRow) => ReactNode;
+  readonly rowExpansionContent?: (
+    record: TRow,
+    context: RowExpansionContentContext,
+  ) => ReactNode;
+  /** Optional host control; Table keeps ownership of row expansion state. */
+  readonly rowExpansionControl?: RowExpansionControl<TRow>;
   /** Controlled DataTable record identities currently expanded. */
   readonly expandedRowIds?: readonly unknown[];
   readonly onExpandedRowIdsChange?: (recordIds: readonly unknown[]) => void;

@@ -17,6 +17,10 @@
   overflow-wrap: anywhere;
 }
 
+.identity {
+  min-width: 0;
+}
+
 .facts {
   display: grid;
   /* Four facts per row keep EXP and its derived EXP / 100 HP ratio side by side,

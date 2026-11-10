@@ -1,8 +1,10 @@
 import { MantineProvider } from '@mantine/core';
-import { render, screen } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { describe, expect, it, vi } from 'vitest';
 
 import { MonsterBrowseCard } from '../MonsterBrowseCard';
+import { MonsterDropListing } from '../MonsterDrops';
 import type { MonsterBrowseRow } from '../project';
 
 /**
@@ -24,6 +26,12 @@ function knownRow(): MonsterBrowseRow {
     undead: true,
     bodyAttack: true,
     factStates: {},
+    drops: {
+      native: { state: 'unavailable' },
+      historical: { state: 'unavailable' },
+      entries: [],
+      itemKeys: [],
+    },
   };
 }
 
@@ -40,6 +48,12 @@ function unknownRow(): MonsterBrowseRow {
       boss: 'unknown',
       undead: 'absent',
       bodyAttack: 'unsupported',
+    },
+    drops: {
+      native: { state: 'unknown' },
+      historical: { state: 'unavailable' },
+      entries: [],
+      itemKeys: [],
     },
   };
 }
@@ -63,10 +77,13 @@ function factTitles(): readonly string[] {
     .map((element) => element.getAttribute('title') ?? '');
 }
 
-function renderCard(record: MonsterBrowseRow) {
+function renderCard(record: MonsterBrowseRow, dropBrowseAvailable = false) {
   return render(
     <MantineProvider>
-      <MonsterBrowseCard record={record} />
+      <MonsterBrowseCard
+        record={record}
+        dropBrowseAvailable={dropBrowseAvailable}
+      />
     </MantineProvider>,
   );
 }
@@ -83,6 +100,7 @@ describe('MonsterBrowseCard', () => {
       'Boss',
       'Undead',
       'Body attack',
+      'Drops',
     ]);
     expect(
       screen.getByRole('heading', { name: 'Sentinel Snail' }),
@@ -97,7 +115,16 @@ describe('MonsterBrowseCard', () => {
   it('shows formatted known values, including a genuine false', () => {
     renderCard(knownRow());
 
-    expect(factValues()).toEqual(['5', '30', '1', '3.33', 'No', 'Yes', 'Yes']);
+    expect(factValues()).toEqual([
+      '5',
+      '30',
+      '1',
+      '3.33',
+      'No',
+      'Yes',
+      'Yes',
+      'Native: Unavailable for this releaseHistorical: Unavailable for this release',
+    ]);
     expect(factTitles()).toEqual([
       'Level: 5',
       'HP: 30',
@@ -107,6 +134,7 @@ describe('MonsterBrowseCard', () => {
       'Boss: No',
       'Undead: Yes',
       'Body attack: Yes',
+      '',
     ]);
   });
 
@@ -126,6 +154,7 @@ describe('MonsterBrowseCard', () => {
       'Unknown',
       'Not recorded',
       'Unavailable',
+      'Native: UnknownHistorical: Unavailable for this release',
     ]);
   });
 
@@ -135,5 +164,320 @@ describe('MonsterBrowseCard', () => {
     const list = screen.getAllByRole('definition')[0]?.closest('dl');
     expect(list).toHaveAttribute('aria-label', 'Sentinel Snail facts');
     expect(document.querySelectorAll('a')).toHaveLength(0);
+  });
+
+  it('opens a focus-managed drop drawer without guessing unresolved item keys', async () => {
+    const user = userEvent.setup();
+    const row: MonsterBrowseRow = {
+      ...knownRow(),
+      drops: {
+        native: { state: 'known', count: 1, lowerBound: true },
+        historical: { state: 'absent' },
+        itemKeys: [],
+        entries: [
+          {
+            itemRefState: 'ambiguous',
+            itemName: 'Unknown item name',
+            assertionKind: 'historical-overlay',
+            sourceBuild: 'gms-v83',
+            confidence: 'maybe',
+          },
+        ],
+      },
+    };
+    renderCard(row, true);
+
+    expect(screen.getByText(/At least 1 \(partial coverage\)/u)).toBeVisible();
+    expect(
+      screen.getByLabelText(
+        'Native drops: At least 1 (partial coverage). Historical drops: None recorded.',
+      ),
+    ).toBeVisible();
+    const expandButton = screen.getByRole('button', {
+      name: 'Sentinel Snail, 1 drop. Show drops.',
+    });
+    expect(expandButton).toHaveAttribute('aria-expanded', 'false');
+    expect(expandButton).toHaveTextContent('1');
+    expect(expandButton).toHaveAttribute('data-variant', 'default');
+    expect(expandButton).toHaveAttribute('aria-haspopup', 'dialog');
+
+    await user.click(expandButton);
+    expect(expandButton).toHaveAttribute('aria-expanded', 'true');
+    expect(expandButton).toHaveAttribute('data-variant', 'light');
+    const drawer = await screen.findByRole('dialog', {
+      name: /Sentinel Snail/u,
+    });
+    await waitFor(() => expect(drawer).toBeVisible());
+    expect(screen.getByRole('heading', { name: 'Drops (1)' })).toBeVisible();
+    await waitFor(() =>
+      expect(screen.getByText(/Unknown item name/u)).toBeVisible(),
+    );
+    expect(screen.getByText(/Ambiguous item reference/u)).toBeVisible();
+    expect(
+      screen.getByRole('group', { name: 'Drop certainty legend' }),
+    ).toHaveTextContent('Confirmed');
+    expect(
+      screen.getByRole('group', { name: 'Drop certainty legend' }),
+    ).toHaveTextContent('Unconfirmed');
+    const uncertaintyButton = screen.getByRole('button', {
+      name: 'Show unconfirmed drop details for Unknown item name',
+    });
+    expect(uncertaintyButton).toHaveAttribute('data-confirmed', 'false');
+    const legendStatus = screen
+      .getByRole('group', { name: 'Drop certainty legend' })
+      .querySelector('[data-confirmed="false"]');
+    expect(legendStatus?.className).toContain('certainty');
+    expect(uncertaintyButton.className).toContain('certainty');
+    expect(
+      screen.queryByText(/Historical · GMS v83 · maybe/u),
+    ).not.toBeInTheDocument();
+
+    const search = screen.getByRole('textbox', {
+      name: 'Search items',
+    });
+    await user.type(search, 'no match');
+    expect(screen.getByText('No drop entries match “no match”.')).toBeVisible();
+    await user.clear(search);
+    expect(screen.getByText(/Unknown item name/u)).toBeVisible();
+
+    await user.click(
+      screen.getByRole('button', { name: 'Close Drops for Sentinel Snail' }),
+    );
+    await waitFor(() =>
+      expect(expandButton).toHaveAttribute('aria-expanded', 'false'),
+    );
+    await waitFor(() => expect(expandButton).toHaveFocus());
+  });
+
+  it('labels an unavailable empty listing as unavailable', async () => {
+    const user = userEvent.setup();
+    renderCard(unknownRow());
+
+    await user.click(
+      screen.getByRole('button', {
+        name: 'Sentinel Unknown, Drops unavailable. Show drops.',
+      }),
+    );
+
+    await waitFor(() =>
+      expect(
+        screen.getByRole('heading', { name: 'Drops unavailable' }),
+      ).toBeVisible(),
+    );
+    expect(
+      screen.getByText('Drop listing unavailable for this release.'),
+    ).toBeVisible();
+    expect(
+      screen.queryByRole('heading', { name: 'Drops (0)' }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('shows zero for an available empty roster when count facts are unknown', async () => {
+    const user = userEvent.setup();
+    renderCard(unknownRow(), true);
+
+    const trigger = screen.getByRole('button', {
+      name: 'Sentinel Unknown, 0. Show drops.',
+    });
+    expect(trigger).toHaveTextContent('0');
+    await user.click(trigger);
+
+    await waitFor(() =>
+      expect(screen.getByRole('heading', { name: 'Drops (0)' })).toBeVisible(),
+    );
+    expect(
+      screen.getByText('No drops have been recorded for this monster'),
+    ).toBeVisible();
+  });
+
+  it('closes a status popover before its containing desktop drops panel', async () => {
+    const user = userEvent.setup();
+    const row: MonsterBrowseRow = {
+      ...knownRow(),
+      drops: {
+        native: { state: 'absent', coverageKey: 'fixture.no-native-source' },
+        historical: { state: 'known', count: 1, sourceBuilds: ['gms-v83'] },
+        itemKeys: [],
+        entries: [
+          {
+            itemRefState: 'resolved',
+            itemName: 'Green Headband',
+            assertionKind: 'historical-overlay',
+            sourceBuild: 'gms-v83',
+            confidence: 'maybe',
+          },
+        ],
+      },
+    };
+    const onClose = vi.fn();
+    render(
+      <MantineProvider>
+        <MonsterDropListing
+          record={row}
+          dropBrowseAvailable
+          targetBuildLabel="Classic World"
+          onClose={onClose}
+        />
+      </MantineProvider>,
+    );
+
+    const statusButton = screen.getByRole('button', {
+      name: 'Show unconfirmed drop details for Green Headband',
+    });
+    await user.hover(statusButton);
+    expect(statusButton).toHaveAttribute('aria-expanded', 'true');
+    await waitFor(() =>
+      expect(
+        screen.getByText('Source: GMS v83 Monster Book.'),
+      ).toBeInTheDocument(),
+    );
+    await user.keyboard('{Escape}');
+    await waitFor(() =>
+      expect(statusButton).toHaveAttribute('aria-expanded', 'false'),
+    );
+    expect(onClose).not.toHaveBeenCalled();
+
+    statusButton.focus();
+    expect(
+      document.querySelector('table[aria-label="Drop sources"]'),
+    ).toBeNull();
+    expect(statusButton).toHaveFocus();
+
+    await user.keyboard('{Escape}');
+    expect(onClose).toHaveBeenCalledOnce();
+
+    await user.click(screen.getByRole('textbox', { name: 'Search items' }));
+    await user.keyboard('{Escape}');
+    expect(onClose).toHaveBeenCalledTimes(2);
+  });
+
+  it('uses the current build as the source for a confirmed drop', async () => {
+    const user = userEvent.setup();
+    const row: MonsterBrowseRow = {
+      ...knownRow(),
+      drops: {
+        native: { state: 'known', count: 1, lowerBound: false },
+        historical: { state: 'absent' },
+        itemKeys: [],
+        entries: [
+          {
+            itemRefState: 'resolved',
+            itemName: 'Red Potion',
+            assertionKind: 'native',
+          },
+        ],
+      },
+    };
+    render(
+      <MantineProvider>
+        <MonsterDropListing
+          record={row}
+          dropBrowseAvailable
+          targetBuildLabel="GMS v83"
+          onClose={vi.fn()}
+        />
+      </MantineProvider>,
+    );
+
+    const statusButton = screen.getByRole('button', {
+      name: 'Show confirmed drop details for Red Potion',
+    });
+    await user.click(statusButton);
+    expect(statusButton).toHaveAttribute('aria-expanded', 'true');
+    await waitFor(() =>
+      expect(
+        screen.getByText('Source: GMS v83 Monster Book.'),
+      ).toBeInTheDocument(),
+    );
+    expect(
+      document.querySelector('table[aria-label="Drop sources"]'),
+    ).toBeNull();
+  });
+
+  it('omits source attribution when a historical entry has no source build', async () => {
+    const user = userEvent.setup();
+    const row: MonsterBrowseRow = {
+      ...knownRow(),
+      drops: {
+        native: { state: 'absent' },
+        historical: { state: 'unknown' },
+        itemKeys: [],
+        entries: [
+          {
+            itemRefState: 'resolved',
+            itemName: 'Unknown source drop',
+            assertionKind: 'historical-overlay',
+          },
+        ],
+      },
+    };
+    render(
+      <MantineProvider>
+        <MonsterDropListing
+          record={row}
+          dropBrowseAvailable
+          targetBuildLabel="Classic World"
+          onClose={vi.fn()}
+        />
+      </MantineProvider>,
+    );
+
+    await user.click(
+      screen.getByRole('button', {
+        name: 'Show unconfirmed drop details for Unknown source drop',
+      }),
+    );
+    await waitFor(() => expect(screen.getByText('Maybe')).toBeInTheDocument());
+    expect(screen.queryByText(/^Source:/u)).not.toBeInTheDocument();
+  });
+
+  it('lets Escape close a status popover before the mobile drawer', async () => {
+    const user = userEvent.setup();
+    const row: MonsterBrowseRow = {
+      ...knownRow(),
+      drops: {
+        native: { state: 'absent', coverageKey: 'fixture.no-native-source' },
+        historical: { state: 'known', count: 1, sourceBuilds: ['gms-v83'] },
+        itemKeys: [],
+        entries: [
+          {
+            itemRefState: 'resolved',
+            itemName: 'Green Headband',
+            assertionKind: 'historical-overlay',
+            sourceBuild: 'gms-v83',
+            confidence: 'maybe',
+          },
+        ],
+      },
+    };
+    renderCard(row, true);
+
+    await user.click(
+      screen.getByRole('button', {
+        name: 'Sentinel Snail, 1 drop. Show drops.',
+      }),
+    );
+    const drawer = await screen.findByRole('dialog', {
+      name: /Sentinel Snail/u,
+    });
+    const statusButton = screen.getByRole('button', {
+      name: 'Show unconfirmed drop details for Green Headband',
+    });
+    await user.click(statusButton);
+    expect(statusButton).toHaveAttribute('aria-expanded', 'true');
+    expect(statusButton).toHaveAttribute(
+      'data-mantine-stop-propagation',
+      'true',
+    );
+
+    await user.keyboard('{Escape}');
+    await waitFor(() =>
+      expect(statusButton).toHaveAttribute('aria-expanded', 'false'),
+    );
+    expect(drawer).toBeVisible();
+    expect(statusButton).toHaveFocus();
+
+    await user.keyboard('{Escape}');
+    await waitFor(() => expect(drawer).not.toBeInTheDocument());
   });
 });

@@ -1,19 +1,26 @@
-import { Group, Title } from '@mantine/core';
+import { Button, MultiSelect, Text, Title } from '@mantine/core';
 import { FacetedBrowser } from '@mapletip/component-library';
 import type {
   BrowseState,
   FacetDefinition,
+  QueryFieldDefinition,
+  RowExpansionControlContext,
   TableColumn,
 } from '@mapletip/component-library';
+import { Package } from '@phosphor-icons/react';
 import type { ReactElement } from 'react';
 
 import { BrowsePageShell } from '@/components/BrowsePageShell';
 import { BUILDS, type BuildId } from '@/config/maplekit';
 
+import classes from '../MonsterBrowse.module.css';
+import dropClasses from '../MonsterDrops.module.css';
 import { MonsterBrowseCard } from '../MonsterBrowseCard';
-import { MonsterSprite } from '../MonsterSprite';
+import { dropListingActionLabel, MonsterDropListing } from '../MonsterDrops';
+import { MONSTER_SPRITE_SIZE, MonsterSprite } from '../MonsterSprite';
 import {
   formatMonsterFact,
+  type MonsterDropItemOption,
   type MonsterBrowseRow,
   type MonsterFactId,
 } from '../project';
@@ -21,6 +28,8 @@ import {
 export interface MonsterBrowseProps {
   readonly buildId: BuildId;
   readonly rows: readonly MonsterBrowseRow[];
+  readonly dropBrowseAvailable: boolean;
+  readonly dropItemOptions: readonly MonsterDropItemOption[];
 }
 
 interface StatColumnOptions {
@@ -79,10 +88,13 @@ export const monsterBrowseColumns: readonly TableColumn<MonsterBrowseRow>[] = [
     sortable: true,
     firstSortDirection: 'asc',
     render: (record) => (
-      <Group align="flex-start" gap="xs" wrap="nowrap">
+      <div
+        className={classes['identity']}
+        style={{ paddingInlineStart: MONSTER_NAME_INDENT }}
+      >
         <MonsterSprite sprite={record.sprite} />
-        <span>{record.name}</span>
-      </Group>
+        <span className={classes['identityName']}>{record.name}</span>
+      </div>
     ),
   },
   statColumn('level', 'Level', { firstSortDirection: 'asc' }),
@@ -108,6 +120,51 @@ export const monsterBrowseColumns: readonly TableColumn<MonsterBrowseRow>[] = [
 
 /** The rail already names the build; the count only needs the short noun. */
 const SUMMARY_NOUN = { one: 'Monster', other: 'Monsters' } as const;
+const MONSTER_NAME_INDENT = `calc(${MONSTER_SPRITE_SIZE}px + var(--mantine-spacing-xs))`;
+
+function dropExpansionControl(
+  {
+    record,
+    expanded,
+    controlsId,
+    onToggle,
+  }: RowExpansionControlContext<MonsterBrowseRow>,
+  dropBrowseAvailable: boolean,
+): ReactElement {
+  const label = dropListingActionLabel(record, expanded, dropBrowseAvailable);
+  return (
+    <Button
+      type="button"
+      variant={expanded ? 'light' : 'default'}
+      size="compact-sm"
+      radius="sm"
+      leftSection={<Package size={14} aria-hidden="true" />}
+      classNames={{
+        section: dropClasses['triggerSection'],
+        label: dropClasses['triggerLabel'],
+      }}
+      aria-expanded={expanded}
+      aria-controls={controlsId}
+      aria-label={label}
+      title={label}
+      style={{ marginInlineStart: MONSTER_NAME_INDENT }}
+      onKeyDown={(event) => {
+        if (!expanded || event.key !== 'Escape') return;
+        event.preventDefault();
+        event.stopPropagation();
+        onToggle();
+      }}
+      onClick={(event) => {
+        event.stopPropagation();
+        onToggle();
+      }}
+    >
+      {dropBrowseAvailable
+        ? record.drops.entries.length.toLocaleString('en-US')
+        : 'Unavailable'}
+    </Button>
+  );
+}
 
 // Boolean counts are derived from the rows, never from a static taxonomy: a
 // non-`known` fact is absent from the row and therefore from the facet, which is
@@ -146,6 +203,42 @@ const facets: readonly FacetDefinition<MonsterBrowseRow>[] = [
   ...booleanFacets,
 ];
 
+function dropItemFacet(
+  options: readonly MonsterDropItemOption[],
+): FacetDefinition<MonsterBrowseRow> {
+  return {
+    id: 'drops-item',
+    field: 'dropItemKeys',
+    label: 'Drops item',
+    kind: 'multi-select',
+    options,
+    renderControl: ({ value, onChange }) => {
+      const selected = Array.isArray(value)
+        ? value.filter((entry): entry is string => typeof entry === 'string')
+        : [];
+      if (options.length === 0) {
+        return <Text size="sm">No resolved item keys are available.</Text>;
+      }
+      return (
+        <MultiSelect
+          aria-label="Drops item"
+          data={options}
+          value={selected}
+          onChange={(next) => onChange(next.length === 0 ? undefined : next)}
+          searchable
+          clearable
+          hidePickedOptions
+          limit={15}
+          maxDropdownHeight={300}
+          nothingFoundMessage="No dropped items match"
+          placeholder="Search dropped items"
+          size="sm"
+        />
+      );
+    },
+  };
+}
+
 const defaultState: BrowseState = {
   search: '',
   filters: {},
@@ -158,8 +251,24 @@ const defaultState: BrowseState = {
 export function MonsterBrowse({
   buildId,
   rows,
+  dropBrowseAvailable,
+  dropItemOptions,
 }: MonsterBrowseProps): ReactElement {
   const label = BUILDS[buildId].label;
+  const queryFields: readonly QueryFieldDefinition<MonsterBrowseRow>[] =
+    dropBrowseAvailable
+      ? [
+          {
+            id: 'dropItemKeys',
+            accessor: (record) => record.drops.itemKeys,
+            sortable: false,
+          },
+        ]
+      : [];
+  const browseFacets = dropBrowseAvailable
+    ? [...facets, dropItemFacet(dropItemOptions)]
+    : facets;
+
   return (
     <BrowsePageShell>
       <FacetedBrowser
@@ -168,8 +277,9 @@ export function MonsterBrowse({
         idAccessor="key"
         identityField="name"
         columns={monsterBrowseColumns}
+        queryFields={queryFields}
         searchFields={['name']}
-        facets={facets}
+        facets={browseFacets}
         recordNoun={`${label} monsters`}
         summaryMode="total"
         summaryNoun={SUMMARY_NOUN}
@@ -179,7 +289,24 @@ export function MonsterBrowse({
         // scroll region is the page's vertical scroll region on desktop.
         fillHeight
         tableStorageKey={`mapletip:web:monsters:${buildId}:v1`}
-        renderCard={(record) => <MonsterBrowseCard record={record} />}
+        renderCard={(record) => (
+          <MonsterBrowseCard
+            record={record}
+            dropBrowseAvailable={dropBrowseAvailable}
+            targetBuildLabel={label}
+          />
+        )}
+        rowExpansionContent={(record, { onClose }) => (
+          <MonsterDropListing
+            record={record}
+            dropBrowseAvailable={dropBrowseAvailable}
+            targetBuildLabel={label}
+            onClose={onClose}
+          />
+        )}
+        rowExpansionControl={(context) =>
+          dropExpansionControl(context, dropBrowseAvailable)
+        }
         defaultState={defaultState}
       />
     </BrowsePageShell>

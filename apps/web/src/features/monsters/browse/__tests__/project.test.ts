@@ -1,9 +1,14 @@
-import type { StaticMonsterCatalog } from '@mapletip/data/monsters';
+import type {
+  MonsterCatalogV2_2,
+  MonsterDropBrowseV1,
+  StaticMonsterCatalog,
+} from '@mapletip/data/monsters';
 import { describe, expect, it } from 'vitest';
 
 import {
   formatMonsterFact,
   projectMonsterBrowseRows,
+  projectMonsterDropItemOptions,
   UNNAMED_MONSTER_LABEL,
   type MonsterBrowseRow,
   type MonsterFactId,
@@ -162,6 +167,199 @@ describe('projectMonsterBrowseRows contract-2.1 tuple mapping', () => {
     ]) {
       expect(row).not.toHaveProperty(omitted);
     }
+  });
+});
+
+describe('Monster drop projection', () => {
+  function catalogV22(
+    drops: MonsterCatalogV2_2['records'][number]['drops'],
+    {
+      historicalDrops = 'supported',
+      nativeDropsAbsentCoverageKey = 'fixture.native-drops-coverage',
+    }: {
+      readonly historicalDrops?: 'supported' | 'unsupported';
+      readonly nativeDropsAbsentCoverageKey?: string | null;
+    } = {},
+  ): StaticMonsterCatalog {
+    const base = fixtureCatalog({ records: [sentinelRecord()] });
+    return {
+      ...base,
+      contractVersion: '2.2',
+      browseCoverage: {
+        historicalDrops,
+        locationScope: 'client-placements',
+        nativeDropsAbsentCoverageKey,
+      },
+      records: base.records.map((record) => ({
+        ...record,
+        drops,
+        locations: { state: 'absent' },
+      })),
+    } as unknown as StaticMonsterCatalog;
+  }
+
+  function dropBrowseFixture(): MonsterDropBrowseV1 {
+    return {
+      format: 'mapletip.monster-drop-browse',
+      contractVersion: '1.0',
+      scope: { build_id: 'cw-launch', family_id: 'classic-world' },
+      items: [
+        {
+          itemRef: { state: 'ambiguous' },
+          itemName: { state: 'known', value: 'Known but ambiguous potion' },
+          itemClass: { state: 'unknown' },
+          category: { kind: 'unknown' },
+        },
+        {
+          itemRef: { state: 'resolved', key: 'fixture:item:known' },
+          itemName: { state: 'known', value: 'Known item' },
+          itemClass: { state: 'known', value: 'etc' },
+          category: { kind: 'item-class', value: 'etc' },
+        },
+      ],
+      records: {
+        'fixture:monster:001': {
+          entries: [
+            { assertionKind: 'native', item: 0 },
+            {
+              assertionKind: 'historical-overlay',
+              sourceBuild: 'gms-v83',
+              confidence: 'maybe',
+              item: 1,
+            },
+          ],
+        },
+      },
+    };
+  }
+
+  it('keeps old catalog summaries unavailable instead of inventing zero counts', () => {
+    const row = firstRow(
+      projectMonsterBrowseRows(fixtureCatalog({ records: [sentinelRecord()] })),
+    );
+
+    expect(row.drops.native).toEqual({ state: 'unavailable' });
+    expect(row.drops.historical).toEqual({ state: 'unavailable' });
+  });
+
+  it('preserves native unknown and historical count/source independently', () => {
+    const row = firstRow(
+      projectMonsterBrowseRows(
+        catalogV22({
+          native: { state: 'unknown' },
+          historical: {
+            state: 'known',
+            count: 6,
+            sourceBuilds: ['gms-v83'],
+          },
+        }),
+      ),
+    );
+
+    expect(row.drops.native).toEqual({ state: 'unknown' });
+    expect(row.drops.historical).toEqual({
+      state: 'known',
+      count: 6,
+      sourceBuilds: ['gms-v83'],
+    });
+  });
+
+  it('retains absent coverage and distinguishes an observed zero count', () => {
+    const absent = firstRow(
+      projectMonsterBrowseRows(
+        catalogV22({
+          native: { state: 'absent' },
+          historical: { state: 'absent' },
+        }),
+      ),
+    );
+    const zero = firstRow(
+      projectMonsterBrowseRows(
+        catalogV22({
+          native: { state: 'known', count: 0, lowerBound: false },
+          historical: { state: 'absent' },
+        }),
+      ),
+    );
+
+    expect(absent.drops.native).toEqual({
+      state: 'absent',
+      coverageKey: 'fixture.native-drops-coverage',
+    });
+    expect(zero.drops.native).toEqual({
+      state: 'known',
+      count: 0,
+      lowerBound: false,
+    });
+  });
+
+  it('does not turn a missing historical summary into an absent count', () => {
+    const unsupported = firstRow(
+      projectMonsterBrowseRows(
+        catalogV22(
+          { native: { state: 'unsupported' } },
+          { historicalDrops: 'unsupported' },
+        ),
+      ),
+    );
+    const unknown = firstRow(
+      projectMonsterBrowseRows(
+        catalogV22({ native: { state: 'unsupported' } }),
+      ),
+    );
+
+    expect(unsupported.drops.historical).toEqual({ state: 'unsupported' });
+    expect(unknown.drops.historical).toEqual({ state: 'unknown' });
+  });
+
+  it('keeps unresolved entries but exposes only resolved item keys to filtering', () => {
+    const drops = dropBrowseFixture();
+    const row = firstRow(
+      projectMonsterBrowseRows(
+        catalogV22({
+          native: { state: 'known', count: 1, lowerBound: true },
+          historical: { state: 'known', count: 1, sourceBuilds: ['gms-v83'] },
+        }),
+        drops,
+      ),
+    );
+
+    expect(row.drops.entries).toHaveLength(2);
+    expect(row.drops.entries[0]).toMatchObject({
+      itemRefState: 'ambiguous',
+      itemName: 'Known but ambiguous potion',
+      assertionKind: 'native',
+    });
+    expect(row.drops.entries[1]).toMatchObject({
+      itemKey: 'fixture:item:known',
+      assertionKind: 'historical-overlay',
+      sourceBuild: 'gms-v83',
+      confidence: 'maybe',
+    });
+    expect(row.drops.itemKeys).toEqual(['fixture:item:known']);
+  });
+
+  it('builds unique item-filter labels from stable resolved keys', () => {
+    const dropBrowse = dropBrowseFixture();
+    dropBrowse.items[0]!.itemRef = {
+      state: 'resolved',
+      key: 'fixture:item:other',
+    };
+    dropBrowse.items[1]!.itemName = {
+      state: 'known',
+      value: 'Known but ambiguous potion',
+    };
+
+    expect(projectMonsterDropItemOptions(dropBrowse)).toEqual([
+      {
+        value: 'fixture:item:known',
+        label: 'Known but ambiguous potion (fixture:item:known)',
+      },
+      {
+        value: 'fixture:item:other',
+        label: 'Known but ambiguous potion (fixture:item:other)',
+      },
+    ]);
   });
 });
 
