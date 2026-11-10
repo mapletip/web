@@ -32,13 +32,6 @@ interface ParsedItemRoute {
   readonly category: ItemCategorySelection;
 }
 
-function guardNotFound(condition: boolean): asserts condition {
-  if (!condition) {
-    // eslint-disable-next-line @typescript-eslint/only-throw-error
-    throw notFound();
-  }
-}
-
 /**
  * Parses raw route parameters into a validated build ID and category selection.
  * Throws notFound() if:
@@ -57,17 +50,31 @@ export function parseItemRouteParams(params: ItemRouteParams): ParsedItemRoute {
   const { scope, child } = params;
 
   if (scope === undefined) {
-    guardNotFound(child === undefined);
+    if (child !== undefined) {
+      // eslint-disable-next-line @typescript-eslint/only-throw-error
+      throw notFound();
+    }
     return { buildId, category: { scope: ITEM_SCOPES.all } };
   }
 
-  guardNotFound(scope !== 'all' && isItemScope(scope));
+  if (scope === 'all') {
+    // eslint-disable-next-line @typescript-eslint/only-throw-error
+    throw notFound();
+  }
+
+  if (!isItemScope(scope)) {
+    // eslint-disable-next-line @typescript-eslint/only-throw-error
+    throw notFound();
+  }
 
   const scopeObj = ITEM_SCOPES[scope];
 
   if (child !== undefined) {
     const childObj = scopeObj.children.find((c) => c.slug === child);
-    guardNotFound(childObj !== undefined);
+    if (!childObj) {
+      // eslint-disable-next-line @typescript-eslint/only-throw-error
+      throw notFound();
+    }
     return { buildId, category: { scope: scopeObj, child: childObj } };
   }
 
