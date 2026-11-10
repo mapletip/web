@@ -334,6 +334,9 @@ export function FacetedBrowser<TRecord extends Record<string, unknown>>(
       height="100%"
       identityField={comparisonProps.identityField}
       storeColumnsKey={tableStoreColumnsKey}
+      {...(comparisonProps.tableVerticalSpacing !== undefined
+        ? { verticalSpacing: comparisonProps.tableVerticalSpacing }
+        : {})}
       {...(comparisonProps.tableMaxHeight !== undefined
         ? { maxHeight: comparisonProps.tableMaxHeight }
         : {})}

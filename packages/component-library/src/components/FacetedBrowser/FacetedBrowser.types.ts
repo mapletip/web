@@ -12,6 +12,7 @@ import type {
   RowExpansionContentContext,
   RowExpansionControl,
   TableColumn,
+  TableProps,
 } from '@/components/Table';
 
 export type { PageLinkRenderOptions, PageLinkRenderProps, PageLinkRenderer };
@@ -174,6 +175,8 @@ type PresentationProps<TRecord extends Record<string, unknown>> =
       readonly tableLabel?: string;
       /** Optional maximum height for DataTable's internal table scroll area. */
       readonly tableMaxHeight?: number | string;
+      /** Vertical padding for comparison-table cells. */
+      readonly tableVerticalSpacing?: TableProps<TRecord>['verticalSpacing'];
       readonly rowExpansionContent?: (
         record: TRecord,
         context: RowExpansionContentContext,

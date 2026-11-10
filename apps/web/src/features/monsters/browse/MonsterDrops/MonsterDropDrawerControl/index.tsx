@@ -30,6 +30,7 @@ export function MonsterDropDrawerControl({
         variant={opened ? 'light' : 'default'}
         size="compact-sm"
         radius="sm"
+        px={4}
         leftSection={<Package size={14} aria-hidden="true" />}
         classNames={{
           section: classes['triggerSection'],

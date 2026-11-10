@@ -7,6 +7,7 @@
 }
 
 .triggerLabel {
+  font-size: var(--mantine-font-size-xs);
   line-height: 1;
 }
 
