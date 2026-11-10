@@ -10,51 +10,98 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { routeTree } from '@/routeTree.gen';
 
+import { getCategoryRows } from '../assignment';
+import { ITEM_SCOPES } from '../categories';
+import { getItemColumns } from '../columns';
 import type { ItemRow } from '../project';
+import type { ItemCategorySelection } from '../routing';
 
-const { fixtureRows } = vi.hoisted(() => {
+const { fixtureRows, cwCoverage, gmsCoverage } = vi.hoisted(() => {
   const rows: readonly ItemRow[] = [
     {
-      key: 'item:02000000',
       sourceId: '02000000',
       name: 'Red Potion',
       itemClass: 'consume',
       types: ['potion'],
       functions: ['recovery'],
+      hp: 50,
     },
     {
-      key: 'item:02070000',
+      sourceId: '02040000',
+      name: 'Scroll for Helmet DEF 100%',
+      itemClass: 'consume',
+      types: ['upgrade-scroll'],
+      targetLabel: 'hat',
+      success: 100,
+      cursed: 0,
+      stats: { weaponDefense: 1 },
+      tier: 'lesser',
+    },
+    {
       sourceId: '02070000',
       name: 'Subi Throwing-Stars',
       itemClass: 'consume',
       types: ['throwing-star'],
+      attack: 15,
     },
     {
-      key: 'item:04000000',
       sourceId: '04000000',
       name: 'Snail Shell',
       itemClass: 'etc',
+      neededForQuestCount: 1,
+      usedInRecipeCount: 1,
+      questFlag: true,
+    },
+    {
+      sourceId: '03010000',
+      name: 'Relaxer',
+      itemClass: 'setup',
+      types: ['chair'],
+      seatHp: 50,
+    },
+    {
+      sourceId: '05000000',
+      name: 'Brown Puppy',
+      itemClass: 'pet',
+      cashShopListingCount: 1,
+      closeness: 1,
+    },
+    {
+      sourceId: '05010000',
+      name: 'Transparent Hat',
+      itemClass: 'cash',
+      cashShopListingCount: 1,
     },
   ];
-  return { fixtureRows: rows };
+  const relationships = (status: 'complete' | 'unsupported') => ({
+    'cash-shop-listing': 'complete' as const,
+    'found-in-container': 'complete' as const,
+    'made-by-recipe': status,
+    'monster-drop': 'partial' as const,
+    'needed-for-quest': 'complete' as const,
+    'quest-reward': 'complete' as const,
+    'used-in-recipe': status,
+  });
+  return {
+    fixtureRows: rows,
+    cwCoverage: {
+      relationships: relationships('complete'),
+      scrollTier: 'complete' as const,
+    },
+    gmsCoverage: {
+      relationships: relationships('unsupported'),
+      scrollTier: 'unsupported' as const,
+    },
+  };
 });
 
 vi.mock('../load', () => ({
-  loadItemBrowse: vi.fn().mockResolvedValue({
-    rows: fixtureRows,
-    coverage: {
-      relationships: {
-        'cash-shop-listing': 'complete',
-        'found-in-container': 'complete',
-        'made-by-recipe': 'complete',
-        'monster-drop': 'partial',
-        'needed-for-quest': 'complete',
-        'quest-reward': 'complete',
-        'used-in-recipe': 'complete',
-      },
-      scrollTier: 'complete',
-    },
-  }),
+  loadItemBrowse: vi.fn().mockImplementation((buildId: string) =>
+    Promise.resolve({
+      rows: fixtureRows,
+      coverage: buildId === 'gms-v83' ? gmsCoverage : cwCoverage,
+    }),
+  ),
 }));
 
 describe('Items Browse server rendering', () => {
@@ -143,4 +190,60 @@ describe('Items Browse server rendering', () => {
       'Classic World has no All Items.',
     );
   });
+
+  it('renders every category for both builds with unique columns and sorts', async () => {
+    const categories: ItemCategorySelection[] = [];
+    for (const scope of Object.values(ITEM_SCOPES)) {
+      categories.push({ scope });
+      for (const child of scope.children) {
+        categories.push({ scope, child });
+      }
+    }
+
+    for (const buildPrefix of ['', '/gms-v83']) {
+      const coverage = buildPrefix === '/gms-v83' ? gmsCoverage : cwCoverage;
+      for (const { scope, child } of categories) {
+        const basePath = `/maplestory${buildPrefix}/items`;
+        const path =
+          scope.slug === 'all'
+            ? basePath
+            : [basePath, scope.slug, child?.slug].filter(Boolean).join('/');
+        const scopedRows = getCategoryRows({
+          rows: fixtureRows,
+          scope,
+          child,
+        });
+        const { columns, sortOptions } = getItemColumns({
+          category: { scope, child },
+          coverage,
+          rows: scopedRows,
+        });
+
+        const columnKeys = columns.map(({ accessor }) => accessor);
+        expect(new Set(columnKeys).size, `Duplicate columns on ${path}`).toBe(
+          columnKeys.length,
+        );
+
+        const sortKeys = sortOptions.map(
+          ({ field, direction }) => `${field}:${direction}`,
+        );
+        expect(new Set(sortKeys).size, `Duplicate sorts on ${path}`).toBe(
+          sortKeys.length,
+        );
+
+        const router = createRouter({
+          routeTree,
+          history: createMemoryHistory({ initialEntries: [path] }),
+        });
+        await router.load();
+
+        const html = renderToString(
+          <MantineProvider theme={theme} forceColorScheme="dark">
+            <RouterProvider router={router} />
+          </MantineProvider>,
+        );
+        expect(html).toContain('Item categories');
+      }
+    }
+  }, 30_000);
 });

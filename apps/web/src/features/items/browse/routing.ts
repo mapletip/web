@@ -27,7 +27,7 @@ export interface ItemCategorySelection {
   readonly child?: ItemCategoryChild | undefined;
 }
 
-export interface ParsedItemRoute {
+interface ParsedItemRoute {
   readonly buildId: BuildId;
   readonly category: ItemCategorySelection;
 }

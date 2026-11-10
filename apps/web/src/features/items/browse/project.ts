@@ -21,13 +21,12 @@ export type ItemRelationshipKind = keyof NonNullable<
   ItemBrowseRecord['relationships']
 >;
 
-export interface ItemPetTarget {
-  readonly key: string;
+interface ItemPetTarget {
+  readonly sourceId: string;
   readonly name?: string;
 }
 
 export type ItemRow = {
-  readonly key: string;
   readonly sourceId: string;
   readonly itemClass: ItemBrowseClass;
   readonly name?: string;
@@ -94,20 +93,18 @@ function filterNonEmptyArray<T>(
 
 function resolvePetTargets(
   targets: readonly string[] | undefined,
-  petNamesByKey: ReadonlyMap<string, string>,
+  petByTargetKey: ReadonlyMap<string, ItemPetTarget>,
 ): readonly ItemPetTarget[] | undefined {
   if (!targets || targets.length === 0) {
     return undefined;
   }
 
-  const distinctKeys = Array.from(new Set(targets));
-  return distinctKeys.map((targetKey) => {
-    const knownName = petNamesByKey.get(targetKey);
-    if (knownName !== undefined) {
-      return { key: targetKey, name: knownName };
-    }
-    return { key: targetKey };
-  });
+  const resolved = new Map<string, ItemPetTarget>();
+  for (const targetKey of targets) {
+    const pet = petByTargetKey.get(targetKey) ?? { sourceId: targetKey };
+    resolved.set(pet.sourceId, pet);
+  }
+  return Array.from(resolved.values());
 }
 
 export const RELATIONSHIP_COUNT_FIELDS = [
@@ -126,16 +123,19 @@ export const RELATIONSHIP_COUNT_FIELDS = [
 export function projectItemBrowseRows(
   records: readonly ItemBrowseRow[],
 ): readonly ItemRow[] {
-  const petNamesByKey = new Map<string, string>();
+  const petByTargetKey = new Map<string, ItemPetTarget>();
   for (const record of records) {
-    if (record.name.state === 'known') {
-      petNamesByKey.set(record.key, record.name.value);
-    }
+    const name = extractKnownFact(record.name);
+    const pet = {
+      sourceId: record.sourceId,
+      ...(name !== undefined ? { name } : {}),
+    };
+    petByTargetKey.set(record.key, pet);
+    petByTargetKey.set(record.sourceId, pet);
   }
 
   return records.map((record) => {
     const row: WritableItemRow = {
-      key: record.key,
       sourceId: record.sourceId,
       itemClass: record.itemClass,
     };
@@ -166,7 +166,7 @@ export function projectItemBrowseRows(
     setField(
       row,
       'petTargets',
-      resolvePetTargets(petFood?.targets, petNamesByKey),
+      resolvePetTargets(petFood?.targets, petByTargetKey),
     );
     setField(
       row,

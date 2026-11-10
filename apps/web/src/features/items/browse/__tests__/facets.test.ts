@@ -136,7 +136,6 @@ describe('Items Browse facets', () => {
 
   it('uses positive relationship counts for the shared choices', () => {
     const row: ItemRow = {
-      key: 'item:one',
       sourceId: '1',
       itemClass: 'etc',
       neededForQuestCount: 1,

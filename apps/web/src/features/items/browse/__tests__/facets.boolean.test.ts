@@ -66,14 +66,13 @@ describe('Items Browse boolean facets', () => {
     expect(
       queryValue({
         field: 'noRecordedQuestOrRecipeUse',
-        row: { key: 'a', sourceId: '1', itemClass: 'etc' },
+        row: { sourceId: '1', itemClass: 'etc' },
       }),
     ).toBe(true);
     expect(
       queryValue({
         field: 'noRecordedQuestOrRecipeUse',
         row: {
-          key: 'b',
           sourceId: '2',
           itemClass: 'etc',
           neededForQuestCount: 0,
@@ -85,7 +84,6 @@ describe('Items Browse boolean facets', () => {
       queryValue({
         field: 'noRecordedQuestOrRecipeUse',
         row: {
-          key: 'c',
           sourceId: '3',
           itemClass: 'etc',
           neededForQuestCount: 1,
@@ -96,7 +94,6 @@ describe('Items Browse boolean facets', () => {
       queryValue({
         field: 'noRecordedQuestOrRecipeUse',
         row: {
-          key: 'd',
           sourceId: '4',
           itemClass: 'etc',
           usedInRecipeCount: 2,
@@ -107,57 +104,50 @@ describe('Items Browse boolean facets', () => {
 
   it('marks percentage recovery when either percentage field is present', () => {
     const query = ITEM_FACET_CONFIGS.percentageRecovery.getValue;
-    expect(query({ key: 'a', sourceId: '1', itemClass: 'consume' })).toBe(
-      false,
+    expect(query({ sourceId: '1', itemClass: 'consume' })).toBe(false);
+    expect(query({ sourceId: '2', itemClass: 'consume', hpPercent: 0 })).toBe(
+      true,
     );
-    expect(
-      query({ key: 'b', sourceId: '2', itemClass: 'consume', hpPercent: 0 }),
-    ).toBe(true);
-    expect(
-      query({ key: 'c', sourceId: '3', itemClass: 'consume', mpPercent: 25 }),
-    ).toBe(true);
+    expect(query({ sourceId: '3', itemClass: 'consume', mpPercent: 25 })).toBe(
+      true,
+    );
   });
 
   it('derives Recovery and chair Restores choices from positive recorded fields', () => {
     const recovery = ITEM_FACET_CONFIGS.recoveryRestores.values;
     const chairs = ITEM_FACET_CONFIGS.chairRestores.values;
 
-    expect(recovery({ key: 'a', sourceId: '1', itemClass: 'consume' })).toEqual(
-      [],
-    );
+    expect(recovery({ sourceId: '1', itemClass: 'consume' })).toEqual([]);
     expect(
       recovery({
-        key: 'b',
         sourceId: '2',
         itemClass: 'consume',
         hpPercent: 30,
       }),
     ).toEqual(['hp-only']);
-    expect(
-      recovery({ key: 'c', sourceId: '3', itemClass: 'consume', mp: 40 }),
-    ).toEqual(['mp-only']);
+    expect(recovery({ sourceId: '3', itemClass: 'consume', mp: 40 })).toEqual([
+      'mp-only',
+    ]);
     expect(
       recovery({
-        key: 'd',
         sourceId: '4',
         itemClass: 'consume',
         hp: 1,
         mpPercent: 20,
       }),
     ).toEqual(['hp-and-mp']);
-    expect(
-      recovery({ key: 'e', sourceId: '5', itemClass: 'consume', hp: 0 }),
-    ).toEqual([]);
+    expect(recovery({ sourceId: '5', itemClass: 'consume', hp: 0 })).toEqual(
+      [],
+    );
 
-    expect(
-      chairs({ key: 'f', sourceId: '6', itemClass: 'setup', seatHp: 50 }),
-    ).toEqual(['hp-only']);
-    expect(
-      chairs({ key: 'g', sourceId: '7', itemClass: 'setup', seatMp: 40 }),
-    ).toEqual(['mp-only']);
+    expect(chairs({ sourceId: '6', itemClass: 'setup', seatHp: 50 })).toEqual([
+      'hp-only',
+    ]);
+    expect(chairs({ sourceId: '7', itemClass: 'setup', seatMp: 40 })).toEqual([
+      'mp-only',
+    ]);
     expect(
       chairs({
-        key: 'h',
         sourceId: '8',
         itemClass: 'setup',
         seatHp: 50,
