@@ -14,6 +14,7 @@ import { getCategoryRows } from '../assignment';
 import { ITEM_SCOPES } from '../categories';
 import { getItemColumns } from '../columns';
 import type { ItemRow } from '../project';
+import type { ItemCategorySelection } from '../routing';
 
 const { fixtureRows, cwCoverage, gmsCoverage } = vi.hoisted(() => {
   const rows: readonly ItemRow[] = [
@@ -191,14 +192,13 @@ describe('Items Browse server rendering', () => {
   });
 
   it('renders every category for both builds with unique columns and sorts', async () => {
-    const categories = Object.values(ITEM_SCOPES).flatMap((scope) =>
-      scope.slug === 'all'
-        ? [{ scope, child: undefined }]
-        : [
-            { scope, child: undefined },
-            ...scope.children.map((child) => ({ scope, child })),
-          ],
-    );
+    const categories: ItemCategorySelection[] = [];
+    for (const scope of Object.values(ITEM_SCOPES)) {
+      categories.push({ scope });
+      for (const child of scope.children) {
+        categories.push({ scope, child });
+      }
+    }
 
     for (const buildPrefix of ['', '/gms-v83']) {
       const coverage = buildPrefix === '/gms-v83' ? gmsCoverage : cwCoverage;
