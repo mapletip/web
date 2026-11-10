@@ -3,7 +3,7 @@ import type { ReactElement } from 'react';
 
 import type { BuildId } from '@/config/maplekit';
 
-import { MonsterDropDrawerControl, MonsterDropSummary } from '../MonsterDrops';
+import { MonsterDropDrawerControl } from '../MonsterDrops';
 import { MonsterSprite } from '../MonsterSprite';
 import {
   formatMonsterFact,
@@ -52,12 +52,6 @@ export function MonsterBrowseCard({
             </div>
           );
         })}
-        <div>
-          <dt>Drops</dt>
-          <dd>
-            <MonsterDropSummary record={record} />
-          </dd>
-        </div>
       </dl>
     </article>
   );

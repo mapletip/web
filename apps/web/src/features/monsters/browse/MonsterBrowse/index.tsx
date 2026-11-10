@@ -16,7 +16,7 @@ import { BUILDS, type BuildId } from '@/config/maplekit';
 import classes from '../MonsterBrowse.module.css';
 import { MonsterBrowseCard } from '../MonsterBrowseCard';
 import { dropListingActionLabel, MonsterDropListing } from '../MonsterDrops';
-import dropClasses from '../MonsterDrops.module.css';
+import dropClasses from '../MonsterDrops/MonsterDrops.module.css';
 import { MONSTER_SPRITE_SIZE, MonsterSprite } from '../MonsterSprite';
 import {
   formatMonsterFact,

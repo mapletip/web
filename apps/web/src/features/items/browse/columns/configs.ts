@@ -5,6 +5,7 @@
  */
 import type { ItemBrowseCoverage } from '@mapletip/data/items';
 
+import { itemCategoryLabel } from '../labels';
 import {
   RELATIONSHIP_COUNT_FIELDS,
   type ItemRelationshipKind,
@@ -24,7 +25,6 @@ import {
   formatSuccess,
   formatTargetLabel,
   formatTier,
-  SCOPE_LABELS,
 } from './format';
 
 export interface ColumnConfig {
@@ -210,7 +210,7 @@ export const COLUMNS = {
   itemClass: col({
     key: 'itemClass',
     title: 'Inventory',
-    value: (row) => SCOPE_LABELS[row.itemClass] ?? row.itemClass,
+    value: (row) => itemCategoryLabel(row.itemClass),
     ...{ width: 120, sortable: true },
   }),
   functions: col({

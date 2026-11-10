@@ -69,7 +69,11 @@ function ControlledExpandableTable(): ReactElement {
   );
 }
 
-function CustomTriggerExpandableTable(): ReactElement {
+function CustomTriggerExpandableTable({
+  closeTwice = false,
+}: {
+  readonly closeTwice?: boolean;
+}): ReactElement {
   return (
     <Table<DetailRecord>
       ariaLabel="Custom trigger records"
@@ -83,7 +87,7 @@ function CustomTriggerExpandableTable(): ReactElement {
             type="button"
             onClick={() => {
               onClose();
-              onClose();
+              if (closeTwice) onClose();
             }}
           >
             Close details for {record.name}
@@ -468,7 +472,31 @@ describe('Table DataTable mechanics', () => {
       .toHaveFocus();
   });
 
-  it('keeps the sticky header in front of a hovered, scrolled expansion row', async () => {
+  it('keeps a custom expansion closed when close is requested twice', async () => {
+    await render(
+      <MantineProvider
+        theme={theme}
+        cssVariablesResolver={cssVariablesResolver}
+        forceColorScheme="dark"
+      >
+        <CustomTriggerExpandableTable closeTwice />
+      </MantineProvider>,
+    );
+
+    await page.getByRole('button', { name: 'Show details for One' }).click();
+    await page.getByRole('button', { name: 'Close details for One' }).click();
+
+    await vi.waitFor(() =>
+      expect(
+        document.querySelector('[data-testid="custom-details-one"]'),
+      ).toBeNull(),
+    );
+    await expect
+      .element(page.getByRole('button', { name: 'Show details for One' }))
+      .toHaveAttribute('aria-expanded', 'false');
+  });
+
+  it('keeps expanded content above column hover and the sticky header above both', async () => {
     await render(
       <MantineProvider
         theme={theme}
@@ -485,7 +513,10 @@ describe('Table DataTable mechanics', () => {
           rowExpansionContent={(record) => (
             <div
               data-testid={`comparison-details-${record.id}`}
-              style={{ height: 240 }}
+              style={{
+                height: 240,
+                backgroundColor: 'var(--mantine-color-body)',
+              }}
             >
               Details for {record.name}
             </div>
@@ -514,6 +545,11 @@ describe('Table DataTable mechanics', () => {
 
     await userEvent.hover(identityCell);
     expect(getComputedStyle(identityCell, '::before').content).toBe('""');
+    const identityLayer = Number(getComputedStyle(identityCell).zIndex);
+    const expansionLayer = Number(getComputedStyle(expansionCell).zIndex);
+    const headerLayer = Number(getComputedStyle(header).zIndex);
+    expect(expansionLayer).toBeGreaterThan(identityLayer);
+    expect(headerLayer).toBeGreaterThan(expansionLayer);
 
     await vi.waitFor(() =>
       expect(viewport.scrollHeight).toBeGreaterThan(viewport.clientHeight),

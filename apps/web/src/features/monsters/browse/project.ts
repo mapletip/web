@@ -17,27 +17,9 @@ import type {
 
 type MonsterCatalogRecord =
   MonsterCatalogV2_2['records'][number] | MonsterCatalogV2_3['records'][number];
-type MonsterDropSummary = MonsterCatalogRecord['drops'];
 
 export type MonsterFactState = 'known' | 'unknown' | 'absent' | 'unsupported';
 export type UnknownFactState = Exclude<MonsterFactState, 'known'>;
-
-export type MonsterDropCountFact =
-  | {
-      readonly state: 'known';
-      readonly count: number;
-      readonly lowerBound: boolean;
-    }
-  | { readonly state: 'absent' }
-  | { readonly state: 'unknown' | 'unsupported' };
-
-export type MonsterHistoricalDropCountFact =
-  | {
-      readonly state: 'known';
-      readonly count: number;
-      readonly sourceBuilds: readonly string[];
-    }
-  | { readonly state: 'absent' | 'unknown' | 'unsupported' };
 
 export interface MonsterDropEntry {
   readonly itemKey?: string;
@@ -54,8 +36,6 @@ export interface MonsterDropItemOption {
 }
 
 export interface MonsterDropFacts {
-  readonly native: MonsterDropCountFact;
-  readonly historical: MonsterHistoricalDropCountFact;
   readonly entries: readonly MonsterDropEntry[];
   /** Resolved stable item keys for the shared array facet. */
   readonly itemKeys: readonly string[];
@@ -187,7 +167,6 @@ function readFact<T>(
 function projectRecord(
   record: MonsterCatalogRecord,
   dropBrowse: MonsterDropBrowseV1,
-  historicalDropsSupported: boolean,
 ): MonsterBrowseRow {
   const factStates: Partial<Record<MonsterFactId, UnknownFactState>> = {};
 
@@ -260,19 +239,12 @@ function projectRecord(
   );
 
   const dropEntries = projectDropEntries(dropBrowse, record.key);
-  const native = projectNativeDropCount(record.drops.native);
-  const historical = projectHistoricalDropCount(
-    record.drops.historical,
-    historicalDropsSupported,
-  );
 
   return {
     key: record.key,
     name: name ?? UNNAMED_MONSTER_LABEL,
     factStates,
     drops: {
-      native,
-      historical,
       entries: dropEntries,
       itemKeys: Array.from(
         new Set(
@@ -318,42 +290,7 @@ export function projectMonsterBrowseRows(
     );
   }
 
-  return catalog.records.map((record) =>
-    projectRecord(
-      record,
-      dropBrowse,
-      catalog.browseCoverage.historicalDrops === 'supported',
-    ),
-  );
-}
-
-function projectNativeDropCount(
-  fact: MonsterDropSummary['native'],
-): MonsterDropCountFact {
-  if (fact.state === 'known') {
-    return {
-      state: 'known',
-      count: fact.count,
-      lowerBound: fact.lowerBound,
-    };
-  }
-  if (fact.state === 'absent') return { state: 'absent' };
-  return { state: fact.state };
-}
-
-function projectHistoricalDropCount(
-  fact: MonsterDropSummary['historical'],
-  supported: boolean,
-): MonsterHistoricalDropCountFact {
-  if (fact?.state === 'known') {
-    return {
-      state: 'known',
-      count: fact.count,
-      sourceBuilds: fact.sourceBuilds,
-    };
-  }
-  if (fact?.state === 'absent') return { state: 'absent' };
-  return { state: supported ? 'unknown' : 'unsupported' };
+  return catalog.records.map((record) => projectRecord(record, dropBrowse));
 }
 
 function projectDropEntries(
@@ -378,7 +315,7 @@ function projectDropEntries(
         : undefined;
     let category: string | undefined;
     if (item.category.kind === 'equip-slot') {
-      category = item.category.code;
+      category = 'equipment';
     } else if (item.category.kind === 'item-class') {
       category = item.category.value;
     }

@@ -4,12 +4,31 @@
  * Raw WZ and contract keys never leak into the player interface.
  */
 import type {
+  ItemBrowseClass,
   ItemBrowseFunction,
   ItemBrowseScrollDeltas,
   ItemBrowseUpgradeSpecial,
   ItemBrowseUpgradeTarget,
   ItemBrowseUpgradeTier,
 } from './project';
+
+const ITEM_CLASS_LABELS: Readonly<Record<ItemBrowseClass, string>> = {
+  consume: 'Use',
+  etc: 'ETC',
+  setup: 'Set-up',
+  cash: 'Cash Items',
+  pet: 'Pets',
+};
+
+const ITEM_CATEGORY_LABELS: Readonly<Record<string, string>> = {
+  ...ITEM_CLASS_LABELS,
+  equipment: 'Equipment',
+};
+
+export function itemCategoryLabel(category: string | undefined): string {
+  if (category === undefined) return 'Other';
+  return ITEM_CATEGORY_LABELS[category] ?? 'Other';
+}
 
 export const ITEM_FUNCTION_LABELS: Readonly<
   Record<ItemBrowseFunction, string>

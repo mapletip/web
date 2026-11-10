@@ -1,5 +1,4 @@
 import type {
-  MonsterCatalogV2_2,
   MonsterDropBrowseV1,
   StaticMonsterCatalog,
 } from '@mapletip/data/monsters';
@@ -176,30 +175,6 @@ describe('projectMonsterBrowseRows contract-2.2 tuple mapping', () => {
 });
 
 describe('Monster drop projection', () => {
-  function catalogV22(
-    drops: MonsterCatalogV2_2['records'][number]['drops'],
-    {
-      historicalDrops = 'supported',
-    }: {
-      readonly historicalDrops?: 'supported' | 'unsupported';
-    } = {},
-  ): StaticMonsterCatalog {
-    const base = fixtureCatalog({ records: [sentinelRecord()] });
-    return {
-      ...base,
-      contractVersion: '2.2',
-      browseCoverage: {
-        historicalDrops,
-        locationScope: 'client-placements',
-      },
-      records: base.records.map((record) => ({
-        ...record,
-        drops,
-        locations: { state: 'absent' },
-      })),
-    } as unknown as StaticMonsterCatalog;
-  }
-
   function dropBrowseFixture(): MonsterDropBrowseV1 {
     return {
       format: 'mapletip.monster-drop-browse',
@@ -235,90 +210,10 @@ describe('Monster drop projection', () => {
     };
   }
 
-  it('preserves unknown summary states instead of inventing zero counts', () => {
-    const row = firstRow(
-      projectRows(fixtureCatalog({ records: [sentinelRecord()] })),
-    );
-
-    expect(row.drops.native).toEqual({ state: 'unknown' });
-    expect(row.drops.historical).toEqual({ state: 'unknown' });
-  });
-
-  it('preserves native unknown and historical count/source independently', () => {
-    const row = firstRow(
-      projectRows(
-        catalogV22({
-          native: { state: 'unknown' },
-          historical: {
-            state: 'known',
-            count: 6,
-            sourceBuilds: ['gms-v83'],
-          },
-        }),
-      ),
-    );
-
-    expect(row.drops.native).toEqual({ state: 'unknown' });
-    expect(row.drops.historical).toEqual({
-      state: 'known',
-      count: 6,
-      sourceBuilds: ['gms-v83'],
-    });
-  });
-
-  it('preserves absent state and distinguishes an observed zero count', () => {
-    const absent = firstRow(
-      projectRows(
-        catalogV22({
-          native: { state: 'absent' },
-          historical: { state: 'absent' },
-        }),
-      ),
-    );
-    const zero = firstRow(
-      projectRows(
-        catalogV22({
-          native: { state: 'known', count: 0, lowerBound: false },
-          historical: { state: 'absent' },
-        }),
-      ),
-    );
-
-    expect(absent.drops.native).toEqual({ state: 'absent' });
-    expect(zero.drops.native).toEqual({
-      state: 'known',
-      count: 0,
-      lowerBound: false,
-    });
-  });
-
-  it('does not turn a missing historical summary into an absent count', () => {
-    const unsupported = firstRow(
-      projectRows(
-        catalogV22(
-          { native: { state: 'unsupported' } },
-          { historicalDrops: 'unsupported' },
-        ),
-      ),
-    );
-    const unknown = firstRow(
-      projectRows(catalogV22({ native: { state: 'unsupported' } })),
-    );
-
-    expect(unsupported.drops.historical).toEqual({ state: 'unsupported' });
-    expect(unknown.drops.historical).toEqual({ state: 'unknown' });
-  });
-
   it('keeps unresolved entries but exposes only resolved item keys to filtering', () => {
     const drops = dropBrowseFixture();
     const row = firstRow(
-      projectRows(
-        catalogV22({
-          native: { state: 'known', count: 1, lowerBound: true },
-          historical: { state: 'known', count: 1, sourceBuilds: ['gms-v83'] },
-        }),
-        drops,
-      ),
+      projectRows(fixtureCatalog({ records: [sentinelRecord()] }), drops),
     );
 
     expect(row.drops.entries).toHaveLength(2);
@@ -327,12 +222,37 @@ describe('Monster drop projection', () => {
       itemName: 'Known but ambiguous potion',
       assertionKind: 'native',
     });
+    expect(row.drops.entries[0]).not.toHaveProperty('itemCategory');
     expect(row.drops.entries[1]).toMatchObject({
       itemKey: 'fixture:item:known',
       assertionKind: 'historical-overlay',
       sourceBuild: 'gms-v83',
     });
     expect(row.drops.itemKeys).toEqual(['fixture:item:known']);
+  });
+
+  it('normalizes equipment slots and leaves unknown categories unclassified', () => {
+    const drops = dropBrowseFixture();
+    drops.items.push({
+      itemRef: { state: 'resolved', key: 'fixture:item:headband' },
+      itemName: { state: 'known', value: 'Green Headband' },
+      itemClass: { state: 'unknown' },
+      category: { kind: 'equip-slot', code: 'cap' },
+    });
+    drops.records['fixture:monster:001']!.entries.push({
+      assertionKind: 'native',
+      item: 2,
+    });
+
+    const row = firstRow(
+      projectRows(fixtureCatalog({ records: [sentinelRecord()] }), drops),
+    );
+
+    expect(row.drops.entries[0]).not.toHaveProperty('itemCategory');
+    expect(row.drops.entries[2]).toMatchObject({
+      itemName: 'Green Headband',
+      itemCategory: 'equipment',
+    });
   });
 
   it('builds unique item-filter labels from stable resolved keys', () => {

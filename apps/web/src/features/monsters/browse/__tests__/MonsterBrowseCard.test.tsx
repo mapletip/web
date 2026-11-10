@@ -29,8 +29,6 @@ function knownRow(): MonsterBrowseRow {
     bodyAttack: true,
     factStates: {},
     drops: {
-      native: { state: 'unknown' },
-      historical: { state: 'unknown' },
       entries: [],
       itemKeys: [],
     },
@@ -52,8 +50,6 @@ function unknownRow(): MonsterBrowseRow {
       bodyAttack: 'unsupported',
     },
     drops: {
-      native: { state: 'unknown' },
-      historical: { state: 'unknown' },
       entries: [],
       itemKeys: [],
     },
@@ -102,7 +98,6 @@ describe('MonsterBrowseCard', () => {
       'Boss',
       'Undead',
       'Body attack',
-      'Drops',
     ]);
     expect(
       screen.getByRole('heading', { name: 'Sentinel Snail' }),
@@ -117,16 +112,7 @@ describe('MonsterBrowseCard', () => {
   it('shows formatted known values, including a genuine false', () => {
     renderCard(knownRow());
 
-    expect(factValues()).toEqual([
-      '5',
-      '30',
-      '1',
-      '3.33',
-      'No',
-      'Yes',
-      'Yes',
-      'Native: UnknownHistorical: Unknown',
-    ]);
+    expect(factValues()).toEqual(['5', '30', '1', '3.33', 'No', 'Yes', 'Yes']);
     expect(factTitles()).toEqual([
       'Level: 5',
       'HP: 30',
@@ -136,7 +122,6 @@ describe('MonsterBrowseCard', () => {
       'Boss: No',
       'Undead: Yes',
       'Body attack: Yes',
-      '',
     ]);
   });
 
@@ -156,7 +141,6 @@ describe('MonsterBrowseCard', () => {
       'Unknown',
       'Not recorded',
       'Unavailable',
-      'Native: UnknownHistorical: Unknown',
     ]);
   });
 
@@ -168,13 +152,11 @@ describe('MonsterBrowseCard', () => {
     expect(document.querySelectorAll('a')).toHaveLength(0);
   });
 
-  it('opens a focus-managed drop drawer without guessing unresolved item keys', async () => {
+  it('opens the drop drawer without guessing unresolved item keys', async () => {
     const user = userEvent.setup();
     const row: MonsterBrowseRow = {
       ...knownRow(),
       drops: {
-        native: { state: 'known', count: 1, lowerBound: true },
-        historical: { state: 'absent' },
         itemKeys: [],
         entries: [
           {
@@ -188,12 +170,6 @@ describe('MonsterBrowseCard', () => {
     };
     renderCard(row);
 
-    expect(screen.getByText(/At least 1 \(partial coverage\)/u)).toBeVisible();
-    expect(
-      screen.getByLabelText(
-        'Native drops: At least 1 (partial coverage). Historical drops: None recorded.',
-      ),
-    ).toBeVisible();
     const expandButton = screen.getByRole('button', {
       name: 'Sentinel Snail, 1 drop. Show drops.',
     });
@@ -273,8 +249,6 @@ describe('MonsterBrowseCard', () => {
     const row: MonsterBrowseRow = {
       ...knownRow(),
       drops: {
-        native: { state: 'absent' },
-        historical: { state: 'known', count: 1, sourceBuilds: ['gms-v83'] },
         itemKeys: [],
         entries: [
           {
@@ -332,8 +306,6 @@ describe('MonsterBrowseCard', () => {
     const row: MonsterBrowseRow = {
       ...knownRow(),
       drops: {
-        native: { state: 'known', count: 1, lowerBound: false },
-        historical: { state: 'absent' },
         itemKeys: [],
         entries: [
           {
@@ -370,8 +342,6 @@ describe('MonsterBrowseCard', () => {
     const row: MonsterBrowseRow = {
       ...knownRow(),
       drops: {
-        native: { state: 'absent' },
-        historical: { state: 'unknown' },
         itemKeys: [],
         entries: [
           {
@@ -406,8 +376,6 @@ describe('MonsterBrowseCard', () => {
     const row: MonsterBrowseRow = {
       ...knownRow(),
       drops: {
-        native: { state: 'absent' },
-        historical: { state: 'known', count: 1, sourceBuilds: ['gms-v83'] },
         itemKeys: [],
         entries: [
           {

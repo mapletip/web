@@ -12,7 +12,6 @@ import {
   UPGRADE_TIER_LABELS,
 } from '../labels';
 import type {
-  ItemBrowseClass,
   ItemBrowseUpgradeTarget,
   ItemBrowseUpgradeTier,
   ItemRow,
@@ -21,14 +20,6 @@ import type {
 export type ItemBrowseCoverageState = ItemBrowseCoverage['scrollTier'];
 
 const LIST_VALUE_SEPARATOR = '\n';
-
-export const SCOPE_LABELS: Readonly<Record<ItemBrowseClass, string>> = {
-  consume: 'Use',
-  etc: 'ETC',
-  setup: 'Set-up',
-  cash: 'Cash Items',
-  pet: 'Pets',
-};
 
 export function formatRelCount(
   count: number | undefined,

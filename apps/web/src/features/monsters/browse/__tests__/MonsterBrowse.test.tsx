@@ -195,25 +195,19 @@ describe('MonsterBrowse', () => {
       ).queryByRole('columnheader', { name: 'Drops' }),
     ).not.toBeInTheDocument();
     expect(
-      within(cards()).getAllByLabelText(
-        'Native drops: Unknown. Historical drops: Unknown.',
-      ),
+      within(cards()).getAllByRole('button', {
+        name: /, 0\. Show drops\./u,
+      }),
     ).toHaveLength(4);
   });
 
-  it('shows historical drop evidence in the mobile relationship drawer', async () => {
+  it('shows historical drop entries in the mobile relationship drawer', async () => {
     const user = userEvent.setup();
     const [first] = rows;
     if (first === undefined) throw new Error('Fixture produced no rows.');
     const historicalRow: MonsterBrowseRow = {
       ...first,
       drops: {
-        native: { state: 'absent' },
-        historical: {
-          state: 'known',
-          count: 1,
-          sourceBuilds: ['gms-v83'],
-        },
         itemKeys: [],
         entries: [
           {
@@ -228,8 +222,8 @@ describe('MonsterBrowse', () => {
     mountBrowse({ browseRows: [historicalRow] });
 
     const card = within(cards()).getByRole('article');
-    expect(card).toHaveTextContent('Native: No native source');
-    expect(card).toHaveTextContent('Historical: 1 historical (GMS v83)');
+    expect(card).not.toHaveTextContent('Native:');
+    expect(card).not.toHaveTextContent('Historical:');
     const expandButton = within(card).getByRole('button', {
       name: 'Sentinel Snail, 1 drop. Show drops.',
     });
@@ -263,7 +257,6 @@ describe('MonsterBrowse', () => {
         ...row,
         drops: {
           ...row.drops,
-          native: { state: 'known' as const, count: 1, lowerBound: true },
           itemKeys: [itemKey],
         },
       };
