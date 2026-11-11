@@ -316,6 +316,7 @@ describe('MonsterBrowse', () => {
 
   it('filters monsters by a stable dropped item key through the shared facet', async () => {
     const user = userEvent.setup();
+    const redPotionIcon = 'https://d0.mapletip.com/item-icons/red-potion.png';
     const browseRows = rows.map((row, index) => {
       const itemKey = index === 0 ? 'fixture:item:red' : 'fixture:item:blue';
       return {
@@ -329,7 +330,11 @@ describe('MonsterBrowse', () => {
     mountBrowse({
       browseRows,
       dropItemOptions: [
-        { value: 'fixture:item:red', label: 'Red Potion' },
+        {
+          value: 'fixture:item:red',
+          label: 'Red Potion',
+          iconUrl: redPotionIcon,
+        },
         { value: 'fixture:item:blue', label: 'Blue Potion' },
       ],
     });
@@ -355,6 +360,11 @@ describe('MonsterBrowse', () => {
     fireEvent.click(option!);
 
     await waitFor(() => expect(summaryText()).toBe('1 Monster'));
+    expect(
+      document.querySelector(
+        `[class*="dropItemPillContent"] img[src="${redPotionIcon}"]`,
+      ),
+    ).toBeInTheDocument();
     expect(
       within(cards()).getByRole('heading', { name: 'Sentinel Snail' }),
     ).toBeInTheDocument();

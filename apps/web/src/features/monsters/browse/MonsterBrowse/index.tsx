@@ -1,4 +1,4 @@
-import { Button, Group, MultiSelect, Text, Title } from '@mantine/core';
+import { Button, Group, MultiSelect, Pill, Text, Title } from '@mantine/core';
 import { FacetedBrowser, Thumbnail } from '@mapletip/component-library';
 import type {
   BrowseState,
@@ -206,6 +206,26 @@ function dropItemFacet(
                 )}
                 <Text size="sm">{option.label}</Text>
               </Group>
+            );
+          }}
+          renderPill={({ option, onRemove, disabled }) => {
+            const iconUrl =
+              typeof option.value === 'string'
+                ? iconUrls.get(option.value)
+                : undefined;
+            return (
+              <Pill
+                withRemoveButton={!disabled && onRemove !== undefined}
+                {...(onRemove === undefined ? {} : { onRemove })}
+                {...(disabled === undefined ? {} : { disabled })}
+              >
+                <span className={classes['dropItemPillContent']}>
+                  {iconUrl === undefined ? null : (
+                    <Thumbnail src={iconUrl} size={16} alt="" />
+                  )}
+                  {option.label}
+                </span>
+              </Pill>
             );
           }}
           size="sm"

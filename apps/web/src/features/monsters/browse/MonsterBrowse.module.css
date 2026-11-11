@@ -24,3 +24,13 @@
 .dropItemOptionIcon img {
   image-rendering: pixelated;
 }
+
+.dropItemPillContent {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--mantine-spacing-xs);
+}
+
+.dropItemPillContent img {
+  image-rendering: pixelated;
+}
