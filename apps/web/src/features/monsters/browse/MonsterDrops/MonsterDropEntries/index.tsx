@@ -1,6 +1,6 @@
 import { Box, Group, Stack, Text, TextInput, Title } from '@mantine/core';
-import { Check, MagnifyingGlass, Question } from '@phosphor-icons/react';
 import { Thumbnail } from '@mapletip/component-library';
+import { Check, MagnifyingGlass, Question } from '@phosphor-icons/react';
 import { useState, type ReactElement } from 'react';
 
 import type { BuildId } from '@/config/maplekit';

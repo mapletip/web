@@ -7,8 +7,8 @@
  * published contract order. The contract's sprite fact stays separate from
  * displayable facts because only its known content ID affects the thumbnail.
  */
-import { hasMonsterBrowseSummaries } from '@mapletip/data/monsters';
 import { itemIconUrl } from '@mapletip/data/items';
+import { hasMonsterBrowseSummaries } from '@mapletip/data/monsters';
 import type {
   MonsterCatalogV2_2,
   MonsterCatalogV2_3,
