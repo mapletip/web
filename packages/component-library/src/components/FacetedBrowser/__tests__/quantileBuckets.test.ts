@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
 import type { FacetRangeBucket } from '@/components/FacetedBrowser';
-import { bucketContains } from '@/components/FacetedBrowser/FacetControls/rangeBucketFilterFn';
 import { buildQuantileBuckets } from '@/components/FacetedBrowser/FacetControls/quantileBuckets';
+import { bucketContains } from '@/components/FacetedBrowser/FacetControls/rangeBucketFilterFn';
 
 /** How many admissible values fall inside each bucket's inclusive bounds. */
 function bucketCounts({
