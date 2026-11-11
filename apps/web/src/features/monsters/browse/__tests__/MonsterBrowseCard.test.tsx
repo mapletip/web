@@ -11,7 +11,7 @@ import type { MonsterBrowseRow } from '../project';
 
 /**
  * `MonsterBrowseCard` is private to the feature, so it is tested at its own
- * seam: the card owns the mobile fact list (which facts, in which order), the
+ * seam: the card owns the mobile fact grid (which facts, in which order), the
  * semantic structure and the honest display of every non-`known` state. The
  * page-level SSR test only proves that a card is present in the document.
  */
@@ -22,11 +22,17 @@ function knownRow(): MonsterBrowseRow {
     sprite: 'c'.repeat(64),
     level: 5,
     hp: 30,
+    mp: 10,
     exp: 1,
     expPer100Hp: (1 / 30) * 100,
-    boss: false,
-    undead: true,
-    bodyAttack: true,
+    physicalAttack: 4,
+    physicalDefense: 5,
+    magicAttack: 6,
+    magicDefense: 7,
+    accuracy: 8,
+    avoidability: 9,
+    pushed: 11,
+    speed: -65,
     factStates: {},
     drops: {
       entries: [],
@@ -35,7 +41,7 @@ function knownRow(): MonsterBrowseRow {
   };
 }
 
-/** Every shown fact is non-`known`, and the four states are all distinct. */
+/** Source-backed unknown values stay distinct from absent and derived values. */
 function unknownRow(): MonsterBrowseRow {
   return {
     key: 'fixture:monster:002',
@@ -45,9 +51,6 @@ function unknownRow(): MonsterBrowseRow {
       hp: 'unknown',
       exp: 'absent',
       expPer100Hp: 'unknown',
-      boss: 'unknown',
-      undead: 'absent',
-      bodyAttack: 'unsupported',
     },
     drops: {
       entries: [],
@@ -87,21 +90,27 @@ function renderCard(
 }
 
 describe('MonsterBrowseCard', () => {
-  it('presents the training facts in their documented order', () => {
+  it('presents the training and combat facts in a 3-by-4 grid', () => {
     const { container } = renderCard(knownRow());
 
     expect(factLabels()).toEqual([
-      'Level',
       'HP',
       'EXP',
       'EXP / 100 HP',
-      'Boss',
-      'Undead',
-      'Body attack',
+      'W. ATT',
+      'M. ATT',
+      'ACC',
+      'W. DEF',
+      'M. DEF',
+      'AVOID',
+      'Knockback',
+      'Speed',
+      'HP Regen',
     ]);
     expect(
       screen.getByRole('heading', { name: 'Sentinel Snail' }),
     ).toBeVisible();
+    expect(screen.getByText('Lv. 5')).toBeVisible();
     expect(container.querySelector('img')).toHaveAttribute(
       'src',
       `https://d0.mapletip.com/media/images/cc/${'c'.repeat(64)}.png`,
@@ -109,19 +118,37 @@ describe('MonsterBrowseCard', () => {
     expect(screen.getByText('EXP / 100 HP', { exact: true })).toBeVisible();
   });
 
-  it('shows formatted known values, including a genuine false', () => {
+  it('shows formatted known values and the derived training ratio', () => {
     renderCard(knownRow());
 
-    expect(factValues()).toEqual(['5', '30', '1', '3.33', 'No', 'Yes', 'Yes']);
+    expect(factValues()).toEqual([
+      '30',
+      '1',
+      '3.33',
+      '4',
+      '6',
+      '8',
+      '5',
+      '7',
+      '9',
+      '11',
+      '-65',
+      '—',
+    ]);
     expect(factTitles()).toEqual([
-      'Level: 5',
+      // One decimal-place decision for the derived ratio; `1/30 × 100`.
       'HP: 30',
       'EXP: 1',
-      // One decimal-place decision for the derived ratio; `1/30 × 100`.
       'EXP / 100 HP: 3.33',
-      'Boss: No',
-      'Undead: Yes',
-      'Body attack: Yes',
+      'W. ATT: 4',
+      'M. ATT: 6',
+      'ACC: 8',
+      'W. DEF: 5',
+      'M. DEF: 7',
+      'AVOID: 9',
+      'Knockback: 11',
+      'Speed: -65',
+      'HP Regen: Unavailable in the current catalog',
     ]);
   });
 
@@ -134,13 +161,18 @@ describe('MonsterBrowseCard', () => {
 
     expect(factValues()).toEqual([
       'Unknown',
-      'Unknown',
       'Not recorded',
       // A derived ratio has no source state, so it shows a dash.
       '-',
       'Unknown',
-      'Not recorded',
-      'Unavailable',
+      'Unknown',
+      'Unknown',
+      'Unknown',
+      'Unknown',
+      'Unknown',
+      'Unknown',
+      'Unknown',
+      '—',
     ]);
   });
 
@@ -148,7 +180,7 @@ describe('MonsterBrowseCard', () => {
     renderCard(knownRow());
 
     const list = screen.getAllByRole('definition')[0]?.closest('dl');
-    expect(list).toHaveAttribute('aria-label', 'Sentinel Snail facts');
+    expect(list).toHaveAttribute('aria-label', 'Training facts');
     expect(document.querySelectorAll('a')).toHaveLength(0);
   });
 

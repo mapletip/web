@@ -9,7 +9,6 @@
 }
 
 .name {
-  flex: 1;
   min-width: 0;
   margin: 0;
   font-size: var(--mantine-font-size-md);
@@ -18,21 +17,42 @@
   overflow-wrap: anywhere;
 }
 
+.identity {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: var(--mantine-spacing-xs);
+  min-width: 0;
+}
+
+.title {
+  min-width: 0;
+}
+
+.level {
+  display: block;
+  margin-top: 1px;
+  color: var(--mantine-color-dimmed);
+  font-size: var(--mantine-font-size-xs);
+  line-height: 1.25;
+}
+
+.stats {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+
 .facts {
   display: grid;
-  /* Four facts per row keep EXP and its derived EXP / 100 HP ratio side by side,
-     so the training pair reads left to right instead of wrapping under each
-     other. Very narrow phones fall back to three so the values stay legible. */
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 6px 8px;
+  gap: 8px;
   min-width: 0;
   margin: 0;
 }
 
-@media (min-width: 22.5em) {
-  .facts {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-  }
+.divider {
+  border-top: 1px solid var(--mapletip-color-border-subtle);
 }
 
 .facts > div {
@@ -40,10 +60,31 @@
 }
 
 .facts dt {
+  display: flex;
+  align-items: center;
+  gap: 4px;
   color: var(--mantine-color-dimmed);
   font-size: 0.7rem;
   font-weight: 600;
   line-height: 1.25;
+}
+
+.icon,
+.hpIcon,
+.experienceIcon {
+  flex: none;
+}
+
+.icon {
+  color: var(--mantine-color-dimmed);
+}
+
+.hpIcon {
+  color: #f28f91;
+}
+
+.experienceIcon {
+  color: #f5bd56;
 }
 
 .facts dd {
