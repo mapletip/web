@@ -1,5 +1,4 @@
 import { Group } from '@mantine/core';
-import type { ReactElement } from 'react';
 import {
   ArrowsLeftRight,
   Calculator,
@@ -14,6 +13,7 @@ import {
   TrendUp,
   Wind,
 } from '@phosphor-icons/react';
+import type { ReactElement } from 'react';
 
 import type { BuildId } from '@/config/maplekit';
 
@@ -26,6 +26,11 @@ import {
 } from '../project';
 
 import classes from './MonsterBrowseCard.module.css';
+
+const toneIconClasses = {
+  hp: classes['hpIcon'],
+  experience: classes['experienceIcon'],
+};
 
 type MonsterCardFactId = MonsterFactId | 'hpRegen';
 
@@ -129,13 +134,7 @@ function MonsterFact({
         <Icon
           aria-hidden="true"
           size={fact.size}
-          className={
-            fact.tone === 'hp'
-              ? classes['hpIcon']
-              : fact.tone === 'experience'
-                ? classes['experienceIcon']
-                : classes['icon']
-          }
+          className={fact.tone ? toneIconClasses[fact.tone] : classes['icon']}
         />
         {fact.label}
       </dt>
