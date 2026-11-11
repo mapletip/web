@@ -1,6 +1,7 @@
-import { ActionIcon, HoverCard, Stack, Text } from '@mantine/core';
+import { ActionIcon, Group, Popover, Stack, Text } from '@mantine/core';
+import { Thumbnail } from '@mapletip/component-library';
 import { Check, Question } from '@phosphor-icons/react';
-import type { KeyboardEvent, ReactElement } from 'react';
+import { useState, type KeyboardEvent, type ReactElement } from 'react';
 
 import { BUILDS, isBuildId, type BuildId } from '@/config/maplekit';
 
@@ -42,24 +43,26 @@ export function DropCertaintyDisclosure({
   const stateLabel = confirmed ? 'Confirmed' : 'Maybe';
   const actionLabel = `Show ${confirmed ? 'confirmed' : 'unconfirmed'} drop details for ${entry.itemName}`;
   const sourceLabel = dropSourceLabel(entry, buildId);
+  const [opened, setOpened] = useState(false);
 
   function handleEscape(event: KeyboardEvent<HTMLElement>): void {
-    if (
-      event.key !== 'Escape' ||
-      event.currentTarget.getAttribute('aria-expanded') === 'true'
-    ) {
+    if (event.key !== 'Escape') return;
+    if (opened) {
+      event.preventDefault();
+      event.stopPropagation();
+      setOpened(false);
       return;
     }
     closeDropsPanelOnEscape(event, onClose);
   }
 
   return (
-    <HoverCard
-      events={{ hover: true, focus: true, touch: true }}
-      interactive
-      closeDelay={150}
+    <Popover
+      opened={opened}
+      onChange={setOpened}
+      closeOnEscape={false}
       returnFocus
-      role="dialog"
+      withRoles={false}
       position="bottom"
       width={280}
       withinPortal
@@ -67,7 +70,7 @@ export function DropCertaintyDisclosure({
       middlewares={{ flip: true, shift: true }}
       styles={{ dropdown: { maxWidth: 'calc(100vw - 24px)' } }}
     >
-      <HoverCard.Target>
+      <Popover.Target>
         <ActionIcon
           type="button"
           variant="transparent"
@@ -75,6 +78,9 @@ export function DropCertaintyDisclosure({
           className={classes['certainty']}
           data-confirmed={confirmed}
           aria-label={actionLabel}
+          aria-haspopup="dialog"
+          aria-expanded={opened}
+          onClick={() => setOpened((current) => !current)}
           data-mantine-stop-propagation={
             onClose === undefined ? undefined : 'true'
           }
@@ -86,22 +92,36 @@ export function DropCertaintyDisclosure({
             <Question size={14} aria-hidden="true" />
           )}
         </ActionIcon>
-      </HoverCard.Target>
-      <HoverCard.Dropdown
+      </Popover.Target>
+      <Popover.Dropdown
         role="dialog"
         aria-label={`${stateLabel} drop details for ${entry.itemName}`}
       >
-        <Stack gap={4}>
-          <Text fw={600} size="sm">
-            {stateLabel}
-          </Text>
+        <Group gap="xs" wrap="nowrap" align="flex-start">
+          {entry.itemIconUrl === undefined ? null : (
+            <Thumbnail
+              src={entry.itemIconUrl}
+              size={32}
+              alt={`${entry.itemName} icon`}
+            />
+          )}
+          <Stack gap={4}>
+            <Text fw={600} size="sm">
+              {entry.itemName}
+            </Text>
+            <Text size="xs" c="dimmed">
+              {stateLabel}
+            </Text>
+          </Stack>
+        </Group>
+        <Stack gap={4} mt="xs">
           {sourceLabel === undefined ? null : (
             <Text size="xs" c="dimmed">
               Source: {sourceLabel}.
             </Text>
           )}
         </Stack>
-      </HoverCard.Dropdown>
-    </HoverCard>
+      </Popover.Dropdown>
+    </Popover>
   );
 }

@@ -295,6 +295,7 @@ describe('MonsterBrowseCard', () => {
           {
             itemRefState: 'resolved',
             itemName: 'Green Headband',
+            itemIconUrl: 'https://example.test/green-headband.png',
             assertionKind: 'historical-overlay',
             sourceBuild: 'gms-v83',
           },
@@ -315,12 +316,16 @@ describe('MonsterBrowseCard', () => {
     const statusButton = screen.getByRole('button', {
       name: 'Show unconfirmed drop details for Green Headband',
     });
-    await user.hover(statusButton);
+    await user.click(statusButton);
     expect(statusButton).toHaveAttribute('aria-expanded', 'true');
     await waitFor(() =>
       expect(
         screen.getByText('Source: GMS v83 Monster Book.'),
       ).toBeInTheDocument(),
+    );
+    expect(screen.getByAltText('Green Headband icon')).toHaveAttribute(
+      'src',
+      'https://example.test/green-headband.png',
     );
     await user.keyboard('{Escape}');
     await waitFor(() =>
@@ -352,6 +357,7 @@ describe('MonsterBrowseCard', () => {
           {
             itemRefState: 'resolved',
             itemName: 'Red Potion',
+            itemIconUrl: 'https://example.test/red-potion.png',
             assertionKind: 'native',
           },
         ],
@@ -372,6 +378,10 @@ describe('MonsterBrowseCard', () => {
       expect(
         screen.getByText('Source: GMS v83 Monster Book.'),
       ).toBeInTheDocument(),
+    );
+    expect(screen.getByAltText('Red Potion icon')).toHaveAttribute(
+      'src',
+      'https://example.test/red-potion.png',
     );
     expect(
       document.querySelector('table[aria-label="Drop sources"]'),
