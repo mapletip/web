@@ -1,5 +1,5 @@
-import { Button, MultiSelect, Text, Title } from '@mantine/core';
-import { FacetedBrowser } from '@mapletip/component-library';
+import { Button, Group, MultiSelect, Text, Title } from '@mantine/core';
+import { FacetedBrowser, Thumbnail } from '@mapletip/component-library';
 import type {
   BrowseState,
   FacetDefinition,
@@ -162,6 +162,10 @@ function dropItemFacet(
   options: readonly MonsterDropItemOption[],
   definition: FacetDefinition<MonsterBrowseRow>,
 ): FacetDefinition<MonsterBrowseRow> {
+  const iconUrls = new Map(
+    options.map(({ value, iconUrl }) => [value, iconUrl] as const),
+  );
+
   return {
     ...definition,
     options,
@@ -178,6 +182,7 @@ function dropItemFacet(
           data={options}
           value={selected}
           onChange={(next) => onChange(next.length === 0 ? undefined : next)}
+          comboboxProps={{ withinPortal: false }}
           searchable
           clearable
           hidePickedOptions
@@ -185,6 +190,19 @@ function dropItemFacet(
           maxDropdownHeight={300}
           nothingFoundMessage="No dropped items match"
           placeholder="Search dropped items"
+          renderOption={({ option }) => {
+            const iconUrl = iconUrls.get(option.value);
+            return (
+              <Group gap="xs" wrap="nowrap">
+                {iconUrl === undefined ? null : (
+                  <span className={classes['dropItemOptionIcon']}>
+                    <Thumbnail src={iconUrl} size={24} alt="" />
+                  </span>
+                )}
+                <Text size="sm">{option.label}</Text>
+              </Group>
+            );
+          }}
           size="sm"
         />
       );

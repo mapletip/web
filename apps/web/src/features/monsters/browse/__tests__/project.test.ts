@@ -1,5 +1,7 @@
+import { itemIconUrl } from '@mapletip/data/items';
 import type {
   MonsterDropBrowseV1,
+  StaticMonsterDropBrowse,
   StaticMonsterCatalog,
 } from '@mapletip/data/monsters';
 import { describe, expect, it } from 'vitest';
@@ -274,6 +276,34 @@ describe('Monster drop projection', () => {
       {
         value: 'fixture:item:other',
         label: 'Known but ambiguous potion (fixture:item:other)',
+      },
+    ]);
+  });
+
+  it('projects known item icons into drop filter options', () => {
+    const baseUrl = 'https://assets.example.test/';
+    const iconId = 'a'.repeat(64);
+    const dropBrowse: StaticMonsterDropBrowse = {
+      format: 'mapletip.monster-drop-browse',
+      contractVersion: '1.1',
+      scope: { build_id: 'cw-launch', family_id: 'classic-world' },
+      items: [
+        {
+          itemRef: { state: 'resolved', key: 'fixture:item:green-headband' },
+          itemName: { state: 'known', value: 'Green Headband' },
+          itemClass: { state: 'unknown' },
+          category: { kind: 'equip-slot', code: 'cap' },
+          icon: { state: 'known', value: iconId },
+        },
+      ],
+      records: {},
+    };
+
+    expect(projectMonsterDropItemOptions(dropBrowse, baseUrl)).toEqual([
+      {
+        value: 'fixture:item:green-headband',
+        label: 'Green Headband',
+        iconUrl: itemIconUrl(baseUrl, iconId),
       },
     ]);
   });
