@@ -15,9 +15,20 @@ export function bucketContains(
   bucket: FacetRangeBucket,
   value: number,
 ): boolean {
-  if (bucket.min !== undefined && value < bucket.min) return false;
-  if (bucket.max !== undefined && value > bucket.max) return false;
+  const testedValue =
+    bucket.decimalPlaces === undefined
+      ? value
+      : roundToDecimalPlaces(value, bucket.decimalPlaces);
+  if (bucket.min !== undefined && testedValue < bucket.min) return false;
+  if (bucket.max !== undefined && testedValue > bucket.max) return false;
   return true;
+}
+
+/** Keep membership checks aligned with the quantized values used for cuts. */
+function roundToDecimalPlaces(value: number, decimalPlaces: number): number {
+  const scale = 10 ** decimalPlaces;
+  const scaled = value * scale;
+  return Math.round(scaled + Number.EPSILON * Math.abs(scaled)) / scale;
 }
 
 /**

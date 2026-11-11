@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { FacetRangeBucket } from '@/components/FacetedBrowser';
 import { buildQuantileBuckets } from '@/components/FacetedBrowser/FacetControls/quantileBuckets';
+import { bucketContains } from '@/components/FacetedBrowser/FacetControls/rangeBucketFilterFn';
 
 /** How many admissible values fall inside each bucket's inclusive bounds. */
 function bucketCounts({
@@ -12,12 +13,7 @@ function bucketCounts({
   readonly buckets: readonly FacetRangeBucket[];
 }): readonly number[] {
   return buckets.map(
-    (bucket) =>
-      values.filter(
-        (value) =>
-          (bucket.min === undefined || value >= bucket.min) &&
-          (bucket.max === undefined || value <= bucket.max),
-      ).length,
+    (bucket) => values.filter((value) => bucketContains(bucket, value)).length,
   );
 }
 
@@ -25,9 +21,11 @@ function bucketCounts({
 function expectWellFormed({
   buckets,
   values,
+  decimalPlaces,
 }: {
   readonly buckets: readonly FacetRangeBucket[];
   readonly values: readonly number[];
+  readonly decimalPlaces?: number;
 }): void {
   for (const bucket of buckets) {
     expect(bucket.min).toBeDefined();
@@ -44,7 +42,11 @@ function expectWellFormed({
     const previous = buckets[index - 1];
     if (previous === undefined) continue;
     expect(previous.max!).toBeLessThan(bucket.min!);
-    expect(bucket.min!).toBe(previous.max! + 1);
+    const step = 10 ** -(decimalPlaces ?? 0);
+    const expectedMin = Number(
+      (previous.max! + step).toFixed(decimalPlaces ?? 0),
+    );
+    expect(bucket.min!).toBe(expectedMin);
     expect(previous.value).not.toBe(bucket.value);
   }
 
@@ -66,6 +68,52 @@ describe('buildQuantileBuckets', () => {
       { value: '25', label: '25', min: 25, max: 25 },
       { value: '35', label: '35', min: 35, max: 35 },
     ]);
+  });
+
+  it('rounds decimal values to the configured precision for exact buckets', () => {
+    const values = [1.234, 1.235, 2.5];
+    const buckets = buildQuantileBuckets({ values, decimalPlaces: 2 });
+
+    expect(buckets).toEqual([
+      {
+        value: '1.23',
+        label: '1.23',
+        min: 1.23,
+        max: 1.23,
+        decimalPlaces: 2,
+      },
+      {
+        value: '1.24',
+        label: '1.24',
+        min: 1.24,
+        max: 1.24,
+        decimalPlaces: 2,
+      },
+      {
+        value: '2.5',
+        label: '2.5',
+        min: 2.5,
+        max: 2.5,
+        decimalPlaces: 2,
+      },
+    ]);
+    expect(bucketCounts({ values, buckets })).toEqual([1, 1, 1]);
+  });
+
+  it('converts decimal quantile bounds back from scaled integer units', () => {
+    const values = [0.3333, 0.5, 0.75, 1.25, 1.5, 2, 3.3333, 4.5];
+    const buckets = buildQuantileBuckets({ values, decimalPlaces: 2 });
+
+    expect(buckets.map((bucket) => bucket.label)).toEqual([
+      '0.3–0.5',
+      '0.51–0.75',
+      '0.76–1.5',
+      '1.51–2',
+      '2.01–3.5',
+      '3.51–4.5',
+    ]);
+    expect(bucketCounts({ values, buckets })).toEqual([2, 1, 2, 1, 1, 1]);
+    expectWellFormed({ buckets, values, decimalPlaces: 2 });
   });
 
   it('adds a unit to exact and quantile labels only', () => {

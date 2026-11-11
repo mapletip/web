@@ -179,6 +179,47 @@ const facets: readonly FacetDefinition<FacetRecord>[] = [
 ];
 
 describe('resolveFacets', () => {
+  it('omits a decimal quantile facet when precision collapses its values', () => {
+    interface DecimalRecord extends Record<string, unknown> {
+      readonly id: string;
+      readonly ratio: number;
+    }
+
+    const decimalRecords: readonly DecimalRecord[] = [
+      { id: 'a', ratio: 1.001 },
+      { id: 'b', ratio: 1.004 },
+    ];
+    const decimalQueryFields: readonly QueryFieldDefinition<DecimalRecord>[] = [
+      { id: 'ratio', accessor: 'ratio' },
+    ];
+    const decimalFacets: readonly FacetDefinition<DecimalRecord>[] = [
+      {
+        id: 'ratio',
+        field: 'ratio',
+        label: 'Ratio',
+        kind: 'range',
+        buckets: 'quantile',
+        decimalPlaces: 2,
+      },
+    ];
+    const fieldAccessors = resolveFields({
+      columns: [],
+      queryFields: decimalQueryFields,
+      idAccessor: 'id',
+      identityField: undefined,
+      searchFields: undefined,
+    });
+
+    const resolved = resolveFacets({
+      facets: decimalFacets,
+      queryFields: decimalQueryFields,
+      records: decimalRecords,
+      fieldAccessors,
+    });
+
+    expect(resolved.facets).toEqual([]);
+  });
+
   it('uses exact buckets through six distinct values and quantiles above six', () => {
     const fieldAccessors = resolveFields({
       columns: [],
