@@ -95,6 +95,8 @@ export const monsterBrowseColumns: readonly TableColumn<MonsterBrowseRow>[] = [
   statColumn('level', 'Level', { firstSortDirection: 'asc' }),
   statColumn('hp', 'HP'),
   statColumn('mp', 'MP'),
+  statColumn('hpRecovery', 'HP REC', { fullLabel: 'HP recovery value' }),
+  statColumn('mpRecovery', 'MP REC', { fullLabel: 'MP recovery value' }),
   statColumn('exp', 'EXP'),
   statColumn('expPer100Hp', 'EXP / 100 HP', {
     fullLabel: 'Experience per 100 HP',

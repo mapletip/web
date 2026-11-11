@@ -38,7 +38,11 @@ export async function loadMonsterBrowse(
   ]);
 
   return {
-    rows: projectMonsterBrowseRows(catalog, dropBrowse),
+    rows: projectMonsterBrowseRows(
+      catalog,
+      dropBrowse,
+      MAPLEKIT_RELEASE.baseUrl,
+    ),
     dropItemOptions: projectMonsterDropItemOptions(dropBrowse),
   };
 }

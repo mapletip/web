@@ -28,7 +28,9 @@ type MonsterCardPlacement =
   | { readonly section: 'identity'; readonly factId: MonsterFactId }
   | {
       readonly section: 'training' | 'combat';
-      readonly factId: MonsterFactId | 'hpRegen';
+      readonly factId: MonsterFactId;
+      /** Places selected facts at the end of the mobile card section. */
+      readonly order?: number;
     }
   | { readonly section: 'dropAction' };
 
@@ -51,7 +53,8 @@ export interface MonsterBrowseFactConfig {
 export type MonsterBrowseCardStatFact = MonsterBrowseFactConfig & {
   readonly card: {
     readonly section: 'training' | 'combat';
-    readonly factId: MonsterFactId | 'hpRegen';
+    readonly factId: MonsterFactId;
+    readonly order?: number;
   };
 };
 
@@ -74,6 +77,14 @@ export const MONSTER_BROWSE_FACT_CONFIG = {
     iconColor: '#f28f91',
     card: { section: 'training', factId: 'hp' },
     facet: { field: 'hp', kind: 'range', buckets: 'quantile' },
+  },
+  hpRecovery: {
+    id: 'hpRecovery',
+    label: 'HP Recovery',
+    icon: Heartbeat,
+    iconSize: 14,
+    iconColor: '#f28f91',
+    card: { section: 'combat', factId: 'hpRecovery', order: 100 },
   },
   exp: {
     id: 'exp',
@@ -176,13 +187,6 @@ export const MONSTER_BROWSE_FACT_CONFIG = {
     iconSize: 14,
     card: { section: 'combat', factId: 'speed' },
   },
-  hpRegen: {
-    id: 'hpRegen',
-    label: 'HP Regen',
-    icon: Heartbeat,
-    iconSize: 14,
-    card: { section: 'combat', factId: 'hpRegen' },
-  },
 } satisfies Readonly<Record<string, MonsterBrowseFactConfig>>;
 
 export function renderMonsterBrowseFactIcon(
@@ -230,7 +234,8 @@ export function getMonsterBrowseCardFacts(
   );
   return facts
     .filter(isMonsterBrowseCardStatFact)
-    .filter((fact) => fact.card.section === section);
+    .filter((fact) => fact.card.section === section)
+    .sort((left, right) => (left.card.order ?? 0) - (right.card.order ?? 0));
 }
 
 function isMonsterBrowseCardStatFact(

@@ -68,10 +68,7 @@ function MonsterFact({
   readonly fact: MonsterBrowseCardStatFact;
 }): ReactElement {
   const factId = fact.card.factId;
-  const displayValue =
-    factId === 'hpRegen' ? '—' : formatMonsterFact(record, factId);
-  const accessibleValue =
-    factId === 'hpRegen' ? 'Unavailable in the current catalog' : displayValue;
+  const displayValue = formatMonsterFact(record, factId);
 
   return (
     <div data-stat={factId}>
@@ -83,8 +80,8 @@ function MonsterFact({
         {fact.label}
       </dt>
       <dd
-        aria-label={`${fact.label}: ${accessibleValue}`}
-        title={`${fact.label}: ${accessibleValue}`}
+        aria-label={`${fact.label}: ${displayValue}`}
+        title={`${fact.label}: ${displayValue}`}
       >
         {displayValue}
       </dd>

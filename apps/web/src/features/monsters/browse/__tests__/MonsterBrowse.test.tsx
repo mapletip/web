@@ -202,6 +202,14 @@ describe('MonsterBrowse', () => {
     });
     expect(column('level')?.firstSortDirection).toBe('asc');
     expect(column('hp')?.firstSortDirection).toBe('desc');
+    expect(column('hpRecovery')).toMatchObject({
+      title: 'HP REC',
+      fullLabel: 'HP recovery value',
+    });
+    expect(column('mpRecovery')).toMatchObject({
+      title: 'MP REC',
+      fullLabel: 'MP recovery value',
+    });
     expect(column('drops')).toBeUndefined();
   });
 
@@ -364,8 +372,8 @@ describe('MonsterBrowse', () => {
     expect(
       within(cards()).getByRole('heading', { name: 'Sentinel Slime' }),
     ).toBeInTheDocument();
-    // EXP comes from the EXP slot (4); MP remains desktop-only while the card
-    // keeps the production HP Regen slot. The derived ratio is 2 / 45 × 100.
+    // EXP comes from the EXP slot (4); base MP remains desktop-only. Recovery
+    // values are absent from this legacy fixture. The ratio is 2 / 45 × 100.
     const slimeCard = within(cards())
       .getByRole('heading', { name: 'Sentinel Slime' })
       .closest('article')!;

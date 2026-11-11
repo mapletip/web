@@ -1,4 +1,5 @@
 import { Box, Group, Stack, Text, TextInput, Title } from '@mantine/core';
+import { Thumbnail } from '@mapletip/component-library';
 import { Check, MagnifyingGlass, Question } from '@phosphor-icons/react';
 import { useState, type ReactElement } from 'react';
 
@@ -24,7 +25,7 @@ function itemReferenceLabel(state: string): string | undefined {
   if (state === 'resolved') return undefined;
   if (state === 'unresolved') return 'Unresolved item reference';
   if (state === 'ambiguous') return 'Ambiguous item reference';
-  if (state === 'absent') return 'Item reference not recorded';
+  if (state === 'absent') return '-';
   if (state === 'unsupported') return 'Item reference unsupported';
   return 'Item reference unknown';
 }
@@ -125,13 +126,26 @@ export function MonsterDropEntries({
                     >
                       <Group
                         className={classes['itemRow']}
-                        gap="sm"
+                        gap="xs"
                         justify="space-between"
                         wrap="nowrap"
                       >
-                        <Text size="sm" className={classes['itemName']}>
-                          {entry.itemName}
-                        </Text>
+                        <Group
+                          className={classes['itemIdentity']}
+                          gap="xs"
+                          wrap="nowrap"
+                        >
+                          {entry.itemIconUrl === undefined ? null : (
+                            <Thumbnail
+                              src={entry.itemIconUrl}
+                              size={32}
+                              alt=""
+                            />
+                          )}
+                          <Text size="sm" className={classes['itemName']}>
+                            {entry.itemName}
+                          </Text>
+                        </Group>
                         <DropCertaintyDisclosure
                           entry={entry}
                           buildId={buildId}

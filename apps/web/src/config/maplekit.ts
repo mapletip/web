@@ -19,9 +19,9 @@ const DATA_ORIGIN = 'https://d0.mapletip.com/';
 const RELEASE_PIN = {
   format: 'mapletip.local-release-pin',
   releaseId:
-    'release-199361d8dc65a9df51d5edfa81b691f3a7b41f39b0d1525fe1763caf14134df3',
-  path: 'v1/releases/ede08ca3eb28e1f5ef1663bc2a29408656b69532fb3bba15651a764d83d0c741.json',
-  sha256: 'ede08ca3eb28e1f5ef1663bc2a29408656b69532fb3bba15651a764d83d0c741',
+    'release-dbf14ba28dad5bc90760a5c5ee4f77e3f45ff105d003b822e14f905aa32701ca',
+  path: 'v1/releases/6fbe1994bff03cb5776e051d455506f2cd57e9ffe735cdc44a0eb1716e044527.json',
+  sha256: '6fbe1994bff03cb5776e051d455506f2cd57e9ffe735cdc44a0eb1716e044527',
   byteLength: 868,
 } as const satisfies GetMonsterBrowseOptions['pin'];
 
