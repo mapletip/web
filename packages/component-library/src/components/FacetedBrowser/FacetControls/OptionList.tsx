@@ -2,16 +2,21 @@ import { Button, Checkbox, Stack, Text } from '@mantine/core';
 import type { ReactElement, ReactNode } from 'react';
 import { Fragment, useState } from 'react';
 
-import labelClasses from './FacetLabel.module.css';
+import { FacetContainer } from './FacetContainer';
 import type { FacetOptionWithCount } from './types';
 
 const DEFAULT_VISIBLE_OPTIONS = 3;
 
-function renderOption(option: FacetOptionWithCount): ReactElement {
+function renderOption(
+  option: FacetOptionWithCount,
+  checked: boolean,
+  onChange: (checked: boolean) => void,
+): ReactElement {
   return (
     <Checkbox
       key={option.value}
       value={option.value}
+      checked={checked}
       label={
         <span>
           {option.label}{' '}
@@ -20,6 +25,7 @@ function renderOption(option: FacetOptionWithCount): ReactElement {
           </span>
         </span>
       }
+      onChange={(event) => onChange(event.currentTarget.checked)}
     />
   );
 }
@@ -50,55 +56,57 @@ export function OptionList({
     collapsible && !showAllOptions ? options.slice(0, limit) : options;
 
   return (
-    // The checkbox group owns only the bucket options. Anything in `footer`
-    // (e.g. a standalone Custom checkbox) must stay out of the group, otherwise
-    // it joins the group's context-driven value array; See more also lives
-    // outside the group so it always renders last.
-    <Stack gap="xs">
-      <Checkbox.Group
-        label={label}
-        value={[...value]}
-        onChange={(next) => onChange(next)}
-        classNames={{ label: labelClasses['label'] ?? '' }}
-      >
-        <Stack gap="xs" mt="xs">
-          {visibleOptions.map((option, index) => {
-            const previousGroup = visibleOptions[index - 1]?.group;
-            const showGroupHeading =
-              option.group !== undefined && option.group !== previousGroup;
-            return (
-              <Fragment key={option.value}>
-                {showGroupHeading && (
-                  <Text size="xs" fw={600} c="dimmed">
-                    {option.group}
-                  </Text>
-                )}
-                {renderOption(option)}
-              </Fragment>
-            );
-          })}
-        </Stack>
-      </Checkbox.Group>
-      {footer}
-      {collapsible ? (
-        // Vertical spacing comes from this stack; the toggle carries no margin.
-        <Button
-          type="button"
-          variant="subtle"
-          color="maple"
-          size="compact-sm"
-          px={4}
-          aria-expanded={showAllOptions}
-          onClick={() => setShowAllOptions((expanded) => !expanded)}
-          style={{
-            display: 'flex',
-            alignSelf: 'flex-start',
-            width: 'fit-content',
-          }}
-        >
-          {showAllOptions ? 'See less' : 'See more'}
-        </Button>
-      ) : null}
-    </Stack>
+    <FacetContainer label={label}>
+      {(labelId) => (
+        <>
+          <Stack gap="xs" role="group" aria-labelledby={labelId}>
+            {visibleOptions.map((option, index) => {
+              const previousGroup = visibleOptions[index - 1]?.group;
+              const showGroupHeading =
+                option.group !== undefined && option.group !== previousGroup;
+              return (
+                <Fragment key={option.value}>
+                  {showGroupHeading && (
+                    <Text size="xs" fw={600} c="dimmed">
+                      {option.group}
+                    </Text>
+                  )}
+                  {renderOption(
+                    option,
+                    value.includes(option.value),
+                    (checked) => {
+                      const next = checked
+                        ? [...value, option.value]
+                        : value.filter((entry) => entry !== option.value);
+                      onChange(next);
+                    },
+                  )}
+                </Fragment>
+              );
+            })}
+          </Stack>
+          {footer}
+          {collapsible ? (
+            // Vertical spacing comes from this stack; the toggle carries no margin.
+            <Button
+              type="button"
+              variant="subtle"
+              color="maple"
+              size="compact-sm"
+              px={4}
+              aria-expanded={showAllOptions}
+              onClick={() => setShowAllOptions((expanded) => !expanded)}
+              style={{
+                display: 'flex',
+                alignSelf: 'flex-start',
+                width: 'fit-content',
+              }}
+            >
+              {showAllOptions ? 'See less' : 'See more'}
+            </Button>
+          ) : null}
+        </>
+      )}
+    </FacetContainer>
   );
 }

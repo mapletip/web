@@ -1,4 +1,4 @@
-/* Section label shared by facet controls and the drawer's Sort select. */
+/* Shared label-to-control spacing for facet controls and the drawer's Sort select. */
 .label {
   font-weight: 600;
   font-size: var(--mantine-font-size-sm);

@@ -1,9 +1,10 @@
-import { Group, Stack, Text } from '@mantine/core';
+import { Group } from '@mantine/core';
 import type { ReactElement, ReactNode } from 'react';
 
 import type { FacetFilterValue } from '@/components/FacetedBrowser/hooks/filterTypes';
 
 import { BooleanControl } from './BooleanControl';
+import { FacetContainer } from './FacetContainer';
 import { OptionList } from './OptionList';
 import { RangeBucketControl } from './RangeBucketControl';
 import { RangeControl } from './RangeControl';
@@ -53,14 +54,7 @@ export function FacetControl<TRecord extends Record<string, unknown>>({
     });
     if (facet.icon === undefined) return <div>{control}</div>;
 
-    return (
-      <Stack gap="xs">
-        <Text size="sm" fw={600} component="p" m={0}>
-          {labelContent}
-        </Text>
-        {control}
-      </Stack>
-    );
+    return <FacetContainer label={labelContent}>{control}</FacetContainer>;
   }
 
   if (facet.kind === 'multi-select') {
