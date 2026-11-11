@@ -10,6 +10,8 @@
  * index-agnostic and works for any column count.
  */
 .comparison {
+  /* Let expanded row content size itself against the visible table viewport. */
+  container-type: inline-size;
   --column-hover-color: color-mix(
     in srgb,
     var(--mantine-color-text) 7%,
