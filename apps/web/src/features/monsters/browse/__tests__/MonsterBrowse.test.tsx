@@ -263,12 +263,7 @@ describe('MonsterBrowse', () => {
       Array.from(
         quickFilterRegion.querySelectorAll('svg[data-monster-fact-icon]'),
       ).map((icon) => icon.getAttribute('data-monster-fact-icon')),
-    ).toEqual([
-      'level',
-      'hp',
-      'exp',
-      'expPer100Hp',
-    ]);
+    ).toEqual(['level', 'hp', 'exp', 'expPer100Hp']);
   });
 
   it('shows historical drop entries in the mobile relationship drawer', async () => {

@@ -281,9 +281,7 @@ function projectRecord(
     ...(level === undefined ? {} : { level }),
     ...(hp === undefined ? {} : { hp }),
     ...(mp === undefined ? {} : { mp }),
-    ...(recoveryFactsAvailable === undefined
-      ? {}
-      : { recoveryFactsAvailable }),
+    ...(recoveryFactsAvailable === undefined ? {} : { recoveryFactsAvailable }),
     ...(hpRecovery === undefined ? {} : { hpRecovery }),
     ...(mpRecovery === undefined ? {} : { mpRecovery }),
     ...(exp === undefined ? {} : { exp }),
