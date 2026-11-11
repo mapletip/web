@@ -21,6 +21,10 @@
   padding: var(--mantine-spacing-md);
 }
 
+.rail :global(.mantine-Checkbox-root) {
+  --checkbox-size: var(--checkbox-size-xs);
+}
+
 .results {
   display: flex;
   flex-direction: column;
