@@ -1,7 +1,10 @@
 import type { Row } from '@tanstack/react-table';
 import { describe, expect, it } from 'vitest';
 
-import { createRangeBucketFilterFn } from '@/components/FacetedBrowser/FacetControls/rangeBucketFilterFn';
+import {
+  bucketContains,
+  createRangeBucketFilterFn,
+} from '@/components/FacetedBrowser/FacetControls/rangeBucketFilterFn';
 import type { FacetRangeBucket } from '@/components/FacetedBrowser/FacetControls/types';
 import { facetedBrowserFeatures } from '@/components/FacetedBrowser/hooks/tableFeatures';
 
@@ -36,6 +39,34 @@ describe('createRangeBucketFilterFn', () => {
     expect(filter(row(20), 'level', ['-20-5', '11-20'])).toBe(true);
     expect(filter(row(6), 'level', ['-20-5', '11-20'])).toBe(false);
     expect(filter(row(10), 'level', ['-20-5', '11-20'])).toBe(false);
+  });
+
+  it('rounds decimal values consistently for bucket counts and filters', () => {
+    const decimalBuckets: readonly FacetRangeBucket[] = [
+      {
+        value: 'low',
+        label: '0.3–0.5',
+        min: 0.3,
+        max: 0.5,
+        decimalPlaces: 2,
+      },
+      {
+        value: 'high',
+        label: '0.51–0.75',
+        min: 0.51,
+        max: 0.75,
+        decimalPlaces: 2,
+      },
+    ];
+    const decimalFilter = createRangeBucketFilterFn<TestRecord>(decimalBuckets);
+
+    expect(bucketContains(decimalBuckets[0]!, 0.504)).toBe(true);
+    expect(decimalFilter(row(0.504), 'ratio', ['low'])).toBe(true);
+    expect(bucketContains(decimalBuckets[1]!, 0.505)).toBe(true);
+    expect(decimalFilter(row(0.505), 'ratio', ['high'])).toBe(true);
+    expect(decimalFilter(row(0.505), 'ratio', ['low'])).toBe(false);
+    expect(bucketContains(decimalBuckets[1]!, 0.754)).toBe(true);
+    expect(bucketContains(decimalBuckets[1]!, 0.755)).toBe(false);
   });
 
   it('does not parse negative bucket ids back into numbers', () => {
