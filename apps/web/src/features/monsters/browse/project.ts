@@ -8,21 +8,27 @@
  * displayable facts because only its known content ID affects the thumbnail.
  */
 import { hasMonsterBrowseSummaries } from '@mapletip/data/monsters';
+import { itemIconUrl } from '@mapletip/data/items';
 import type {
   MonsterCatalogV2_2,
   MonsterCatalogV2_3,
-  MonsterDropBrowseV1,
+  MonsterCatalogV2_4,
+  StaticMonsterDropBrowse,
   StaticMonsterCatalog,
 } from '@mapletip/data/monsters';
 
 type MonsterCatalogRecord =
-  MonsterCatalogV2_2['records'][number] | MonsterCatalogV2_3['records'][number];
+  | MonsterCatalogV2_2['records'][number]
+  | MonsterCatalogV2_3['records'][number]
+  | MonsterCatalogV2_4['records'][number];
 
 export type MonsterFactState = 'known' | 'unknown' | 'absent' | 'unsupported';
 export type UnknownFactState = Exclude<MonsterFactState, 'known'>;
 
 export interface MonsterDropEntry {
   readonly itemKey?: string;
+  /** Same-build item sprite URL, present only for a known SDK icon fact. */
+  readonly itemIconUrl?: string;
   readonly itemRefState: string;
   readonly itemName: string;
   readonly itemCategory?: string;
@@ -48,6 +54,8 @@ export type MonsterFactId =
   | 'level'
   | 'hp'
   | 'mp'
+  | 'hpRecovery'
+  | 'mpRecovery'
   | 'exp'
   // Derived training ratio, not a catalog fact: see `expPer100Hp` below.
   | 'expPer100Hp'
@@ -70,10 +78,15 @@ export interface MonsterBrowseRow extends Record<string, unknown> {
   readonly name: string;
   /** Content ID for the representative sprite, present only when known. */
   readonly sprite?: string;
+  /** Present on catalog revision 2.4, including when either value is non-known. */
+  readonly recoveryFactsAvailable?: true;
   // Numeric facts: present ONLY when the canonical state is `known`.
   readonly level?: number;
   readonly hp?: number;
   readonly mp?: number;
+  /** Source recovery integers; no recovery interval or rate is implied. */
+  readonly hpRecovery?: number;
+  readonly mpRecovery?: number;
   readonly exp?: number;
   /**
    * Derived `EXP / HP × 100` training ratio, present only when both inputs are
@@ -145,7 +158,7 @@ export const UNNAMED_MONSTER_LABEL = 'Unnamed monster';
 
 const UNKNOWN_FACT_LABELS: Readonly<Record<UnknownFactState, string>> = {
   unknown: 'Unknown',
-  absent: 'Not recorded',
+  absent: '-',
   unsupported: 'Unavailable',
 };
 
@@ -167,7 +180,8 @@ function readFact<T>(
 
 function projectRecord(
   record: MonsterCatalogRecord,
-  dropBrowse: MonsterDropBrowseV1,
+  dropBrowse: StaticMonsterDropBrowse,
+  baseUrl?: string,
 ): MonsterBrowseRow {
   const factStates: Partial<Record<MonsterFactId, UnknownFactState>> = {};
 
@@ -177,6 +191,14 @@ function projectRecord(
   const level = readFact<number>(record.stats[STAT.level], 'level', factStates);
   const hp = readFact<number>(record.stats[STAT.hp], 'hp', factStates);
   const mp = readFact<number>(record.stats[STAT.mp], 'mp', factStates);
+  let recoveryFactsAvailable: true | undefined;
+  let hpRecovery: number | undefined;
+  let mpRecovery: number | undefined;
+  if ('hpRecovery' in record && 'mpRecovery' in record) {
+    recoveryFactsAvailable = true;
+    hpRecovery = readFact<number>(record.hpRecovery, 'hpRecovery', factStates);
+    mpRecovery = readFact<number>(record.mpRecovery, 'mpRecovery', factStates);
+  }
   const exp = readFact<number>(record.stats[STAT.exp], 'exp', factStates);
   // A training ratio the contract does not carry: derived from the two facts it
   // does. Both inputs must be known and HP positive, so an unknown input never
@@ -239,7 +261,7 @@ function projectRecord(
     factStates,
   );
 
-  const dropEntries = projectDropEntries(dropBrowse, record.key);
+  const dropEntries = projectDropEntries(dropBrowse, record.key, baseUrl);
 
   return {
     key: record.key,
@@ -259,6 +281,11 @@ function projectRecord(
     ...(level === undefined ? {} : { level }),
     ...(hp === undefined ? {} : { hp }),
     ...(mp === undefined ? {} : { mp }),
+    ...(recoveryFactsAvailable === undefined
+      ? {}
+      : { recoveryFactsAvailable }),
+    ...(hpRecovery === undefined ? {} : { hpRecovery }),
+    ...(mpRecovery === undefined ? {} : { mpRecovery }),
     ...(exp === undefined ? {} : { exp }),
     ...(expPer100Hp === undefined ? {} : { expPer100Hp }),
     ...(physicalAttack === undefined ? {} : { physicalAttack }),
@@ -283,7 +310,8 @@ function projectRecord(
  */
 export function projectMonsterBrowseRows(
   catalog: StaticMonsterCatalog,
-  dropBrowse: MonsterDropBrowseV1,
+  dropBrowse: StaticMonsterDropBrowse,
+  baseUrl?: string,
 ): readonly MonsterBrowseRow[] {
   if (!hasMonsterBrowseSummaries(catalog)) {
     throw new Error(
@@ -291,12 +319,15 @@ export function projectMonsterBrowseRows(
     );
   }
 
-  return catalog.records.map((record) => projectRecord(record, dropBrowse));
+  return catalog.records.map((record) =>
+    projectRecord(record, dropBrowse, baseUrl),
+  );
 }
 
 function projectDropEntries(
-  dropBrowse: MonsterDropBrowseV1,
+  dropBrowse: StaticMonsterDropBrowse,
   monsterKey: string,
+  baseUrl?: string,
 ): readonly MonsterDropEntry[] {
   const record = dropBrowse.records[monsterKey];
   if (record === undefined) return [];
@@ -314,6 +345,10 @@ function projectDropEntries(
       item.itemRef.key.length > 0
         ? item.itemRef.key
         : undefined;
+    const iconId =
+      'icon' in item && item.icon.state === 'known'
+        ? item.icon.value
+        : undefined;
     let category: string | undefined;
     if (item.category.kind === 'equip-slot') {
       category = 'equipment';
@@ -323,6 +358,9 @@ function projectDropEntries(
 
     return {
       ...(itemKey === undefined ? {} : { itemKey }),
+      ...(iconId === undefined || baseUrl === undefined
+        ? {}
+        : { itemIconUrl: itemIconUrl(baseUrl, iconId) }),
       itemRefState: item.itemRef.state,
       itemName: formatDropItemName(item.itemName),
       ...(category === undefined ? {} : { itemCategory: category }),
@@ -337,17 +375,17 @@ function projectDropEntries(
 }
 
 function formatDropItemName(
-  fact: MonsterDropBrowseV1['items'][number]['itemName'],
+  fact: StaticMonsterDropBrowse['items'][number]['itemName'],
 ): string {
   if (fact.state === 'known') return fact.value;
   if (fact.state === 'unknown') return 'Unknown item name';
-  if (fact.state === 'absent') return 'Item name not recorded';
+  if (fact.state === 'absent') return '-';
   return 'Item name unavailable';
 }
 
 /** Unique, key-valued options for the shared FacetedBrowser item facet. */
 export function projectMonsterDropItemOptions(
-  dropBrowse: MonsterDropBrowseV1,
+  dropBrowse: StaticMonsterDropBrowse,
 ): readonly MonsterDropItemOption[] {
   const resolved = dropBrowse.items.flatMap((item) => {
     const key = item.itemRef.key;

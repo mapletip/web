@@ -23,6 +23,8 @@ function knownRow(): MonsterBrowseRow {
     level: 5,
     hp: 30,
     mp: 10,
+    hpRecovery: 4,
+    mpRecovery: 3,
     exp: 1,
     expPer100Hp: (1 / 30) * 100,
     physicalAttack: 4,
@@ -50,6 +52,7 @@ function unknownRow(): MonsterBrowseRow {
       level: 'unknown',
       hp: 'unknown',
       exp: 'absent',
+      mpRecovery: 'absent',
       expPer100Hp: 'unknown',
     },
     drops: {
@@ -90,7 +93,7 @@ function renderCard(
 }
 
 describe('MonsterBrowseCard', () => {
-  it('presents the training and combat facts in a 3-by-4 grid', () => {
+  it('presents the training and combat facts', () => {
     const { container } = renderCard(knownRow());
 
     expect(factLabels()).toEqual([
@@ -105,7 +108,7 @@ describe('MonsterBrowseCard', () => {
       'AVOID',
       'Knockback',
       'Speed',
-      'HP Regen',
+      'HP Recovery',
     ]);
     expect(
       screen.getByRole('heading', { name: 'Sentinel Snail' }),
@@ -139,7 +142,7 @@ describe('MonsterBrowseCard', () => {
       '9',
       '11',
       '-65',
-      '—',
+      '4',
     ]);
     expect(factTitles()).toEqual([
       // One decimal-place decision for the derived ratio; `1/30 × 100`.
@@ -154,7 +157,7 @@ describe('MonsterBrowseCard', () => {
       'AVOID: 9',
       'Knockback: 11',
       'Speed: -65',
-      'HP Regen: Unavailable in the current catalog',
+      'HP Recovery: 4',
     ]);
   });
 
@@ -167,7 +170,7 @@ describe('MonsterBrowseCard', () => {
 
     expect(factValues()).toEqual([
       'Unknown',
-      'Not recorded',
+      '-',
       // A derived ratio has no source state, so it shows a dash.
       '-',
       'Unknown',
@@ -178,7 +181,7 @@ describe('MonsterBrowseCard', () => {
       'Unknown',
       'Unknown',
       'Unknown',
-      '—',
+      'Unknown',
     ]);
   });
 

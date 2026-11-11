@@ -341,8 +341,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/component-library
       '@mapletip/data':
-        specifier: 0.5.0
-        version: 0.5.0
+        specifier: 0.6.0
+        version: 0.6.0
       '@mapletip/theme':
         specifier: workspace:*
         version: link:../../packages/theme
@@ -1073,8 +1073,8 @@ packages:
     peerDependencies:
       react: ^19.2.0
 
-  '@mapletip/data@0.5.0':
-    resolution: {integrity: sha512-Zy7DuUolQ3E7yB5WIsn0/h2gHNPrtto+WdBlb32tmxHS9NvQ4zUyCI8cQwodHCM0F18JYYsvT/yM4Yco1Q+GSQ==}
+  '@mapletip/data@0.6.0':
+    resolution: {integrity: sha512-/H9KjgC5ODPR6fWbagmsdU6Tp+FdU89NI9lCuvZ5MaW2mEVt28F+Xnso84BctdCSyYEkB4XjG9AIyZMYldi79Q==}
 
   '@napi-rs/wasm-runtime@1.2.5':
     resolution: {integrity: sha512-HshSvXzmBxNzqejd3k/KemgQ3hdREUYFRRrgxOZ+gPljDIsO2SDZrVZMd4Z/HsxudQbE62OVyVFE8z9BCurfjA==}
@@ -4627,7 +4627,7 @@ snapshots:
     dependencies:
       react: 19.3.1
 
-  '@mapletip/data@0.5.0': {}
+  '@mapletip/data@0.6.0': {}
 
   '@napi-rs/wasm-runtime@1.2.5(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)':
     dependencies:
