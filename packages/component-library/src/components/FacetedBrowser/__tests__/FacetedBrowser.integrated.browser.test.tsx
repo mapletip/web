@@ -877,8 +877,7 @@ describe('integrated FacetedBrowser', () => {
     await page
       .getByRole('button', { name: 'Filters, 0 active. Open all filters' })
       .click();
-    await page.getByRole('combobox', { name: 'Availability' }).click();
-    await page.getByRole('option', { name: 'No (1)' }).click();
+    await page.getByRole('checkbox', { name: 'No (1)' }).click();
     expect(page.getByRole('button', { name: 'Show 1 entry' })).toBeEnabled();
     await page.getByRole('button', { name: 'Show 1 entry' }).click();
 
@@ -1018,13 +1017,13 @@ describe('integrated FacetedBrowser', () => {
         (button) => button.textContent === 'See more',
       );
 
-    expect(railCheckboxes()).toHaveLength(6);
+    expect(railCheckboxes()).toHaveLength(8);
     expect(rail.textContent).not.toContain('Delta');
     expect(seeMoreButtons()).toHaveLength(2);
 
     await userEvent.click(seeMoreButtons()[0]!);
 
-    expect(railCheckboxes()).toHaveLength(15);
+    expect(railCheckboxes()).toHaveLength(17);
     expect(rail.textContent).toContain('Delta');
     expect(rail.textContent).toContain('See less');
   });
@@ -1049,13 +1048,13 @@ describe('integrated FacetedBrowser', () => {
         (button) => button.textContent === 'See more',
       );
 
-    expect(dialogCheckboxes()).toHaveLength(6);
+    expect(dialogCheckboxes()).toHaveLength(8);
     expect(dialog.textContent).not.toContain('Delta');
     expect(seeMoreButtons()).toHaveLength(2);
 
     await userEvent.click(seeMoreButtons()[0]!);
 
-    expect(dialogCheckboxes()).toHaveLength(15);
+    expect(dialogCheckboxes()).toHaveLength(17);
     expect(dialog.textContent).toContain('Delta');
     expect(dialog.textContent).toContain('See less');
   });
@@ -1919,7 +1918,7 @@ describe('integrated FacetedBrowser', () => {
     expect(page.getByText('Records are unavailable')).toBeVisible();
   });
 
-  it('keeps the drawer boolean select compact instead of full width', async () => {
+  it('renders drawer boolean facets as yes/no checkboxes', async () => {
     await render(
       <Browser state={{ ...state, page: 1 }} onStateChange={() => {}} />,
     );
@@ -1928,16 +1927,8 @@ describe('integrated FacetedBrowser', () => {
       .getByRole('button', { name: 'Filters, 0 active. Open all filters' })
       .click();
 
-    const imageAvailable = page.getByRole('combobox', {
-      name: 'Image available',
-    });
-    const width = imageAvailable.element().getBoundingClientRect().width;
-    const dialogWidth = document
-      .querySelector('[role="dialog"]')!
-      .getBoundingClientRect().width;
-
-    expect(width).toBeGreaterThan(150);
-    expect(width).toBeLessThan(dialogWidth * 0.6);
+    expect(page.getByRole('checkbox', { name: /^Yes \(/u })).toBeVisible();
+    expect(page.getByRole('checkbox', { name: /^No \(/u })).toBeVisible();
   });
 
   it('supports computed query fields without a table and rejects invalid ranges', async () => {
@@ -1948,8 +1939,7 @@ describe('integrated FacetedBrowser', () => {
     await page
       .getByRole('button', { name: 'Filters, 0 active. Open all filters' })
       .click();
-    await page.getByRole('combobox', { name: 'Image available' }).click();
-    await page.getByRole('option', { name: /^Yes \(/u }).click();
+    await page.getByRole('checkbox', { name: /^Yes \(/u }).click();
     expect(
       page.getByRole('button', { name: /^Show \d+ records$/u }),
     ).toBeEnabled();

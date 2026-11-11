@@ -1,4 +1,4 @@
-import { Select } from '@mantine/core';
+import { Checkbox, Stack } from '@mantine/core';
 import type { ReactElement, ReactNode } from 'react';
 
 import type { FacetFilterValue } from '@/components/FacetedBrowser/hooks/filterTypes';
@@ -12,7 +12,7 @@ export interface BooleanControlProps {
   readonly onChange: (value: FacetFilterValue) => void;
 }
 
-/** Clearable yes/no facet renderer shared by rail and drawer surfaces. */
+/** Clearable yes/no checkbox facet shared by rail and drawer surfaces. */
 export function BooleanControl({
   label,
   value,
@@ -20,19 +20,24 @@ export function BooleanControl({
   onChange,
 }: BooleanControlProps): ReactElement {
   return (
-    <Select
-      label={label}
-      clearable
-      checkIconPosition="left"
-      withAlignedLabels
-      value={typeof value === 'boolean' ? String(value) : null}
-      w={200}
-      classNames={{ label: labelClasses['label'] ?? '' }}
-      data={[
-        { value: 'true', label: `Yes (${counts.get('true') ?? 0})` },
-        { value: 'false', label: `No (${counts.get('false') ?? 0})` },
-      ]}
-      onChange={(next) => onChange(next === null ? undefined : next === 'true')}
-    />
+    <fieldset style={{ border: 0, margin: 0, minWidth: 0, padding: 0 }}>
+      <legend className={labelClasses['label'] ?? ''}>{label}</legend>
+      <Stack gap="xs" mt="xs">
+        <Checkbox
+          checked={value === true}
+          label={`Yes (${counts.get('true') ?? 0})`}
+          onChange={(event) =>
+            onChange(event.currentTarget.checked ? true : undefined)
+          }
+        />
+        <Checkbox
+          checked={value === false}
+          label={`No (${counts.get('false') ?? 0})`}
+          onChange={(event) =>
+            onChange(event.currentTarget.checked ? false : undefined)
+          }
+        />
+      </Stack>
+    </fieldset>
   );
 }

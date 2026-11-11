@@ -419,9 +419,12 @@ describe('Items Browse router state', () => {
       '/maplestory/items/etc?noRecordedQuestOrRecipeUse=true',
     );
 
+    const noUseFacet = screen.getByRole('group', {
+      name: 'No recorded quest or recipe use',
+    });
     expect(
-      screen.getByRole('combobox', { name: 'No recorded quest or recipe use' }),
-    ).toHaveValue('Yes (1)');
+      within(noUseFacet).getByRole('checkbox', { name: /^Yes \(/u }),
+    ).toBeChecked();
     expect(screen.getByText('Snail Shell')).toBeInTheDocument();
     expect(screen.queryByText('Quest Material')).not.toBeInTheDocument();
     expect(router.state.matches.at(-1)?.search).toMatchObject({
