@@ -120,9 +120,7 @@ function MonsterFact({
   const displayValue =
     fact.id === 'hpRegen' ? '—' : formatMonsterFact(record, fact.id);
   const accessibleValue =
-    fact.id === 'hpRegen'
-      ? 'Unavailable in the current catalog'
-      : displayValue;
+    fact.id === 'hpRegen' ? 'Unavailable in the current catalog' : displayValue;
   const Icon = fact.icon;
 
   return (

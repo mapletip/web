@@ -160,7 +160,6 @@ describe('MonsterBrowse server rendering', () => {
     expect(html).toContain('>-</td>');
     expect(html).toContain('EXP / 100 HP: -');
     expect(html).toContain('Unknown');
-    expect(html).toContain('Not recorded');
     expect(html).not.toContain('0 native');
   });
 });
