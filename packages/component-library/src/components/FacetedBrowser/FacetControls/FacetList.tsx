@@ -25,11 +25,15 @@ export function FacetList<TRecord extends Record<string, unknown>>({
   onChange,
 }: FacetListProps<TRecord>): ReactElement {
   return (
-    <>
+    <div>
       {facets.map((facet, index) => (
         <div key={`${surface}-${facet.id}`}>
           {index > 0 ? (
-            <Divider my="sm" color="var(--mapletip-color-border-subtle)" />
+            <Divider
+              mt={surface === 'rail' ? 'xs' : 'sm'}
+              mb={surface === 'rail' ? 'xs' : 'sm'}
+              color="var(--mapletip-color-border-subtle)"
+            />
           ) : null}
           <FacetControl
             facet={facet}
@@ -41,6 +45,6 @@ export function FacetList<TRecord extends Record<string, unknown>>({
           />
         </div>
       ))}
-    </>
+    </div>
   );
 }

@@ -1,4 +1,4 @@
-import { NumberInput, Stack, Text } from '@mantine/core';
+import { NumberInput, Stack } from '@mantine/core';
 import type { ReactElement, ReactNode } from 'react';
 
 import {
@@ -7,6 +7,8 @@ import {
   type FacetFilterValue,
   type NumericRangeFilter,
 } from '@/components/FacetedBrowser/hooks/filterTypes';
+
+import { FacetContainer } from './FacetContainer';
 
 function toNumber(value: number | string): number | undefined {
   if (value === '') return undefined;
@@ -59,33 +61,32 @@ export function RangeControl({
     );
   };
 
-  return (
+  const controls = (
     <Stack gap="xs">
-      {hideLabel ? null : (
-        <Text size="sm" fw={600} component="p" m={0}>
-          {labelContent ?? label}
-        </Text>
-      )}
       {/* Visible labels are short ("From"/"To"); the facet name stays in the
           accessible name so several range facets on one page stay distinct. */}
-      <Stack gap="xs">
-        <NumberInput
-          label="From"
-          aria-label={`${label} from`}
-          value={minValue}
-          hideControls
-          onChange={(next) => updatePart('min', next)}
-          error={invalid ? 'Minimum must not exceed maximum.' : undefined}
-        />
-        <NumberInput
-          label="To"
-          aria-label={`${label} to`}
-          value={maxValue}
-          hideControls
-          onChange={(next) => updatePart('max', next)}
-          error={invalid ? 'Maximum must be at least the minimum.' : undefined}
-        />
-      </Stack>
+      <NumberInput
+        label="From"
+        aria-label={`${label} from`}
+        value={minValue}
+        hideControls
+        onChange={(next) => updatePart('min', next)}
+        error={invalid ? 'Minimum must not exceed maximum.' : undefined}
+      />
+      <NumberInput
+        label="To"
+        aria-label={`${label} to`}
+        value={maxValue}
+        hideControls
+        onChange={(next) => updatePart('max', next)}
+        error={invalid ? 'Maximum must be at least the minimum.' : undefined}
+      />
     </Stack>
+  );
+
+  return hideLabel ? (
+    controls
+  ) : (
+    <FacetContainer label={labelContent ?? label}>{controls}</FacetContainer>
   );
 }

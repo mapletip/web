@@ -3,7 +3,7 @@ import type { ReactElement, ReactNode } from 'react';
 
 import type { FacetFilterValue } from '@/components/FacetedBrowser/hooks/filterTypes';
 
-import labelClasses from './FacetLabel.module.css';
+import { FacetContainer } from './FacetContainer';
 
 export interface BooleanControlProps {
   readonly label: ReactNode;
@@ -20,24 +20,25 @@ export function BooleanControl({
   onChange,
 }: BooleanControlProps): ReactElement {
   return (
-    <fieldset style={{ border: 0, margin: 0, minWidth: 0, padding: 0 }}>
-      <legend className={labelClasses['label'] ?? ''}>{label}</legend>
-      <Stack gap="xs" mt="xs">
-        <Checkbox
-          checked={value === true}
-          label={`Yes (${counts.get('true') ?? 0})`}
-          onChange={(event) =>
-            onChange(event.currentTarget.checked ? true : undefined)
-          }
-        />
-        <Checkbox
-          checked={value === false}
-          label={`No (${counts.get('false') ?? 0})`}
-          onChange={(event) =>
-            onChange(event.currentTarget.checked ? false : undefined)
-          }
-        />
-      </Stack>
-    </fieldset>
+    <FacetContainer label={label}>
+      {(labelId) => (
+        <Stack gap="xs" role="group" aria-labelledby={labelId}>
+          <Checkbox
+            checked={value === true}
+            label={`Yes (${counts.get('true') ?? 0})`}
+            onChange={(event) =>
+              onChange(event.currentTarget.checked ? true : undefined)
+            }
+          />
+          <Checkbox
+            checked={value === false}
+            label={`No (${counts.get('false') ?? 0})`}
+            onChange={(event) =>
+              onChange(event.currentTarget.checked ? false : undefined)
+            }
+          />
+        </Stack>
+      )}
+    </FacetContainer>
   );
 }
