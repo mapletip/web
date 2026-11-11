@@ -3,11 +3,11 @@ import { useId, useState, type ReactElement } from 'react';
 
 import type { BuildId } from '@/config/maplekit';
 
-import { MonsterSprite } from '../../MonsterSprite';
 import {
   MONSTER_BROWSE_FACT_CONFIG,
   renderMonsterBrowseFactIcon,
 } from '../../monster-browse-fact-config';
+import { MonsterSprite } from '../../MonsterSprite';
 import type { MonsterBrowseRow } from '../../project';
 import { MonsterDropEntries } from '../MonsterDropEntries';
 import { dropListingActionLabel } from '../MonsterDropListing';

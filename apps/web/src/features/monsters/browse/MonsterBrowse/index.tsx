@@ -12,16 +12,16 @@ import type { ReactElement } from 'react';
 import { BrowsePageShell } from '@/components/BrowsePageShell';
 import { BUILDS, type BuildId } from '@/config/maplekit';
 
-import classes from '../MonsterBrowse.module.css';
-import { MonsterBrowseCard } from '../MonsterBrowseCard';
-import { dropListingActionLabel, MonsterDropListing } from '../MonsterDrops';
-import dropClasses from '../MonsterDrops/MonsterDrops.module.css';
-import { MONSTER_SPRITE_SIZE, MonsterSprite } from '../MonsterSprite';
 import {
   getMonsterBrowseFacetDefinition,
   MONSTER_BROWSE_FACT_CONFIG,
   renderMonsterBrowseFactIcon,
 } from '../monster-browse-fact-config';
+import classes from '../MonsterBrowse.module.css';
+import { MonsterBrowseCard } from '../MonsterBrowseCard';
+import { dropListingActionLabel, MonsterDropListing } from '../MonsterDrops';
+import dropClasses from '../MonsterDrops/MonsterDrops.module.css';
+import { MONSTER_SPRITE_SIZE, MonsterSprite } from '../MonsterSprite';
 import {
   formatMonsterFact,
   type MonsterDropItemOption,

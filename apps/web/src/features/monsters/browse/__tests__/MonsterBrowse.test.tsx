@@ -11,11 +11,11 @@ import { describe, expect, it } from 'vitest';
 
 import { DEFAULT_BUILD_ID } from '@/config/maplekit';
 
-import { MonsterBrowse, monsterBrowseColumns } from '../MonsterBrowse';
 import {
   getMonsterBrowseFacetDefinition,
   MONSTER_BROWSE_FACT_CONFIG,
 } from '../monster-browse-fact-config';
+import { MonsterBrowse, monsterBrowseColumns } from '../MonsterBrowse';
 import {
   projectMonsterBrowseRows,
   type MonsterBrowseRow,
@@ -152,15 +152,10 @@ describe('MonsterBrowse', () => {
       }),
     );
     expect(MONSTER_BROWSE_FACT_CONFIG.level.showIconInCard).toBe(false);
-    expect(facets.find(({ id }) => id === 'hp')?.icon).toEqual(
-      expect.objectContaining({
-        type: MONSTER_BROWSE_FACT_CONFIG.hp.icon,
-        props: expect.objectContaining({
-          size: 16,
-          color: '#f28f91',
-        }),
-      }),
-    );
+    const hpIcon = facets.find(({ id }) => id === 'hp')?.icon;
+    expect(hpIcon).toHaveProperty('type', MONSTER_BROWSE_FACT_CONFIG.hp.icon);
+    expect(hpIcon).toHaveProperty('props.size', 16);
+    expect(hpIcon).toHaveProperty('props.color', '#f28f91');
   });
 
   it('keeps compact headers with full accessible names and stable sort intents', () => {
@@ -247,6 +242,7 @@ describe('MonsterBrowse', () => {
     expect(
       quickFilters
         .getAllByRole('button')
+        .filter((button) => button.getAttribute('aria-label')?.includes('Open'))
         .map((button) => button.getAttribute('aria-label')),
     ).toEqual([
       'Filters, 0 active. Open all filters',

@@ -184,7 +184,10 @@ export function renderMonsterBrowseFactIcon(
   {
     className,
     surface = 'facet',
-  }: { readonly className?: string; readonly surface?: 'card' | 'facet' } = {},
+  }: {
+    readonly className?: string | undefined;
+    readonly surface?: 'card' | 'facet';
+  } = {},
 ): ReactElement | undefined {
   if (fact.icon === undefined) return undefined;
   if (surface === 'card' && fact.showIconInCard === false) return undefined;
@@ -216,7 +219,10 @@ export function getMonsterBrowseFacetDefinition(
 export function getMonsterBrowseCardFacts(
   section: 'training' | 'combat',
 ): readonly MonsterBrowseCardStatFact[] {
-  return Object.values(MONSTER_BROWSE_FACT_CONFIG)
+  const facts: readonly MonsterBrowseFactConfig[] = Object.values(
+    MONSTER_BROWSE_FACT_CONFIG,
+  );
+  return facts
     .filter(isMonsterBrowseCardStatFact)
     .filter((fact) => fact.card.section === section);
 }
@@ -224,7 +230,5 @@ export function getMonsterBrowseCardFacts(
 function isMonsterBrowseCardStatFact(
   fact: MonsterBrowseFactConfig,
 ): fact is MonsterBrowseCardStatFact {
-  return (
-    fact.card?.section === 'training' || fact.card?.section === 'combat'
-  );
+  return fact.card?.section === 'training' || fact.card?.section === 'combat';
 }

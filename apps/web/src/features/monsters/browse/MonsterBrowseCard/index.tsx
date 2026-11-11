@@ -3,17 +3,15 @@ import type { ReactElement } from 'react';
 
 import type { BuildId } from '@/config/maplekit';
 
-import { MonsterDropDrawerControl } from '../MonsterDrops';
-import { MonsterSprite } from '../MonsterSprite';
 import {
   getMonsterBrowseCardFacts,
   MONSTER_BROWSE_FACT_CONFIG,
   renderMonsterBrowseFactIcon,
+  type MonsterBrowseCardStatFact,
 } from '../monster-browse-fact-config';
-import {
-  formatMonsterFact,
-  type MonsterBrowseRow,
-} from '../project';
+import { MonsterDropDrawerControl } from '../MonsterDrops';
+import { MonsterSprite } from '../MonsterSprite';
+import { formatMonsterFact, type MonsterBrowseRow } from '../project';
 
 import classes from './MonsterBrowseCard.module.css';
 
@@ -67,7 +65,7 @@ function MonsterFact({
   fact,
 }: {
   readonly record: MonsterBrowseRow;
-  readonly fact: (typeof trainingFacts)[number] | (typeof combatFacts)[number];
+  readonly fact: MonsterBrowseCardStatFact;
 }): ReactElement {
   const factId = fact.card.factId;
   const displayValue =

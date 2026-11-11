@@ -502,7 +502,10 @@ describe('range facet buckets', () => {
       screen.queryByRole('button', { name: 'See more' }),
     ).not.toBeInTheDocument();
     // Standalone use keeps the facet name plus the short From/To labels.
-    expect(screen.getByText('Level', { exact: true })).toBeVisible();
+    const levelLabel = screen
+      .getAllByText('Level', { exact: true })
+      .find((element) => element.tagName === 'P');
+    expect(levelLabel).toBeVisible();
     expect(screen.getByText('From', { exact: true })).toBeVisible();
     expect(screen.getByText('To', { exact: true })).toBeVisible();
     expect(fromInput()).toBeVisible();

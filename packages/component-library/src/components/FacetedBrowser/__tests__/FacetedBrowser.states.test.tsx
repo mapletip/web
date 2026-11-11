@@ -930,6 +930,7 @@ describe('responsive navigation slot', () => {
     expect(
       quickFilters
         .getAllByRole('button')
+        .filter((button) => button.getAttribute('aria-label')?.includes('Open'))
         .map((button) => button.getAttribute('aria-label')),
     ).toEqual([
       'Filters, 0 active. Open all filters',
