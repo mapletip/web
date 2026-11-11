@@ -39,6 +39,7 @@ export interface MonsterDropEntry {
 export interface MonsterDropItemOption {
   readonly value: string;
   readonly label: string;
+  readonly iconUrl?: string;
 }
 
 export interface MonsterDropFacts {
@@ -343,10 +344,7 @@ function projectDropEntries(
       item.itemRef.key.length > 0
         ? item.itemRef.key
         : undefined;
-    const iconId =
-      'icon' in item && item.icon.state === 'known'
-        ? item.icon.value
-        : undefined;
+    const iconUrl = projectDropItemIconUrl(item, baseUrl);
     let category: string | undefined;
     if (item.category.kind === 'equip-slot') {
       category = 'equipment';
@@ -356,9 +354,7 @@ function projectDropEntries(
 
     return {
       ...(itemKey === undefined ? {} : { itemKey }),
-      ...(iconId === undefined || baseUrl === undefined
-        ? {}
-        : { itemIconUrl: itemIconUrl(baseUrl, iconId) }),
+      ...(iconUrl === undefined ? {} : { itemIconUrl: iconUrl }),
       itemRefState: item.itemRef.state,
       itemName: formatDropItemName(item.itemName),
       ...(category === undefined ? {} : { itemCategory: category }),
@@ -370,6 +366,17 @@ function projectDropEntries(
         : {}),
     };
   });
+}
+
+function projectDropItemIconUrl(
+  item: StaticMonsterDropBrowse['items'][number],
+  baseUrl?: string,
+): string | undefined {
+  const iconId =
+    'icon' in item && item.icon.state === 'known' ? item.icon.value : undefined;
+  return iconId === undefined || baseUrl === undefined
+    ? undefined
+    : itemIconUrl(baseUrl, iconId);
 }
 
 function formatDropItemName(
@@ -384,6 +391,7 @@ function formatDropItemName(
 /** Unique, key-valued options for the shared FacetedBrowser item facet. */
 export function projectMonsterDropItemOptions(
   dropBrowse: StaticMonsterDropBrowse,
+  baseUrl?: string,
 ): readonly MonsterDropItemOption[] {
   const resolved = dropBrowse.items.flatMap((item) => {
     const key = item.itemRef.key;
@@ -394,7 +402,14 @@ export function projectMonsterDropItemOptions(
     ) {
       return [];
     }
-    return [{ value: key, label: formatDropItemName(item.itemName) }];
+    const iconUrl = projectDropItemIconUrl(item, baseUrl);
+    return [
+      {
+        value: key,
+        label: formatDropItemName(item.itemName),
+        ...(iconUrl === undefined ? {} : { iconUrl }),
+      },
+    ];
   });
 
   const labelCounts = new Map<string, number>();
@@ -409,6 +424,7 @@ export function projectMonsterDropItemOptions(
         labelCounts.get(option.label) === 1
           ? option.label
           : `${option.label} (${option.value})`,
+      ...(option.iconUrl === undefined ? {} : { iconUrl: option.iconUrl }),
     }))
     .sort((left, right) => left.label.localeCompare(right.label));
 }
