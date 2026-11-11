@@ -363,6 +363,27 @@ describe('MonsterBrowse', () => {
     ).not.toBeInTheDocument();
   });
 
+  it('closes and discards the filter drawer when browser Back is pressed', async () => {
+    const user = userEvent.setup();
+    mountBrowse();
+
+    await user.click(
+      screen.getByRole('button', {
+        name: 'Filters, 0 active. Open all filters',
+      }),
+    );
+    const drawer = await screen.findByRole('dialog', { name: 'Filters' });
+    await waitFor(() => expect(drawer).toBeVisible());
+    expect(
+      within(drawer).getByRole('button', { name: 'Apply' }),
+    ).toBeInTheDocument();
+
+    fireEvent.popState(window);
+
+    await waitFor(() => expect(drawer).not.toBeVisible());
+    expect(summaryText()).toBe('4 Monsters');
+  });
+
   it('applies search, a rail preset and clear to the result set', async () => {
     const user = userEvent.setup();
     mountBrowse();

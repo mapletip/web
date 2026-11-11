@@ -7,7 +7,13 @@ import type {
   RowExpansionControlContext,
   TableColumn,
 } from '@mapletip/component-library';
-import type { ReactElement } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type ReactElement,
+} from 'react';
 
 import { BrowsePageShell } from '@/components/BrowsePageShell';
 import { BUILDS, type BuildId } from '@/config/maplekit';
@@ -186,7 +192,6 @@ function dropItemFacet(
           searchable
           clearable
           hidePickedOptions
-          limit={15}
           maxDropdownHeight={300}
           nothingFoundMessage="No dropped items match"
           placeholder="Search dropped items"
@@ -224,6 +229,35 @@ export function MonsterBrowse({
   rows,
   dropItemOptions,
 }: MonsterBrowseProps): ReactElement {
+  const [filterDrawerOpened, setFilterDrawerOpened] = useState(false);
+  const filterDrawerHistoryEntry = useRef(false);
+  const onFilterDrawerOpenedChange = useCallback((opened: boolean) => {
+    if (
+      !opened &&
+      filterDrawerHistoryEntry.current &&
+      typeof window !== 'undefined'
+    ) {
+      filterDrawerHistoryEntry.current = false;
+      window.history.back();
+    }
+    setFilterDrawerOpened(opened);
+  }, []);
+
+  useEffect(() => {
+    if (!filterDrawerOpened || typeof window === 'undefined') return;
+
+    window.history.pushState(window.history.state, '', window.location.href);
+    filterDrawerHistoryEntry.current = true;
+
+    const handlePopState = () => {
+      if (!filterDrawerHistoryEntry.current) return;
+      filterDrawerHistoryEntry.current = false;
+      setFilterDrawerOpened(false);
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [filterDrawerOpened]);
+
   const label = BUILDS[buildId].label;
   const queryFields: readonly QueryFieldDefinition<MonsterBrowseRow>[] = [
     // Boolean facets remain registered as query fields even though their
@@ -257,6 +291,7 @@ export function MonsterBrowse({
         queryFields={queryFields}
         searchFields={['name']}
         facets={browseFacets}
+        filterDrawerApplyLabel="Apply"
         recordNoun={`${label} monsters`}
         summaryMode="total"
         summaryNoun={SUMMARY_NOUN}
@@ -279,6 +314,8 @@ export function MonsterBrowse({
         )}
         rowExpansionControl={(context) => dropExpansionControl(context)}
         defaultState={defaultState}
+        drawerOpened={filterDrawerOpened}
+        onDrawerOpenedChange={onFilterDrawerOpenedChange}
       />
     </BrowsePageShell>
   );
