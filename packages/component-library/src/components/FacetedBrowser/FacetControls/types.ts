@@ -22,6 +22,8 @@ export interface FacetRangeBucket {
   readonly label: string;
   readonly min?: number;
   readonly max?: number;
+  /** Round values to this many decimal places before testing bucket membership. */
+  readonly decimalPlaces?: number;
 }
 
 export interface FacetControlContext<TRecord extends Record<string, unknown>> {
@@ -57,11 +59,16 @@ export interface FacetDefinition<TRecord extends Record<string, unknown>> {
   /** Prefix shown once at the start of generated range labels, such as `+`. */
   readonly valuePrefix?: string;
   /**
+   * Decimal precision for quantile buckets. Values are rounded to this
+   * precision before quantile cuts and bucket membership checks.
+   */
+  readonly decimalPlaces?: number;
+  /**
    * Range presets for a `kind: 'range'` facet. `'quantile'` creates one exact
    * bucket per distinct value when there are at most six; above six it derives
    * readable equal-population buckets from the field's values (finite,
-   * non-negative integers). It is also the facet's filtering semantics. Omit
-   * for bare min/max inputs.
+   * non-negative numbers, rounded to `decimalPlaces` (default 0). It is also
+   * the facet's filtering semantics. Omit for bare min/max inputs.
    */
   readonly buckets?: readonly FacetRangeBucket[] | 'quantile';
   /** Specialized controls receive the current canonical or draft value and setter. */

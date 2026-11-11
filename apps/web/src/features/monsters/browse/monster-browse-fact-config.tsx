@@ -44,6 +44,7 @@ export interface MonsterBrowseFactConfig {
     readonly field: string;
     readonly kind: FacetDefinition<MonsterBrowseRow>['kind'];
     readonly buckets?: readonly FacetRangeBucket[] | 'quantile';
+    readonly decimalPlaces?: number;
   };
 }
 
@@ -90,7 +91,12 @@ export const MONSTER_BROWSE_FACT_CONFIG = {
     iconSize: 14,
     iconColor: '#f5bd56',
     card: { section: 'training', factId: 'expPer100Hp' },
-    facet: { field: 'expPer100Hp', kind: 'range' },
+    facet: {
+      field: 'expPer100Hp',
+      kind: 'range',
+      buckets: 'quantile',
+      decimalPlaces: 2,
+    },
   },
   boss: {
     id: 'boss',

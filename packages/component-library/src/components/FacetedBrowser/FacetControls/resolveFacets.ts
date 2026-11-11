@@ -129,13 +129,18 @@ function resolveFacet<TRecord extends Record<string, unknown>>({
     );
     if (distinctValues.size < 2) return undefined;
     if (facet.buckets !== 'quantile') return facet;
+    const buckets = buildQuantileBuckets({
+      values,
+      valuePrefix: facet.valuePrefix,
+      unit: facet.unit,
+      decimalPlaces: facet.decimalPlaces,
+    });
+    // Decimal quantization can collapse distinct source values to one displayed
+    // value, which would leave a facet with only one unhelpful option.
+    if (buckets.length < 2) return undefined;
     return {
       ...facet,
-      buckets: buildQuantileBuckets({
-        values,
-        valuePrefix: facet.valuePrefix,
-        unit: facet.unit,
-      }),
+      buckets,
     };
   }
 

@@ -1,7 +1,7 @@
 import type { FacetRangeBucket } from './types';
 
 /**
- * Deterministic readable buckets for finite, non-negative integer values.
+ * Deterministic readable buckets for finite, non-negative numeric values.
  *
  * Heavy-tailed numeric fields (monster HP spans 30 → 2.1 billion) make
  * equal-width buckets useless: one bucket holds almost every row and the rest are
@@ -11,31 +11,40 @@ import type { FacetRangeBucket } from './types';
  * Raw order statistics ("765–1,721") are then rounded outward onto a shared grid
  * (5s below 100, then 25s, 250s, …) so labels are scannable while staying narrow
  * enough that neighbouring buckets remain distinct. A bucket always ends on a grid
- * line and the next starts at the following integer: ranges are inclusive,
+ * line and the next starts at the following grid unit: ranges are inclusive,
  * contiguous, non-overlapping and every admissible value belongs to exactly one
  * bucket. Rounding up can swallow a narrow quantile range whole; that range then
  * has no value to claim and merges into the bucket above rather than becoming
  * empty or inverted.
  *
- * The supported domain is deliberately explicit: finite, non-negative, integer
- * numbers. Unknown values are excluded by the caller before they reach here, while
- * a present value outside this contract is a programming error rather than
- * something to bucket silently.
+ * Values are integer-only by default. A decimal precision can be supplied to
+ * quantize fractional values onto an integer grid before deriving buckets.
+ * Unknown values are excluded by the caller before they reach here, while a
+ * present value outside the selected contract is a programming error rather
+ * than something to bucket silently.
  */
 const TARGET_BUCKETS = 6;
 const MIN_GRID_STEP = 5;
-const FORMATTER = new Intl.NumberFormat('en-US');
+const MAX_DECIMAL_PLACES = 12;
 
 function formatValue({
   value,
   valuePrefix,
   unit,
+  decimalPlaces,
 }: {
   readonly value: number;
   readonly valuePrefix?: string | undefined;
   readonly unit?: string | undefined;
+  readonly decimalPlaces?: number | undefined;
 }): string {
-  return `${valuePrefix ?? ''}${FORMATTER.format(value)}${unit ?? ''}`;
+  const formatter = new Intl.NumberFormat(
+    'en-US',
+    decimalPlaces === undefined
+      ? undefined
+      : { maximumFractionDigits: decimalPlaces },
+  );
+  return `${valuePrefix ?? ''}${formatter.format(value)}${unit ?? ''}`;
 }
 
 function assertSupportedValue(value: number): void {
@@ -96,9 +105,11 @@ export interface BuildQuantileBucketsOptions {
   readonly values: readonly number[];
   readonly valuePrefix?: string | undefined;
   readonly unit?: string | undefined;
+  /** Round values to this many decimal places before deriving quantiles. */
+  readonly decimalPlaces?: number | undefined;
 }
 
-export function buildQuantileBuckets({
+function buildIntegerQuantileBuckets({
   values,
   valuePrefix,
   unit,
@@ -158,4 +169,75 @@ export function buildQuantileBuckets({
     min: bound.min,
     max: bound.max,
   }));
+}
+
+function assertDecimalPlaces(decimalPlaces: number): void {
+  if (
+    !Number.isInteger(decimalPlaces) ||
+    decimalPlaces < 0 ||
+    decimalPlaces > MAX_DECIMAL_PLACES
+  ) {
+    throw new Error(
+      `FacetedBrowser: quantile decimal places must be an integer from 0 to ${MAX_DECIMAL_PLACES}, received ${String(decimalPlaces)}.`,
+    );
+  }
+}
+
+function roundToScaledInteger(value: number, scale: number): number {
+  const scaled = value * scale;
+  return Math.round(scaled + Number.EPSILON * Math.abs(scaled));
+}
+
+function decimalValue(
+  scaledValue: number,
+  scale: number,
+  decimalPlaces: number,
+): number {
+  return Number((scaledValue / scale).toFixed(decimalPlaces));
+}
+
+export function buildQuantileBuckets({
+  values,
+  valuePrefix,
+  unit,
+  decimalPlaces = 0,
+}: BuildQuantileBucketsOptions): readonly FacetRangeBucket[] {
+  assertDecimalPlaces(decimalPlaces);
+  if (decimalPlaces === 0) {
+    return buildIntegerQuantileBuckets({ values, valuePrefix, unit });
+  }
+
+  const scale = 10 ** decimalPlaces;
+  const scaledValues = values.map((value) => {
+    if (!Number.isFinite(value) || value < 0) {
+      throw new Error(
+        `FacetedBrowser: quantile buckets require finite, non-negative values, received ${String(value)}.`,
+      );
+    }
+    const scaled = roundToScaledInteger(value, scale);
+    if (!Number.isSafeInteger(scaled)) {
+      throw new Error(
+        `FacetedBrowser: quantile value ${String(value)} exceeds the supported precision of ${decimalPlaces} decimal places.`,
+      );
+    }
+    return scaled;
+  });
+
+  const scaledBuckets = buildIntegerQuantileBuckets({
+    values: scaledValues,
+  });
+  return scaledBuckets.map((bucket) => {
+    const min = decimalValue(bucket.min!, scale, decimalPlaces);
+    const max = decimalValue(bucket.max!, scale, decimalPlaces);
+    const exact = bucket.min === bucket.max;
+    return {
+      value: exact ? String(min) : `${String(min)}-${String(max)}`,
+      label: exact
+        ? formatValue({ value: min, valuePrefix, unit, decimalPlaces })
+        : `${formatValue({ value: min, valuePrefix, unit, decimalPlaces })}–${formatValue({ value: max, unit, decimalPlaces })}`,
+      min,
+      max,
+      decimalPlaces,
+    };
+  });
 }
