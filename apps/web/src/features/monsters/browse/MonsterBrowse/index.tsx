@@ -60,19 +60,6 @@ function statColumn(
   };
 }
 
-function flagColumn(
-  accessor: MonsterFactId,
-  title: string,
-): TableColumn<MonsterBrowseRow> {
-  return {
-    accessor,
-    title,
-    sortable: true,
-    firstSortDirection: 'asc',
-    render: (record) => formatMonsterFact(record, accessor),
-  };
-}
-
 // Column headers use MapleTip's compact browse vocabulary (`W. ATT`) so the
 // comparison table fits without horizontal noise; the full stat name stays as
 // the spoken expansion. Plain text only: Monster detail routes do not exist
@@ -117,9 +104,6 @@ export const monsterBrowseColumns: readonly TableColumn<MonsterBrowseRow>[] = [
   statColumn('avoidability', 'AVOID', { fullLabel: 'Avoidability' }),
   statColumn('pushed', 'KB', { fullLabel: 'Knockback damage threshold' }),
   statColumn('speed', 'Speed'),
-  flagColumn('boss', 'Boss'),
-  flagColumn('undead', 'Undead'),
-  flagColumn('bodyAttack', 'Body attack'),
 ];
 
 /** The rail already names the build; the count only needs the short noun. */
@@ -255,6 +239,11 @@ export function MonsterBrowse({
 }: MonsterBrowseProps): ReactElement {
   const label = BUILDS[buildId].label;
   const queryFields: readonly QueryFieldDefinition<MonsterBrowseRow>[] = [
+    // Boolean facets remain registered as query fields even though their
+    // comparison-table columns are intentionally omitted.
+    'boss',
+    'undead',
+    'bodyAttack',
     {
       id: 'dropItemKeys',
       accessor: (record) => record.drops.itemKeys,

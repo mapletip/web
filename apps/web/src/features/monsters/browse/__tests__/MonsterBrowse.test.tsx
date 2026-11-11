@@ -298,8 +298,8 @@ describe('MonsterBrowse', () => {
     expect(
       within(cards()).getByRole('heading', { name: 'Sentinel Slime' }),
     ).toBeInTheDocument();
-    // EXP comes from the EXP slot (4), not the distinct MP sentinel (999), and
-    // the derived ratio is computed from the correct fields: 2 / 45 × 100.
+    // EXP comes from the EXP slot (4); MP remains desktop-only while the card
+    // keeps the production HP Regen slot. The derived ratio is 2 / 45 × 100.
     const slimeCard = within(cards())
       .getByRole('heading', { name: 'Sentinel Slime' })
       .closest('article')!;
