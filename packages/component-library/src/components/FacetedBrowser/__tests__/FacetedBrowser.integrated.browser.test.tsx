@@ -43,7 +43,6 @@ const facets: readonly FacetDefinition<DemoRecord>[] = [
     field: 'group',
     label: 'Category',
     kind: 'multi-select',
-    quick: true,
     options: demoGroupFacetOptions.map(({ value, label }) => ({
       value,
       label,
@@ -54,7 +53,6 @@ const facets: readonly FacetDefinition<DemoRecord>[] = [
     field: 'region',
     label: 'Region',
     kind: 'multi-select',
-    quick: true,
   },
   {
     id: 'value-range',
@@ -860,7 +858,6 @@ describe('integrated FacetedBrowser', () => {
                 field: 'available',
                 label: 'Availability',
                 kind: 'boolean',
-                quick: true,
               },
             ]}
             presentation="cards"

@@ -65,7 +65,6 @@ describe('FacetedBrowser server rendering', () => {
               field: 'group',
               label: 'Category',
               kind: 'multi-select',
-              quick: true,
               options: [{ value: 'Alpha', label: 'Alpha' }],
             },
           ]}

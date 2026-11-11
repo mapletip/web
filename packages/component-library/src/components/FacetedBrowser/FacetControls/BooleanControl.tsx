@@ -1,12 +1,12 @@
 import { Select } from '@mantine/core';
-import type { ReactElement } from 'react';
+import type { ReactElement, ReactNode } from 'react';
 
 import type { FacetFilterValue } from '@/components/FacetedBrowser/hooks/filterTypes';
 
 import labelClasses from './FacetLabel.module.css';
 
 export interface BooleanControlProps {
-  readonly label: string;
+  readonly label: ReactNode;
   readonly value: FacetFilterValue;
   readonly counts: ReadonlyMap<string, number>;
   readonly onChange: (value: FacetFilterValue) => void;

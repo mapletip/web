@@ -1,5 +1,5 @@
 import { Button, Scroller } from '@mantine/core';
-import { CaretDown } from '@phosphor-icons/react';
+import { CaretDown, FunnelSimple } from '@phosphor-icons/react';
 import type { ReactElement, ReactNode } from 'react';
 
 import classes from '@/components/FacetedBrowser/QuickFacets/QuickFacets.module.css';
@@ -7,6 +7,7 @@ import classes from '@/components/FacetedBrowser/QuickFacets/QuickFacets.module.
 export interface QuickFacet {
   readonly id: string;
   readonly label: string;
+  readonly icon?: ReactNode | undefined;
   readonly active: number;
 }
 
@@ -61,6 +62,12 @@ export function QuickFacets({
       {hasFilters ? (
         <Button
           variant="default"
+          leftSection={
+            <span className={classes['facetIcon']} aria-hidden="true">
+              <FunnelSimple size={16} aria-hidden="true" />
+            </span>
+          }
+          classNames={{ section: classes['facetIconSection'] }}
           aria-label={`Filters, ${activeTotal} active. Open all filters`}
           onClick={() => onOpen(null)}
         >
@@ -78,6 +85,16 @@ export function QuickFacets({
           <Button
             key={facet.id}
             variant="default"
+            {...(facet.icon !== undefined
+              ? {
+                  leftSection: (
+                    <span className={classes['facetIcon']} aria-hidden="true">
+                      {facet.icon}
+                    </span>
+                  ),
+                }
+              : {})}
+            classNames={{ section: classes['facetIconSection'] }}
             aria-label={ariaLabel}
             onClick={() => onOpen(facet.id)}
           >

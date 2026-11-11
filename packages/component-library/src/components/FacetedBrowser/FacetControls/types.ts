@@ -38,9 +38,10 @@ export interface FacetDefinition<TRecord extends Record<string, unknown>> {
   /** Registered TanStack query-field ID used by the canonical filter state. */
   readonly field: string;
   readonly label: string;
+  /** Optional decorative icon shared by the rail, drawer and mobile shortcut. */
+  readonly icon?: ReactNode;
   /** Boolean facets are removed only when every record has the same value. */
   readonly kind: 'multi-select' | 'range' | 'boolean';
-  readonly quick?: boolean;
   /** Optional labels and ordering for categorical values; values remain strings. */
   readonly options?: readonly FacetOption[];
   /**

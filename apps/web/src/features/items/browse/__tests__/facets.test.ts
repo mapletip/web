@@ -181,7 +181,6 @@ describe('Items Browse facets', () => {
       Object.keys(UPGRADE_TARGET_LABELS).sort(),
     );
     expect(slot?.label).toBe('Equipment slot');
-    expect(slot?.quick).toBe(true);
     expect(slot?.options?.[0]).toEqual({
       value: 'bow',
       label: 'Bow',
@@ -207,10 +206,9 @@ describe('Items Browse facets', () => {
       },
     ]);
 
-    expect(facets.find(({ id }) => id === 'scrollStat')).toMatchObject({
-      label: 'Stat improved',
-      quick: true,
-    });
+    expect(facets.find(({ id }) => id === 'scrollStat')?.label).toBe(
+      'Stat improved',
+    );
     expect(
       facets
         .find(({ id }) => id === 'scrollSuccess')

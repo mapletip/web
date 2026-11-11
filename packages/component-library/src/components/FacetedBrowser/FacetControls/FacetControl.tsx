@@ -1,4 +1,5 @@
-import type { ReactElement } from 'react';
+import { Group, Stack, Text } from '@mantine/core';
+import type { ReactElement, ReactNode } from 'react';
 
 import type { FacetFilterValue } from '@/components/FacetedBrowser/hooks/filterTypes';
 
@@ -21,6 +22,16 @@ export interface FacetControlProps<TRecord extends Record<string, unknown>> {
   readonly onChange: (value: FacetFilterValue) => void;
 }
 
+function facetLabel(label: string, icon: ReactNode | undefined): ReactNode {
+  if (icon === undefined) return label;
+  return (
+    <Group component="span" gap={6} wrap="nowrap">
+      <span aria-hidden="true">{icon}</span>
+      <span>{label}</span>
+    </Group>
+  );
+}
+
 /** Dispatches a facet definition to its shared renderer. */
 export function FacetControl<TRecord extends Record<string, unknown>>({
   facet,
@@ -30,11 +41,25 @@ export function FacetControl<TRecord extends Record<string, unknown>>({
   surface,
   onChange,
 }: FacetControlProps<TRecord>): ReactElement {
+  const labelContent = facetLabel(facet.label, facet.icon);
+
   if (facet.renderControl) {
+    const control = facet.renderControl({
+      value,
+      onChange,
+      counts,
+      records,
+      surface,
+    });
+    if (facet.icon === undefined) return <div>{control}</div>;
+
     return (
-      <div>
-        {facet.renderControl({ value, onChange, counts, records, surface })}
-      </div>
+      <Stack gap="xs">
+        <Text size="sm" fw={600} component="p" m={0}>
+          {labelContent}
+        </Text>
+        {control}
+      </Stack>
     );
   }
 
@@ -55,7 +80,7 @@ export function FacetControl<TRecord extends Record<string, unknown>>({
 
     return (
       <OptionList
-        label={facet.label}
+        label={labelContent}
         options={options}
         value={selected}
         onChange={(next) => onChange(next.length > 0 ? next : undefined)}
@@ -71,6 +96,7 @@ export function FacetControl<TRecord extends Record<string, unknown>>({
       return (
         <RangeBucketControl
           label={facet.label}
+          labelContent={labelContent}
           buckets={buckets}
           counts={counts}
           value={value}
@@ -80,13 +106,18 @@ export function FacetControl<TRecord extends Record<string, unknown>>({
     }
 
     return (
-      <RangeControl label={facet.label} value={value} onChange={onChange} />
+      <RangeControl
+        label={facet.label}
+        labelContent={labelContent}
+        value={value}
+        onChange={onChange}
+      />
     );
   }
 
   return (
     <BooleanControl
-      label={facet.label}
+      label={labelContent}
       value={value}
       counts={counts}
       onChange={onChange}

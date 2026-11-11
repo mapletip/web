@@ -35,15 +35,14 @@ function facetsFor({
 }
 
 describe('Items Browse fixed range facets', () => {
-  it('uses explicit Recovery buckets and quick facets', () => {
+  it('uses explicit Recovery buckets', () => {
     const recovery = facetsFor({ scope: 'use', childSlug: 'recovery' });
     const hp = recovery.find(({ id }) => id === 'hp');
     const mp = recovery.find(({ id }) => id === 'mp');
 
-    expect(recovery.find(({ id }) => id === 'recoveryRestores')).toMatchObject({
-      label: 'Restores',
-      quick: true,
-    });
+    expect(recovery.find(({ id }) => id === 'recoveryRestores')?.label).toBe(
+      'Restores',
+    );
     expect(hp?.buckets).toEqual([
       { value: '1-99', label: '1–99', min: 1, max: 99 },
       { value: '100-299', label: '100–299', min: 100, max: 299 },
@@ -53,19 +52,16 @@ describe('Items Browse fixed range facets', () => {
       { value: '2000+', label: '2000+', min: 2000 },
     ]);
     expect(mp?.buckets).toEqual(hp?.buckets);
-    expect(hp?.quick).toBe(true);
-    expect(mp?.quick).toBeUndefined();
     expect(
       recovery.find(({ id }) => id === 'percentageRecovery'),
     ).toMatchObject({ label: 'Percentage recovery', kind: 'boolean' });
   });
 
-  it('uses explicit chair buckets and exposes only Restores as a quick facet', () => {
+  it('uses explicit chair buckets', () => {
     const chairs = facetsFor({ scope: 'setup', childSlug: 'chairs' });
-    expect(chairs.find(({ id }) => id === 'chairRestores')).toMatchObject({
-      label: 'Restores',
-      quick: true,
-    });
+    expect(chairs.find(({ id }) => id === 'chairRestores')?.label).toBe(
+      'Restores',
+    );
     expect(chairs.find(({ id }) => id === 'seatHp')?.buckets).toEqual([
       { value: '1-29', label: '1–29', min: 1, max: 29 },
       { value: '30-39', label: '30–39', min: 30, max: 39 },
@@ -80,8 +76,6 @@ describe('Items Browse fixed range facets', () => {
       { value: '40-59', label: '40–59', min: 40, max: 59 },
       { value: '60+', label: '60+', min: 60 },
     ]);
-    expect(chairs.find(({ id }) => id === 'seatHp')?.quick).toBeUndefined();
-    expect(chairs.find(({ id }) => id === 'seatMp')?.quick).toBeUndefined();
   });
 
   it('prefixes generated projectile attack ranges once', () => {

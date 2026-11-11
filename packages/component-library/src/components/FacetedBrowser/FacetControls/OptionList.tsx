@@ -25,7 +25,7 @@ function renderOption(option: FacetOptionWithCount): ReactElement {
 }
 
 export interface OptionListProps {
-  readonly label: string;
+  readonly label: ReactNode;
   readonly options: readonly FacetOptionWithCount[];
   readonly value: readonly string[];
   readonly onChange: (value: string[]) => void;

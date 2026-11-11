@@ -13,6 +13,10 @@ import { DEFAULT_BUILD_ID } from '@/config/maplekit';
 
 import { MonsterBrowse, monsterBrowseColumns } from '../MonsterBrowse';
 import {
+  getMonsterBrowseFacetDefinition,
+  MONSTER_BROWSE_FACT_CONFIG,
+} from '../monster-browse-fact-config';
+import {
   projectMonsterBrowseRows,
   type MonsterBrowseRow,
   type MonsterDropItemOption,
@@ -127,6 +131,38 @@ function column(accessor: string) {
 }
 
 describe('MonsterBrowse', () => {
+  it('builds ordered facet metadata from the shared Monster fact config', () => {
+    const facets = Object.values(MONSTER_BROWSE_FACT_CONFIG).flatMap((fact) => {
+      const definition = getMonsterBrowseFacetDefinition(fact);
+      return definition === undefined ? [] : [definition];
+    });
+
+    expect(facets.map(({ id }) => id)).toEqual([
+      'level',
+      'hp',
+      'exp',
+      'expPer100Hp',
+      'boss',
+      'undead',
+      'drops-item',
+    ]);
+    expect(facets.find(({ id }) => id === 'level')?.icon).toEqual(
+      expect.objectContaining({
+        type: MONSTER_BROWSE_FACT_CONFIG.level.icon,
+      }),
+    );
+    expect(MONSTER_BROWSE_FACT_CONFIG.level.showIconInCard).toBe(false);
+    expect(facets.find(({ id }) => id === 'hp')?.icon).toEqual(
+      expect.objectContaining({
+        type: MONSTER_BROWSE_FACT_CONFIG.hp.icon,
+        props: expect.objectContaining({
+          size: 16,
+          color: '#f28f91',
+        }),
+      }),
+    );
+  });
+
   it('keeps compact headers with full accessible names and stable sort intents', () => {
     expect(column('name')).toMatchObject({
       accessor: 'name',
@@ -201,6 +237,31 @@ describe('MonsterBrowse', () => {
     ).toHaveLength(4);
   });
 
+  it('shows every effective rail facet in order in the mobile quick filters', () => {
+    mountBrowse();
+
+    const quickFilterRegion = screen.getByRole('region', {
+      name: 'Quick filters',
+    });
+    const quickFilters = within(quickFilterRegion);
+    expect(
+      quickFilters
+        .getAllByRole('button')
+        .map((button) => button.getAttribute('aria-label')),
+    ).toEqual([
+      'Filters, 0 active. Open all filters',
+      'Level. Open Level filters',
+      'HP. Open HP filters',
+      'EXP. Open EXP filters',
+      'EXP / 100 HP. Open EXP / 100 HP filters',
+    ]);
+    expect(
+      Array.from(
+        quickFilterRegion.querySelectorAll('svg[data-monster-fact-icon]'),
+      ).map((icon) => icon.getAttribute('data-monster-fact-icon')),
+    ).toEqual(['level', 'hp', 'exp', 'expPer100Hp']);
+  });
+
   it('shows historical drop entries in the mobile relationship drawer', async () => {
     const user = userEvent.setup();
     const [first] = rows;
@@ -268,6 +329,15 @@ describe('MonsterBrowse', () => {
         { value: 'fixture:item:blue', label: 'Blue Potion' },
       ],
     });
+
+    const dropItemChip = within(
+      screen.getByRole('region', { name: 'Quick filters' }),
+    ).getByRole('button', {
+      name: 'Drops item. Open Drops item filters',
+    });
+    expect(
+      dropItemChip.querySelector('svg[data-monster-fact-icon="drops-item"]'),
+    ).not.toBeNull();
 
     const input = screen.getByRole('combobox', { name: 'Drops item' });
     await user.click(input);

@@ -62,7 +62,7 @@ describe('QuickFacets', () => {
     }
   });
 
-  it('renders Filters button when hasFilters is true even with no quick facets', () => {
+  it('renders Filters button when hasFilters is true even with no facets', () => {
     render(
       <MantineProvider>
         <QuickFacets

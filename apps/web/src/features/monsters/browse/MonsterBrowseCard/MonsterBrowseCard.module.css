@@ -69,22 +69,8 @@
   line-height: 1.25;
 }
 
-.icon,
-.hpIcon,
-.experienceIcon {
-  flex: none;
-}
-
 .icon {
-  color: var(--mantine-color-dimmed);
-}
-
-.hpIcon {
-  color: #f28f91;
-}
-
-.experienceIcon {
-  color: #f5bd56;
+  flex: none;
 }
 
 .facts dd {

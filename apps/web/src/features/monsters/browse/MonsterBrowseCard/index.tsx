@@ -1,18 +1,4 @@
 import { Group } from '@mantine/core';
-import {
-  ArrowsLeftRight,
-  Calculator,
-  Heart,
-  Heartbeat,
-  PersonSimpleRun,
-  Shield,
-  ShieldStar,
-  Sparkle,
-  Sword,
-  Target,
-  TrendUp,
-  Wind,
-} from '@phosphor-icons/react';
 import type { ReactElement } from 'react';
 
 import type { BuildId } from '@/config/maplekit';
@@ -20,56 +6,19 @@ import type { BuildId } from '@/config/maplekit';
 import { MonsterDropDrawerControl } from '../MonsterDrops';
 import { MonsterSprite } from '../MonsterSprite';
 import {
+  getMonsterBrowseCardFacts,
+  MONSTER_BROWSE_FACT_CONFIG,
+  renderMonsterBrowseFactIcon,
+} from '../monster-browse-fact-config';
+import {
   formatMonsterFact,
   type MonsterBrowseRow,
-  type MonsterFactId,
 } from '../project';
 
 import classes from './MonsterBrowseCard.module.css';
 
-const toneIconClasses = {
-  hp: classes['hpIcon'],
-  experience: classes['experienceIcon'],
-};
-
-type MonsterCardFactId = MonsterFactId | 'hpRegen';
-
-const trainingFacts: readonly {
-  readonly id: MonsterFactId;
-  readonly label: string;
-  readonly icon: typeof Heart;
-  readonly size: 14 | 15 | 16;
-  readonly tone?: 'hp' | 'experience';
-}[] = [
-  { id: 'hp', label: 'HP', icon: Heart, size: 16, tone: 'hp' },
-  { id: 'exp', label: 'EXP', icon: TrendUp, size: 15, tone: 'experience' },
-  {
-    id: 'expPer100Hp',
-    label: 'EXP / 100 HP',
-    icon: Calculator,
-    size: 14,
-    tone: 'experience',
-  },
-];
-
-const combatFacts: readonly {
-  readonly id: MonsterCardFactId;
-  readonly label: string;
-  readonly icon: typeof Heart;
-  readonly size: 14 | 15 | 16;
-}[] = [
-  { id: 'physicalAttack', label: 'W. ATT', icon: Sword, size: 16 },
-  { id: 'magicAttack', label: 'M. ATT', icon: Sparkle, size: 16 },
-  { id: 'accuracy', label: 'ACC', icon: Target, size: 16 },
-  { id: 'physicalDefense', label: 'W. DEF', icon: Shield, size: 16 },
-  { id: 'magicDefense', label: 'M. DEF', icon: ShieldStar, size: 16 },
-  { id: 'avoidability', label: 'AVOID', icon: Wind, size: 16 },
-  { id: 'pushed', label: 'Knockback', icon: ArrowsLeftRight, size: 14 },
-  { id: 'speed', label: 'Speed', icon: PersonSimpleRun, size: 14 },
-  // The current Monster catalog has no HP Regen field. Keep production's
-  // stat order and show an explicit unavailable marker in this slot.
-  { id: 'hpRegen', label: 'HP Regen', icon: Heartbeat, size: 14 },
-];
+const trainingFacts = getMonsterBrowseCardFacts('training');
+const combatFacts = getMonsterBrowseCardFacts('combat');
 
 export function MonsterBrowseCard({
   record,
@@ -86,6 +35,10 @@ export function MonsterBrowseCard({
           <div className={classes['title']}>
             <h2 className={classes['name']}>{record.name}</h2>
             <span className={classes['level']}>
+              {renderMonsterBrowseFactIcon(MONSTER_BROWSE_FACT_CONFIG.level, {
+                className: classes['icon'],
+                surface: 'card',
+              })}
               Lv. {formatMonsterFact(record, 'level')}
             </span>
           </div>
@@ -114,28 +67,21 @@ function MonsterFact({
   fact,
 }: {
   readonly record: MonsterBrowseRow;
-  readonly fact: {
-    readonly id: MonsterCardFactId;
-    readonly label: string;
-    readonly icon: typeof Heart;
-    readonly size: 14 | 15 | 16;
-    readonly tone?: 'hp' | 'experience';
-  };
+  readonly fact: (typeof trainingFacts)[number] | (typeof combatFacts)[number];
 }): ReactElement {
+  const factId = fact.card.factId;
   const displayValue =
-    fact.id === 'hpRegen' ? '—' : formatMonsterFact(record, fact.id);
+    factId === 'hpRegen' ? '—' : formatMonsterFact(record, factId);
   const accessibleValue =
-    fact.id === 'hpRegen' ? 'Unavailable in the current catalog' : displayValue;
-  const Icon = fact.icon;
+    factId === 'hpRegen' ? 'Unavailable in the current catalog' : displayValue;
 
   return (
-    <div data-stat={fact.id}>
+    <div data-stat={factId}>
       <dt>
-        <Icon
-          aria-hidden="true"
-          size={fact.size}
-          className={fact.tone ? toneIconClasses[fact.tone] : classes['icon']}
-        />
+        {renderMonsterBrowseFactIcon(fact, {
+          className: classes['icon'],
+          surface: 'card',
+        })}
         {fact.label}
       </dt>
       <dd
