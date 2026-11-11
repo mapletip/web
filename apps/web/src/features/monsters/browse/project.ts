@@ -41,7 +41,8 @@ export interface MonsterDropFacts {
   readonly itemKeys: readonly string[];
 }
 
-/** Projected fact IDs. Keep in sync with the column/facet definitions. */
+/** Known Monster fields projected from the catalog, whether or not a surface
+ * displays them. */
 export type MonsterFactId =
   | 'name'
   | 'level'

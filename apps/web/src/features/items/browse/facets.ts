@@ -56,7 +56,6 @@ function deriveFacet({
     id: field,
     field,
     label: config.label,
-    ...(config.quick ? { quick: true } : {}),
   };
 
   if (config.kind === 'multi-select') {

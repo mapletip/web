@@ -1,5 +1,5 @@
 import { Checkbox, Stack } from '@mantine/core';
-import type { ReactElement } from 'react';
+import type { ReactElement, ReactNode } from 'react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
 import {
@@ -37,6 +37,7 @@ function bucketCount(
 
 export interface RangeBucketControlProps {
   readonly label: string;
+  readonly labelContent?: ReactNode | undefined;
   readonly buckets: readonly FacetRangeBucket[];
   readonly counts: ReadonlyMap<string, number>;
   readonly value: FacetFilterValue;
@@ -53,6 +54,7 @@ export interface RangeBucketControlProps {
  */
 export function RangeBucketControl({
   label,
+  labelContent,
   buckets,
   counts,
   value,
@@ -104,7 +106,7 @@ export function RangeBucketControl({
 
   return (
     <OptionList
-      label={label}
+      label={labelContent ?? label}
       options={options}
       value={selectedBuckets}
       onChange={handleBucketsChange}

@@ -1,9 +1,12 @@
 import { Button, Drawer, Group, Stack, Text, Title } from '@mantine/core';
-import { Package } from '@phosphor-icons/react';
 import { useId, useState, type ReactElement } from 'react';
 
 import type { BuildId } from '@/config/maplekit';
 
+import {
+  MONSTER_BROWSE_FACT_CONFIG,
+  renderMonsterBrowseFactIcon,
+} from '../../monster-browse-fact-config';
 import { MonsterSprite } from '../../MonsterSprite';
 import type { MonsterBrowseRow } from '../../project';
 import { MonsterDropEntries } from '../MonsterDropEntries';
@@ -31,7 +34,10 @@ export function MonsterDropDrawerControl({
         size="compact-sm"
         radius="sm"
         px={4}
-        leftSection={<Package size={14} aria-hidden="true" />}
+        leftSection={renderMonsterBrowseFactIcon(
+          MONSTER_BROWSE_FACT_CONFIG.dropsItem,
+          { surface: 'card' },
+        )}
         classNames={{
           section: classes['triggerSection'],
           label: classes['triggerLabel'],

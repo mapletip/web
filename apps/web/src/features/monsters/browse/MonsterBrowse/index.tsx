@@ -7,12 +7,16 @@ import type {
   RowExpansionControlContext,
   TableColumn,
 } from '@mapletip/component-library';
-import { Package } from '@phosphor-icons/react';
 import type { ReactElement } from 'react';
 
 import { BrowsePageShell } from '@/components/BrowsePageShell';
 import { BUILDS, type BuildId } from '@/config/maplekit';
 
+import {
+  getMonsterBrowseFacetDefinition,
+  MONSTER_BROWSE_FACT_CONFIG,
+  renderMonsterBrowseFactIcon,
+} from '../monster-browse-fact-config';
 import classes from '../MonsterBrowse.module.css';
 import { MonsterBrowseCard } from '../MonsterBrowseCard';
 import { dropListingActionLabel, MonsterDropListing } from '../MonsterDrops';
@@ -124,7 +128,9 @@ function dropExpansionControl({
       size="compact-sm"
       radius="sm"
       px={4}
-      leftSection={<Package size={14} aria-hidden="true" />}
+      leftSection={renderMonsterBrowseFactIcon(
+        MONSTER_BROWSE_FACT_CONFIG.dropsItem,
+      )}
       classNames={{
         section: dropClasses['triggerSection'],
         label: dropClasses['triggerLabel'],
@@ -150,51 +156,12 @@ function dropExpansionControl({
   );
 }
 
-// Boolean counts are derived from the rows, never from a static taxonomy: a
-// non-`known` fact is absent from the row and therefore from the facet, which is
-// exactly what the honest text states.
-const booleanFacets: readonly FacetDefinition<MonsterBrowseRow>[] = [
-  { id: 'boss', field: 'boss', label: 'Boss', kind: 'boolean', quick: true },
-  { id: 'undead', field: 'undead', label: 'Undead', kind: 'boolean' },
-  {
-    id: 'bodyAttack',
-    field: 'bodyAttack',
-    label: 'Body attack',
-    kind: 'boolean',
-  },
-];
-
-// Range presets are a facet capability: the shared FacetedBrowser derives them
-// from the complete record set and the resolved field accessor, so this page only
-// declares which fields use them. EXP / 100 HP stays a bare min/max facet.
-const facets: readonly FacetDefinition<MonsterBrowseRow>[] = [
-  {
-    id: 'level',
-    field: 'level',
-    label: 'Level',
-    kind: 'range',
-    quick: true,
-    buckets: 'quantile',
-  },
-  { id: 'hp', field: 'hp', label: 'HP', kind: 'range', buckets: 'quantile' },
-  { id: 'exp', field: 'exp', label: 'EXP', kind: 'range', buckets: 'quantile' },
-  {
-    id: 'expPer100Hp',
-    field: 'expPer100Hp',
-    label: 'EXP / 100 HP',
-    kind: 'range',
-  },
-  ...booleanFacets,
-];
-
 function dropItemFacet(
   options: readonly MonsterDropItemOption[],
+  definition: FacetDefinition<MonsterBrowseRow>,
 ): FacetDefinition<MonsterBrowseRow> {
   return {
-    id: 'drops-item',
-    field: 'dropItemKeys',
-    label: 'Drops item',
-    kind: 'multi-select',
+    ...definition,
     options,
     renderControl: ({ value, onChange }) => {
       const selected = Array.isArray(value)
@@ -243,14 +210,21 @@ export function MonsterBrowse({
     // comparison-table columns are intentionally omitted.
     'boss',
     'undead',
-    'bodyAttack',
     {
       id: 'dropItemKeys',
       accessor: (record) => record.drops.itemKeys,
       sortable: false,
     },
   ];
-  const browseFacets = [...facets, dropItemFacet(dropItemOptions)];
+  const browseFacets = Object.values(MONSTER_BROWSE_FACT_CONFIG).flatMap(
+    (fact) => {
+      const definition = getMonsterBrowseFacetDefinition(fact);
+      if (definition === undefined) return [];
+      return definition.id === 'drops-item'
+        ? [dropItemFacet(dropItemOptions, definition)]
+        : [definition];
+    },
+  );
 
   return (
     <BrowsePageShell>

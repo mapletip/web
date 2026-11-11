@@ -10,14 +10,12 @@ export interface RangeFacetConfig {
   readonly buckets: readonly FacetRangeBucket[] | 'quantile';
   readonly valuePrefix?: string;
   readonly unit?: string;
-  readonly quick?: boolean;
 }
 
 export interface BooleanFacetConfig {
   readonly kind: 'boolean';
   readonly label: string;
   readonly getValue: (row: ItemRow) => boolean | undefined;
-  readonly quick?: boolean;
 }
 
 export type NumericFacetConfig = RangeFacetConfig | BooleanFacetConfig;
@@ -70,7 +68,6 @@ export const ITEM_NUMERIC_FACET_CONFIGS = {
     label: 'HP restored',
     getValue: (row) => row.hp,
     buckets: RECOVERY_BUCKETS,
-    quick: true,
   },
   mp: {
     kind: 'range',

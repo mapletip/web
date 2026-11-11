@@ -1,5 +1,5 @@
 import { NumberInput, Stack, Text } from '@mantine/core';
-import type { ReactElement } from 'react';
+import type { ReactElement, ReactNode } from 'react';
 
 import {
   isInvalidNumericRange,
@@ -16,6 +16,7 @@ function toNumber(value: number | string): number | undefined {
 
 export interface RangeControlProps {
   readonly label: string;
+  readonly labelContent?: ReactNode | undefined;
   readonly value: FacetFilterValue;
   readonly onChange: (value: FacetFilterValue) => void;
   /**
@@ -29,6 +30,7 @@ export interface RangeControlProps {
 /** Bounded numeric facet renderer shared by rail and drawer surfaces. */
 export function RangeControl({
   label,
+  labelContent,
   value,
   onChange,
   hideLabel = false,
@@ -61,7 +63,7 @@ export function RangeControl({
     <Stack gap="xs">
       {hideLabel ? null : (
         <Text size="sm" fw={600} component="p" m={0}>
-          {label}
+          {labelContent ?? label}
         </Text>
       )}
       {/* Visible labels are short ("From"/"To"); the facet name stays in the

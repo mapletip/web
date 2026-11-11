@@ -309,13 +309,13 @@ export function FacetedBrowser<TRecord extends Record<string, unknown>>(
     Object.keys(canonicalState.filters).length > 0;
 
   const activeFilterCount = countActiveFilters(canonicalState.filters);
-  const quickFacets = facets
-    .filter((facet) => facet.quick)
-    .map((facet) => ({
-      id: facet.id,
-      label: facet.label,
-      active: activeValueCount(canonicalState.filters[facet.field]),
-    }));
+  // Mobile shortcuts mirror the resolved left-rail facets in the same order.
+  const quickFacets = facets.map((facet) => ({
+    id: facet.id,
+    label: facet.label,
+    ...(facet.icon !== undefined ? { icon: facet.icon } : {}),
+    active: activeValueCount(canonicalState.filters[facet.field]),
+  }));
 
   const { pendingCount, getDraftFacetValues } = drawer;
   const getCommittedFacetValues = browser.getFacetValues;

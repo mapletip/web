@@ -53,7 +53,6 @@ const facets: readonly FacetDefinition<DemoRecord>[] = [
     field: 'group',
     label: 'Category',
     kind: 'multi-select',
-    quick: true,
     options: demoGroupFacetOptions.map(({ value, label }) => ({
       value,
       label,
@@ -64,7 +63,6 @@ const facets: readonly FacetDefinition<DemoRecord>[] = [
     field: 'region',
     label: 'Region',
     kind: 'multi-select',
-    quick: true,
   },
   {
     id: 'value-range',
@@ -904,8 +902,7 @@ describe('responsive navigation slot', () => {
     expect(navChip.querySelector('[class*="icon"]')).toBeNull();
   });
 
-  it('renders Filters button when facets are present but none are quick', () => {
-    const nonQuickFacets = facets.map((f) => ({ ...f, quick: false }));
+  it('renders every effective facet as a quick filter in declaration order', () => {
     render(
       <MantineProvider>
         <FacetedBrowser
@@ -913,7 +910,7 @@ describe('responsive navigation slot', () => {
           records={demoRecords}
           idAccessor="id"
           queryFields={queryFields}
-          facets={nonQuickFacets}
+          facets={facets}
           presentation="cards"
           renderCard={(record) => <div>{record.name}</div>}
           defaultState={{
@@ -927,9 +924,59 @@ describe('responsive navigation slot', () => {
       </MantineProvider>,
     );
 
+    const quickFilters = within(
+      screen.getByRole('region', { name: 'Quick filters' }),
+    );
     expect(
-      screen.getByRole('button', { name: /Open all filters/i }),
-    ).toBeVisible();
+      quickFilters
+        .getAllByRole('button')
+        .filter((button) => button.getAttribute('aria-label')?.includes('Open'))
+        .map((button) => button.getAttribute('aria-label')),
+    ).toEqual([
+      'Filters, 0 active. Open all filters',
+      'Category. Open Category filters',
+      'Region. Open Region filters',
+      'Value 1. Open Value 1 filters',
+      'Image available. Open Image available filters',
+    ]);
+  });
+
+  it('renders facet icons in both the left rail and mobile shortcuts', () => {
+    const iconFacet = {
+      ...facets[0]!,
+      icon: <span data-testid="category-facet-icon">Category icon</span>,
+    };
+    const { container } = render(
+      <MantineProvider>
+        <FacetedBrowser
+          title={<h1>Catalog</h1>}
+          records={demoRecords}
+          idAccessor="id"
+          queryFields={queryFields}
+          facets={[iconFacet, ...facets.slice(1)]}
+          presentation="cards"
+          renderCard={(record) => <div>{record.name}</div>}
+          defaultState={{
+            search: '',
+            filters: {},
+            page: 1,
+            pageSize: 20,
+            hiddenColumns: [],
+          }}
+        />
+      </MantineProvider>,
+    );
+
+    const railIcon = container.querySelector(
+      'aside[aria-label="Filters"] [data-testid="category-facet-icon"]',
+    );
+    const quickIcon = container.querySelector(
+      '[aria-label="Quick filters"] [data-testid="category-facet-icon"]',
+    );
+    expect(railIcon).not.toBeNull();
+    expect(quickIcon).not.toBeNull();
+    expect(railIcon?.parentElement).toHaveAttribute('aria-hidden', 'true');
+    expect(quickIcon?.parentElement).toHaveAttribute('aria-hidden', 'true');
   });
 
   it('opens separate navigation drawer on chip click and closes on cancel', async () => {

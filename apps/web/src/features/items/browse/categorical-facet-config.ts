@@ -27,7 +27,6 @@ export interface CategoricalFacetConfig {
   readonly formatOption?: (options: { readonly value: string }) => string;
   readonly optionOrder?: readonly string[];
   readonly groups?: Readonly<Record<string, string>>;
-  readonly quick?: boolean;
 }
 
 interface RelationshipFacetOption {
@@ -185,14 +184,12 @@ export const ITEM_CATEGORICAL_FACET_CONFIGS = {
     label: 'Restores',
     values: recoveryKinds,
     labels: RESTORES_LABELS,
-    quick: true,
   },
   chairRestores: {
     kind: 'multi-select',
     label: 'Restores',
     values: chairRecoveryKinds,
     labels: RESTORES_LABELS,
-    quick: true,
   },
   scrollTarget: {
     kind: 'multi-select',
@@ -201,14 +198,12 @@ export const ITEM_CATEGORICAL_FACET_CONFIGS = {
     labels: UPGRADE_TARGET_LABELS,
     optionOrder: Object.values(SCROLL_TARGET_GROUPS).flat(),
     groups: SCROLL_TARGET_GROUP_BY_VALUE,
-    quick: true,
   },
   scrollStat: {
     kind: 'multi-select',
     label: 'Stat improved',
     values: (row) => (row.stats ? Object.keys(row.stats) : []),
     labels: SCROLL_STAT_LABELS,
-    quick: true,
   },
   scrollSuccess: {
     kind: 'multi-select',

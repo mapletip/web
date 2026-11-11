@@ -111,6 +111,12 @@ describe('MonsterBrowseCard', () => {
       screen.getByRole('heading', { name: 'Sentinel Snail' }),
     ).toBeVisible();
     expect(screen.getByText('Lv. 5')).toBeVisible();
+    expect(
+      container.querySelector('svg[data-monster-fact-icon="level"]'),
+    ).toBeNull();
+    expect(
+      container.querySelector('svg[data-monster-fact-icon="hp"]'),
+    ).toBeInTheDocument();
     expect(container.querySelector('img')).toHaveAttribute(
       'src',
       `https://d0.mapletip.com/media/images/cc/${'c'.repeat(64)}.png`,

@@ -138,7 +138,6 @@ function BrowserExample({
         field: 'group',
         label: 'Category',
         kind: 'multi-select',
-        quick: true,
         options: demoGroupFacetOptions.map(({ value, label }, index) => ({
           value,
           label,
@@ -150,7 +149,6 @@ function BrowserExample({
         field: 'region',
         label: 'Region',
         kind: 'multi-select',
-        quick: true,
         options: demoRegionFacetOptions,
       },
       {
