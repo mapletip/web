@@ -172,7 +172,7 @@ function dropItemFacet(
       }
       return (
         <MultiSelect
-          aria-label="Drops item"
+          aria-label="Drops"
           data={options}
           value={selected}
           onChange={(next) => onChange(next.length === 0 ? undefined : next)}

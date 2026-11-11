@@ -98,6 +98,14 @@ export const MONSTER_BROWSE_FACT_CONFIG = {
       decimalPlaces: 2,
     },
   },
+  dropsItem: {
+    id: 'drops-item',
+    label: 'Drops',
+    icon: Package,
+    iconSize: 14,
+    card: { section: 'dropAction' },
+    facet: { field: 'dropItemKeys', kind: 'multi-select' },
+  },
   boss: {
     id: 'boss',
     label: 'Boss',
@@ -111,14 +119,6 @@ export const MONSTER_BROWSE_FACT_CONFIG = {
     icon: Skull,
     iconSize: 16,
     facet: { field: 'undead', kind: 'boolean' },
-  },
-  dropsItem: {
-    id: 'drops-item',
-    label: 'Drops item',
-    icon: Package,
-    iconSize: 14,
-    card: { section: 'dropAction' },
-    facet: { field: 'dropItemKeys', kind: 'multi-select' },
   },
   physicalAttack: {
     id: 'physicalAttack',

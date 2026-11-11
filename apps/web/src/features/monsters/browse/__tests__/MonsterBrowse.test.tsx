@@ -142,9 +142,9 @@ describe('MonsterBrowse', () => {
       'hp',
       'exp',
       'expPer100Hp',
+      'drops-item',
       'boss',
       'undead',
-      'drops-item',
     ]);
     expect(facets.find(({ id }) => id === 'level')?.icon).toEqual(
       expect.objectContaining({
@@ -329,13 +329,13 @@ describe('MonsterBrowse', () => {
     const dropItemChip = within(
       screen.getByRole('region', { name: 'Quick filters' }),
     ).getByRole('button', {
-      name: 'Drops item. Open Drops item filters',
+      name: 'Drops. Open Drops filters',
     });
     expect(
       dropItemChip.querySelector('svg[data-monster-fact-icon="drops-item"]'),
     ).not.toBeNull();
 
-    const input = screen.getByRole('combobox', { name: 'Drops item' });
+    const input = screen.getByRole('combobox', { name: 'Drops' });
     await user.click(input);
     await user.type(input, 'Red Potion');
     // The shared searchable control owns option rendering; the selected value

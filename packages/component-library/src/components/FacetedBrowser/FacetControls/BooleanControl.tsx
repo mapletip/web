@@ -1,9 +1,10 @@
-import { Checkbox, Stack } from '@mantine/core';
+import { Checkbox } from '@mantine/core';
 import type { ReactElement, ReactNode } from 'react';
 
 import type { FacetFilterValue } from '@/components/FacetedBrowser/hooks/filterTypes';
 
 import { FacetContainer } from './FacetContainer';
+import { FacetOptionGroup } from './FacetOptionGroup';
 
 export interface BooleanControlProps {
   readonly label: ReactNode;
@@ -22,7 +23,7 @@ export function BooleanControl({
   return (
     <FacetContainer label={label}>
       {(labelId) => (
-        <Stack gap="xs" role="group" aria-labelledby={labelId}>
+        <FacetOptionGroup labelId={labelId}>
           <Checkbox
             checked={value === true}
             label={`Yes (${counts.get('true') ?? 0})`}
@@ -37,7 +38,7 @@ export function BooleanControl({
               onChange(event.currentTarget.checked ? false : undefined)
             }
           />
-        </Stack>
+        </FacetOptionGroup>
       )}
     </FacetContainer>
   );
