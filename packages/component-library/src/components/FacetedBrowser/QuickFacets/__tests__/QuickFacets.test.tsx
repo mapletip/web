@@ -1,5 +1,5 @@
 import { MantineProvider } from '@mantine/core';
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 
@@ -7,6 +7,40 @@ import '@/styles.css';
 import { QuickFacets } from '@/components/FacetedBrowser/QuickFacets/QuickFacets';
 
 describe('QuickFacets', () => {
+  it('shows active facets first while preserving configured order within each group', () => {
+    render(
+      <MantineProvider>
+        <QuickFacets
+          activeTotal={2}
+          facets={[
+            { id: 'level', label: 'Level', active: 1 },
+            { id: 'hp', label: 'HP', active: 0 },
+            { id: 'undead', label: 'Undead', active: 1 },
+            { id: 'exp', label: 'EXP', active: 0 },
+          ]}
+          onOpen={() => undefined}
+        />
+      </MantineProvider>,
+    );
+
+    const chipLabels = within(
+      screen.getByRole('region', { name: 'Quick filters' }),
+    )
+      .getAllByRole('button')
+      .flatMap((button) => {
+        const label = button.getAttribute('aria-label');
+        return label?.includes('Open') ? [label] : [];
+      });
+
+    expect(chipLabels).toEqual([
+      'Filters, 2 active. Open all filters',
+      'Level, 1 active filter. Open Level filters',
+      'Undead, 1 active filter. Open Undead filters',
+      'HP. Open HP filters',
+      'EXP. Open EXP filters',
+    ]);
+  });
+
   it('reports the selected section and active count accessibly', async () => {
     const onOpen = vi.fn();
     render(

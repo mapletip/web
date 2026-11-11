@@ -34,6 +34,14 @@ export function QuickFacets({
   navigation,
   hasFilters = facets.length > 0,
 }: QuickFacetsProps): ReactElement {
+  // `facets` follows the left rail's configured order. Stable partitioning
+  // surfaces active facets first while retaining that position order in both
+  // groups.
+  const orderedFacets = [
+    ...facets.filter((facet) => facet.active > 0),
+    ...facets.filter((facet) => facet.active === 0),
+  ];
+
   return (
     <Scroller
       role="region"
@@ -74,7 +82,7 @@ export function QuickFacets({
           Filters{activeTotal > 0 ? ` (${activeTotal})` : null}
         </Button>
       ) : null}
-      {facets.map((facet) => {
+      {orderedFacets.map((facet) => {
         let ariaLabel = `${facet.label}. Open ${facet.label} filters`;
         if (facet.active > 0) {
           const suffix = facet.active === 1 ? '' : 's';
