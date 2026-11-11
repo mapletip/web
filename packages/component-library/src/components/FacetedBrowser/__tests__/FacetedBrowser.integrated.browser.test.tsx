@@ -877,8 +877,7 @@ describe('integrated FacetedBrowser', () => {
     await page
       .getByRole('button', { name: 'Filters, 0 active. Open all filters' })
       .click();
-    await page.getByRole('combobox', { name: 'Availability' }).click();
-    await page.getByRole('option', { name: 'No (1)' }).click();
+    await page.getByRole('checkbox', { name: 'No (1)' }).click();
     expect(page.getByRole('button', { name: 'Show 1 entry' })).toBeEnabled();
     await page.getByRole('button', { name: 'Show 1 entry' }).click();
 
@@ -1018,13 +1017,13 @@ describe('integrated FacetedBrowser', () => {
         (button) => button.textContent === 'See more',
       );
 
-    expect(railCheckboxes()).toHaveLength(6);
+    expect(railCheckboxes()).toHaveLength(8);
     expect(rail.textContent).not.toContain('Delta');
     expect(seeMoreButtons()).toHaveLength(2);
 
     await userEvent.click(seeMoreButtons()[0]!);
 
-    expect(railCheckboxes()).toHaveLength(15);
+    expect(railCheckboxes()).toHaveLength(17);
     expect(rail.textContent).toContain('Delta');
     expect(rail.textContent).toContain('See less');
   });
@@ -1049,13 +1048,13 @@ describe('integrated FacetedBrowser', () => {
         (button) => button.textContent === 'See more',
       );
 
-    expect(dialogCheckboxes()).toHaveLength(6);
+    expect(dialogCheckboxes()).toHaveLength(8);
     expect(dialog.textContent).not.toContain('Delta');
     expect(seeMoreButtons()).toHaveLength(2);
 
     await userEvent.click(seeMoreButtons()[0]!);
 
-    expect(dialogCheckboxes()).toHaveLength(15);
+    expect(dialogCheckboxes()).toHaveLength(17);
     expect(dialog.textContent).toContain('Delta');
     expect(dialog.textContent).toContain('See less');
   });

@@ -162,8 +162,8 @@ describe('range facet buckets', () => {
   it('shows three buckets and Custom, then reveals the rest with See more', async () => {
     render(<LevelBrowser facets={bucketedFacets} />);
 
-    // Three buckets plus the Custom checkbox.
-    expect(checkboxes()).toHaveLength(4);
+    // Three buckets, Custom, and the Boss yes/no checkboxes.
+    expect(checkboxes()).toHaveLength(6);
     expect(
       screen.getByRole('checkbox', { name: /^1–20/u }),
     ).toBeInTheDocument();
@@ -178,7 +178,7 @@ describe('range facet buckets', () => {
     );
 
     await userEvent.click(seeMore());
-    expect(checkboxes()).toHaveLength(6);
+    expect(checkboxes()).toHaveLength(8);
     expect(
       screen.getByRole('checkbox', { name: /^61–80/u }),
     ).toBeInTheDocument();
@@ -187,7 +187,7 @@ describe('range facet buckets', () => {
     ).toBeInTheDocument();
 
     await userEvent.click(screen.getByRole('button', { name: 'See less' }));
-    expect(checkboxes()).toHaveLength(4);
+    expect(checkboxes()).toHaveLength(6);
     expect(screen.queryAllByRole('checkbox', { name: /^61–80/u })).toHaveLength(
       0,
     );
@@ -496,7 +496,9 @@ describe('range facet buckets', () => {
   it('keeps the visible facet label for a bucket-less range facet', () => {
     render(<LevelBrowser facets={plainRangeFacets} />);
 
-    expect(screen.queryAllByRole('checkbox')).toHaveLength(0);
+    expect(screen.queryAllByRole('checkbox')).toHaveLength(2);
+    expect(screen.getByRole('checkbox', { name: /^Yes \(/u })).toBeVisible();
+    expect(screen.getByRole('checkbox', { name: /^No \(/u })).toBeVisible();
     expect(screen.queryAllByRole('button', { name: 'Custom' })).toHaveLength(0);
     expect(
       screen.queryByRole('button', { name: 'See more' }),
