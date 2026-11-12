@@ -1,7 +1,7 @@
-import { test, expect, ready } from './support/test';
+import { test, expect } from './support/test';
 
 test('build-specific routes serve their own fixture and reject unsupported slugs', async ({
-  page,
+  monsterPage,
   request,
 }) => {
   const gmsResponse = await request.get('/maplestory/gms-v83/monsters');
@@ -20,28 +20,20 @@ test('build-specific routes serve their own fixture and reject unsupported slugs
     expect((await request.get(path)).status()).toBe(404);
   }
 
-  await page.goto('/maplestory/unknown/monsters');
-  await ready(page);
-  await expect(
-    page.getByRole('heading', { name: 'Page not found' }),
-  ).toBeVisible();
+  await monsterPage.goto('/maplestory/unknown/monsters');
+  await expect(monsterPage.heading('Page not found')).toBeVisible();
 
-  await page.goto('/maplestory/gms-v83/monsters');
-  await ready(page);
-  const alphaDrops = page.getByRole('button', {
-    name: 'Native Alpha, 2 drops. Show drops.',
-  });
+  await monsterPage.goto('/maplestory/gms-v83/monsters');
+  const alphaDrops = monsterPage.drops.tableButton('Native Alpha', 2);
   await alphaDrops.click();
-  const panel = page.getByRole('region', { name: 'Native Alpha Drops (2)' });
-  const certainty = panel.getByRole('button', {
-    name: 'Show confirmed drop details for Native Flake',
-  });
+  const panel = monsterPage.drops.panel('Native Alpha', 2);
+  const certainty = panel.certaintyButton('confirmed', 'Native Flake');
   await certainty.focus();
   await certainty.hover();
-  const dialog = page.getByRole('dialog', {
-    name: 'Show confirmed drop details for Native Flake',
-  });
-  await expect(dialog).toBeVisible();
-  await expect(dialog.getByText('Confirmed')).toBeVisible();
-  await expect(dialog.getByText('Source: GMS v83 Monster Book.')).toBeVisible();
+  const dialog = monsterPage.drops.certaintyDialog(
+    'Show confirmed drop details for Native Flake',
+  );
+  await expect(dialog.root).toBeVisible();
+  await expect(dialog.text('Confirmed')).toBeVisible();
+  await expect(dialog.text('Source: GMS v83 Monster Book.')).toBeVisible();
 });

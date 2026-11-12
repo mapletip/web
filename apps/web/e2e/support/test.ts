@@ -1,6 +1,8 @@
-import { expect, test as base, type Page } from '@playwright/test';
+import { expect, test as base } from '@playwright/test';
 
 import { spriteResponse } from '../../src/mocks/sprites';
+
+import { MonsterPage } from './monster-page';
 
 // Playwright's fixture callback is named `use`; it is not a React hook.
 /* eslint react-hooks/rules-of-hooks: off */
@@ -17,9 +19,13 @@ interface Fixtures {
   readonly expectedArtifactRequests: RegExp[];
   readonly escapedDataRequests: string[];
   readonly expectedBrowserErrors: ExpectedBrowserErrors;
+  readonly monsterPage: MonsterPage;
 }
 
 export const test = base.extend<Fixtures>({
+  monsterPage: async ({ page }, use) => {
+    await use(new MonsterPage(page));
+  },
   artifactRequests: async ({}, use) => {
     await use([]);
   },
@@ -104,14 +110,3 @@ export const test = base.extend<Fixtures>({
 });
 
 export { expect };
-
-/** Wait for the app's React hydration before using browser-side controls. */
-export async function ready(page: Page): Promise<void> {
-  await page.waitForFunction(() => {
-    const main = document.querySelector('main');
-    return (
-      main !== null &&
-      Object.keys(main).some((key) => key.startsWith('__reactProps'))
-    );
-  });
-}

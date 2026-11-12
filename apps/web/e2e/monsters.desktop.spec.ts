@@ -1,14 +1,4 @@
-import { test, expect, ready } from './support/test';
-
-const MONSTER_TABLE = 'Classic World monsters comparison';
-
-function table(page: Parameters<typeof ready>[0]) {
-  return page.getByRole('table', { name: MONSTER_TABLE });
-}
-
-function dropButtons(page: Parameters<typeof ready>[0]) {
-  return table(page).getByRole('button', { name: /Show drops\.$/u });
-}
+import { test, expect } from './support/test';
 
 function countFromSummaryLabel(label: string): number {
   const count = /\((\d+)\)/u.exec(label)?.[1];
@@ -18,7 +8,7 @@ function countFromSummaryLabel(label: string): number {
 }
 
 test('server render and hydration expose the verified Monster fixture', async ({
-  page,
+  monsterPage,
   request,
   artifactRequests,
 }) => {
@@ -37,52 +27,39 @@ test('server render and hydration expose the verified Monster fixture', async ({
   });
 
   await test.step('the browser hydrates without reloading artifacts', async () => {
-    await page.goto('/maplestory/monsters');
-    await ready(page);
-    await expect(page.getByRole('heading', { level: 1 })).toHaveText(
+    await monsterPage.goto();
+    await expect(monsterPage.heading()).toHaveText(
       'MapleStory Classic World Monsters',
     );
-    await expect(dropButtons(page)).toHaveCount(25);
-    await expect(
-      table(page).getByRole('row', { name: /Plain Pebble/u }),
-    ).toBeVisible();
-    await expect(
-      table(page).getByRole('row', { name: /Unnamed monster/u }),
-    ).toBeVisible();
+    await expect(monsterPage.table.dropButtons).toHaveCount(25);
+    await expect(monsterPage.table.row(/Plain Pebble/u)).toBeVisible();
+    await expect(monsterPage.table.row(/Unnamed monster/u)).toBeVisible();
 
-    const patchy = table(page).getByRole('row', { name: /Patchy Records/u });
+    const patchy = monsterPage.table.row(/Patchy Records/u);
     await expect(patchy.getByText('-')).toHaveCount(3);
     await expect(patchy.getByText('Unknown', { exact: true })).toHaveCount(2);
     await expect(patchy.getByText('Unavailable')).toBeVisible();
 
     await expect(
-      table(page)
-        .getByRole('row', { name: /Zero Yield Drone/u })
-        .getByText('0', {
-          exact: true,
-        }),
+      monsterPage.table.row(/Zero Yield Drone/u).getByText('0', {
+        exact: true,
+      }),
     ).toHaveCount(3);
     await expect(
-      table(page)
-        .getByRole('row', { name: /Hollow Husk/u })
-        .getByText('-', {
-          exact: true,
-        }),
+      monsterPage.table.row(/Hollow Husk/u).getByText('-', {
+        exact: true,
+      }),
     ).toBeVisible();
     await expect(
-      table(page)
-        .getByRole('row', { name: /Slow Burn Titan/u })
-        .getByText('<0.01'),
+      monsterPage.table.row(/Slow Burn Titan/u).getByText('<0.01'),
     ).toBeVisible();
     await expect(
-      table(page)
-        .getByRole('row', { name: /Big Number Brute/u })
-        .getByText('2,147,483,647'),
+      monsterPage.table.row(/Big Number Brute/u).getByText('2,147,483,647'),
     ).toHaveCount(2);
 
     for (const name of ['Lost Portrait', 'Unrecorded Portrait']) {
-      const spriteCell = table(page)
-        .getByRole('row', { name: new RegExp(name, 'u') })
+      const spriteCell = monsterPage.table
+        .row(new RegExp(name, 'u'))
         .getByRole('cell')
         .first();
       const sprite = spriteCell.locator('img');
@@ -96,8 +73,8 @@ test('server render and hydration expose the verified Monster fixture', async ({
       expect(fallbackBox?.width).toBe(40);
       expect(fallbackBox?.height).toBe(40);
     }
-    const plainSprite = table(page)
-      .getByRole('row', { name: /Plain Pebble/u })
+    const plainSprite = monsterPage.table
+      .row(/Plain Pebble/u)
       .getByRole('cell')
       .first()
       .locator('img');
@@ -114,54 +91,46 @@ test('server render and hydration expose the verified Monster fixture', async ({
 
 test('browse journey searches, filters, sorts and pages the fixture rows', async ({
   page,
+  monsterPage,
 }) => {
-  await page.goto('/maplestory/monsters');
-  await ready(page);
-  const search = page.getByRole('textbox', {
-    name: 'Search Classic World monsters',
-  });
-  const summary = page.getByText(/^\d+ Monsters?$/u).first();
+  await monsterPage.goto();
+  const search = monsterPage.search;
+  const summary = monsterPage.summary;
 
   await test.step('search and sort', async () => {
     await search.fill('twin');
     await expect(summary).toHaveText('2 Monsters');
-    await expect(
-      table(page).getByRole('row', { name: /Twin Sprout/u }),
-    ).toHaveCount(2);
+    await expect(monsterPage.table.row(/Twin Sprout/u)).toHaveCount(2);
     await search.clear();
-    await page
-      .getByRole('button', { name: 'HP Not sorted', exact: true })
-      .click();
+    await monsterPage.table.sortButton('HP Not sorted').click();
     await expect
-      .poll(async () => dropButtons(page).first().getAttribute('aria-label'))
+      .poll(async () =>
+        monsterPage.table.dropButtons.first().getAttribute('aria-label'),
+      )
       .toMatch(/^Big Number Brute,/u);
   });
 
   await test.step('boolean and range facets', async () => {
-    const boss = page.getByRole('group', { name: 'Boss' });
-    await boss.getByRole('checkbox', { name: /^Yes \(2\)$/u }).click();
+    await monsterPage.filters
+      .facet('Boss')
+      .checkbox(/^Yes \(2\)$/u)
+      .click();
     await expect(summary).toHaveText('2 Monsters');
-    await expect(
-      table(page).getByRole('row', { name: /Mystery Traits/u }),
-    ).toHaveCount(0);
+    await expect(monsterPage.table.row(/Mystery Traits/u)).toHaveCount(0);
 
-    const undead = page.getByRole('group', { name: 'Undead' });
-    await undead.getByRole('checkbox', { name: /^Yes \(1\)$/u }).click();
+    await monsterPage.filters
+      .facet('Undead')
+      .checkbox(/^Yes \(1\)$/u)
+      .click();
     await expect(summary).toHaveText('1 Monster');
-    await expect(
-      table(page).getByRole('row', { name: /Crowned Revenant/u }),
-    ).toBeVisible();
-    await expect(
-      page.getByRole('button', { name: /Remove Boss/u }),
-    ).toBeVisible();
-    await expect(
-      page.getByRole('button', { name: /Remove Undead/u }),
-    ).toBeVisible();
-    await page.getByRole('button', { name: 'Clear filters' }).click();
+    await expect(monsterPage.table.row(/Crowned Revenant/u)).toBeVisible();
+    await expect(monsterPage.filters.removeButton('Boss')).toBeVisible();
+    await expect(monsterPage.filters.removeButton('Undead')).toBeVisible();
+    await monsterPage.filters.clearButton.click();
     await expect(summary).toHaveText('30 Monsters');
 
-    const ratio = page.getByRole('group', { name: 'EXP / 100 HP' });
-    const bucket = ratio.getByRole('checkbox').first();
+    const ratio = monsterPage.filters.facet('EXP / 100 HP');
+    const bucket = ratio.checkboxes.first();
     const snapshot = await bucket.ariaSnapshot();
     const label = /checkbox "([^"]+)"/u.exec(snapshot)?.[1] ?? '';
     expect(label).toMatch(/\d+.*\(\d+\)/u);
@@ -170,19 +139,17 @@ test('browse journey searches, filters, sorts and pages the fixture rows', async
     await expect(summary).toHaveText(
       `${expectedCount} Monster${expectedCount === 1 ? '' : 's'}`,
     );
-    await page.getByRole('button', { name: 'Clear filters' }).click();
+    await monsterPage.filters.clearButton.click();
     await expect(summary).toHaveText('30 Monsters');
   });
 
   await test.step('dropped-item facet distinguishes matching item keys', async () => {
-    const drops = page.getByRole('combobox', { name: 'Drops' });
+    const drops = monsterPage.filters.dropItems;
     await drops.fill('Practice Tonic B');
     await page.getByRole('option', { name: 'Practice Tonic B' }).click();
     await expect(summary).toHaveText('1 Monster');
-    await expect(
-      table(page).getByRole('row', { name: /Crowned Warden/u }),
-    ).toBeVisible();
-    await page.getByRole('button', { name: 'Clear filters' }).click();
+    await expect(monsterPage.table.row(/Crowned Warden/u)).toBeVisible();
+    await monsterPage.filters.clearButton.click();
 
     await drops.fill('Sample Charm');
     const duplicateOptions = page.getByRole('option', {
@@ -195,31 +162,27 @@ test('browse journey searches, filters, sorts and pages the fixture rows', async
   });
 
   await test.step('page and page-size controls update visible rows', async () => {
-    await page.getByRole('button', { name: 'Next page' }).click();
-    await expect(dropButtons(page)).toHaveCount(5);
-    await page
-      .getByRole('combobox', { name: 'Classic World monsters per page' })
-      .click();
+    await monsterPage.pagination.nextButton.click();
+    await expect(monsterPage.table.dropButtons).toHaveCount(5);
+    await monsterPage.pagination.pageSize('Classic World').click();
     await page.getByRole('option', { name: '50' }).click();
-    await expect(dropButtons(page)).toHaveCount(30);
+    await expect(monsterPage.table.dropButtons).toHaveCount(30);
   });
 });
 
 test('desktop drop panels group and search entries and close in Escape order', async ({
   page,
+  monsterPage,
 }) => {
-  await page.goto('/maplestory/monsters');
-  await ready(page);
-  const monsterTable = table(page);
+  await monsterPage.goto();
+  const monsterTable = monsterPage.table.root;
 
-  const wardenButton = monsterTable.getByRole('button', {
-    name: 'Crowned Warden, 24 drops. Show drops.',
-  });
+  const wardenButton = monsterPage.drops.tableButton('Crowned Warden', 24);
   await wardenButton.click();
-  const panel = page.getByRole('region', { name: 'Crowned Warden Drops (24)' });
-  await expect(panel).toBeVisible();
+  const panel = monsterPage.drops.panel('Crowned Warden', 24);
+  await expect(panel.root).toBeVisible();
   const tableBox = await monsterTable.boundingBox();
-  const panelBox = await panel.boundingBox();
+  const panelBox = await panel.root.boundingBox();
   expect(tableBox).not.toBeNull();
   expect(panelBox).not.toBeNull();
   expect(panelBox!.width).toBeLessThanOrEqual(tableBox!.width + 1);
@@ -234,62 +197,54 @@ test('desktop drop panels group and search entries and close in Escape order', a
     'Other',
   ];
   for (const name of categoryHeadings) {
-    await expect(panel.getByRole('heading', { name, level: 4 })).toBeVisible();
+    await expect(panel.category(name, 4)).toBeVisible();
   }
-  await expect(panel.getByText('Unknown item name')).toBeVisible();
-  await expect(panel.getByText('Unresolved item reference')).toBeVisible();
+  await expect(panel.text('Unknown item name')).toBeVisible();
+  await expect(panel.text('Unresolved item reference')).toBeVisible();
 
-  const itemSearch = panel.getByRole('textbox', { name: 'Search items' });
+  const itemSearch = panel.itemSearch;
   await itemSearch.fill('Practice Tonic A');
-  await expect(panel.getByText('Practice Tonic A')).toBeVisible();
-  await expect(panel.getByText('Practice Tonic B')).toHaveCount(0);
+  await expect(panel.text('Practice Tonic A')).toBeVisible();
+  await expect(panel.text('Practice Tonic B')).toHaveCount(0);
   await itemSearch.fill('no matching fixture item');
-  await expect(panel.getByText(/No drop entries match/u)).toBeVisible();
+  await expect(panel.text(/No drop entries match/u)).toBeVisible();
   await itemSearch.clear();
 
-  const certainty = panel.getByRole('button', {
-    name: 'Show unconfirmed drop details for Practice Cap',
-  });
+  const certainty = panel.certaintyButton('unconfirmed', 'Practice Cap');
   await certainty.focus();
   await certainty.hover();
-  const detailDialog = page.getByRole('dialog', {
-    name: 'Show unconfirmed drop details for Practice Cap',
-  });
-  await expect(detailDialog).toBeVisible();
-  await expect(detailDialog.getByText('Maybe')).toBeVisible();
+  const detailDialog = monsterPage.drops.certaintyDialog(
+    'Show unconfirmed drop details for Practice Cap',
+  );
+  await expect(detailDialog.root).toBeVisible();
+  await expect(detailDialog.text('Maybe')).toBeVisible();
   await expect(
-    detailDialog.getByText('Source: GMS v83 Monster Book.'),
+    detailDialog.text('Source: GMS v83 Monster Book.'),
   ).toBeVisible();
   await page.keyboard.press('Escape');
-  await expect(detailDialog).toHaveCount(0);
-  await expect(panel).toBeVisible();
+  await expect(detailDialog.root).toHaveCount(0);
+  await expect(panel.root).toBeVisible();
   await page.keyboard.press('Escape');
-  await expect(panel).toHaveCount(0);
+  await expect(panel.root).toHaveCount(0);
 
-  await monsterTable
-    .getByRole('button', { name: 'Twin Sprout, 0. Show drops.' })
-    .first()
+  await monsterPage.drops.tableButton('Twin Sprout', 0).first().click();
+  await expect(monsterPage.drops.panel('Twin Sprout', 0).root).toContainText(
+    'No drops have been recorded for this monster',
+  );
+  await monsterPage.drops
+    .panel('Twin Sprout', 0)
+    .closeButton('Twin Sprout')
     .click();
-  await expect(
-    page.getByRole('region', { name: 'Twin Sprout Drops (0)' }),
-  ).toContainText('No drops have been recorded for this monster');
-  await page
-    .getByRole('button', { name: 'Close Drops for Twin Sprout' })
-    .click();
-  await expect(
-    monsterTable.getByRole('button', {
-      name: 'Plain Pebble, 1 drop. Show drops.',
-    }),
-  ).toBeVisible();
+  await expect(monsterPage.drops.tableButton('Plain Pebble', 1)).toBeVisible();
 });
 
 test('history navigation loads Monster artifacts in the browser', async ({
   page,
+  monsterPage,
   artifactRequests,
   expectedArtifactRequests,
 }) => {
-  await page.goto('/maplestory/monsters');
-  await ready(page);
+  await monsterPage.goto();
   await page
     .getByRole('banner')
     .getByRole('link', { name: 'MapleTip' })
@@ -304,10 +259,8 @@ test('history navigation loads Monster artifacts in the browser', async ({
     /^\/v2\/browse\//u,
   );
   await page.goBack();
-  await ready(page);
-  await expect(
-    table(page).getByRole('row', { name: /Plain Pebble/u }),
-  ).toBeVisible();
+  await monsterPage.ready();
+  await expect(monsterPage.table.row(/Plain Pebble/u)).toBeVisible();
   await expect.poll(() => artifactRequests.length).toBe(5);
   expect(
     artifactRequests
@@ -326,6 +279,7 @@ test('history navigation loads Monster artifacts in the browser', async ({
 
 test('failed server loads hide diagnostics and retry in the browser', async ({
   page,
+  monsterPage,
   expectedBrowserErrors,
   expectedArtifactRequests,
 }) => {
@@ -348,7 +302,7 @@ test('failed server loads hide diagnostics and retry in the browser', async ({
   }
 
   await page.goto(urls[0]!);
-  await ready(page);
+  await monsterPage.ready();
   await expect(
     page.getByRole('heading', { name: 'Something went wrong' }),
   ).toBeVisible();
@@ -364,9 +318,7 @@ test('failed server loads hide diagnostics and retry in the browser', async ({
     /^\/v2\/browse\//u,
   );
   await page.getByRole('button', { name: 'Try again' }).click();
-  await expect(
-    table(page).getByRole('row', { name: /Plain Pebble/u }),
-  ).toBeVisible();
+  await expect(monsterPage.table.row(/Plain Pebble/u)).toBeVisible();
   await expect
     .poll(() =>
       page.evaluate(
