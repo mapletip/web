@@ -173,6 +173,52 @@ jobs:
           retention-days: 5
           if-no-files-found: ignore
 
+  integration:
+    name: Web integration
+    needs: playwright-version
+    runs-on: ubuntu-26.04
+    container:
+      image: mcr.microsoft.com/playwright:v${{ needs.playwright-version.outputs.version }}-resolute
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
+
+      - name: Setup Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Turborepo remote cache
+        uses: rharkor/caching-for-turbo@2238fae6eb9a9936f92356f54cb3660200d105e7 # v2.5.1
+        with:
+          use-relative-cache-path: true
+
+      - name: Web integration tests
+        run: pnpm turbo run test:e2e
+
+      - name: Web visual regression tests
+        run: pnpm turbo run test:e2e:visual
+
+      - name: Upload web integration evidence
+        if: failure()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: web-integration-evidence
+          path: |
+            apps/web/test-results
+            apps/web/playwright-report
+          retention-days: 5
+          if-no-files-found: ignore
+
   # Publishing only runs for canonical main pushes that passed every gate
   # above; pull requests never reach these jobs and never hold packages:write
   # or id-token:write. Matrix outputs can't reach a downstream job keyed by
@@ -180,7 +226,7 @@ jobs:
   # instead, the same pattern the Forums pipeline uses.
   publish:
     name: Publish image (${{ matrix.arch }})
-    needs: [validate, test, visual]
+    needs: [validate, test, visual, integration]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     strategy:
       fail-fast: false

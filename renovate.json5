@@ -44,5 +44,10 @@
       matchPackageNames: ['typescript'],
       allowedVersions: '<7',
     },
+    {
+      // Keep the browser test client aligned with the CI browser image.
+      matchPackageNames: ['playwright', '@playwright/test'],
+      groupName: 'Playwright',
+    },
   ],
 }

@@ -3,6 +3,7 @@ import { createFileRoute } from '@tanstack/react-router';
 import { BrowseUnavailable } from '@/components/BrowseUnavailable';
 import { supportedBuildSlug as supportedBuild } from '@/config/maplekit';
 import { MonsterBrowse } from '@/features/monsters/browse';
+import { loadMonsterBrowseAfterHistory } from '@/features/monsters/browse/history';
 import { loadMonsterBrowse } from '@/features/monsters/browse/load';
 import { monsterPageMetadata } from '@/features/monsters/browse/metadata';
 
@@ -11,7 +12,9 @@ export const Route = createFileRoute('/maplestory/$buildId/monsters')({
     supportedBuild(params.buildId);
   },
   loader: ({ params, abortController }) =>
-    loadMonsterBrowse(supportedBuild(params.buildId), abortController.signal),
+    loadMonsterBrowseAfterHistory(supportedBuild(params.buildId), () =>
+      loadMonsterBrowse(supportedBuild(params.buildId), abortController.signal),
+    ),
   head: ({ params }) => {
     const metadata = monsterPageMetadata(supportedBuild(params.buildId));
     return {

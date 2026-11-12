@@ -26,6 +26,14 @@
       "dependsOn": ["^build"],
       "passThroughEnv": ["PLAYWRIGHT_BROWSERS_PATH", "PLAYWRIGHT_WS_ENDPOINT"]
     },
+    "test:e2e": {
+      "dependsOn": ["@mapletip/web#build:msw"],
+      "passThroughEnv": ["PLAYWRIGHT_BROWSERS_PATH", "PLAYWRIGHT_WS_ENDPOINT"]
+    },
+    "test:e2e:visual": {
+      "dependsOn": ["@mapletip/web#build:msw"],
+      "passThroughEnv": ["PLAYWRIGHT_BROWSERS_PATH", "PLAYWRIGHT_WS_ENDPOINT"]
+    },
     "typecheck": {
       "dependsOn": ["^typecheck", "^build"]
     },
@@ -37,6 +45,7 @@
       "cache": false,
       "persistent": true,
       "dependsOn": ["^build"],
+      "passThroughEnv": ["API_MODE"],
       "with": ["@mapletip/component-library#dev"]
     }
   }
