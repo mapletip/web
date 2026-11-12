@@ -360,6 +360,12 @@ describe('MonsterBrowse', () => {
     fireEvent.click(option!);
 
     await waitFor(() => expect(summaryText()).toBe('1 Monster'));
+    const activeDropChip = screen.getByRole('button', {
+      name: 'Remove Drops: Red Potion',
+    });
+    expect(
+      activeDropChip.querySelector(`img[src="${redPotionIcon}"]`),
+    ).toBeInTheDocument();
     expect(
       document.querySelector(
         `[class*="dropItemPillContent"] img[src="${redPotionIcon}"]`,

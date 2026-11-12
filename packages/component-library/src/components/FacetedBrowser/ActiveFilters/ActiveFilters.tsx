@@ -37,10 +37,23 @@ export function ActiveFilters<TRecord extends Record<string, unknown>>({
           size="compact-sm"
           variant="light"
           color="maple"
+          className={classes['activeChip']}
+          classNames={{ label: classes['chipButtonLabel'] }}
+          title={chip.label}
+          {...(chip.icon === undefined
+            ? {}
+            : {
+                leftSection: (
+                  <span className={classes['chipIcon']} aria-hidden="true">
+                    {chip.icon}
+                  </span>
+                ),
+              })}
           aria-label={`Remove ${chip.label}`}
           onClick={() => onRemove(chip)}
         >
-          {chip.label} ×
+          <span className={classes['chipLabel']}>{chip.label}</span>
+          <span aria-hidden="true">×</span>
         </Button>
       ))}
       <Button

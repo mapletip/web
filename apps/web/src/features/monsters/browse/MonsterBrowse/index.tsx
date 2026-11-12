@@ -168,13 +168,20 @@ function dropItemFacet(
   options: readonly MonsterDropItemOption[],
   definition: FacetDefinition<MonsterBrowseRow>,
 ): FacetDefinition<MonsterBrowseRow> {
+  const facetOptions = options.map(({ value, label, iconUrl }) => ({
+    value,
+    label,
+    ...(iconUrl === undefined
+      ? {}
+      : { icon: <Thumbnail src={iconUrl} size={16} alt="" /> }),
+  }));
   const iconUrls = new Map(
     options.map(({ value, iconUrl }) => [value, iconUrl] as const),
   );
 
   return {
     ...definition,
-    options,
+    options: facetOptions,
     renderControl: ({ value, onChange }) => {
       const selected = Array.isArray(value)
         ? value.filter((entry): entry is string => typeof entry === 'string')
@@ -215,7 +222,10 @@ function dropItemFacet(
                 : undefined;
             return (
               <Pill
+                className={classes['dropItemPill']}
+                classNames={{ label: classes['dropItemPillLabel'] }}
                 withRemoveButton={!disabled && onRemove !== undefined}
+                title={option.label}
                 {...(onRemove === undefined ? {} : { onRemove })}
                 {...(disabled === undefined ? {} : { disabled })}
               >
@@ -223,7 +233,9 @@ function dropItemFacet(
                   {iconUrl === undefined ? null : (
                     <Thumbnail src={iconUrl} size={16} alt="" />
                   )}
-                  {option.label}
+                  <span className={classes['dropItemPillText']}>
+                    {option.label}
+                  </span>
                 </span>
               </Pill>
             );

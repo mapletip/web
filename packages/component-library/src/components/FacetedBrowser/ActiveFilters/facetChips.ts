@@ -1,3 +1,5 @@
+import type { ReactNode } from 'react';
+
 import type { FacetDefinition } from '@/components/FacetedBrowser/FacetControls/types';
 import { normalizeFilterValue } from '@/components/FacetedBrowser/hooks/browseState';
 import {
@@ -9,6 +11,7 @@ export interface ActiveFacetChip {
   readonly key: string;
   readonly label: string;
   readonly field: string;
+  readonly icon?: ReactNode;
   readonly removeValue?: string;
 }
 
@@ -56,13 +59,13 @@ function buildFacetChips<TRecord extends Record<string, unknown>>(
     return selections.map((selected) => {
       const buckets =
         typeof facet.buckets === 'string' ? undefined : facet.buckets;
-      const option =
-        facet.options?.find((entry) => entry.value === selected) ??
-        buckets?.find((entry) => entry.value === selected);
+      const option = facet.options?.find((entry) => entry.value === selected);
+      const bucket = buckets?.find((entry) => entry.value === selected);
       return {
         key: `${facet.id}:${selected}`,
-        label: `${facet.label}: ${option?.label ?? selected}`,
+        label: `${facet.label}: ${option?.label ?? bucket?.label ?? selected}`,
         field: facet.field,
+        ...(option?.icon === undefined ? {} : { icon: option.icon }),
         removeValue: selected,
       };
     });
