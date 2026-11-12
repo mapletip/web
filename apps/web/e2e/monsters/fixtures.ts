@@ -2,7 +2,7 @@ import { expect, test as base } from '@playwright/test';
 
 import { spriteResponse } from '../../src/mocks/sprites';
 
-import { MonsterPage } from './monster-page';
+import { MonsterPage } from './page/monster-page';
 
 // Playwright's fixture callback is named `use`; it is not a React hook.
 /* eslint react-hooks/rules-of-hooks: off */

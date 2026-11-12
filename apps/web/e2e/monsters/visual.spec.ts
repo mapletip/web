@@ -1,5 +1,5 @@
-import type { MonsterPage } from './support/monster-page';
-import { test, expect } from './support/test';
+import { test, expect } from './fixtures';
+import type { MonsterPage } from './page/monster-page';
 
 async function openBossesAndUndead(monsterPage: MonsterPage): Promise<void> {
   await monsterPage.filters.checkbox('Boss', /^Yes/u).click();

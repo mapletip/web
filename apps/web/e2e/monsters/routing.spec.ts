@@ -1,4 +1,4 @@
-import { test, expect } from './support/test';
+import { test, expect } from './fixtures';
 
 test('build-specific routes serve their own fixture and reject unsupported slugs', async ({
   monsterPage,

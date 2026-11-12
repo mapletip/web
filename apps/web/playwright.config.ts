@@ -35,16 +35,14 @@ export default defineConfig({
       animations: 'disabled',
       caret: 'hide',
       scale: 'css',
-      stylePath: fileURLToPath(
-        new URL('./e2e/support/visual.css', import.meta.url),
-      ),
+      stylePath: fileURLToPath(new URL('./e2e/visual.css', import.meta.url)),
     },
   },
   use,
   projects: [
     {
       name: 'desktop',
-      testMatch: ['**/*.desktop.spec.ts', '**/*.routing.spec.ts'],
+      testMatch: ['**/desktop.spec.ts', '**/routing.spec.ts'],
       use: {
         ...devices['Desktop Chrome'],
         ...use,
@@ -54,7 +52,7 @@ export default defineConfig({
     },
     {
       name: 'mobile',
-      testMatch: '**/*.mobile.spec.ts',
+      testMatch: '**/mobile.spec.ts',
       use: {
         ...devices['iPhone 13'],
         ...use,
@@ -67,7 +65,7 @@ export default defineConfig({
     },
     {
       name: 'visual',
-      testMatch: '**/*.visual.spec.ts',
+      testMatch: '**/visual.spec.ts',
       use: {
         ...devices['Desktop Chrome'],
         ...use,

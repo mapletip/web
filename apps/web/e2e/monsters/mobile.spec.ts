@@ -1,4 +1,4 @@
-import { test, expect } from './support/test';
+import { test, expect } from './fixtures';
 
 test('mobile cards, quick filters and the drops drawer work together', async ({
   page,

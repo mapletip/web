@@ -1,4 +1,4 @@
-import { test, expect } from './support/test';
+import { test, expect } from './fixtures';
 
 function countFromSummaryLabel(label: string): number {
   const count = /\((\d+)\)/u.exec(label)?.[1];
