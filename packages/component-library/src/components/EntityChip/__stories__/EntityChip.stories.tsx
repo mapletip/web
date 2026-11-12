@@ -6,41 +6,8 @@ import { EntityChip } from '@/components/EntityChip';
 import recordImageStress from '@/fixtures/record-image-stress.svg?url';
 import smallImage from '@/fixtures/thumbnail-small.svg?url';
 
-const linkedChips = [
-  {
-    name: 'Synthetic item one',
-    iconSrc: smallImage,
-    destination: { href: '/synthetic/items/one' },
-  },
-  {
-    name: 'Synthetic item two',
-    iconSrc: recordImageStress,
-    destination: { href: '/synthetic/items/two' },
-  },
-  {
-    name: 'Synthetic item with no icon',
-    destination: { href: '/synthetic/items/three' },
-  },
-];
-
 const longName =
   'Synthetic summoning item with a deliberately long name that wraps inside its chip';
-
-function Stage({
-  testId,
-  width,
-  children,
-}: {
-  readonly testId: string;
-  readonly width: number;
-  readonly children: ReactNode;
-}): ReactNode {
-  return (
-    <Box data-testid={testId} w={width} maw="100%" p="md">
-      {children}
-    </Box>
-  );
-}
 
 function CertaintyControl({
   label = 'Confirmed',
@@ -54,6 +21,23 @@ function CertaintyControl({
   );
 }
 
+function GallerySection({
+  label,
+  children,
+}: {
+  readonly label: string;
+  readonly children: ReactNode;
+}): ReactNode {
+  return (
+    <Stack gap="xs">
+      <Text size="xs" c="var(--mapletip-color-muted)">
+        {label}
+      </Text>
+      {children}
+    </Stack>
+  );
+}
+
 const meta = {
   title: 'Components/EntityChip',
   parameters: { layout: 'centered' },
@@ -62,110 +46,102 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Linked: Story = {
+/**
+ * One story covering every state the chip has, so the capture shows linked,
+ * unlinked, placeholder, trailing-control, long-name and wrapping cases on the
+ * same canvas at the same sizes.
+ */
+export const Gallery: Story = {
   render: () => (
-    <Stage testId="entity-chip-linked" width={560}>
-      <Stack gap="xs">
-        <Text size="sm">Linked chips, including one without an icon</Text>
-        <Group gap="xs">
-          {linkedChips.map((chip) => (
-            <EntityChip key={chip.destination.href} {...chip} />
-          ))}
-        </Group>
-      </Stack>
-    </Stage>
-  ),
-};
-
-export const Unlinked: Story = {
-  render: () => (
-    <Stage testId="entity-chip-unlinked" width={560}>
-      <Stack gap="xs">
-        <Text size="sm">The same chips without a destination</Text>
-        <Group gap="xs">
-          {linkedChips.map((chip) => (
-            <EntityChip
-              key={chip.destination.href}
-              name={chip.name}
-              iconSrc={chip.iconSrc}
-            />
-          ))}
-        </Group>
-      </Stack>
-    </Stage>
-  ),
-};
-
-export const LongName: Story = {
-  render: () => (
-    <Stage testId="entity-chip-long-name" width={390}>
-      <Stack gap="xs">
-        <Text size="sm">A long name wraps inside the chip</Text>
-        <EntityChip
-          name={longName}
-          iconSrc={smallImage}
-          destination={{ href: '/synthetic/items/long-name' }}
-          trailing={<CertaintyControl />}
-        />
-      </Stack>
-    </Stage>
-  ),
-};
-
-export const TrailingControl: Story = {
-  render: () => (
-    <Stage testId="entity-chip-trailing-control" width={560}>
-      <Stack gap="xs">
-        <Text size="sm">
-          The trailing control stays outside the link and focusable on its own
-        </Text>
+    <Stack
+      data-testid="entity-chip-story"
+      w={640}
+      p="md"
+      gap="lg"
+      bg="var(--mapletip-color-canvas)"
+    >
+      <GallerySection label="Linked chips, including one without an icon">
         <Group gap="xs">
           <EntityChip
-            name="Synthetic item one"
+            name="Linked item one"
             iconSrc={smallImage}
             destination={{ href: '/synthetic/items/one' }}
+          />
+          <EntityChip
+            name="Linked item two"
+            iconSrc={recordImageStress}
+            destination={{ href: '/synthetic/items/two' }}
+          />
+          <EntityChip
+            name="Linked item without an icon"
+            destination={{ href: '/synthetic/items/three' }}
+          />
+        </Group>
+      </GallerySection>
+
+      <GallerySection label="Unlinked chips: plain text, no link">
+        <Group gap="xs">
+          <EntityChip name="Unlinked item one" iconSrc={smallImage} />
+          <EntityChip name="Unlinked item two" iconSrc={recordImageStress} />
+          <EntityChip name="Unlinked item without an icon" />
+        </Group>
+      </GallerySection>
+
+      <GallerySection label="Trailing controls stay outside the link">
+        <Group gap="xs">
+          <EntityChip
+            name="Confirmed item"
+            iconSrc={smallImage}
+            destination={{ href: '/synthetic/items/confirmed' }}
             trailing={<CertaintyControl />}
           />
           <EntityChip
-            name="Synthetic item two"
+            name="Unconfirmed item"
             iconSrc={recordImageStress}
-            destination={{ href: '/synthetic/items/two' }}
+            destination={{ href: '/synthetic/items/unconfirmed' }}
             trailing={<CertaintyControl label="Unconfirmed" />}
           />
           <EntityChip
-            name="Synthetic item three"
+            name="No-destination item"
             trailing={<CertaintyControl />}
           />
         </Group>
-      </Stack>
-    </Stage>
-  ),
-};
+      </GallerySection>
 
-export const WrappingGroup: Story = {
-  render: () => (
-    <Stage testId="entity-chip-wrapping-group" width={560}>
-      <Stack gap="xs">
-        <Text size="sm">
-          Chips wrap as a group without overflowing the page
-        </Text>
-        <Group gap="xs">
-          {[
-            ...linkedChips,
-            {
-              name: longName,
-              iconSrc: smallImage,
-              destination: { href: '/synthetic/items/long-name' },
-            },
-          ].map((chip) => (
+      <GallerySection label="A long name wraps inside the chip">
+        <Box w={320} maw="100%">
+          <EntityChip
+            name={longName}
+            iconSrc={smallImage}
+            destination={{ href: '/synthetic/items/long-name' }}
+            trailing={<CertaintyControl />}
+          />
+        </Box>
+      </GallerySection>
+
+      <GallerySection label="Chips wrap as a group">
+        <Box w={320} maw="100%">
+          <Group gap="xs">
             <EntityChip
-              key={chip.name}
-              {...chip}
+              name="Wrapping item one"
+              iconSrc={smallImage}
+              destination={{ href: '/synthetic/items/wrapping-one' }}
               trailing={<CertaintyControl />}
             />
-          ))}
-        </Group>
-      </Stack>
-    </Stage>
+            <EntityChip
+              name="Wrapping item two with a longer name"
+              iconSrc={recordImageStress}
+              destination={{ href: '/synthetic/items/wrapping-two' }}
+              trailing={<CertaintyControl />}
+            />
+            <EntityChip
+              name="Wrapping item three"
+              destination={{ href: '/synthetic/items/wrapping-three' }}
+              trailing={<CertaintyControl />}
+            />
+          </Group>
+        </Box>
+      </GallerySection>
+    </Stack>
   ),
 };
