@@ -11,6 +11,7 @@ cli="${CONTAINER_CLI:-docker}"
 image="$1"
 port="${2:-18087}"
 name="web-smoke-$$"
+repo_root=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/../.." && pwd)
 
 "$cli" run --detach --name "$name" \
   --read-only --cap-drop=ALL --security-opt=no-new-privileges \
@@ -29,6 +30,43 @@ test "$(curl -s "http://127.0.0.1:$port/api/healthz")" = ok
 curl -s -D "/tmp/smoke-health-headers-$$" -o /dev/null "http://127.0.0.1:$port/api/healthz"
 grep -qi '^cache-control: no-store' "/tmp/smoke-health-headers-$$"
 test "$(curl -s -o /dev/null -w '%{http_code}' "http://127.0.0.1:$port/nope")" = 404
+
+# Check the production bundle inside the image that is actually running.
+if "$cli" exec "$name" test -e /app/.output/public/mockServiceWorker.js; then
+  echo 'Production image unexpectedly contains mockServiceWorker.js.' >&2
+  exit 1
+fi
+
+if "$cli" exec "$name" grep -aR -F -l \
+  -e mockServiceWorker \
+  -e @mswjs \
+  -e virtual:msw \
+  -e 'Plain Pebble' \
+  -e 'Twin Sprout' \
+  -e 'Native Alpha' \
+  -e 'Patchy Records' \
+  /app/.output; then
+  echo 'Production image contains mock data or code.' >&2
+  exit 1
+else
+  grep_status=$?
+  if [ "$grep_status" -ne 1 ]; then
+    echo "Could not scan production image bundle (grep exit $grep_status)." >&2
+    exit "$grep_status"
+  fi
+fi
+
+release_pin=$(sed -nE "s/.*sha256:[[:space:]]*'([a-f0-9]{64})'.*/\1/p" \
+  "$repo_root/apps/web/src/config/maplekit.ts")
+if [ -z "$release_pin" ]; then
+  echo 'Could not read the production release pin.' >&2
+  exit 1
+fi
+if ! "$cli" exec "$name" grep -aR -F -q -- "$release_pin" /app/.output; then
+  echo 'Production image does not contain the pinned production release digest.' >&2
+  exit 1
+fi
+
 # Rejected Monster build slugs and the removed demo route are deterministic and
 # never touch the network; valid catalog pages need the live pinned release, so
 # those are verified in the explicit integration step instead.
