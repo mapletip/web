@@ -21,6 +21,13 @@ export { Thumbnail } from '@/components/Thumbnail';
 export type { ThumbnailProps } from '@/components/Thumbnail';
 export { SpriteStage } from '@/components/SpriteStage';
 export type { SpriteStageProps } from '@/components/SpriteStage';
+export { FactSheet } from '@/components/FactSheet';
+export type {
+  Fact,
+  FactSheetProps,
+  KnownFact,
+  NotKnownFact,
+} from '@/components/FactSheet';
 export { Header } from '@/components/Header';
 export type {
   HeaderGroupLink,
