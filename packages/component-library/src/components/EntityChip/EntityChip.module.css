@@ -1,0 +1,60 @@
+.root {
+  display: inline-flex;
+  align-items: center;
+  max-width: 100%;
+  min-width: 0;
+  gap: var(--mantine-spacing-xs);
+  padding: 0.25rem 0.5rem;
+  color: var(--mapletip-color-ink);
+  background: var(--mapletip-color-panel);
+  border: 1px solid var(--mapletip-color-border-subtle);
+  border-radius: var(--mantine-radius-sm);
+  font-size: var(--mantine-font-size-sm);
+  line-height: var(--mantine-line-height-sm);
+}
+
+.root:focus-within {
+  border-color: var(--mapletip-color-focus);
+}
+
+.content {
+  display: inline-flex;
+  align-items: center;
+  min-width: 0;
+  gap: var(--mantine-spacing-xs);
+}
+
+/*
+ * The link is the chip's whole text target, so it may shrink and wrap; the icon
+ * and trailing control keep their size. A long name wraps inside the chip
+ * instead of widening the page.
+ */
+.link {
+  display: inline-flex;
+  align-items: center;
+  max-width: 100%;
+  min-width: 0;
+  color: inherit;
+  text-decoration: none;
+}
+
+.link:hover .name {
+  text-decoration: underline;
+}
+
+.name {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.trailing {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+}
+
+@media (forced-colors: active) {
+  .root {
+    border-color: CanvasText;
+  }
+}
