@@ -2,8 +2,8 @@ import type { MonsterPage } from './support/monster-page';
 import { test, expect } from './support/test';
 
 async function openBossesAndUndead(monsterPage: MonsterPage): Promise<void> {
-  await monsterPage.filters.facet('Boss').checkbox(/^Yes/u).click();
-  await monsterPage.filters.facet('Undead').checkbox(/^Yes/u).click();
+  await monsterPage.filters.checkbox('Boss', /^Yes/u).click();
+  await monsterPage.filters.checkbox('Undead', /^Yes/u).click();
 }
 
 test('desktop page with expanded drops and certainty details', async ({
@@ -16,16 +16,20 @@ test('desktop page with expanded drops and certainty details', async ({
   await monsterPage.captureReady();
   await monsterPage.drops.tableButton('Crowned Warden', 24).click();
   const panel = monsterPage.drops.panel('Crowned Warden', 24);
-  const certainty = panel.certaintyButton('unconfirmed', 'Practice Cap');
+  const certainty = monsterPage.drops.certaintyButton(
+    panel,
+    'unconfirmed',
+    'Practice Cap',
+  );
   await certainty.focus();
   await certainty.hover();
   const detailDialog = monsterPage.drops.certaintyDialog(
     'Show unconfirmed drop details for Practice Cap',
   );
-  await expect(detailDialog.root).toBeVisible();
-  await expect(detailDialog.text('Maybe')).toBeVisible();
+  await expect(detailDialog).toBeVisible();
+  await expect(detailDialog.getByText('Maybe')).toBeVisible();
   await expect(
-    detailDialog.text('Source: GMS v83 Monster Book.'),
+    detailDialog.getByText('Source: GMS v83 Monster Book.'),
   ).toBeVisible();
   await monsterPage.captureReady();
   await expect(page).toHaveScreenshot('desktop-drops-expanded.png');
@@ -40,11 +44,11 @@ test('desktop page with boolean and range filters active in the rail', async ({
   await monsterPage.goto();
   await monsterPage.captureReady();
   await openBossesAndUndead(monsterPage);
-  const summary = monsterPage.summary;
+  const summary = monsterPage.results.summary;
   const ratio = monsterPage.filters.facet('EXP / 100 HP');
-  const seeMore = ratio.seeMoreButton;
+  const seeMore = ratio.getByRole('button', { name: 'See more' });
   if (await seeMore.isVisible()) await seeMore.click();
-  const buckets = ratio.checkboxes;
+  const buckets = ratio.getByRole('checkbox');
   for (let index = 0; index < (await buckets.count()); index += 1) {
     const bucket = buckets.nth(index);
     await bucket.click();
@@ -52,7 +56,7 @@ test('desktop page with boolean and range filters active in the rail', async ({
     await bucket.click();
   }
   await expect(summary).toHaveText('1 Monster');
-  await expect(monsterPage.table.row(/Crowned Revenant/u)).toBeVisible();
+  await expect(monsterPage.results.row(/Crowned Revenant/u)).toBeVisible();
   await monsterPage.captureReady();
   await expect(page).toHaveScreenshot('desktop-filtered-rail.png');
 });
@@ -66,11 +70,13 @@ test('mobile cards show the opening fixture rows', async ({
   await monsterPage.goto();
   await page.evaluate(() => window.scrollTo(0, 240));
   await monsterPage.captureReady();
-  await expect(monsterPage.cards.root).toBeVisible();
-  await expect(monsterPage.cards.heading('Plain Pebble')).toBeVisible();
-  await expect(monsterPage.cards.heading('Twin Sprout').first()).toBeVisible();
+  await expect(monsterPage.results.cards).toBeVisible();
+  await expect(monsterPage.results.cardHeading('Plain Pebble')).toBeVisible();
   await expect(
-    monsterPage.cards.heading('Twin Sprout').nth(1),
+    monsterPage.results.cardHeading('Twin Sprout').first(),
+  ).toBeVisible();
+  await expect(
+    monsterPage.results.cardHeading('Twin Sprout').nth(1),
   ).toBeInViewport();
   await expect(page).toHaveScreenshot('mobile-cards.png');
 });
@@ -83,10 +89,12 @@ test('mobile cards preserve unknown facts and long names', async ({
   await page.addInitScript(() => localStorage.clear());
   await monsterPage.goto();
   await monsterPage.captureReady();
-  await expect(monsterPage.cards.heading('Patchy Records')).toBeVisible();
-  await expect(monsterPage.cards.heading('Unnamed monster')).toBeVisible();
+  await expect(monsterPage.results.cardHeading('Patchy Records')).toBeVisible();
   await expect(
-    monsterPage.cards.heading(
+    monsterPage.results.cardHeading('Unnamed monster'),
+  ).toBeVisible();
+  await expect(
+    monsterPage.results.cardHeading(
       'Extraordinarily Long Named Fixture Creature Of The Far Northern Reaches',
     ),
   ).toBeVisible();
@@ -101,13 +109,13 @@ test('mobile drops drawer opens over the active boss filter', async ({
   await page.addInitScript(() => localStorage.clear());
   await monsterPage.goto();
   await monsterPage.captureReady();
-  const filters = await monsterPage.quickFilters.openAll();
-  await filters.filters.facet('Boss').checkbox(/^Yes/u).click();
-  await filters.applyButton.click();
+  const filters = await monsterPage.filters.openAll();
+  await monsterPage.filters.checkbox('Boss', /^Yes/u, filters).click();
+  await monsterPage.filters.applyButton(filters).click();
   await monsterPage.drops.cardButton('Crowned Warden', 24).click();
   const drawer = monsterPage.drops.drawer('Crowned Warden');
-  await expect(drawer.category('Drops (24)')).toBeVisible();
-  await expect(drawer.certaintyLegend).toBeVisible();
+  await expect(monsterPage.drops.category(drawer, 'Drops (24)')).toBeVisible();
+  await expect(monsterPage.drops.certaintyLegend(drawer)).toBeVisible();
   await monsterPage.captureReady();
   await expect(page).toHaveScreenshot('mobile-drops-drawer.png');
 });

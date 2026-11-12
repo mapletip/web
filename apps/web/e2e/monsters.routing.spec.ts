@@ -27,13 +27,17 @@ test('build-specific routes serve their own fixture and reject unsupported slugs
   const alphaDrops = monsterPage.drops.tableButton('Native Alpha', 2);
   await alphaDrops.click();
   const panel = monsterPage.drops.panel('Native Alpha', 2);
-  const certainty = panel.certaintyButton('confirmed', 'Native Flake');
+  const certainty = monsterPage.drops.certaintyButton(
+    panel,
+    'confirmed',
+    'Native Flake',
+  );
   await certainty.focus();
   await certainty.hover();
   const dialog = monsterPage.drops.certaintyDialog(
     'Show confirmed drop details for Native Flake',
   );
-  await expect(dialog.root).toBeVisible();
-  await expect(dialog.text('Confirmed')).toBeVisible();
-  await expect(dialog.text('Source: GMS v83 Monster Book.')).toBeVisible();
+  await expect(dialog).toBeVisible();
+  await expect(dialog.getByText('Confirmed')).toBeVisible();
+  await expect(dialog.getByText('Source: GMS v83 Monster Book.')).toBeVisible();
 });

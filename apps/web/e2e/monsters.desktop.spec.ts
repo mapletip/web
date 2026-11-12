@@ -31,34 +31,34 @@ test('server render and hydration expose the verified Monster fixture', async ({
     await expect(monsterPage.heading()).toHaveText(
       'MapleStory Classic World Monsters',
     );
-    await expect(monsterPage.table.dropButtons).toHaveCount(25);
-    await expect(monsterPage.table.row(/Plain Pebble/u)).toBeVisible();
-    await expect(monsterPage.table.row(/Unnamed monster/u)).toBeVisible();
+    await expect(monsterPage.results.dropButtons).toHaveCount(25);
+    await expect(monsterPage.results.row(/Plain Pebble/u)).toBeVisible();
+    await expect(monsterPage.results.row(/Unnamed monster/u)).toBeVisible();
 
-    const patchy = monsterPage.table.row(/Patchy Records/u);
+    const patchy = monsterPage.results.row(/Patchy Records/u);
     await expect(patchy.getByText('-')).toHaveCount(3);
     await expect(patchy.getByText('Unknown', { exact: true })).toHaveCount(2);
     await expect(patchy.getByText('Unavailable')).toBeVisible();
 
     await expect(
-      monsterPage.table.row(/Zero Yield Drone/u).getByText('0', {
+      monsterPage.results.row(/Zero Yield Drone/u).getByText('0', {
         exact: true,
       }),
     ).toHaveCount(3);
     await expect(
-      monsterPage.table.row(/Hollow Husk/u).getByText('-', {
+      monsterPage.results.row(/Hollow Husk/u).getByText('-', {
         exact: true,
       }),
     ).toBeVisible();
     await expect(
-      monsterPage.table.row(/Slow Burn Titan/u).getByText('<0.01'),
+      monsterPage.results.row(/Slow Burn Titan/u).getByText('<0.01'),
     ).toBeVisible();
     await expect(
-      monsterPage.table.row(/Big Number Brute/u).getByText('2,147,483,647'),
+      monsterPage.results.row(/Big Number Brute/u).getByText('2,147,483,647'),
     ).toHaveCount(2);
 
     for (const name of ['Lost Portrait', 'Unrecorded Portrait']) {
-      const spriteCell = monsterPage.table
+      const spriteCell = monsterPage.results
         .row(new RegExp(name, 'u'))
         .getByRole('cell')
         .first();
@@ -73,7 +73,7 @@ test('server render and hydration expose the verified Monster fixture', async ({
       expect(fallbackBox?.width).toBe(40);
       expect(fallbackBox?.height).toBe(40);
     }
-    const plainSprite = monsterPage.table
+    const plainSprite = monsterPage.results
       .row(/Plain Pebble/u)
       .getByRole('cell')
       .first()
@@ -94,43 +94,37 @@ test('browse journey searches, filters, sorts and pages the fixture rows', async
   monsterPage,
 }) => {
   await monsterPage.goto();
-  const search = monsterPage.search;
-  const summary = monsterPage.summary;
+  const search = monsterPage.results.search;
+  const summary = monsterPage.results.summary;
 
   await test.step('search and sort', async () => {
     await search.fill('twin');
     await expect(summary).toHaveText('2 Monsters');
-    await expect(monsterPage.table.row(/Twin Sprout/u)).toHaveCount(2);
+    await expect(monsterPage.results.row(/Twin Sprout/u)).toHaveCount(2);
     await search.clear();
-    await monsterPage.table.sortButton('HP Not sorted').click();
+    await monsterPage.results.sortButton('HP Not sorted').click();
     await expect
       .poll(async () =>
-        monsterPage.table.dropButtons.first().getAttribute('aria-label'),
+        monsterPage.results.dropButtons.first().getAttribute('aria-label'),
       )
       .toMatch(/^Big Number Brute,/u);
   });
 
   await test.step('boolean and range facets', async () => {
-    await monsterPage.filters
-      .facet('Boss')
-      .checkbox(/^Yes \(2\)$/u)
-      .click();
+    await monsterPage.filters.checkbox('Boss', /^Yes \(2\)$/u).click();
     await expect(summary).toHaveText('2 Monsters');
-    await expect(monsterPage.table.row(/Mystery Traits/u)).toHaveCount(0);
+    await expect(monsterPage.results.row(/Mystery Traits/u)).toHaveCount(0);
 
-    await monsterPage.filters
-      .facet('Undead')
-      .checkbox(/^Yes \(1\)$/u)
-      .click();
+    await monsterPage.filters.checkbox('Undead', /^Yes \(1\)$/u).click();
     await expect(summary).toHaveText('1 Monster');
-    await expect(monsterPage.table.row(/Crowned Revenant/u)).toBeVisible();
+    await expect(monsterPage.results.row(/Crowned Revenant/u)).toBeVisible();
     await expect(monsterPage.filters.removeButton('Boss')).toBeVisible();
     await expect(monsterPage.filters.removeButton('Undead')).toBeVisible();
     await monsterPage.filters.clearButton.click();
     await expect(summary).toHaveText('30 Monsters');
 
     const ratio = monsterPage.filters.facet('EXP / 100 HP');
-    const bucket = ratio.checkboxes.first();
+    const bucket = ratio.getByRole('checkbox').first();
     const snapshot = await bucket.ariaSnapshot();
     const label = /checkbox "([^"]+)"/u.exec(snapshot)?.[1] ?? '';
     expect(label).toMatch(/\d+.*\(\d+\)/u);
@@ -148,7 +142,7 @@ test('browse journey searches, filters, sorts and pages the fixture rows', async
     await drops.fill('Practice Tonic B');
     await page.getByRole('option', { name: 'Practice Tonic B' }).click();
     await expect(summary).toHaveText('1 Monster');
-    await expect(monsterPage.table.row(/Crowned Warden/u)).toBeVisible();
+    await expect(monsterPage.results.row(/Crowned Warden/u)).toBeVisible();
     await monsterPage.filters.clearButton.click();
 
     await drops.fill('Sample Charm');
@@ -162,11 +156,11 @@ test('browse journey searches, filters, sorts and pages the fixture rows', async
   });
 
   await test.step('page and page-size controls update visible rows', async () => {
-    await monsterPage.pagination.nextButton.click();
-    await expect(monsterPage.table.dropButtons).toHaveCount(5);
-    await monsterPage.pagination.pageSize('Classic World').click();
+    await monsterPage.results.nextPageButton.click();
+    await expect(monsterPage.results.dropButtons).toHaveCount(5);
+    await monsterPage.results.pageSize('Classic World').click();
     await page.getByRole('option', { name: '50' }).click();
-    await expect(monsterPage.table.dropButtons).toHaveCount(30);
+    await expect(monsterPage.results.dropButtons).toHaveCount(30);
   });
 });
 
@@ -175,14 +169,14 @@ test('desktop drop panels group and search entries and close in Escape order', a
   monsterPage,
 }) => {
   await monsterPage.goto();
-  const monsterTable = monsterPage.table.root;
+  const monsterTable = monsterPage.results.table;
 
   const wardenButton = monsterPage.drops.tableButton('Crowned Warden', 24);
   await wardenButton.click();
   const panel = monsterPage.drops.panel('Crowned Warden', 24);
-  await expect(panel.root).toBeVisible();
+  await expect(panel).toBeVisible();
   const tableBox = await monsterTable.boundingBox();
-  const panelBox = await panel.root.boundingBox();
+  const panelBox = await panel.boundingBox();
   expect(tableBox).not.toBeNull();
   expect(panelBox).not.toBeNull();
   expect(panelBox!.width).toBeLessThanOrEqual(tableBox!.width + 1);
@@ -197,44 +191,46 @@ test('desktop drop panels group and search entries and close in Escape order', a
     'Other',
   ];
   for (const name of categoryHeadings) {
-    await expect(panel.category(name, 4)).toBeVisible();
+    await expect(monsterPage.drops.category(panel, name, 4)).toBeVisible();
   }
-  await expect(panel.text('Unknown item name')).toBeVisible();
-  await expect(panel.text('Unresolved item reference')).toBeVisible();
+  await expect(panel.getByText('Unknown item name')).toBeVisible();
+  await expect(panel.getByText('Unresolved item reference')).toBeVisible();
 
-  const itemSearch = panel.itemSearch;
+  const itemSearch = monsterPage.drops.itemSearch(panel);
   await itemSearch.fill('Practice Tonic A');
-  await expect(panel.text('Practice Tonic A')).toBeVisible();
-  await expect(panel.text('Practice Tonic B')).toHaveCount(0);
+  await expect(panel.getByText('Practice Tonic A')).toBeVisible();
+  await expect(panel.getByText('Practice Tonic B')).toHaveCount(0);
   await itemSearch.fill('no matching fixture item');
-  await expect(panel.text(/No drop entries match/u)).toBeVisible();
+  await expect(panel.getByText(/No drop entries match/u)).toBeVisible();
   await itemSearch.clear();
 
-  const certainty = panel.certaintyButton('unconfirmed', 'Practice Cap');
+  const certainty = monsterPage.drops.certaintyButton(
+    panel,
+    'unconfirmed',
+    'Practice Cap',
+  );
   await certainty.focus();
   await certainty.hover();
   const detailDialog = monsterPage.drops.certaintyDialog(
     'Show unconfirmed drop details for Practice Cap',
   );
-  await expect(detailDialog.root).toBeVisible();
-  await expect(detailDialog.text('Maybe')).toBeVisible();
+  await expect(detailDialog).toBeVisible();
+  await expect(detailDialog.getByText('Maybe')).toBeVisible();
   await expect(
-    detailDialog.text('Source: GMS v83 Monster Book.'),
+    detailDialog.getByText('Source: GMS v83 Monster Book.'),
   ).toBeVisible();
   await page.keyboard.press('Escape');
-  await expect(detailDialog.root).toHaveCount(0);
-  await expect(panel.root).toBeVisible();
+  await expect(detailDialog).toHaveCount(0);
+  await expect(panel).toBeVisible();
   await page.keyboard.press('Escape');
-  await expect(panel.root).toHaveCount(0);
+  await expect(panel).toHaveCount(0);
 
   await monsterPage.drops.tableButton('Twin Sprout', 0).first().click();
-  await expect(monsterPage.drops.panel('Twin Sprout', 0).root).toContainText(
+  const emptyPanel = monsterPage.drops.panel('Twin Sprout', 0);
+  await expect(emptyPanel).toContainText(
     'No drops have been recorded for this monster',
   );
-  await monsterPage.drops
-    .panel('Twin Sprout', 0)
-    .closeButton('Twin Sprout')
-    .click();
+  await monsterPage.drops.closeButton(emptyPanel, 'Twin Sprout').click();
   await expect(monsterPage.drops.tableButton('Plain Pebble', 1)).toBeVisible();
 });
 
@@ -260,7 +256,7 @@ test('history navigation loads Monster artifacts in the browser', async ({
   );
   await page.goBack();
   await monsterPage.ready();
-  await expect(monsterPage.table.row(/Plain Pebble/u)).toBeVisible();
+  await expect(monsterPage.results.row(/Plain Pebble/u)).toBeVisible();
   await expect.poll(() => artifactRequests.length).toBe(5);
   expect(
     artifactRequests
@@ -318,7 +314,7 @@ test('failed server loads hide diagnostics and retry in the browser', async ({
     /^\/v2\/browse\//u,
   );
   await page.getByRole('button', { name: 'Try again' }).click();
-  await expect(monsterPage.table.row(/Plain Pebble/u)).toBeVisible();
+  await expect(monsterPage.results.row(/Plain Pebble/u)).toBeVisible();
   await expect
     .poll(() =>
       page.evaluate(

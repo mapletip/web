@@ -1,39 +1,16 @@
 import type { Page } from '@playwright/test';
 
-import { MonsterCards } from './components/monster-cards';
-import { MonsterDrops } from './components/monster-drops';
-import {
-  MonsterFilterCollection,
-  QuickFilters,
-} from './components/monster-filters';
-import { MonsterPagination } from './components/monster-pagination';
-import { MonsterTable } from './components/monster-table';
+import { MonsterDrops, MonsterFilters, MonsterResults } from './components';
 
 export class MonsterPage {
-  readonly table: MonsterTable;
-  readonly cards: MonsterCards;
-  readonly filters: MonsterFilterCollection;
-  readonly quickFilters: QuickFilters;
+  readonly results: MonsterResults;
+  readonly filters: MonsterFilters;
   readonly drops: MonsterDrops;
-  readonly pagination: MonsterPagination;
 
   constructor(readonly page: Page) {
-    this.table = new MonsterTable(page);
-    this.cards = new MonsterCards(page);
-    this.filters = new MonsterFilterCollection(page);
-    this.quickFilters = new QuickFilters(page);
-    this.drops = new MonsterDrops(page, this.table, this.cards);
-    this.pagination = new MonsterPagination(page);
-  }
-
-  get summary() {
-    return this.page.getByText(/^\d+ Monsters?$/u).first();
-  }
-
-  get search() {
-    return this.page.getByRole('textbox', {
-      name: 'Search Classic World monsters',
-    });
+    this.results = new MonsterResults(page);
+    this.filters = new MonsterFilters(page);
+    this.drops = new MonsterDrops(page, this.results);
   }
 
   heading(name?: string) {
