@@ -19,6 +19,13 @@ export type {
 } from '@/components/Footer';
 export { Thumbnail } from '@/components/Thumbnail';
 export type { ThumbnailProps } from '@/components/Thumbnail';
+export { EntityChip } from '@/components/EntityChip';
+export type {
+  EntityChipDestination,
+  EntityChipLinkRenderer,
+  EntityChipLinkRenderProps,
+  EntityChipProps,
+} from '@/components/EntityChip';
 export { SpriteStage } from '@/components/SpriteStage';
 export type { SpriteStageProps } from '@/components/SpriteStage';
 export { FactSheet } from '@/components/FactSheet';
