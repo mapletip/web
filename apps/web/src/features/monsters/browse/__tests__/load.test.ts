@@ -3,7 +3,11 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { MAPLEKIT_RELEASE } from '@/config/maplekit';
 
-import { loadMonsterBrowse } from '../load';
+import {
+  loadMonsterBrowse,
+  MONSTER_BROWSE_UNAVAILABLE_MESSAGE,
+  sanitizeMonsterBrowseError,
+} from '../load';
 
 const openRelease = vi.hoisted(() => vi.fn());
 const openBuild = vi.hoisted(() => vi.fn());
@@ -91,23 +95,51 @@ describe('loadMonsterBrowse', () => {
     expect(browse.rows[0]?.drops.itemKeys).toEqual(['fixture:item:red-potion']);
   });
 
-  it('propagates SDK drop artifact errors', async () => {
+  it('sanitizes SDK drop artifact errors before the router can serialize them', async () => {
     setProduct();
     const failure = Object.assign(new Error('unsupported capability'), {
       code: 'UNSUPPORTED_CAPABILITY',
     });
     loadDropBrowse.mockRejectedValue(failure);
 
-    await expect(loadMonsterBrowse('cw-launch')).rejects.toBe(failure);
+    await expect(loadMonsterBrowse('cw-launch')).rejects.toThrow(
+      MONSTER_BROWSE_UNAVAILABLE_MESSAGE,
+    );
   });
 
-  it('propagates catalog verification failures', async () => {
+  it('sanitizes catalog verification failures', async () => {
     setProduct();
     const failure = Object.assign(new Error('integrity'), {
       code: 'INTEGRITY_ERROR',
     });
     loadCatalog.mockRejectedValue(failure);
 
-    await expect(loadMonsterBrowse('cw-launch')).rejects.toBe(failure);
+    await expect(loadMonsterBrowse('cw-launch')).rejects.toThrow(
+      MONSTER_BROWSE_UNAVAILABLE_MESSAGE,
+    );
+  });
+
+  it('preserves an abort error as an abort', () => {
+    const abort = new DOMException('Request aborted', 'AbortError');
+
+    expect(sanitizeMonsterBrowseError(abort)).toBe(abort);
+  });
+
+  it('replaces an SDK error with a generic error without its cause', () => {
+    const failure = Object.assign(
+      new Error('SHA-256 mismatch at v2/catalogs/a'),
+      {
+        code: 'INTEGRITY_ERROR',
+      },
+    );
+
+    const sanitized = sanitizeMonsterBrowseError(failure);
+
+    expect(sanitized).toBeInstanceOf(Error);
+    expect(sanitized).not.toBe(failure);
+    expect(sanitized).toMatchObject({
+      message: MONSTER_BROWSE_UNAVAILABLE_MESSAGE,
+    });
+    expect(sanitized).not.toHaveProperty('cause');
   });
 });

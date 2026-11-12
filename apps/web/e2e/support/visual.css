@@ -1,0 +1,12 @@
+body {
+  margin: 0;
+}
+html {
+  scrollbar-width: none;
+}
+::-webkit-scrollbar {
+  display: none;
+}
+.mantine-ScrollArea-scrollbar {
+  display: none !important;
+}

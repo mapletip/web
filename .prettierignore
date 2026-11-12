@@ -1,4 +1,8 @@
 pnpm-lock.yaml
 storybook-static
+.claude/worktrees/
 
 apps/web/src/routeTree.gen.ts
+**/.output-msw/**
+**/test-results/**
+**/playwright-report/**

@@ -18,6 +18,7 @@ import {
 import { BrowsePageShell } from '@/components/BrowsePageShell';
 import { BUILDS, type BuildId } from '@/config/maplekit';
 
+import { preserveMonsterBrowseForDrawerClose } from '../history';
 import {
   getMonsterBrowseFacetDefinition,
   MONSTER_BROWSE_FACT_CONFIG,
@@ -263,21 +264,26 @@ export function MonsterBrowse({
 }: MonsterBrowseProps): ReactElement {
   const [filterDrawerOpened, setFilterDrawerOpened] = useState(false);
   const filterDrawerHistoryEntry = useRef(false);
-  const onFilterDrawerOpenedChange = useCallback((opened: boolean) => {
-    if (
-      !opened &&
-      filterDrawerHistoryEntry.current &&
-      typeof window !== 'undefined'
-    ) {
-      filterDrawerHistoryEntry.current = false;
-      window.history.back();
-    }
-    setFilterDrawerOpened(opened);
-  }, []);
+  const onFilterDrawerOpenedChange = useCallback(
+    (opened: boolean) => {
+      if (
+        !opened &&
+        filterDrawerHistoryEntry.current &&
+        typeof window !== 'undefined'
+      ) {
+        filterDrawerHistoryEntry.current = false;
+        preserveMonsterBrowseForDrawerClose(buildId, { rows, dropItemOptions });
+        window.history.back();
+      }
+      setFilterDrawerOpened(opened);
+    },
+    [buildId, dropItemOptions, rows],
+  );
 
   useEffect(() => {
     if (!filterDrawerOpened || typeof window === 'undefined') return;
 
+    preserveMonsterBrowseForDrawerClose(buildId, { rows, dropItemOptions });
     window.history.pushState(window.history.state, '', window.location.href);
     filterDrawerHistoryEntry.current = true;
 
@@ -288,7 +294,7 @@ export function MonsterBrowse({
     };
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
-  }, [filterDrawerOpened]);
+  }, [buildId, dropItemOptions, filterDrawerOpened, rows]);
 
   const label = BUILDS[buildId].label;
   const queryFields: readonly QueryFieldDefinition<MonsterBrowseRow>[] = [

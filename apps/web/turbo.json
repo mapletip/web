@@ -4,6 +4,11 @@
   "tasks": {
     "build": {
       "outputs": [".output/**"]
+    },
+    "build:msw": {
+      "dependsOn": ["^build"],
+      "env": ["API_MODE"],
+      "outputs": [".output-msw/**"]
     }
   }
 }

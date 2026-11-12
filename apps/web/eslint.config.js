@@ -4,5 +4,13 @@ import vitestRules from '@mapletip/config/eslint/vitest';
 export default [
   ...react(import.meta.dirname),
   ...vitestRules,
-  { ignores: ['.output/**', 'src/routeTree.gen.ts'] },
+  {
+    ignores: [
+      '.output/**',
+      '.output-msw/**',
+      'test-results/**',
+      'playwright-report/**',
+      'src/routeTree.gen.ts',
+    ],
+  },
 ];
