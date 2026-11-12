@@ -83,6 +83,8 @@ interface CommonProps<TRecord extends Record<string, unknown>> {
   readonly facets?: readonly FacetDefinition<TRecord>[];
   /** Hides the desktop rail's visible "Filters" heading while keeping its label. */
   readonly showFilterHeading?: boolean;
+  /** Optional label for the filter drawer's apply action. */
+  readonly filterDrawerApplyLabel?: string;
   /**
    * Optional responsive category navigation configuration.
    *

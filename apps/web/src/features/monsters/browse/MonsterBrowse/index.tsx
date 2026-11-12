@@ -1,4 +1,4 @@
-import { Button, Group, MultiSelect, Text, Title } from '@mantine/core';
+import { Button, Group, MultiSelect, Pill, Text, Title } from '@mantine/core';
 import { FacetedBrowser, Thumbnail } from '@mapletip/component-library';
 import type {
   BrowseState,
@@ -7,7 +7,13 @@ import type {
   RowExpansionControlContext,
   TableColumn,
 } from '@mapletip/component-library';
-import type { ReactElement } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type ReactElement,
+} from 'react';
 
 import { BrowsePageShell } from '@/components/BrowsePageShell';
 import { BUILDS, type BuildId } from '@/config/maplekit';
@@ -162,13 +168,20 @@ function dropItemFacet(
   options: readonly MonsterDropItemOption[],
   definition: FacetDefinition<MonsterBrowseRow>,
 ): FacetDefinition<MonsterBrowseRow> {
+  const facetOptions = options.map(({ value, label, iconUrl }) => ({
+    value,
+    label,
+    ...(iconUrl === undefined
+      ? {}
+      : { icon: <Thumbnail src={iconUrl} size={16} alt="" /> }),
+  }));
   const iconUrls = new Map(
     options.map(({ value, iconUrl }) => [value, iconUrl] as const),
   );
 
   return {
     ...definition,
-    options,
+    options: facetOptions,
     renderControl: ({ value, onChange }) => {
       const selected = Array.isArray(value)
         ? value.filter((entry): entry is string => typeof entry === 'string')
@@ -186,7 +199,6 @@ function dropItemFacet(
           searchable
           clearable
           hidePickedOptions
-          limit={15}
           maxDropdownHeight={300}
           nothingFoundMessage="No dropped items match"
           placeholder="Search dropped items"
@@ -201,6 +213,31 @@ function dropItemFacet(
                 )}
                 <Text size="sm">{option.label}</Text>
               </Group>
+            );
+          }}
+          renderPill={({ option, onRemove, disabled }) => {
+            const iconUrl =
+              typeof option.value === 'string'
+                ? iconUrls.get(option.value)
+                : undefined;
+            return (
+              <Pill
+                className={classes['dropItemPill']}
+                classNames={{ label: classes['dropItemPillLabel'] }}
+                withRemoveButton={!disabled && onRemove !== undefined}
+                title={option.label}
+                {...(onRemove === undefined ? {} : { onRemove })}
+                {...(disabled === undefined ? {} : { disabled })}
+              >
+                <span className={classes['dropItemPillContent']}>
+                  {iconUrl === undefined ? null : (
+                    <Thumbnail src={iconUrl} size={16} alt="" />
+                  )}
+                  <span className={classes['dropItemPillText']}>
+                    {option.label}
+                  </span>
+                </span>
+              </Pill>
             );
           }}
           size="sm"
@@ -224,6 +261,35 @@ export function MonsterBrowse({
   rows,
   dropItemOptions,
 }: MonsterBrowseProps): ReactElement {
+  const [filterDrawerOpened, setFilterDrawerOpened] = useState(false);
+  const filterDrawerHistoryEntry = useRef(false);
+  const onFilterDrawerOpenedChange = useCallback((opened: boolean) => {
+    if (
+      !opened &&
+      filterDrawerHistoryEntry.current &&
+      typeof window !== 'undefined'
+    ) {
+      filterDrawerHistoryEntry.current = false;
+      window.history.back();
+    }
+    setFilterDrawerOpened(opened);
+  }, []);
+
+  useEffect(() => {
+    if (!filterDrawerOpened || typeof window === 'undefined') return;
+
+    window.history.pushState(window.history.state, '', window.location.href);
+    filterDrawerHistoryEntry.current = true;
+
+    const handlePopState = () => {
+      if (!filterDrawerHistoryEntry.current) return;
+      filterDrawerHistoryEntry.current = false;
+      setFilterDrawerOpened(false);
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [filterDrawerOpened]);
+
   const label = BUILDS[buildId].label;
   const queryFields: readonly QueryFieldDefinition<MonsterBrowseRow>[] = [
     // Boolean facets remain registered as query fields even though their
@@ -257,6 +323,7 @@ export function MonsterBrowse({
         queryFields={queryFields}
         searchFields={['name']}
         facets={browseFacets}
+        filterDrawerApplyLabel="Apply"
         recordNoun={`${label} monsters`}
         summaryMode="total"
         summaryNoun={SUMMARY_NOUN}
@@ -279,6 +346,8 @@ export function MonsterBrowse({
         )}
         rowExpansionControl={(context) => dropExpansionControl(context)}
         defaultState={defaultState}
+        drawerOpened={filterDrawerOpened}
+        onDrawerOpenedChange={onFilterDrawerOpenedChange}
       />
     </BrowsePageShell>
   );

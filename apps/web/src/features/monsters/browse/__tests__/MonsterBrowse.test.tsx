@@ -316,6 +316,7 @@ describe('MonsterBrowse', () => {
 
   it('filters monsters by a stable dropped item key through the shared facet', async () => {
     const user = userEvent.setup();
+    const redPotionIcon = 'https://d0.mapletip.com/item-icons/red-potion.png';
     const browseRows = rows.map((row, index) => {
       const itemKey = index === 0 ? 'fixture:item:red' : 'fixture:item:blue';
       return {
@@ -329,7 +330,11 @@ describe('MonsterBrowse', () => {
     mountBrowse({
       browseRows,
       dropItemOptions: [
-        { value: 'fixture:item:red', label: 'Red Potion' },
+        {
+          value: 'fixture:item:red',
+          label: 'Red Potion',
+          iconUrl: redPotionIcon,
+        },
         { value: 'fixture:item:blue', label: 'Blue Potion' },
       ],
     });
@@ -355,12 +360,44 @@ describe('MonsterBrowse', () => {
     fireEvent.click(option!);
 
     await waitFor(() => expect(summaryText()).toBe('1 Monster'));
+    const activeDropChip = screen.getByRole('button', {
+      name: 'Remove Drops: Red Potion',
+    });
+    expect(
+      activeDropChip.querySelector(`img[src="${redPotionIcon}"]`),
+    ).toBeInTheDocument();
+    expect(
+      document.querySelector(
+        `[class*="dropItemPillContent"] img[src="${redPotionIcon}"]`,
+      ),
+    ).toBeInTheDocument();
     expect(
       within(cards()).getByRole('heading', { name: 'Sentinel Snail' }),
     ).toBeInTheDocument();
     expect(
       within(cards()).queryByText('Sentinel Slime'),
     ).not.toBeInTheDocument();
+  });
+
+  it('closes and discards the filter drawer when browser Back is pressed', async () => {
+    const user = userEvent.setup();
+    mountBrowse();
+
+    await user.click(
+      screen.getByRole('button', {
+        name: 'Filters, 0 active. Open all filters',
+      }),
+    );
+    const drawer = await screen.findByRole('dialog', { name: 'Filters' });
+    await waitFor(() => expect(drawer).toBeVisible());
+    expect(
+      within(drawer).getByRole('button', { name: 'Apply' }),
+    ).toBeInTheDocument();
+
+    fireEvent.popState(window);
+
+    await waitFor(() => expect(drawer).not.toBeVisible());
+    expect(summaryText()).toBe('4 Monsters');
   });
 
   it('applies search, a rail preset and clear to the result set', async () => {

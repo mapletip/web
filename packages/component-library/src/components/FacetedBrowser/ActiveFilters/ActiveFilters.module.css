@@ -1,3 +1,28 @@
 .activeFilters {
   min-width: 0;
 }
+
+.activeChip {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.chipButtonLabel {
+  display: flex;
+  min-width: 0;
+  max-width: 100%;
+  align-items: center;
+  gap: var(--mantine-spacing-xs);
+  overflow: hidden;
+}
+
+.chipLabel {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chipIcon img {
+  image-rendering: pixelated;
+}

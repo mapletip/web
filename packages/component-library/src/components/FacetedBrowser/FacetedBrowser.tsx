@@ -89,6 +89,7 @@ export function FacetedBrowser<TRecord extends Record<string, unknown>>(
     searchFields,
     facets: facetDefinitions = EMPTY_FACETS,
     showFilterHeading = true,
+    filterDrawerApplyLabel,
     recordNoun = 'records',
     navigation,
     sortOptions,
@@ -558,9 +559,10 @@ export function FacetedBrowser<TRecord extends Record<string, unknown>>(
         opened={drawer.opened}
         title={shownDrawerFacet?.label ?? 'Filters'}
         applyLabel={
-          drawer.invalidDraft || drawer.pendingCount === undefined
+          filterDrawerApplyLabel ??
+          (drawer.invalidDraft || drawer.pendingCount === undefined
             ? 'Show results'
-            : `Show ${drawer.pendingCount} ${recordNoun}`
+            : `Show ${drawer.pendingCount} ${recordNoun}`)
         }
         applyDisabled={drawer.invalidDraft}
         onApply={drawer.apply}
