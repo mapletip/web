@@ -1,6 +1,8 @@
 import type { Page } from '@playwright/test';
 
-import { MonsterDrops, MonsterFilters, MonsterResults } from './components';
+import { MonsterDrops } from './monster-drops';
+import { MonsterFilters } from './monster-filters';
+import { MonsterResults } from './monster-results';
 
 export class MonsterPage {
   readonly results: MonsterResults;
