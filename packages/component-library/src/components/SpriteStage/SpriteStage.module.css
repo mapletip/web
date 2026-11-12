@@ -1,0 +1,211 @@
+.stage {
+  /* Production floor offset. */
+  --sprite-stage-floor-offset: 2rem;
+  /* Production: min(100%, clamp(30rem, rendered + 12rem, 34rem)). The outer
+   * cap is the stage width, which is this box, so the clamp is the whole rule. */
+  --sprite-stage-light-width: clamp(30rem, calc(100% + 12rem), 34rem);
+  /* Production: clamp(17.75rem, rendered height + 9rem, 24rem). */
+  --sprite-stage-light-height: clamp(17.75rem, calc(100% + 9rem), 24rem);
+  /* Production caps the light at the stage height + 1rem. */
+  --sprite-stage-height: 24rem;
+
+  position: relative;
+  isolation: isolate;
+  box-sizing: border-box;
+  display: grid;
+  place-items: end center;
+  width: 34rem;
+  height: var(--sprite-stage-height);
+  padding-bottom: var(--sprite-stage-floor-offset);
+  overflow: hidden;
+  background-color: transparent;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+/* A faint, feathered wall/floor bend just behind the sprite's feet. */
+.floor {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  mask-image: linear-gradient(
+    to right,
+    transparent 0%,
+    black 30%,
+    black 70%,
+    transparent 100%
+  );
+  background:
+    radial-gradient(
+      ellipse 45% 0.75rem at 50%
+        calc(100% - var(--sprite-stage-floor-offset) - 0.6rem),
+      rgb(176 123 69 / 8%),
+      transparent
+    ),
+    linear-gradient(
+      to bottom,
+      transparent calc(100% - var(--sprite-stage-floor-offset) - 1.5rem),
+      rgb(9 7 5 / 6%) calc(100% - var(--sprite-stage-floor-offset) - 0.75rem),
+      rgb(9 7 5 / 28%) calc(100% - var(--sprite-stage-floor-offset) + 0.25rem),
+      rgb(9 7 5 / 12%) calc(100% - 0.5rem),
+      transparent 100%
+    );
+}
+
+/* Independent wall bloom and shallow floor pool share the sprite's baseline.
+ * The figure is the sprite's own box, so the light follows what is shown. */
+.figure {
+  position: relative;
+  z-index: 6;
+  display: grid;
+  place-items: end center;
+}
+
+.glow {
+  position: absolute;
+  /* Production: bottom: calc(floor offset - 1.25rem), measured from the stage. */
+  bottom: -1.25rem;
+  left: 50%;
+  translate: -50% 0;
+  z-index: 2;
+  width: var(--sprite-stage-light-width);
+  height: min(
+    var(--sprite-stage-light-height),
+    calc(var(--sprite-stage-height) + 1rem)
+  );
+  pointer-events: none;
+}
+
+.glow::before,
+.glow::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+}
+
+.glow::before {
+  /* One amber hue, faded independently on each axis to avoid concentric color
+   * bands. */
+  background: linear-gradient(
+    to bottom,
+    rgb(170 95 45 / 0%) 0%,
+    rgb(170 95 45 / 12%) 24%,
+    rgb(170 95 45 / 29%) 42%,
+    rgb(170 95 45 / 54%) 62%,
+    rgb(170 95 45 / 58%) 75%,
+    rgb(170 95 45 / 48%) 87%,
+    rgb(170 95 45 / 0%) 100%
+  );
+  mask-image: linear-gradient(
+    to right,
+    transparent 0%,
+    rgb(0 0 0 / 8%) 15%,
+    rgb(0 0 0 / 50%) 30%,
+    rgb(0 0 0 / 90%) 42%,
+    black 50%,
+    rgb(0 0 0 / 90%) 58%,
+    rgb(0 0 0 / 50%) 70%,
+    rgb(0 0 0 / 8%) 85%,
+    transparent 100%
+  );
+  filter: blur(12px);
+}
+
+.glow::after {
+  top: auto;
+  height: 4rem;
+  background:
+    /* Small golden hotspot, with progressively wider and dimmer reflections. */
+    radial-gradient(
+      ellipse 23% 23% at 50% 69%,
+      rgb(255 211 125 / 84%) 0%,
+      rgb(255 191 88 / 58%) 28%,
+      rgb(231 153 62 / 22%) 60%,
+      transparent 100%
+    ),
+    radial-gradient(
+      ellipse 36% 38% at 50% 69%,
+      rgb(235 158 66 / 50%) 0%,
+      rgb(189 118 45 / 24%) 40%,
+      rgb(137 87 39 / 7%) 70%,
+      transparent 100%
+    ),
+    radial-gradient(
+      ellipse 50% 32% at 50% 64%,
+      rgb(178 122 60 / 16%),
+      rgb(126 85 43 / 6%) 55%,
+      transparent 100%
+    );
+  filter: blur(1px);
+}
+
+/* Compact contact shadow at the same baseline as the light pool. */
+.shadow {
+  position: absolute;
+  /* Production: bottom: calc(floor offset - 0.2rem), measured from the stage. */
+  bottom: -0.2rem;
+  left: 50%;
+  translate: -50% 0;
+  z-index: 4;
+  /* Production: clamp(1.625rem, rendered width * 0.75, 11.25rem). */
+  width: clamp(1.625rem, calc(100% * 0.75), 11.25rem);
+  height: 0.5rem;
+  border-radius: 50%;
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse at 50% 50%,
+    rgb(0 0 0 / 75%) 0%,
+    rgb(0 0 0 / 35%) 48%,
+    transparent 75%
+  );
+}
+
+/* Sprite pixels remain above the decorative light and contact shadow. */
+.sprite {
+  position: relative;
+  z-index: 6;
+  display: block;
+  width: auto;
+  height: auto;
+  /* Production's desktop safe box: 420 × 276. The image keeps its natural size
+   * unless a maximum is exceeded, never enlarges, and both axes are maxima. */
+  max-width: 26.25rem;
+  max-height: 17.25rem;
+  object-fit: scale-down;
+}
+
+.stage[data-unavailable='true'] {
+  place-items: center;
+}
+
+.unavailable {
+  max-width: 75%;
+  text-align: center;
+  text-wrap: balance;
+  color: var(--mapletip-color-muted);
+}
+
+/* The stage is static, and stays static whatever the user's preference. The
+ * declarations are explicit so a later decoration cannot quietly animate. */
+@media (prefers-reduced-motion: reduce) {
+  .stage,
+  .stage * {
+    animation: none;
+    transition: none;
+  }
+}
+
+/* Forced colours drop gradients and shadows; the shipped stage draws its
+ * boundary with a system colour, which is all that is needed. The sprite keeps
+ * its own colours. */
+@media (forced-colors: active) {
+  .stage {
+    border: 1px solid ButtonBorder;
+  }
+
+  .unavailable {
+    color: CanvasText;
+  }
+}

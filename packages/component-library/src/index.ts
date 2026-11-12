@@ -19,6 +19,8 @@ export type {
 } from '@/components/Footer';
 export { Thumbnail } from '@/components/Thumbnail';
 export type { ThumbnailProps } from '@/components/Thumbnail';
+export { SpriteStage } from '@/components/SpriteStage';
+export type { SpriteStageProps } from '@/components/SpriteStage';
 export { Header } from '@/components/Header';
 export type {
   HeaderGroupLink,
