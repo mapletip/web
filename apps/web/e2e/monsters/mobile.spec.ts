@@ -42,7 +42,9 @@ test('mobile cards, quick filters and the drops drawer work together', async ({
   ).toBeAttached();
 
   const wardenDrops = monsterPage.drops.cardButton('Crowned Warden', 24);
+  await expect(wardenDrops).toHaveAttribute('aria-expanded', 'false');
   await wardenDrops.click();
+  await expect(wardenDrops).toHaveAttribute('aria-expanded', 'true');
   const drawer = monsterPage.drops.drawer('Crowned Warden');
   await expect(monsterPage.drops.category(drawer, 'Drops (24)')).toBeVisible();
   await expect(monsterPage.drops.certaintyLegend(drawer)).toBeVisible();
@@ -51,10 +53,28 @@ test('mobile cards, quick filters and the drops drawer work together', async ({
 
   await monsterPage.drops.closeButton(drawer, 'Crowned Warden').click();
   await expect(drawer).toHaveCount(0);
+  await expect(wardenDrops).toHaveAttribute('aria-expanded', 'false');
   await expect(wardenDrops).toBeFocused();
 
   await wardenDrops.click();
-  await expect(monsterPage.drops.drawer('Crowned Warden')).toBeVisible();
+  const reopened = monsterPage.drops.drawer('Crowned Warden');
+  await expect(reopened).toBeVisible();
+
+  const certainty = monsterPage.drops.certaintyButton(
+    reopened,
+    'unconfirmed',
+    'Practice Cap',
+  );
+  await certainty.click();
+  const detailDialog = monsterPage.drops.certaintyDialog(
+    'Show unconfirmed drop details for Practice Cap',
+  );
+  await expect(detailDialog).toBeVisible();
   await page.keyboard.press('Escape');
-  await expect(monsterPage.drops.drawer('Crowned Warden')).toHaveCount(0);
+  await expect(detailDialog).toHaveCount(0);
+  await expect(reopened).toBeVisible();
+
+  await page.keyboard.press('Escape');
+  await expect(reopened).toHaveCount(0);
+  await expect(wardenDrops).toBeFocused();
 });

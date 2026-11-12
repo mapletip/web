@@ -1,4 +1,5 @@
-import { CloseButton, Group, Title } from '@mantine/core';
+import { CloseButton, Group, Stack, Title } from '@mantine/core';
+import type { RecordDetailsContentContext } from '@mapletip/component-library';
 import { Package } from '@phosphor-icons/react';
 import type { ReactElement } from 'react';
 
@@ -24,16 +25,33 @@ export function dropListingActionLabel(
   return `${record.name}, ${dropListingCountText(record)}. ${expanded ? 'Hide' : 'Show'} drops.`;
 }
 
+export type MonsterDropSurface = RecordDetailsContentContext['surface'];
+
 export function MonsterDropListing({
   record,
   buildId,
   onClose,
+  surface = 'table',
 }: {
   readonly record: MonsterBrowseRow;
   readonly buildId: BuildId;
   readonly onClose: () => void;
+  readonly surface?: MonsterDropSurface;
 }): ReactElement {
   const countText = `Drops (${record.drops.entries.length.toLocaleString('en-US')})`;
+
+  // The shared drawer already gives the record title and close control. Keep
+  // today's plain heading and body; only the desktop inline panel owns the frame.
+  if (surface === 'drawer') {
+    return (
+      <Stack gap="sm">
+        <Title order={3} size="sm">
+          {countText}
+        </Title>
+        <MonsterDropEntries record={record} buildId={buildId} />
+      </Stack>
+    );
+  }
 
   return (
     <section

@@ -113,3 +113,24 @@
   justify-content: space-between;
   min-height: 36px;
 }
+
+/*
+ * Record-details drawer defaults. A bottom sheet keeps the fixed header and lets
+ * only the domain body scroll, whether the content is a short list or long prose.
+ */
+.detailsDrawerContent {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.detailsDrawerHeader {
+  flex: 0 0 auto;
+}
+
+.detailsDrawerBody {
+  min-height: 0;
+  flex: 1 1 auto;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}

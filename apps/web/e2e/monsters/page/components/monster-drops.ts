@@ -61,8 +61,13 @@ export class MonsterDrops {
   }
 
   closeButton(listing: Locator, monster: string): Locator {
+    // The desktop panel owns "Close Drops"; the shared mobile drawer uses the
+    // generic "Close details" label.
     return listing.getByRole('button', {
-      name: `Close Drops for ${monster}`,
+      name: new RegExp(
+        `Close (?:Drops|details) for ${escapeRegExp(monster)}`,
+        'u',
+      ),
     });
   }
 }

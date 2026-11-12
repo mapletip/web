@@ -1,7 +1,5 @@
-import { Group } from '@mantine/core';
+import { Button, Group } from '@mantine/core';
 import type { ReactElement } from 'react';
-
-import type { BuildId } from '@/config/maplekit';
 
 import {
   getMonsterBrowseCardFacts,
@@ -9,7 +7,8 @@ import {
   renderMonsterBrowseFactIcon,
   type MonsterBrowseCardStatFact,
 } from '../monster-browse-fact-config';
-import { MonsterDropDrawerControl } from '../MonsterDrops';
+import { dropListingActionLabel } from '../MonsterDrops';
+import dropClasses from '../MonsterDrops/MonsterDrops.module.css';
 import { MonsterSprite } from '../MonsterSprite';
 import { formatMonsterFact, type MonsterBrowseRow } from '../project';
 
@@ -20,10 +19,13 @@ const combatFacts = getMonsterBrowseCardFacts('combat');
 
 export function MonsterBrowseCard({
   record,
-  buildId,
+  onShowDrops,
+  isDetailsOpen,
 }: {
   readonly record: MonsterBrowseRow;
-  readonly buildId: BuildId;
+  /** Supplied by FacetedBrowser only when the host exposes record details. */
+  readonly onShowDrops?: (() => void) | undefined;
+  readonly isDetailsOpen?: boolean | undefined;
 }): ReactElement {
   return (
     <article className={classes['card']}>
@@ -41,7 +43,30 @@ export function MonsterBrowseCard({
             </span>
           </div>
         </div>
-        <MonsterDropDrawerControl record={record} buildId={buildId} />
+        {onShowDrops === undefined ? null : (
+          <Button
+            type="button"
+            variant={isDetailsOpen === true ? 'light' : 'default'}
+            size="compact-sm"
+            radius="sm"
+            px={4}
+            leftSection={renderMonsterBrowseFactIcon(
+              MONSTER_BROWSE_FACT_CONFIG.dropsItem,
+              { surface: 'card' },
+            )}
+            classNames={{
+              section: dropClasses['triggerSection'],
+              label: dropClasses['triggerLabel'],
+            }}
+            aria-haspopup="dialog"
+            aria-expanded={isDetailsOpen === true}
+            aria-label={dropListingActionLabel(record, false)}
+            title={`${record.drops.entries.length.toLocaleString('en-US')} Drops`}
+            onClick={onShowDrops}
+          >
+            {record.drops.entries.length.toLocaleString('en-US')}
+          </Button>
+        )}
       </Group>
       <div className={classes['stats']}>
         <dl className={classes['facts']} aria-label="Training facts">

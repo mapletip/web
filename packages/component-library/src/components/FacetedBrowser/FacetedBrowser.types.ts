@@ -9,7 +9,6 @@ import type {
   PageLinkRenderer,
 } from '@/components/FacetedBrowser/Pagination/Pagination';
 import type {
-  RowExpansionContentContext,
   RowExpansionControl,
   TableColumn,
   TableProps,
@@ -62,6 +61,27 @@ export interface FacetedBrowserNavigation {
   readonly render: (
     context: FacetedBrowserNavigationRenderContext,
   ) => ReactNode;
+}
+
+/**
+ * Context for a comparison-mode card. Both fields exist only when the host
+ * supplies `rowExpansionContent`, so a card without details keeps its plain
+ * one-argument renderer.
+ */
+export interface RecordCardContext {
+  readonly openDetails?: () => void;
+  /** True only for the card whose record owns the open details drawer. */
+  readonly isDetailsOpen?: boolean;
+}
+
+/**
+ * Host content is rendered inline through DataTable on desktop and in the
+ * shared details drawer on mobile. `surface` lets the host vary heading and
+ * close chrome without introducing a second content callback.
+ */
+export interface RecordDetailsContentContext {
+  readonly onClose: () => void;
+  readonly surface: 'table' | 'drawer';
 }
 
 export interface BrowseSortOption {
@@ -173,7 +193,10 @@ type PresentationProps<TRecord extends Record<string, unknown>> =
       readonly presentation: 'comparison';
       readonly columns: readonly TableColumn<TRecord>[];
       readonly identityField: keyof TRecord & string;
-      readonly renderCard: (record: TRecord) => ReactNode;
+      readonly renderCard: (
+        record: TRecord,
+        context: RecordCardContext,
+      ) => ReactNode;
       readonly tableLabel?: string;
       /** Optional maximum height for DataTable's internal table scroll area. */
       readonly tableMaxHeight?: number | string;
@@ -181,8 +204,10 @@ type PresentationProps<TRecord extends Record<string, unknown>> =
       readonly tableVerticalSpacing?: TableProps<TRecord>['verticalSpacing'];
       readonly rowExpansionContent?: (
         record: TRecord,
-        context: RowExpansionContentContext,
+        context: RecordDetailsContentContext,
       ) => ReactNode;
+      /** Drawer heading. Defaults to the record's `identityField` value. */
+      readonly recordDetailsTitle?: (record: TRecord) => ReactNode;
       readonly rowExpansionControl?: RowExpansionControl<TRecord>;
     }
   | {

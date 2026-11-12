@@ -280,6 +280,62 @@ export const MobileCards: Story = {
   globals: { viewport: { value: 'mobileBreakpoint', isRotated: false } },
 };
 
+export const RecordDetails: Story = {
+  name: 'Record details',
+  render: () => (
+    <FacetedBrowser
+      title={<Title order={1}>Browse records</Title>}
+      records={demoRecords.slice(0, 12)}
+      idAccessor="id"
+      identityField="name"
+      columns={makeDemoColumns()}
+      presentation="comparison"
+      renderCard={(record, { openDetails, isDetailsOpen }) => (
+        <div style={{ display: 'grid', gap: 8 }}>
+          <FacetedBrowserRecordCard record={record} />
+          <Button
+            type="button"
+            variant={isDetailsOpen === true ? 'light' : 'default'}
+            aria-haspopup="dialog"
+            aria-expanded={isDetailsOpen}
+            onClick={openDetails}
+          >
+            Details for {record.name}
+          </Button>
+        </div>
+      )}
+      recordDetailsTitle={(record) => `Details: ${record.name}`}
+      rowExpansionContent={(record, { surface }) => (
+        <Text size="sm">
+          {surface === 'table' ? 'Inline details' : 'Drawer details'} for{' '}
+          <a href={record.href}>{record.name}</a>.
+        </Text>
+      )}
+      defaultState={{
+        search: '',
+        filters: {},
+        sort: { field: 'value1', direction: 'desc' },
+        page: 1,
+        pageSize: 12,
+        hiddenColumns: [],
+      }}
+    />
+  ),
+  globals: { viewport: { value: 'mobileBreakpoint', isRotated: false } },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const trigger = canvas.getByRole('button', {
+      name: 'Details for Record 001',
+    });
+    await userEvent.click(trigger);
+    const drawer = await screen.findByRole('dialog', {
+      name: 'Details: Record 001',
+    });
+    await expect(drawer).toBeInTheDocument();
+    await expect(trigger).toHaveAttribute('aria-expanded', 'true');
+  },
+};
+
 export const CustomResults: Story = {
   name: 'Custom results',
   render: () => (

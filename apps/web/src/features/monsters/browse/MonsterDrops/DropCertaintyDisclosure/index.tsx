@@ -1,6 +1,6 @@
 import { ActionIcon, HoverCard, Stack, Text } from '@mantine/core';
 import { Check, Question } from '@phosphor-icons/react';
-import type { KeyboardEvent, ReactElement } from 'react';
+import { useState, type KeyboardEvent, type ReactElement } from 'react';
 
 import { BUILDS, isBuildId, type BuildId } from '@/config/maplekit';
 
@@ -38,6 +38,7 @@ export function DropCertaintyDisclosure({
   readonly buildId: BuildId;
   readonly onClose?: () => void;
 }): ReactElement {
+  const [explanationOpen, setExplanationOpen] = useState(false);
   const confirmed = entry.assertionKind === 'native';
   const stateLabel = confirmed ? 'Confirmed' : 'Maybe';
   const actionLabel = `Show ${confirmed ? 'confirmed' : 'unconfirmed'} drop details for ${entry.itemName}`;
@@ -63,6 +64,8 @@ export function DropCertaintyDisclosure({
       position="bottom"
       width={280}
       withinPortal
+      onOpen={() => setExplanationOpen(true)}
+      onClose={() => setExplanationOpen(false)}
       withArrow
       middlewares={{ flip: true, shift: true }}
       styles={{ dropdown: { maxWidth: 'calc(100vw - 24px)' } }}
@@ -75,9 +78,7 @@ export function DropCertaintyDisclosure({
           className={classes['certainty']}
           data-confirmed={confirmed}
           aria-label={actionLabel}
-          data-mantine-stop-propagation={
-            onClose === undefined ? undefined : 'true'
-          }
+          data-mantine-stop-propagation={explanationOpen ? 'true' : undefined}
           onKeyDownCapture={handleEscape}
         >
           {confirmed ? (

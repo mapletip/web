@@ -8,8 +8,12 @@ import {
   Title,
 } from '@mantine/core';
 import { MagnifyingGlass } from '@phosphor-icons/react';
-import type { MouseEvent as ReactMouseEvent, ReactElement } from 'react';
-import { useCallback, useMemo, useRef, useState } from 'react';
+import type {
+  MouseEvent as ReactMouseEvent,
+  ReactElement,
+  ReactNode,
+} from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { ActiveFilters } from '@/components/FacetedBrowser/ActiveFilters/ActiveFilters';
 import type { ActiveFacetChip } from '@/components/FacetedBrowser/ActiveFilters/facetChips';
@@ -39,6 +43,7 @@ import { Layout } from '@/components/FacetedBrowser/Layout/Layout';
 import { NavigationDrawer } from '@/components/FacetedBrowser/NavigationDrawer';
 import { Pagination } from '@/components/FacetedBrowser/Pagination/Pagination';
 import { QuickFacets } from '@/components/FacetedBrowser/QuickFacets/QuickFacets';
+import { RecordDetailsDrawer } from '@/components/FacetedBrowser/RecordDetailsDrawer/RecordDetailsDrawer';
 import { Status, hasStatus } from '@/components/FacetedBrowser/Status/Status';
 import {
   formatSummaryText,
@@ -50,6 +55,7 @@ import {
   Toolbar,
 } from '@/components/FacetedBrowser/Toolbar/Toolbar';
 import { ComparisonTable } from '@/components/Table';
+import type { RowExpansionContentContext } from '@/components/Table';
 import {
   deriveTableStorageKey,
   resolveTableStorageKey,
@@ -196,6 +202,40 @@ export function FacetedBrowser<TRecord extends Record<string, unknown>>(
   });
   const canonicalState = browser.canonicalState;
 
+  const comparisonRowExpansionContent = comparisonProps?.rowExpansionContent;
+  const comparisonRecordDetailsTitle = comparisonProps?.recordDetailsTitle;
+  const [selectedDetailsRecordId, setSelectedDetailsRecordId] =
+    useState<unknown>(undefined);
+  const openRecordDetails = useCallback(
+    (record: TRecord) => {
+      setSelectedDetailsRecordId(record[idAccessor]);
+    },
+    [idAccessor],
+  );
+  const closeRecordDetails = useCallback(() => {
+    setSelectedDetailsRecordId(undefined);
+  }, []);
+  // The drawer is open exactly while the selected identity is on the current
+  // page. No effect, no second expansion engine and nothing in browse state.
+  const selectedDetailsRecord =
+    comparisonRowExpansionContent !== undefined &&
+    selectedDetailsRecordId !== undefined
+      ? browser.records.find(
+          (record) => record[idAccessor] === selectedDetailsRecordId,
+        )
+      : undefined;
+  const detailsIdentityField = comparisonProps?.identityField;
+  const selectedDetailsLabel =
+    selectedDetailsRecord !== undefined && detailsIdentityField !== undefined
+      ? String(selectedDetailsRecord[detailsIdentityField])
+      : undefined;
+  const selectedDetailsTitle =
+    selectedDetailsRecord === undefined
+      ? null
+      : (comparisonRecordDetailsTitle?.(selectedDetailsRecord) ??
+        selectedDetailsLabel ??
+        null);
+
   const [internalDrawerOpened, setInternalDrawerOpened] = useState(false);
   const drawerControlled = controlledDrawerOpened !== undefined;
   const drawerOpened = drawerControlled
@@ -219,6 +259,20 @@ export function FacetedBrowser<TRecord extends Record<string, unknown>>(
     error,
     unavailable,
   });
+  const detailsOpen = !statusActive && selectedDetailsRecord !== undefined;
+
+  // A selection is valid only while its record is on the visible current page.
+  // Clear it as soon as that stops being true so a later return cannot reopen
+  // the drawer without a new user action.
+  useEffect(() => {
+    if (
+      selectedDetailsRecordId !== undefined &&
+      (statusActive || selectedDetailsRecord === undefined)
+    ) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- invalidate stale record selection
+      setSelectedDetailsRecordId(undefined);
+    }
+  }, [selectedDetailsRecord, selectedDetailsRecordId, statusActive]);
   const drawerTitleRef = useRef<HTMLHeadingElement>(null);
   const filterIsInvalid = useCallback(
     (filters: Readonly<Record<string, FacetFilterValue>>) =>
@@ -341,14 +395,38 @@ export function FacetedBrowser<TRecord extends Record<string, unknown>>(
       {...(comparisonProps.tableMaxHeight !== undefined
         ? { maxHeight: comparisonProps.tableMaxHeight }
         : {})}
-      {...(comparisonProps.rowExpansionContent
-        ? { rowExpansionContent: comparisonProps.rowExpansionContent }
+      {...(comparisonRowExpansionContent
+        ? {
+            rowExpansionContent: (
+              record: TRecord,
+              context: RowExpansionContentContext,
+            ) =>
+              comparisonRowExpansionContent(record, {
+                onClose: context.onClose,
+                surface: 'table',
+              }),
+          }
         : {})}
       {...(comparisonProps.rowExpansionControl
         ? { rowExpansionControl: comparisonProps.rowExpansionControl }
         : {})}
     />
   ) : undefined;
+
+  const renderBrowserCard = (record: TRecord): ReactNode => {
+    if (props.presentation === 'cards') return props.renderCard(record);
+    if (props.presentation !== 'comparison') return null;
+
+    return props.renderCard(
+      record,
+      comparisonRowExpansionContent === undefined
+        ? {}
+        : {
+            openDetails: () => openRecordDetails(record),
+            isDetailsOpen: detailsOpen && selectedDetailsRecord === record,
+          },
+    );
+  };
 
   const cardResults =
     props.presentation === 'comparison' || props.presentation === 'cards' ? (
@@ -359,7 +437,7 @@ export function FacetedBrowser<TRecord extends Record<string, unknown>>(
       >
         {browser.records.map((record) => (
           <div role="listitem" key={String(record[idAccessor])}>
-            {props.renderCard(record)}
+            {renderBrowserCard(record)}
           </div>
         ))}
       </div>
@@ -555,6 +633,25 @@ export function FacetedBrowser<TRecord extends Record<string, unknown>>(
           />
         }
       />
+      {comparisonRowExpansionContent !== undefined ? (
+        <RecordDetailsDrawer
+          opened={detailsOpen}
+          title={selectedDetailsTitle}
+          closeLabel={
+            selectedDetailsLabel === undefined
+              ? 'Close details'
+              : `Close details for ${selectedDetailsLabel}`
+          }
+          onClose={closeRecordDetails}
+        >
+          {selectedDetailsRecord === undefined
+            ? null
+            : comparisonRowExpansionContent(selectedDetailsRecord, {
+                onClose: closeRecordDetails,
+                surface: 'drawer',
+              })}
+        </RecordDetailsDrawer>
+      ) : null}
       <FilterDrawer
         opened={drawer.opened}
         title={shownDrawerFacet?.label ?? 'Filters'}
