@@ -13,7 +13,7 @@ import type {
   ReactElement,
   ReactNode,
 } from 'react';
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { ActiveFilters } from '@/components/FacetedBrowser/ActiveFilters/ActiveFilters';
 import type { ActiveFacetChip } from '@/components/FacetedBrowser/ActiveFilters/facetChips';
@@ -203,7 +203,7 @@ export function FacetedBrowser<TRecord extends Record<string, unknown>>(
   const canonicalState = browser.canonicalState;
 
   const comparisonRowExpansionContent = comparisonProps?.rowExpansionContent;
-  const comparisonRowExpansionTitle = comparisonProps?.rowExpansionTitle;
+  const comparisonRecordDetailsTitle = comparisonProps?.recordDetailsTitle;
   const [selectedDetailsRecordId, setSelectedDetailsRecordId] =
     useState<unknown>(undefined);
   const openRecordDetails = useCallback(
@@ -229,6 +229,12 @@ export function FacetedBrowser<TRecord extends Record<string, unknown>>(
     selectedDetailsRecord !== undefined && detailsIdentityField !== undefined
       ? String(selectedDetailsRecord[detailsIdentityField])
       : undefined;
+  const selectedDetailsTitle =
+    selectedDetailsRecord === undefined
+      ? null
+      : (comparisonRecordDetailsTitle?.(selectedDetailsRecord) ??
+        selectedDetailsLabel ??
+        null);
 
   const [internalDrawerOpened, setInternalDrawerOpened] = useState(false);
   const drawerControlled = controlledDrawerOpened !== undefined;
@@ -253,6 +259,20 @@ export function FacetedBrowser<TRecord extends Record<string, unknown>>(
     error,
     unavailable,
   });
+  const detailsOpen = !statusActive && selectedDetailsRecord !== undefined;
+
+  // A selection is valid only while its record is on the visible current page.
+  // Clear it as soon as that stops being true so a later return cannot reopen
+  // the drawer without a new user action.
+  useEffect(() => {
+    if (
+      selectedDetailsRecordId !== undefined &&
+      (statusActive || selectedDetailsRecord === undefined)
+    ) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- invalidate stale record selection
+      setSelectedDetailsRecordId(undefined);
+    }
+  }, [selectedDetailsRecord, selectedDetailsRecordId, statusActive]);
   const drawerTitleRef = useRef<HTMLHeadingElement>(null);
   const filterIsInvalid = useCallback(
     (filters: Readonly<Record<string, FacetFilterValue>>) =>
@@ -394,14 +414,18 @@ export function FacetedBrowser<TRecord extends Record<string, unknown>>(
   ) : undefined;
 
   const renderBrowserCard = (record: TRecord): ReactNode => {
-    if (props.presentation !== 'comparison') {
-      return props.presentation === 'cards' ? props.renderCard(record) : null;
-    }
-    return comparisonRowExpansionContent === undefined
-      ? props.renderCard(record, {})
-      : props.renderCard(record, {
-          openDetails: () => openRecordDetails(record),
-        });
+    if (props.presentation === 'cards') return props.renderCard(record);
+    if (props.presentation !== 'comparison') return null;
+
+    return props.renderCard(
+      record,
+      comparisonRowExpansionContent === undefined
+        ? {}
+        : {
+            openDetails: () => openRecordDetails(record),
+            isDetailsOpen: detailsOpen && selectedDetailsRecord === record,
+          },
+    );
   };
 
   const cardResults =
@@ -611,14 +635,8 @@ export function FacetedBrowser<TRecord extends Record<string, unknown>>(
       />
       {comparisonRowExpansionContent !== undefined ? (
         <RecordDetailsDrawer
-          opened={selectedDetailsRecord !== undefined}
-          title={
-            selectedDetailsRecord === undefined
-              ? null
-              : (comparisonRowExpansionTitle?.(selectedDetailsRecord) ??
-                selectedDetailsLabel ??
-                null)
-          }
+          opened={detailsOpen}
+          title={selectedDetailsTitle}
           closeLabel={
             selectedDetailsLabel === undefined
               ? 'Close details'

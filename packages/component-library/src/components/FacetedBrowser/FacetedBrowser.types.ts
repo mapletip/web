@@ -64,12 +64,14 @@ export interface FacetedBrowserNavigation {
 }
 
 /**
- * Context for a comparison-mode card. `openDetails` exists only when the host
+ * Context for a comparison-mode card. Both fields exist only when the host
  * supplies `rowExpansionContent`, so a card without details keeps its plain
  * one-argument renderer.
  */
 export interface RecordCardContext {
   readonly openDetails?: () => void;
+  /** True only for the card whose record owns the open details drawer. */
+  readonly isDetailsOpen?: boolean;
 }
 
 /**
@@ -205,7 +207,7 @@ type PresentationProps<TRecord extends Record<string, unknown>> =
         context: RecordDetailsContentContext,
       ) => ReactNode;
       /** Drawer heading. Defaults to the record's `identityField` value. */
-      readonly rowExpansionTitle?: (record: TRecord) => ReactNode;
+      readonly recordDetailsTitle?: (record: TRecord) => ReactNode;
       readonly rowExpansionControl?: RowExpansionControl<TRecord>;
     }
   | {

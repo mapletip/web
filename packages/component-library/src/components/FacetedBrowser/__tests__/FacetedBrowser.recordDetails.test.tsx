@@ -22,9 +22,11 @@ const defaultState: BrowseState = {
 function Browser({
   rows = records,
   withDetails = true,
+  loading = false,
 }: {
   readonly rows?: readonly DemoRecord[];
   readonly withDetails?: boolean;
+  readonly loading?: boolean;
 }) {
   return (
     <MantineProvider>
@@ -35,7 +37,8 @@ function Browser({
         identityField="name"
         columns={makeDemoColumns()}
         presentation="comparison"
-        renderCard={(record, { openDetails }) => (
+        loading={loading}
+        renderCard={(record, { openDetails, isDetailsOpen }) => (
           <>
             <a href={record.href}>{record.name}</a>
             {openDetails === undefined ? (
@@ -44,6 +47,7 @@ function Browser({
               <button
                 type="button"
                 aria-haspopup="dialog"
+                aria-expanded={isDetailsOpen}
                 onClick={openDetails}
               >
                 Details for {record.name}
@@ -71,14 +75,20 @@ describe('FacetedBrowser record details', () => {
     const first = records[0]!;
     const second = records[1]!;
     render(<Browser />);
+    const firstTrigger = screen.getByRole('button', {
+      name: `Details for ${first.name}`,
+    });
+    const secondTrigger = screen.getByRole('button', {
+      name: `Details for ${second.name}`,
+    });
 
-    await user.click(
-      screen.getByRole('button', { name: `Details for ${first.name}` }),
-    );
+    await user.click(firstTrigger);
     const drawer = await screen.findByRole('dialog', { name: first.name });
     expect(
       within(drawer).getByText(`drawer: content for ${first.name}`),
     ).toBeInTheDocument();
+    expect(firstTrigger).toHaveAttribute('aria-expanded', 'true');
+    expect(secondTrigger).toHaveAttribute('aria-expanded', 'false');
 
     await user.click(
       screen.getByRole('button', { name: `Close details for ${first.name}` }),
@@ -86,13 +96,13 @@ describe('FacetedBrowser record details', () => {
     await waitFor(() =>
       expect(screen.queryByRole('dialog')).not.toBeInTheDocument(),
     );
+    expect(firstTrigger).toHaveAttribute('aria-expanded', 'false');
 
-    await user.click(
-      screen.getByRole('button', { name: `Details for ${second.name}` }),
-    );
+    await user.click(secondTrigger);
     expect(
       await screen.findByRole('dialog', { name: second.name }),
     ).toBeInTheDocument();
+    expect(secondTrigger).toHaveAttribute('aria-expanded', 'true');
   });
 
   it('closes when the selected record leaves the current page', async () => {
@@ -115,6 +125,38 @@ describe('FacetedBrowser record details', () => {
       expect(screen.queryByRole('dialog')).not.toBeInTheDocument(),
     );
     expect(screen.queryByText(`drawer: content for ${first.name}`)).toBeNull();
+
+    // Restoring the record must not restore the old selection.
+    rerender(<Browser />);
+    await waitFor(() =>
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument(),
+    );
+    expect(
+      screen.getByRole('button', { name: `Details for ${first.name}` }),
+    ).toHaveAttribute('aria-expanded', 'false');
+  });
+
+  it('invalidates the selection while results are loading', async () => {
+    const user = userEvent.setup();
+    const first = records[0]!;
+    const { rerender } = render(<Browser />);
+
+    await user.click(
+      screen.getByRole('button', { name: `Details for ${first.name}` }),
+    );
+    expect(
+      await screen.findByRole('dialog', { name: first.name }),
+    ).toBeInTheDocument();
+
+    rerender(<Browser loading />);
+    await waitFor(() =>
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument(),
+    );
+
+    rerender(<Browser />);
+    await waitFor(() =>
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument(),
+    );
   });
 
   it('gives cards no details action without record-expansion content', () => {

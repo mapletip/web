@@ -293,9 +293,10 @@ describe('MonsterBrowse', () => {
       name: 'Sentinel Snail, 1 drop. Show drops.',
     });
     expect(expandButton).toHaveAttribute('aria-haspopup', 'dialog');
-    expect(expandButton).not.toHaveAttribute('aria-expanded');
+    expect(expandButton).toHaveAttribute('aria-expanded', 'false');
     expect(expandButton).not.toHaveAttribute('aria-controls');
     await user.click(expandButton);
+    expect(expandButton).toHaveAttribute('aria-expanded', 'true');
 
     const drawer = await screen.findByRole('dialog', {
       name: /Sentinel Snail/u,
@@ -313,6 +314,7 @@ describe('MonsterBrowse', () => {
     await waitFor(() =>
       expect(screen.queryByRole('dialog')).not.toBeInTheDocument(),
     );
+    expect(expandButton).toHaveAttribute('aria-expanded', 'false');
     await waitFor(() => expect(expandButton).toHaveFocus());
   });
 
@@ -340,6 +342,7 @@ describe('MonsterBrowse', () => {
       name: 'Sentinel Snail, 1 drop. Show drops.',
     });
     await user.click(trigger);
+    expect(trigger).toHaveAttribute('aria-expanded', 'true');
     const drawer = await screen.findByRole('dialog', {
       name: /Sentinel Snail/u,
     });
@@ -365,6 +368,7 @@ describe('MonsterBrowse', () => {
     await waitFor(() =>
       expect(screen.queryByRole('dialog')).not.toBeInTheDocument(),
     );
+    expect(trigger).toHaveAttribute('aria-expanded', 'false');
   });
 
   it('filters monsters by a stable dropped item key through the shared facet', async () => {

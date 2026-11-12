@@ -20,10 +20,12 @@ const combatFacts = getMonsterBrowseCardFacts('combat');
 export function MonsterBrowseCard({
   record,
   onShowDrops,
+  isDetailsOpen,
 }: {
   readonly record: MonsterBrowseRow;
   /** Supplied by FacetedBrowser only when the host exposes record details. */
-  readonly onShowDrops?: () => void;
+  readonly onShowDrops?: (() => void) | undefined;
+  readonly isDetailsOpen?: boolean | undefined;
 }): ReactElement {
   return (
     <article className={classes['card']}>
@@ -44,7 +46,7 @@ export function MonsterBrowseCard({
         {onShowDrops === undefined ? null : (
           <Button
             type="button"
-            variant="default"
+            variant={isDetailsOpen === true ? 'light' : 'default'}
             size="compact-sm"
             radius="sm"
             px={4}
@@ -57,6 +59,7 @@ export function MonsterBrowseCard({
               label: dropClasses['triggerLabel'],
             }}
             aria-haspopup="dialog"
+            aria-expanded={isDetailsOpen === true}
             aria-label={dropListingActionLabel(record, false)}
             title={`${record.drops.entries.length.toLocaleString('en-US')} Drops`}
             onClick={onShowDrops}

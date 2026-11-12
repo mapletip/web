@@ -60,6 +60,8 @@ export type {
   PageLinkRenderProps,
   PageLinkRenderer,
   QueryFieldDefinition,
+  RecordCardContext,
+  RecordDetailsContentContext,
   SearchMatchOptions,
   StateChangeDetails,
 } from '@/components/FacetedBrowser';

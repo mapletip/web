@@ -1,4 +1,4 @@
-import { MantineProvider } from '@mantine/core';
+import { Button, MantineProvider } from '@mantine/core';
 import { describe, expect, it } from 'vitest';
 import { page, userEvent } from 'vitest/browser';
 import { render } from 'vitest-browser-react';
@@ -20,12 +20,18 @@ function Browser() {
         identityField="name"
         columns={makeDemoColumns()}
         presentation="comparison"
-        renderCard={(record, { openDetails }) => (
-          <button type="button" aria-haspopup="dialog" onClick={openDetails}>
+        renderCard={(record, { openDetails, isDetailsOpen }) => (
+          <Button
+            type="button"
+            variant={isDetailsOpen === true ? 'light' : 'default'}
+            aria-haspopup="dialog"
+            aria-expanded={isDetailsOpen}
+            onClick={openDetails}
+          >
             Details for {record.name}
-          </button>
+          </Button>
         )}
-        rowExpansionTitle={(record: DemoRecord) => `Details: ${record.name}`}
+        recordDetailsTitle={(record: DemoRecord) => `Details: ${record.name}`}
         rowExpansionContent={(record, { surface }) => (
           <p>{`${surface}: content for ${record.name}`}</p>
         )}
@@ -61,10 +67,15 @@ describe('FacetedBrowser record details in a real browser', () => {
     await expect
       .element(page.getByText(`drawer: content for ${first.name}`))
       .toBeVisible();
+    await expect.element(firstTrigger).toHaveAttribute('aria-expanded', 'true');
+    await expect.element(firstTrigger).toHaveAttribute('data-variant', 'light');
 
     await userEvent.keyboard('{Escape}');
     await expect.element(firstDrawer).not.toBeInTheDocument();
     await expect.element(firstTrigger).toHaveFocus();
+    await expect
+      .element(firstTrigger)
+      .toHaveAttribute('aria-expanded', 'false');
 
     await userEvent.click(
       page.getByRole('button', { name: `Details for ${second.name}` }),
@@ -79,6 +90,9 @@ describe('FacetedBrowser record details in a real browser', () => {
     await expect
       .element(page.getByText(`drawer: content for ${first.name}`))
       .not.toBeInTheDocument();
+    await expect
+      .element(page.getByRole('button', { name: `Details for ${second.name}` }))
+      .toHaveAttribute('aria-expanded', 'true');
 
     await userEvent.click(
       page.getByRole('button', {

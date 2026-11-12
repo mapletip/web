@@ -1,4 +1,5 @@
 import { CloseButton, Group, Stack, Title } from '@mantine/core';
+import type { RecordDetailsContentContext } from '@mapletip/component-library';
 import { Package } from '@phosphor-icons/react';
 import type { ReactElement } from 'react';
 
@@ -24,7 +25,7 @@ export function dropListingActionLabel(
   return `${record.name}, ${dropListingCountText(record)}. ${expanded ? 'Hide' : 'Show'} drops.`;
 }
 
-export type MonsterDropSurface = 'table' | 'drawer';
+export type MonsterDropSurface = RecordDetailsContentContext['surface'];
 
 export function MonsterDropListing({
   record,

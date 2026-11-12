@@ -290,20 +290,21 @@ export const RecordDetails: Story = {
       identityField="name"
       columns={makeDemoColumns()}
       presentation="comparison"
-      renderCard={(record, { openDetails }) => (
+      renderCard={(record, { openDetails, isDetailsOpen }) => (
         <div style={{ display: 'grid', gap: 8 }}>
           <FacetedBrowserRecordCard record={record} />
           <Button
             type="button"
-            variant="default"
+            variant={isDetailsOpen === true ? 'light' : 'default'}
             aria-haspopup="dialog"
+            aria-expanded={isDetailsOpen}
             onClick={openDetails}
           >
             Details for {record.name}
           </Button>
         </div>
       )}
-      rowExpansionTitle={(record) => `Details: ${record.name}`}
+      recordDetailsTitle={(record) => `Details: ${record.name}`}
       rowExpansionContent={(record, { surface }) => (
         <Text size="sm">
           {surface === 'table' ? 'Inline details' : 'Drawer details'} for{' '}
@@ -323,13 +324,15 @@ export const RecordDetails: Story = {
   globals: { viewport: { value: 'mobileBreakpoint', isRotated: false } },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await userEvent.click(
-      canvas.getByRole('button', { name: 'Details for Record 001' }),
-    );
+    const trigger = canvas.getByRole('button', {
+      name: 'Details for Record 001',
+    });
+    await userEvent.click(trigger);
     const drawer = await screen.findByRole('dialog', {
       name: 'Details: Record 001',
     });
     await expect(drawer).toBeInTheDocument();
+    await expect(trigger).toHaveAttribute('aria-expanded', 'true');
   },
 };
 

@@ -81,12 +81,17 @@ function factTitles(): readonly string[] {
     .map((element) => element.getAttribute('title') ?? '');
 }
 
-function renderCard(record: MonsterBrowseRow, onShowDrops?: () => void) {
+function renderCard(
+  record: MonsterBrowseRow,
+  onShowDrops?: () => void,
+  isDetailsOpen?: boolean,
+) {
   return render(
     <MantineProvider>
       <MonsterBrowseCard
         record={record}
-        {...(onShowDrops === undefined ? {} : { onShowDrops })}
+        onShowDrops={onShowDrops}
+        isDetailsOpen={isDetailsOpen}
       />
     </MantineProvider>,
   );
@@ -218,13 +223,23 @@ describe('MonsterBrowseCard', () => {
     expect(trigger).toHaveTextContent('1');
     expect(trigger).toHaveAttribute('data-variant', 'default');
     expect(trigger).toHaveAttribute('aria-haspopup', 'dialog');
-    expect(trigger).not.toHaveAttribute('aria-expanded');
+    expect(trigger).toHaveAttribute('aria-expanded', 'false');
     expect(trigger).not.toHaveAttribute('aria-controls');
 
     await user.click(trigger);
     expect(onShowDrops).toHaveBeenCalledOnce();
     // The card owns no drawer; FacetedBrowser renders the one shared drawer.
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
+  it('shows the active Drops state from the shared drawer', () => {
+    renderCard(knownRow(), vi.fn(), true);
+
+    const trigger = screen.getByRole('button', {
+      name: 'Sentinel Snail, 0. Show drops.',
+    });
+    expect(trigger).toHaveAttribute('aria-expanded', 'true');
+    expect(trigger).toHaveAttribute('data-variant', 'light');
   });
 
   it('renders drawer-surface drops without the desktop panel chrome', async () => {

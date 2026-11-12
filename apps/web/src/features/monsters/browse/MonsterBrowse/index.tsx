@@ -344,10 +344,11 @@ export function MonsterBrowse({
         // scroll region is the page's vertical scroll region on desktop.
         fillHeight
         tableStorageKey={`mapletip:web:monsters:${buildId}:v1`}
-        renderCard={(record, { openDetails }) => (
+        renderCard={(record, { openDetails, isDetailsOpen }) => (
           <MonsterBrowseCard
             record={record}
-            {...(openDetails === undefined ? {} : { onShowDrops: openDetails })}
+            onShowDrops={openDetails}
+            isDetailsOpen={isDetailsOpen}
           />
         )}
         rowExpansionContent={(record, { onClose, surface }) => (
@@ -358,7 +359,7 @@ export function MonsterBrowse({
             surface={surface}
           />
         )}
-        rowExpansionTitle={(record) => <MonsterDropTitle record={record} />}
+        recordDetailsTitle={(record) => <MonsterDropTitle record={record} />}
         rowExpansionControl={(context) => dropExpansionControl(context)}
         defaultState={defaultState}
         drawerOpened={filterDrawerOpened}

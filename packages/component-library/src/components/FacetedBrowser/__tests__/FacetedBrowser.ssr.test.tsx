@@ -47,7 +47,7 @@ describe('FacetedBrowser server rendering', () => {
           rowExpansionContent={(record) => (
             <p>{`Inline details for ${record.name}`}</p>
           )}
-          rowExpansionTitle={(record) => `Details: ${record.name}`}
+          recordDetailsTitle={(record) => `Details: ${record.name}`}
           defaultState={{
             search: '',
             filters: {},
