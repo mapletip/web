@@ -292,9 +292,10 @@ describe('MonsterBrowse', () => {
     const expandButton = within(card).getByRole('button', {
       name: 'Sentinel Snail, 1 drop. Show drops.',
     });
-    expect(expandButton).toHaveAttribute('aria-expanded', 'false');
+    expect(expandButton).toHaveAttribute('aria-haspopup', 'dialog');
+    expect(expandButton).not.toHaveAttribute('aria-expanded');
+    expect(expandButton).not.toHaveAttribute('aria-controls');
     await user.click(expandButton);
-    expect(expandButton).toHaveAttribute('aria-expanded', 'true');
 
     const drawer = await screen.findByRole('dialog', {
       name: /Sentinel Snail/u,
@@ -306,11 +307,63 @@ describe('MonsterBrowse', () => {
 
     await user.click(
       within(drawer).getByRole('button', {
-        name: 'Close Drops for Sentinel Snail',
+        name: 'Close details for Sentinel Snail',
       }),
     );
     await waitFor(() =>
-      expect(expandButton).toHaveAttribute('aria-expanded', 'false'),
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument(),
+    );
+    await waitFor(() => expect(expandButton).toHaveFocus());
+  });
+
+  it('lets Escape close a status popover before the shared mobile drawer', async () => {
+    const user = userEvent.setup();
+    const [first] = rows;
+    if (first === undefined) throw new Error('Fixture produced no rows.');
+    const row: MonsterBrowseRow = {
+      ...first,
+      drops: {
+        itemKeys: [],
+        entries: [
+          {
+            itemRefState: 'resolved',
+            itemName: 'Green Headband',
+            assertionKind: 'historical-overlay',
+            sourceBuild: 'gms-v83',
+          },
+        ],
+      },
+    };
+    mountBrowse({ browseRows: [row] });
+
+    const trigger = within(cards()).getByRole('button', {
+      name: 'Sentinel Snail, 1 drop. Show drops.',
+    });
+    await user.click(trigger);
+    const drawer = await screen.findByRole('dialog', {
+      name: /Sentinel Snail/u,
+    });
+
+    const statusButton = within(drawer).getByRole('button', {
+      name: 'Show unconfirmed drop details for Green Headband',
+    });
+    await user.click(statusButton);
+    expect(statusButton).toHaveAttribute('aria-expanded', 'true');
+    expect(statusButton).toHaveAttribute(
+      'data-mantine-stop-propagation',
+      'true',
+    );
+
+    await user.keyboard('{Escape}');
+    await waitFor(() =>
+      expect(statusButton).toHaveAttribute('aria-expanded', 'false'),
+    );
+    expect(drawer).toBeVisible();
+    expect(statusButton).not.toHaveAttribute('data-mantine-stop-propagation');
+
+    await user.keyboard('{Escape}');
+    await waitFor(() =>
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument(),
     );
   });
 

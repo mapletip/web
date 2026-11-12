@@ -280,6 +280,59 @@ export const MobileCards: Story = {
   globals: { viewport: { value: 'mobileBreakpoint', isRotated: false } },
 };
 
+export const RecordDetails: Story = {
+  name: 'Record details',
+  render: () => (
+    <FacetedBrowser
+      title={<Title order={1}>Browse records</Title>}
+      records={demoRecords.slice(0, 12)}
+      idAccessor="id"
+      identityField="name"
+      columns={makeDemoColumns()}
+      presentation="comparison"
+      renderCard={(record, { openDetails }) => (
+        <div style={{ display: 'grid', gap: 8 }}>
+          <FacetedBrowserRecordCard record={record} />
+          <Button
+            type="button"
+            variant="default"
+            aria-haspopup="dialog"
+            onClick={openDetails}
+          >
+            Details for {record.name}
+          </Button>
+        </div>
+      )}
+      rowExpansionTitle={(record) => `Details: ${record.name}`}
+      rowExpansionContent={(record, { surface }) => (
+        <Text size="sm">
+          {surface === 'table' ? 'Inline details' : 'Drawer details'} for{' '}
+          <a href={record.href}>{record.name}</a>.
+        </Text>
+      )}
+      defaultState={{
+        search: '',
+        filters: {},
+        sort: { field: 'value1', direction: 'desc' },
+        page: 1,
+        pageSize: 12,
+        hiddenColumns: [],
+      }}
+    />
+  ),
+  globals: { viewport: { value: 'mobileBreakpoint', isRotated: false } },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(
+      canvas.getByRole('button', { name: 'Details for Record 001' }),
+    );
+    const drawer = await screen.findByRole('dialog', {
+      name: 'Details: Record 001',
+    });
+    await expect(drawer).toBeInTheDocument();
+  },
+};
+
 export const CustomResults: Story = {
   name: 'Custom results',
   render: () => (

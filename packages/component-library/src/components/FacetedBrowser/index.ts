@@ -11,6 +11,8 @@ export type {
   PageLinkRenderOptions,
   PageLinkRenderProps,
   PageLinkRenderer,
+  RecordCardContext,
+  RecordDetailsContentContext,
   StateChangeDetails,
 } from '@/components/FacetedBrowser/FacetedBrowser.types';
 export type {

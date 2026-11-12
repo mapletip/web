@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest';
 
 import { FacetedBrowser, type BrowseState } from '@/components/FacetedBrowser';
 import { NeutralBrowserMarkup } from '@/components/FacetedBrowser/__tests__/fixtures/NeutralBrowserMarkup';
-import { demoRecords } from '@/fixtures/records';
+import { demoRecords, makeDemoColumns } from '@/fixtures/records';
 
 describe('FacetedBrowser server rendering', () => {
   it('renders result links in both presentations and real pagination links without a DOM', () => {
@@ -23,6 +23,47 @@ describe('FacetedBrowser server rendering', () => {
     expect(html).toContain('href="?page=2"');
     expect(html.match(/href="\/records\/record-/gu)).toHaveLength(200);
     expect(html).toContain('Record 099');
+  });
+
+  it('renders details-enabled comparison markup with the drawer closed', () => {
+    const html = renderToString(
+      <MantineProvider theme={theme} forceColorScheme="dark">
+        <FacetedBrowser
+          title={<h1>Details browser</h1>}
+          records={demoRecords.slice(0, 4)}
+          idAccessor="id"
+          identityField="name"
+          columns={makeDemoColumns()}
+          presentation="comparison"
+          renderCard={(record, { openDetails }) => (
+            <button
+              type="button"
+              aria-haspopup={openDetails === undefined ? undefined : 'dialog'}
+              onClick={openDetails}
+            >
+              {record.name}
+            </button>
+          )}
+          rowExpansionContent={(record) => (
+            <p>{`Inline details for ${record.name}`}</p>
+          )}
+          rowExpansionTitle={(record) => `Details: ${record.name}`}
+          defaultState={{
+            search: '',
+            filters: {},
+            sort: { field: 'value1', direction: 'desc' },
+            page: 1,
+            pageSize: 25,
+            hiddenColumns: [],
+          }}
+        />
+      </MantineProvider>,
+    );
+
+    expect(html).toContain('Details browser');
+    expect(html).toContain('Record 001');
+    expect(html).not.toContain('Inline details for');
+    expect(html).not.toContain('role="dialog"');
   });
 
   it('renders an integrated card-only browser without dummy columns in Node', () => {

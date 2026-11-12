@@ -26,7 +26,11 @@ import {
 } from '../monster-browse-fact-config';
 import classes from '../MonsterBrowse.module.css';
 import { MonsterBrowseCard } from '../MonsterBrowseCard';
-import { dropListingActionLabel, MonsterDropListing } from '../MonsterDrops';
+import {
+  dropListingActionLabel,
+  MonsterDropListing,
+  MonsterDropTitle,
+} from '../MonsterDrops';
 import dropClasses from '../MonsterDrops/MonsterDrops.module.css';
 import { MONSTER_SPRITE_SIZE, MonsterSprite } from '../MonsterSprite';
 import {
@@ -340,16 +344,21 @@ export function MonsterBrowse({
         // scroll region is the page's vertical scroll region on desktop.
         fillHeight
         tableStorageKey={`mapletip:web:monsters:${buildId}:v1`}
-        renderCard={(record) => (
-          <MonsterBrowseCard record={record} buildId={buildId} />
+        renderCard={(record, { openDetails }) => (
+          <MonsterBrowseCard
+            record={record}
+            {...(openDetails === undefined ? {} : { onShowDrops: openDetails })}
+          />
         )}
-        rowExpansionContent={(record, { onClose }) => (
+        rowExpansionContent={(record, { onClose, surface }) => (
           <MonsterDropListing
             record={record}
             buildId={buildId}
             onClose={onClose}
+            surface={surface}
           />
         )}
+        rowExpansionTitle={(record) => <MonsterDropTitle record={record} />}
         rowExpansionControl={(context) => dropExpansionControl(context)}
         defaultState={defaultState}
         drawerOpened={filterDrawerOpened}
