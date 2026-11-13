@@ -42,10 +42,7 @@ export type FacetedBrowserNavigationRenderContext =
       readonly onNavigate?: never;
     };
 
-export interface FacetedBrowserNavigationHistory {
-  readonly push: () => void;
-  readonly back: () => void;
-}
+export type NavigationOpenedChangeReason = 'open' | 'dismiss' | 'navigate';
 
 export interface FacetedBrowserNavigation {
   readonly label: string;
@@ -57,7 +54,12 @@ export interface FacetedBrowserNavigation {
   readonly currentId: string;
   readonly currentCount?: number | undefined;
   readonly apply: (id: string, options: { readonly replace: true }) => void;
-  readonly history?: FacetedBrowserNavigationHistory | undefined;
+  /** Optional controlled open state. Omit to keep internal open state. */
+  readonly opened?: boolean;
+  readonly onOpenedChange?: (
+    opened: boolean,
+    reason: NavigationOpenedChangeReason,
+  ) => void;
   readonly render: (
     context: FacetedBrowserNavigationRenderContext,
   ) => ReactNode;
@@ -82,6 +84,27 @@ export interface RecordCardContext {
 export interface RecordDetailsContentContext {
   readonly onClose: () => void;
   readonly surface: 'table' | 'drawer';
+}
+
+export type RecordDetailsChangeReason = 'open' | 'dismiss' | 'invalidate';
+
+/**
+ * Optional host-controlled mobile record-details selection. The identity is
+ * normalized to a string so it can round-trip through route location state.
+ */
+export interface RecordDetailsSelection {
+  readonly selectedId: string | null;
+  readonly onSelectedIdChange: (
+    selectedId: string | null,
+    reason: RecordDetailsChangeReason,
+  ) => void;
+}
+
+export type DrawerOpenedChangeReason =
+  'open' | 'dismiss' | 'apply' | 'invalidate';
+
+export interface DrawerOpenedChangeDetails {
+  readonly reason: DrawerOpenedChangeReason;
 }
 
 export interface BrowseSortOption {
@@ -181,7 +204,10 @@ type StateProps =
 type DrawerStateProps =
   | {
       readonly drawerOpened: boolean;
-      readonly onDrawerOpenedChange: (opened: boolean) => void;
+      readonly onDrawerOpenedChange: (
+        opened: boolean,
+        details?: DrawerOpenedChangeDetails,
+      ) => void;
     }
   | {
       readonly drawerOpened?: never;
@@ -208,6 +234,8 @@ type PresentationProps<TRecord extends Record<string, unknown>> =
       ) => ReactNode;
       /** Drawer heading. Defaults to the record's `identityField` value. */
       readonly recordDetailsTitle?: (record: TRecord) => ReactNode;
+      /** Optional host-controlled mobile selection; desktop expansion is unchanged. */
+      readonly recordDetails?: RecordDetailsSelection;
       readonly rowExpansionControl?: RowExpansionControl<TRecord>;
     }
   | {

@@ -26,7 +26,9 @@ import { resolveFacets } from '@/components/FacetedBrowser/FacetControls/resolve
 import type { FacetDefinition } from '@/components/FacetedBrowser/FacetControls/types';
 import classes from '@/components/FacetedBrowser/FacetedBrowser.module.css';
 import type {
+  DrawerOpenedChangeDetails,
   FacetedBrowserProps,
+  NavigationOpenedChangeReason,
   StateChangeDetails,
 } from '@/components/FacetedBrowser/FacetedBrowser.types';
 import { FilterDrawer } from '@/components/FacetedBrowser/FilterDrawer/FilterDrawer';
@@ -204,24 +206,41 @@ export function FacetedBrowser<TRecord extends Record<string, unknown>>(
 
   const comparisonRowExpansionContent = comparisonProps?.rowExpansionContent;
   const comparisonRecordDetailsTitle = comparisonProps?.recordDetailsTitle;
-  const [selectedDetailsRecordId, setSelectedDetailsRecordId] =
-    useState<unknown>(undefined);
+  const recordDetailsSelection = comparisonProps?.recordDetails;
+  const [internalSelectedDetailsRecordId, setInternalSelectedDetailsRecordId] =
+    useState<string | undefined>(undefined);
+  const selectedDetailsRecordId =
+    recordDetailsSelection === undefined
+      ? internalSelectedDetailsRecordId
+      : recordDetailsSelection.selectedId;
   const openRecordDetails = useCallback(
     (record: TRecord) => {
-      setSelectedDetailsRecordId(record[idAccessor]);
+      if (recordDetailsSelection !== undefined) {
+        recordDetailsSelection.onSelectedIdChange(
+          String(record[idAccessor]),
+          'open',
+        );
+        return;
+      }
+      setInternalSelectedDetailsRecordId(String(record[idAccessor]));
     },
-    [idAccessor],
+    [idAccessor, recordDetailsSelection],
   );
   const closeRecordDetails = useCallback(() => {
-    setSelectedDetailsRecordId(undefined);
-  }, []);
+    if (recordDetailsSelection !== undefined) {
+      recordDetailsSelection.onSelectedIdChange(null, 'dismiss');
+      return;
+    }
+    setInternalSelectedDetailsRecordId(undefined);
+  }, [recordDetailsSelection]);
   // The drawer is open exactly while the selected identity is on the current
   // page. No effect, no second expansion engine and nothing in browse state.
   const selectedDetailsRecord =
     comparisonRowExpansionContent !== undefined &&
-    selectedDetailsRecordId !== undefined
+    selectedDetailsRecordId !== undefined &&
+    selectedDetailsRecordId !== null
       ? browser.records.find(
-          (record) => record[idAccessor] === selectedDetailsRecordId,
+          (record) => String(record[idAccessor]) === selectedDetailsRecordId,
         )
       : undefined;
   const detailsIdentityField = comparisonProps?.identityField;
@@ -242,11 +261,11 @@ export function FacetedBrowser<TRecord extends Record<string, unknown>>(
     ? controlledDrawerOpened
     : internalDrawerOpened;
   const updateDrawerOpened = useCallback(
-    (opened: boolean) => {
+    (opened: boolean, details?: DrawerOpenedChangeDetails) => {
       if (!drawerControlled) {
         setInternalDrawerOpened(opened);
       }
-      onDrawerOpenedChange?.(opened);
+      onDrawerOpenedChange?.(opened, details);
     },
     [drawerControlled, onDrawerOpenedChange],
   );
@@ -262,17 +281,34 @@ export function FacetedBrowser<TRecord extends Record<string, unknown>>(
   const detailsOpen = !statusActive && selectedDetailsRecord !== undefined;
 
   // A selection is valid only while its record is on the visible current page.
-  // Clear it as soon as that stops being true so a later return cannot reopen
-  // the drawer without a new user action.
+  // Invalidate it as soon as that stops being true so a later return cannot
+  // reopen the drawer without a new user action.
+  const invalidatedDetailsId = useRef<string | null>(null);
   useEffect(() => {
-    if (
-      selectedDetailsRecordId !== undefined &&
-      (statusActive || selectedDetailsRecord === undefined)
-    ) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- invalidate stale record selection
-      setSelectedDetailsRecordId(undefined);
+    const hasSelection =
+      selectedDetailsRecordId !== undefined && selectedDetailsRecordId !== null;
+    if (!hasSelection) {
+      invalidatedDetailsId.current = null;
+      return;
     }
-  }, [selectedDetailsRecord, selectedDetailsRecordId, statusActive]);
+    if (!statusActive && selectedDetailsRecord !== undefined) {
+      invalidatedDetailsId.current = null;
+      return;
+    }
+    if (invalidatedDetailsId.current === selectedDetailsRecordId) return;
+    invalidatedDetailsId.current = selectedDetailsRecordId;
+    if (recordDetailsSelection !== undefined) {
+      recordDetailsSelection.onSelectedIdChange(null, 'invalidate');
+      return;
+    }
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- invalidate stale record selection
+    setInternalSelectedDetailsRecordId(undefined);
+  }, [
+    recordDetailsSelection,
+    selectedDetailsRecord,
+    selectedDetailsRecordId,
+    statusActive,
+  ]);
   const drawerTitleRef = useRef<HTMLHeadingElement>(null);
   const filterIsInvalid = useCallback(
     (filters: Readonly<Record<string, FacetFilterValue>>) =>
@@ -474,9 +510,29 @@ export function FacetedBrowser<TRecord extends Record<string, unknown>>(
       />
     ) : undefined;
 
-  const [navDrawerOpened, setNavDrawerOpened] = useState(false);
-  const openNavDrawer = useCallback(() => setNavDrawerOpened(true), []);
-  const closeNavDrawer = useCallback(() => setNavDrawerOpened(false), []);
+  const [internalNavDrawerOpened, setInternalNavDrawerOpened] = useState(false);
+  const navDrawerControlled =
+    navigation !== undefined && navigation.opened !== undefined;
+  const navDrawerOpened = navDrawerControlled
+    ? (navigation?.opened ?? false)
+    : internalNavDrawerOpened;
+  const updateNavDrawerOpened = useCallback(
+    (opened: boolean, reason: NavigationOpenedChangeReason) => {
+      if (!navDrawerControlled) {
+        setInternalNavDrawerOpened(opened);
+      }
+      navigation?.onOpenedChange?.(opened, reason);
+    },
+    [navDrawerControlled, navigation],
+  );
+  const openNavDrawer = useCallback(
+    () => updateNavDrawerOpened(true, 'open'),
+    [updateNavDrawerOpened],
+  );
+  const closeNavDrawer = useCallback(
+    (reason: 'dismiss' | 'navigate') => updateNavDrawerOpened(false, reason),
+    [updateNavDrawerOpened],
+  );
 
   const railContent =
     navigation || facets.length > 0 ? (
@@ -719,7 +775,6 @@ export function FacetedBrowser<TRecord extends Record<string, unknown>>(
           currentCount={navigation.currentCount}
           onClose={closeNavDrawer}
           onApply={navigation.apply}
-          history={navigation.history}
         >
           {({ selectedId, onSelect }) =>
             navigation.render({

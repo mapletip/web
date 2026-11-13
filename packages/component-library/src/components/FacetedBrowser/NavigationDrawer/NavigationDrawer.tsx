@@ -11,7 +11,6 @@ import {
 import type {
   FacetedBrowserNavigationDrawerMeta,
   FacetedBrowserNavigationDrawerNode,
-  FacetedBrowserNavigationHistory,
 } from '@/components/FacetedBrowser/FacetedBrowser.types';
 import classes from '@/components/FacetedBrowser/FilterDrawer/FilterDrawer.module.css';
 
@@ -28,9 +27,8 @@ export interface NavigationDrawerProps {
   readonly title: string;
   readonly currentId: string;
   readonly currentCount?: number | undefined;
-  readonly onClose: () => void;
+  readonly onClose: (reason: 'dismiss' | 'navigate') => void;
   readonly onApply: (id: string, options: { readonly replace: true }) => void;
-  readonly history?: FacetedBrowserNavigationHistory | undefined;
   readonly children:
     ReactNode | ((context: NavigationDrawerRenderContext) => ReactNode);
 }
@@ -38,7 +36,7 @@ export interface NavigationDrawerProps {
 /**
  * Mobile bottom sheet drawer for responsive category navigation.
  * Keeps a draft selection while drilling, with a sticky footer ([Cancel] [Show N items]).
- * Back closes without navigating; applying replaces history.
+ * It only reports close/navigate intent; the host owns history and routing.
  */
 export function NavigationDrawer({
   opened,
@@ -47,7 +45,6 @@ export function NavigationDrawer({
   currentCount,
   onClose,
   onApply,
-  history,
   children,
 }: NavigationDrawerProps): ReactElement {
   const [prevOpened, setPrevOpened] = useState(opened);
@@ -68,41 +65,11 @@ export function NavigationDrawer({
 
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    if (!opened) return;
-
-    if (history) {
-      history.push();
-    } else if (typeof window !== 'undefined') {
-      window.history.pushState(window.history.state, '', window.location.href);
-    }
-  }, [opened, history]);
-
   const handleCancel = useCallback(() => {
-    if (history) {
-      history.back();
-    } else if (typeof window !== 'undefined') {
-      window.history.back();
-    }
     setDraftId(currentId);
     setDraftCount(currentCount);
-    onClose();
-  }, [currentId, currentCount, history, onClose]);
-
-  useEffect(() => {
-    if (!opened || typeof window === 'undefined') return;
-
-    const handlePopState = () => {
-      setDraftId(currentId);
-      setDraftCount(currentCount);
-      onClose();
-    };
-
-    window.addEventListener('popstate', handlePopState);
-    return () => {
-      window.removeEventListener('popstate', handlePopState);
-    };
-  }, [opened, currentId, currentCount, onClose]);
+    onClose('dismiss');
+  }, [currentId, currentCount, onClose]);
 
   const handleApply = useCallback(() => {
     if (draftId === currentId) {
@@ -110,7 +77,7 @@ export function NavigationDrawer({
       return;
     }
     onApply(draftId, { replace: true });
-    onClose();
+    onClose('navigate');
   }, [currentId, draftId, handleCancel, onApply, onClose]);
 
   const handleSelect = useCallback(
@@ -124,7 +91,7 @@ export function NavigationDrawer({
           return;
         }
         onApply(node.id, { replace: true });
-        onClose();
+        onClose('navigate');
       } else {
         setDraftId(node.id);
         setDraftCount(node.count);
