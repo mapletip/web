@@ -2,23 +2,18 @@ import { Button, Group, MultiSelect, Pill, Text, Title } from '@mantine/core';
 import { FacetedBrowser, Thumbnail } from '@mapletip/component-library';
 import type {
   BrowseState,
+  DrawerOpenedChangeDetails,
   FacetDefinition,
   QueryFieldDefinition,
   RowExpansionControlContext,
   TableColumn,
 } from '@mapletip/component-library';
-import {
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-  type ReactElement,
-} from 'react';
+import { useCallback, type ReactElement } from 'react';
 
 import { BrowsePageShell } from '@/components/BrowsePageShell';
 import { BUILDS, type BuildId } from '@/config/maplekit';
+import { useBrowseOverlay } from '@/features/browse-overlay/useBrowseOverlay';
 
-import { preserveMonsterBrowseForDrawerClose } from '../history';
 import {
   getMonsterBrowseFacetDefinition,
   MONSTER_BROWSE_FACT_CONFIG,
@@ -266,39 +261,26 @@ export function MonsterBrowse({
   rows,
   dropItemOptions,
 }: MonsterBrowseProps): ReactElement {
-  const [filterDrawerOpened, setFilterDrawerOpened] = useState(false);
-  const filterDrawerHistoryEntry = useRef(false);
+  const browseOverlay = useBrowseOverlay();
+  const filterDrawerOpened = browseOverlay.overlay?.type === 'filters';
+  const selectedRecordId =
+    browseOverlay.overlay?.type === 'record-details'
+      ? browseOverlay.overlay.recordId
+      : null;
   const onFilterDrawerOpenedChange = useCallback(
-    (opened: boolean) => {
-      if (
-        !opened &&
-        filterDrawerHistoryEntry.current &&
-        typeof window !== 'undefined'
-      ) {
-        filterDrawerHistoryEntry.current = false;
-        preserveMonsterBrowseForDrawerClose(buildId, { rows, dropItemOptions });
-        window.history.back();
+    (opened: boolean, details?: DrawerOpenedChangeDetails) => {
+      if (opened) {
+        browseOverlay.open({ type: 'filters' });
+        return;
       }
-      setFilterDrawerOpened(opened);
+      if (details?.reason === 'invalidate') {
+        browseOverlay.invalidate('filters');
+        return;
+      }
+      browseOverlay.dismiss('filters');
     },
-    [buildId, dropItemOptions, rows],
+    [browseOverlay],
   );
-
-  useEffect(() => {
-    if (!filterDrawerOpened || typeof window === 'undefined') return;
-
-    preserveMonsterBrowseForDrawerClose(buildId, { rows, dropItemOptions });
-    window.history.pushState(window.history.state, '', window.location.href);
-    filterDrawerHistoryEntry.current = true;
-
-    const handlePopState = () => {
-      if (!filterDrawerHistoryEntry.current) return;
-      filterDrawerHistoryEntry.current = false;
-      setFilterDrawerOpened(false);
-    };
-    window.addEventListener('popstate', handlePopState);
-    return () => window.removeEventListener('popstate', handlePopState);
-  }, [buildId, dropItemOptions, filterDrawerOpened, rows]);
 
   const label = BUILDS[buildId].label;
   const queryFields: readonly QueryFieldDefinition<MonsterBrowseRow>[] = [
@@ -360,6 +342,25 @@ export function MonsterBrowse({
           />
         )}
         recordDetailsTitle={(record) => <MonsterDropTitle record={record} />}
+        recordDetails={{
+          selectedId: selectedRecordId,
+          onSelectedIdChange: (selectedId, reason) => {
+            if (reason === 'invalidate') {
+              browseOverlay.invalidate('record-details');
+              return;
+            }
+            if (reason === 'dismiss') {
+              browseOverlay.dismiss('record-details');
+              return;
+            }
+            if (selectedId !== null) {
+              browseOverlay.open({
+                type: 'record-details',
+                recordId: selectedId,
+              });
+            }
+          },
+        }}
         rowExpansionControl={(context) => dropExpansionControl(context)}
         defaultState={defaultState}
         drawerOpened={filterDrawerOpened}

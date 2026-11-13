@@ -1,7 +1,25 @@
 import { MantineProvider } from '@mantine/core';
 import { theme } from '@mapletip/theme';
 import { renderToString } from 'react-dom/server';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
+
+vi.mock('@/features/browse-overlay/useBrowseOverlay', async () => {
+  const { useState } = await import('react');
+  return {
+    useBrowseOverlay: () => {
+      const [overlay, setOverlay] = useState<
+        | import('@/features/browse-overlay/useBrowseOverlay').BrowseOverlay
+        | undefined
+      >(undefined);
+      return {
+        overlay,
+        open: setOverlay,
+        dismiss: () => setOverlay(undefined),
+        invalidate: () => setOverlay(undefined),
+      };
+    },
+  };
+});
 
 import { DEFAULT_BUILD_ID } from '@/config/maplekit';
 
@@ -107,8 +125,8 @@ function renderBrowseHtml(): string {
     emptyDropBrowseFixture(),
   );
 
-  // The page takes its rows as props and uses no router hooks, so plain server
-  // rendering is the whole contract; no router scaffolding is needed.
+  // The route owns the TanStack overlay hook; this unit test isolates the
+  // presentational page with a stateful host stand-in.
   return renderToString(
     <MantineProvider theme={theme} forceColorScheme="dark">
       <MonsterBrowse
