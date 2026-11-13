@@ -472,6 +472,58 @@ describe('Items Browse router state', () => {
     expect(screen.getAllByText('Success rate').length).toBeGreaterThan(0);
   });
 
+  it('owns navigation overlay history and dismisses without leaving the route', async () => {
+    const { router, user } = await mountRoute('/maplestory/items?q=Extra');
+    const back = vi.spyOn(router.history, 'back');
+    await user.click(
+      screen.getByRole('button', {
+        name: 'Item categories: All Items. Open Item categories',
+      }),
+    );
+    const dialog = await screen.findByRole('dialog', {
+      name: 'Item categories',
+    });
+    expect(router.state.location.state).toMatchObject({
+      browseOverlay: { type: 'navigation' },
+    });
+
+    await user.click(within(dialog).getByRole('button', { name: 'Cancel' }));
+
+    await waitFor(() => {
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    });
+    expect(back).toHaveBeenCalledTimes(1);
+    expect(router.state.location.state).not.toHaveProperty('browseOverlay');
+    const location = new URL(router.state.location.href, 'http://localhost');
+    expect(location.pathname).toBe('/maplestory/items');
+    expect(location.searchParams.get('q')).toBe('Extra');
+  });
+
+  it('navigates to a selected category without an extra Back', async () => {
+    const { router, user } = await mountRoute('/maplestory/items');
+    const back = vi.spyOn(router.history, 'back');
+    await user.click(
+      screen.getByRole('button', {
+        name: 'Item categories: All Items. Open Item categories',
+      }),
+    );
+    const dialog = await screen.findByRole('dialog', {
+      name: 'Item categories',
+    });
+    await user.click(within(dialog).getByRole('button', { name: /^Use/u }));
+    await user.click(
+      within(dialog).getByRole('button', { name: /^Recovery/u }),
+    );
+
+    await waitFor(() => {
+      expect(
+        new URL(router.state.location.href, 'http://localhost').pathname,
+      ).toBe('/maplestory/items/use/recovery');
+    });
+    expect(router.state.location.state).not.toHaveProperty('browseOverlay');
+    expect(back).not.toHaveBeenCalled();
+  });
+
   it('drops page and facet params from category breadcrumb links', async () => {
     const { router, user } = await mountRoute(
       '/maplestory/items/use?q=Extra&page=2&pageSize=25&sort=name-desc&types=%5B%22not-an-option%22%5D',

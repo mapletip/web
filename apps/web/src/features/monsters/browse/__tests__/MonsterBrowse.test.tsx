@@ -7,7 +7,25 @@ import {
   within,
 } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
+
+vi.mock('@/features/browse-overlay/useBrowseOverlay', async () => {
+  const { useState } = await import('react');
+  return {
+    useBrowseOverlay: () => {
+      const [overlay, setOverlay] = useState<
+        | import('@/features/browse-overlay/useBrowseOverlay').BrowseOverlay
+        | undefined
+      >(undefined);
+      return {
+        overlay,
+        open: setOverlay,
+        dismiss: () => setOverlay(undefined),
+        invalidate: () => setOverlay(undefined),
+      };
+    },
+  };
+});
 
 import { DEFAULT_BUILD_ID } from '@/config/maplekit';
 
@@ -434,27 +452,6 @@ describe('MonsterBrowse', () => {
     expect(
       within(cards()).queryByText('Sentinel Slime'),
     ).not.toBeInTheDocument();
-  });
-
-  it('closes and discards the filter drawer when browser Back is pressed', async () => {
-    const user = userEvent.setup();
-    mountBrowse();
-
-    await user.click(
-      screen.getByRole('button', {
-        name: 'Filters, 0 active. Open all filters',
-      }),
-    );
-    const drawer = await screen.findByRole('dialog', { name: 'Filters' });
-    await waitFor(() => expect(drawer).toBeVisible());
-    expect(
-      within(drawer).getByRole('button', { name: 'Apply' }),
-    ).toBeInTheDocument();
-
-    fireEvent.popState(window);
-
-    await waitFor(() => expect(drawer).not.toBeVisible());
-    expect(summaryText()).toBe('4 Monsters');
   });
 
   it('applies search, a rail preset and clear to the result set', async () => {

@@ -1,12 +1,12 @@
 import { Text } from '@mantine/core';
 import { DrillDownNav, FacetedBrowser } from '@mapletip/component-library';
-import type { FacetedBrowserNavigationHistory } from '@mapletip/component-library';
 import type { ItemBrowseCoverage } from '@mapletip/data/items';
 import { Link, useRouter } from '@tanstack/react-router';
 import { useCallback, useMemo, type ReactElement } from 'react';
 
 import { BrowsePageShell } from '@/components/BrowsePageShell';
 import { BUILDS, type BuildId } from '@/config/maplekit';
+import { useBrowseOverlay } from '@/features/browse-overlay/useBrowseOverlay';
 
 import { getCategoryRows } from '../assignment';
 import { getItemColumns, itemColumnContextKey } from '../columns';
@@ -107,18 +107,7 @@ export function ItemBrowse({
     sortOptions: presentation.sortOptions,
   });
   const router = useRouter();
-  const navHistory = useMemo<FacetedBrowserNavigationHistory>(
-    () => ({
-      push: () => {
-        const location = router.history.location;
-        router.history.push(location.href, location.state);
-      },
-      back: () => {
-        router.history.back();
-      },
-    }),
-    [router],
-  );
+  const browseOverlay = useBrowseOverlay();
 
   const applyNav = useCallback(
     (id: string, options: { readonly replace: true }) => {
@@ -152,7 +141,16 @@ export function ItemBrowse({
             currentCount: currentNode.count,
             ...(currentIcon ? { currentIcon } : {}),
             apply: applyNav,
-            history: navHistory,
+            opened: browseOverlay.overlay?.type === 'navigation',
+            onOpenedChange: (opened, reason) => {
+              if (opened) {
+                browseOverlay.open({ type: 'navigation' });
+                return;
+              }
+              if (reason === 'dismiss') {
+                browseOverlay.dismiss('navigation');
+              }
+            },
             render: (context) => {
               if (context.mode === 'drawer') {
                 return (

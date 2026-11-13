@@ -31,7 +31,10 @@ interface DraftSession {
 
 export interface UseFacetedBrowserDrawerOptions {
   readonly opened: boolean;
-  readonly onOpenedChange: (opened: boolean) => void;
+  readonly onOpenedChange: (
+    opened: boolean,
+    details?: { readonly reason: 'open' | 'dismiss' | 'apply' | 'invalidate' },
+  ) => void;
   readonly committedState: BrowseState;
   readonly statusActive: boolean;
   readonly filterIsInvalid: (
@@ -143,7 +146,7 @@ export function useFacetedBrowserDrawer({
       return;
     }
     openedRef.current = sessionMatches;
-    if (!sessionMatches) onOpenedChange(false);
+    if (!sessionMatches) onOpenedChange(false, { reason: 'invalidate' });
   }, [
     committedState,
     onOpenedChange,
@@ -169,7 +172,7 @@ export function useFacetedBrowserDrawer({
       openedRef.current = true;
       replaceSession(createSession(committedState));
       setFocusedFacetId(facetId);
-      onOpenedChange(true);
+      onOpenedChange(true, { reason: 'open' });
     },
     [committedState, onOpenedChange, replaceSession],
   );
@@ -178,7 +181,7 @@ export function useFacetedBrowserDrawer({
     openedRef.current = false;
     replaceSession(null);
     setFocusedFacetId(null);
-    onOpenedChange(false);
+    onOpenedChange(false, { reason: 'dismiss' });
   }, [onOpenedChange, replaceSession]);
 
   const apply = useCallback(() => {
@@ -198,7 +201,7 @@ export function useFacetedBrowserDrawer({
     });
     replaceSession(null);
     setFocusedFacetId(null);
-    onOpenedChange(false);
+    onOpenedChange(false, { reason: 'apply' });
   }, [
     commitDraft,
     committedState,

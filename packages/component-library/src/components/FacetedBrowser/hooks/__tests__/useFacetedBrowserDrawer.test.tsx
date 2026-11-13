@@ -20,14 +20,22 @@ const committedState = {
 function DrawerHarness({
   commitDraft = () => undefined,
   initiallyOpened = true,
+  onOpenedChange,
 }: {
   readonly commitDraft?: (draft: DraftCommit) => void;
   readonly initiallyOpened?: boolean;
+  readonly onOpenedChange?: (
+    opened: boolean,
+    details?: { readonly reason: 'open' | 'dismiss' | 'apply' | 'invalidate' },
+  ) => void;
 }) {
   const [opened, setOpened] = useState(initiallyOpened);
   const drawer = useFacetedBrowserDrawer({
     opened,
-    onOpenedChange: setOpened,
+    onOpenedChange: (nextOpened, details) => {
+      setOpened(nextOpened);
+      onOpenedChange?.(nextOpened, details);
+    },
     committedState,
     statusActive: false,
     filterIsInvalid: (filters) => isInvalidNumericRange(filters['level']),
@@ -177,6 +185,31 @@ describe('FacetedBrowser drawer actions', () => {
     expect(commitDraft).toHaveBeenCalledWith({
       filters: {},
       sort: { field: 'value1', direction: 'desc' },
+    });
+  });
+
+  it('reports open, dismiss and apply reasons', async () => {
+    const onOpenedChange = vi.fn();
+    render(
+      <DrawerHarness initiallyOpened={false} onOpenedChange={onOpenedChange} />,
+    );
+
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Open set and apply' }),
+    );
+    expect(onOpenedChange).toHaveBeenNthCalledWith(1, true, {
+      reason: 'open',
+    });
+    expect(onOpenedChange).toHaveBeenNthCalledWith(2, false, {
+      reason: 'apply',
+    });
+
+    onOpenedChange.mockClear();
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Set sort and close' }),
+    );
+    expect(onOpenedChange).toHaveBeenCalledWith(false, {
+      reason: 'dismiss',
     });
   });
 

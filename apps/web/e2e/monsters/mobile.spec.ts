@@ -78,3 +78,100 @@ test('mobile cards, quick filters and the drops drawer work together', async ({
   await expect(reopened).toHaveCount(0);
   await expect(wardenDrops).toBeFocused();
 });
+
+test('mobile drops use one browser history entry and do not refetch data', async ({
+  page,
+  monsterPage,
+  artifactRequests,
+}) => {
+  await monsterPage.goto();
+  const drops = monsterPage.drops.cardButton('Crowned Warden', 24);
+  await drops.click();
+  const drawer = monsterPage.drops.drawer('Crowned Warden');
+  await expect(drawer).toBeVisible();
+
+  await page.goBack();
+  await expect(drawer).toHaveCount(0);
+  await expect(page).toHaveURL(/\/maplestory\/monsters$/u);
+  await expect(drops).toHaveAttribute('aria-expanded', 'false');
+
+  await page.goForward();
+  await expect(drawer).toBeVisible();
+  await expect(drops).toHaveAttribute('aria-expanded', 'true');
+
+  await monsterPage.drops.closeButton(drawer, 'Crowned Warden').click();
+  await expect(drawer).toHaveCount(0);
+  await page.goBack();
+  await expect(page).not.toHaveURL(/\/maplestory\/monsters$/u);
+  expect(artifactRequests).toEqual([]);
+});
+
+test('mobile filter drafts discard on Back and Apply survives history cleanup', async ({
+  page,
+  monsterPage,
+  artifactRequests,
+}) => {
+  await monsterPage.goto();
+  await monsterPage.filters.quickButton('Level. Open Level filters').click();
+  const levelDialog = page.getByRole('dialog', { name: 'Level' });
+  await expect(
+    levelDialog.getByRole('heading', { name: 'Level' }),
+  ).toBeVisible();
+  await levelDialog
+    .getByRole('button', { name: 'Back to all filters' })
+    .click();
+  const dialog = page.getByRole('dialog', { name: 'Filters' });
+  await expect(dialog).toBeVisible();
+
+  const bossYes = dialog
+    .getByRole('group', { name: 'Boss' })
+    .getByRole('checkbox', { name: /^Yes \(/u });
+  await bossYes.check();
+  await expect(monsterPage.results.summary).toHaveText('30 Monsters');
+
+  await page.goBack();
+  await expect(dialog).toHaveCount(0);
+  await expect(monsterPage.results.summary).toHaveText('30 Monsters');
+  await expect(page).toHaveURL(/\/maplestory\/monsters$/u);
+
+  await page.goForward();
+  const reopened = page.getByRole('dialog', { name: 'Filters' });
+  await expect(reopened).toBeVisible();
+  await expect(
+    reopened
+      .getByRole('group', { name: 'Boss' })
+      .getByRole('checkbox', { name: /^Yes \(/u }),
+  ).not.toBeChecked();
+  await expect(monsterPage.results.summary).toHaveText('30 Monsters');
+
+  await reopened
+    .getByRole('group', { name: 'Boss' })
+    .getByRole('checkbox', { name: /^Yes \(/u })
+    .check();
+  await monsterPage.filters.applyButton(reopened).click();
+  await expect(reopened).toHaveCount(0);
+  await expect(monsterPage.results.summary).toHaveText('2 Monsters');
+
+  await page.goBack();
+  await expect(page).not.toHaveURL(/\/maplestory\/monsters$/u);
+  expect(artifactRequests).toEqual([]);
+});
+
+test('versioned monster details follow the same Back and Forward policy', async ({
+  monsterPage,
+  artifactRequests,
+}) => {
+  await monsterPage.goto('/maplestory/gms-v83/monsters');
+  const drops = monsterPage.drops.cardButton('Native Alpha', 2);
+  await drops.click();
+  const drawer = monsterPage.drops.drawer('Native Alpha');
+  await expect(drawer).toBeVisible();
+
+  await monsterPage.page.goBack();
+  await expect(drawer).toHaveCount(0);
+  await expect(monsterPage.page).toHaveURL(/\/maplestory\/gms-v83\/monsters$/u);
+
+  await monsterPage.page.goForward();
+  await expect(drawer).toBeVisible();
+  expect(artifactRequests).toEqual([]);
+});

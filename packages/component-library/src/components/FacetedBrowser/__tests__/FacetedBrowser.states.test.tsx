@@ -7,7 +7,7 @@ import {
   within,
 } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 
 import '@/styles.css';
@@ -539,7 +539,9 @@ describe('sort options control', () => {
     const cancelButton = within(dialog).getByRole('button', { name: 'Cancel' });
     await userEvent.click(cancelButton);
     expect(onStateChange).not.toHaveBeenCalled();
-    expect(onDrawerOpenedChange).toHaveBeenCalledWith(false);
+    expect(onDrawerOpenedChange).toHaveBeenCalledWith(false, {
+      reason: 'dismiss',
+    });
 
     rerender(
       <MantineProvider>
@@ -585,6 +587,9 @@ describe('sort options control', () => {
         page: 1,
       }),
     );
+    expect(onDrawerOpenedChange).toHaveBeenLastCalledWith(false, {
+      reason: 'apply',
+    });
   });
 });
 
@@ -1052,6 +1057,64 @@ describe('responsive navigation slot', () => {
     expect(
       screen.queryByRole('button', { name: 'Reset' }),
     ).not.toBeInTheDocument();
+  });
+
+  it('supports host-controlled navigation opening and dismissal', async () => {
+    const apply = vi.fn();
+    const onOpenedChange = vi.fn();
+
+    function ControlledNavigation() {
+      const [opened, setOpened] = useState(false);
+      return (
+        <MantineProvider>
+          <FacetedBrowser
+            title={<h1>Catalog</h1>}
+            records={demoRecords}
+            idAccessor="id"
+            facets={[]}
+            navigation={{
+              label: genericNavigation.label,
+              currentLabel: genericNavigation.subCategoryLabel,
+              currentId: 'clothing',
+              apply,
+              opened,
+              onOpenedChange: (nextOpened, reason) => {
+                onOpenedChange(nextOpened, reason);
+                setOpened(nextOpened);
+              },
+              render: () => <div>Category Content</div>,
+            }}
+            presentation="cards"
+            renderCard={(record) => <div>{record.name}</div>}
+            defaultState={{
+              search: '',
+              filters: {},
+              page: 1,
+              pageSize: 20,
+              hiddenColumns: [],
+            }}
+          />
+        </MantineProvider>
+      );
+    }
+
+    render(<ControlledNavigation />);
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: `${genericNavigation.label}: ${genericNavigation.subCategoryLabel}. Open ${genericNavigation.label}`,
+      }),
+    );
+    expect(onOpenedChange).toHaveBeenCalledWith(true, 'open');
+    await waitFor(() => {
+      expect(screen.getByRole('dialog')).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+    expect(onOpenedChange).toHaveBeenLastCalledWith(false, 'dismiss');
+    await waitFor(() => {
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    });
+    expect(apply).not.toHaveBeenCalled();
   });
 
   it('keeps filter drawer untouched and distinct from navigation drawer when facets exist', async () => {
