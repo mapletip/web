@@ -52,12 +52,12 @@ function ItemBrowseLeaf() {
       coverage={coverage}
       category={category}
       search={search}
-      onSearchChange={({ search: nextSearch, replace }) => {
-        void navigate({
+      onSearchChange={({ search: nextSearch, replace }) =>
+        navigate({
           search: nextSearch,
           replace,
-        });
-      }}
+        })
+      }
     />
   );
 }

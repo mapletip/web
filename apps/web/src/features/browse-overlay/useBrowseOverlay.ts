@@ -52,6 +52,10 @@ export function useBrowseOverlay(): {
   readonly open: (overlay: BrowseOverlay) => void;
   readonly dismiss: (type: BrowseOverlay['type']) => void;
   readonly invalidate: (type: BrowseOverlay['type']) => Promise<void>;
+  readonly apply: (
+    type: BrowseOverlay['type'],
+    commit: () => void | Promise<void>,
+  ) => Promise<void>;
 } {
   const router = useRouter();
   const location = useLocation();
@@ -91,6 +95,8 @@ export function useBrowseOverlay(): {
       const current = parseBrowseOverlay(router.state.location.state);
       if (current?.type !== type) return;
 
+      const expectedHref = router.state.location.href;
+
       // Invalidation tradeoff: browser history cannot delete a Forward entry.
       // Calling history.back() directly leaves the invalid overlay entry in
       // the Forward stack, which bounces Back or tries to reopen stale details
@@ -122,7 +128,24 @@ export function useBrowseOverlay(): {
         },
       });
 
-      if (parseBrowseOverlay(router.state.location.state) === undefined) {
+      if (
+        parseBrowseOverlay(router.state.location.state) === undefined &&
+        router.state.location.href === expectedHref
+      ) {
+        router.history.back();
+      }
+    },
+    [router],
+  );
+
+  const apply = useCallback(
+    async (type: BrowseOverlay['type'], commit: () => void | Promise<void>) => {
+      const current = parseBrowseOverlay(router.state.location.state);
+      if (current?.type !== type) return;
+
+      await commit();
+
+      if (parseBrowseOverlay(router.state.location.state)?.type === type) {
         router.history.back();
       }
     },
@@ -130,7 +153,7 @@ export function useBrowseOverlay(): {
   );
 
   return useMemo(
-    () => ({ overlay, open, dismiss, invalidate }),
-    [overlay, open, dismiss, invalidate],
+    () => ({ overlay, open, dismiss, invalidate, apply }),
+    [overlay, open, dismiss, invalidate, apply],
   );
 }

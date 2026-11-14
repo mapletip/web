@@ -6,9 +6,10 @@ import type {
   FacetDefinition,
   QueryFieldDefinition,
   RowExpansionControlContext,
+  StateChangeDetails,
   TableColumn,
 } from '@mapletip/component-library';
-import { useCallback, type ReactElement } from 'react';
+import { useCallback, useState, type ReactElement } from 'react';
 
 import { BrowsePageShell } from '@/components/BrowsePageShell';
 import { BUILDS, type BuildId } from '@/config/maplekit';
@@ -261,6 +262,7 @@ export function MonsterBrowse({
   rows,
   dropItemOptions,
 }: MonsterBrowseProps): ReactElement {
+  const [browseState, setBrowseState] = useState<BrowseState>(defaultState);
   const browseOverlay = useBrowseOverlay();
   const filterDrawerOpened = browseOverlay.overlay?.type === 'filters';
   const selectedRecordId =
@@ -277,7 +279,21 @@ export function MonsterBrowse({
         void browseOverlay.invalidate('filters');
         return;
       }
+      if (details?.reason === 'apply') {
+        return;
+      }
       browseOverlay.dismiss('filters');
+    },
+    [browseOverlay],
+  );
+
+  const onStateChange = useCallback(
+    (nextState: BrowseState, details?: StateChangeDetails) => {
+      if (details?.reason === 'apply') {
+        void browseOverlay.apply('filters', () => setBrowseState(nextState));
+        return;
+      }
+      setBrowseState(nextState);
     },
     [browseOverlay],
   );
@@ -362,7 +378,8 @@ export function MonsterBrowse({
           },
         }}
         rowExpansionControl={(context) => dropExpansionControl(context)}
-        defaultState={defaultState}
+        state={browseState}
+        onStateChange={onStateChange}
         drawerOpened={filterDrawerOpened}
         onDrawerOpenedChange={onFilterDrawerOpenedChange}
       />

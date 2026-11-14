@@ -645,7 +645,52 @@ describe('Items Browse router state', () => {
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     expect(router.state.location.state).not.toHaveProperty('browseOverlay');
 
-    // 6. Compact sequential check that after filter dismissal/apply the category navigation
+    // 6. Second Apply cycle after Back: open filters again, select Shoes, and Apply.
+    // The second Apply commits the URL, leaves overlay absent, and triggers no cleanup back.
+    const openFiltersSecond = screen.getByRole('button', {
+      name: 'Filters, 0 active. Open all filters',
+    });
+    await user.click(openFiltersSecond);
+    const secondCycleDialog = await screen.findByRole('dialog', {
+      name: 'Filters',
+    });
+    expect(router.state.location.state).toMatchObject({
+      browseOverlay: { type: 'filters' },
+    });
+
+    backSpy.mockClear();
+    const shoesCheckbox = within(secondCycleDialog).getByRole('checkbox', {
+      name: /^Shoes/u,
+    });
+    await user.click(shoesCheckbox);
+    expect(shoesCheckbox).toBeChecked();
+
+    const secondApplyButton = within(secondCycleDialog).getByRole('button', {
+      name: /^Show /u,
+    });
+    await user.click(secondApplyButton);
+
+    await waitFor(
+      () => {
+        expect(
+          screen.queryByRole('dialog', { name: 'Filters' }),
+        ).not.toBeInTheDocument();
+      },
+      { timeout: 3000 },
+    );
+    await waitFor(() => {
+      const secondAppliedUrl = new URL(
+        router.state.location.href,
+        'http://localhost',
+      );
+      expect(secondAppliedUrl.searchParams.get('scrollTarget')).toBe(
+        '["shoes"]',
+      );
+    });
+    expect(router.state.location.state).not.toHaveProperty('browseOverlay');
+    expect(backSpy).not.toHaveBeenCalled();
+
+    // 7. Compact sequential check that after filter dismissal/apply the category navigation
     // still opens/cancels or applies correctly without leaving browseOverlay state.
     const navChip = screen.getByRole('button', {
       name: 'Item categories: Scrolls. Open Item categories',
@@ -734,5 +779,37 @@ describe('Items Browse router state', () => {
       ).not.toBeInTheDocument();
     });
     expect(router.state.location.state).not.toHaveProperty('browseOverlay');
+  });
+
+  it('consumes overlay and leaves URL unchanged when applying an unchanged draft', async () => {
+    const { router, user } = await mountRoute('/maplestory/items/use/scrolls');
+
+    const openFilters = screen.getByRole('button', {
+      name: 'Filters, 0 active. Open all filters',
+    });
+    await user.click(openFilters);
+    const dialog = await screen.findByRole('dialog', { name: 'Filters' });
+
+    expect(router.state.location.state).toMatchObject({
+      browseOverlay: { type: 'filters' },
+    });
+    const urlBeforeApply = router.state.location.href;
+
+    const applyButton = within(dialog).getByRole('button', {
+      name: /^Show /u,
+    });
+    await user.click(applyButton);
+
+    await waitFor(
+      () => {
+        expect(
+          screen.queryByRole('dialog', { name: 'Filters' }),
+        ).not.toBeInTheDocument();
+      },
+      { timeout: 3000 },
+    );
+
+    expect(router.state.location.state).not.toHaveProperty('browseOverlay');
+    expect(router.state.location.href).toBe(urlBeforeApply);
   });
 });

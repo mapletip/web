@@ -19,7 +19,9 @@ export interface OnSearchChangeOptions {
 
 export interface UseItemBrowseUrlStateOptions {
   readonly search: ItemBrowseSearch;
-  readonly onSearchChange: (options: OnSearchChangeOptions) => void;
+  readonly onSearchChange: (
+    options: OnSearchChangeOptions,
+  ) => void | Promise<void>;
   readonly contextKey: string;
   readonly defaultHiddenColumns: readonly string[];
   readonly sortOptions: readonly BrowseSortOption[];
@@ -30,7 +32,7 @@ export interface UseItemBrowseUrlStateResult {
   readonly handleStateChange: (
     nextState: BrowseState,
     details?: StateChangeDetails,
-  ) => void;
+  ) => void | Promise<void>;
 }
 
 const SEARCH_DEBOUNCE_MS = 150;
@@ -63,7 +65,7 @@ export function useItemBrowseUrlState({
 
   const emitDebouncedSearchChange = useDebouncedCallback(
     (nextSearch: ItemBrowseSearch) => {
-      onSearchChange({ search: nextSearch, replace: true });
+      void onSearchChange({ search: nextSearch, replace: true });
     },
     { delay: SEARCH_DEBOUNCE_MS },
   );
@@ -92,7 +94,7 @@ export function useItemBrowseUrlState({
       }
 
       emitDebouncedSearchChange.cancel();
-      onSearchChange({
+      return onSearchChange({
         search: nextSearch,
         replace: details?.reason === 'clamp' || details?.reason === 'apply',
       });

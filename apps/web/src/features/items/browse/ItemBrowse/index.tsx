@@ -1,6 +1,10 @@
 import { Text } from '@mantine/core';
 import { DrillDownNav, FacetedBrowser } from '@mapletip/component-library';
-import type { DrawerOpenedChangeDetails } from '@mapletip/component-library';
+import type {
+  BrowseState,
+  DrawerOpenedChangeDetails,
+  StateChangeDetails,
+} from '@mapletip/component-library';
 import type { ItemBrowseCoverage } from '@mapletip/data/items';
 import { Link, useRouter } from '@tanstack/react-router';
 import { useCallback, useMemo, type ReactElement } from 'react';
@@ -44,7 +48,9 @@ export interface ItemBrowseProps {
   readonly coverage: ItemBrowseCoverage;
   readonly category: ItemCategorySelection;
   readonly search: ItemBrowseSearch;
-  readonly onSearchChange: (options: OnSearchChangeOptions) => void;
+  readonly onSearchChange: (
+    options: OnSearchChangeOptions,
+  ) => void | Promise<void>;
 }
 
 const SUMMARY_NOUN = { one: 'Item', other: 'Items' } as const;
@@ -99,13 +105,27 @@ export function ItemBrowse({
     [browseOverlay],
   );
 
-  const { browseState, handleStateChange } = useItemBrowseUrlState({
-    search,
-    onSearchChange,
-    contextKey,
-    defaultHiddenColumns: presentation.defaultHiddenColumns,
-    sortOptions: presentation.sortOptions,
-  });
+  const { browseState, handleStateChange: commitBrowseState } =
+    useItemBrowseUrlState({
+      search,
+      onSearchChange,
+      contextKey,
+      defaultHiddenColumns: presentation.defaultHiddenColumns,
+      sortOptions: presentation.sortOptions,
+    });
+
+  const handleStateChange = useCallback(
+    (nextState: BrowseState, details?: StateChangeDetails) => {
+      if (details?.reason === 'apply') {
+        void browseOverlay.apply('filters', () =>
+          commitBrowseState(nextState, details),
+        );
+        return;
+      }
+      void commitBrowseState(nextState, details);
+    },
+    [browseOverlay, commitBrowseState],
+  );
 
   const navTree = useMemo(
     () => getItemNavTree({ rows, buildId }),
