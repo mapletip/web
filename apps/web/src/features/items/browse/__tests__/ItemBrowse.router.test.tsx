@@ -683,4 +683,44 @@ describe('Items Browse router state', () => {
       expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     });
   });
+
+  it('does not treat a normal non-apply URL change while filter drawer is open as Apply', async () => {
+    const { router, user } = await mountRoute('/maplestory/items/use/scrolls');
+
+    const openFilters = screen.getByRole('button', {
+      name: 'Filters, 0 active. Open all filters',
+    });
+    await user.click(openFilters);
+    await screen.findByRole('dialog', { name: 'Filters' });
+
+    expect(router.state.location.state).toMatchObject({
+      browseOverlay: { type: 'filters' },
+    });
+    const historyLengthBeforeChange = router.history.length;
+
+    // Normal non-apply URL-backed navigation while drawer is open
+    await router.navigate({
+      to: ITEM_NAV_TARGET,
+      params: {
+        buildId: undefined,
+        scope: 'use',
+        child: 'scrolls',
+      },
+      search: {
+        ...ITEM_BROWSE_DEFAULT_SEARCH,
+        page: 2,
+      },
+    });
+
+    // Pushes new history entry instead of replacing the overlay entry
+    expect(router.history.length).toBeGreaterThan(historyLengthBeforeChange);
+
+    // Stale drawer session is dismissed/invalidated, not treated as an Apply
+    await waitFor(() => {
+      expect(
+        screen.queryByRole('dialog', { name: 'Filters' }),
+      ).not.toBeInTheDocument();
+    });
+    expect(router.state.location.state).not.toHaveProperty('browseOverlay');
+  });
 });

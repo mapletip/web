@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { useState } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 
+import type { StateChangeDetails } from '@/components/FacetedBrowser/FacetedBrowser.types';
 import { isInvalidNumericRange } from '@/components/FacetedBrowser/hooks/filterTypes';
 import {
   useFacetedBrowserDrawer,
@@ -22,7 +23,10 @@ function DrawerHarness({
   initiallyOpened = true,
   onOpenedChange,
 }: {
-  readonly commitDraft?: (draft: DraftCommit) => void;
+  readonly commitDraft?: (
+    draft: DraftCommit,
+    details?: StateChangeDetails,
+  ) => void;
   readonly initiallyOpened?: boolean;
   readonly onOpenedChange?: (
     opened: boolean,
@@ -134,10 +138,13 @@ describe('FacetedBrowser drawer actions', () => {
     await userEvent.click(
       screen.getByRole('button', { name: 'Set and apply' }),
     );
-    expect(commitDraft).toHaveBeenCalledWith({
-      filters: { group: ['Beta'] },
-      sort: undefined,
-    });
+    expect(commitDraft).toHaveBeenCalledWith(
+      {
+        filters: { group: ['Beta'] },
+        sort: undefined,
+      },
+      { reason: 'apply' },
+    );
   });
 
   it('does not apply after a close in the same event', async () => {
@@ -167,10 +174,13 @@ describe('FacetedBrowser drawer actions', () => {
     await userEvent.click(
       screen.getByRole('button', { name: 'Open set and apply' }),
     );
-    expect(commitDraft).toHaveBeenCalledWith({
-      filters: { group: ['Beta'] },
-      sort: undefined,
-    });
+    expect(commitDraft).toHaveBeenCalledWith(
+      {
+        filters: { group: ['Beta'] },
+        sort: undefined,
+      },
+      { reason: 'apply' },
+    );
   });
 
   it('does not apply an invalid draft written in the same event', async () => {
@@ -190,10 +200,13 @@ describe('FacetedBrowser drawer actions', () => {
     await userEvent.click(
       screen.getByRole('button', { name: 'Set sort and apply' }),
     );
-    expect(commitDraft).toHaveBeenCalledWith({
-      filters: {},
-      sort: { field: 'value1', direction: 'desc' },
-    });
+    expect(commitDraft).toHaveBeenCalledWith(
+      {
+        filters: {},
+        sort: { field: 'value1', direction: 'desc' },
+      },
+      { reason: 'apply' },
+    );
   });
 
   it('reports open, dismiss and apply reasons', async () => {

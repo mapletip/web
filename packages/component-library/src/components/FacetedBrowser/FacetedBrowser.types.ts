@@ -124,7 +124,7 @@ export interface BrowseSortOption {
 }
 
 export interface StateChangeDetails {
-  readonly reason?: 'clamp' | undefined;
+  readonly reason?: 'clamp' | 'apply' | undefined;
 }
 
 interface CommonProps<TRecord extends Record<string, unknown>> {

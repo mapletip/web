@@ -99,19 +99,9 @@ export function ItemBrowse({
     [browseOverlay],
   );
 
-  const handleSearchChange = useCallback(
-    ({ search: nextSearch, replace }: OnSearchChangeOptions) => {
-      onSearchChange({
-        search: nextSearch,
-        replace: filterDrawerOpened ? true : replace,
-      });
-    },
-    [filterDrawerOpened, onSearchChange],
-  );
-
   const { browseState, handleStateChange } = useItemBrowseUrlState({
     search,
-    onSearchChange: handleSearchChange,
+    onSearchChange,
     contextKey,
     defaultHiddenColumns: presentation.defaultHiddenColumns,
     sortOptions: presentation.sortOptions,

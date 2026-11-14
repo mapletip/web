@@ -94,7 +94,7 @@ export function useItemBrowseUrlState({
       emitDebouncedSearchChange.cancel();
       onSearchChange({
         search: nextSearch,
-        replace: details?.reason === 'clamp',
+        replace: details?.reason === 'clamp' || details?.reason === 'apply',
       });
     },
     [

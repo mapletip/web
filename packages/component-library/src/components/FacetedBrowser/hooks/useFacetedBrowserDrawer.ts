@@ -2,6 +2,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import type { SortIntent } from '@/components/Table';
 
+import type { StateChangeDetails } from '../FacetedBrowser.types';
+
 import {
   EMPTY_FILTERS,
   browseStatesEqual,
@@ -43,7 +45,10 @@ export interface UseFacetedBrowserDrawerOptions {
   readonly evaluateDraft: (
     filters: Record<string, FacetFilterValue>,
   ) => DraftEvaluation;
-  readonly commitDraft: (draft: DraftCommit) => void;
+  readonly commitDraft: (
+    draft: DraftCommit,
+    details?: StateChangeDetails,
+  ) => void;
 }
 
 function snapshotState(state: BrowseState): BrowseState {
@@ -205,10 +210,13 @@ export function useFacetedBrowserDrawer({
 
     openedRef.current = false;
     if (hasChanges) {
-      commitDraft({
-        filters: currentSession.filters,
-        sort: currentSession.sort,
-      });
+      commitDraft(
+        {
+          filters: currentSession.filters,
+          sort: currentSession.sort,
+        },
+        { reason: 'apply' },
+      );
     }
     replaceSession(null);
     setFocusedFacetId(null);

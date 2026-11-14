@@ -146,6 +146,26 @@ describe('useItemBrowseUrlState', () => {
     });
   });
 
+  it('replaces drawer apply changes', () => {
+    const onSearchChange = vi.fn();
+    const { getResult } = setup({
+      search: itemBrowseSearchSchema.parse({ page: 2 }),
+      onSearchChange,
+    });
+
+    act(() => {
+      getResult().handleStateChange(
+        { ...getResult().browseState, page: 1 },
+        { reason: 'apply' },
+      );
+    });
+
+    expect(onSearchChange).toHaveBeenCalledWith({
+      search: { q: '', page: 1, pageSize: 50, sort: 'name-asc' },
+      replace: true,
+    });
+  });
+
   it('cancels a pending search replace before pushing a discrete change', () => {
     vi.useFakeTimers();
     const onSearchChange = vi.fn();

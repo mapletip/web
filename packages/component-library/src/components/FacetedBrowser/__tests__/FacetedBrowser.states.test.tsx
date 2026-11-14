@@ -587,6 +587,7 @@ describe('sort options control', () => {
         sort: { field: 'name', direction: 'desc' },
         page: 1,
       }),
+      { reason: 'apply' },
     );
     expect(onDrawerOpenedChange).toHaveBeenLastCalledWith(false, {
       reason: 'apply',
