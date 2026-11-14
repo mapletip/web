@@ -33,25 +33,30 @@ export const handlers = [
 ];
 
 const cwCatalogPath = fixtureRelease.builds.get('cw-launch')?.catalog.path;
+const cwPagePackPath = fixtureRelease.builds.get('cw-launch')?.pagePack.path;
 const gmsProductPath =
   fixtureRelease.builds.get('gms-v83')?.productManifest.path;
 
+function corruptFileHandler(path: string | undefined) {
+  if (path === undefined) return [];
+  return [
+    http.get(`${DATA_ORIGIN}/${path}`, () => {
+      const original = fixtureRelease.files.get(path);
+      if (original === undefined) {
+        return new HttpResponse(null, { status: 404 });
+      }
+      const altered = new Uint8Array(original);
+      altered[0] = (altered[0] ?? 0) ^ 1;
+      return new HttpResponse(altered, {
+        headers: { 'content-type': 'application/json' },
+      });
+    }),
+  ];
+}
+
 export const failingOriginHandlers = [
-  ...(cwCatalogPath === undefined
-    ? []
-    : [
-        http.get(`${DATA_ORIGIN}/${cwCatalogPath}`, () => {
-          const original = fixtureRelease.files.get(cwCatalogPath);
-          if (original === undefined) {
-            return new HttpResponse(null, { status: 404 });
-          }
-          const altered = new Uint8Array(original);
-          altered[0] = (altered[0] ?? 0) ^ 1;
-          return new HttpResponse(altered, {
-            headers: { 'content-type': 'application/json' },
-          });
-        }),
-      ]),
+  ...corruptFileHandler(cwCatalogPath),
+  ...corruptFileHandler(cwPagePackPath),
   ...(gmsProductPath === undefined
     ? []
     : [

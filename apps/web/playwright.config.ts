@@ -42,7 +42,11 @@ export default defineConfig({
   projects: [
     {
       name: 'desktop',
-      testMatch: ['**/desktop.spec.ts', '**/routing.spec.ts'],
+      testMatch: [
+        '**/desktop.spec.ts',
+        '**/routing.spec.ts',
+        '**/detail.spec.ts',
+      ],
       use: {
         ...devices['Desktop Chrome'],
         ...use,
@@ -52,7 +56,7 @@ export default defineConfig({
     },
     {
       name: 'mobile',
-      testMatch: '**/mobile.spec.ts',
+      testMatch: ['**/mobile.spec.ts', '**/detail.spec.ts'],
       use: {
         ...devices['iPhone 13'],
         ...use,
