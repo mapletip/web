@@ -68,24 +68,6 @@ describe('NavigationDrawer', () => {
     ).toBeInTheDocument();
   });
 
-  it('pushes a history entry when opened', () => {
-    const history = {
-      push: vi.fn(),
-      back: vi.fn(),
-    };
-
-    render(
-      <MantineProvider>
-        <NavigationDrawer {...defaultProps} history={history}>
-          {() => <div>Drawer Body</div>}
-        </NavigationDrawer>
-      </MantineProvider>,
-    );
-
-    expect(history.push).toHaveBeenCalledTimes(1);
-    expect(history.back).not.toHaveBeenCalled();
-  });
-
   it('moves draft on tapping non-leaf row without navigating and updates footer count', () => {
     render(
       <MantineProvider>
@@ -122,19 +104,12 @@ describe('NavigationDrawer', () => {
     expect(defaultProps.onClose).not.toHaveBeenCalled();
   });
 
-  it('applies immediately and closes on tapping leaf row without calling history.back', () => {
+  it('applies immediately and reports navigation on tapping a different leaf row', () => {
     const onApply = vi.fn();
     const onClose = vi.fn();
-    const history = { push: vi.fn(), back: vi.fn() };
-
     render(
       <MantineProvider>
-        <NavigationDrawer
-          {...defaultProps}
-          onApply={onApply}
-          onClose={onClose}
-          history={history}
-        >
+        <NavigationDrawer {...defaultProps} onApply={onApply} onClose={onClose}>
           {({ onSelect }) => (
             <button
               type="button"
@@ -153,15 +128,12 @@ describe('NavigationDrawer', () => {
 
     expect(onApply).toHaveBeenCalledTimes(1);
     expect(onApply).toHaveBeenCalledWith('clothing/shirts', { replace: true });
-    expect(onClose).toHaveBeenCalledTimes(1);
-    expect(history.back).not.toHaveBeenCalled();
+    expect(onClose).toHaveBeenCalledWith('navigate');
   });
 
-  it('just closes and pops history on tapping leaf row when leaf id equals currentId', () => {
+  it('dismisses without applying when the leaf id equals the current id', () => {
     const onApply = vi.fn();
     const onClose = vi.fn();
-    const history = { push: vi.fn(), back: vi.fn() };
-
     render(
       <MantineProvider>
         <NavigationDrawer
@@ -169,7 +141,6 @@ describe('NavigationDrawer', () => {
           currentId="clothing/shirts"
           onApply={onApply}
           onClose={onClose}
-          history={history}
         >
           {({ onSelect }) => (
             <button
@@ -188,23 +159,15 @@ describe('NavigationDrawer', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Select Shirts' }));
 
     expect(onApply).not.toHaveBeenCalled();
-    expect(history.back).toHaveBeenCalledTimes(1);
-    expect(onClose).toHaveBeenCalledTimes(1);
+    expect(onClose).toHaveBeenCalledWith('dismiss');
   });
 
-  it('applies draft and replaces history on footer apply click when draft differs from current', () => {
+  it('applies the draft and reports navigation when it differs from the current id', () => {
     const onApply = vi.fn();
     const onClose = vi.fn();
-    const history = { push: vi.fn(), back: vi.fn() };
-
     render(
       <MantineProvider>
-        <NavigationDrawer
-          {...defaultProps}
-          onApply={onApply}
-          onClose={onClose}
-          history={history}
-        >
+        <NavigationDrawer {...defaultProps} onApply={onApply} onClose={onClose}>
           {({ onSelect }) => (
             <button
               type="button"
@@ -224,15 +187,12 @@ describe('NavigationDrawer', () => {
 
     expect(onApply).toHaveBeenCalledTimes(1);
     expect(onApply).toHaveBeenCalledWith('clothing', { replace: true });
-    expect(onClose).toHaveBeenCalledTimes(1);
-    expect(history.back).not.toHaveBeenCalled();
+    expect(onClose).toHaveBeenCalledWith('navigate');
   });
 
-  it('just closes and pops history on footer apply click when draft equals current', () => {
+  it('dismisses without applying when the draft equals the current id', () => {
     const onApply = vi.fn();
     const onClose = vi.fn();
-    const history = { push: vi.fn(), back: vi.fn() };
-
     render(
       <MantineProvider>
         <NavigationDrawer
@@ -240,7 +200,6 @@ describe('NavigationDrawer', () => {
           currentId="all"
           onApply={onApply}
           onClose={onClose}
-          history={history}
         >
           {() => <div>Body</div>}
         </NavigationDrawer>
@@ -250,17 +209,14 @@ describe('NavigationDrawer', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Show 100 items' }));
 
     expect(onApply).not.toHaveBeenCalled();
-    expect(onClose).toHaveBeenCalledTimes(1);
-    expect(history.back).toHaveBeenCalledTimes(1);
+    expect(onClose).toHaveBeenCalledWith('dismiss');
   });
 
-  it('discards draft, calls history.back and onClose on Cancel click', () => {
+  it('discards the draft and reports dismissal on Cancel click', () => {
     const onClose = vi.fn();
-    const history = { push: vi.fn(), back: vi.fn() };
-
     render(
       <MantineProvider>
-        <NavigationDrawer {...defaultProps} onClose={onClose} history={history}>
+        <NavigationDrawer {...defaultProps} onClose={onClose}>
           {({ onSelect }) => (
             <button
               type="button"
@@ -278,18 +234,15 @@ describe('NavigationDrawer', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Select Clothing' }));
     fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
 
-    expect(onClose).toHaveBeenCalledTimes(1);
-    expect(history.back).toHaveBeenCalledTimes(1);
+    expect(onClose).toHaveBeenCalledWith('dismiss');
     expect(defaultProps.onApply).not.toHaveBeenCalled();
   });
 
-  it('discards draft, calls history.back and onClose on Close button (✕) click', () => {
+  it('discards the draft and reports dismissal on Close button (✕) click', () => {
     const onClose = vi.fn();
-    const history = { push: vi.fn(), back: vi.fn() };
-
     render(
       <MantineProvider>
-        <NavigationDrawer {...defaultProps} onClose={onClose} history={history}>
+        <NavigationDrawer {...defaultProps} onClose={onClose}>
           {() => <div>Body</div>}
         </NavigationDrawer>
       </MantineProvider>,
@@ -297,39 +250,26 @@ describe('NavigationDrawer', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Close Categories' }));
 
-    expect(onClose).toHaveBeenCalledTimes(1);
-    expect(history.back).toHaveBeenCalledTimes(1);
+    expect(onClose).toHaveBeenCalledWith('dismiss');
   });
 
-  it('closes and discards draft without calling history.back when browser popstate fires', () => {
+  it('does not touch browser history while opening, cancelling or applying', () => {
+    const pushState = vi.spyOn(window.history, 'pushState');
+    const back = vi.spyOn(window.history, 'back');
     const onClose = vi.fn();
-    const history = { push: vi.fn(), back: vi.fn() };
 
     render(
       <MantineProvider>
-        <NavigationDrawer {...defaultProps} onClose={onClose} history={history}>
-          {({ onSelect }) => (
-            <button
-              type="button"
-              onClick={() =>
-                onSelect({ id: 'clothing', count: 42 }, { isLeaf: false })
-              }
-            >
-              Select Clothing
-            </button>
-          )}
+        <NavigationDrawer {...defaultProps} onClose={onClose}>
+          {() => <div>Body</div>}
         </NavigationDrawer>
       </MantineProvider>,
     );
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
 
-    fireEvent.click(screen.getByRole('button', { name: 'Select Clothing' }));
-
-    // Simulate browser Back (popstate)
-    fireEvent(window, new PopStateEvent('popstate'));
-
-    expect(onClose).toHaveBeenCalledTimes(1);
-    // history.back must NOT be called since browser already popped
-    expect(history.back).not.toHaveBeenCalled();
+    expect(onClose).toHaveBeenCalledWith('dismiss');
+    expect(pushState).not.toHaveBeenCalled();
+    expect(back).not.toHaveBeenCalled();
   });
 
   it('moves focus to the highlighted draft row after drilling', async () => {

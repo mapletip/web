@@ -2,6 +2,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import type { SortIntent } from '@/components/Table';
 
+import type { StateChangeDetails } from '../FacetedBrowser.types';
+
 import {
   EMPTY_FILTERS,
   browseStatesEqual,
@@ -31,7 +33,10 @@ interface DraftSession {
 
 export interface UseFacetedBrowserDrawerOptions {
   readonly opened: boolean;
-  readonly onOpenedChange: (opened: boolean) => void;
+  readonly onOpenedChange: (
+    opened: boolean,
+    details?: { readonly reason: 'open' | 'dismiss' | 'apply' | 'invalidate' },
+  ) => void;
   readonly committedState: BrowseState;
   readonly statusActive: boolean;
   readonly filterIsInvalid: (
@@ -40,7 +45,10 @@ export interface UseFacetedBrowserDrawerOptions {
   readonly evaluateDraft: (
     filters: Record<string, FacetFilterValue>,
   ) => DraftEvaluation;
-  readonly commitDraft: (draft: DraftCommit) => void;
+  readonly commitDraft: (
+    draft: DraftCommit,
+    details?: StateChangeDetails,
+  ) => void;
 }
 
 function snapshotState(state: BrowseState): BrowseState {
@@ -143,7 +151,7 @@ export function useFacetedBrowserDrawer({
       return;
     }
     openedRef.current = sessionMatches;
-    if (!sessionMatches) onOpenedChange(false);
+    if (!sessionMatches) onOpenedChange(false, { reason: 'invalidate' });
   }, [
     committedState,
     onOpenedChange,
@@ -169,7 +177,7 @@ export function useFacetedBrowserDrawer({
       openedRef.current = true;
       replaceSession(createSession(committedState));
       setFocusedFacetId(facetId);
-      onOpenedChange(true);
+      onOpenedChange(true, { reason: 'open' });
     },
     [committedState, onOpenedChange, replaceSession],
   );
@@ -178,7 +186,7 @@ export function useFacetedBrowserDrawer({
     openedRef.current = false;
     replaceSession(null);
     setFocusedFacetId(null);
-    onOpenedChange(false);
+    onOpenedChange(false, { reason: 'dismiss' });
   }, [onOpenedChange, replaceSession]);
 
   const apply = useCallback(() => {
@@ -191,14 +199,28 @@ export function useFacetedBrowserDrawer({
     ) {
       return;
     }
+    const filtersChanged = !filtersEqual(
+      currentSession.filters,
+      committedState.filters,
+    );
+    const sortChanged =
+      currentSession.sort?.field !== committedState.sort?.field ||
+      currentSession.sort?.direction !== committedState.sort?.direction;
+    const hasChanges = filtersChanged || sortChanged;
+
     openedRef.current = false;
-    commitDraft({
-      filters: currentSession.filters,
-      sort: currentSession.sort,
-    });
+    if (hasChanges) {
+      commitDraft(
+        {
+          filters: currentSession.filters,
+          sort: currentSession.sort,
+        },
+        { reason: 'apply' },
+      );
+    }
     replaceSession(null);
     setFocusedFacetId(null);
-    onOpenedChange(false);
+    onOpenedChange(false, { reason: hasChanges ? 'apply' : 'dismiss' });
   }, [
     commitDraft,
     committedState,

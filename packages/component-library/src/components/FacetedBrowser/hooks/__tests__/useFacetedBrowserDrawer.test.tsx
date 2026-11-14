@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { useState } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 
+import type { StateChangeDetails } from '@/components/FacetedBrowser/FacetedBrowser.types';
 import { isInvalidNumericRange } from '@/components/FacetedBrowser/hooks/filterTypes';
 import {
   useFacetedBrowserDrawer,
@@ -20,14 +21,25 @@ const committedState = {
 function DrawerHarness({
   commitDraft = () => undefined,
   initiallyOpened = true,
+  onOpenedChange,
 }: {
-  readonly commitDraft?: (draft: DraftCommit) => void;
+  readonly commitDraft?: (
+    draft: DraftCommit,
+    details?: StateChangeDetails,
+  ) => void;
   readonly initiallyOpened?: boolean;
+  readonly onOpenedChange?: (
+    opened: boolean,
+    details?: { readonly reason: 'open' | 'dismiss' | 'apply' | 'invalidate' },
+  ) => void;
 }) {
   const [opened, setOpened] = useState(initiallyOpened);
   const drawer = useFacetedBrowserDrawer({
     opened,
-    onOpenedChange: setOpened,
+    onOpenedChange: (nextOpened, details) => {
+      setOpened(nextOpened);
+      onOpenedChange?.(nextOpened, details);
+    },
     committedState,
     statusActive: false,
     filterIsInvalid: (filters) => isInvalidNumericRange(filters['level']),
@@ -106,6 +118,14 @@ function DrawerHarness({
       >
         Set sort and close
       </button>
+      <button
+        type="button"
+        onClick={() => {
+          drawer.apply();
+        }}
+      >
+        Apply without changes
+      </button>
     </div>
   );
 }
@@ -118,10 +138,13 @@ describe('FacetedBrowser drawer actions', () => {
     await userEvent.click(
       screen.getByRole('button', { name: 'Set and apply' }),
     );
-    expect(commitDraft).toHaveBeenCalledWith({
-      filters: { group: ['Beta'] },
-      sort: undefined,
-    });
+    expect(commitDraft).toHaveBeenCalledWith(
+      {
+        filters: { group: ['Beta'] },
+        sort: undefined,
+      },
+      { reason: 'apply' },
+    );
   });
 
   it('does not apply after a close in the same event', async () => {
@@ -151,10 +174,13 @@ describe('FacetedBrowser drawer actions', () => {
     await userEvent.click(
       screen.getByRole('button', { name: 'Open set and apply' }),
     );
-    expect(commitDraft).toHaveBeenCalledWith({
-      filters: { group: ['Beta'] },
-      sort: undefined,
-    });
+    expect(commitDraft).toHaveBeenCalledWith(
+      {
+        filters: { group: ['Beta'] },
+        sort: undefined,
+      },
+      { reason: 'apply' },
+    );
   });
 
   it('does not apply an invalid draft written in the same event', async () => {
@@ -174,9 +200,37 @@ describe('FacetedBrowser drawer actions', () => {
     await userEvent.click(
       screen.getByRole('button', { name: 'Set sort and apply' }),
     );
-    expect(commitDraft).toHaveBeenCalledWith({
-      filters: {},
-      sort: { field: 'value1', direction: 'desc' },
+    expect(commitDraft).toHaveBeenCalledWith(
+      {
+        filters: {},
+        sort: { field: 'value1', direction: 'desc' },
+      },
+      { reason: 'apply' },
+    );
+  });
+
+  it('reports open, dismiss and apply reasons', async () => {
+    const onOpenedChange = vi.fn();
+    render(
+      <DrawerHarness initiallyOpened={false} onOpenedChange={onOpenedChange} />,
+    );
+
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Open set and apply' }),
+    );
+    expect(onOpenedChange).toHaveBeenNthCalledWith(1, true, {
+      reason: 'open',
+    });
+    expect(onOpenedChange).toHaveBeenNthCalledWith(2, false, {
+      reason: 'apply',
+    });
+
+    onOpenedChange.mockClear();
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Set sort and close' }),
+    );
+    expect(onOpenedChange).toHaveBeenCalledWith(false, {
+      reason: 'dismiss',
     });
   });
 
@@ -188,5 +242,24 @@ describe('FacetedBrowser drawer actions', () => {
       screen.getByRole('button', { name: 'Set sort and close' }),
     );
     expect(commitDraft).not.toHaveBeenCalled();
+  });
+
+  it('reports dismiss and does not commit draft when applying unchanged state', async () => {
+    const commitDraft = vi.fn();
+    const onOpenedChange = vi.fn();
+    render(
+      <DrawerHarness
+        commitDraft={commitDraft}
+        onOpenedChange={onOpenedChange}
+      />,
+    );
+
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Apply without changes' }),
+    );
+    expect(commitDraft).not.toHaveBeenCalled();
+    expect(onOpenedChange).toHaveBeenCalledWith(false, {
+      reason: 'dismiss',
+    });
   });
 });

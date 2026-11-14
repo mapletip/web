@@ -1,12 +1,17 @@
 import { Text } from '@mantine/core';
 import { DrillDownNav, FacetedBrowser } from '@mapletip/component-library';
-import type { FacetedBrowserNavigationHistory } from '@mapletip/component-library';
+import type {
+  BrowseState,
+  DrawerOpenedChangeDetails,
+  StateChangeDetails,
+} from '@mapletip/component-library';
 import type { ItemBrowseCoverage } from '@mapletip/data/items';
 import { Link, useRouter } from '@tanstack/react-router';
 import { useCallback, useMemo, type ReactElement } from 'react';
 
 import { BrowsePageShell } from '@/components/BrowsePageShell';
 import { BUILDS, type BuildId } from '@/config/maplekit';
+import { useBrowseOverlay } from '@/features/browse-overlay/useBrowseOverlay';
 
 import { getCategoryRows } from '../assignment';
 import { getItemColumns, itemColumnContextKey } from '../columns';
@@ -43,7 +48,9 @@ export interface ItemBrowseProps {
   readonly coverage: ItemBrowseCoverage;
   readonly category: ItemCategorySelection;
   readonly search: ItemBrowseSearch;
-  readonly onSearchChange: (options: OnSearchChangeOptions) => void;
+  readonly onSearchChange: (
+    options: OnSearchChangeOptions,
+  ) => void | Promise<void>;
 }
 
 const SUMMARY_NOUN = { one: 'Item', other: 'Items' } as const;
@@ -77,13 +84,48 @@ export function ItemBrowse({
     () => getItemColumns({ category, coverage, rows: scopedRows }),
     [category, coverage, scopedRows],
   );
-  const { browseState, handleStateChange } = useItemBrowseUrlState({
-    search,
-    onSearchChange,
-    contextKey,
-    defaultHiddenColumns: presentation.defaultHiddenColumns,
-    sortOptions: presentation.sortOptions,
-  });
+  const browseOverlay = useBrowseOverlay();
+  const filterDrawerOpened = browseOverlay.overlay?.type === 'filters';
+
+  const onFilterDrawerOpenedChange = useCallback(
+    (opened: boolean, details?: DrawerOpenedChangeDetails) => {
+      if (opened) {
+        browseOverlay.open({ type: 'filters' });
+        return;
+      }
+      if (details?.reason === 'invalidate') {
+        void browseOverlay.invalidate('filters');
+        return;
+      }
+      if (details?.reason === 'apply') {
+        return;
+      }
+      browseOverlay.dismiss('filters');
+    },
+    [browseOverlay],
+  );
+
+  const { browseState, handleStateChange: commitBrowseState } =
+    useItemBrowseUrlState({
+      search,
+      onSearchChange,
+      contextKey,
+      defaultHiddenColumns: presentation.defaultHiddenColumns,
+      sortOptions: presentation.sortOptions,
+    });
+
+  const handleStateChange = useCallback(
+    (nextState: BrowseState, details?: StateChangeDetails) => {
+      if (details?.reason === 'apply') {
+        void browseOverlay.apply('filters', () =>
+          commitBrowseState(nextState, details),
+        );
+        return;
+      }
+      void commitBrowseState(nextState, details);
+    },
+    [browseOverlay, commitBrowseState],
+  );
 
   const navTree = useMemo(
     () => getItemNavTree({ rows, buildId }),
@@ -107,18 +149,6 @@ export function ItemBrowse({
     sortOptions: presentation.sortOptions,
   });
   const router = useRouter();
-  const navHistory = useMemo<FacetedBrowserNavigationHistory>(
-    () => ({
-      push: () => {
-        const location = router.history.location;
-        router.history.push(location.href, location.state);
-      },
-      back: () => {
-        router.history.back();
-      },
-    }),
-    [router],
-  );
 
   const applyNav = useCallback(
     (id: string, options: { readonly replace: true }) => {
@@ -152,7 +182,16 @@ export function ItemBrowse({
             currentCount: currentNode.count,
             ...(currentIcon ? { currentIcon } : {}),
             apply: applyNav,
-            history: navHistory,
+            opened: browseOverlay.overlay?.type === 'navigation',
+            onOpenedChange: (opened, reason) => {
+              if (opened) {
+                browseOverlay.open({ type: 'navigation' });
+                return;
+              }
+              if (reason === 'dismiss') {
+                browseOverlay.dismiss('navigation');
+              }
+            },
             render: (context) => {
               if (context.mode === 'drawer') {
                 return (
@@ -202,6 +241,8 @@ export function ItemBrowse({
           )}
           state={browseState}
           onStateChange={handleStateChange}
+          drawerOpened={filterDrawerOpened}
+          onDrawerOpenedChange={onFilterDrawerOpenedChange}
           renderPageLink={({ page, state, props }) => {
             const { target, disabled, ...linkProps } = props;
             const routerLinkProps: Omit<typeof linkProps, 'href'> = linkProps;

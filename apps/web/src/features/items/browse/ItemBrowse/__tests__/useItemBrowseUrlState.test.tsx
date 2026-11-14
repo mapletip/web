@@ -21,7 +21,9 @@ describe('useItemBrowseUrlState', () => {
     sortOptions = ITEM_SORT_OPTIONS,
   }: {
     readonly search?: ItemBrowseSearch;
-    readonly onSearchChange?: (options: OnSearchChangeOptions) => void;
+    readonly onSearchChange?: (
+      options: OnSearchChangeOptions,
+    ) => void | Promise<void>;
     readonly contextKey?: string;
     readonly defaultHiddenColumns?: readonly string[];
     readonly sortOptions?: typeof ITEM_SORT_OPTIONS;
@@ -59,7 +61,7 @@ describe('useItemBrowseUrlState', () => {
     const { getResult } = setup({ onSearchChange });
 
     act(() => {
-      getResult().handleStateChange({
+      void getResult().handleStateChange({
         ...getResult().browseState,
         search: 'pot',
       });
@@ -81,7 +83,10 @@ describe('useItemBrowseUrlState', () => {
     const { getResult } = setup({ onSearchChange });
 
     act(() => {
-      getResult().handleStateChange({ ...getResult().browseState, page: 2 });
+      void getResult().handleStateChange({
+        ...getResult().browseState,
+        page: 2,
+      });
     });
 
     expect(onSearchChange).toHaveBeenCalledWith({
@@ -107,7 +112,7 @@ describe('useItemBrowseUrlState', () => {
     });
 
     act(() => {
-      getResult().handleStateChange({
+      void getResult().handleStateChange({
         ...getResult().browseState,
         page: 1,
         filters: { types: ['potion'] },
@@ -134,12 +139,35 @@ describe('useItemBrowseUrlState', () => {
     });
 
     act(() => {
-      getResult().handleStateChange(
+      void getResult().handleStateChange(
         { ...getResult().browseState, page: 1 },
         { reason: 'clamp' },
       );
     });
 
+    expect(onSearchChange).toHaveBeenCalledWith({
+      search: { q: '', page: 1, pageSize: 50, sort: 'name-asc' },
+      replace: true,
+    });
+  });
+
+  it('replaces drawer apply changes and returns onSearchChange result', () => {
+    const commitPromise = Promise.resolve();
+    const onSearchChange = vi.fn().mockReturnValue(commitPromise);
+    const { getResult } = setup({
+      search: itemBrowseSearchSchema.parse({ page: 2 }),
+      onSearchChange,
+    });
+
+    let result: void | Promise<void> = undefined;
+    act(() => {
+      result = getResult().handleStateChange(
+        { ...getResult().browseState, page: 1 },
+        { reason: 'apply' },
+      );
+    });
+
+    expect(result).toBe(commitPromise);
     expect(onSearchChange).toHaveBeenCalledWith({
       search: { q: '', page: 1, pageSize: 50, sort: 'name-asc' },
       replace: true,
@@ -152,13 +180,13 @@ describe('useItemBrowseUrlState', () => {
     const { getResult } = setup({ onSearchChange });
 
     act(() => {
-      getResult().handleStateChange({
+      void getResult().handleStateChange({
         ...getResult().browseState,
         search: 'pot',
       });
     });
     act(() => {
-      getResult().handleStateChange({
+      void getResult().handleStateChange({
         ...getResult().browseState,
         page: 2,
       });

@@ -234,11 +234,10 @@ test('desktop drop panels group and search entries and close in Escape order', a
   await expect(monsterPage.drops.tableButton('Plain Pebble', 1)).toBeVisible();
 });
 
-test('history navigation loads Monster artifacts in the browser', async ({
+test('history navigation reuses cached Monster artifacts', async ({
   page,
   monsterPage,
   artifactRequests,
-  expectedArtifactRequests,
 }) => {
   await monsterPage.goto();
   await page
@@ -247,30 +246,11 @@ test('history navigation loads Monster artifacts in the browser', async ({
     .click();
   await expect(page).toHaveURL('/');
   artifactRequests.splice(0);
-  expectedArtifactRequests.push(
-    /^\/v1\/releases\//u,
-    /^\/v1\/build-indexes\//u,
-    /^\/v2\/products\//u,
-    /^\/v2\/catalogs\//u,
-    /^\/v2\/browse\//u,
-  );
+
   await page.goBack();
   await monsterPage.ready();
   await expect(monsterPage.results.row(/Plain Pebble/u)).toBeVisible();
-  await expect.poll(() => artifactRequests.length).toBe(5);
-  expect(
-    artifactRequests
-      .map((path) => path.split('/').filter(Boolean).slice(0, 2).join('/'))
-      .sort(),
-  ).toEqual(
-    [
-      'v1/releases',
-      'v1/build-indexes',
-      'v2/products',
-      'v2/catalogs',
-      'v2/browse',
-    ].sort(),
-  );
+  expect(artifactRequests).toEqual([]);
 });
 
 test('failed server loads hide diagnostics and retry in the browser', async ({

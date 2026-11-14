@@ -154,10 +154,13 @@ export interface UseFacetedBrowserReturn<
   /** Reset all filters to empty. */
   readonly resetFilters: () => void;
   /** Atomically commit a drawer draft's filters and sort in a single transition. */
-  readonly commitDraft: (draft: {
-    readonly filters: Record<string, FacetFilterValue>;
-    readonly sort: SortIntent | undefined;
-  }) => void;
+  readonly commitDraft: (
+    draft: {
+      readonly filters: Record<string, FacetFilterValue>;
+      readonly sort: SortIntent | undefined;
+    },
+    details?: StateChangeDetails,
+  ) => void;
   /** Columns currently visible in original declaration order. */
   readonly visibleColumns: readonly TableColumn<TRecord>[];
   /** Column visibility map. */
@@ -556,13 +559,16 @@ export function useFacetedBrowser<TRecord extends Record<string, unknown>>({
   }, [setFilters]);
 
   const commitDraft = useCallback(
-    ({
-      filters,
-      sort,
-    }: {
-      readonly filters: Record<string, FacetFilterValue>;
-      readonly sort: SortIntent | undefined;
-    }) => {
+    (
+      {
+        filters,
+        sort,
+      }: {
+        readonly filters: Record<string, FacetFilterValue>;
+        readonly sort: SortIntent | undefined;
+      },
+      details?: StateChangeDetails,
+    ) => {
       const current = latestStateRef.current;
       const nextFilters = normalizeFilters(filters);
       const filtersChanged = !filtersEqual(current.filters, nextFilters);
@@ -580,7 +586,7 @@ export function useFacetedBrowser<TRecord extends Record<string, unknown>>({
         hiddenColumns: current.hiddenColumns,
         ...(sort ? { sort } : {}),
       };
-      const changed = emitState(nextState);
+      const changed = emitState(nextState, details);
       if (!changed) return;
       if (filtersChanged) onFiltersChange?.(nextFilters);
       if (sortChanged && sort) onSortChange?.(sort);
