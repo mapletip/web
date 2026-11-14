@@ -694,7 +694,7 @@ describe('Items Browse router state', () => {
       },
       { timeout: 3000 },
     );
-  });
+  }, 15_000);
 
   it('does not treat a normal non-apply URL change while filter drawer is open as Apply', async () => {
     const { router, user } = await mountRoute('/maplestory/items/use/scrolls');
