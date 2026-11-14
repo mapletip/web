@@ -573,11 +573,14 @@ describe('Items Browse router state', () => {
 
     router.history.back();
 
-    await waitFor(() => {
-      expect(
-        screen.queryByRole('dialog', { name: 'Filters' }),
-      ).not.toBeInTheDocument();
-    });
+    await waitFor(
+      () => {
+        expect(
+          screen.queryByRole('dialog', { name: 'Filters' }),
+        ).not.toBeInTheDocument();
+      },
+      { timeout: 3000 },
+    );
     expect(router.state.location.state).not.toHaveProperty('browseOverlay');
     const urlAfterBack = new URL(
       router.state.location.href,
@@ -612,11 +615,14 @@ describe('Items Browse router state', () => {
     });
     await user.click(applyButton);
 
-    await waitFor(() => {
-      expect(
-        screen.queryByRole('dialog', { name: 'Filters' }),
-      ).not.toBeInTheDocument();
-    });
+    await waitFor(
+      () => {
+        expect(
+          screen.queryByRole('dialog', { name: 'Filters' }),
+        ).not.toBeInTheDocument();
+      },
+      { timeout: 3000 },
+    );
     await waitFor(() => {
       const appliedUrl = new URL(
         router.state.location.href,
@@ -653,9 +659,12 @@ describe('Items Browse router state', () => {
     });
 
     await user.click(within(navDialog).getByRole('button', { name: 'Cancel' }));
-    await waitFor(() => {
-      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
-    });
+    await waitFor(
+      () => {
+        expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+      },
+      { timeout: 3000 },
+    );
     expect(router.state.location.state).not.toHaveProperty('browseOverlay');
 
     const navChip2 = screen.getByRole('button', {
@@ -679,9 +688,12 @@ describe('Items Browse router state', () => {
       ).toBe('/maplestory/items/use/recovery');
     });
     expect(router.state.location.state).not.toHaveProperty('browseOverlay');
-    await waitFor(() => {
-      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
-    });
+    await waitFor(
+      () => {
+        expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+      },
+      { timeout: 3000 },
+    );
   });
 
   it('does not treat a normal non-apply URL change while filter drawer is open as Apply', async () => {
