@@ -546,4 +546,141 @@ describe('Items Browse router state', () => {
     expect(url.searchParams.has('page')).toBe(false);
     expect(url.searchParams.has('types')).toBe(false);
   });
+
+  it('owns mobile filter drawer in router history and applies via URL replace', async () => {
+    const { router, user } = await mountRoute('/maplestory/items/use/scrolls');
+
+    // 1. From /maplestory/items/use/scrolls, open mobile Quick Filters.
+    const openFilters = screen.getByRole('button', {
+      name: 'Filters, 0 active. Open all filters',
+    });
+    await user.click(openFilters);
+    const dialog = await screen.findByRole('dialog', { name: 'Filters' });
+
+    // 2. Assert router location state has browseOverlay filters and URL has no filter.
+    expect(router.state.location.state).toMatchObject({
+      browseOverlay: { type: 'filters' },
+    });
+    const urlInitial = new URL(router.state.location.href, 'http://localhost');
+    expect(urlInitial.searchParams.has('scrollTarget')).toBe(false);
+
+    // 3. Stage Hat, call router.history.back(): dialog closes, overlay state gone, committed URL/search unchanged.
+    const hatCheckbox = within(dialog).getByRole('checkbox', {
+      name: /^Hat/u,
+    });
+    await user.click(hatCheckbox);
+    expect(hatCheckbox).toBeChecked();
+
+    router.history.back();
+
+    await waitFor(() => {
+      expect(
+        screen.queryByRole('dialog', { name: 'Filters' }),
+      ).not.toBeInTheDocument();
+    });
+    expect(router.state.location.state).not.toHaveProperty('browseOverlay');
+    const urlAfterBack = new URL(
+      router.state.location.href,
+      'http://localhost',
+    );
+    expect(urlAfterBack.pathname).toBe('/maplestory/items/use/scrolls');
+    expect(urlAfterBack.searchParams.has('scrollTarget')).toBe(false);
+
+    // 4. Forward: dialog reopens, Hat is unchecked (fresh draft).
+    router.history.forward();
+
+    const reopenedDialog = await screen.findByRole('dialog', {
+      name: 'Filters',
+    });
+    expect(router.state.location.state).toMatchObject({
+      browseOverlay: { type: 'filters' },
+    });
+    const reopenedHat = within(reopenedDialog).getByRole('checkbox', {
+      name: /^Hat/u,
+    });
+    expect(reopenedHat).not.toBeChecked();
+
+    // 5. Check Hat and Apply: drawer closes, final URL search has scrollTarget hat, no browseOverlay,
+    // and history.back was not called by apply cleanup. Then a normal user Back goes to the pre-overlay
+    // URL and does not reopen the drawer.
+    const backSpy = vi.spyOn(router.history, 'back');
+    await user.click(reopenedHat);
+    expect(reopenedHat).toBeChecked();
+
+    const applyButton = within(reopenedDialog).getByRole('button', {
+      name: /^Show /u,
+    });
+    await user.click(applyButton);
+
+    await waitFor(() => {
+      expect(
+        screen.queryByRole('dialog', { name: 'Filters' }),
+      ).not.toBeInTheDocument();
+    });
+    await waitFor(() => {
+      const appliedUrl = new URL(
+        router.state.location.href,
+        'http://localhost',
+      );
+      expect(appliedUrl.searchParams.get('scrollTarget')).toBe('["hat"]');
+    });
+    expect(router.state.location.state).not.toHaveProperty('browseOverlay');
+    expect(backSpy).not.toHaveBeenCalled();
+
+    router.history.back();
+    await waitFor(() => {
+      const restoredUrl = new URL(
+        router.state.location.href,
+        'http://localhost',
+      );
+      expect(restoredUrl.pathname).toBe('/maplestory/items/use/scrolls');
+      expect(restoredUrl.searchParams.has('scrollTarget')).toBe(false);
+    });
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(router.state.location.state).not.toHaveProperty('browseOverlay');
+
+    // 6. Compact sequential check that after filter dismissal/apply the category navigation
+    // still opens/cancels or applies correctly without leaving browseOverlay state.
+    const navChip = screen.getByRole('button', {
+      name: 'Item categories: Scrolls. Open Item categories',
+    });
+    await user.click(navChip);
+    const navDialog = await screen.findByRole('dialog', {
+      name: 'Item categories',
+    });
+    expect(router.state.location.state).toMatchObject({
+      browseOverlay: { type: 'navigation' },
+    });
+
+    await user.click(within(navDialog).getByRole('button', { name: 'Cancel' }));
+    await waitFor(() => {
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    });
+    expect(router.state.location.state).not.toHaveProperty('browseOverlay');
+
+    const navChip2 = screen.getByRole('button', {
+      name: 'Item categories: Scrolls. Open Item categories',
+    });
+    await user.click(navChip2);
+    const navDialog2 = await screen.findByRole('dialog', {
+      name: 'Item categories',
+    });
+    expect(router.state.location.state).toMatchObject({
+      browseOverlay: { type: 'navigation' },
+    });
+    await user.click(within(navDialog2).getByRole('button', { name: /^Use/u }));
+    const recoveryButton = await screen.findByRole('button', {
+      name: /^Recovery/u,
+    });
+    await user.click(recoveryButton);
+    await waitFor(() => {
+      expect(
+        new URL(router.state.location.href, 'http://localhost').pathname,
+      ).toBe('/maplestory/items/use/recovery');
+    });
+    expect(router.state.location.state).not.toHaveProperty('browseOverlay');
+    await waitFor(() => {
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    });
+  });
 });

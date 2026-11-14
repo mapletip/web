@@ -21,6 +21,10 @@ vi.mock('@/features/browse-overlay/useBrowseOverlay', async () => {
         overlay,
         open: setOverlay,
         dismiss: () => setOverlay(undefined),
+        invalidate: () => {
+          setOverlay(undefined);
+          return Promise.resolve();
+        },
       };
     },
   };

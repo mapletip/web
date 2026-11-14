@@ -1,5 +1,6 @@
 import { Text } from '@mantine/core';
 import { DrillDownNav, FacetedBrowser } from '@mapletip/component-library';
+import type { DrawerOpenedChangeDetails } from '@mapletip/component-library';
 import type { ItemBrowseCoverage } from '@mapletip/data/items';
 import { Link, useRouter } from '@tanstack/react-router';
 import { useCallback, useMemo, type ReactElement } from 'react';
@@ -77,9 +78,40 @@ export function ItemBrowse({
     () => getItemColumns({ category, coverage, rows: scopedRows }),
     [category, coverage, scopedRows],
   );
+  const browseOverlay = useBrowseOverlay();
+  const filterDrawerOpened = browseOverlay.overlay?.type === 'filters';
+
+  const onFilterDrawerOpenedChange = useCallback(
+    (opened: boolean, details?: DrawerOpenedChangeDetails) => {
+      if (opened) {
+        browseOverlay.open({ type: 'filters' });
+        return;
+      }
+      if (details?.reason === 'invalidate') {
+        void browseOverlay.invalidate('filters');
+        return;
+      }
+      if (details?.reason === 'apply') {
+        return;
+      }
+      browseOverlay.dismiss('filters');
+    },
+    [browseOverlay],
+  );
+
+  const handleSearchChange = useCallback(
+    ({ search: nextSearch, replace }: OnSearchChangeOptions) => {
+      onSearchChange({
+        search: nextSearch,
+        replace: filterDrawerOpened ? true : replace,
+      });
+    },
+    [filterDrawerOpened, onSearchChange],
+  );
+
   const { browseState, handleStateChange } = useItemBrowseUrlState({
     search,
-    onSearchChange,
+    onSearchChange: handleSearchChange,
     contextKey,
     defaultHiddenColumns: presentation.defaultHiddenColumns,
     sortOptions: presentation.sortOptions,
@@ -107,7 +139,6 @@ export function ItemBrowse({
     sortOptions: presentation.sortOptions,
   });
   const router = useRouter();
-  const browseOverlay = useBrowseOverlay();
 
   const applyNav = useCallback(
     (id: string, options: { readonly replace: true }) => {
@@ -200,6 +231,8 @@ export function ItemBrowse({
           )}
           state={browseState}
           onStateChange={handleStateChange}
+          drawerOpened={filterDrawerOpened}
+          onDrawerOpenedChange={onFilterDrawerOpenedChange}
           renderPageLink={({ page, state, props }) => {
             const { target, disabled, ...linkProps } = props;
             const routerLinkProps: Omit<typeof linkProps, 'href'> = linkProps;

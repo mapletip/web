@@ -216,7 +216,9 @@ test('invalidating details closes the drawer and consumes the history entry', as
   await expect(page).toHaveURL(/\/maplestory\/monsters$/u);
 
   await page.goForward();
+  await page.waitForTimeout(200);
   await expect(drawer).toHaveCount(0);
+  await expect(page).toHaveURL(/\/maplestory\/monsters$/u);
   await expect
     .poll(() =>
       page.evaluate(
@@ -226,6 +228,8 @@ test('invalidating details closes the drawer and consumes the history entry', as
       ),
     )
     .toBeUndefined();
+
+  await page.goBack();
   await expect(page).toHaveURL(/\/maplestory\/monsters$/u);
   await expect(drawer).toHaveCount(0);
 

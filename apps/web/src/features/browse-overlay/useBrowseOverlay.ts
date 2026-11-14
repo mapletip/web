@@ -51,6 +51,7 @@ export function useBrowseOverlay(): {
   readonly overlay: BrowseOverlay | undefined;
   readonly open: (overlay: BrowseOverlay) => void;
   readonly dismiss: (type: BrowseOverlay['type']) => void;
+  readonly invalidate: (type: BrowseOverlay['type']) => Promise<void>;
 } {
   const router = useRouter();
   const location = useLocation();
@@ -85,5 +86,51 @@ export function useBrowseOverlay(): {
     [router],
   );
 
-  return { overlay, open, dismiss };
+  const invalidate = useCallback(
+    async (type: BrowseOverlay['type']) => {
+      const current = parseBrowseOverlay(router.state.location.state);
+      if (current?.type !== type) return;
+
+      // Invalidation tradeoff: browser history cannot delete a Forward entry.
+      // Calling history.back() directly leaves the invalid overlay entry in
+      // the Forward stack, which bounces Back or tries to reopen stale details
+      // on Forward navigation.
+      //
+      // Compromise: neutralize the current owned overlay entry first with a
+      // same-URL replace that clears `browseOverlay` while preserving pathname,
+      // search, hash, and other state. Awaiting that replace and then consuming
+      // the neutralized entry via router.history.back() ensures:
+      // 1. The current entry lands on the pre-overlay Browse entry.
+      // 2. Forward lands on a neutralized closed Browse entry and does NOT
+      //    auto-Back or reopen stale details.
+      // Unavoidable tradeoff: a same-URL neutralized Forward entry remains in
+      // history, but there is no stale overlay or bounce.
+      await router.navigate({
+        to: '.',
+        search: true,
+        hash: true,
+        replace: true,
+        resetScroll: false,
+        hashScrollIntoView: false,
+        state: (previous) => {
+          if (previous === null || typeof previous !== 'object') return {};
+          const nextState = { ...previous } as typeof previous & {
+            browseOverlay?: unknown;
+          };
+          delete nextState.browseOverlay;
+          return nextState;
+        },
+      });
+
+      if (parseBrowseOverlay(router.state.location.state) === undefined) {
+        router.history.back();
+      }
+    },
+    [router],
+  );
+
+  return useMemo(
+    () => ({ overlay, open, dismiss, invalidate }),
+    [overlay, open, dismiss, invalidate],
+  );
 }

@@ -194,14 +194,25 @@ export function useFacetedBrowserDrawer({
     ) {
       return;
     }
+    const filtersChanged = !filtersEqual(
+      currentSession.filters,
+      committedState.filters,
+    );
+    const sortChanged =
+      currentSession.sort?.field !== committedState.sort?.field ||
+      currentSession.sort?.direction !== committedState.sort?.direction;
+    const hasChanges = filtersChanged || sortChanged;
+
     openedRef.current = false;
-    commitDraft({
-      filters: currentSession.filters,
-      sort: currentSession.sort,
-    });
+    if (hasChanges) {
+      commitDraft({
+        filters: currentSession.filters,
+        sort: currentSession.sort,
+      });
+    }
     replaceSession(null);
     setFocusedFacetId(null);
-    onOpenedChange(false, { reason: 'apply' });
+    onOpenedChange(false, { reason: hasChanges ? 'apply' : 'dismiss' });
   }, [
     commitDraft,
     committedState,

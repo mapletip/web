@@ -114,6 +114,14 @@ function DrawerHarness({
       >
         Set sort and close
       </button>
+      <button
+        type="button"
+        onClick={() => {
+          drawer.apply();
+        }}
+      >
+        Apply without changes
+      </button>
     </div>
   );
 }
@@ -221,5 +229,24 @@ describe('FacetedBrowser drawer actions', () => {
       screen.getByRole('button', { name: 'Set sort and close' }),
     );
     expect(commitDraft).not.toHaveBeenCalled();
+  });
+
+  it('reports dismiss and does not commit draft when applying unchanged state', async () => {
+    const commitDraft = vi.fn();
+    const onOpenedChange = vi.fn();
+    render(
+      <DrawerHarness
+        commitDraft={commitDraft}
+        onOpenedChange={onOpenedChange}
+      />,
+    );
+
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Apply without changes' }),
+    );
+    expect(commitDraft).not.toHaveBeenCalled();
+    expect(onOpenedChange).toHaveBeenCalledWith(false, {
+      reason: 'dismiss',
+    });
   });
 });
