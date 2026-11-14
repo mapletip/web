@@ -2,7 +2,6 @@ import { Button, Group, MultiSelect, Pill, Text, Title } from '@mantine/core';
 import { FacetedBrowser, Thumbnail } from '@mapletip/component-library';
 import type {
   BrowseState,
-  DrawerOpenedChangeDetails,
   FacetDefinition,
   QueryFieldDefinition,
   RowExpansionControlContext,
@@ -268,13 +267,9 @@ export function MonsterBrowse({
       ? browseOverlay.overlay.recordId
       : null;
   const onFilterDrawerOpenedChange = useCallback(
-    (opened: boolean, details?: DrawerOpenedChangeDetails) => {
+    (opened: boolean) => {
       if (opened) {
         browseOverlay.open({ type: 'filters' });
-        return;
-      }
-      if (details?.reason === 'invalidate') {
-        browseOverlay.invalidate('filters');
         return;
       }
       browseOverlay.dismiss('filters');
@@ -345,11 +340,7 @@ export function MonsterBrowse({
         recordDetails={{
           selectedId: selectedRecordId,
           onSelectedIdChange: (selectedId, reason) => {
-            if (reason === 'invalidate') {
-              browseOverlay.invalidate('record-details');
-              return;
-            }
-            if (reason === 'dismiss') {
+            if (reason === 'dismiss' || reason === 'invalidate') {
               browseOverlay.dismiss('record-details');
               return;
             }

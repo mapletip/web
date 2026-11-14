@@ -511,19 +511,19 @@ export function FacetedBrowser<TRecord extends Record<string, unknown>>(
     ) : undefined;
 
   const [internalNavDrawerOpened, setInternalNavDrawerOpened] = useState(false);
-  const navDrawerControlled =
-    navigation !== undefined && navigation.opened !== undefined;
-  const navDrawerOpened = navDrawerControlled
-    ? (navigation?.opened ?? false)
-    : internalNavDrawerOpened;
+  const navDrawerOpened =
+    navigation?.opened !== undefined
+      ? navigation.opened
+      : internalNavDrawerOpened;
   const updateNavDrawerOpened = useCallback(
     (opened: boolean, reason: NavigationOpenedChangeReason) => {
-      if (!navDrawerControlled) {
+      if (navigation?.opened !== undefined) {
+        navigation.onOpenedChange(opened, reason);
+      } else {
         setInternalNavDrawerOpened(opened);
       }
-      navigation?.onOpenedChange?.(opened, reason);
     },
-    [navDrawerControlled, navigation],
+    [navigation],
   );
   const openNavDrawer = useCallback(
     () => updateNavDrawerOpened(true, 'open'),

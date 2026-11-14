@@ -51,7 +51,6 @@ export function useBrowseOverlay(): {
   readonly overlay: BrowseOverlay | undefined;
   readonly open: (overlay: BrowseOverlay) => void;
   readonly dismiss: (type: BrowseOverlay['type']) => void;
-  readonly invalidate: (type: BrowseOverlay['type']) => void;
 } {
   const router = useRouter();
   const location = useLocation();
@@ -69,6 +68,8 @@ export function useBrowseOverlay(): {
         search: true,
         hash: true,
         replace: current !== undefined,
+        resetScroll: false,
+        hashScrollIntoView: false,
         state: (previous) => ({ ...previous, browseOverlay: next }),
       });
     },
@@ -84,26 +85,5 @@ export function useBrowseOverlay(): {
     [router],
   );
 
-  const invalidate = useCallback(
-    (type: BrowseOverlay['type']) => {
-      const current = parseBrowseOverlay(router.state.location.state);
-      if (current?.type !== type) return;
-      void router.navigate({
-        to: '.',
-        search: true,
-        hash: true,
-        replace: true,
-        state: (previous) => {
-          const nextState = { ...previous } as typeof previous & {
-            browseOverlay?: unknown;
-          };
-          delete nextState.browseOverlay;
-          return nextState;
-        },
-      });
-    },
-    [router],
-  );
-
-  return { overlay, open, dismiss, invalidate };
+  return { overlay, open, dismiss };
 }

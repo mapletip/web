@@ -44,7 +44,7 @@ export type FacetedBrowserNavigationRenderContext =
 
 export type NavigationOpenedChangeReason = 'open' | 'dismiss' | 'navigate';
 
-export interface FacetedBrowserNavigation {
+interface FacetedBrowserNavigationCommon {
   readonly label: string;
   readonly currentLabel: string;
   /**
@@ -54,16 +54,26 @@ export interface FacetedBrowserNavigation {
   readonly currentId: string;
   readonly currentCount?: number | undefined;
   readonly apply: (id: string, options: { readonly replace: true }) => void;
-  /** Optional controlled open state. Omit to keep internal open state. */
-  readonly opened?: boolean;
-  readonly onOpenedChange?: (
-    opened: boolean,
-    reason: NavigationOpenedChangeReason,
-  ) => void;
   readonly render: (
     context: FacetedBrowserNavigationRenderContext,
   ) => ReactNode;
 }
+
+export type FacetedBrowserNavigation = FacetedBrowserNavigationCommon &
+  (
+    | {
+        readonly opened?: never;
+        readonly onOpenedChange?: never;
+      }
+    | {
+        /** Controlled open state. Paired with `onOpenedChange`. */
+        readonly opened: boolean;
+        readonly onOpenedChange: (
+          opened: boolean,
+          reason: NavigationOpenedChangeReason,
+        ) => void;
+      }
+  );
 
 /**
  * Context for a comparison-mode card. Both fields exist only when the host

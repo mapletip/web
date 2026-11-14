@@ -16,6 +16,7 @@ import type {
   BrowseSortOption,
   BrowseState,
   FacetDefinition,
+  FacetedBrowserNavigation,
   QueryFieldDefinition,
 } from '@/components/FacetedBrowser';
 import { demoGroupFacetOptions } from '@/fixtures/facetOptions';
@@ -1115,6 +1116,55 @@ describe('responsive navigation slot', () => {
       expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     });
     expect(apply).not.toHaveBeenCalled();
+  });
+
+  it('enforces paired opened and onOpenedChange contract at compile time', () => {
+    const apply = vi.fn();
+    const render = () => <div>Category Content</div>;
+
+    // Valid: uncontrolled navigation (both omitted)
+    const uncontrolled: FacetedBrowserNavigation = {
+      label: genericNavigation.label,
+      currentLabel: genericNavigation.subCategoryLabel,
+      currentId: 'clothing',
+      apply,
+      render,
+    };
+    expect(uncontrolled.opened).toBeUndefined();
+
+    // Valid: controlled navigation (both present)
+    const controlled: FacetedBrowserNavigation = {
+      label: genericNavigation.label,
+      currentLabel: genericNavigation.subCategoryLabel,
+      currentId: 'clothing',
+      apply,
+      opened: true,
+      onOpenedChange: () => {},
+      render,
+    };
+    expect(controlled.opened).toBe(true);
+
+    // @ts-expect-error -- opened without onOpenedChange is rejected by the paired contract
+    const openedWithoutCallback: FacetedBrowserNavigation = {
+      label: genericNavigation.label,
+      currentLabel: genericNavigation.subCategoryLabel,
+      currentId: 'clothing',
+      apply,
+      opened: true,
+      render,
+    };
+    expect(openedWithoutCallback).toBeDefined();
+
+    // @ts-expect-error -- onOpenedChange without opened is rejected by the paired contract
+    const callbackWithoutOpened: FacetedBrowserNavigation = {
+      label: genericNavigation.label,
+      currentLabel: genericNavigation.subCategoryLabel,
+      currentId: 'clothing',
+      apply,
+      onOpenedChange: () => {},
+      render,
+    };
+    expect(callbackWithoutOpened).toBeDefined();
   });
 
   it('keeps filter drawer untouched and distinct from navigation drawer when facets exist', async () => {
