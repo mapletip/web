@@ -1,5 +1,7 @@
 import { monsterPublicId, monsterSlug } from '../../src/mocks/release';
 
+import type { Request } from '@playwright/test';
+
 import { expect, test } from './fixtures';
 
 const DIAGNOSTIC_LEAK_PATTERN =
@@ -76,6 +78,47 @@ test('detail pages server-render metadata, hydrate without whole-build artifacts
     await monsterPage.goto(stale);
     await expect(page).toHaveURL(canonical);
     await expect(monsterPage.heading(item.name)).toBeVisible();
+  }
+});
+
+test('Monster Browse links open the same-build Monster Detail page', async ({
+  page,
+  monsterPage,
+  artifactRequests,
+  expectedArtifactRequests,
+}) => {
+  for (const item of DETAIL_CASES) {
+    const canonical = canonicalPath(item);
+    const artifactCountBeforeBrowse = artifactRequests.length;
+    await monsterPage.goto(`${item.prefix}/monsters`);
+    expect(artifactRequests).toHaveLength(artifactCountBeforeBrowse);
+    const nameLink = page
+      .getByRole('link', { name: item.name, exact: true })
+      .filter({ visible: true });
+    await expect(nameLink).toHaveCount(1);
+    await expect(nameLink).toHaveAttribute('href', canonical);
+    expectedArtifactRequests.push(
+      /^\/v1\/releases\/[a-f0-9]{64}\.json$/u,
+      /^\/v1\/build-indexes\/[a-f0-9]{64}\.json$/u,
+      /^\/v2\/products\/[a-f0-9]{64}\.json$/u,
+      /^\/v2\/monsters\/page-packs\/[a-f0-9]{64}\.json$/u,
+    );
+    const documentNavigations: string[] = [];
+    const recordDocumentNavigation = (request: Request) => {
+      if (
+        request.isNavigationRequest() &&
+        request.frame() === page.mainFrame()
+      ) {
+        documentNavigations.push(request.url());
+      }
+    };
+    page.on('request', recordDocumentNavigation);
+    await nameLink.click();
+    await expect(page).toHaveURL(`http://127.0.0.1:4173${canonical}`);
+    await expect(monsterPage.heading(item.name)).toBeVisible();
+    await page.waitForLoadState('networkidle');
+    page.off('request', recordDocumentNavigation);
+    expect(documentNavigations).toEqual([]);
   }
 });
 

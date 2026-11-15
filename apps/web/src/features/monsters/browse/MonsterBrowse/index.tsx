@@ -9,11 +9,17 @@ import type {
   StateChangeDetails,
   TableColumn,
 } from '@mapletip/component-library';
-import { useCallback, useState, type ReactElement } from 'react';
+import { useCallback, useMemo, useState, type ReactElement } from 'react';
 
 import { BrowsePageShell } from '@/components/BrowsePageShell';
+import { AnchorLink } from '@/components/RouterLinks';
 import { BUILDS, type BuildId } from '@/config/maplekit';
 import { useBrowseOverlay } from '@/features/browse-overlay/useBrowseOverlay';
+import {
+  monsterDetailLinkProps,
+  MONSTER_STAT_BY_ID,
+} from '@/features/monsters/shared';
+import type { MonsterDetailStatId } from '@/features/monsters/shared';
 
 import {
   getMonsterBrowseFacetDefinition,
@@ -71,53 +77,76 @@ function statColumn(
   };
 }
 
+function monsterStatColumn(
+  id: MonsterDetailStatId,
+  options?: StatColumnOptions,
+): TableColumn<MonsterBrowseRow> {
+  const { label, browseLabel } = MONSTER_STAT_BY_ID[id];
+  return statColumn(id, browseLabel, {
+    ...(label === browseLabel ? {} : { fullLabel: label }),
+    ...options,
+  });
+}
+
 // Column headers use MapleTip's compact browse vocabulary (`W. ATT`) so the
 // comparison table fits without horizontal noise; the full stat name stays as
-// the spoken expansion. Plain text only: Monster detail routes do not exist
-// yet, so names are not links.
+// the spoken expansion.
 //
 // Exported for the feature's own unit tests (column metadata is data), never
 // through the public barrel.
 const identityCellClassName = classes['identityCell'];
 
-export const monsterBrowseColumns: readonly TableColumn<MonsterBrowseRow>[] = [
-  {
-    accessor: 'name',
-    title: 'Name',
-    sortable: true,
-    firstSortDirection: 'asc',
-    ...(identityCellClassName !== undefined
-      ? { cellClassName: identityCellClassName }
-      : {}),
-    render: (record) => (
-      <div
-        className={classes['identity']}
-        style={{ paddingInlineStart: MONSTER_NAME_INDENT }}
-      >
-        <MonsterSprite sprite={record.sprite} />
-        <span className={classes['identityName']}>{record.name}</span>
-      </div>
-    ),
-  },
-  statColumn('level', 'Level', { firstSortDirection: 'asc' }),
-  statColumn('hp', 'HP'),
-  statColumn('mp', 'MP'),
-  statColumn('hpRecovery', 'HP REC', { fullLabel: 'HP recovery value' }),
-  statColumn('mpRecovery', 'MP REC', { fullLabel: 'MP recovery value' }),
-  statColumn('exp', 'EXP'),
-  statColumn('expPer100Hp', 'EXP / 100 HP', {
-    fullLabel: 'Experience per 100 HP',
-    nowrap: true,
-  }),
-  statColumn('physicalAttack', 'W. ATT', { fullLabel: 'Weapon attack' }),
-  statColumn('physicalDefense', 'W. DEF', { fullLabel: 'Weapon defense' }),
-  statColumn('magicAttack', 'M. ATT', { fullLabel: 'Magic attack' }),
-  statColumn('magicDefense', 'M. DEF', { fullLabel: 'Magic defense' }),
-  statColumn('accuracy', 'ACC', { fullLabel: 'Accuracy' }),
-  statColumn('avoidability', 'AVOID', { fullLabel: 'Avoidability' }),
-  statColumn('pushed', 'KB', { fullLabel: 'Knockback damage threshold' }),
-  statColumn('speed', 'Speed'),
-];
+export function createMonsterBrowseColumns(
+  buildId: BuildId,
+): readonly TableColumn<MonsterBrowseRow>[] {
+  return [
+    {
+      accessor: 'name',
+      title: 'Name',
+      sortable: true,
+      firstSortDirection: 'asc',
+      ...(identityCellClassName !== undefined
+        ? { cellClassName: identityCellClassName }
+        : {}),
+      render: (record) => {
+        const linkProps = monsterDetailLinkProps(record, buildId);
+        return (
+          <div
+            className={classes['identity']}
+            style={{ paddingInlineStart: MONSTER_NAME_INDENT }}
+          >
+            <MonsterSprite sprite={record.sprite} />
+            {linkProps === undefined ? (
+              <span className={classes['identityName']}>{record.name}</span>
+            ) : (
+              <AnchorLink className={classes['identityName']} {...linkProps}>
+                {record.name}
+              </AnchorLink>
+            )}
+          </div>
+        );
+      },
+    },
+    monsterStatColumn('level', { firstSortDirection: 'asc' }),
+    monsterStatColumn('hp'),
+    monsterStatColumn('mp'),
+    statColumn('hpRecovery', 'HP REC', { fullLabel: 'HP recovery value' }),
+    statColumn('mpRecovery', 'MP REC', { fullLabel: 'MP recovery value' }),
+    monsterStatColumn('exp'),
+    statColumn('expPer100Hp', 'EXP / 100 HP', {
+      fullLabel: 'Experience per 100 HP',
+      nowrap: true,
+    }),
+    monsterStatColumn('physicalAttack'),
+    monsterStatColumn('physicalDefense'),
+    monsterStatColumn('magicAttack'),
+    monsterStatColumn('magicDefense'),
+    monsterStatColumn('accuracy'),
+    monsterStatColumn('avoidability'),
+    statColumn('pushed', 'KB', { fullLabel: 'Knockback damage threshold' }),
+    monsterStatColumn('speed'),
+  ];
+}
 
 /** The rail already names the build; the count only needs the short noun. */
 const SUMMARY_NOUN = { one: 'Monster', other: 'Monsters' } as const;
@@ -262,6 +291,7 @@ export function MonsterBrowse({
   rows,
   dropItemOptions,
 }: MonsterBrowseProps): ReactElement {
+  const columns = useMemo(() => createMonsterBrowseColumns(buildId), [buildId]);
   const [browseState, setBrowseState] = useState<BrowseState>(defaultState);
   const browseOverlay = useBrowseOverlay();
   const filterDrawerOpened = browseOverlay.overlay?.type === 'filters';
@@ -327,7 +357,7 @@ export function MonsterBrowse({
         records={rows}
         idAccessor="key"
         identityField="name"
-        columns={monsterBrowseColumns}
+        columns={columns}
         queryFields={queryFields}
         searchFields={['name']}
         facets={browseFacets}
@@ -345,6 +375,7 @@ export function MonsterBrowse({
         renderCard={(record, { openDetails, isDetailsOpen }) => (
           <MonsterBrowseCard
             record={record}
+            buildId={buildId}
             onShowDrops={openDetails}
             isDetailsOpen={isDetailsOpen}
           />

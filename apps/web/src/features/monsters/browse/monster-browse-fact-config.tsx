@@ -3,26 +3,17 @@ import type {
   FacetRangeBucket,
 } from '@mapletip/component-library';
 import {
-  ArrowsLeftRight,
   Calculator,
   Crown,
-  Heart,
   Heartbeat,
-  Medal,
   Package,
-  PersonSimpleRun,
-  Shield,
-  ShieldStar,
   Skull,
-  Sparkle,
-  Sword,
-  Target,
-  TrendUp,
-  Wind,
 } from '@phosphor-icons/react';
 import type { ReactElement } from 'react';
 
 import type { MonsterBrowseRow, MonsterFactId } from './project';
+import { MONSTER_STAT_BY_ID } from '../shared';
+import type { MonsterDetailStatId, MonsterStatDefinition } from '../shared';
 
 type MonsterCardPlacement =
   | { readonly section: 'identity'; readonly factId: MonsterFactId }
@@ -37,7 +28,7 @@ type MonsterCardPlacement =
 export interface MonsterBrowseFactConfig {
   readonly id: string;
   readonly label: string;
-  readonly icon?: typeof Heart;
+  readonly icon?: MonsterStatDefinition['icon'];
   readonly iconSize?: 14 | 15 | 16;
   readonly iconColor?: string;
   readonly showIconInCard?: boolean;
@@ -58,23 +49,28 @@ export type MonsterBrowseCardStatFact = MonsterBrowseFactConfig & {
   };
 };
 
+function sharedStat(id: MonsterDetailStatId) {
+  const { browseLabel, icon, iconSize, iconColor } = MONSTER_STAT_BY_ID[id];
+  return {
+    label: browseLabel,
+    icon,
+    iconSize,
+    ...(iconColor === undefined ? {} : { iconColor }),
+  };
+}
+
 /** One source for Monster Browse labels, icons, card placement and facets. */
 export const MONSTER_BROWSE_FACT_CONFIG = {
   level: {
     id: 'level',
-    label: 'Level',
-    icon: Medal,
-    iconSize: 16,
+    ...sharedStat('level'),
     showIconInCard: false,
     card: { section: 'identity', factId: 'level' },
     facet: { field: 'level', kind: 'range', buckets: 'quantile' },
   },
   hp: {
     id: 'hp',
-    label: 'HP',
-    icon: Heart,
-    iconSize: 16,
-    iconColor: '#f28f91',
+    ...sharedStat('hp'),
     card: { section: 'training', factId: 'hp' },
     facet: { field: 'hp', kind: 'range', buckets: 'quantile' },
   },
@@ -88,10 +84,7 @@ export const MONSTER_BROWSE_FACT_CONFIG = {
   },
   exp: {
     id: 'exp',
-    label: 'EXP',
-    icon: TrendUp,
-    iconSize: 15,
-    iconColor: '#f5bd56',
+    ...sharedStat('exp'),
     card: { section: 'training', factId: 'exp' },
     facet: { field: 'exp', kind: 'range', buckets: 'quantile' },
   },
@@ -133,58 +126,42 @@ export const MONSTER_BROWSE_FACT_CONFIG = {
   },
   physicalAttack: {
     id: 'physicalAttack',
-    label: 'W. ATT',
-    icon: Sword,
-    iconSize: 16,
+    ...sharedStat('physicalAttack'),
     card: { section: 'combat', factId: 'physicalAttack' },
   },
   magicAttack: {
     id: 'magicAttack',
-    label: 'M. ATT',
-    icon: Sparkle,
-    iconSize: 16,
+    ...sharedStat('magicAttack'),
     card: { section: 'combat', factId: 'magicAttack' },
   },
   accuracy: {
     id: 'accuracy',
-    label: 'ACC',
-    icon: Target,
-    iconSize: 16,
+    ...sharedStat('accuracy'),
     card: { section: 'combat', factId: 'accuracy' },
   },
   physicalDefense: {
     id: 'physicalDefense',
-    label: 'W. DEF',
-    icon: Shield,
-    iconSize: 16,
+    ...sharedStat('physicalDefense'),
     card: { section: 'combat', factId: 'physicalDefense' },
   },
   magicDefense: {
     id: 'magicDefense',
-    label: 'M. DEF',
-    icon: ShieldStar,
-    iconSize: 16,
+    ...sharedStat('magicDefense'),
     card: { section: 'combat', factId: 'magicDefense' },
   },
   avoidability: {
     id: 'avoidability',
-    label: 'AVOID',
-    icon: Wind,
-    iconSize: 16,
+    ...sharedStat('avoidability'),
     card: { section: 'combat', factId: 'avoidability' },
   },
   pushed: {
     id: 'pushed',
-    label: 'Knockback',
-    icon: ArrowsLeftRight,
-    iconSize: 14,
+    ...sharedStat('pushed'),
     card: { section: 'combat', factId: 'pushed' },
   },
   speed: {
     id: 'speed',
-    label: 'Speed',
-    icon: PersonSimpleRun,
-    iconSize: 14,
+    ...sharedStat('speed'),
     card: { section: 'combat', factId: 'speed' },
   },
 } satisfies Readonly<Record<string, MonsterBrowseFactConfig>>;

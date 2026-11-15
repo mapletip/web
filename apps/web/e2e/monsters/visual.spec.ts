@@ -1,5 +1,11 @@
 import { test, expect } from './fixtures';
 import type { MonsterPage } from './page/monster-page';
+import { monsterPublicId, monsterSlug } from '../../src/mocks/release';
+
+const HERO_SOURCE_ID = 'crowned-revenant';
+const HERO_NAME = 'Crowned Revenant';
+const HERO_PUBLIC_ID = monsterPublicId(HERO_SOURCE_ID);
+const HERO_PATH = `/maplestory/monsters/${monsterSlug(HERO_NAME, HERO_PUBLIC_ID)}-${HERO_PUBLIC_ID}`;
 
 async function openBossesAndUndead(monsterPage: MonsterPage): Promise<void> {
   await monsterPage.filters.checkbox('Boss', /^Yes/u).click();
@@ -137,4 +143,51 @@ test('generic unavailable page has no server diagnostics', async ({
     page.getByRole('heading', { name: 'Something went wrong' }),
   ).toBeVisible();
   await expect(page).toHaveScreenshot('error-page.png');
+});
+
+test('desktop Monster Detail hero', async ({ page, monsterPage }) => {
+  const spriteRequests: string[] = [];
+  page.on('request', (request) => {
+    if (new URL(request.url()).pathname.includes('/media/images/')) {
+      spriteRequests.push(request.url());
+    }
+  });
+  await page.setViewportSize({ width: 1440, height: 1200 });
+  await monsterPage.goto(HERO_PATH);
+  await monsterPage.captureReady();
+
+  await expect(monsterPage.heading(HERO_NAME)).toBeVisible();
+  await expect(page.getByText('Boss', { exact: true })).toBeVisible();
+  await expect(page.getByText('Undead', { exact: true })).toBeVisible();
+  await expect(page.getByText('Immune: Poison', { exact: true })).toBeVisible();
+  await expect(page.getByText('Weak: Holy', { exact: true })).toBeVisible();
+  await expect(
+    page.locator('img[src*="/media/images/"]').filter({ visible: true }),
+  ).toHaveCount(1);
+  expect(spriteRequests).toHaveLength(1);
+  await expect(page).toHaveScreenshot('desktop-monster-hero.png');
+});
+
+test('mobile Monster Detail hero uses one portrait image and one stat column', async ({
+  page,
+  monsterPage,
+}) => {
+  const spriteRequests: string[] = [];
+  page.on('request', (request) => {
+    if (new URL(request.url()).pathname.includes('/media/images/')) {
+      spriteRequests.push(request.url());
+    }
+  });
+  await page.setViewportSize({ width: 390, height: 1100 });
+  await monsterPage.goto(HERO_PATH);
+  await monsterPage.captureReady();
+
+  await expect(monsterPage.heading(HERO_NAME)).toBeVisible();
+  await expect(
+    page.locator('img[src*="/media/images/"]').filter({ visible: true }),
+  ).toHaveCount(1);
+  expect(spriteRequests).toHaveLength(1);
+  const factList = page.locator('dl').first();
+  await expect(factList.locator('> div')).toHaveCount(12);
+  await expect(page).toHaveScreenshot('mobile-monster-hero.png');
 });
