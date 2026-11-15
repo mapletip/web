@@ -35,6 +35,12 @@ export type {
   KnownFact,
   NotKnownFact,
 } from '@/components/FactSheet';
+export { RecordSections } from '@/components/RecordSections';
+export type {
+  RecordSection,
+  RecordSectionCount,
+  RecordSectionsProps,
+} from '@/components/RecordSections';
 export { Header } from '@/components/Header';
 export type {
   HeaderGroupLink,
