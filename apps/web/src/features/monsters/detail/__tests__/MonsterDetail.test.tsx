@@ -157,7 +157,7 @@ describe('MonsterDetail hero', () => {
     ).toBeVisible();
     expect(
       screen.getByText(
-        'No recorded drop information. This does not establish that the Monster drops nothing.',
+        'No recorded drop information.',
       ),
     ).toBeVisible();
   });

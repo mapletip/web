@@ -85,12 +85,12 @@ describe('MonsterDetailDrops', () => {
     expect(screen.getByText('Maybe')).toBeInTheDocument();
   });
 
-  it('shows the cautious no-recorded-drops message', () => {
+  it('shows the no-recorded-drops message', () => {
     renderDrops({ state: 'no-recorded', count: 0 });
 
     expect(
       screen.getByText(
-        'No recorded drop information. This does not establish that the Monster drops nothing.',
+        'No recorded drop information.',
       ),
     ).toBeVisible();
     expect(
