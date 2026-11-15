@@ -11,9 +11,10 @@ import {
 } from '@phosphor-icons/react';
 import type { ReactElement } from 'react';
 
-import type { MonsterBrowseRow, MonsterFactId } from './project';
 import { MONSTER_STAT_BY_ID } from '../shared';
 import type { MonsterDetailStatId, MonsterStatDefinition } from '../shared';
+
+import type { MonsterBrowseRow, MonsterFactId } from './project';
 
 type MonsterCardPlacement =
   | { readonly section: 'identity'; readonly factId: MonsterFactId }

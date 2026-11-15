@@ -1,10 +1,10 @@
 import { MantineProvider } from '@mantine/core';
-import { render, screen } from '@testing-library/react';
 import {
   RouterContextProvider,
   createMemoryHistory,
   createRouter,
 } from '@tanstack/react-router';
+import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 
 import { routeTree } from '@/routeTree.gen';

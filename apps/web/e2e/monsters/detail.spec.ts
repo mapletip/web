@@ -1,6 +1,6 @@
-import { monsterPublicId, monsterSlug } from '../../src/mocks/release';
-
 import type { Request } from '@playwright/test';
+
+import { monsterPublicId, monsterSlug } from '../../src/mocks/release';
 
 import { expect, test } from './fixtures';
 
@@ -81,17 +81,16 @@ test('detail pages server-render metadata, hydrate without whole-build artifacts
   }
 });
 
-test('Monster Browse links open the same-build Monster Detail page', async ({
-  page,
-  monsterPage,
-  artifactRequests,
-  expectedArtifactRequests,
-}) => {
-  for (const item of DETAIL_CASES) {
+for (const item of DETAIL_CASES) {
+  test(`Monster Browse links open the same-build ${item.buildLabel} Monster Detail page`, async ({
+    page,
+    monsterPage,
+    artifactRequests,
+    expectedArtifactRequests,
+  }) => {
     const canonical = canonicalPath(item);
-    const artifactCountBeforeBrowse = artifactRequests.length;
     await monsterPage.goto(`${item.prefix}/monsters`);
-    expect(artifactRequests).toHaveLength(artifactCountBeforeBrowse);
+    expect(artifactRequests).toEqual([]);
     const nameLink = page
       .getByRole('link', { name: item.name, exact: true })
       .filter({ visible: true });
@@ -119,8 +118,8 @@ test('Monster Browse links open the same-build Monster Detail page', async ({
     await page.waitForLoadState('networkidle');
     page.off('request', recordDocumentNavigation);
     expect(documentNavigations).toEqual([]);
-  }
-});
+  });
+}
 
 test('detail not-found addresses return 404 with noindex and a browse link', async ({
   page,

@@ -1,5 +1,10 @@
 import { MantineProvider } from '@mantine/core';
 import {
+  RouterContextProvider,
+  createMemoryHistory,
+  createRouter,
+} from '@tanstack/react-router';
+import {
   fireEvent,
   render,
   screen,
@@ -9,11 +14,6 @@ import {
 import userEvent from '@testing-library/user-event';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
-import {
-  RouterContextProvider,
-  createMemoryHistory,
-  createRouter,
-} from '@tanstack/react-router';
 
 vi.mock('@/features/browse-overlay/useBrowseOverlay', async () => {
   const { useState } = await import('react');

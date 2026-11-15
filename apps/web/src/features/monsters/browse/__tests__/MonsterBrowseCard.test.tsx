@@ -1,12 +1,12 @@
 import { MantineProvider } from '@mantine/core';
-import { render, screen, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import { describe, expect, it, vi } from 'vitest';
 import {
   RouterContextProvider,
   createMemoryHistory,
   createRouter,
 } from '@tanstack/react-router';
+import { render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { describe, expect, it, vi } from 'vitest';
 
 import { DEFAULT_BUILD_ID } from '@/config/maplekit';
 import { routeTree } from '@/routeTree.gen';

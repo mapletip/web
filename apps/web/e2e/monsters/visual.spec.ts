@@ -1,6 +1,7 @@
+import { monsterPublicId, monsterSlug } from '../../src/mocks/release';
+
 import { test, expect } from './fixtures';
 import type { MonsterPage } from './page/monster-page';
-import { monsterPublicId, monsterSlug } from '../../src/mocks/release';
 
 const HERO_SOURCE_ID = 'crowned-revenant';
 const HERO_NAME = 'Crowned Revenant';
