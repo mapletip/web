@@ -37,6 +37,20 @@ describe('MonsterDetail server rendering', () => {
           ...monsterPageFixture().stats,
           hp: { state: 'known', value: 23_000_000 },
         },
+        drops: {
+          entries: [
+            {
+              itemRef: { state: 'resolved', key: 'fixture:item:tonic' },
+              name: { state: 'known', value: 'Synthetic Tonic' },
+              category: { kind: 'item-class', value: 'consume' },
+              icon: { state: 'unknown' },
+              assertion: { kind: 'native' },
+            },
+          ],
+          summary: {
+            native: { state: 'known', count: 1, lowerBound: true },
+          },
+        },
       }),
       'cw-launch',
     );
@@ -59,6 +73,13 @@ describe('MonsterDetail server rendering', () => {
 
     expect(html).toContain('Sentinel Snail');
     expect(html).toContain('23,000,000');
+    expect(html).toContain('href="#drops"');
+    const renderedText = html
+      .replace(/<!--.*?-->/gu, '')
+      .replace(/<[^>]*>/gu, '');
+    expect(renderedText).toContain('Drops (1)');
+    expect(renderedText).toContain('Usable (1)');
+    expect(html).toContain('Synthetic Tonic');
     expect(html).toContain('aria-label="Breadcrumb"');
     expect(html).toContain('href="/"');
     expect(html).toContain('href="/maplestory/monsters"');

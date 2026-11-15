@@ -185,3 +185,113 @@ test('failed detail origin returns 500 with noindex and zero SDK diagnostics', a
     await expect(page.getByRole('button', { name: 'Try again' })).toBeVisible();
   }
 });
+
+test('Monster Detail shows grouped Drops and certainty at each viewport', async ({
+  page,
+  monsterPage,
+}, testInfo) => {
+  const item: DetailCase = {
+    buildId: 'cw-launch',
+    prefix: '/maplestory',
+    sourceId: 'crowned-warden',
+    name: 'Crowned Warden',
+    buildLabel: 'Classic World',
+  };
+  const canonical = canonicalPath(item);
+  await monsterPage.goto(canonical);
+
+  const sections = page.getByRole('navigation', { name: 'Record sections' });
+  const dropsLink = sections.getByRole('link', { name: 'Drops (24)' });
+  await expect(dropsLink).toHaveAttribute('href', '#drops');
+  await dropsLink.click();
+  await expect(
+    page.getByRole('heading', { level: 2, name: 'Drops (24)' }),
+  ).toBeVisible();
+
+  const dropsControl = page
+    .getByRole('heading', { level: 2, name: 'Drops (24)' })
+    .getByRole('button', { name: 'Drops (24)' });
+  await expect(dropsControl).toHaveAttribute('aria-expanded', 'true');
+  await dropsControl.click();
+  await expect(dropsControl).toHaveAttribute('aria-expanded', 'false');
+  await expect(
+    page.getByRole('heading', { level: 3, name: 'Equipment (4)' }),
+  ).toBeHidden();
+  await dropsControl.click();
+  await expect(dropsControl).toHaveAttribute('aria-expanded', 'true');
+  await expect(
+    page.getByRole('heading', { level: 3, name: 'Equipment (4)' }),
+  ).toBeVisible();
+
+  for (const group of [
+    'Equipment (4)',
+    'Usable (4)',
+    'Etc (4)',
+    'Setup (4)',
+    'Cash (3)',
+    'Pets (4)',
+    'Unknown type (1)',
+  ]) {
+    await expect(
+      page.getByRole('heading', { level: 3, name: group }),
+    ).toBeVisible();
+  }
+
+  const itemName = page.getByText('Warden Token', { exact: true });
+  await expect(itemName).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Warden Token' })).toHaveCount(0);
+  const certainty = page.getByRole('button', {
+    name: 'Show unconfirmed drop details for Warden Token',
+  });
+  await certainty.click();
+  await expect(page.getByText('Source: GMS v83 Monster Book.')).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(page.getByText('Source: GMS v83 Monster Book.')).toHaveCount(0);
+  await page.mouse.move(5, 5);
+  await page.evaluate(() => {
+    const activeElement = document.activeElement;
+    if (activeElement instanceof HTMLElement) activeElement.blur();
+  });
+  await expect(page.getByText('Source: GMS v83 Monster Book.')).toHaveCount(0);
+
+  const widths = await page.evaluate(() => ({
+    document: document.documentElement.scrollWidth,
+    viewport: document.documentElement.clientWidth,
+  }));
+  expect(widths.document).toBeLessThanOrEqual(widths.viewport);
+  await page.evaluate(() => {
+    document.documentElement.style.scrollBehavior = 'auto';
+    window.scrollTo(0, 0);
+  });
+  expect(await page.evaluate(() => window.scrollY)).toBe(0);
+  await expect(page).toHaveScreenshot(
+    `${testInfo.project.name}-monster-detail-drops.png`,
+    { fullPage: true },
+  );
+});
+
+test('long drop names wrap without page-level horizontal overflow', async ({
+  page,
+  monsterPage,
+}) => {
+  const item: DetailCase = {
+    buildId: 'cw-launch',
+    prefix: '/maplestory',
+    sourceId: 'crowned-revenant',
+    name: 'Crowned Revenant',
+    buildLabel: 'Classic World',
+  };
+  await monsterPage.goto(canonicalPath(item));
+
+  await expect(
+    page.getByText(
+      'An Extraordinarily Long Synthetic Drop Name For Narrow Layouts',
+      { exact: true },
+    ),
+  ).toBeVisible();
+  const widths = await page.evaluate(() => ({
+    document: document.documentElement.scrollWidth,
+    viewport: document.documentElement.clientWidth,
+  }));
+  expect(widths.document).toBeLessThanOrEqual(widths.viewport);
+});

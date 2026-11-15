@@ -1,0 +1,19 @@
+.root,
+.groups,
+.group {
+  min-width: 0;
+}
+
+.group {
+  display: grid;
+  gap: var(--mantine-spacing-xs);
+}
+
+.heading {
+  margin: 0;
+}
+
+.items {
+  min-width: 0;
+  align-items: flex-start;
+}

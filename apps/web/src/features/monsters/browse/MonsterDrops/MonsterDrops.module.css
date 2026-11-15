@@ -53,10 +53,6 @@
   color: var(--mantine-color-dimmed);
 }
 
-.legend {
-  color: var(--mantine-color-dimmed);
-}
-
 .items {
   display: flex;
   flex-wrap: wrap;
@@ -93,16 +89,6 @@
 
 .itemIdentity img {
   image-rendering: pixelated;
-}
-
-.certainty {
-  display: inline-flex;
-  flex: 0 0 auto;
-  color: var(--mantine-color-teal-4);
-}
-
-.certainty[data-confirmed='false'] {
-  color: var(--mantine-color-yellow-4);
 }
 
 @media (max-width: 40em) {
