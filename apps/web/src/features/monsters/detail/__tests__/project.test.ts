@@ -1,9 +1,30 @@
+import { itemIconUrl } from '@mapletip/data/items';
+import type { MonsterPageRecordV1 } from '@mapletip/data/monsters';
 import { describe, expect, it } from 'vitest';
+
+import { MAPLEKIT_RELEASE } from '@/config/maplekit';
 
 import { UNNAMED_MONSTER_LABEL } from '../../shared';
 import { projectMonsterDetail } from '../project';
 
 import { monsterPageFixture } from './monsterPageFixture';
+
+type MonsterPageDrop = MonsterPageRecordV1['drops']['entries'][number];
+
+function pageDrop(
+  name: MonsterPageDrop['name'],
+  category: MonsterPageDrop['category'],
+  overrides: Partial<MonsterPageDrop> = {},
+): MonsterPageDrop {
+  return {
+    itemRef: { state: 'resolved', key: 'fixture:item:record' },
+    name,
+    category,
+    icon: { state: 'unknown' },
+    assertion: { kind: 'native' },
+    ...overrides,
+  };
+}
 
 describe('projectMonsterDetail', () => {
   it('projects identity fields and unprefixed canonical path for default build', () => {
@@ -159,5 +180,163 @@ describe('projectMonsterDetail', () => {
       { code: 'S', element: 'Poison', response: 'Immune' },
       { code: 'H', element: 'Holy', response: 'Weak' },
     ]);
+  });
+
+  it('groups every drop in contract order and counts rendered entries', () => {
+    const entries = [
+      pageDrop(
+        { state: 'known', value: 'Second Charm' },
+        { kind: 'item-class', value: 'etc' },
+      ),
+      pageDrop(
+        { state: 'known', value: 'Practice Cap' },
+        { kind: 'equip-slot', code: 'cap' },
+      ),
+      pageDrop(
+        { state: 'known', value: 'Practice Tonic' },
+        { kind: 'item-class', value: 'consume' },
+      ),
+      pageDrop(
+        { state: 'known', value: 'First Charm' },
+        { kind: 'item-class', value: 'etc' },
+      ),
+      pageDrop(
+        { state: 'known', value: 'Paper Kite' },
+        { kind: 'item-class', value: 'setup' },
+      ),
+      pageDrop(
+        { state: 'known', value: 'Pixel Pin' },
+        { kind: 'item-class', value: 'cash' },
+      ),
+      pageDrop(
+        { state: 'known', value: 'Toy Mite' },
+        { kind: 'item-class', value: 'pet' },
+      ),
+      pageDrop(
+        { state: 'known', value: 'Unknown Type Token' },
+        { kind: 'unknown' },
+      ),
+    ];
+    const view = projectMonsterDetail(
+      monsterPageFixture({
+        drops: { entries, summary: { native: { state: 'unknown' } } },
+      }),
+      'cw-launch',
+    );
+
+    expect(view.drops).toMatchObject({
+      state: 'present',
+      count: 8,
+      groups: [
+        { id: 'equipment', label: 'Equipment', count: 1 },
+        { id: 'usable', label: 'Usable', count: 1 },
+        { id: 'etc', label: 'Etc', count: 2 },
+        { id: 'setup', label: 'Setup', count: 1 },
+        { id: 'cash', label: 'Cash', count: 1 },
+        { id: 'pets', label: 'Pets', count: 1 },
+        { id: 'unknown', label: 'Unknown type', count: 1 },
+      ],
+    });
+    if (view.drops.state !== 'present') {
+      throw new Error('Expected projected drops.');
+    }
+    expect(view.drops.groups[2]?.entries.map(({ name }) => name)).toEqual([
+      'Second Charm',
+      'First Charm',
+    ]);
+    expect(view.drops.groups[6]?.entries[0]?.name).toBe('Unknown Type Token');
+  });
+
+  it('retains unresolved item rows, honest fallback names, icons and source builds', () => {
+    const iconId = 'b'.repeat(64);
+    const view = projectMonsterDetail(
+      monsterPageFixture({
+        drops: {
+          entries: [
+            pageDrop(
+              { state: 'unknown' },
+              { kind: 'unknown' },
+              {
+                itemRef: { state: 'unresolved' },
+                icon: { state: 'known', value: iconId },
+                assertion: {
+                  kind: 'historical-overlay',
+                  confidence: 'maybe',
+                  sourceBuild: 'gms-v83',
+                },
+              },
+            ),
+          ],
+          summary: { native: { state: 'unsupported' } },
+        },
+      }),
+      'cw-launch',
+    );
+
+    expect(view.drops).toMatchObject({
+      state: 'present',
+      count: 1,
+      groups: [
+        {
+          id: 'unknown',
+          entries: [
+            {
+              name: 'Item name unavailable',
+              iconUrl: itemIconUrl(MAPLEKIT_RELEASE.baseUrl, iconId),
+              assertionKind: 'historical-overlay',
+              sourceBuild: 'gms-v83',
+            },
+          ],
+        },
+      ],
+    });
+  });
+
+  it('distinguishes no recorded drops from unavailable collection evidence', () => {
+    const absent = projectMonsterDetail(
+      monsterPageFixture({
+        drops: {
+          entries: [],
+          summary: {
+            native: { state: 'absent' },
+            historical: { state: 'absent' },
+          },
+        },
+      }),
+      'cw-launch',
+    );
+    const noObservedRows = projectMonsterDetail(
+      monsterPageFixture({
+        drops: {
+          entries: [],
+          summary: {
+            native: { state: 'known', count: 0, lowerBound: true },
+            historical: { state: 'absent' },
+          },
+        },
+      }),
+      'cw-launch',
+    );
+    const unknown = projectMonsterDetail(monsterPageFixture(), 'cw-launch');
+    const unsupported = projectMonsterDetail(
+      monsterPageFixture({
+        drops: {
+          entries: [],
+          summary: { native: { state: 'unsupported' } },
+        },
+      }),
+      'cw-launch',
+    );
+
+    expect(absent.drops).toEqual({ state: 'no-recorded', count: 0 });
+    expect(noObservedRows.drops).toEqual({ state: 'no-recorded', count: 0 });
+    expect(unknown.drops).toEqual({
+      state: 'unavailable',
+      count: 'unknown',
+    });
+    expect(unsupported.drops).toEqual({
+      state: 'unavailable',
+      count: 'unknown',
+    });
   });
 });

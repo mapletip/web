@@ -4,45 +4,61 @@ import { useState, type KeyboardEvent, type ReactElement } from 'react';
 
 import { BUILDS, isBuildId, type BuildId } from '@/config/maplekit';
 
-import type { MonsterDropEntry } from '../../project';
-import { closeDropsPanelOnEscape } from '../escape';
-import classes from '../MonsterDrops.module.css';
+import classes from './drop-certainty.module.css';
+
+export type MonsterDropAssertionKind = 'native' | 'historical-overlay';
+
+export interface MonsterDropCertaintyProps {
+  readonly itemName: string;
+  readonly assertionKind: MonsterDropAssertionKind;
+  readonly sourceBuild?: string;
+}
+
+export interface DropCertaintyDisclosureProps extends MonsterDropCertaintyProps {
+  readonly buildId: BuildId;
+  readonly onEscape?: (event: KeyboardEvent<HTMLElement>) => void;
+}
 
 function buildLabel(buildId: string): string {
   return isBuildId(buildId) ? BUILDS[buildId].label : buildId;
 }
 
 function dropSourceLabel(
-  entry: MonsterDropEntry,
+  certainty: MonsterDropCertaintyProps,
   buildId: BuildId,
 ): string | undefined {
-  // The published drop roster omits source type. The released GMS v83 native
-  // assertions and CW historical overlays attributed to GMS v83 are sourced
-  // from the Monster Book, as established by the source projection contract.
-  if (entry.assertionKind === 'native' && buildId === 'gms-v83') {
+  if (certainty.assertionKind === 'native' && buildId === 'gms-v83') {
     return `${BUILDS[buildId].label} Monster Book`;
   }
-  if (entry.sourceBuild !== undefined) {
-    const label = buildLabel(entry.sourceBuild);
-    return entry.sourceBuild === 'gms-v83' ? `${label} Monster Book` : label;
+  if (certainty.sourceBuild !== undefined) {
+    const label = buildLabel(certainty.sourceBuild);
+    return certainty.sourceBuild === 'gms-v83'
+      ? `${label} Monster Book`
+      : label;
   }
   return undefined;
 }
 
+/** Shared certainty marker and explanation for Monster Browse and Detail. */
 export function DropCertaintyDisclosure({
-  entry,
+  itemName,
+  assertionKind,
+  sourceBuild,
   buildId,
-  onClose,
-}: {
-  readonly entry: MonsterDropEntry;
-  readonly buildId: BuildId;
-  readonly onClose?: () => void;
-}): ReactElement {
+  onEscape,
+}: DropCertaintyDisclosureProps): ReactElement {
   const [explanationOpen, setExplanationOpen] = useState(false);
-  const confirmed = entry.assertionKind === 'native';
+  const confirmed = assertionKind === 'native';
   const stateLabel = confirmed ? 'Confirmed' : 'Maybe';
-  const actionLabel = `Show ${confirmed ? 'confirmed' : 'unconfirmed'} drop details for ${entry.itemName}`;
-  const sourceLabel = dropSourceLabel(entry, buildId);
+  const actionLabel = `Show ${confirmed ? 'confirmed' : 'unconfirmed'} drop details for ${itemName}`;
+  const sourceLabel = dropSourceLabel(
+    {
+      itemName,
+      assertionKind,
+      ...(sourceBuild === undefined ? {} : { sourceBuild }),
+    },
+    buildId,
+  );
 
   function handleEscape(event: KeyboardEvent<HTMLElement>): void {
     if (
@@ -51,7 +67,7 @@ export function DropCertaintyDisclosure({
     ) {
       return;
     }
-    closeDropsPanelOnEscape(event, onClose);
+    onEscape?.(event);
   }
 
   return (
@@ -90,7 +106,7 @@ export function DropCertaintyDisclosure({
       </HoverCard.Target>
       <HoverCard.Dropdown
         role="dialog"
-        aria-label={`${stateLabel} drop details for ${entry.itemName}`}
+        aria-label={`${stateLabel} drop details for ${itemName}`}
       >
         <Stack gap={4}>
           <Text fw={600} size="sm">

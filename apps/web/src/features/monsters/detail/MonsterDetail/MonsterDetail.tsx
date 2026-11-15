@@ -1,5 +1,10 @@
 import { Badge, Box, Grid, Group, Stack, Title } from '@mantine/core';
-import { FactSheet, SpriteStage, Thumbnail } from '@mapletip/component-library';
+import {
+  FactSheet,
+  RecordSections,
+  SpriteStage,
+  Thumbnail,
+} from '@mapletip/component-library';
 import type { ReactElement } from 'react';
 
 import { DetailPageShell } from '@/components/DetailPageShell';
@@ -7,6 +12,7 @@ import { DetailBreadcrumbs } from '@/features/detail';
 import { MONSTER_STAT_BY_ID } from '@/features/monsters/shared';
 
 import { monsterDetailBreadcrumbs } from '../metadata';
+import { MonsterDetailDrops } from '../MonsterDetailDrops';
 import type { MonsterDetailStatView, MonsterDetailView } from '../project';
 
 import classes from './MonsterDetail.module.css';
@@ -72,6 +78,18 @@ export function MonsterDetail({ view }: MonsterDetailProps): ReactElement {
             </Grid.Col>
           </Grid>
         </section>
+        <RecordSections
+          sections={[
+            {
+              id: 'drops',
+              title: 'Drops',
+              count: view.drops.count,
+              content: (
+                <MonsterDetailDrops drops={view.drops} buildId={view.buildId} />
+              ),
+            },
+          ]}
+        />
       </Stack>
     </DetailPageShell>
   );

@@ -4,7 +4,7 @@ import {
   createMemoryHistory,
   createRouter,
 } from '@tanstack/react-router';
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 
 import { routeTree } from '@/routeTree.gen';
@@ -101,5 +101,80 @@ describe('MonsterDetail hero', () => {
         'Speed',
       ],
     );
+  });
+
+  it('derives the Drops navigation and heading count from the projected entries', () => {
+    renderDetail({
+      drops: {
+        entries: [
+          {
+            itemRef: { state: 'resolved', key: 'fixture:item:tonic' },
+            name: { state: 'known', value: 'Practice Tonic' },
+            category: { kind: 'item-class', value: 'consume' },
+            icon: { state: 'unknown' },
+            assertion: { kind: 'native' },
+          },
+        ],
+        summary: { native: { state: 'known', count: 1, lowerBound: true } },
+      },
+    });
+
+    const navigation = screen.getByRole('navigation', {
+      name: 'Record sections',
+    });
+    expect(
+      within(navigation).getByRole('link', { name: 'Drops (1)' }),
+    ).toHaveAttribute('href', '#drops');
+    expect(
+      screen.getByRole('heading', { level: 2, name: 'Drops (1)' }),
+    ).toBeVisible();
+    expect(
+      screen.getByRole('heading', { level: 3, name: 'Usable (1)' }),
+    ).toBeVisible();
+    expect(screen.getByText('Practice Tonic')).toBeVisible();
+    expect(screen.queryByRole('link', { name: 'Practice Tonic' })).toBeNull();
+  });
+
+  it('shows zero counts when no drop information is recorded', () => {
+    renderDetail({
+      drops: {
+        entries: [],
+        summary: {
+          native: { state: 'absent' },
+          historical: { state: 'absent' },
+        },
+      },
+    });
+
+    const navigation = screen.getByRole('navigation', {
+      name: 'Record sections',
+    });
+    expect(
+      within(navigation).getByRole('link', { name: 'Drops (0)' }),
+    ).toHaveAttribute('href', '#drops');
+    expect(
+      screen.getByRole('heading', { level: 2, name: 'Drops (0)' }),
+    ).toBeVisible();
+    expect(screen.getByText('No recorded drop information.')).toBeVisible();
+  });
+
+  it('shows unknown counts when drop information is unavailable', () => {
+    renderDetail({
+      drops: {
+        entries: [],
+        summary: { native: { state: 'unsupported' } },
+      },
+    });
+
+    const navigation = screen.getByRole('navigation', {
+      name: 'Record sections',
+    });
+    expect(
+      within(navigation).getByRole('link', { name: 'Drops (?)' }),
+    ).toHaveAttribute('href', '#drops');
+    expect(
+      screen.getByRole('heading', { level: 2, name: 'Drops (?)' }),
+    ).toBeVisible();
+    expect(screen.getByText('Drop information is unavailable.')).toBeVisible();
   });
 });

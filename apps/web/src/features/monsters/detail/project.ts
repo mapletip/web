@@ -1,6 +1,7 @@
+import { itemIconUrl } from '@mapletip/data/items';
 import type { MonsterPageRecordV1 } from '@mapletip/data/monsters';
 
-import type { BuildId } from '@/config/maplekit';
+import { MAPLEKIT_RELEASE, type BuildId } from '@/config/maplekit';
 import { buildRecordDetailPath } from '@/features/detail';
 
 import {
@@ -11,7 +12,16 @@ import {
   resolveMonsterSpriteUrl,
   UNNAMED_MONSTER_LABEL,
 } from '../shared';
-import type { MonsterDetailStatId, UnknownFactState } from '../shared';
+import type {
+  MonsterDetailStatId,
+  MonsterDropCategoryId,
+  UnknownFactState,
+} from '../shared';
+import {
+  getMonsterDropCategoryId,
+  getMonsterDropCategoryLabel,
+  MONSTER_DROP_CATEGORIES,
+} from '../shared/drop-categories';
 
 export interface MonsterDetailStatView {
   readonly id: MonsterDetailStatId;
@@ -27,6 +37,30 @@ export interface MonsterElementResponseView {
   readonly response: string;
 }
 
+export interface MonsterDetailDropEntryView {
+  readonly name: string;
+  readonly iconUrl?: string;
+  readonly assertionKind: 'native' | 'historical-overlay';
+  readonly sourceBuild?: string;
+}
+
+export interface MonsterDetailDropGroupView {
+  readonly id: MonsterDropCategoryId;
+  readonly label: string;
+  readonly count: number;
+  readonly entries: readonly MonsterDetailDropEntryView[];
+}
+
+export type MonsterDetailDropsView =
+  | {
+      readonly state: 'present';
+      /** Number of entries rendered on the page, not a claim of completeness. */
+      readonly count: number;
+      readonly groups: readonly MonsterDetailDropGroupView[];
+    }
+  | { readonly state: 'no-recorded'; readonly count: 0 }
+  | { readonly state: 'unavailable'; readonly count: 'unknown' };
+
 /** Serializable, display-ready view model for the Monster Detail hero. */
 export interface MonsterDetailView {
   readonly publicId: string;
@@ -41,6 +75,7 @@ export interface MonsterDetailView {
   readonly spriteUrl?: string;
   readonly spriteWidth?: number;
   readonly spriteHeight?: number;
+  readonly drops: MonsterDetailDropsView;
 }
 
 type NumericMonsterFact =
@@ -134,6 +169,74 @@ function positiveDimension(
     : undefined;
 }
 
+function projectMonsterDrops(
+  record: MonsterPageRecordV1,
+): MonsterDetailDropsView {
+  const groupedEntries = new Map<
+    MonsterDropCategoryId,
+    MonsterDetailDropEntryView[]
+  >();
+
+  for (const entry of record.drops.entries) {
+    let sourceCategory: string | undefined;
+    if (entry.category.kind === 'equip-slot') {
+      sourceCategory = 'equipment';
+    } else if (entry.category.kind === 'item-class') {
+      sourceCategory = entry.category.value;
+    }
+    const category = getMonsterDropCategoryId(sourceCategory);
+    const group = groupedEntries.get(category) ?? [];
+    group.push({
+      name:
+        entry.name.state === 'known'
+          ? entry.name.value
+          : 'Item name unavailable',
+      ...(entry.icon.state === 'known'
+        ? {
+            iconUrl: itemIconUrl(MAPLEKIT_RELEASE.baseUrl, entry.icon.value),
+          }
+        : {}),
+      assertionKind: entry.assertion.kind,
+      ...(entry.assertion.kind === 'historical-overlay'
+        ? { sourceBuild: entry.assertion.sourceBuild }
+        : {}),
+    });
+    groupedEntries.set(category, group);
+  }
+
+  const count = record.drops.entries.length;
+  if (count === 0) {
+    const { native, historical } = record.drops.summary;
+    const nativeHasNoEntries =
+      native.state === 'absent' ||
+      (native.state === 'known' && native.count === 0);
+    const historicalHasNoEntries =
+      historical == null || historical.state === 'absent';
+
+    return nativeHasNoEntries && historicalHasNoEntries
+      ? { state: 'no-recorded', count: 0 }
+      : { state: 'unavailable', count: 'unknown' };
+  }
+
+  return {
+    state: 'present',
+    count,
+    groups: MONSTER_DROP_CATEGORIES.flatMap(({ id }) => {
+      const entries = groupedEntries.get(id);
+      return entries === undefined
+        ? []
+        : [
+            {
+              id,
+              label: getMonsterDropCategoryLabel(id, 'detail'),
+              count: entries.length,
+              entries,
+            },
+          ];
+    }),
+  };
+}
+
 /**
  * Project a verified MapleKit Monster page record into the serializable hero
  * view. Non-known facts keep the same wording as Monster Browse.
@@ -166,6 +269,7 @@ export function projectMonsterDetail(
     ...(record.undead.state === 'known' ? { undead: record.undead.value } : {}),
     elements: projectElements(record),
     stats: MONSTER_STAT_DEFINITIONS.map(({ id }) => projectStat(record, id)),
+    drops: projectMonsterDrops(record),
     ...(spriteUrl === undefined ? {} : { spriteUrl }),
     ...(spriteWidth === undefined ? {} : { spriteWidth }),
     ...(spriteHeight === undefined ? {} : { spriteHeight }),

@@ -1,5 +1,12 @@
 export { monsterDetailLinkProps, type MonsterPublicAddress } from './address';
 export {
+  getMonsterDropCategoryId,
+  getMonsterDropCategoryLabel,
+  MONSTER_DROP_CATEGORIES,
+  type MonsterDropCategoryId,
+  type MonsterDropCategorySurface,
+} from './drop-categories';
+export {
   formatMonsterFact,
   formatMonsterNumber,
   getMonsterNonKnownLabel,

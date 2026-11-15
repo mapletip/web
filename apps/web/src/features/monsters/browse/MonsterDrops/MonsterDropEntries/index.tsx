@@ -1,25 +1,19 @@
 import { Box, Group, Stack, Text, TextInput, Title } from '@mantine/core';
 import { Thumbnail } from '@mapletip/component-library';
-import { Check, MagnifyingGlass, Question } from '@phosphor-icons/react';
+import { MagnifyingGlass } from '@phosphor-icons/react';
 import { useState, type ReactElement } from 'react';
 
 import type { BuildId } from '@/config/maplekit';
-import { itemCategoryLabel } from '@/features/items/browse/labels';
+import {
+  getMonsterDropCategoryId,
+  MONSTER_DROP_CATEGORIES,
+} from '@/features/monsters/shared';
+import { DropCertaintyDisclosure } from '@/features/monsters/shared/DropCertaintyDisclosure';
+import { DropCertaintyLegend } from '@/features/monsters/shared/DropCertaintyLegend';
 
 import type { MonsterBrowseRow, MonsterDropEntry } from '../../project';
-import { DropCertaintyDisclosure } from '../DropCertaintyDisclosure';
 import { closeDropsPanelOnEscape } from '../escape';
 import classes from '../MonsterDrops.module.css';
-
-const CATEGORY_ORDER = [
-  'Equipment',
-  'Use',
-  'ETC',
-  'Set-up',
-  'Cash Items',
-  'Pets',
-  'Other',
-] as const;
 
 function itemReferenceLabel(state: string): string | undefined {
   if (state === 'resolved') return undefined;
@@ -57,22 +51,23 @@ export function MonsterDropEntries({
   const filteredEntries = record.drops.entries.filter((entry) =>
     matchesDropSearch(entry, query),
   );
-  const groupedEntries = new Map<string, MonsterDropEntry[]>();
+  const groupedEntries = new Map<
+    (typeof MONSTER_DROP_CATEGORIES)[number]['id'],
+    MonsterDropEntry[]
+  >();
   for (const entry of filteredEntries) {
-    const category = itemCategoryLabel(entry.itemCategory);
+    const category = getMonsterDropCategoryId(entry.itemCategory);
     const group = groupedEntries.get(category) ?? [];
     group.push(entry);
     groupedEntries.set(category, group);
   }
 
-  const categoryOrder = new Map<string, number>(
-    CATEGORY_ORDER.map((category, index) => [category, index]),
-  );
-  const orderedGroups = [...groupedEntries.entries()].sort(
-    ([left], [right]) =>
-      (categoryOrder.get(left) ?? CATEGORY_ORDER.length) -
-      (categoryOrder.get(right) ?? CATEGORY_ORDER.length),
-  );
+  const orderedGroups = MONSTER_DROP_CATEGORIES.flatMap((category) => {
+    const entries = groupedEntries.get(category.id);
+    return entries === undefined
+      ? []
+      : [[category.browseLabel, entries] as const];
+  });
 
   return (
     <Stack gap="sm">
@@ -86,25 +81,7 @@ export function MonsterDropEntries({
         leftSection={<MagnifyingGlass aria-hidden="true" size={16} />}
         size="sm"
       />
-      <Group
-        gap="md"
-        role="group"
-        aria-label="Drop certainty legend"
-        className={classes['legend']}
-      >
-        <Group gap={4} wrap="nowrap">
-          <span className={classes['certainty']} data-confirmed="true">
-            <Check size={14} aria-hidden="true" />
-          </span>
-          <Text size="xs">Confirmed</Text>
-        </Group>
-        <Group gap={4} wrap="nowrap">
-          <span className={classes['certainty']} data-confirmed="false">
-            <Question size={14} aria-hidden="true" />
-          </span>
-          <Text size="xs">Unconfirmed</Text>
-        </Group>
-      </Group>
+      <DropCertaintyLegend />
       {orderedGroups.length === 0 ? (
         <Text size="sm" c="dimmed">
           No drop entries match “{search.trim()}”.
@@ -147,9 +124,15 @@ export function MonsterDropEntries({
                           </Text>
                         </Group>
                         <DropCertaintyDisclosure
-                          entry={entry}
+                          itemName={entry.itemName}
+                          assertionKind={entry.assertionKind}
+                          {...(entry.sourceBuild === undefined
+                            ? {}
+                            : { sourceBuild: entry.sourceBuild })}
                           buildId={buildId}
-                          {...(onClose === undefined ? {} : { onClose })}
+                          onEscape={(event) =>
+                            closeDropsPanelOnEscape(event, onClose)
+                          }
                         />
                       </Group>
                       {reference ? (

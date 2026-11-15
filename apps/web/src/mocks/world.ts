@@ -387,6 +387,12 @@ const cwItems: readonly FixtureItem[] = [
     category: { kind: 'item-class', value: 'etc' },
   },
   {
+    id: 'long-named-drop',
+    name: 'An Extraordinarily Long Synthetic Drop Name For Narrow Layouts',
+    itemClass: known('etc'),
+    category: { kind: 'item-class', value: 'etc' },
+  },
+  {
     id: 'woven-thread',
     name: 'Woven Thread',
     itemClass: known('etc'),
@@ -467,7 +473,10 @@ const cwItems: readonly FixtureItem[] = [
 
 const wardenItemIds = cwItems
   .map(({ id }) => id)
-  .filter((id) => id !== 'pebble-token' && id !== 'quiet-bell');
+  .filter(
+    (id) =>
+      id !== 'pebble-token' && id !== 'quiet-bell' && id !== 'long-named-drop',
+  );
 const historical = (itemId: string): FixtureDrop => ({
   itemId,
   assertionKind: 'historical-overlay',
@@ -489,6 +498,7 @@ export const world: { readonly builds: readonly FixtureBuild[] } = {
         'crowned-revenant': [
           historical('practice-tonic-a'),
           historical('sample-charm-a'),
+          historical('long-named-drop'),
         ],
       },
     },
