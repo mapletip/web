@@ -1,9 +1,15 @@
 import { MantineProvider } from '@mantine/core';
+import {
+  RouterContextProvider,
+  createMemoryHistory,
+  createRouter,
+} from '@tanstack/react-router';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 
 import { DEFAULT_BUILD_ID } from '@/config/maplekit';
+import { routeTree } from '@/routeTree.gen';
 
 import { MonsterBrowseCard } from '../MonsterBrowseCard';
 import { MonsterDropListing } from '../MonsterDrops';
@@ -18,6 +24,8 @@ import type { MonsterBrowseRow } from '../project';
 function knownRow(): MonsterBrowseRow {
   return {
     key: 'fixture:monster:001',
+    publicId: '00000001',
+    slug: 'sentinel-snail',
     name: 'Sentinel Snail',
     sprite: 'c'.repeat(64),
     level: 5,
@@ -86,14 +94,21 @@ function renderCard(
   onShowDrops?: () => void,
   isDetailsOpen?: boolean,
 ) {
+  const router = createRouter({
+    routeTree,
+    history: createMemoryHistory({ initialEntries: ['/maplestory/monsters'] }),
+  });
   return render(
-    <MantineProvider>
-      <MonsterBrowseCard
-        record={record}
-        onShowDrops={onShowDrops}
-        isDetailsOpen={isDetailsOpen}
-      />
-    </MantineProvider>,
+    <RouterContextProvider router={router}>
+      <MantineProvider>
+        <MonsterBrowseCard
+          record={record}
+          buildId={DEFAULT_BUILD_ID}
+          onShowDrops={onShowDrops}
+          isDetailsOpen={isDetailsOpen}
+        />
+      </MantineProvider>
+    </RouterContextProvider>,
   );
 }
 
@@ -190,12 +205,14 @@ describe('MonsterBrowseCard', () => {
     ]);
   });
 
-  it('is a labelled list with no invented record links', () => {
+  it('is a labelled list and links the monster name to its canonical detail page', () => {
     renderCard(knownRow());
 
     const list = screen.getAllByRole('definition')[0]?.closest('dl');
     expect(list).toHaveAttribute('aria-label', 'Training facts');
-    expect(document.querySelectorAll('a')).toHaveLength(0);
+    expect(
+      screen.getByRole('link', { name: 'Sentinel Snail' }),
+    ).toHaveAttribute('href', '/maplestory/monsters/sentinel-snail-00000001');
   });
 
   it('exposes a details trigger that opens the shared drawer', async () => {

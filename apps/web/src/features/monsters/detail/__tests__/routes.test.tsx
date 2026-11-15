@@ -75,6 +75,7 @@ describe('Monster Browse & Detail route integration', () => {
     expect(loadCall?.buildId).toBe('gms-v83');
     expect(loadCall?.publicId).toBe('jp565851');
     expect(loadCall?.signal).toBeInstanceOf(AbortSignal);
+    expect(loadCall?.signal).toBeInstanceOf(AbortSignal);
 
     const detailMatch = router.state.matches.find(
       (m) => m.routeId === '/maplestory/{-$buildId}/monsters/$slugId',

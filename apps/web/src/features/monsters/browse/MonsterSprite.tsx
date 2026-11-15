@@ -1,8 +1,7 @@
 import { Thumbnail } from '@mapletip/component-library';
-import { monsterSpriteUrl } from '@mapletip/data/monsters';
 import { useEffect, useRef, useState, type ReactElement } from 'react';
 
-import { MAPLEKIT_RELEASE } from '@/config/maplekit';
+import { resolveMonsterSpriteUrl } from '../shared';
 
 export const MONSTER_SPRITE_SIZE = 40;
 
@@ -13,10 +12,7 @@ export function MonsterSprite({
 }): ReactElement {
   const containerRef = useRef<HTMLSpanElement>(null);
   const [failedSprite, setFailedSprite] = useState(false);
-  const src =
-    sprite === undefined
-      ? undefined
-      : monsterSpriteUrl(MAPLEKIT_RELEASE.baseUrl, sprite);
+  const src = resolveMonsterSpriteUrl(sprite);
 
   useEffect(() => {
     const image = containerRef.current?.querySelector('img');

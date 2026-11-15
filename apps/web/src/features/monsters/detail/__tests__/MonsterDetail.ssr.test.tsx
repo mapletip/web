@@ -33,6 +33,10 @@ describe('MonsterDetail server rendering', () => {
         publicId: '36z2h01p',
         slug: 'sentinel-snail',
         name: { state: 'known', value: 'Sentinel Snail' },
+        stats: {
+          ...monsterPageFixture().stats,
+          hp: { state: 'known', value: 23_000_000 },
+        },
       }),
       'cw-launch',
     );
@@ -54,6 +58,7 @@ describe('MonsterDetail server rendering', () => {
     );
 
     expect(html).toContain('Sentinel Snail');
+    expect(html).toContain('23,000,000');
     expect(html).toContain('aria-label="Breadcrumb"');
     expect(html).toContain('href="/"');
     expect(html).toContain('href="/maplestory/monsters"');

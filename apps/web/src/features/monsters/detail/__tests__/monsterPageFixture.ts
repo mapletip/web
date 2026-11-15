@@ -15,6 +15,8 @@ export function monsterPageFixture(
     name: { state: 'known', value: 'Sentinel Snail' },
     sprite: {
       contentId: { state: 'known', value: 'a'.repeat(64) },
+      width: 32,
+      height: 48,
     },
     boss: UNKNOWN,
     undead: UNKNOWN,

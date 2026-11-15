@@ -1,5 +1,10 @@
 import { MantineProvider } from '@mantine/core';
 import {
+  RouterContextProvider,
+  createMemoryHistory,
+  createRouter,
+} from '@tanstack/react-router';
+import {
   fireEvent,
   render,
   screen,
@@ -7,6 +12,7 @@ import {
   within,
 } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
 
 vi.mock('@/features/browse-overlay/useBrowseOverlay', async () => {
@@ -38,12 +44,13 @@ vi.mock('@/features/browse-overlay/useBrowseOverlay', async () => {
 });
 
 import { DEFAULT_BUILD_ID } from '@/config/maplekit';
+import { routeTree } from '@/routeTree.gen';
 
 import {
   getMonsterBrowseFacetDefinition,
   MONSTER_BROWSE_FACT_CONFIG,
 } from '../monster-browse-fact-config';
-import { MonsterBrowse, monsterBrowseColumns } from '../MonsterBrowse';
+import { createMonsterBrowseColumns, MonsterBrowse } from '../MonsterBrowse';
 import {
   projectMonsterBrowseRows,
   type MonsterBrowseRow,
@@ -114,7 +121,7 @@ function record({
   });
 }
 
-const rows = projectMonsterBrowseRows(
+const projectedRows = projectMonsterBrowseRows(
   fixtureCatalog({
     records: [
       record({ key: '001', name: 'Sentinel Snail', level: 5, hp: 30, exp: 1 }),
@@ -126,21 +133,40 @@ const rows = projectMonsterBrowseRows(
   emptyDropBrowseFixture(),
 );
 
+const rows: readonly MonsterBrowseRow[] = projectedRows.map((row, index) => ({
+  ...row,
+  publicId: String(index + 1).padStart(8, '0'),
+  slug: row.name.toLowerCase().replaceAll(' ', '-'),
+}));
+
+function createBrowseRouter() {
+  return createRouter({
+    routeTree,
+    history: createMemoryHistory({
+      initialEntries: ['/maplestory/monsters'],
+    }),
+  });
+}
+
 function mountBrowse({
+  buildId = DEFAULT_BUILD_ID,
   browseRows = rows,
   dropItemOptions = [],
 }: {
+  readonly buildId?: 'cw-launch' | 'gms-v83';
   readonly browseRows?: readonly MonsterBrowseRow[];
   readonly dropItemOptions?: readonly MonsterDropItemOption[];
 } = {}) {
   return render(
-    <MantineProvider>
-      <MonsterBrowse
-        buildId={DEFAULT_BUILD_ID}
-        rows={browseRows}
-        dropItemOptions={dropItemOptions}
-      />
-    </MantineProvider>,
+    <RouterContextProvider router={createBrowseRouter()}>
+      <MantineProvider>
+        <MonsterBrowse
+          buildId={buildId}
+          rows={browseRows}
+          dropItemOptions={dropItemOptions}
+        />
+      </MantineProvider>
+    </RouterContextProvider>,
   );
 }
 
@@ -148,17 +174,57 @@ const summaryText = () =>
   screen.getAllByText(/^\d+ Monsters?$/u)[0]?.textContent ?? '';
 
 /** Cards are the presentation that renders real DOM in jsdom. */
-function cards() {
+function cards(buildName = 'Classic World') {
   return screen.getByRole('list', {
-    name: 'Classic World monsters cards',
+    name: `${buildName} monsters cards`,
   });
 }
 
 function column(accessor: string) {
-  return monsterBrowseColumns.find((entry) => entry.accessor === accessor);
+  return createMonsterBrowseColumns(DEFAULT_BUILD_ID).find(
+    (entry) => entry.accessor === accessor,
+  );
 }
 
 describe('MonsterBrowse', () => {
+  it('links the table and card names to the canonical address for their build', () => {
+    const { unmount } = mountBrowse();
+    const firstRow = rows[0];
+    if (firstRow === undefined) throw new Error('Fixture produced no rows.');
+    const defaultNameCell = createMonsterBrowseColumns('cw-launch')
+      .find((entry) => entry.accessor === 'name')
+      ?.render?.(firstRow);
+    expect(
+      renderToStaticMarkup(
+        <RouterContextProvider router={createBrowseRouter()}>
+          <MantineProvider>{defaultNameCell}</MantineProvider>
+        </RouterContextProvider>,
+      ),
+    ).toContain('href="/maplestory/monsters/sentinel-snail-00000001"');
+    expect(
+      within(cards()).getByRole('link', { name: 'Sentinel Snail' }),
+    ).toHaveAttribute('href', '/maplestory/monsters/sentinel-snail-00000001');
+
+    unmount();
+    mountBrowse({ buildId: 'gms-v83' });
+    const gmsNameCell = createMonsterBrowseColumns('gms-v83')
+      .find((entry) => entry.accessor === 'name')
+      ?.render?.(firstRow);
+    expect(
+      renderToStaticMarkup(
+        <RouterContextProvider router={createBrowseRouter()}>
+          <MantineProvider>{gmsNameCell}</MantineProvider>
+        </RouterContextProvider>,
+      ),
+    ).toContain('href="/maplestory/gms-v83/monsters/sentinel-snail-00000001"');
+    expect(
+      within(cards('GMS v83')).getByRole('link', { name: 'Sentinel Snail' }),
+    ).toHaveAttribute(
+      'href',
+      '/maplestory/gms-v83/monsters/sentinel-snail-00000001',
+    );
+  });
+
   it('builds ordered facet metadata from the shared Monster fact config', () => {
     const facets = Object.values(MONSTER_BROWSE_FACT_CONFIG).flatMap((fact) => {
       const definition = getMonsterBrowseFacetDefinition(fact);

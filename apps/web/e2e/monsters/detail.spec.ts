@@ -1,3 +1,5 @@
+import type { Request } from '@playwright/test';
+
 import { monsterPublicId, monsterSlug } from '../../src/mocks/release';
 
 import { expect, test } from './fixtures';
@@ -78,6 +80,46 @@ test('detail pages server-render metadata, hydrate without whole-build artifacts
     await expect(monsterPage.heading(item.name)).toBeVisible();
   }
 });
+
+for (const item of DETAIL_CASES) {
+  test(`Monster Browse links open the same-build ${item.buildLabel} Monster Detail page`, async ({
+    page,
+    monsterPage,
+    artifactRequests,
+    expectedArtifactRequests,
+  }) => {
+    const canonical = canonicalPath(item);
+    await monsterPage.goto(`${item.prefix}/monsters`);
+    expect(artifactRequests).toEqual([]);
+    const nameLink = page
+      .getByRole('link', { name: item.name, exact: true })
+      .filter({ visible: true });
+    await expect(nameLink).toHaveCount(1);
+    await expect(nameLink).toHaveAttribute('href', canonical);
+    expectedArtifactRequests.push(
+      /^\/v1\/releases\/[a-f0-9]{64}\.json$/u,
+      /^\/v1\/build-indexes\/[a-f0-9]{64}\.json$/u,
+      /^\/v2\/products\/[a-f0-9]{64}\.json$/u,
+      /^\/v2\/monsters\/page-packs\/[a-f0-9]{64}\.json$/u,
+    );
+    const documentNavigations: string[] = [];
+    const recordDocumentNavigation = (request: Request) => {
+      if (
+        request.isNavigationRequest() &&
+        request.frame() === page.mainFrame()
+      ) {
+        documentNavigations.push(request.url());
+      }
+    };
+    page.on('request', recordDocumentNavigation);
+    await nameLink.click();
+    await expect(page).toHaveURL(`http://127.0.0.1:4173${canonical}`);
+    await expect(monsterPage.heading(item.name)).toBeVisible();
+    await page.waitForLoadState('networkidle');
+    page.off('request', recordDocumentNavigation);
+    expect(documentNavigations).toEqual([]);
+  });
+}
 
 test('detail not-found addresses return 404 with noindex and a browse link', async ({
   page,

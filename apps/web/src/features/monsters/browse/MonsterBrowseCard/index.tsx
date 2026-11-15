@@ -1,6 +1,10 @@
 import { Button, Group } from '@mantine/core';
 import type { ReactElement } from 'react';
 
+import { AnchorLink } from '@/components/RouterLinks';
+import type { BuildId } from '@/config/maplekit';
+import { monsterDetailLinkProps } from '@/features/monsters/shared';
+
 import {
   getMonsterBrowseCardFacts,
   MONSTER_BROWSE_FACT_CONFIG,
@@ -19,21 +23,30 @@ const combatFacts = getMonsterBrowseCardFacts('combat');
 
 export function MonsterBrowseCard({
   record,
+  buildId,
   onShowDrops,
   isDetailsOpen,
 }: {
   readonly record: MonsterBrowseRow;
+  readonly buildId: BuildId;
   /** Supplied by FacetedBrowser only when the host exposes record details. */
   readonly onShowDrops?: (() => void) | undefined;
   readonly isDetailsOpen?: boolean | undefined;
 }): ReactElement {
+  const detailLinkProps = monsterDetailLinkProps(record, buildId);
   return (
     <article className={classes['card']}>
       <Group gap="xs" wrap="nowrap" align="flex-start">
         <div className={classes['identity']}>
           <MonsterSprite sprite={record.sprite} />
           <div className={classes['title']}>
-            <h2 className={classes['name']}>{record.name}</h2>
+            <h2 className={classes['name']}>
+              {detailLinkProps === undefined ? (
+                record.name
+              ) : (
+                <AnchorLink {...detailLinkProps}>{record.name}</AnchorLink>
+              )}
+            </h2>
             <span className={classes['level']}>
               {renderMonsterBrowseFactIcon(MONSTER_BROWSE_FACT_CONFIG.level, {
                 className: classes['icon'],

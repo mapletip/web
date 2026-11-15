@@ -17,6 +17,17 @@
   overflow-wrap: anywhere;
 }
 
+.name a {
+  color: var(--mantine-color-anchor);
+  text-decoration: none;
+}
+
+.name a:hover,
+.name a:focus-visible {
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+}
+
 .identity {
   display: flex;
   flex: 1;

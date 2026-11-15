@@ -8,6 +8,7 @@ import {
   loadMonsterDetail,
   sanitizeMonsterDetailError,
 } from '../load';
+import { projectMonsterDetail } from '../project';
 
 import { monsterPageFixture } from './monsterPageFixture';
 
@@ -50,13 +51,14 @@ describe('loadMonsterDetail', () => {
     });
     expect(result).toEqual({
       status: 'found',
-      view: {
-        publicId: 'jp565851',
-        slug: 'pianus',
-        name: 'Pianus',
-        buildId: 'gms-v83',
-        canonicalPath: '/maplestory/gms-v83/monsters/pianus-jp565851',
-      },
+      view: projectMonsterDetail(
+        monsterPageFixture({
+          publicId: 'jp565851',
+          slug: 'pianus',
+          name: { state: 'known', value: 'Pianus' },
+        }),
+        'gms-v83',
+      ),
     });
   });
 

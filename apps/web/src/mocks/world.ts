@@ -30,7 +30,16 @@ export interface FixtureMonster {
   readonly exp: FixtureFact<number>;
   readonly boss: FixtureFact<boolean>;
   readonly undead: FixtureFact<boolean>;
+  readonly elements?: readonly FixtureMonsterElement[];
   readonly sprite: SpriteState;
+}
+
+export interface FixtureMonsterElement {
+  readonly code: string;
+  readonly effect: number;
+  readonly meaning: string;
+  readonly multiplier: number;
+  readonly resistance: string;
 }
 
 export interface FixtureItem {
@@ -262,6 +271,22 @@ const cwMonsters: readonly FixtureMonster[] = [
     exp: known(28),
     boss: known(true),
     undead: known(true),
+    elements: [
+      {
+        code: 'S',
+        effect: 2,
+        meaning: 'Poison',
+        multiplier: 0,
+        resistance: 'Immune',
+      },
+      {
+        code: 'H',
+        effect: 1,
+        meaning: 'Holy',
+        multiplier: 1.5,
+        resistance: 'Weak',
+      },
+    ],
     sprite: 'exact',
   },
   ...Array.from({ length: 12 }, (_, index): FixtureMonster => {

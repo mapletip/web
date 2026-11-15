@@ -18,14 +18,18 @@ import type {
   StaticMonsterCatalog,
 } from '@mapletip/data/monsters';
 
+import { UNNAMED_MONSTER_LABEL } from '../shared';
+import type { MonsterFactId, UnknownFactState } from '../shared';
+
+export { formatMonsterFact, UNNAMED_MONSTER_LABEL } from '../shared';
+export type { MonsterFactId, UnknownFactState } from '../shared';
+export type { MonsterFactState } from '../shared';
+
 type MonsterCatalogRecord =
   | MonsterCatalogV2_2['records'][number]
   | MonsterCatalogV2_3['records'][number]
   | MonsterCatalogV2_4['records'][number]
   | MonsterCatalogV2_5['records'][number];
-
-export type MonsterFactState = 'known' | 'unknown' | 'absent' | 'unsupported';
-export type UnknownFactState = Exclude<MonsterFactState, 'known'>;
 
 export interface MonsterDropEntry {
   readonly itemKey?: string;
@@ -50,33 +54,13 @@ export interface MonsterDropFacts {
   readonly itemKeys: readonly string[];
 }
 
-/** Known Monster fields projected from the catalog, whether or not a surface
- * displays them. */
-export type MonsterFactId =
-  | 'name'
-  | 'level'
-  | 'hp'
-  | 'mp'
-  | 'hpRecovery'
-  | 'mpRecovery'
-  | 'exp'
-  // Derived training ratio, not a catalog fact: see `expPer100Hp` below.
-  | 'expPer100Hp'
-  | 'physicalAttack'
-  | 'physicalDefense'
-  | 'magicAttack'
-  | 'magicDefense'
-  | 'accuracy'
-  | 'avoidability'
-  | 'pushed'
-  | 'speed'
-  | 'boss'
-  | 'undead'
-  | 'bodyAttack';
-
 export interface MonsterBrowseRow extends Record<string, unknown> {
   /** SDK stable public key — the record identity, never the display name. */
   readonly key: string;
+  /** Public route identity, present on catalog revision 2.5 and later. */
+  readonly publicId?: string;
+  /** URL display slug, present on catalog revision 2.5 and later. */
+  readonly slug?: string;
   /** Display name when known, otherwise an honest fallback label. */
   readonly name: string;
   /** Content ID for the representative sprite, present only when known. */
@@ -156,14 +140,6 @@ const TRAIT = {
   undead: 1,
   bodyAttack: 2,
 } as const;
-
-export const UNNAMED_MONSTER_LABEL = 'Unnamed monster';
-
-const UNKNOWN_FACT_LABELS: Readonly<Record<UnknownFactState, string>> = {
-  unknown: 'Unknown',
-  absent: '-',
-  unsupported: 'Unavailable',
-};
 
 /**
  * Read one fact, recording any non-`known` state instead of inventing a value.
@@ -268,6 +244,12 @@ function projectRecord(
 
   return {
     key: record.key,
+    ...('publicId' in record && typeof record.publicId === 'string'
+      ? { publicId: record.publicId }
+      : {}),
+    ...('slug' in record && typeof record.slug === 'string'
+      ? { slug: record.slug }
+      : {}),
     name: name ?? UNNAMED_MONSTER_LABEL,
     factStates,
     drops: {
@@ -431,20 +413,6 @@ export function projectMonsterDropItemOptions(
     .sort((left, right) => left.label.localeCompare(right.label));
 }
 
-const RATIO_FORMATTER = new Intl.NumberFormat('en-US', {
-  maximumFractionDigits: 2,
-});
-
-/**
- * A positive ratio below display precision reads as a threshold instead of
- * rounding to a false zero; a genuine zero still reads `0`.
- */
-function formatMonsterRatio(value: number): string {
-  if (value === 0) return '0';
-  if (value > 0 && value < 0.01) return '<0.01';
-  return RATIO_FORMATTER.format(value);
-}
-
 /**
  * The single honest display helper for a projected fact.
  *
@@ -456,22 +424,3 @@ function formatMonsterRatio(value: number): string {
  * of its own, so it is either computable or not, and an unavailable ratio shows
  * a dash rather than a word in an otherwise numeric column.
  */
-export function formatMonsterFact(
-  row: MonsterBrowseRow,
-  factId: MonsterFactId,
-): string {
-  const value = row[factId];
-  if (typeof value === 'number') {
-    return factId === 'expPer100Hp'
-      ? formatMonsterRatio(value)
-      : value.toLocaleString('en-US');
-  }
-  if (typeof value === 'boolean') return value ? 'Yes' : 'No';
-  if (typeof value === 'string') return value;
-
-  if (factId === 'expPer100Hp') return '-';
-
-  const state = row.factStates[factId];
-  if (state === undefined) return UNKNOWN_FACT_LABELS.unknown;
-  return UNKNOWN_FACT_LABELS[state];
-}

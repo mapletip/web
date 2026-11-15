@@ -115,6 +115,29 @@ function projectMonster(
     known(0),
     known('fixture'),
   ] as MonsterCatalogV2_5['records'][number]['traits'];
+  const firstElement = monster.elements?.[0];
+  const elements =
+    firstElement === undefined
+      ? { state: 'unknown' as const }
+      : ({
+          state: 'known' as const,
+          items: [
+            {
+              code: firstElement.code,
+              effect: firstElement.effect,
+              meaning: known(firstElement.meaning),
+              multiplier: known(firstElement.multiplier),
+              resistance: known(firstElement.resistance),
+            },
+            ...(monster.elements?.slice(1).map((element) => ({
+              code: element.code,
+              effect: element.effect,
+              meaning: known(element.meaning),
+              multiplier: known(element.multiplier),
+              resistance: known(element.resistance),
+            })) ?? []),
+          ],
+        } as MonsterCatalogV2_5['records'][number]['elements']);
 
   let sprite: MonsterCatalogV2_5['records'][number]['sprite'];
   if (monster.sprite === 'unknown') {
@@ -141,7 +164,7 @@ function projectMonster(
     traits,
     hpRecovery: wireFact(monster.hpRecovery ?? { state: 'unknown' }),
     mpRecovery: wireFact(monster.mpRecovery ?? { state: 'unknown' }),
-    elements: { state: 'unknown' },
+    elements,
     relationships: { state: 'unknown' },
     sprite,
     drops: {
@@ -196,7 +219,7 @@ function projectMonsterPage(
     undead: catalogRecord.traits[1],
     hpRecovery: catalogRecord.hpRecovery,
     mpRecovery: catalogRecord.mpRecovery,
-    elements: { state: 'unknown' },
+    elements: catalogRecord.elements,
     stats: {
       level,
       hp,

@@ -21,6 +21,17 @@
   overflow-wrap: anywhere;
 }
 
+a.identityName {
+  color: var(--mantine-color-anchor);
+  text-decoration: none;
+}
+
+a.identityName:hover,
+a.identityName:focus-visible {
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+}
+
 .dropItemOptionIcon img {
   image-rendering: pixelated;
 }

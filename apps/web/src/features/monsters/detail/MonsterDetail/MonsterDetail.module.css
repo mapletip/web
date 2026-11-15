@@ -1,0 +1,38 @@
+.page {
+  min-width: 0;
+}
+
+.hero {
+  display: grid;
+  gap: var(--mantine-spacing-lg);
+  min-width: 0;
+}
+
+.identity {
+  min-width: 0;
+  align-items: center;
+}
+
+.portrait {
+  flex: 0 0 56px;
+  width: 56px;
+  height: 56px;
+}
+
+.name {
+  overflow-wrap: anywhere;
+}
+
+.badges {
+  row-gap: var(--mantine-spacing-xs);
+}
+
+.factsAndSprite {
+  min-width: 0;
+}
+
+.sprite {
+  display: flex;
+  min-width: 0;
+  justify-content: center;
+}
