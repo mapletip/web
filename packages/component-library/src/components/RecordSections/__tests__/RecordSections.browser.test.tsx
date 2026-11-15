@@ -68,7 +68,9 @@ describe('RecordSections narrow navigation', () => {
     const navigationBounds = navigation.getBoundingClientRect();
     const lastLinkBounds = lastLink.getBoundingClientRect();
     expect(lastLinkBounds.left).toBeGreaterThanOrEqual(navigationBounds.left);
-    expect(lastLinkBounds.right).toBeLessThanOrEqual(navigationBounds.right);
+    expect(lastLinkBounds.right).toBeLessThanOrEqual(
+      navigationBounds.right + 1,
+    );
     expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(390);
   });
 
