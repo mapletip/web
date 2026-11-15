@@ -198,7 +198,21 @@ test('Monster Detail shows grouped Drops and certainty at each viewport', async 
     buildLabel: 'Classic World',
   };
   const canonical = canonicalPath(item);
+  const spriteRequests: string[] = [];
+  page.on('request', (request) => {
+    if (new URL(request.url()).pathname.includes('/media/images/')) {
+      spriteRequests.push(request.url());
+    }
+  });
   await monsterPage.goto(canonical);
+
+  await expect(page.getByText('Boss', { exact: true })).toBeVisible();
+  await expect(
+    page.locator('img[src*="/media/images/"]').filter({ visible: true }),
+  ).toHaveCount(1);
+  expect(spriteRequests).toHaveLength(1);
+  const factList = page.locator('dl').first();
+  await expect(factList.locator('> div')).toHaveCount(12);
 
   const sections = page.getByRole('navigation', { name: 'Record sections' });
   const dropsLink = sections.getByRole('link', { name: 'Drops (24)' });
