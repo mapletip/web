@@ -13,6 +13,7 @@ import type {
   MonsterCatalogV2_2,
   MonsterCatalogV2_3,
   MonsterCatalogV2_4,
+  MonsterCatalogV2_5,
   StaticMonsterDropBrowse,
   StaticMonsterCatalog,
 } from '@mapletip/data/monsters';
@@ -20,7 +21,8 @@ import type {
 type MonsterCatalogRecord =
   | MonsterCatalogV2_2['records'][number]
   | MonsterCatalogV2_3['records'][number]
-  | MonsterCatalogV2_4['records'][number];
+  | MonsterCatalogV2_4['records'][number]
+  | MonsterCatalogV2_5['records'][number];
 
 export type MonsterFactState = 'known' | 'unknown' | 'absent' | 'unsupported';
 export type UnknownFactState = Exclude<MonsterFactState, 'known'>;

@@ -1,6 +1,8 @@
 import type {
-  MonsterCatalogV2_4,
+  MonsterCatalogV2_5,
   MonsterDropBrowseV1,
+  MonsterPagePackV1,
+  MonsterPageRecordV1,
 } from '@mapletip/data/monsters';
 
 import type { FixtureBuild, FixtureFact, FixtureMonster } from './world';
@@ -8,6 +10,9 @@ import { world } from './world';
 
 const encoder = new TextEncoder();
 const ZERO = '0'.repeat(64);
+const FNV1A_64_OFFSET = 14695981039346656037n;
+const FNV1A_64_PRIME = 1099511628211n;
+const BASE36_8_MOD = 36n ** 8n;
 
 export interface FileDescriptor {
   readonly path: string;
@@ -19,6 +24,7 @@ export interface FixtureBuildArtifacts {
   readonly productManifest: FileDescriptor;
   readonly catalog: FileDescriptor;
   readonly dropBrowse: FileDescriptor;
+  readonly pagePack: FileDescriptor;
 }
 
 export interface FixtureRelease {
@@ -55,13 +61,34 @@ function known<T>(value: T): FixtureFact<T> {
   return { state: 'known', value };
 }
 
+export function monsterPublicId(sourceId: string): string {
+  let hash = FNV1A_64_OFFSET;
+  for (const byte of encoder.encode(`monster:${sourceId}`)) {
+    hash ^= BigInt(byte);
+    hash = BigInt.asUintN(64, hash * FNV1A_64_PRIME);
+  }
+  return (hash % BASE36_8_MOD).toString(36).padStart(8, '0');
+}
+
+export function monsterSlug(
+  name: string | undefined,
+  publicId: string,
+): string {
+  const segments = name?.toLowerCase().match(/[a-z0-9]+/gu);
+  return segments && segments.length > 0
+    ? segments.join('-')
+    : `monster-${publicId}`;
+}
+
 function projectMonster(
   build: FixtureBuild,
   monster: FixtureMonster,
   key: string,
+  publicId: string,
+  slug: string,
   spriteId: string | undefined,
   dropCount: number,
-): MonsterCatalogV2_4['records'][number] {
+): MonsterCatalogV2_5['records'][number] {
   const level = monster.level;
   const stats = [
     known(level),
@@ -76,7 +103,7 @@ function projectMonster(
     known(level),
     known(level * 10),
     known(level),
-  ] as MonsterCatalogV2_4['records'][number]['stats'];
+  ] as MonsterCatalogV2_5['records'][number]['stats'];
   const traits = [
     wireFact(monster.boss),
     wireFact(monster.undead),
@@ -87,9 +114,9 @@ function projectMonster(
     known(0),
     known(0),
     known('fixture'),
-  ] as MonsterCatalogV2_4['records'][number]['traits'];
+  ] as MonsterCatalogV2_5['records'][number]['traits'];
 
-  let sprite: MonsterCatalogV2_4['records'][number]['sprite'];
+  let sprite: MonsterCatalogV2_5['records'][number]['sprite'];
   if (monster.sprite === 'unknown') {
     sprite = { state: 'unknown' };
   } else if (monster.sprite === 'absent') {
@@ -97,7 +124,7 @@ function projectMonster(
   } else {
     sprite = { state: 'known', value: spriteId ?? '' };
   }
-  let nativeDrops: MonsterCatalogV2_4['records'][number]['drops']['native'];
+  let nativeDrops: MonsterCatalogV2_5['records'][number]['drops']['native'];
   if (build.buildId === 'gms-v83' && dropCount > 0) {
     nativeDrops = { state: 'known', count: dropCount, lowerBound: true };
   } else {
@@ -106,6 +133,8 @@ function projectMonster(
 
   return {
     key,
+    publicId,
+    slug,
     name:
       monster.name === undefined ? { state: 'unknown' } : known(monster.name),
     stats,
@@ -131,6 +160,70 @@ function projectMonster(
         : {}),
     },
     locations: { state: 'absent' },
+  };
+}
+
+function projectMonsterPage(
+  scope: MonsterPageRecordV1['scope'],
+  catalogRecord: MonsterCatalogV2_5['records'][number],
+  entries: MonsterPageRecordV1['drops']['entries'],
+): MonsterPageRecordV1 {
+  const [
+    level,
+    hp,
+    mp,
+    exp,
+    paDamage,
+    maDamage,
+    pdDamage,
+    mdDamage,
+    acc,
+    eva,
+    pushed,
+    speed,
+  ] = catalogRecord.stats;
+
+  return {
+    format: 'mapletip.monster-page',
+    contractVersion: '1.0',
+    scope,
+    key: catalogRecord.key,
+    publicId: catalogRecord.publicId,
+    slug: catalogRecord.slug,
+    name: catalogRecord.name,
+    sprite: { contentId: catalogRecord.sprite },
+    boss: catalogRecord.traits[0],
+    undead: catalogRecord.traits[1],
+    hpRecovery: catalogRecord.hpRecovery,
+    mpRecovery: catalogRecord.mpRecovery,
+    elements: { state: 'unknown' },
+    stats: {
+      level,
+      hp,
+      mp,
+      exp,
+      paDamage,
+      maDamage,
+      pdDamage,
+      mdDamage,
+      acc,
+      eva,
+      pushed,
+      speed,
+    },
+    drops: {
+      summary: catalogRecord.drops,
+      entries,
+    },
+    locations: {
+      summary: { state: 'absent' },
+      entries: [],
+    },
+    quests: {
+      state: 'absent',
+      entries: [],
+    },
+    summonedByItems: [],
   };
 }
 
@@ -176,21 +269,31 @@ export async function buildRelease(fixtureWorld: {
         category: item.category,
       };
     });
+    const itemById = new Map(
+      sortedItems.map(
+        ({ item, key: itemKey }) => [item.id, { item, key: itemKey }] as const,
+      ),
+    );
     const itemIndices = new Map(
       sortedItems.map(({ item }, index) => [item.id, index] as const),
     );
 
     const monsters = await Promise.all(
-      build.monsters.map(async (monster) => ({
-        monster,
-        key: await key('monster', `${build.buildId}:${monster.id}`),
-        spriteId:
-          monster.sprite === 'unknown' || monster.sprite === 'absent'
-            ? undefined
-            : await sha256Hex(
-                encoder.encode(`fixture:sprite:${monster.sprite}`),
-              ),
-      })),
+      build.monsters.map(async (monster) => {
+        const publicId = monsterPublicId(monster.id);
+        return {
+          monster,
+          key: await key('monster', `${build.buildId}:${monster.id}`),
+          publicId,
+          slug: monsterSlug(monster.name, publicId),
+          spriteId:
+            monster.sprite === 'unknown' || monster.sprite === 'absent'
+              ? undefined
+              : await sha256Hex(
+                  encoder.encode(`fixture:sprite:${monster.sprite}`),
+                ),
+        };
+      }),
     );
     for (const { monster, spriteId } of monsters) {
       if (spriteId !== undefined) spriteIds.set(spriteId, monster.sprite);
@@ -201,16 +304,22 @@ export async function buildRelease(fixtureWorld: {
         ([monsterId, drops]) => [monsterId, drops.length] as const,
       ),
     );
-    const records = monsters
-      .map(({ monster, key: monsterKey, spriteId }) =>
-        projectMonster(
+    const projectedMonsters = monsters.map(
+      ({ monster, key: monsterKey, publicId, slug, spriteId }) => ({
+        monster,
+        record: projectMonster(
           build,
           monster,
           monsterKey,
+          publicId,
+          slug,
           spriteId,
           dropCountByMonster.get(monster.id) ?? 0,
         ),
-      )
+      }),
+    );
+    const records = projectedMonsters
+      .map(({ record }) => record)
       .sort((left, right) => left.key.localeCompare(right.key));
     const range: RangeDescriptor = {
       count: records.length,
@@ -220,7 +329,7 @@ export async function buildRelease(fixtureWorld: {
 
     const catalog = await put('v2/catalogs', {
       format: 'mapletip.monster-catalog-2',
-      contractVersion: '2.4',
+      contractVersion: '2.5',
       scope,
       browseCoverage: {
         historicalDrops: build.historicalDrops,
@@ -229,6 +338,56 @@ export async function buildRelease(fixtureWorld: {
       recordCount: records.length,
       records,
     });
+    const pageRecords = projectedMonsters
+      .map(({ monster, record }) => {
+        const drops = build.drops[monster.id] ?? [];
+        const entries: MonsterPageRecordV1['drops']['entries'] = drops.map(
+          (drop) => {
+            const target = itemById.get(drop.itemId);
+            if (target === undefined) {
+              throw new Error(
+                `Fixture drop references unknown item "${drop.itemId}".`,
+              );
+            }
+            return {
+              itemRef:
+                target.item.id === 'unresolved-token'
+                  ? { state: 'unresolved' }
+                  : { state: 'resolved', key: target.key },
+              name:
+                target.item.name === undefined
+                  ? { state: 'unknown' }
+                  : known(target.item.name),
+              category: target.item.category,
+              icon: { state: 'unknown' },
+              assertion:
+                drop.assertionKind === 'native'
+                  ? { kind: 'native' }
+                  : {
+                      kind: 'historical-overlay',
+                      sourceBuild: drop.sourceBuild ?? 'gms-v83',
+                      confidence: drop.confidence ?? 'maybe',
+                    },
+            };
+          },
+        );
+        return projectMonsterPage(scope, record, entries);
+      })
+      .sort((left, right) => left.publicId.localeCompare(right.publicId));
+    const pagePackRange: RangeDescriptor = {
+      count: pageRecords.length,
+      firstKey: pageRecords[0]?.publicId ?? '',
+      lastKey: pageRecords.at(-1)?.publicId ?? '',
+    };
+    const pagePack = await put('v2/monsters/page-packs', {
+      format: 'mapletip.monster-page-pack',
+      contractVersion: '1.0',
+      recordKind: 'monster-page',
+      scope,
+      records: Object.fromEntries(
+        pageRecords.map((record) => [record.publicId, record]),
+      ),
+    } satisfies MonsterPagePackV1);
     const dropRecords: MonsterDropBrowseV1['records'] = {};
     for (const { monster, key: monsterKey } of monsters) {
       const drops = build.drops[monster.id] ?? [];
@@ -266,6 +425,7 @@ export async function buildRelease(fixtureWorld: {
       'evidence-pages-v2',
       'monster-core-v1',
       'monster-drop-browse-v1',
+      'monster-page-v1',
       'product-input-identity-v1',
       'record-packs-v1',
       'wire-2.0',
@@ -292,6 +452,7 @@ export async function buildRelease(fixtureWorld: {
       packingPolicy: { targetBytes: 524288, maxBytes: 1048576 },
       catalog: { ...catalog, ...range },
       detailPacks: [],
+      pagePacks: [{ ...pagePack, ...pagePackRange }],
       relationshipPacks: [],
       dropBrowse: { ...dropBrowse, ...range },
       totalEntityCount: records.length,
@@ -317,7 +478,12 @@ export async function buildRelease(fixtureWorld: {
       productCapabilities: ['monster-core-v1'],
       products: [descriptor],
     });
-    builds.set(build.buildId, { productManifest, catalog, dropBrowse });
+    builds.set(build.buildId, {
+      productManifest,
+      catalog,
+      dropBrowse,
+      pagePack,
+    });
   }
 
   const buildIndex = await put('v1/build-indexes', {
@@ -337,6 +503,7 @@ export async function buildRelease(fixtureWorld: {
       'evidence-pages-v2',
       'monster-core-v1',
       'monster-drop-browse-v1',
+      'monster-page-v1',
       'product-input-identity-v1',
       'record-packs-v1',
       'release-manifest-v1',

@@ -513,7 +513,7 @@ describe('Items Browse route integration', () => {
     await router.load();
 
     const monsterMatch = router.state.matches.find(
-      (m) => m.routeId === '/maplestory/$buildId/monsters',
+      (m) => m.routeId === '/maplestory/{-$buildId}/monsters/',
     );
     expect(monsterMatch).toBeDefined();
     expect(loadItemBrowse).not.toHaveBeenCalled();

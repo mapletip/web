@@ -1,3 +1,5 @@
+import { MissingRecordError } from '@mapletip/data';
+import { getMonsterPage, hasMonsterPublicIds } from '@mapletip/data/monsters';
 import { openRelease } from '@mapletip/data/release';
 import { describe, expect, it } from 'vitest';
 
@@ -38,6 +40,34 @@ describe('fixture release', () => {
       ]);
       expect(catalog.records).toHaveLength(expectedCount);
       expect(Object.keys(dropBrowse.records)).toHaveLength(expectedCount);
+      expect(hasMonsterPublicIds(catalog)).toBe(true);
+      if (!hasMonsterPublicIds(catalog)) {
+        throw new Error(`Expected catalog v2.5 for ${buildId}.`);
+      }
+
+      const first = catalog.records[0];
+      if (first === undefined) {
+        throw new Error(`Expected at least one monster in ${buildId}.`);
+      }
+      const [pageFromProduct, pageFromSdk] = await Promise.all([
+        product.loadPage(first.publicId),
+        getMonsterPage({
+          baseUrl: 'https://d0.mapletip.com/',
+          pin: fixtureRelease.pin,
+          buildId,
+          publicId: first.publicId,
+          fetch: fileFetch(fixtureRelease.files),
+        }),
+      ]);
+      for (const page of [pageFromProduct, pageFromSdk]) {
+        expect(page.publicId).toBe(first.publicId);
+        expect(page.slug).toBe(first.slug);
+        expect(page.name).toEqual(first.name);
+      }
+
+      await expect(product.loadPage('00000000')).rejects.toBeInstanceOf(
+        MissingRecordError,
+      );
     }
   });
 
