@@ -10,6 +10,7 @@ import { projectMonsterDetail } from '../project';
 import { monsterPageFixture } from './monsterPageFixture';
 
 type MonsterPageDrop = MonsterPageRecordV1['drops']['entries'][number];
+type MonsterPageLocation = MonsterPageRecordV1['locations']['entries'][number];
 
 function pageDrop(
   name: MonsterPageDrop['name'],
@@ -22,6 +23,21 @@ function pageDrop(
     category,
     icon: { state: 'unknown' },
     assertion: { kind: 'native' },
+    ...overrides,
+  };
+}
+
+function pageLocation(
+  mapKey: string,
+  name: MonsterPageLocation['name'],
+  placementCount: number,
+  overrides: Partial<MonsterPageLocation> = {},
+): MonsterPageLocation {
+  return {
+    mapKey,
+    name,
+    placementCount,
+    minimap: { state: 'absent', coverageKey: 'fixture:minimap' },
     ...overrides,
   };
 }
@@ -335,6 +351,169 @@ describe('projectMonsterDetail', () => {
       count: 'unknown',
     });
     expect(unsupported.drops).toEqual({
+      state: 'unavailable',
+      count: 'unknown',
+    });
+  });
+
+  it('orders locations by placement count then name, preserves duplicate map keys, and projects geography and minimaps', () => {
+    const minimapId = 'c'.repeat(64);
+    const view = projectMonsterDetail(
+      monsterPageFixture({
+        locations: {
+          summary: { state: 'known', mapCount: 4, placementCount: 40 },
+          entries: [
+            pageLocation('fixture:map:unnamed', { state: 'unknown' }, 10, {
+              streetName: 'Harbor Road',
+              geography: {
+                regionKey: 'fixture:south',
+                regionLabel: 'South Practice Region',
+                provenance: 'reviewed-overlay',
+                status: 'verified',
+              },
+            }),
+            pageLocation(
+              'fixture:map:duplicate-b',
+              { state: 'known', value: 'Twin Glade' },
+              5,
+              {
+                geography: {
+                  regionKey: 'fixture:south',
+                  regionLabel: 'South Practice Region',
+                  provenance: 'reviewed-overlay',
+                  status: 'verified',
+                },
+              },
+            ),
+            pageLocation(
+              'fixture:map:top',
+              { state: 'known', value: 'High Meadow' },
+              20,
+              {
+                streetName: 'West Path',
+                geography: {
+                  regionKey: 'fixture:north',
+                  regionLabel: 'North Practice Region',
+                  provenance: 'reviewed-overlay',
+                  status: 'verified',
+                },
+                minimap: { state: 'known', value: minimapId },
+              },
+            ),
+            pageLocation(
+              'fixture:map:duplicate-a',
+              { state: 'known', value: 'Twin Glade' },
+              5,
+              {
+                geography: {
+                  regionKey: 'fixture:south',
+                  regionLabel: 'South Practice Region',
+                  provenance: 'reviewed-overlay',
+                  status: 'verified',
+                },
+              },
+            ),
+          ],
+        },
+      }),
+      'cw-launch',
+    );
+
+    expect(view.locations).toEqual({
+      state: 'present',
+      count: 4,
+      maps: [
+        {
+          key: 'fixture:map:top',
+          name: 'High Meadow',
+          geographyLine: 'West Path · North Practice Region',
+          minimapUrl: `https://d0.mapletip.com/media/images/cc/${minimapId}.png`,
+          placementCount: 20,
+          placementLabel: '20 spawns',
+        },
+        {
+          key: 'fixture:map:unnamed',
+          name: 'Map name unavailable',
+          geographyLine: 'Harbor Road · South Practice Region',
+          placementCount: 10,
+          placementLabel: '10 spawns',
+        },
+        {
+          key: 'fixture:map:duplicate-a',
+          name: 'Twin Glade',
+          geographyLine: 'South Practice Region',
+          placementCount: 5,
+          placementLabel: '5 spawns',
+        },
+        {
+          key: 'fixture:map:duplicate-b',
+          name: 'Twin Glade',
+          geographyLine: 'South Practice Region',
+          placementCount: 5,
+          placementLabel: '5 spawns',
+        },
+      ],
+    });
+  });
+
+  it('omits region labels when maps are all in one region and uses singular spawn wording', () => {
+    const view = projectMonsterDetail(
+      monsterPageFixture({
+        locations: {
+          summary: { state: 'known', mapCount: 1, placementCount: 1 },
+          entries: [
+            pageLocation(
+              'fixture:map:quiet',
+              { state: 'known', value: 'Quiet Clearing' },
+              1,
+              {
+                streetName: 'Forest Edge',
+                geography: {
+                  regionKey: 'fixture:forest',
+                  regionLabel: 'Practice Forest',
+                  provenance: 'source-region-allowlist',
+                },
+              },
+            ),
+          ],
+        },
+      }),
+      'cw-launch',
+    );
+
+    expect(view.locations).toMatchObject({
+      state: 'present',
+      count: 1,
+      maps: [
+        {
+          name: 'Quiet Clearing',
+          geographyLine: 'Forest Edge',
+          placementCount: 1,
+          placementLabel: '1 spawn',
+        },
+      ],
+    });
+  });
+
+  it('projects absent and unresolved location collection states separately', () => {
+    const absent = projectMonsterDetail(
+      monsterPageFixture({
+        locations: { summary: { state: 'absent' }, entries: [] },
+      }),
+      'cw-launch',
+    );
+    const unresolved = projectMonsterDetail(
+      monsterPageFixture({
+        locations: {
+          summary: { state: 'unresolved', mapCount: 2, placementCount: 7 },
+          entries: [],
+        },
+      }),
+      'cw-launch',
+    );
+
+    expect(absent.locations).toEqual({ state: 'no-locations', count: 0 });
+    expect(unresolved.locations).toEqual({
       state: 'unavailable',
       count: 'unknown',
     });

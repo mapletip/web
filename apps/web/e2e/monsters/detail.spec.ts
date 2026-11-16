@@ -1,4 +1,4 @@
-import type { Request } from '@playwright/test';
+import type { Locator, Request } from '@playwright/test';
 
 import { monsterPublicId, monsterSlug } from '../../src/mocks/release';
 
@@ -36,6 +36,28 @@ function canonicalPath(item: DetailCase): string {
   const publicId = monsterPublicId(item.sourceId);
   const slug = monsterSlug(item.name, publicId);
   return `${item.prefix}/monsters/${slug}-${publicId}`;
+}
+
+async function minimapBackgrounds(
+  minimap: Locator,
+): Promise<{ readonly well: string; readonly card: string }> {
+  return minimap.evaluate((element) => {
+    const card = element.closest('[data-record-card="true"]');
+    if (card === null) throw new Error('Minimap is outside its map card.');
+    return {
+      well: getComputedStyle(element).backgroundColor,
+      card: getComputedStyle(card).backgroundColor,
+    };
+  });
+}
+
+function expectMonsterPageArtifacts(expected: RegExp[]): void {
+  expected.push(
+    /^\/v1\/releases\/[a-f0-9]{64}\.json$/u,
+    /^\/v1\/build-indexes\/[a-f0-9]{64}\.json$/u,
+    /^\/v2\/products\/[a-f0-9]{64}\.json$/u,
+    /^\/v2\/monsters\/page-packs\/[a-f0-9]{64}\.json$/u,
+  );
 }
 
 test('detail pages server-render metadata, hydrate without whole-build artifacts, and redirect stale slugs', async ({
@@ -207,10 +229,12 @@ test('Monster Detail shows grouped Drops and certainty at each viewport', async 
   await monsterPage.goto(canonical);
 
   await expect(page.getByText('Boss', { exact: true })).toBeVisible();
-  await expect(
-    page.locator('img[src*="/media/images/"]').filter({ visible: true }),
-  ).toHaveCount(1);
-  expect(spriteRequests).toHaveLength(1);
+  const heroImages = page
+    .locator('section[aria-labelledby="monster-name"] img')
+    .filter({ visible: true });
+  await expect(heroImages).toHaveCount(1);
+  const heroSpriteUrl = await heroImages.getAttribute('src');
+  expect(spriteRequests.filter((url) => url === heroSpriteUrl)).toHaveLength(1);
   const factList = page.locator('dl').first();
   await expect(factList.locator('> div')).toHaveCount(12);
 
@@ -282,6 +306,232 @@ test('Monster Detail shows grouped Drops and certainty at each viewport', async 
     `${testInfo.project.name}-monster-detail-drops.png`,
     { fullPage: true },
   );
+});
+
+test('Monster Detail opens every location in a drawer from its responsive cap', async ({
+  page,
+  monsterPage,
+  expectedArtifactRequests,
+}, testInfo) => {
+  const item: DetailCase = {
+    buildId: 'cw-launch',
+    prefix: '/maplestory',
+    sourceId: 'crowned-warden',
+    name: 'Crowned Warden',
+    buildLabel: 'Classic World',
+  };
+  expectMonsterPageArtifacts(expectedArtifactRequests);
+  await monsterPage.goto(canonicalPath(item));
+
+  const locationsHeading = page.getByRole('heading', {
+    level: 2,
+    name: 'Locations (12)',
+  });
+  await expect(locationsHeading).toBeVisible();
+  await monsterPage.captureReady();
+  const previewMinimapColors = await minimapBackgrounds(
+    page
+      .locator('ul:not([data-location-drawer]) [data-map-minimap="true"]')
+      .first(),
+  );
+  expect(previewMinimapColors.well).not.toBe(previewMinimapColors.card);
+  await expect(page).toHaveScreenshot(
+    `${testInfo.project.name}-monster-detail-locations.png`,
+    { fullPage: true },
+  );
+  const locationNavigation = page
+    .getByRole('navigation', { name: 'Record sections' })
+    .getByRole('link', { name: 'Locations (12)' });
+  await expect(locationNavigation).toHaveAttribute('href', '#locations');
+
+  const inlineCards = page.locator(
+    'ul:not([data-location-drawer]) [data-testid="monster-location-card"]',
+  );
+  const initialCap = testInfo.project.name === 'mobile' ? 5 : 10;
+  await expect(inlineCards.filter({ visible: true })).toHaveCount(initialCap);
+
+  const search = page.getByRole('textbox', { name: 'Find a map' });
+  await search.fill('Practice Map 12');
+  await expect(inlineCards.filter({ visible: true })).toHaveCount(1);
+  await expect(
+    page.getByRole('heading', { name: 'Practice Map 12' }),
+  ).toBeVisible();
+  await search.fill('');
+
+  await page.getByRole('button', { name: 'View all 12 maps' }).click();
+  await expect(page.getByRole('dialog', { name: 'All 12 maps' })).toBeVisible();
+  const drawer = page.getByRole('dialog');
+  const drawerCards = drawer.getByTestId('monster-location-card');
+  await expect(drawerCards.filter({ visible: true })).toHaveCount(12);
+  await expect(drawerCards.getByRole('link')).toHaveCount(0);
+  await expect(inlineCards.filter({ visible: true })).toHaveCount(initialCap);
+
+  const searchIds = await page
+    .locator('input[id$="-map-search"]')
+    .evaluateAll((inputs) => inputs.map((input) => input.id));
+  expect(searchIds).toHaveLength(2);
+  expect(new Set(searchIds).size).toBe(2);
+  const controlInputIds = await page
+    .locator('[data-location-controls] input')
+    .evaluateAll((inputs) => inputs.map((input) => input.id));
+  expect(controlInputIds).toHaveLength(6);
+  expect(new Set(controlInputIds).size).toBe(6);
+
+  const drawerSort = drawer.getByRole('radiogroup', {
+    name: 'Order locations',
+  });
+  await drawerSort.getByText('Map name', { exact: true }).click();
+  await expect(
+    drawer.getByRole('heading', { name: 'Practice Map 01' }),
+  ).toBeVisible();
+  await expect(drawer.getByText('1 spawn', { exact: true })).toBeVisible();
+  await expect(
+    drawer.getByRole('img', { name: 'Practice Map 01 minimap' }),
+  ).toBeVisible();
+
+  const drawerSearch = drawer.getByRole('textbox', { name: 'Find a map' });
+  await drawerSearch.fill('Practice Map 12');
+  await expect(page.getByRole('dialog', { name: 'All 1 map' })).toBeVisible();
+  await expect(drawerCards.filter({ visible: true })).toHaveCount(1);
+  await expect(
+    drawer.getByRole('heading', { name: 'Practice Map 12' }),
+  ).toBeVisible();
+  await expect(inlineCards.filter({ visible: true })).toHaveCount(1);
+  await drawerSearch.fill('no matching map');
+  await expect(drawer.getByRole('status')).toHaveText(
+    'No maps match your search.',
+  );
+  await expect(drawerCards).toHaveCount(0);
+  await drawerSearch.fill('');
+  await expect(drawerCards).toHaveCount(12);
+
+  const minimapBounds = await drawer
+    .locator('[data-map-minimap="true"]')
+    .first()
+    .evaluate((element) => {
+      const image = element.querySelector('img');
+      if (image === null) throw new Error('Minimap image is missing.');
+      const well = element.getBoundingClientRect();
+      const art = image.getBoundingClientRect();
+      return {
+        left: art.left >= well.left,
+        top: art.top >= well.top,
+        right: art.right <= well.right,
+        bottom: art.bottom <= well.bottom,
+      };
+    });
+  expect(minimapBounds).toEqual({
+    left: true,
+    top: true,
+    right: true,
+    bottom: true,
+  });
+
+  const minimapColors = await minimapBackgrounds(
+    drawer.locator('[data-map-minimap="true"]').first(),
+  );
+  expect(minimapColors.well).not.toBe(minimapColors.card);
+
+  await expect(
+    page.getByRole('heading', { name: 'Practice Map 01' }).first(),
+  ).toBeVisible();
+
+  await monsterPage.captureReady();
+  await expect(page).toHaveScreenshot(
+    `${testInfo.project.name}-monster-detail-locations-drawer.png`,
+  );
+  await drawer
+    .getByRole('heading', { name: 'Practice Map 12' })
+    .scrollIntoViewIfNeeded();
+  await expect(
+    drawer.getByRole('heading', { name: 'Practice Map 12' }),
+  ).toBeInViewport();
+  const expandTrigger = page.getByRole('button', { name: 'View all 12 maps' });
+  await page.keyboard.press('Escape');
+  await expect(drawer).toBeHidden();
+  await expect(expandTrigger).toBeFocused();
+  await expect(
+    inlineCards.first().getByRole('heading', { name: 'Practice Map 01' }),
+  ).toBeVisible();
+});
+
+test('Locations Drawer follows Back and Forward and leaves the page on the next Back', async ({
+  page,
+  monsterPage,
+  expectedArtifactRequests,
+}) => {
+  const browsePath = '/maplestory/monsters';
+  const item: DetailCase = {
+    buildId: 'cw-launch',
+    prefix: '/maplestory',
+    sourceId: 'crowned-warden',
+    name: 'Crowned Warden',
+    buildLabel: 'Classic World',
+  };
+  const detailPath = `${canonicalPath(item)}?history=preserved#locations`;
+  expectMonsterPageArtifacts(expectedArtifactRequests);
+  await monsterPage.goto(browsePath);
+  await page.goto(detailPath);
+  await monsterPage.ready();
+  await page.waitForLoadState('networkidle');
+  await expect(monsterPage.heading('Crowned Warden')).toBeVisible();
+
+  const expectedUrl = page.url();
+  expect(new URL(expectedUrl).searchParams.get('history')).toBe('preserved');
+  expect(new URL(expectedUrl).hash).toBe('#locations');
+  const trigger = page.getByRole('button', { name: 'View all 12 maps' });
+  await expect(trigger).toBeVisible();
+  await trigger.click({ trial: true });
+  const pageScrollY = await page.evaluate(() => window.scrollY);
+  await trigger.click();
+
+  const drawer = page.getByRole('dialog', { name: 'All 12 maps' });
+  await expect(drawer).toBeVisible();
+  await expect(page).toHaveURL(expectedUrl);
+  await expect
+    .poll(() => page.evaluate(() => window.scrollY))
+    .toBe(pageScrollY);
+  await expect(trigger).toHaveAttribute('aria-expanded', 'true');
+
+  await page.reload();
+  await monsterPage.ready();
+  await expect(page).toHaveURL(expectedUrl);
+  await expect(drawer).toBeVisible();
+  await expect(trigger).toHaveAttribute('aria-expanded', 'true');
+
+  await page.goBack();
+  await expect(drawer).toBeHidden();
+  await expect(page).toHaveURL(expectedUrl);
+  await expect
+    .poll(() => page.evaluate(() => window.scrollY))
+    .toBe(pageScrollY);
+  await expect(trigger).toHaveAttribute('aria-expanded', 'false');
+
+  await page.goForward();
+  await expect(drawer).toBeVisible();
+  await expect(page).toHaveURL(expectedUrl);
+  await expect
+    .poll(() => page.evaluate(() => window.scrollY))
+    .toBe(pageScrollY);
+
+  await drawer.getByRole('button', { name: 'Close map list' }).click();
+  await expect(drawer).toBeHidden();
+  await expect(page).toHaveURL(expectedUrl);
+  await expect
+    .poll(() => page.evaluate(() => window.scrollY))
+    .toBe(pageScrollY);
+  await page.goBack();
+  await expect(page).toHaveURL(new RegExp(`${browsePath}$`, 'u'));
+  await expect(
+    page.getByRole('heading', { level: 1, name: 'Crowned Warden' }),
+  ).toBeHidden();
+
+  await page.goForward();
+  await expect(page).toHaveURL(expectedUrl);
+  await expect(drawer).toBeHidden();
+  await page.goForward();
+  await expect(drawer).toBeVisible();
+  await expect(page).toHaveURL(expectedUrl);
 });
 
 test('long drop names wrap without page-level horizontal overflow', async ({

@@ -5,7 +5,12 @@ import type {
   MonsterPageRecordV1,
 } from '@mapletip/data/monsters';
 
-import type { FixtureBuild, FixtureFact, FixtureMonster } from './world';
+import type {
+  FixtureBuild,
+  FixtureFact,
+  FixtureLocation,
+  FixtureMonster,
+} from './world';
 import { world } from './world';
 
 const encoder = new TextEncoder();
@@ -38,6 +43,7 @@ export interface FixtureRelease {
   };
   readonly builds: ReadonlyMap<string, FixtureBuildArtifacts>;
   readonly spriteIds: ReadonlyMap<string, string>;
+  readonly minimapIds: ReadonlySet<string>;
 }
 
 type RangeDescriptor = {
@@ -190,6 +196,7 @@ function projectMonsterPage(
   scope: MonsterPageRecordV1['scope'],
   catalogRecord: MonsterCatalogV2_5['records'][number],
   entries: MonsterPageRecordV1['drops']['entries'],
+  monster: FixtureMonster,
 ): MonsterPageRecordV1 {
   const [
     level,
@@ -205,6 +212,44 @@ function projectMonsterPage(
     pushed,
     speed,
   ] = catalogRecord.stats;
+  const locationFixtures = monster.locations ?? [];
+  const locationsState =
+    monster.locationsState ??
+    (locationFixtures.length === 0 ? 'absent' : 'known');
+  const locationPlacementCount = locationFixtures.reduce(
+    (total, location) => total + location.placementCount,
+    0,
+  );
+  const locationEntries: MonsterPageRecordV1['locations']['entries'] =
+    locationFixtures.map((location: FixtureLocation) => ({
+      mapKey: location.mapKey,
+      name:
+        location.name === undefined
+          ? { state: 'unknown' }
+          : known(location.name),
+      ...(location.streetName === undefined
+        ? {}
+        : { streetName: location.streetName }),
+      ...(location.regionKey === undefined && location.regionLabel === undefined
+        ? {}
+        : {
+            geography: {
+              ...(location.regionKey === undefined
+                ? {}
+                : { regionKey: location.regionKey }),
+              ...(location.regionLabel === undefined
+                ? {}
+                : { regionLabel: location.regionLabel }),
+              provenance: 'reviewed-overlay' as const,
+              status: 'verified' as const,
+            },
+          }),
+      placementCount: location.placementCount,
+      minimap:
+        location.minimapContentId === undefined
+          ? { state: 'absent', coverageKey: 'fixture:minimap' }
+          : known(location.minimapContentId),
+    }));
 
   return {
     format: 'mapletip.monster-page',
@@ -239,8 +284,15 @@ function projectMonsterPage(
       entries,
     },
     locations: {
-      summary: { state: 'absent' },
-      entries: [],
+      summary:
+        locationsState === 'absent'
+          ? { state: 'absent' }
+          : {
+              state: locationsState,
+              mapCount: locationEntries.length,
+              placementCount: locationPlacementCount,
+            },
+      entries: locationEntries,
     },
     quests: {
       state: 'absent',
@@ -256,6 +308,7 @@ export async function buildRelease(fixtureWorld: {
   const files = new Map<string, Uint8Array>();
   const builds = new Map<string, FixtureBuildArtifacts>();
   const spriteIds = new Map<string, string>();
+  const minimapIds = new Set<string>();
 
   async function put(dir: string, value: unknown): Promise<FileDescriptor> {
     const bytes = encoder.encode(JSON.stringify(value));
@@ -320,6 +373,11 @@ export async function buildRelease(fixtureWorld: {
     );
     for (const { monster, spriteId } of monsters) {
       if (spriteId !== undefined) spriteIds.set(spriteId, monster.sprite);
+      for (const location of monster.locations ?? []) {
+        if (location.minimapContentId !== undefined) {
+          minimapIds.add(location.minimapContentId);
+        }
+      }
     }
     const recordDrops = Object.entries(build.drops);
     const dropCountByMonster = new Map(
@@ -394,7 +452,7 @@ export async function buildRelease(fixtureWorld: {
             };
           },
         );
-        return projectMonsterPage(scope, record, entries);
+        return projectMonsterPage(scope, record, entries, monster);
       })
       .sort((left, right) => left.publicId.localeCompare(right.publicId));
     const pagePackRange: RangeDescriptor = {
@@ -540,6 +598,7 @@ export async function buildRelease(fixtureWorld: {
     pin: { format: 'mapletip.local-release-pin', releaseId, ...manifest },
     builds,
     spriteIds,
+    minimapIds,
   };
 }
 

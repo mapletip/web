@@ -19,6 +19,16 @@ export type FixtureCategory =
   | { readonly kind: 'item-class'; readonly value: ItemClass }
   | { readonly kind: 'unknown' };
 
+export interface FixtureLocation {
+  readonly mapKey: string;
+  readonly name?: string;
+  readonly streetName?: string;
+  readonly regionKey?: string;
+  readonly regionLabel?: string;
+  readonly placementCount: number;
+  readonly minimapContentId?: string;
+}
+
 export interface FixtureMonster {
   readonly id: string;
   readonly name?: string;
@@ -31,6 +41,8 @@ export interface FixtureMonster {
   readonly boss: FixtureFact<boolean>;
   readonly undead: FixtureFact<boolean>;
   readonly elements?: readonly FixtureMonsterElement[];
+  readonly locationsState?: 'known' | 'absent' | 'unresolved';
+  readonly locations?: readonly FixtureLocation[];
   readonly sprite: SpriteState;
 }
 
@@ -260,6 +272,24 @@ const cwMonsters: readonly FixtureMonster[] = [
     exp: known(26),
     boss: known(true),
     undead: known(false),
+    locations: Array.from({ length: 12 }, (_, index): FixtureLocation => {
+      const number = String(index + 1).padStart(2, '0');
+      const placementCount = Math.max(1, 12 - index);
+      const western = index < 8;
+      return {
+        mapKey: `fixture:map:${number}`,
+        name: `Practice Map ${number}`,
+        streetName: western
+          ? 'Western Practice Grounds'
+          : 'Eastern Practice Grounds',
+        regionKey: western ? 'fixture:west' : 'fixture:east',
+        regionLabel: western ? 'Practice West' : 'Practice East',
+        placementCount,
+        ...(index < 2
+          ? { minimapContentId: String(index + 1).repeat(64) }
+          : {}),
+      };
+    }),
     sprite: 'exact',
   },
   {

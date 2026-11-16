@@ -177,4 +177,42 @@ describe('MonsterDetail hero', () => {
     ).toBeVisible();
     expect(screen.getByText('Drop information is unavailable.')).toBeVisible();
   });
+
+  it('renders Locations before Drops with the map count from its view data', () => {
+    renderDetail({
+      locations: {
+        summary: { state: 'known', mapCount: 1, placementCount: 1 },
+        entries: [
+          {
+            mapKey: 'fixture:map:quiet-clearing',
+            name: { state: 'known', value: 'Quiet Clearing' },
+            streetName: 'Forest Edge',
+            geography: {
+              regionKey: 'fixture:practice-forest',
+              regionLabel: 'Practice Forest',
+              provenance: 'reviewed-overlay',
+              status: 'verified',
+            },
+            placementCount: 1,
+            minimap: { state: 'absent', coverageKey: 'fixture:minimap' },
+          },
+        ],
+      },
+    });
+
+    const navigation = screen.getByRole('navigation', {
+      name: 'Record sections',
+    });
+    expect(
+      within(navigation)
+        .getAllByRole('link')
+        .map((link) => link.textContent),
+    ).toEqual(['Locations (1)', 'Drops (?)']);
+    expect(
+      screen.getByRole('heading', { level: 2, name: 'Locations (1)' }),
+    ).toBeVisible();
+    expect(screen.getByText('Quiet Clearing')).toBeVisible();
+    expect(screen.getByText('Forest Edge')).toBeVisible();
+    expect(screen.getByText('1 spawn')).toBeVisible();
+  });
 });
