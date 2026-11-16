@@ -11,9 +11,9 @@
 
 .sort {
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: var(--mantine-spacing-xs);
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--mantine-spacing-sm);
 }
 
 .list {
