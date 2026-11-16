@@ -19,7 +19,7 @@
 .list {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--mantine-spacing-md);
+  gap: var(--mantine-spacing-sm);
   min-width: 0;
   margin: 0;
   padding: 0;
@@ -30,30 +30,28 @@
   min-width: 0;
 }
 
-.minimapWell {
-  position: relative;
-  display: block;
-  width: 10rem;
-  height: 8rem;
+.drawerTitle {
   min-width: 0;
-  max-width: 100%;
-  flex: 0 1 10rem;
-  box-sizing: border-box;
-  overflow: hidden;
-  background: var(--mapletip-color-canvas);
 }
 
-.minimapWell > * {
-  position: absolute;
-  inset: 0;
+.drawerPortrait {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 6px;
+  background: var(--mantine-color-dark-6);
+}
+
+.drawerTitleCopy {
   min-width: 0;
-  max-width: 100%;
-  max-height: 100%;
 }
 
 .mobileExpand,
 .desktopExpand {
-  align-self: flex-start;
+  min-height: 2.75rem;
 }
 
 @media (max-width: 47.99em) {
@@ -63,12 +61,6 @@
 
   .list {
     grid-template-columns: minmax(0, 1fr);
-  }
-
-  .minimapWell {
-    width: 6rem;
-    height: 6rem;
-    flex-basis: 6rem;
   }
 
   .list:not([data-location-drawer='true']) > .item:nth-child(n + 6) {

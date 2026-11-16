@@ -46,6 +46,34 @@ export const WithMedia: Story = {
   ),
 };
 
+export const MediaAside: Story = {
+  args: { title: 'Practice Meadow' },
+  render: () => (
+    <Stage>
+      <RecordCard
+        layout="mediaAside"
+        title="Practice Meadow"
+        secondaryLine="West Practice Grounds · Meadow District"
+        media={
+          <Image
+            src={smallImage}
+            alt=""
+            w={280}
+            h={110}
+            fit="contain"
+            loading="lazy"
+          />
+        }
+        footer={
+          <Text size="sm" c="dimmed">
+            <strong>12</strong> spawns
+          </Text>
+        }
+      />
+    </Stage>
+  ),
+};
+
 export const WithoutMedia: Story = {
   args: { title: 'Quiet Clearing' },
   render: () => (

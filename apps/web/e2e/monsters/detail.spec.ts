@@ -415,7 +415,7 @@ test('Monster Detail opens every location in a drawer from its responsive cap', 
   await search.fill('');
 
   await page.getByRole('button', { name: 'View all 12 maps' }).click();
-  await expect(page.getByRole('dialog', { name: 'All 12 maps' })).toBeVisible();
+  await expect(page.getByRole('dialog', { name: /^All maps/u })).toBeVisible();
   const drawer = page.getByRole('dialog');
   const drawerCards = drawer.getByTestId('monster-location-card');
   await expect(drawerCards.filter({ visible: true })).toHaveCount(12);
@@ -447,7 +447,7 @@ test('Monster Detail opens every location in a drawer from its responsive cap', 
 
   const drawerSearch = drawer.getByRole('textbox', { name: 'Find a map' });
   await drawerSearch.fill('Practice Map 12');
-  await expect(page.getByRole('dialog', { name: 'All 1 map' })).toBeVisible();
+  await expect(page.getByRole('dialog', { name: /^All maps/u })).toBeVisible();
   await expect(drawerCards.filter({ visible: true })).toHaveCount(1);
   await expect(
     drawer.getByRole('heading', { name: 'Practice Map 12' }),
@@ -541,7 +541,7 @@ test('Locations Drawer follows Back and Forward and leaves the page on the next 
   const pageScrollY = await page.evaluate(() => window.scrollY);
   await trigger.click();
 
-  const drawer = page.getByRole('dialog', { name: 'All 12 maps' });
+  const drawer = page.getByRole('dialog', { name: /^All maps/u });
   await expect(drawer).toBeVisible();
   await expect(page).toHaveURL(expectedUrl);
   await expect

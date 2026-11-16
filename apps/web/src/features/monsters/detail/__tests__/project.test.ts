@@ -371,7 +371,7 @@ describe('projectMonsterDetail', () => {
     });
   });
 
-  it('orders locations by placement count then name, preserves duplicate map keys, and projects geography and minimaps', () => {
+  it('orders locations by placement count then name, preserves duplicate map keys, and projects streets and minimaps', () => {
     const minimapId = 'c'.repeat(64);
     const view = projectMonsterDetail(
       monsterPageFixture({
@@ -441,7 +441,7 @@ describe('projectMonsterDetail', () => {
         {
           key: 'fixture:map:top',
           name: 'High Meadow',
-          geographyLine: 'West Path · North Practice Region',
+          geographyLine: 'West Path',
           minimapUrl: `https://d0.mapletip.com/media/images/cc/${minimapId}.png`,
           placementCount: 20,
           placementLabel: '20 spawns',
@@ -449,21 +449,19 @@ describe('projectMonsterDetail', () => {
         {
           key: 'fixture:map:unnamed',
           name: 'Map name unavailable',
-          geographyLine: 'Harbor Road · South Practice Region',
+          geographyLine: 'Harbor Road',
           placementCount: 10,
           placementLabel: '10 spawns',
         },
         {
           key: 'fixture:map:duplicate-a',
           name: 'Twin Glade',
-          geographyLine: 'South Practice Region',
           placementCount: 5,
           placementLabel: '5 spawns',
         },
         {
           key: 'fixture:map:duplicate-b',
           name: 'Twin Glade',
-          geographyLine: 'South Practice Region',
           placementCount: 5,
           placementLabel: '5 spawns',
         },
@@ -471,7 +469,7 @@ describe('projectMonsterDetail', () => {
     });
   });
 
-  it('omits region labels when maps are all in one region and uses singular spawn wording', () => {
+  it('excludes region labels from the location tagline and uses singular spawn wording', () => {
     const view = projectMonsterDetail(
       monsterPageFixture({
         locations: {

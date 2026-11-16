@@ -365,20 +365,9 @@ function projectMonsterLocations(
     return { state: 'no-locations', count: 0 };
   }
 
-  const regionIds = new Set(
-    locations.entries.flatMap((entry) => {
-      const key = nonBlank(entry.geography?.regionKey);
-      const label = nonBlank(entry.geography?.regionLabel);
-      return key === undefined && label === undefined ? [] : [key ?? label!];
-    }),
-  );
-  const showRegion = regionIds.size > 1;
   const maps = locations.entries
     .map((entry) => {
       const street = nonBlank(entry.streetName);
-      const region = showRegion
-        ? nonBlank(entry.geography?.regionLabel)
-        : undefined;
       const minimapUrl =
         entry.minimap.state === 'known'
           ? mapMinimapUrl(entry.minimap.value)
@@ -390,9 +379,7 @@ function projectMonsterLocations(
       return {
         key: entry.mapKey,
         name,
-        ...(street === undefined && region === undefined
-          ? {}
-          : { geographyLine: [street, region].filter(Boolean).join(' · ') }),
+        ...(street === undefined ? {} : { geographyLine: street }),
         ...(minimapUrl === undefined ? {} : { minimapUrl }),
         placementCount: entry.placementCount,
         placementLabel:
