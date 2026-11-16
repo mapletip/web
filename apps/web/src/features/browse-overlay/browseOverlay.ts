@@ -1,4 +1,4 @@
-import { useRouteOverlay } from '@/features/route-overlay/useRouteOverlay';
+import type { RouteOverlayOptions } from '@/features/route-overlay/useRouteOverlay';
 
 /** Transient browse UI represented in TanStack Router location state. */
 export type BrowseOverlay =
@@ -35,11 +35,9 @@ function sameOverlay(
   return left.recordId === right.recordId;
 }
 
-/** Browse compatibility wrapper around the shared route overlay history. */
-export function useBrowseOverlay() {
-  return useRouteOverlay<BrowseOverlay>({
-    stateKey: 'browseOverlay',
-    parse: parseBrowseOverlay,
-    same: sameOverlay,
-  });
-}
+/** Browse-specific location-state schema and equality for the shared controller. */
+export const browseOverlayOptions: RouteOverlayOptions<BrowseOverlay> = {
+  stateKey: 'browseOverlay',
+  parse: parseBrowseOverlay,
+  same: sameOverlay,
+};

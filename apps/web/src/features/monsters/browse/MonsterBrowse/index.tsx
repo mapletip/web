@@ -14,12 +14,13 @@ import { useCallback, useMemo, useState, type ReactElement } from 'react';
 import { BrowsePageShell } from '@/components/BrowsePageShell';
 import { AnchorLink } from '@/components/RouterLinks';
 import { BUILDS, type BuildId } from '@/config/maplekit';
-import { useBrowseOverlay } from '@/features/browse-overlay/useBrowseOverlay';
+import { browseOverlayOptions } from '@/features/browse-overlay/browseOverlay';
 import {
   monsterDetailLinkProps,
   MONSTER_STAT_BY_ID,
 } from '@/features/monsters/shared';
 import type { MonsterDetailStatId } from '@/features/monsters/shared';
+import { useRouteOverlay } from '@/features/route-overlay/useRouteOverlay';
 
 import {
   getMonsterBrowseFacetDefinition,
@@ -293,7 +294,7 @@ export function MonsterBrowse({
 }: MonsterBrowseProps): ReactElement {
   const columns = useMemo(() => createMonsterBrowseColumns(buildId), [buildId]);
   const [browseState, setBrowseState] = useState<BrowseState>(defaultState);
-  const browseOverlay = useBrowseOverlay();
+  const browseOverlay = useRouteOverlay(browseOverlayOptions);
   const filterDrawerOpened = browseOverlay.overlay?.type === 'filters';
   const selectedRecordId =
     browseOverlay.overlay?.type === 'record-details'
