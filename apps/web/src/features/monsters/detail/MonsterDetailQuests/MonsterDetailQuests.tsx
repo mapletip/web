@@ -31,12 +31,49 @@ export function MonsterDetailQuests({
         <Box component="li" className={classes['item']} key={quest.key}>
           <RecordCard
             title={quest.name}
-            secondaryLine={[
-              quest.minimumLevelLabel,
-              `Job: ${quest.jobRequirementLabel}`,
-              quest.defeatLabel,
-            ].join(' · ')}
-            badges={quest.repeatable ? <Badge>Repeatable</Badge> : undefined}
+            secondaryLine={
+              <span className={classes['facts']}>
+                {quest.jobSummary === undefined ? null : (
+                  <span>{quest.jobSummary}</span>
+                )}
+                <Badge
+                  component="span"
+                  variant="light"
+                  color="gray"
+                  size="xs"
+                  radius="sm"
+                  tt="none"
+                >
+                  {quest.defeatLabel}
+                </Badge>
+              </span>
+            }
+            badges={
+              <>
+                {quest.minimumLevelBadge === undefined ? null : (
+                  <Badge
+                    variant="light"
+                    color="gray"
+                    size="xs"
+                    radius="sm"
+                    tt="none"
+                  >
+                    {quest.minimumLevelBadge}
+                  </Badge>
+                )}
+                {quest.repeatable ? (
+                  <Badge
+                    variant="outline"
+                    color="gray"
+                    size="xs"
+                    radius="sm"
+                    tt="none"
+                  >
+                    Repeatable
+                  </Badge>
+                ) : null}
+              </>
+            }
             footer={quest.sharedCountNote}
           />
         </Box>

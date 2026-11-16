@@ -64,8 +64,8 @@ export interface MonsterDetailLocationMapView {
 export interface MonsterDetailQuestEntryView {
   readonly key: string;
   readonly name: string;
-  readonly minimumLevelLabel: string;
-  readonly jobRequirementLabel: string;
+  readonly minimumLevelBadge?: string;
+  readonly jobSummary?: string;
   readonly defeatLabel: string;
   readonly repeatable: boolean;
   readonly sharedCountNote?: string;
@@ -237,10 +237,7 @@ function mapMinimapUrl(contentId: string): string {
   ).toString();
 }
 
-/**
- * The local Quest consumer has authoritative labels for job class-base codes.
- * Advancement codes need the Jobs catalog, which this detail read does not expose.
- */
+/** Advancement codes need the Jobs catalog; only the class-base codes are labelled here. */
 const JOB_FAMILY_LABELS: Readonly<Record<number, string>> = {
   0: 'Beginner',
   100: 'Warrior',
@@ -253,12 +250,14 @@ const JOB_FAMILY_LABELS: Readonly<Record<number, string>> = {
   2001: 'Evan',
 };
 
-function projectQuestJobRequirement(
+const JOB_FAMILY_ORDER = Object.values(JOB_FAMILY_LABELS);
+
+function projectQuestJobSummary(
   jobCodes: MonsterPageRecordV1['quests']['entries'][number]['jobCodes'],
-): string {
-  if (jobCodes.state === 'absent') return 'All jobs';
+): string | undefined {
+  if (jobCodes.state === 'absent') return 'Any job';
   if (jobCodes.state !== 'known' && jobCodes.state !== 'partial') {
-    return 'Job requirement unavailable';
+    return undefined;
   }
 
   const labels = new Set<string>();
@@ -269,31 +268,35 @@ function projectQuestJobRequirement(
     else labels.add(label);
   }
 
-  const requirement = [...labels].join(', ');
-  const incomplete = jobCodes.state === 'partial' || unresolved > 0;
-  if (requirement.length === 0) return 'Job requirement unavailable';
-  return incomplete
-    ? `${requirement} · Some job requirements unavailable`
-    : requirement;
+  const families = JOB_FAMILY_ORDER.filter((label) => labels.has(label));
+  const shown = families.slice(0, 2).join(', ');
+  const more = Math.max(0, families.length - 2) + unresolved;
+  let summary: string;
+  if (shown.length === 0) summary = 'Some jobs';
+  else if (more > 0) summary = `${shown} +${more}`;
+  else summary = shown;
+
+  // Partial coverage has no total, so keep the uncertainty compact without inventing one.
+  return jobCodes.state === 'partial' ? `${shown || 'Some jobs'} +?` : summary;
 }
 
 function projectQuestMinimumLevel(
   minLevel: MonsterPageRecordV1['quests']['entries'][number]['minLevel'],
-): string {
-  if (minLevel.state === 'known') {
-    return `Minimum level: ${formatMonsterNumber(minLevel.value)}`;
-  }
-  if (minLevel.state === 'absent') return 'No minimum level';
-  return 'Minimum level unavailable';
+): string | undefined {
+  return minLevel.state === 'known'
+    ? `Lv. ${formatMonsterNumber(minLevel.value)}+`
+    : undefined;
 }
 
 function projectQuest(
   quest: MonsterPageRecordV1['quests']['entries'][number],
 ): MonsterDetailQuestEntryView {
   const groupSize = quest.countGroupSize;
+  const minimumLevelBadge = projectQuestMinimumLevel(quest.minLevel);
+  const jobSummary = projectQuestJobSummary(quest.jobCodes);
   const sharedCountNote =
     groupSize?.state === 'known' && groupSize.value > 1
-      ? `Count shared with ${formatMonsterNumber(groupSize.value - 1)} other ${groupSize.value === 2 ? 'monster' : 'monsters'}`
+      ? `Shared with ${formatMonsterNumber(groupSize.value - 1)} other ${groupSize.value === 2 ? 'monster' : 'monsters'}`
       : undefined;
 
   return {
@@ -302,8 +305,8 @@ function projectQuest(
       quest.name.state === 'known'
         ? quest.name.value
         : 'Quest name unavailable',
-    minimumLevelLabel: projectQuestMinimumLevel(quest.minLevel),
-    jobRequirementLabel: projectQuestJobRequirement(quest.jobCodes),
+    ...(minimumLevelBadge === undefined ? {} : { minimumLevelBadge }),
+    ...(jobSummary === undefined ? {} : { jobSummary }),
     defeatLabel:
       quest.killCount.state === 'known'
         ? `Defeat ×${formatMonsterNumber(quest.killCount.value)}`

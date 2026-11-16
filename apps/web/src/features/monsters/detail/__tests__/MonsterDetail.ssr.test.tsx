@@ -106,6 +106,13 @@ describe('MonsterDetail server rendering', () => {
     expect(renderedText).toContain('Summoned by (1)');
     expect(renderedText).toContain('Synthetic Hunt');
     expect(renderedText).toContain('Synthetic Seed');
+    expect(renderedText).toContain('Lv. 12+');
+    expect(renderedText).toContain('Any job');
+    expect(renderedText).toContain('Defeat');
+    expect(renderedText).toContain('Repeatable');
+    expect(renderedText).toContain('Shared with 1 other monster');
+    expect(renderedText).not.toContain('Minimum level:');
+    expect(renderedText).not.toContain('Job:');
     expect(html).toContain('Synthetic Tonic');
     expect(html).toContain('aria-label="Breadcrumb"');
     expect(html).toContain('href="/"');

@@ -558,13 +558,49 @@ describe('projectMonsterDetail', () => {
         {
           key: 'fixture:quest:001',
           name: 'Practice Hunt',
-          minimumLevelLabel: 'Minimum level: 10',
-          jobRequirementLabel: 'Warrior · Some job requirements unavailable',
+          minimumLevelBadge: 'Lv. 10+',
+          jobSummary: 'Warrior +1',
           defeatLabel: 'Defeat ×30',
           repeatable: true,
-          sharedCountNote: 'Count shared with 2 other monsters',
+          sharedCountNote: 'Shared with 2 other monsters',
         },
       ],
+    });
+  });
+
+  it('formats complete and incomplete job summaries without inventing eligibility', () => {
+    const complete = projectMonsterDetail(
+      monsterPageFixture({
+        quests: {
+          state: 'known',
+          entries: [
+            pageQuest({
+              jobCodes: { state: 'absent', coverageKey: 'all-jobs' },
+            }),
+          ],
+        },
+      }),
+      'cw-launch',
+    );
+    const partial = projectMonsterDetail(
+      monsterPageFixture({
+        quests: {
+          state: 'known',
+          entries: [
+            pageQuest({ jobCodes: { state: 'partial', items: [100] } }),
+          ],
+        },
+      }),
+      'cw-launch',
+    );
+
+    expect(complete.quests).toMatchObject({
+      state: 'present',
+      entries: [{ jobSummary: 'Any job' }],
+    });
+    expect(partial.quests).toMatchObject({
+      state: 'present',
+      entries: [{ jobSummary: 'Warrior +?' }],
     });
   });
 
@@ -607,8 +643,6 @@ describe('projectMonsterDetail', () => {
       entries: [
         {
           name: 'Quest name unavailable',
-          minimumLevelLabel: 'No minimum level',
-          jobRequirementLabel: 'Job requirement unavailable',
           defeatLabel: 'Defeat',
           repeatable: false,
         },

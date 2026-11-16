@@ -14,7 +14,7 @@ function renderQuests(quests: MonsterDetailQuestsView) {
 }
 
 describe('MonsterDetailQuests', () => {
-  it('renders quest cards with plain names, facts, repeatability and shared count', () => {
+  it('renders a concise quest card with plain names, compact roles and shared count', () => {
     const quests: MonsterDetailQuestsView = {
       state: 'present',
       count: 1,
@@ -22,11 +22,11 @@ describe('MonsterDetailQuests', () => {
         {
           key: 'fixture:quest:001',
           name: 'Practice Hunt',
-          minimumLevelLabel: 'Minimum level: 10',
-          jobRequirementLabel: 'Warrior',
+          minimumLevelBadge: 'Lv. 10+',
+          jobSummary: 'Warrior',
           defeatLabel: 'Defeat ×30',
           repeatable: true,
-          sharedCountNote: 'Count shared with 2 other monsters',
+          sharedCountNote: 'Shared with 2 other monsters',
         },
       ],
     };
@@ -36,17 +36,18 @@ describe('MonsterDetailQuests', () => {
     expect(
       screen.getByRole('heading', { name: 'Practice Hunt' }),
     ).toBeVisible();
-    expect(
-      screen.getByText('Minimum level: 10 · Job: Warrior · Defeat ×30'),
-    ).toBeVisible();
+    expect(screen.getByText('Lv. 10+')).toBeVisible();
+    expect(screen.getByText('Warrior')).toBeVisible();
+    expect(screen.getByText('Defeat ×30')).toBeVisible();
     expect(screen.getByText('Repeatable')).toBeVisible();
+    expect(screen.getByText('Shared with 2 other monsters')).toBeVisible();
     expect(
-      screen.getByText('Count shared with 2 other monsters'),
-    ).toBeVisible();
+      screen.queryByText(/^(Minimum level|Job:|Count shared)/u),
+    ).toBeNull();
     expect(screen.queryByRole('link', { name: 'Practice Hunt' })).toBeNull();
   });
 
-  it('shows Defeat when its count is unknown and hides a non-known repeatable badge', () => {
+  it('keeps unknown optional metadata quiet and shows Defeat without a known count', () => {
     renderQuests({
       state: 'present',
       count: 1,
@@ -54,15 +55,14 @@ describe('MonsterDetailQuests', () => {
         {
           key: 'fixture:quest:002',
           name: 'Countless Hunt',
-          minimumLevelLabel: 'Minimum level unavailable',
-          jobRequirementLabel: 'Job requirement unavailable',
           defeatLabel: 'Defeat',
           repeatable: false,
         },
       ],
     });
 
-    expect(screen.getByText(/Defeat$/u)).toBeVisible();
+    expect(screen.getByText('Defeat')).toBeVisible();
+    expect(screen.queryByText(/unavailable/u)).toBeNull();
     expect(screen.queryByText('Repeatable')).toBeNull();
   });
 

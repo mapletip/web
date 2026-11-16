@@ -341,15 +341,11 @@ test('Monster Detail shows quest requirements and summoning items at each viewpo
   await expect(
     page.getByRole('heading', { level: 3, name: 'Synthetic Warden Hunt' }),
   ).toBeVisible();
-  await expect(
-    page.getByText('Minimum level: 12 · Job: Warrior · Defeat ×18', {
-      exact: true,
-    }),
-  ).toBeVisible();
+  await expect(page.getByText('Lv. 12+', { exact: true })).toBeVisible();
+  await expect(page.getByText('Warrior', { exact: true })).toBeVisible();
+  await expect(page.getByText('Defeat ×18', { exact: true })).toBeVisible();
   await expect(page.getByText('Repeatable', { exact: true })).toBeVisible();
-  await expect(
-    page.getByText('Count shared with 2 other monsters'),
-  ).toBeVisible();
+  await expect(page.getByText('Shared with 2 other monsters')).toBeVisible();
   await expect(
     page.getByRole('heading', { level: 2, name: 'Summoned by (1)' }),
   ).toBeVisible();
