@@ -24,7 +24,6 @@
   display: inline-flex;
   min-height: 2.75rem;
   align-items: center;
-  gap: 0.4rem;
   padding-inline: var(--mantine-spacing-sm);
   color: var(--mapletip-color-ink);
   background: var(--mapletip-color-panel);

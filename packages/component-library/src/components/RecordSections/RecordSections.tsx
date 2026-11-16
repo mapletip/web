@@ -1,4 +1,4 @@
-import { Accordion } from '@mantine/core';
+import { Accordion, Group } from '@mantine/core';
 import type { ReactElement } from 'react';
 
 import classes from '@/components/RecordSections/RecordSections.module.css';
@@ -16,7 +16,7 @@ function SectionLabel({ section }: { readonly section: RecordSection }) {
   const count = formatCount(section.count);
 
   return (
-    <>
+    <Group component="span" align="center" gap={6} wrap="nowrap">
       {section.icon !== undefined && (
         <span className={classes['icon']} aria-hidden="true">
           {section.icon}
@@ -29,7 +29,7 @@ function SectionLabel({ section }: { readonly section: RecordSection }) {
           <span className={classes['count']}>{count}</span>
         </>
       )}
-    </>
+    </Group>
   );
 }
 
