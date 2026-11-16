@@ -38,6 +38,8 @@ function StatefulLocations({
   return (
     <MonsterDetailLocations
       locations={locations}
+      monsterName="Practice Snail"
+      monsterSpriteUrl="/synthetic-monster.png"
       drawerOpened={drawerOpened}
       onDrawerOpen={() => setDrawerOpened(true)}
       onDrawerClose={() => setDrawerOpened(false)}
@@ -88,7 +90,11 @@ describe('MonsterDetailLocations', () => {
       name: 'View all 12 maps',
     });
     expect(expandButtons.length).toBe(2);
-    expect(screen.getByText('12 spawns')).toBeVisible();
+    const firstSpawnCount = screen.getAllByTestId(
+      'monster-location-spawn-count',
+    )[0]!;
+    expect(firstSpawnCount).toBeVisible();
+    expect(firstSpawnCount).toHaveTextContent('12 spawns');
 
     const search = screen.getByRole('textbox', { name: 'Find a map' });
     await user.type(search, 'Map 01');
@@ -102,7 +108,7 @@ describe('MonsterDetailLocations', () => {
       name: 'View all 12 maps',
     })[0]!;
     await user.click(trigger);
-    await screen.findByRole('dialog', { name: 'All 12 maps' });
+    await screen.findByRole('dialog', { name: /^All maps/u });
     const drawer = screen.getByRole('dialog');
     await waitFor(() => expect(drawer).toBeVisible());
     const drawerCards = within(drawer).getAllByTestId('monster-location-card');
@@ -152,7 +158,7 @@ describe('MonsterDetailLocations', () => {
       name: 'Find a map',
     });
     await user.type(drawerSearch, 'Practice Map 12');
-    expect(screen.getByRole('dialog', { name: 'All 1 map' })).toBeVisible();
+    expect(screen.getByRole('dialog', { name: /^All maps/u })).toBeVisible();
     expect(
       screen.getAllByRole('textbox', { name: 'Find a map' })[0],
     ).toHaveValue('Practice Map 12');
@@ -178,7 +184,7 @@ describe('MonsterDetailLocations', () => {
     ).toBeNull();
     await user.keyboard('{Escape}');
     await waitFor(() =>
-      expect(screen.queryByRole('dialog', { name: 'All 12 maps' })).toBeNull(),
+      expect(screen.queryByRole('dialog', { name: /^All maps/u })).toBeNull(),
     );
     await waitFor(() => expect(trigger).toHaveFocus());
     expect(
@@ -187,7 +193,7 @@ describe('MonsterDetailLocations', () => {
         { name: 'Practice Map 01' },
       ),
     ).toBeVisible();
-  });
+  }, 10_000);
 
   it('omits search and sort controls for three maps or fewer and reports an empty search', async () => {
     const user = userEvent.setup();

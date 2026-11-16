@@ -148,6 +148,8 @@ export function MonsterDetail({ view }: MonsterDetailProps): ReactElement {
               content: (
                 <MonsterDetailLocations
                   locations={view.locations}
+                  monsterName={view.name}
+                  monsterSpriteUrl={spriteUrl}
                   drawerOpened={locationsOverlay.overlay?.type === 'locations'}
                   onDrawerOpen={() =>
                     locationsOverlay.open({ type: 'locations' })

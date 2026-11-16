@@ -30,6 +30,7 @@ function renderLink(
 /** A generic record card with optional media, footer and host-rendered link. */
 export function RecordCard({
   title,
+  layout = 'default',
   secondaryLine,
   badges,
   media,
@@ -37,13 +38,23 @@ export function RecordCard({
   destination,
   renderLink: linkRenderer,
 }: RecordCardProps): ReactElement {
+  const mediaAside = layout === 'mediaAside';
+  const hasMedia = media !== undefined;
+  const hasFooter = footer !== undefined;
   const body = (
     <Card
-      className={classes['card']}
-      padding="md"
+      className={
+        mediaAside
+          ? `${classes['card']} ${classes['mediaAside']}`
+          : classes['card']
+      }
+      padding={mediaAside ? 'sm' : 'md'}
       radius="md"
       withBorder
       data-record-card="true"
+      data-record-card-has-media={mediaAside ? String(hasMedia) : undefined}
+      data-record-card-has-footer={mediaAside ? String(hasFooter) : undefined}
+      data-record-card-layout={mediaAside ? layout : undefined}
     >
       <Group className={classes['main']} align="flex-start" wrap="nowrap">
         <Stack className={classes['text']} gap="xs">
@@ -59,10 +70,13 @@ export function RecordCard({
             </Text>
           )}
         </Stack>
-        {media === undefined ? null : (
+        {!mediaAside && media !== undefined ? (
           <div className={classes['media']}>{media}</div>
-        )}
+        ) : null}
       </Group>
+      {mediaAside && media !== undefined ? (
+        <div className={classes['media']}>{media}</div>
+      ) : null}
       {footer === undefined ? null : (
         <div className={classes['footer']}>{footer}</div>
       )}

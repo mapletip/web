@@ -2,22 +2,27 @@ import {
   Box,
   Button,
   Drawer,
-  Image,
+  Group,
   SegmentedControl,
   Stack,
   Text,
   TextInput,
 } from '@mantine/core';
-import { RecordCard } from '@mapletip/component-library';
+import { useMediaQuery } from '@mantine/hooks';
+import { Thumbnail } from '@mapletip/component-library';
+import { CaretRight, MagnifyingGlass } from '@phosphor-icons/react';
 import { useId, useState } from 'react';
 import type { ReactElement } from 'react';
 
 import type { MonsterDetailLocationsView } from '../project';
 
+import { MapRecordCard } from './MapRecordCard';
 import classes from './MonsterDetailLocations.module.css';
 
 export interface MonsterDetailLocationsProps {
   readonly locations: MonsterDetailLocationsView;
+  readonly monsterName: string;
+  readonly monsterSpriteUrl: string | undefined;
   readonly drawerOpened: boolean;
   readonly onDrawerOpen: () => void;
   readonly onDrawerClose: () => void;
@@ -25,8 +30,25 @@ export interface MonsterDetailLocationsProps {
 
 type LocationSort = 'spawns' | 'name';
 
-function drawerTitle(count: number): string {
-  return `All ${count} ${count === 1 ? 'map' : 'maps'}`;
+function drawerTitle(
+  monsterName: string,
+  monsterSpriteUrl: string | undefined,
+): ReactElement {
+  return (
+    <Group className={classes['drawerTitle']} gap="sm" wrap="nowrap">
+      <Box className={classes['drawerPortrait']}>
+        <Thumbnail src={monsterSpriteUrl} size={44} alt="" />
+      </Box>
+      <Stack className={classes['drawerTitleCopy']} gap={0}>
+        <Text component="span" fw={600} size="md">
+          All maps
+        </Text>
+        <Text component="span" size="sm" c="dimmed">
+          {monsterName}
+        </Text>
+      </Stack>
+    </Group>
+  );
 }
 
 const MOBILE_CAP = 5;
@@ -35,6 +57,8 @@ const DESKTOP_CAP = 10;
 /** Locations cards with responsive initial caps and whole-list controls. */
 export function MonsterDetailLocations({
   locations,
+  monsterName,
+  monsterSpriteUrl,
   drawerOpened,
   onDrawerOpen,
   onDrawerClose,
@@ -42,6 +66,7 @@ export function MonsterDetailLocations({
   const locationsId = useId();
   const [query, setQuery] = useState('');
   const [sort, setSort] = useState<LocationSort>('spawns');
+  const desktopDrawer = useMediaQuery('(min-width: 48em)', false);
 
   if (locations.state === 'no-locations') {
     return <Text>No locations are listed for this monster.</Text>;
@@ -90,6 +115,7 @@ export function MonsterDetailLocations({
           id={`${locationsId}-${surface}-map-search`}
           label="Find a map"
           placeholder="Map name"
+          leftSection={<MagnifyingGlass aria-hidden="true" size={16} />}
           value={query}
           onChange={(event) => setQuery(event.currentTarget.value)}
         />
@@ -125,28 +151,7 @@ export function MonsterDetailLocations({
             data-testid="monster-location-card"
             key={map.key}
           >
-            <RecordCard
-              title={map.name}
-              secondaryLine={map.geographyLine}
-              media={
-                map.minimapUrl === undefined ? undefined : (
-                  <div
-                    className={classes['minimapWell']}
-                    data-map-minimap="true"
-                  >
-                    <Image
-                      src={map.minimapUrl}
-                      alt={`${map.name} minimap`}
-                      w="100%"
-                      h="100%"
-                      fit="contain"
-                      loading="lazy"
-                    />
-                  </div>
-                )
-              }
-              footer={map.placementLabel}
-            />
+            <MapRecordCard map={map} />
           </Box>
         ))}
       </Box>
@@ -167,7 +172,9 @@ export function MonsterDetailLocations({
         <Button
           className={classes['mobileExpand']}
           hiddenFrom="sm"
-          variant="light"
+          fullWidth
+          variant="default"
+          rightSection={<CaretRight aria-hidden="true" size={16} />}
           aria-haspopup="dialog"
           aria-expanded={drawerOpened}
           onClick={onDrawerOpen}
@@ -179,7 +186,9 @@ export function MonsterDetailLocations({
         <Button
           className={classes['desktopExpand']}
           visibleFrom="sm"
-          variant="light"
+          fullWidth
+          variant="default"
+          rightSection={<CaretRight aria-hidden="true" size={16} />}
           aria-haspopup="dialog"
           aria-expanded={drawerOpened}
           onClick={onDrawerOpen}
@@ -190,17 +199,20 @@ export function MonsterDetailLocations({
       <Drawer
         opened={drawerOpened}
         onClose={onDrawerClose}
-        title={drawerTitle(maps.length)}
-        position="right"
-        size="min(100%, 44rem)"
+        title={drawerTitle(monsterName, monsterSpriteUrl)}
+        position={desktopDrawer ? 'right' : 'bottom'}
+        size={desktopDrawer ? '75vw' : '94dvh'}
+        radius={desktopDrawer ? 0 : 'md'}
         closeButtonProps={{ 'aria-label': 'Close map list' }}
       >
-        {showControls ? renderControls('drawer') : null}
-        {maps.length === 0 ? (
-          <Text role="status">No maps match your search.</Text>
-        ) : (
-          renderMapList(maps, true)
-        )}
+        <Stack gap="md">
+          {showControls ? renderControls('drawer') : null}
+          {maps.length === 0 ? (
+            <Text role="status">No maps match your search.</Text>
+          ) : (
+            renderMapList(maps, true)
+          )}
+        </Stack>
       </Drawer>
     </Stack>
   );
