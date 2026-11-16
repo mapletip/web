@@ -13,7 +13,7 @@ import smallSprite from '@/fixtures/sprite-small.svg?url';
 
 // Production's stage box and its desktop safe sprite box.
 const STAGE_WIDTH = 544;
-const STAGE_HEIGHT = 384;
+const STAGE_HEIGHT = 320;
 const STAGE_FLOOR_OFFSET = 32;
 const SPRITE_MAX_WIDTH = 420;
 const SPRITE_MAX_HEIGHT = 276;
