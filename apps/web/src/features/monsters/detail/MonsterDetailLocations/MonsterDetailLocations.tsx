@@ -8,15 +8,15 @@ import {
   Text,
   TextInput,
 } from '@mantine/core';
-import { Thumbnail } from '@mapletip/component-library';
 import { useMediaQuery } from '@mantine/hooks';
+import { Thumbnail } from '@mapletip/component-library';
 import { CaretRight, MagnifyingGlass } from '@phosphor-icons/react';
 import { useId, useState } from 'react';
 import type { ReactElement } from 'react';
 
 import type { MonsterDetailLocationsView } from '../project';
-import { MapRecordCard } from './MapRecordCard';
 
+import { MapRecordCard } from './MapRecordCard';
 import classes from './MonsterDetailLocations.module.css';
 
 export interface MonsterDetailLocationsProps {

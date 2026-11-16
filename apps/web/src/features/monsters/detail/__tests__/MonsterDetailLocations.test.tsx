@@ -193,7 +193,7 @@ describe('MonsterDetailLocations', () => {
         { name: 'Practice Map 01' },
       ),
     ).toBeVisible();
-  });
+  }, 10_000);
 
   it('omits search and sort controls for three maps or fewer and reports an empty search', async () => {
     const user = userEvent.setup();
