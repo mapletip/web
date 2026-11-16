@@ -155,11 +155,7 @@ describe('MonsterDetail hero', () => {
     expect(
       screen.getByRole('heading', { level: 2, name: 'Drops (0)' }),
     ).toBeVisible();
-    expect(
-      screen.getByText(
-        'No recorded drop information. This does not establish that the Monster drops nothing.',
-      ),
-    ).toBeVisible();
+    expect(screen.getByText('No recorded drop information.')).toBeVisible();
   });
 
   it('shows unknown counts when drop information is unavailable', () => {
