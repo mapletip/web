@@ -2,18 +2,18 @@
 
 **Result:** the six-record production comparison and data-size measurements are complete. Page content counts and public IDs match production. Remaining differences are enumerated below; the stat-icon visual difference and within-category drop order are defects, and no actual screen-reader pass could be run, so C10 is not a full acceptance pass.
 
-The pinned app uses `@mapletip/data@0.7.0`, release `release-86e79c65b68c3e113d9e7db1cba878c33ebc86dfe2ba56e0da34330bba0996c9`, pin SHA-256 `880a2a9261a5548de20fd9e4566fe7a7c840c99a868b766412e382c6c892c7f0`. App screenshots are from the live pinned data through the local SSR server at `127.0.0.1:3003`; production screenshots are from `mapletip.com`. Both sets use 1440×900 and 390×844 CSS viewports. The 24 full-page JPEGs are in the comparison table below.
+The pinned app uses `@mapletip/data@0.7.0`, release `release-86e79c65b68c3e113d9e7db1cba878c33ebc86dfe2ba56e0da34330bba0996c9`, pin SHA-256 `880a2a9261a5548de20fd9e4566fe7a7c840c99a868b766412e382c6c892c7f0`. The live pinned app at `127.0.0.1:3003` was compared with `mapletip.com` at 1440×900 and 390×844 CSS viewports.
 
 ## 10.1 Production comparison
 
-| Monster / build              | Data counts: maps / drops / quests | Production 1440                                        | Pinned app 1440                                            | Production 390                                       | Pinned app 390                                           |
-| ---------------------------- | ---------------------------------: | ------------------------------------------------------ | ---------------------------------------------------------- | ---------------------------------------------------- | -------------------------------------------------------- |
-| Snail · `cw-launch`          |                         37 / 7 / 1 | [1440](screenshots/production/snail-1440.jpg)          | [1440](screenshots/pinned-release/snail-1440.jpg)          | [390](screenshots/production/snail-390.jpg)          | [390](screenshots/pinned-release/snail-390.jpg)          |
-| Green Mushroom · `cw-launch` |                        35 / 19 / 6 | [1440](screenshots/production/green-mushroom-1440.jpg) | [1440](screenshots/pinned-release/green-mushroom-1440.jpg) | [390](screenshots/production/green-mushroom-390.jpg) | [390](screenshots/pinned-release/green-mushroom-390.jpg) |
-| Jr. Balrog · `cw-launch`     |                          1 / 1 / 0 | [1440](screenshots/production/jr-balrog-1440.jpg)      | [1440](screenshots/pinned-release/jr-balrog-1440.jpg)      | [390](screenshots/production/jr-balrog-390.jpg)      | [390](screenshots/pinned-release/jr-balrog-390.jpg)      |
-| Mushmom · `cw-launch`        |                          1 / 5 / 0 | [1440](screenshots/production/mushmom-1440.jpg)        | [1440](screenshots/pinned-release/mushmom-1440.jpg)        | [390](screenshots/production/mushmom-390.jpg)        | [390](screenshots/pinned-release/mushmom-390.jpg)        |
-| Pianus · `gms-v83`           |                         1 / 51 / 0 | [1440](screenshots/production/pianus-1440.jpg)         | [1440](screenshots/pinned-release/pianus-1440.jpg)         | [390](screenshots/production/pianus-390.jpg)         | [390](screenshots/pinned-release/pianus-390.jpg)         |
-| Papulatus · `gms-v83`        |                         30 / 0 / 0 | [1440](screenshots/production/papulatus-1440.jpg)      | [1440](screenshots/pinned-release/papulatus-1440.jpg)      | [390](screenshots/production/papulatus-390.jpg)      | [390](screenshots/pinned-release/papulatus-390.jpg)      |
+| Monster / build              | Data counts: maps / drops / quests |
+| ---------------------------- | ---------------------------------: |
+| Snail · `cw-launch`          |                         37 / 7 / 1 |
+| Green Mushroom · `cw-launch` |                        35 / 19 / 6 |
+| Jr. Balrog · `cw-launch`     |                          1 / 1 / 0 |
+| Mushmom · `cw-launch`        |                          1 / 5 / 0 |
+| Pianus · `gms-v83`           |                         1 / 51 / 0 |
+| Papulatus · `gms-v83`        |                         30 / 0 / 0 |
 
 The six app routes resolve the same public IDs as production: Snail `36z2h01p`, Green Mushroom `99jdvknv`, Jr. Balrog `a4i0wkkb`, Mushmom `w3e42ijs`, Pianus `jp565851`, and Papulatus `bve8mt08`. The six pages have the same section counts and displayed values. `Summoned by` is omitted on all six because the pinned records contain no summoning items.
 
