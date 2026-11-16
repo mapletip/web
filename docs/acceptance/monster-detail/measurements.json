@@ -1,0 +1,94 @@
+{
+  "measuredOn": "2026-11-16",
+  "dataPackage": "@mapletip/data@0.7.0",
+  "release": "release-86e79c65b68c3e113d9e7db1cba878c33ebc86dfe2ba56e0da34330bba0996c9",
+  "releasePin": {
+    "path": "v1/releases/880a2a9261a5548de20fd9e4566fe7a7c840c99a868b766412e382c6c892c7f0.json",
+    "sha256": "880a2a9261a5548de20fd9e4566fe7a7c840c99a868b766412e382c6c892c7f0",
+    "bytes": 886
+  },
+  "method": {
+    "loaderOutputBytes": "UTF-8 byte length of JSON.stringify(projected MonsterDetailView)",
+    "serverHtmlBytes": "curl size_download from direct GET to the final local Vite SSR server at 127.0.0.1:3003, without requesting compression; includes dev server and TanStack hydration bootstrap",
+    "dataRequestCount": "SDK artifact fetches per server loader, excluding the document request and browser image requests",
+    "wholeBuildArtifactRequested": false
+  },
+  "sharedArtifactBytes": {
+    "buildIndex": 33542,
+    "cwLaunchProductManifest": 17429,
+    "gmsV83ProductManifest": 189787
+  },
+  "requestFlow": [
+    "GET /v1/releases/<pin>.json",
+    "GET /v1/build-indexes/<build-index-hash>.json",
+    "GET /v2/products/<product-hash>.json",
+    "GET /v2/packs/<monster-page-pack-hash>.json"
+  ],
+  "records": [
+    {
+      "build": "cw-launch",
+      "monster": "Green Mushroom",
+      "publicId": "99jdvknv",
+      "role": "maximum drops",
+      "drops": 19,
+      "maps": 35,
+      "loaderOutputBytes": 18447,
+      "serverHtmlStatus": 200,
+      "serverHtmlBytes": 136726,
+      "dataRequests": 4,
+      "monsterPagePackBytes": 146369
+    },
+    {
+      "build": "cw-launch",
+      "monster": "Slime",
+      "publicId": "51fiapz2",
+      "role": "maximum maps",
+      "drops": 11,
+      "maps": 52,
+      "loaderOutputBytes": 21289,
+      "serverHtmlStatus": 200,
+      "serverHtmlBytes": 116522,
+      "dataRequests": 4,
+      "monsterPagePackBytes": 150157
+    },
+    {
+      "build": "gms-v83",
+      "monster": "Balrog",
+      "publicId": "zbp2pmbe",
+      "role": "maximum drops (tie)",
+      "drops": 74,
+      "maps": 0,
+      "loaderOutputBytes": 15348,
+      "serverHtmlStatus": 200,
+      "serverHtmlBytes": 174167,
+      "dataRequests": 4,
+      "monsterPagePackBytes": 131273
+    },
+    {
+      "build": "gms-v83",
+      "monster": "White Yeti and King Pepe",
+      "publicId": "2ecxtir0",
+      "role": "maximum drops (tie)",
+      "drops": 74,
+      "maps": 0,
+      "loaderOutputBytes": 16191,
+      "serverHtmlStatus": 200,
+      "serverHtmlBytes": 177843,
+      "dataRequests": 4,
+      "monsterPagePackBytes": 136425
+    },
+    {
+      "build": "gms-v83",
+      "monster": "Horny Mushroom",
+      "publicId": "xhx5jlyl",
+      "role": "maximum maps",
+      "drops": 27,
+      "maps": 122,
+      "loaderOutputBytes": 44876,
+      "serverHtmlStatus": 200,
+      "serverHtmlBytes": 173955,
+      "dataRequests": 4,
+      "monsterPagePackBytes": 124851
+    }
+  ]
+}

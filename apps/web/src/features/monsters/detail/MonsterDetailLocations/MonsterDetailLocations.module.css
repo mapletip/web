@@ -31,22 +31,24 @@
 }
 
 .minimapWell {
-  display: grid;
-  place-items: center;
+  position: relative;
+  display: block;
   width: 10rem;
+  height: 8rem;
   min-width: 0;
   max-width: 100%;
-  aspect-ratio: 160 / 96;
-  padding: var(--mantine-spacing-xs);
+  flex: 0 1 10rem;
   box-sizing: border-box;
+  overflow: hidden;
   background: var(--mapletip-color-canvas);
-  border: 1px solid var(--mapletip-color-border-subtle);
-  border-radius: var(--mantine-radius-sm);
 }
 
 .minimapWell > * {
+  position: absolute;
+  inset: 0;
   min-width: 0;
   max-width: 100%;
+  max-height: 100%;
 }
 
 .mobileExpand,
@@ -61,6 +63,12 @@
 
   .list {
     grid-template-columns: minmax(0, 1fr);
+  }
+
+  .minimapWell {
+    width: 6rem;
+    height: 6rem;
+    flex-basis: 6rem;
   }
 
   .list:not([data-location-drawer='true']) > .item:nth-child(n + 6) {

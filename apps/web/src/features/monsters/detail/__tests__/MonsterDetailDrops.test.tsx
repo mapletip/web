@@ -88,7 +88,11 @@ describe('MonsterDetailDrops', () => {
   it('shows the no-recorded-drops message', () => {
     renderDrops({ state: 'no-recorded', count: 0 });
 
-    expect(screen.getByText('No recorded drop information.')).toBeVisible();
+    expect(
+      screen.getByText(
+        'No recorded drop information. This does not establish that the Monster drops nothing.',
+      ),
+    ).toBeVisible();
     expect(
       screen.queryByRole('group', { name: 'Drop certainty legend' }),
     ).toBeNull();
@@ -112,7 +116,7 @@ describe('MonsterDetailDrops', () => {
         groups: [
           {
             id: 'etc',
-            label: 'Etc',
+            label: 'ETC',
             count: 1,
             entries: [{ name: 'Native Flake', assertionKind: 'native' }],
           },

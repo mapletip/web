@@ -1,10 +1,16 @@
-import { Badge, Box, Grid, Group, Stack, Title } from '@mantine/core';
+import { Badge, Box, Grid, Group, Paper, Stack, Title } from '@mantine/core';
 import {
   FactSheet,
   RecordSections,
   SpriteStage,
   Thumbnail,
 } from '@mapletip/component-library';
+import {
+  BookOpenText,
+  MagicWand,
+  MapPin,
+  Package,
+} from '@phosphor-icons/react';
 import type { ReactElement } from 'react';
 
 import { DetailPageShell } from '@/components/DetailPageShell';
@@ -35,20 +41,46 @@ export function MonsterDetail({ view }: MonsterDetailProps): ReactElement {
   });
   const spriteUrl = view.spriteUrl;
   const badges = [
-    ...(view.boss === true ? [<Badge key="boss">Boss</Badge>] : []),
-    ...(view.undead === true ? [<Badge key="undead">Undead</Badge>] : []),
-    ...view.elements.map((element) => (
-      <Badge key={`${element.code}:${element.response}`} variant="light">
-        {element.response}: {element.element}
-      </Badge>
-    )),
+    ...(view.boss === true
+      ? [
+          <Badge key="boss" color="red">
+            Boss
+          </Badge>,
+        ]
+      : []),
+    ...(view.undead === true
+      ? [
+          <Badge key="undead" color="gray">
+            Undead
+          </Badge>,
+        ]
+      : []),
+    ...view.elements.map((element) => {
+      const color = elementResponseColor(element.response);
+      return (
+        <Badge
+          key={`${element.code}:${element.response}`}
+          variant="light"
+          {...(color === undefined ? {} : { color })}
+        >
+          {element.response}: {element.element}
+        </Badge>
+      );
+    }),
   ];
 
   return (
     <DetailPageShell>
       <Stack className={classes['page']} gap="lg">
         <DetailBreadcrumbs items={breadcrumbs} />
-        <section className={classes['hero']} aria-labelledby="monster-name">
+        <Paper
+          className={classes['hero']}
+          component="section"
+          aria-labelledby="monster-name"
+          withBorder
+          radius="md"
+          p={{ base: 'md', lg: 'xl' }}
+        >
           <Group className={classes['identity']} gap="sm" wrap="nowrap">
             <Box className={classes['portrait']} hiddenFrom="lg">
               <Thumbnail src={spriteUrl} size={56} alt="" />
@@ -67,9 +99,14 @@ export function MonsterDetail({ view }: MonsterDetailProps): ReactElement {
 
           <Grid className={classes['factsAndSprite']} align="center">
             <Grid.Col span={{ base: 12, lg: 6 }}>
-              <FactSheet
-                facts={view.stats.map((stat) => toFactSheetFact(stat))}
-              />
+              <Stack gap="sm">
+                <Title order={2} size="sm">
+                  Stats
+                </Title>
+                <FactSheet
+                  facts={view.stats.map((stat) => toFactSheetFact(stat))}
+                />
+              </Stack>
             </Grid.Col>
             <Grid.Col span={{ base: 12, lg: 6 }}>
               <Box className={classes['sprite']} visibleFrom="lg">
@@ -83,12 +120,15 @@ export function MonsterDetail({ view }: MonsterDetailProps): ReactElement {
               </Box>
             </Grid.Col>
           </Grid>
-        </section>
+        </Paper>
         <RecordSections
           sections={[
             {
               id: 'locations',
               title: 'Locations',
+              icon: (
+                <MapPin size={16} color="var(--mantine-primary-color-filled)" />
+              ),
               count: view.locations.count,
               content: (
                 <MonsterDetailLocations
@@ -104,6 +144,12 @@ export function MonsterDetail({ view }: MonsterDetailProps): ReactElement {
             {
               id: 'drops',
               title: 'Drops',
+              icon: (
+                <Package
+                  size={16}
+                  color="var(--mantine-primary-color-filled)"
+                />
+              ),
               count: view.drops.count,
               content: (
                 <MonsterDetailDrops drops={view.drops} buildId={view.buildId} />
@@ -112,6 +158,12 @@ export function MonsterDetail({ view }: MonsterDetailProps): ReactElement {
             {
               id: 'quests',
               title: 'Quests',
+              icon: (
+                <BookOpenText
+                  size={16}
+                  color="var(--mantine-primary-color-filled)"
+                />
+              ),
               count: view.quests.count,
               content: <MonsterDetailQuests quests={view.quests} />,
             },
@@ -120,6 +172,12 @@ export function MonsterDetail({ view }: MonsterDetailProps): ReactElement {
                   {
                     id: 'summoned-by',
                     title: 'Summoned by',
+                    icon: (
+                      <MagicWand
+                        size={16}
+                        color="var(--mantine-primary-color-filled)"
+                      />
+                    ),
                     count: view.summonedBy.count,
                     content: (
                       <MonsterDetailSummonedBy summonedBy={view.summonedBy} />
@@ -132,6 +190,19 @@ export function MonsterDetail({ view }: MonsterDetailProps): ReactElement {
       </Stack>
     </DetailPageShell>
   );
+}
+
+function elementResponseColor(response: string): string | undefined {
+  switch (response.toLocaleLowerCase('en')) {
+    case 'immune':
+      return 'green';
+    case 'resistant':
+      return 'blue';
+    case 'weak':
+      return 'red';
+    default:
+      return undefined;
+  }
 }
 
 function toFactSheetFact(stat: MonsterDetailStatView) {

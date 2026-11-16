@@ -57,6 +57,8 @@ export function RecordSections({
         className={classes['accordion']}
         multiple
         defaultValue={initiallyOpen}
+        variant="separated"
+        radius="md"
       >
         {sections.map((section) => (
           <Accordion.Item

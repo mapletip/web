@@ -6,6 +6,8 @@
   display: grid;
   gap: var(--mantine-spacing-lg);
   min-width: 0;
+  background: var(--mapletip-color-panel);
+  border-color: var(--mapletip-color-border-subtle);
 }
 
 .identity {

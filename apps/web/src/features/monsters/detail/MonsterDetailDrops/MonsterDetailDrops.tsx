@@ -21,7 +21,12 @@ export function MonsterDetailDrops({
   buildId,
 }: MonsterDetailDropsProps): ReactElement {
   if (drops.state === 'no-recorded') {
-    return <Text size="sm">No recorded drop information.</Text>;
+    return (
+      <Text size="sm">
+        No recorded drop information. This does not establish that the Monster
+        drops nothing.
+      </Text>
+    );
   }
 
   if (drops.state === 'unavailable') {

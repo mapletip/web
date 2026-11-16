@@ -14,6 +14,7 @@ import smallSprite from '@/fixtures/sprite-small.svg?url';
 // Production's stage box and its desktop safe sprite box.
 const STAGE_WIDTH = 544;
 const STAGE_HEIGHT = 384;
+const STAGE_FLOOR_OFFSET = 32;
 const SPRITE_MAX_WIDTH = 420;
 const SPRITE_MAX_HEIGHT = 276;
 const hostId = 'sprite-stage-host';
@@ -104,6 +105,19 @@ describe('SpriteStage sizing', () => {
     // Never enlarged beyond the safe box, and never larger than its natural size.
     expect(sprite.width).toBeLessThanOrEqual(SPRITE_MAX_WIDTH);
     expect(sprite.height).toBeLessThanOrEqual(SPRITE_MAX_HEIGHT);
+  });
+
+  it('keeps a tall sprite above the floor in the standard host stage', async () => {
+    await mountStage({ src: oversizedSprite, width: 1600, height: 2400 });
+
+    const sprite = spriteRect();
+    const stageBox = stage().getBoundingClientRect();
+
+    expect(sprite.height).toBeCloseTo(SPRITE_MAX_HEIGHT, 0);
+    expect(sprite.top).toBeGreaterThanOrEqual(stageBox.top);
+    expect(sprite.bottom).toBeLessThanOrEqual(
+      stageBox.bottom - STAGE_FLOOR_OFFSET + 0.5,
+    );
   });
 
   it('sizes the light and contact shadow from a small sprite that is shown', async () => {

@@ -71,6 +71,7 @@ export function MonsterDetailLocations({
         left.key.localeCompare(right.key)
       );
     });
+  const previewMaps = maps.slice(0, DESKTOP_CAP);
 
   const showControls = locations.maps.length > 3;
   const showMobileExpand = locations.maps.length > MOBILE_CAP;
@@ -159,7 +160,7 @@ export function MonsterDetailLocations({
       {maps.length === 0 ? (
         <Text role="status">No maps match your search.</Text>
       ) : (
-        renderMapList(maps)
+        renderMapList(previewMaps)
       )}
 
       {showMobileExpand ? (

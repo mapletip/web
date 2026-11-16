@@ -21,7 +21,7 @@ export const MONSTER_DROP_CATEGORIES = [
     id: 'etc',
     sourceValue: 'etc',
     browseLabel: 'ETC',
-    detailLabel: 'Etc',
+    detailLabel: 'ETC',
   },
   {
     id: 'setup',
