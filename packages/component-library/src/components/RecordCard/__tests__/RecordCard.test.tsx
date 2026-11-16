@@ -56,11 +56,7 @@ describe('RecordCard', () => {
         readonly children: React.ReactNode;
       },
     ) => (
-      <a
-        href={props.href}
-        className={props.className}
-        data-host-link="true"
-      >
+      <a href={props.href} className={props.className} data-host-link="true">
         {props.children}
       </a>
     );
