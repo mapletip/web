@@ -12,13 +12,11 @@ import type {
 function renderLink(
   destination: RecordCardDestination,
   linkRenderer: RecordCardLinkRenderer | undefined,
-  title: string,
   children: ReactNode,
 ): ReactNode {
   const props: RecordCardLinkRenderProps = {
     href: destination.href,
     className: classes['link'] ?? '',
-    'aria-label': title,
     children,
   };
 
@@ -75,7 +73,7 @@ export function RecordCard({
     body
   ) : (
     <div className={classes['linkedCard']}>
-      {renderLink(destination, linkRenderer, title, body)}
+      {renderLink(destination, linkRenderer, body)}
     </div>
   );
 }

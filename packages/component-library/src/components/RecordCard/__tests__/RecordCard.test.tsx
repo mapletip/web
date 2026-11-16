@@ -21,8 +21,12 @@ describe('RecordCard', () => {
       />,
     );
 
-    const link = screen.getByRole('link', { name: 'Practice Meadow' });
+    const link = screen.getByRole('link');
     expect(link).toHaveAttribute('href', '/synthetic/maps/practice-meadow');
+    expect(link).toHaveAccessibleName(
+      /Practice Meadow.*Training.*West Practice Grounds.*12 spawns/u,
+    );
+    expect(link).not.toHaveAttribute('aria-label');
     expect(link).toHaveTextContent('West Practice Grounds');
     expect(link).toHaveTextContent('Training');
     expect(link).toHaveTextContent('12 spawns');
@@ -50,13 +54,11 @@ describe('RecordCard', () => {
         readonly href: string;
         readonly className: string;
         readonly children: React.ReactNode;
-        readonly 'aria-label': string;
       },
     ) => (
       <a
         href={props.href}
         className={props.className}
-        aria-label={props['aria-label']}
         data-host-link="true"
       >
         {props.children}

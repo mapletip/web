@@ -11,7 +11,6 @@ export interface RecordCardLinkRenderProps {
   readonly href: string;
   readonly className: string;
   readonly children: ReactNode;
-  readonly 'aria-label': string;
 }
 
 export type RecordCardLinkRenderer = (
@@ -20,7 +19,7 @@ export type RecordCardLinkRenderer = (
 ) => ReactNode;
 
 export interface RecordCardProps {
-  /** Main record label and the accessible name when the card is linked. */
+  /** Main record label shown as the card heading. */
   readonly title: string;
   readonly secondaryLine?: ReactNode;
   readonly badges?: ReactNode;
