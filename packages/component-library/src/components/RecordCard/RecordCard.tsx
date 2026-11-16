@@ -39,6 +39,8 @@ export function RecordCard({
   renderLink: linkRenderer,
 }: RecordCardProps): ReactElement {
   const mediaAside = layout === 'mediaAside';
+  const hasMedia = media !== undefined;
+  const hasFooter = footer !== undefined;
   const body = (
     <Card
       className={
@@ -50,12 +52,8 @@ export function RecordCard({
       radius="md"
       withBorder
       data-record-card="true"
-      data-record-card-has-media={
-        mediaAside ? (media === undefined ? 'false' : 'true') : undefined
-      }
-      data-record-card-has-footer={
-        mediaAside ? (footer === undefined ? 'false' : 'true') : undefined
-      }
+      data-record-card-has-media={mediaAside ? String(hasMedia) : undefined}
+      data-record-card-has-footer={mediaAside ? String(hasFooter) : undefined}
       data-record-card-layout={mediaAside ? layout : undefined}
     >
       <Group className={classes['main']} align="flex-start" wrap="nowrap">

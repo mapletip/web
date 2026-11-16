@@ -440,7 +440,11 @@ test('Monster Detail opens every location in a drawer from its responsive cap', 
   await expect(
     drawer.getByRole('heading', { name: 'Practice Map 01' }),
   ).toBeVisible();
-  await expect(drawer.getByText('1 spawn', { exact: true })).toBeVisible();
+  await expect(
+    drawer
+      .getByTestId('monster-location-spawn-count')
+      .filter({ hasText: /^1 spawn$/u }),
+  ).toBeVisible();
   await expect(
     drawer.getByRole('img', { name: 'Practice Map 01 minimap' }),
   ).toBeVisible();

@@ -32,7 +32,10 @@ export function MapRecordCard({ map }: MapRecordCardProps): ReactElement {
         )
       }
       footer={
-        <span className={classes['spawnCount']}>
+        <span
+          className={classes['spawnCount']}
+          data-testid="monster-location-spawn-count"
+        >
           <strong>{map.placementCount.toLocaleString('en-US')}</strong>{' '}
           {map.placementCount === 1 ? 'spawn' : 'spawns'}
         </span>

@@ -213,7 +213,9 @@ describe('MonsterDetail hero', () => {
     ).toBeVisible();
     expect(screen.getByText('Quiet Clearing')).toBeVisible();
     expect(screen.getByText('Forest Edge')).toBeVisible();
-    expect(screen.getByText('1 spawn')).toBeVisible();
+    const spawnCount = screen.getByTestId('monster-location-spawn-count');
+    expect(spawnCount).toBeVisible();
+    expect(spawnCount).toHaveTextContent('1 spawn');
   });
 
   it('keeps Quests after Drops and omits an empty Summoned by section and link', () => {

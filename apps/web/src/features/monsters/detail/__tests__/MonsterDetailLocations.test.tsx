@@ -90,7 +90,11 @@ describe('MonsterDetailLocations', () => {
       name: 'View all 12 maps',
     });
     expect(expandButtons.length).toBe(2);
-    expect(screen.getByText('12 spawns')).toBeVisible();
+    const firstSpawnCount = screen.getAllByTestId(
+      'monster-location-spawn-count',
+    )[0]!;
+    expect(firstSpawnCount).toBeVisible();
+    expect(firstSpawnCount).toHaveTextContent('12 spawns');
 
     const search = screen.getByRole('textbox', { name: 'Find a map' });
     await user.type(search, 'Map 01');
