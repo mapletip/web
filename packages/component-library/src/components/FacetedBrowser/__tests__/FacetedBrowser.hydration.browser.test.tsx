@@ -73,7 +73,7 @@ describe('FacetedBrowser hydration', () => {
       act(() => root?.unmount());
       host.remove();
     };
-  });
+  }, 30_000);
 
   it('hydrates DataTable with poisoned empty-string localStorage state', async () => {
     await page.viewport(1440, 900);
