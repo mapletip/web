@@ -1,4 +1,4 @@
-import { useRouteOverlay } from '@/features/route-overlay/useRouteOverlay';
+import type { RouteOverlayOptions } from '@/features/route-overlay/useRouteOverlay';
 
 interface MonsterDetailOverlay {
   readonly type: 'locations';
@@ -20,11 +20,10 @@ function sameOverlay(
   return left?.type === right.type;
 }
 
-/** The Monster Detail Locations Drawer uses the shared same-URL overlay entry. */
-export function useMonsterDetailOverlay() {
-  return useRouteOverlay<MonsterDetailOverlay>({
+/** Monster Detail's location drawer state for the shared route controller. */
+export const monsterDetailOverlayOptions: RouteOverlayOptions<MonsterDetailOverlay> =
+  {
     stateKey: 'monsterDetailOverlay',
     parse: parseMonsterDetailOverlay,
     same: sameOverlay,
-  });
-}
+  };

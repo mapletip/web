@@ -10,12 +10,13 @@ import type { ReactElement } from 'react';
 import { DetailPageShell } from '@/components/DetailPageShell';
 import { DetailBreadcrumbs } from '@/features/detail';
 import { MONSTER_STAT_BY_ID } from '@/features/monsters/shared';
+import { useRouteOverlay } from '@/features/route-overlay/useRouteOverlay';
 
 import { monsterDetailBreadcrumbs } from '../metadata';
 import { MonsterDetailDrops } from '../MonsterDetailDrops';
 import { MonsterDetailLocations } from '../MonsterDetailLocations';
+import { monsterDetailOverlayOptions } from '../monsterDetailOverlay';
 import type { MonsterDetailStatView, MonsterDetailView } from '../project';
-import { useMonsterDetailOverlay } from '../useMonsterDetailOverlay';
 
 import classes from './MonsterDetail.module.css';
 
@@ -25,7 +26,7 @@ export interface MonsterDetailProps {
 
 /** Server-rendered hero for one Monster. */
 export function MonsterDetail({ view }: MonsterDetailProps): ReactElement {
-  const locationsOverlay = useMonsterDetailOverlay();
+  const locationsOverlay = useRouteOverlay(monsterDetailOverlayOptions);
   const breadcrumbs = monsterDetailBreadcrumbs({
     view,
     buildId: view.buildId,

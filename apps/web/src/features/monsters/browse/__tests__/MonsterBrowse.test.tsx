@@ -15,12 +15,12 @@ import userEvent from '@testing-library/user-event';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
 
-vi.mock('@/features/browse-overlay/useBrowseOverlay', async () => {
+vi.mock('@/features/route-overlay/useRouteOverlay', async () => {
   const { useState } = await import('react');
   return {
-    useBrowseOverlay: () => {
+    useRouteOverlay: () => {
       const [overlay, setOverlay] = useState<
-        | import('@/features/browse-overlay/useBrowseOverlay').BrowseOverlay
+        | import('@/features/browse-overlay/browseOverlay').BrowseOverlay
         | undefined
       >(undefined);
       return {
@@ -32,7 +32,7 @@ vi.mock('@/features/browse-overlay/useBrowseOverlay', async () => {
           return Promise.resolve();
         },
         apply: async (
-          _type: import('@/features/browse-overlay/useBrowseOverlay').BrowseOverlay['type'],
+          _type: import('@/features/browse-overlay/browseOverlay').BrowseOverlay['type'],
           commit: () => void | Promise<void>,
         ) => {
           await commit();

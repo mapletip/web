@@ -11,7 +11,8 @@ import { useCallback, useMemo, type ReactElement } from 'react';
 
 import { BrowsePageShell } from '@/components/BrowsePageShell';
 import { BUILDS, type BuildId } from '@/config/maplekit';
-import { useBrowseOverlay } from '@/features/browse-overlay/useBrowseOverlay';
+import { browseOverlayOptions } from '@/features/browse-overlay/browseOverlay';
+import { useRouteOverlay } from '@/features/route-overlay/useRouteOverlay';
 
 import { getCategoryRows } from '../assignment';
 import { getItemColumns, itemColumnContextKey } from '../columns';
@@ -84,7 +85,7 @@ export function ItemBrowse({
     () => getItemColumns({ category, coverage, rows: scopedRows }),
     [category, coverage, scopedRows],
   );
-  const browseOverlay = useBrowseOverlay();
+  const browseOverlay = useRouteOverlay(browseOverlayOptions);
   const filterDrawerOpened = browseOverlay.overlay?.type === 'filters';
 
   const onFilterDrawerOpenedChange = useCallback(
