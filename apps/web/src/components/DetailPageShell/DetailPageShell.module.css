@@ -1,7 +1,7 @@
 .page {
   display: grid;
   gap: var(--mantine-spacing-md);
-  width: min(90rem, 100%);
+  width: min(78rem, 100%);
   margin: 0 auto;
   padding: var(--mantine-spacing-md);
 }

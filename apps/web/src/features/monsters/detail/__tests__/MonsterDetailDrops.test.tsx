@@ -112,7 +112,7 @@ describe('MonsterDetailDrops', () => {
         groups: [
           {
             id: 'etc',
-            label: 'Etc',
+            label: 'ETC',
             count: 1,
             entries: [{ name: 'Native Flake', assertionKind: 'native' }],
           },

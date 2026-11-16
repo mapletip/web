@@ -77,7 +77,7 @@ describe('MonsterDetailLocations', () => {
     const { container } = mount(present());
 
     const cards = screen.getAllByTestId('monster-location-card');
-    expect(cards).toHaveLength(12);
+    expect(cards).toHaveLength(10);
     expect(
       container.querySelectorAll('[data-testid="monster-location-card"] a'),
     ).toHaveLength(0);
@@ -88,16 +88,13 @@ describe('MonsterDetailLocations', () => {
       name: 'View all 12 maps',
     });
     expect(expandButtons.length).toBe(2);
-    expect(screen.getByText('1 spawn')).toBeVisible();
-    expect(
-      screen.getByRole('img', { name: 'Practice Map 01 minimap' }),
-    ).toBeVisible();
+    expect(screen.getByText('12 spawns')).toBeVisible();
 
     const search = screen.getByRole('textbox', { name: 'Find a map' });
-    await user.type(search, 'Map 12');
+    await user.type(search, 'Map 01');
     expect(screen.getAllByTestId('monster-location-card')).toHaveLength(1);
     expect(
-      screen.getByRole('heading', { name: 'Practice Map 12' }),
+      screen.getByRole('heading', { name: 'Practice Map 01' }),
     ).toBeVisible();
     await user.clear(search);
 
@@ -107,12 +104,16 @@ describe('MonsterDetailLocations', () => {
     await user.click(trigger);
     await screen.findByRole('dialog', { name: 'All 12 maps' });
     const drawer = screen.getByRole('dialog');
+    await waitFor(() => expect(drawer).toBeVisible());
     const drawerCards = within(drawer).getAllByTestId('monster-location-card');
     expect(drawerCards).toHaveLength(12);
     expect(within(drawer).getByRole('list')).toHaveAttribute(
       'data-location-drawer',
       'true',
     );
+    expect(
+      within(drawer).getByRole('img', { name: 'Practice Map 01 minimap' }),
+    ).toBeVisible();
 
     const searchIds = Array.from(
       document.querySelectorAll<HTMLInputElement>('input[id$="-map-search"]'),
@@ -139,12 +140,23 @@ describe('MonsterDetailLocations', () => {
         name: 'Practice Map 01',
       }),
     ).toBeVisible();
+    expect(screen.getAllByRole('radio', { name: 'Map name' })[0]).toBeChecked();
+    expect(
+      within(screen.getAllByTestId('monster-location-card')[0]!).getByRole(
+        'heading',
+        { name: 'Practice Map 01' },
+      ),
+    ).toBeVisible();
 
     const drawerSearch = within(drawer).getByRole('textbox', {
       name: 'Find a map',
     });
     await user.type(drawerSearch, 'Practice Map 12');
     expect(screen.getByRole('dialog', { name: 'All 1 map' })).toBeVisible();
+    expect(
+      screen.getAllByRole('textbox', { name: 'Find a map' })[0],
+    ).toHaveValue('Practice Map 12');
+    expect(screen.getAllByTestId('monster-location-card')).toHaveLength(2);
     expect(
       within(drawer).getByRole('heading', { name: 'Practice Map 12' }),
     ).toBeVisible();

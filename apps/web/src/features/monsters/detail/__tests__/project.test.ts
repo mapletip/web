@@ -261,7 +261,7 @@ describe('projectMonsterDetail', () => {
       groups: [
         { id: 'equipment', label: 'Equipment', count: 1 },
         { id: 'usable', label: 'Usable', count: 1 },
-        { id: 'etc', label: 'Etc', count: 2 },
+        { id: 'etc', label: 'ETC', count: 2 },
         { id: 'setup', label: 'Setup', count: 1 },
         { id: 'cash', label: 'Cash', count: 1 },
         { id: 'pets', label: 'Pets', count: 1 },
