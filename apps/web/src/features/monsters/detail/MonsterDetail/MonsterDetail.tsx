@@ -81,31 +81,46 @@ export function MonsterDetail({ view }: MonsterDetailProps): ReactElement {
           radius="md"
           p={{ base: 'md', lg: 'xl' }}
         >
-          <Group className={classes['identity']} gap="sm" wrap="nowrap">
-            <Box className={classes['portrait']} hiddenFrom="lg">
-              <Thumbnail src={spriteUrl} size={56} alt="" />
-            </Box>
-            <Stack gap={badges.length === 0 ? 0 : 'xs'} miw={0}>
-              <Title id="monster-name" order={1} className={classes['name']}>
-                {view.name}
-              </Title>
-              {badges.length === 0 ? null : (
-                <Group className={classes['badges']} gap="xs">
-                  {badges}
-                </Group>
-              )}
-            </Stack>
-          </Group>
-
-          <Grid className={classes['factsAndSprite']} align="center">
+          <Grid className={classes['factsAndSprite']} align="start">
             <Grid.Col span={{ base: 12, lg: 6 }}>
-              <Stack gap="sm">
-                <Title order={2} size="sm">
-                  Stats
-                </Title>
-                <FactSheet
-                  facts={view.stats.map((stat) => toFactSheetFact(stat))}
-                />
+              <Stack className={classes['factsColumn']} gap="md">
+                <Group className={classes['identity']} gap="sm" wrap="nowrap">
+                  <Box className={classes['portrait']} hiddenFrom="lg">
+                    <Thumbnail src={spriteUrl} size={56} alt="" />
+                  </Box>
+                  <Stack gap={badges.length === 0 ? 0 : 'xs'} miw={0}>
+                    <Title
+                      id="monster-name"
+                      order={1}
+                      className={classes['name']}
+                    >
+                      {view.name}
+                    </Title>
+                    {badges.length === 0 ? null : (
+                      <Group className={classes['badges']} gap="xs">
+                        {badges}
+                      </Group>
+                    )}
+                  </Stack>
+                </Group>
+
+                <Stack
+                  className={classes['stats']}
+                  component="section"
+                  aria-labelledby="monster-stats-heading"
+                  gap={0}
+                >
+                  <Title
+                    id="monster-stats-heading"
+                    order={2}
+                    className={classes['visuallyHidden']}
+                  >
+                    Stats
+                  </Title>
+                  <FactSheet
+                    facts={view.stats.map((stat) => toFactSheetFact(stat))}
+                  />
+                </Stack>
               </Stack>
             </Grid.Col>
             <Grid.Col span={{ base: 12, lg: 6 }}>
@@ -116,6 +131,7 @@ export function MonsterDetail({ view }: MonsterDetailProps): ReactElement {
                   unavailableMessage="Sprite unavailable"
                   width={view.spriteWidth}
                   height={view.spriteHeight}
+                  stageHeight="20rem"
                 />
               </Box>
             </Grid.Col>
@@ -212,7 +228,7 @@ function toFactSheetFact(stat: MonsterDetailStatView) {
     <Icon
       aria-hidden="true"
       size={definition.iconSize}
-      color={definition.iconColor ?? 'var(--mantine-color-dimmed)'}
+      color={MONSTER_DETAIL_STAT_ICON_COLORS[stat.id]}
       data-monster-fact-icon={stat.id}
     />
   );
@@ -224,3 +240,20 @@ function toFactSheetFact(stat: MonsterDetailStatView) {
     ...(stat.known ? { value: stat.value } : { notKnown: stat.value }),
   };
 }
+
+const MONSTER_DETAIL_STAT_ICON_COLORS: Readonly<
+  Record<MonsterDetailStatView['id'], string>
+> = {
+  level: '#ffd43b',
+  hp: '#ff6b6b',
+  mp: '#4dabf7',
+  exp: '#ffd43b',
+  physicalAttack: '#ff8787',
+  magicAttack: '#a77bd4',
+  physicalDefense: '#69db7c',
+  magicDefense: '#748ffc',
+  accuracy: '#38d9a9',
+  avoidability: '#3bc9db',
+  pushed: '#ffa94d',
+  speed: '#a9e34b',
+};

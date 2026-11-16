@@ -1,5 +1,11 @@
 import { Image, Text } from '@mantine/core';
-import { useEffect, useRef, useState, type ReactElement } from 'react';
+import {
+  useEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+  type ReactElement,
+} from 'react';
 
 import classes from '@/components/SpriteStage/SpriteStage.module.css';
 import type { SpriteStageProps } from '@/components/SpriteStage/types';
@@ -19,10 +25,15 @@ export function SpriteStage({
   unavailableMessage,
   width,
   height,
+  stageHeight,
 }: SpriteStageProps): ReactElement {
   const imageRef = useRef<HTMLImageElement>(null);
   const [failedSrc, setFailedSrc] = useState<string | null>(null);
   const hasSource = src !== undefined && src !== '';
+  const stageStyle =
+    stageHeight === undefined
+      ? undefined
+      : ({ '--sprite-stage-height': stageHeight } as CSSProperties);
   // Keyed by source, so a new source is never treated as the failed one.
   const failed = hasSource && failedSrc === src;
 
@@ -38,7 +49,7 @@ export function SpriteStage({
 
   if (hasSource && !failed) {
     return (
-      <div className={classes['stage']}>
+      <div className={classes['stage']} style={stageStyle}>
         <span className={classes['floor']} aria-hidden="true" />
         <span className={classes['figure']}>
           <span className={classes['glow']} aria-hidden="true" />
@@ -60,7 +71,11 @@ export function SpriteStage({
   }
 
   return (
-    <div className={classes['stage']} data-unavailable="true">
+    <div
+      className={classes['stage']}
+      data-unavailable="true"
+      style={stageStyle}
+    >
       <Text className={classes['unavailable']} size="sm">
         {unavailableMessage}
       </Text>

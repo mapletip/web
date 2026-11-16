@@ -12,4 +12,6 @@ export interface SpriteStageProps {
   readonly width?: number | undefined;
   /** Natural sprite height in pixels, when known. */
   readonly height?: number | undefined;
+  /** Optional rendered stage height. Defaults to the standard 24rem stage. */
+  readonly stageHeight?: string | undefined;
 }
