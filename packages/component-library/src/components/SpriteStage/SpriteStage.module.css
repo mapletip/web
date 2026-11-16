@@ -7,7 +7,7 @@
   /* Production: clamp(17.75rem, rendered height + 9rem, 24rem). */
   --sprite-stage-light-height: clamp(17.75rem, calc(100% + 9rem), 24rem);
   /* Production caps the light at the stage height + 1rem. */
-  --sprite-stage-height: 24rem;
+  --sprite-stage-height: 20rem;
 
   position: relative;
   isolation: isolate;

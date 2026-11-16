@@ -131,7 +131,6 @@ export function MonsterDetail({ view }: MonsterDetailProps): ReactElement {
                   unavailableMessage="Sprite unavailable"
                   width={view.spriteWidth}
                   height={view.spriteHeight}
-                  stageHeight="20rem"
                 />
               </Box>
             </Grid.Col>
