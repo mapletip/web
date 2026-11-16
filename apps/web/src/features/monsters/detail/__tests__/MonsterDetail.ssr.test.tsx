@@ -51,6 +51,27 @@ describe('MonsterDetail server rendering', () => {
             native: { state: 'known', count: 1, lowerBound: true },
           },
         },
+        quests: {
+          state: 'known',
+          entries: [
+            {
+              questKey: 'fixture:quest:synthetic',
+              name: { state: 'known', value: 'Synthetic Hunt' },
+              minLevel: { state: 'known', value: 12 },
+              jobCodes: { state: 'absent', coverageKey: 'fixture:quest-jobs' },
+              repeatable: { state: 'known', value: true },
+              killCount: { state: 'unknown' },
+              countGroupSize: { state: 'known', value: 2 },
+            },
+          ],
+        },
+        summonedByItems: [
+          {
+            itemRef: { state: 'resolved', key: 'fixture:item:seed' },
+            name: { state: 'known', value: 'Synthetic Seed' },
+            icon: { state: 'unknown' },
+          },
+        ],
       }),
       'cw-launch',
     );
@@ -74,11 +95,24 @@ describe('MonsterDetail server rendering', () => {
     expect(html).toContain('Sentinel Snail');
     expect(html).toContain('23,000,000');
     expect(html).toContain('href="#drops"');
+    expect(html).toContain('href="#quests"');
+    expect(html).toContain('href="#summoned-by"');
     const renderedText = html
       .replace(/<!--.*?-->/gu, '')
       .replace(/<[^>]*>/gu, '');
     expect(renderedText).toContain('Drops (1)');
     expect(renderedText).toContain('Usable (1)');
+    expect(renderedText).toContain('Quests (1)');
+    expect(renderedText).toContain('Summoned by (1)');
+    expect(renderedText).toContain('Synthetic Hunt');
+    expect(renderedText).toContain('Synthetic Seed');
+    expect(renderedText).toContain('Lv. 12+');
+    expect(renderedText).toContain('Any job');
+    expect(renderedText).toContain('Defeat');
+    expect(renderedText).toContain('Repeatable');
+    expect(renderedText).toContain('Shared with 1 other monster');
+    expect(renderedText).not.toContain('Minimum level:');
+    expect(renderedText).not.toContain('Job:');
     expect(html).toContain('Synthetic Tonic');
     expect(html).toContain('aria-label="Breadcrumb"');
     expect(html).toContain('href="/"');

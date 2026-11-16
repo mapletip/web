@@ -8,12 +8,12 @@ describe('typography', () => {
     expect(theme.fontSizes).toMatchObject({
       xs: '0.75rem',
       sm: '0.875rem',
-      md: '1rem',
+      md: '1.125rem',
     });
     expect(theme.lineHeights).toMatchObject({
       xs: '1rem',
       sm: '1.25rem',
-      md: '1.5rem',
+      md: '1.625rem',
     });
     expect(theme.headings?.sizes).toMatchObject({
       h1: { fontSize: '1.75rem', lineHeight: '2.25rem' },

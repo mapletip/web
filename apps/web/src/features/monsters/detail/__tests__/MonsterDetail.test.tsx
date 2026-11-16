@@ -207,12 +207,83 @@ describe('MonsterDetail hero', () => {
       within(navigation)
         .getAllByRole('link')
         .map((link) => link.textContent),
-    ).toEqual(['Locations (1)', 'Drops (?)']);
+    ).toEqual(['Locations (1)', 'Drops (?)', 'Quests (?)']);
     expect(
       screen.getByRole('heading', { level: 2, name: 'Locations (1)' }),
     ).toBeVisible();
     expect(screen.getByText('Quiet Clearing')).toBeVisible();
     expect(screen.getByText('Forest Edge')).toBeVisible();
     expect(screen.getByText('1 spawn')).toBeVisible();
+  });
+
+  it('keeps Quests after Drops and omits an empty Summoned by section and link', () => {
+    renderDetail({
+      quests: {
+        state: 'absent',
+        entries: [],
+      },
+      summonedByItems: [],
+    });
+
+    const navigation = screen.getByRole('navigation', {
+      name: 'Record sections',
+    });
+    expect(
+      within(navigation)
+        .getAllByRole('link')
+        .map((link) => link.textContent),
+    ).toEqual(['Locations (0)', 'Drops (?)', 'Quests (0)']);
+    expect(
+      screen.getByText('No quests are listed for this monster.'),
+    ).toBeVisible();
+    expect(
+      screen.queryByRole('heading', { level: 2, name: /Summoned by/u }),
+    ).toBeNull();
+    expect(
+      within(navigation).queryByRole('link', { name: /Summoned by/u }),
+    ).toBeNull();
+  });
+
+  it('adds a counted Summoned by section after Quests when items exist', () => {
+    renderDetail({
+      quests: {
+        state: 'known',
+        entries: [
+          {
+            questKey: 'fixture:quest:001',
+            name: { state: 'known', value: 'Practice Hunt' },
+            minLevel: { state: 'known', value: 10 },
+            jobCodes: { state: 'absent', coverageKey: 'fixture:quest-jobs' },
+            repeatable: { state: 'known', value: false },
+            killCount: { state: 'known', value: 30 },
+          },
+        ],
+      },
+      summonedByItems: [
+        {
+          itemRef: { state: 'resolved', key: 'fixture:item:seed' },
+          name: { state: 'known', value: 'Practice Seed' },
+          icon: { state: 'unknown' },
+        },
+      ],
+    });
+
+    const navigation = screen.getByRole('navigation', {
+      name: 'Record sections',
+    });
+    expect(
+      within(navigation)
+        .getAllByRole('link')
+        .map((link) => link.textContent),
+    ).toEqual(['Locations (0)', 'Drops (?)', 'Quests (1)', 'Summoned by (1)']);
+    expect(
+      screen.getByRole('heading', { level: 2, name: 'Quests (1)' }),
+    ).toBeVisible();
+    expect(
+      screen.getByRole('heading', { level: 2, name: 'Summoned by (1)' }),
+    ).toBeVisible();
+    expect(screen.getByText('Practice Hunt')).toBeVisible();
+    expect(screen.getByText('Practice Seed')).toBeVisible();
+    expect(screen.queryByRole('link', { name: 'Practice Seed' })).toBeNull();
   });
 });

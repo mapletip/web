@@ -16,6 +16,8 @@ import { monsterDetailBreadcrumbs } from '../metadata';
 import { MonsterDetailDrops } from '../MonsterDetailDrops';
 import { MonsterDetailLocations } from '../MonsterDetailLocations';
 import { monsterDetailOverlayOptions } from '../monsterDetailOverlay';
+import { MonsterDetailQuests } from '../MonsterDetailQuests';
+import { MonsterDetailSummonedBy } from '../MonsterDetailSummonedBy';
 import type { MonsterDetailStatView, MonsterDetailView } from '../project';
 
 import classes from './MonsterDetail.module.css';
@@ -107,6 +109,24 @@ export function MonsterDetail({ view }: MonsterDetailProps): ReactElement {
                 <MonsterDetailDrops drops={view.drops} buildId={view.buildId} />
               ),
             },
+            {
+              id: 'quests',
+              title: 'Quests',
+              count: view.quests.count,
+              content: <MonsterDetailQuests quests={view.quests} />,
+            },
+            ...(view.summonedBy.state === 'present'
+              ? [
+                  {
+                    id: 'summoned-by',
+                    title: 'Summoned by',
+                    count: view.summonedBy.count,
+                    content: (
+                      <MonsterDetailSummonedBy summonedBy={view.summonedBy} />
+                    ),
+                  },
+                ]
+              : []),
           ]}
         />
       </Stack>

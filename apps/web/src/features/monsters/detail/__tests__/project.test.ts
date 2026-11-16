@@ -11,6 +11,7 @@ import { monsterPageFixture } from './monsterPageFixture';
 
 type MonsterPageDrop = MonsterPageRecordV1['drops']['entries'][number];
 type MonsterPageLocation = MonsterPageRecordV1['locations']['entries'][number];
+type MonsterPageQuest = MonsterPageRecordV1['quests']['entries'][number];
 
 function pageDrop(
   name: MonsterPageDrop['name'],
@@ -38,6 +39,20 @@ function pageLocation(
     name,
     placementCount,
     minimap: { state: 'absent', coverageKey: 'fixture:minimap' },
+    ...overrides,
+  };
+}
+
+function pageQuest(
+  overrides: Partial<MonsterPageQuest> = {},
+): MonsterPageQuest {
+  return {
+    questKey: 'fixture:quest:001',
+    name: { state: 'known', value: 'Practice Hunt' },
+    minLevel: { state: 'known', value: 10 },
+    jobCodes: { state: 'known', items: [100] },
+    repeatable: { state: 'known', value: false },
+    killCount: { state: 'known', value: 30 },
     ...overrides,
   };
 }
@@ -516,6 +531,164 @@ describe('projectMonsterDetail', () => {
     expect(unresolved.locations).toEqual({
       state: 'unavailable',
       count: 'unknown',
+    });
+  });
+
+  it('projects known quest facts and subtracts this monster from a shared group', () => {
+    const view = projectMonsterDetail(
+      monsterPageFixture({
+        quests: {
+          state: 'known',
+          entries: [
+            pageQuest({
+              jobCodes: { state: 'known', items: [100, 110] },
+              countGroupSize: { state: 'known', value: 3 },
+              repeatable: { state: 'known', value: true },
+            }),
+          ],
+        },
+      }),
+      'cw-launch',
+    );
+
+    expect(view.quests).toEqual({
+      state: 'present',
+      count: 1,
+      entries: [
+        {
+          key: 'fixture:quest:001',
+          name: 'Practice Hunt',
+          minimumLevelBadge: 'Lv. 10+',
+          jobSummary: 'Warrior +1',
+          defeatLabel: 'Defeat ×30',
+          repeatable: true,
+          sharedCountNote: 'Shared with 2 other monsters',
+        },
+      ],
+    });
+  });
+
+  it('formats complete and incomplete job summaries without inventing eligibility', () => {
+    const complete = projectMonsterDetail(
+      monsterPageFixture({
+        quests: {
+          state: 'known',
+          entries: [
+            pageQuest({
+              jobCodes: { state: 'absent', coverageKey: 'all-jobs' },
+            }),
+          ],
+        },
+      }),
+      'cw-launch',
+    );
+    const partial = projectMonsterDetail(
+      monsterPageFixture({
+        quests: {
+          state: 'known',
+          entries: [
+            pageQuest({ jobCodes: { state: 'partial', items: [100] } }),
+          ],
+        },
+      }),
+      'cw-launch',
+    );
+
+    expect(complete.quests).toMatchObject({
+      state: 'present',
+      entries: [{ jobSummary: 'Any job' }],
+    });
+    expect(partial.quests).toMatchObject({
+      state: 'present',
+      entries: [{ jobSummary: 'Warrior +?' }],
+    });
+  });
+
+  it('keeps quest absence and unresolved information distinct and does not invent facts', () => {
+    const absent = projectMonsterDetail(
+      monsterPageFixture({
+        quests: { state: 'absent', entries: [] },
+      }),
+      'cw-launch',
+    );
+    const unresolved = projectMonsterDetail(
+      monsterPageFixture({ quests: { state: 'unknown', entries: [] } }),
+      'cw-launch',
+    );
+    const unknownCount = projectMonsterDetail(
+      monsterPageFixture({
+        quests: {
+          state: 'known',
+          entries: [
+            pageQuest({
+              name: { state: 'unknown' },
+              minLevel: { state: 'absent', coverageKey: 'fixture:min-level' },
+              jobCodes: { state: 'unknown' },
+              repeatable: { state: 'unknown' },
+              killCount: { state: 'unknown' },
+            }),
+          ],
+        },
+      }),
+      'cw-launch',
+    );
+
+    expect(absent.quests).toEqual({ state: 'no-quests', count: 0 });
+    expect(unresolved.quests).toEqual({
+      state: 'unavailable',
+      count: 'unknown',
+    });
+    expect(unknownCount.quests).toMatchObject({
+      state: 'present',
+      entries: [
+        {
+          name: 'Quest name unavailable',
+          defeatLabel: 'Defeat',
+          repeatable: false,
+        },
+      ],
+    });
+    if (unknownCount.quests.state !== 'present') {
+      throw new Error('Expected the known quest entry to be projected.');
+    }
+    expect(unknownCount.quests.entries[0]?.sharedCountNote).toBeUndefined();
+  });
+
+  it('projects summoned items with placeholder values and omits an empty list', () => {
+    const absent = projectMonsterDetail(
+      monsterPageFixture({ summonedByItems: [] }),
+      'cw-launch',
+    );
+    const present = projectMonsterDetail(
+      monsterPageFixture({
+        summonedByItems: [
+          {
+            itemRef: { state: 'resolved', key: 'fixture:item:seed' },
+            name: { state: 'known', value: 'Practice Seed' },
+            icon: { state: 'known', value: 'b'.repeat(64) },
+          },
+          {
+            itemRef: { state: 'unresolved' },
+            name: { state: 'unknown' },
+            icon: { state: 'unknown' },
+          },
+        ],
+      }),
+      'cw-launch',
+    );
+
+    expect(absent.summonedBy).toEqual({ state: 'absent', count: 0 });
+    expect(present.summonedBy).toEqual({
+      state: 'present',
+      count: 2,
+      entries: [
+        {
+          key: 'fixture:item:seed',
+          name: 'Practice Seed',
+          iconUrl: `https://d0.mapletip.com/media/images/bb/${'b'.repeat(64)}.png`,
+        },
+        { key: 'summoned-item-1', name: 'Item name unavailable' },
+      ],
     });
   });
 });
