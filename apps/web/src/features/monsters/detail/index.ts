@@ -9,6 +9,14 @@ export {
   type MonsterDetailLocationsProps,
 } from './MonsterDetailLocations';
 export {
+  MonsterDetailQuests,
+  type MonsterDetailQuestsProps,
+} from './MonsterDetailQuests';
+export {
+  MonsterDetailSummonedBy,
+  type MonsterDetailSummonedByProps,
+} from './MonsterDetailSummonedBy';
+export {
   monsterDetailBreadcrumbs,
   monsterDetailMetadata,
   type MonsterDetailMetadataOptions,
@@ -17,5 +25,9 @@ export {
   projectMonsterDetail,
   type MonsterDetailLocationMapView,
   type MonsterDetailLocationsView,
+  type MonsterDetailQuestEntryView,
+  type MonsterDetailQuestsView,
+  type MonsterDetailSummonedByView,
+  type MonsterDetailSummonedItemView,
   type MonsterDetailView,
 } from './project';

@@ -1,3 +1,5 @@
+import type { MonsterPageRecordV1 } from '@mapletip/data/monsters';
+
 /**
  * Invented Monster Browse rows used only by the web mock and integration tests.
  * Keep fields named here; the wire format's positional tuples are assembled by
@@ -43,6 +45,8 @@ export interface FixtureMonster {
   readonly elements?: readonly FixtureMonsterElement[];
   readonly locationsState?: 'known' | 'absent' | 'unresolved';
   readonly locations?: readonly FixtureLocation[];
+  readonly quests?: MonsterPageRecordV1['quests'];
+  readonly summonedByItemIds?: readonly string[];
   readonly sprite: SpriteState;
 }
 
@@ -272,6 +276,21 @@ const cwMonsters: readonly FixtureMonster[] = [
     exp: known(26),
     boss: known(true),
     undead: known(false),
+    quests: {
+      state: 'known',
+      entries: [
+        {
+          questKey: 'fixture:quest:warden-hunt',
+          name: known('Synthetic Warden Hunt'),
+          minLevel: known(12),
+          jobCodes: { state: 'known', items: [100] },
+          repeatable: known(true),
+          killCount: known(18),
+          countGroupSize: known(3),
+        },
+      ],
+    },
+    summonedByItemIds: ['quiet-bell'],
     locations: Array.from({ length: 12 }, (_, index): FixtureLocation => {
       const number = String(index + 1).padStart(2, '0');
       const placementCount = Math.max(1, 12 - index);

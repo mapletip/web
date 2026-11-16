@@ -61,6 +61,39 @@ export interface MonsterDetailLocationMapView {
   readonly placementLabel: string;
 }
 
+export interface MonsterDetailQuestEntryView {
+  readonly key: string;
+  readonly name: string;
+  readonly minimumLevelLabel: string;
+  readonly jobRequirementLabel: string;
+  readonly defeatLabel: string;
+  readonly repeatable: boolean;
+  readonly sharedCountNote?: string;
+}
+
+export type MonsterDetailQuestsView =
+  | {
+      readonly state: 'present';
+      readonly count: number;
+      readonly entries: readonly MonsterDetailQuestEntryView[];
+    }
+  | { readonly state: 'no-quests'; readonly count: 0 }
+  | { readonly state: 'unavailable'; readonly count: 'unknown' };
+
+export interface MonsterDetailSummonedItemView {
+  readonly key: string;
+  readonly name: string;
+  readonly iconUrl?: string;
+}
+
+export type MonsterDetailSummonedByView =
+  | {
+      readonly state: 'present';
+      readonly count: number;
+      readonly entries: readonly MonsterDetailSummonedItemView[];
+    }
+  | { readonly state: 'absent'; readonly count: 0 };
+
 export type MonsterDetailLocationsView =
   | {
       readonly state: 'present';
@@ -96,6 +129,8 @@ export interface MonsterDetailView {
   readonly spriteHeight?: number;
   readonly locations: MonsterDetailLocationsView;
   readonly drops: MonsterDetailDropsView;
+  readonly quests: MonsterDetailQuestsView;
+  readonly summonedBy: MonsterDetailSummonedByView;
 }
 
 type NumericMonsterFact =
@@ -200,6 +235,117 @@ function mapMinimapUrl(contentId: string): string {
     `media/images/${prefix}/${contentId}.png`,
     MAPLEKIT_RELEASE.baseUrl,
   ).toString();
+}
+
+/**
+ * The local Quest consumer has authoritative labels for job class-base codes.
+ * Advancement codes need the Jobs catalog, which this detail read does not expose.
+ */
+const JOB_FAMILY_LABELS: Readonly<Record<number, string>> = {
+  0: 'Beginner',
+  100: 'Warrior',
+  200: 'Magician',
+  300: 'Bowman',
+  400: 'Thief',
+  500: 'Pirate',
+  1000: 'Cygnus Knights',
+  2000: 'Aran',
+  2001: 'Evan',
+};
+
+function projectQuestJobRequirement(
+  jobCodes: MonsterPageRecordV1['quests']['entries'][number]['jobCodes'],
+): string {
+  if (jobCodes.state === 'absent') return 'All jobs';
+  if (jobCodes.state !== 'known' && jobCodes.state !== 'partial') {
+    return 'Job requirement unavailable';
+  }
+
+  const labels = new Set<string>();
+  let unresolved = 0;
+  for (const code of jobCodes.items) {
+    const label = JOB_FAMILY_LABELS[code];
+    if (label === undefined) unresolved += 1;
+    else labels.add(label);
+  }
+
+  const requirement = [...labels].join(', ');
+  const incomplete = jobCodes.state === 'partial' || unresolved > 0;
+  if (requirement.length === 0) return 'Job requirement unavailable';
+  return incomplete
+    ? `${requirement} · Some job requirements unavailable`
+    : requirement;
+}
+
+function projectQuestMinimumLevel(
+  minLevel: MonsterPageRecordV1['quests']['entries'][number]['minLevel'],
+): string {
+  if (minLevel.state === 'known') {
+    return `Minimum level: ${formatMonsterNumber(minLevel.value)}`;
+  }
+  if (minLevel.state === 'absent') return 'No minimum level';
+  return 'Minimum level unavailable';
+}
+
+function projectQuest(
+  quest: MonsterPageRecordV1['quests']['entries'][number],
+): MonsterDetailQuestEntryView {
+  const groupSize = quest.countGroupSize;
+  const sharedCountNote =
+    groupSize?.state === 'known' && groupSize.value > 1
+      ? `Count shared with ${formatMonsterNumber(groupSize.value - 1)} other ${groupSize.value === 2 ? 'monster' : 'monsters'}`
+      : undefined;
+
+  return {
+    key: quest.questKey,
+    name:
+      quest.name.state === 'known'
+        ? quest.name.value
+        : 'Quest name unavailable',
+    minimumLevelLabel: projectQuestMinimumLevel(quest.minLevel),
+    jobRequirementLabel: projectQuestJobRequirement(quest.jobCodes),
+    defeatLabel:
+      quest.killCount.state === 'known'
+        ? `Defeat ×${formatMonsterNumber(quest.killCount.value)}`
+        : 'Defeat',
+    repeatable: quest.repeatable.state === 'known' && quest.repeatable.value,
+    ...(sharedCountNote === undefined ? {} : { sharedCountNote }),
+  };
+}
+
+function projectMonsterQuests(
+  record: MonsterPageRecordV1,
+): MonsterDetailQuestsView {
+  if (record.quests.state === 'unknown') {
+    return { state: 'unavailable', count: 'unknown' };
+  }
+  if (record.quests.state === 'absent' || record.quests.entries.length === 0) {
+    return { state: 'no-quests', count: 0 };
+  }
+
+  return {
+    state: 'present',
+    count: record.quests.entries.length,
+    entries: record.quests.entries.map(projectQuest),
+  };
+}
+
+function projectMonsterSummonedBy(
+  record: MonsterPageRecordV1,
+): MonsterDetailSummonedByView {
+  if (record.summonedByItems.length === 0) {
+    return { state: 'absent', count: 0 };
+  }
+
+  const entries = record.summonedByItems.map((item, index) => ({
+    key: item.itemRef.key ?? `summoned-item-${index}`,
+    name:
+      item.name.state === 'known' ? item.name.value : 'Item name unavailable',
+    ...(item.icon.state === 'known'
+      ? { iconUrl: itemIconUrl(MAPLEKIT_RELEASE.baseUrl, item.icon.value) }
+      : {}),
+  }));
+  return { state: 'present', count: entries.length, entries };
 }
 
 function projectMonsterLocations(
@@ -364,6 +510,8 @@ export function projectMonsterDetail(
     stats: MONSTER_STAT_DEFINITIONS.map(({ id }) => projectStat(record, id)),
     locations: projectMonsterLocations(record),
     drops: projectMonsterDrops(record),
+    quests: projectMonsterQuests(record),
+    summonedBy: projectMonsterSummonedBy(record),
     ...(spriteUrl === undefined ? {} : { spriteUrl }),
     ...(spriteWidth === undefined ? {} : { spriteWidth }),
     ...(spriteHeight === undefined ? {} : { spriteHeight }),

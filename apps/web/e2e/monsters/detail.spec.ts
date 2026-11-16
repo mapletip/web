@@ -308,6 +308,66 @@ test('Monster Detail shows grouped Drops and certainty at each viewport', async 
   );
 });
 
+test('Monster Detail shows quest requirements and summoning items at each viewport', async ({
+  page,
+  monsterPage,
+  expectedArtifactRequests,
+}, testInfo) => {
+  const item: DetailCase = {
+    buildId: 'cw-launch',
+    prefix: '/maplestory',
+    sourceId: 'crowned-warden',
+    name: 'Crowned Warden',
+    buildLabel: 'Classic World',
+  };
+  expectMonsterPageArtifacts(expectedArtifactRequests);
+  await monsterPage.goto(canonicalPath(item));
+
+  const navigation = page.getByRole('navigation', { name: 'Record sections' });
+  await expect(
+    navigation.getByRole('link', { name: 'Quests (1)' }),
+  ).toHaveAttribute('href', '#quests');
+  await expect(
+    navigation.getByRole('link', { name: 'Summoned by (1)' }),
+  ).toHaveAttribute('href', '#summoned-by');
+  const sectionLabels = await navigation.getByRole('link').allTextContents();
+  expect(sectionLabels).toEqual([
+    'Locations (12)',
+    'Drops (24)',
+    'Quests (1)',
+    'Summoned by (1)',
+  ]);
+
+  await expect(
+    page.getByRole('heading', { level: 3, name: 'Synthetic Warden Hunt' }),
+  ).toBeVisible();
+  await expect(
+    page.getByText('Minimum level: 12 · Job: Warrior · Defeat ×18', {
+      exact: true,
+    }),
+  ).toBeVisible();
+  await expect(page.getByText('Repeatable', { exact: true })).toBeVisible();
+  await expect(
+    page.getByText('Count shared with 2 other monsters'),
+  ).toBeVisible();
+  await expect(
+    page.getByRole('heading', { level: 2, name: 'Summoned by (1)' }),
+  ).toBeVisible();
+  await expect(page.getByText('Quiet Bell', { exact: true })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Quiet Bell' })).toHaveCount(0);
+
+  const widths = await page.evaluate(() => ({
+    document: document.documentElement.scrollWidth,
+    viewport: document.documentElement.clientWidth,
+  }));
+  expect(widths.document).toBeLessThanOrEqual(widths.viewport);
+  await monsterPage.captureReady();
+  await expect(page).toHaveScreenshot(
+    `${testInfo.project.name}-monster-detail-quests-summoned-by.png`,
+    { fullPage: true },
+  );
+});
+
 test('Monster Detail opens every location in a drawer from its responsive cap', async ({
   page,
   monsterPage,

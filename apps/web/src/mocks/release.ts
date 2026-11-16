@@ -197,6 +197,10 @@ function projectMonsterPage(
   catalogRecord: MonsterCatalogV2_5['records'][number],
   entries: MonsterPageRecordV1['drops']['entries'],
   monster: FixtureMonster,
+  itemById: ReadonlyMap<
+    string,
+    { readonly item: FixtureBuild['items'][number]; readonly key: string }
+  >,
 ): MonsterPageRecordV1 {
   const [
     level,
@@ -294,11 +298,26 @@ function projectMonsterPage(
             },
       entries: locationEntries,
     },
-    quests: {
-      state: 'absent',
-      entries: [],
-    },
-    summonedByItems: [],
+    quests: monster.quests ?? { state: 'absent', entries: [] },
+    summonedByItems: (monster.summonedByItemIds ?? []).map((itemId) => {
+      const target = itemById.get(itemId);
+      if (target === undefined) {
+        throw new Error(
+          `Fixture summoned item references unknown item "${itemId}".`,
+        );
+      }
+      return {
+        itemRef:
+          target.item.id === 'unresolved-token'
+            ? { state: 'unresolved' as const }
+            : { state: 'resolved' as const, key: target.key },
+        name:
+          target.item.name === undefined
+            ? { state: 'unknown' as const }
+            : known(target.item.name),
+        icon: { state: 'unknown' as const },
+      };
+    }),
   };
 }
 
@@ -452,7 +471,7 @@ export async function buildRelease(fixtureWorld: {
             };
           },
         );
-        return projectMonsterPage(scope, record, entries, monster);
+        return projectMonsterPage(scope, record, entries, monster, itemById);
       })
       .sort((left, right) => left.publicId.localeCompare(right.publicId));
     const pagePackRange: RangeDescriptor = {
