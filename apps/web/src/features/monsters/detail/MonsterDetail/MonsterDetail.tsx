@@ -13,7 +13,9 @@ import { MONSTER_STAT_BY_ID } from '@/features/monsters/shared';
 
 import { monsterDetailBreadcrumbs } from '../metadata';
 import { MonsterDetailDrops } from '../MonsterDetailDrops';
+import { MonsterDetailLocations } from '../MonsterDetailLocations';
 import type { MonsterDetailStatView, MonsterDetailView } from '../project';
+import { useMonsterDetailOverlay } from '../useMonsterDetailOverlay';
 
 import classes from './MonsterDetail.module.css';
 
@@ -23,6 +25,7 @@ export interface MonsterDetailProps {
 
 /** Server-rendered hero for one Monster. */
 export function MonsterDetail({ view }: MonsterDetailProps): ReactElement {
+  const locationsOverlay = useMonsterDetailOverlay();
   const breadcrumbs = monsterDetailBreadcrumbs({
     view,
     buildId: view.buildId,
@@ -80,6 +83,21 @@ export function MonsterDetail({ view }: MonsterDetailProps): ReactElement {
         </section>
         <RecordSections
           sections={[
+            {
+              id: 'locations',
+              title: 'Locations',
+              count: view.locations.count,
+              content: (
+                <MonsterDetailLocations
+                  locations={view.locations}
+                  drawerOpened={locationsOverlay.overlay?.type === 'locations'}
+                  onDrawerOpen={() =>
+                    locationsOverlay.open({ type: 'locations' })
+                  }
+                  onDrawerClose={() => locationsOverlay.dismiss('locations')}
+                />
+              ),
+            },
             {
               id: 'drops',
               title: 'Drops',

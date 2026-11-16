@@ -41,6 +41,13 @@ export type {
   RecordSectionCount,
   RecordSectionsProps,
 } from '@/components/RecordSections';
+export { RecordCard } from '@/components/RecordCard';
+export type {
+  RecordCardDestination,
+  RecordCardLinkRenderer,
+  RecordCardLinkRenderProps,
+  RecordCardProps,
+} from '@/components/RecordCard';
 export { Header } from '@/components/Header';
 export type {
   HeaderGroupLink,

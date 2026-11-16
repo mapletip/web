@@ -51,6 +51,25 @@ export interface MonsterDetailDropGroupView {
   readonly entries: readonly MonsterDetailDropEntryView[];
 }
 
+export interface MonsterDetailLocationMapView {
+  /** Stable Map product key; names are not unique. */
+  readonly key: string;
+  readonly name: string;
+  readonly geographyLine?: string;
+  readonly minimapUrl?: string;
+  readonly placementCount: number;
+  readonly placementLabel: string;
+}
+
+export type MonsterDetailLocationsView =
+  | {
+      readonly state: 'present';
+      readonly count: number;
+      readonly maps: readonly MonsterDetailLocationMapView[];
+    }
+  | { readonly state: 'no-locations'; readonly count: 0 }
+  | { readonly state: 'unavailable'; readonly count: 'unknown' };
+
 export type MonsterDetailDropsView =
   | {
       readonly state: 'present';
@@ -75,6 +94,7 @@ export interface MonsterDetailView {
   readonly spriteUrl?: string;
   readonly spriteWidth?: number;
   readonly spriteHeight?: number;
+  readonly locations: MonsterDetailLocationsView;
   readonly drops: MonsterDetailDropsView;
 }
 
@@ -167,6 +187,79 @@ function positiveDimension(
   return typeof value === 'number' && Number.isFinite(value) && value > 0
     ? value
     : undefined;
+}
+
+function nonBlank(value: string | null | undefined): string | undefined {
+  const trimmed = value?.trim();
+  return trimmed === undefined || trimmed.length === 0 ? undefined : trimmed;
+}
+
+function mapMinimapUrl(contentId: string): string {
+  const prefix = contentId.slice(0, 2);
+  return new URL(
+    `media/images/${prefix}/${contentId}.png`,
+    MAPLEKIT_RELEASE.baseUrl,
+  ).toString();
+}
+
+function projectMonsterLocations(
+  record: MonsterPageRecordV1,
+): MonsterDetailLocationsView {
+  const locations = record.locations;
+  if (locations.summary.state === 'absent') {
+    return { state: 'no-locations', count: 0 };
+  }
+  if (locations.summary.state === 'unresolved') {
+    return { state: 'unavailable', count: 'unknown' };
+  }
+  if (locations.summary.mapCount === 0) {
+    return { state: 'no-locations', count: 0 };
+  }
+
+  const regionIds = new Set(
+    locations.entries.flatMap((entry) => {
+      const key = nonBlank(entry.geography?.regionKey);
+      const label = nonBlank(entry.geography?.regionLabel);
+      return key === undefined && label === undefined ? [] : [key ?? label!];
+    }),
+  );
+  const showRegion = regionIds.size > 1;
+  const maps = locations.entries
+    .map((entry) => {
+      const street = nonBlank(entry.streetName);
+      const region = showRegion
+        ? nonBlank(entry.geography?.regionLabel)
+        : undefined;
+      const minimapUrl =
+        entry.minimap.state === 'known'
+          ? mapMinimapUrl(entry.minimap.value)
+          : undefined;
+      const name =
+        nonBlank(entry.name.state === 'known' ? entry.name.value : undefined) ??
+        'Map name unavailable';
+
+      return {
+        key: entry.mapKey,
+        name,
+        ...(street === undefined && region === undefined
+          ? {}
+          : { geographyLine: [street, region].filter(Boolean).join(' · ') }),
+        ...(minimapUrl === undefined ? {} : { minimapUrl }),
+        placementCount: entry.placementCount,
+        placementLabel:
+          entry.placementCount === 1
+            ? '1 spawn'
+            : `${formatMonsterNumber(entry.placementCount)} spawns`,
+      } satisfies MonsterDetailLocationMapView;
+    })
+    .sort(
+      (left, right) =>
+        right.placementCount - left.placementCount ||
+        left.name.localeCompare(right.name, 'en', { sensitivity: 'base' }) ||
+        left.key.localeCompare(right.key),
+    );
+
+  return { state: 'present', count: locations.summary.mapCount, maps };
 }
 
 function projectMonsterDrops(
@@ -269,6 +362,7 @@ export function projectMonsterDetail(
     ...(record.undead.state === 'known' ? { undead: record.undead.value } : {}),
     elements: projectElements(record),
     stats: MONSTER_STAT_DEFINITIONS.map(({ id }) => projectStat(record, id)),
+    locations: projectMonsterLocations(record),
     drops: projectMonsterDrops(record),
     ...(spriteUrl === undefined ? {} : { spriteUrl }),
     ...(spriteWidth === undefined ? {} : { spriteWidth }),
