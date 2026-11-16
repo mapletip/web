@@ -116,7 +116,7 @@ const variantColorResolver: VariantColorsResolver = (input) => {
  * - Maple Twilight canonical dark scheme
  * - Walnut Glow primary actions
  * - Luminous amber link and brand identity
- * - Productive typography and balanced-compact density
+ * - Readable typography and balanced density
  * - Softly rounded surfaces (~8px controls, ~12px panels)
  */
 export const theme: MantineThemeOverride = createTheme({
@@ -131,18 +131,18 @@ export const theme: MantineThemeOverride = createTheme({
   white: '#FFFFFF',
   black: '#000000',
   fontFamily: SYSTEM_FONT_FAMILY,
-  // Productive typography scale: 12px metadata, 14px UI/data, 16px reading, 20px section, 24px entity
+  // Typography scale: 12px metadata, 14px UI/data, 18px reading, 20px section, 24px entity
   fontSizes: {
     xs: '0.75rem', // 12px
     sm: '0.875rem', // 14px
-    md: '1rem', // 16px
+    md: '1.125rem', // 18px
     lg: '1.25rem', // 20px
     xl: '1.5rem', // 24px
   },
   lineHeights: {
     xs: '1rem', // 16px
     sm: '1.25rem', // 20px
-    md: '1.5rem', // 24px
+    md: '1.625rem', // 26px
     lg: '1.75rem', // 28px
     xl: '2rem', // 32px
   },

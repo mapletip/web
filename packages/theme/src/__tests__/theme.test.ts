@@ -156,7 +156,8 @@ describe('MapleTip approved theme foundation', () => {
     expect(theme.primaryShade).toBe(4);
     expect(theme.defaultRadius).toBe('sm');
     expect(theme.fontSizes?.sm).toBe('0.875rem');
-    expect(theme.fontSizes?.md).toBe('1rem');
+    expect(theme.fontSizes?.md).toBe('1.125rem');
+    expect(theme.lineHeights?.md).toBe('1.625rem');
     expect(theme.radius?.sm).toBe('0.5rem');
     expect(theme.radius?.md).toBe('0.75rem');
   });
