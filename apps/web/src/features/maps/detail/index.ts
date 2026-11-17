@@ -11,6 +11,11 @@ export {
   type MapDetailNpcsView,
   type MapDetailMonsterView,
   type MapDetailMonstersView,
+  type MapDetailStageConnector,
+  type MapDetailStageImage,
+  type MapDetailStageMarker,
+  type MapDetailStageMarkerKind,
+  type MapDetailStageView,
   type MapDetailView,
   type ProjectMapDetailOptions,
 } from './project';

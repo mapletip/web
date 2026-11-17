@@ -130,3 +130,36 @@ test('Map Detail shows all record sections at the project viewport and has no na
   }));
   expect(widths.document).toBeLessThanOrEqual(widths.viewport);
 });
+
+test('Map Detail shows its static stage and markers on desktop and mobile', async ({
+  page,
+}) => {
+  const publicId = mapPublicId({ sourceId: 'cw-launch:practice-grove' });
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto(`/maplestory/maps/practice-grove-${publicId}`);
+
+  await expect(
+    page.getByRole('group', { name: 'Practice Grove map' }),
+  ).toBeVisible();
+  await expect(page.locator('[data-marker-ids]').first()).toBeVisible();
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  await expect(
+    page.getByRole('group', { name: 'Practice Grove map' }),
+  ).toBeVisible();
+  await expect(page.locator('[data-marker-ids]').first()).toBeVisible();
+});
+
+test('Map Detail shows the stage message when a map has no image', async ({
+  page,
+}) => {
+  const publicId = mapPublicId({ sourceId: 'cw-launch:quiet-gallery' });
+  await page.goto(`/maplestory/maps/quiet-gallery-${publicId}`);
+
+  await expect(
+    page.getByRole('group', {
+      name: "Map image isn't available.",
+    }),
+  ).toBeVisible();
+  await expect(page.getByText("Map image isn't available.")).toBeVisible();
+});
