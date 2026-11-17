@@ -1,5 +1,9 @@
 import { Stack, Text, Title } from '@mantine/core';
-import { FactSheet, RecordSections } from '@mapletip/component-library';
+import {
+  FactSheet,
+  RecordSections,
+  type RecordSection,
+} from '@mapletip/component-library';
 import { ShareNetwork } from '@phosphor-icons/react';
 import type { ReactElement } from 'react';
 
@@ -12,6 +16,7 @@ import { mapDetailBreadcrumbs } from '../metadata';
 import type { MapDetailView } from '../project';
 
 import { MapDetailConnections } from './MapDetailConnections';
+import { MapDetailMonsters } from './MapDetailMonsters';
 
 export interface MapDetailProps {
   readonly view: MapDetailView;
@@ -19,10 +24,24 @@ export interface MapDetailProps {
 
 /** Server-rendered identity and map information for one Map. */
 export function MapDetail({ view }: MapDetailProps): ReactElement {
-  const noKnownConnections =
-    view.connections.maps.length === 0 &&
-    (view.connections.state === 'absent' ||
-      (view.connections.state === 'known' && view.connections.count === 0));
+  const sections: RecordSection[] = [];
+  if (view.connections !== undefined) {
+    sections.push({
+      id: 'connections',
+      title: 'Connections',
+      icon: (
+        <ShareNetwork size={16} color="var(--mantine-primary-color-filled)" />
+      ),
+      count: view.connections.count,
+      content: <MapDetailConnections connections={view.connections} />,
+    });
+  }
+  sections.push({
+    id: 'monsters',
+    title: 'Monsters',
+    count: view.monsters.count,
+    content: <MapDetailMonsters monsters={view.monsters} />,
+  });
 
   return (
     <DetailPageShell>
@@ -67,29 +86,7 @@ export function MapDetail({ view }: MapDetailProps): ReactElement {
             />
           </Stack>
         )}
-        {noKnownConnections ? null : (
-          <RecordSections
-            sections={[
-              {
-                id: 'connections',
-                title: 'Connections',
-                icon: (
-                  <ShareNetwork
-                    size={16}
-                    color="var(--mantine-primary-color-filled)"
-                  />
-                ),
-                count:
-                  view.connections.count === 'unknown'
-                    ? 'unknown'
-                    : view.connections.count,
-                content: (
-                  <MapDetailConnections connections={view.connections} />
-                ),
-              },
-            ]}
-          />
-        )}
+        <RecordSections sections={sections} />
       </Stack>
     </DetailPageShell>
   );

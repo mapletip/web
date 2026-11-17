@@ -604,6 +604,7 @@ const fixtureMapTargets: readonly Omit<
       {
         monsterId: 'plain-pebble',
         points: [{ x: 240, y: 390 }],
+        respawn: 'none',
       },
       {
         monsterId: 'twin-sprout-a',
@@ -616,6 +617,10 @@ const fixtureMapTargets: readonly Omit<
         monsterId: 'hollow-husk',
         points: [{ x: 570, y: 420 }],
         respawn: 'mixed',
+      },
+      {
+        monsterId: 'crowned-warden',
+        points: [{ x: 690, y: 390 }],
       },
     ],
     npcs: [],

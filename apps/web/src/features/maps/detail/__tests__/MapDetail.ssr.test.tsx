@@ -102,4 +102,32 @@ describe('MapDetail server rendering', () => {
     expect(jsonLd.itemListElement[2]).not.toHaveProperty('item');
     expect(jsonLd.itemListElement[3]).not.toHaveProperty('item');
   });
+
+  it('renders the Monsters section heading and a linked card in server HTML', async () => {
+    const record = mapPageRecordFixture({ mapId: 'practice-grove' });
+    const view = projectMapDetail({ record, buildId: 'cw-launch' });
+    mockedLoadMapDetail.mockResolvedValue({ status: 'found', view });
+
+    const router = createRouter({
+      routeTree,
+      history: createMemoryHistory({ initialEntries: [view.canonicalPath] }),
+    });
+    await router.load();
+
+    const html = renderToString(
+      <RouterContextProvider router={router}>
+        <MantineProvider theme={theme} forceColorScheme="dark">
+          <MapDetail view={view} />
+        </MantineProvider>
+      </RouterContextProvider>,
+    );
+
+    expect(html).toContain('id="monsters"');
+    expect(html).toContain('Monsters');
+    expect(html).toContain('data-testid="map-monster-card"');
+    expect(html).toContain('Plain Pebble');
+    expect(html).toContain(
+      `href="/maplestory/monsters/plain-pebble-${record.monsters.items[0]?.publicId}"`,
+    );
+  });
 });
