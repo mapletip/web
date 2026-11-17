@@ -1,6 +1,5 @@
-import { expect, test } from '@playwright/test';
-
 import { mapPublicId, monsterPublicId } from '../../src/mocks/release';
+import { expect, test } from '../fixtures';
 
 test('Map Detail renders its canonical address, redirects stale slugs, and returns 404 for invalid records', async ({
   page,

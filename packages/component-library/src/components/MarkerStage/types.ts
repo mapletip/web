@@ -48,6 +48,8 @@ export interface MarkerStageProps {
   readonly selectedIds?: readonly string[];
   /** Reports every id at an activated point. */
   readonly onActivate?: (markerIds: readonly string[]) => void;
+  /** Renders details for an activated point, or returns nothing for no panel. */
+  readonly renderDetails?: (markerIds: readonly string[]) => ReactNode;
   /** Whether markers can be activated. Defaults to true. */
   readonly interactive?: boolean;
   /** Host wording shown when the image is missing or fails to load. */

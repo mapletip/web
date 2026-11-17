@@ -282,6 +282,67 @@ describe('MarkerStage', () => {
     expect(onActivate).not.toHaveBeenCalled();
   });
 
+  it('does not render or request marker details in static mode', () => {
+    const renderDetails = vi.fn(() => <p>Marker details</p>);
+    mount({
+      interactive: false,
+      markers: [
+        {
+          id: 'static',
+          x: 100,
+          y: 50,
+          label: 'Static point',
+          content: <span>Static</span>,
+        },
+      ],
+      renderDetails,
+    });
+
+    expect(screen.queryByText('Marker details')).not.toBeInTheDocument();
+    expect(renderDetails).not.toHaveBeenCalled();
+  });
+
+  it('requests details only for the activated marker group', () => {
+    const renderDetails = vi.fn((markerIds: readonly string[]) => (
+      <p>Details for {markerIds.join(', ')}</p>
+    ));
+    mount({
+      markers: [
+        {
+          id: 'first',
+          x: 100,
+          y: 50,
+          label: 'First point',
+          content: <span>First</span>,
+        },
+        {
+          id: 'second',
+          x: 300,
+          y: 150,
+          label: 'Second point',
+          content: <span>Second</span>,
+        },
+      ],
+      renderDetails,
+    });
+
+    expect(renderDetails).not.toHaveBeenCalled();
+
+    fireEvent.click(screen.getByRole('button', { name: 'First point' }));
+    expect(renderDetails.mock.calls.map(([markerIds]) => markerIds)).toEqual([
+      ['first'],
+      ['first'],
+    ]);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Second point' }));
+    expect(renderDetails.mock.calls.map(([markerIds]) => markerIds)).toEqual([
+      ['first'],
+      ['first'],
+      ['second'],
+      ['second'],
+    ]);
+  });
+
   it('shows the host message without markers when the image is missing', () => {
     const { container } = mount({
       image: undefined,
