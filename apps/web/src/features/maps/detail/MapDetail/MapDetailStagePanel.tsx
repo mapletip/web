@@ -47,6 +47,7 @@ export function MapDetailStagePanel({
       <div className={classes['stageWithFind']}>
         <MapDetailStage
           stage={view.stage}
+          className={expanded ? classes['expandedStage'] : undefined}
           interactive={interactive}
           wheelZoom={wheelZoom}
           view={stageView}

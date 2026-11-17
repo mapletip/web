@@ -19,21 +19,6 @@
   max-height: 100%;
 }
 
-.minimapTrigger {
-  display: block;
-  width: 100%;
-  padding: 0;
-  border: 0;
-  border-radius: var(--mantine-radius-xs);
-  background: transparent;
-  cursor: zoom-in;
-}
-
-.minimapTrigger:focus-visible {
-  outline: 2px solid var(--mapletip-color-focus);
-  outline-offset: 3px;
-}
-
 .minimapUnavailable {
   display: grid;
   place-items: center;

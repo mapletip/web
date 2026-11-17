@@ -1,12 +1,14 @@
 export { MapDetail, type MapDetailProps } from './MapDetail';
 export {
   formatMapDetailFocus,
-  isOnlyMapDetailFocusKey,
+  activateMapDetailMarkers,
+  mapDetailEntitiesForMarkers,
   mapDetailFocusMarkerIds,
   mapDetailSearchSchema,
   parseMapDetailFocus,
   resolveMapDetailFocus,
-  MAP_DETAIL_FOCUS_KIND,
+  selectMapDetailEntity,
+  toggleMapDetailKind,
   type MapDetailFocus,
   type MapDetailFocusKind,
 } from './focus';
@@ -15,6 +17,8 @@ export {
   mapDetailMetadata,
   type MapDetailMetadataOptions,
 } from './metadata';
+export { loadMapDetail, MAP_DETAIL_UNAVAILABLE_MESSAGE } from './load';
+export type { MapDetailLoadResult, LoadMapDetailOptions } from './load';
 export {
   projectMapDetail,
   UNNAMED_MAP_LABEL,
@@ -24,7 +28,6 @@ export {
   type MapDetailConnectionView,
   type MapDetailMonsterView,
   type MapDetailMonstersView,
-  type MapDetailStageConnector,
   type MapDetailStageImage,
   type MapDetailStageMarker,
   type MapDetailStageMarkerKind,

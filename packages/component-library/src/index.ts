@@ -30,10 +30,15 @@ export { SpriteStage } from '@/components/SpriteStage';
 export type { SpriteStageProps } from '@/components/SpriteStage';
 export { MarkerStage } from '@/components/MarkerStage';
 export type {
+  MarkerStageConnector,
   MarkerStageImage,
   MarkerStageMarker,
   MarkerStageProps,
   MarkerStageView,
+} from '@/components/MarkerStage';
+export {
+  MARKER_STAGE_MAX_ZOOM,
+  MARKER_STAGE_MIN_ZOOM,
 } from '@/components/MarkerStage';
 export { FactSheet } from '@/components/FactSheet';
 export type {

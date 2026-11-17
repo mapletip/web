@@ -343,14 +343,11 @@ describe('MarkerStage', () => {
     fireEvent.click(screen.getByRole('button', { name: 'First point' }));
     expect(renderDetails.mock.calls.map(([markerIds]) => markerIds)).toEqual([
       ['first'],
-      ['first'],
     ]);
 
     fireEvent.click(screen.getByRole('button', { name: 'Second point' }));
     expect(renderDetails.mock.calls.map(([markerIds]) => markerIds)).toEqual([
       ['first'],
-      ['first'],
-      ['second'],
       ['second'],
     ]);
   });

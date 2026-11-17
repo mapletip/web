@@ -21,9 +21,10 @@ test('desktop Monster Detail shows an enlarged minimap on hover', async ({
     .getByRole('textbox', { name: 'Find a map' })
     .first()
     .fill('Practice Map 01');
-  const trigger = page.getByRole('button', {
-    name: 'Enlarge Practice Map 01 minimap',
-  });
+  const trigger = page
+    .locator('[data-map-minimap="true"]')
+    .filter({ has: page.getByRole('img', { name: 'Practice Map 01 minimap' }) })
+    .first();
   await expect(trigger).toBeVisible();
   await trigger.hover();
 

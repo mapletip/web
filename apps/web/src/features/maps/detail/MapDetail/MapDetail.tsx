@@ -1,4 +1,5 @@
 import {
+  Anchor,
   ActionIcon,
   Button,
   Group,
@@ -12,6 +13,8 @@ import {
 import { useMediaQuery } from '@mantine/hooks';
 import {
   FactSheet,
+  MARKER_STAGE_MAX_ZOOM,
+  MARKER_STAGE_MIN_ZOOM,
   RecordSections,
   type RecordSection,
   type MarkerStageView,
@@ -24,16 +27,19 @@ import { z } from 'zod';
 import { DetailPageShell } from '@/components/DetailPageShell';
 import { AnchorLink } from '@/components/RouterLinks';
 import { DetailBreadcrumbs } from '@/features/detail';
-import { MAP_DETAIL_ROUTE } from '@/features/maps/shared';
 import { MONSTER_DETAIL_ROUTE } from '@/features/monsters/shared';
 import { useRouteOverlay } from '@/features/route-overlay/useRouteOverlay';
 
 import {
+  activateMapDetailMarkers,
   activateMapDetailEntity,
   formatMapDetailFocus,
+  mapDetailEntitiesForMarkers,
   mapDetailFocusMarkerIds,
   parseMapDetailFocus,
   resolveMapDetailFocus,
+  selectMapDetailEntity,
+  toggleMapDetailKind,
   type MapDetailFocus,
 } from '../focus';
 import { mapDetailOverlayOptions } from '../mapDetailOverlay';
@@ -50,7 +56,11 @@ import { EntityIcon } from './markers';
 
 const mapDetailStageViewSchema = z
   .object({
-    zoom: z.number().finite().min(0.5).max(8),
+    zoom: z
+      .number()
+      .finite()
+      .min(MARKER_STAGE_MIN_ZOOM)
+      .max(MARKER_STAGE_MAX_ZOOM),
     centerX: z.number().finite(),
     centerY: z.number().finite(),
   })
@@ -76,6 +86,9 @@ function EntityName({
   readonly entity: MapDetailEntityView;
 }): ReactElement | string {
   if (entity.link === undefined) return entity.name;
+  if ('href' in entity.link) {
+    return <Anchor href={entity.link.href}>{entity.name}</Anchor>;
+  }
   if (entity.link.to === MONSTER_DETAIL_ROUTE) {
     return (
       <AnchorLink to={MONSTER_DETAIL_ROUTE} params={entity.link.params}>
@@ -83,11 +96,7 @@ function EntityName({
       </AnchorLink>
     );
   }
-  return (
-    <AnchorLink to={MAP_DETAIL_ROUTE} params={entity.link.params}>
-      {entity.name}
-    </AnchorLink>
-  );
+  return entity.name;
 }
 
 function MarkerDetails({
@@ -99,23 +108,7 @@ function MarkerDetails({
   readonly view: MapDetailView;
   readonly onChoose: (focusKey: string) => void;
 }): ReactElement | null {
-  const entitiesByFocusKey = new Map(
-    view.entities.map((entity) => [entity.focusKey, entity]),
-  );
-  const markersById = new Map(
-    view.stage.markers.map((marker) => [marker.id, marker]),
-  );
-  const entityKeys = new Set<string>();
-  const entities: MapDetailEntityView[] = [];
-  for (const markerId of markerIds) {
-    const marker = markersById.get(markerId);
-    if (marker === undefined) continue;
-    const entity = entitiesByFocusKey.get(marker.focusKey);
-    if (entity !== undefined && !entityKeys.has(entity.focusKey)) {
-      entityKeys.add(entity.focusKey);
-      entities.push(entity);
-    }
-  }
+  const entities = mapDetailEntitiesForMarkers({ markerIds, view });
   if (entities.length === 0) return null;
   const shared = entities.length > 1;
 
@@ -162,7 +155,10 @@ export function MapDetail({
     `(min-width: ${theme.breakpoints.md})`,
     false,
   );
-  const exploreFullScreen = !useMediaQuery('(min-width: 48rem)', false);
+  const exploreFullScreen = !useMediaQuery(
+    `(min-width: ${theme.breakpoints.sm})`,
+    false,
+  );
   const hydrated = useHydrated();
   const router = useRouter();
   const locationState = useLocation({ select: (location) => location.state });
@@ -223,14 +219,7 @@ export function MapDetail({
     const resolvedFocus = resolveMapDetailFocus({ focus: nextFocus, view });
     return onFocusChange?.(formatMapDetailFocus({ focus: resolvedFocus }));
   };
-  const closeExplore = () => {
-    if (exploreOverlayState === undefined) return;
-    if (canonicalFocus === exploreOverlayState.openedFocus) {
-      exploreOverlay.dismiss('explore');
-    } else {
-      void exploreOverlay.release('explore');
-    }
-  };
+  const closeExplore = () => void exploreOverlay.release('explore');
   const nextEntityFocus = (focusKey: string, modified = false) =>
     activateMapDetailEntity({
       focus,
@@ -245,24 +234,13 @@ export function MapDetail({
     return nextFocus;
   };
   const locateMonster = async (focusKey: string) => {
-    const nextFocus = nextEntityFocus(focusKey);
+    const nextFocus = selectMapDetailEntity({ focusKey, view });
     await writeFocus(nextFocus);
-    exploreOverlay.open({
-      type: 'explore',
-      openedFocus: formatMapDetailFocus({ focus: nextFocus }),
-    });
+    exploreOverlay.open({ type: 'explore' });
   };
-  const markerFocusKeys = new Map(
-    view.stage.markers.map((marker) => [marker.id, marker.focusKey]),
-  );
   const activateMarkers = (markerIds: readonly string[]) => {
-    const keys = new Set(
-      markerIds.flatMap((id) => {
-        const key = markerFocusKeys.get(id);
-        return key === undefined ? [] : [key];
-      }),
-    );
-    if (keys.size === 1) activateEntity([...keys][0]!);
+    const activation = activateMapDetailMarkers({ focus, markerIds, view });
+    if (activation !== undefined) void writeFocus(activation.focus);
   };
   const sections: RecordSection[] = [];
   if (
@@ -286,7 +264,6 @@ export function MapDetail({
     content: (
       <MapDetailMonsters
         monsters={view.monsters}
-        focus={focus}
         onLocate={(focusKey) => {
           void locateMonster(focusKey);
         }}
@@ -344,10 +321,10 @@ export function MapDetail({
                   className={classes['exploreButton']}
                   size={32}
                   variant="white"
+                  disabled={!hydrated}
                   onClick={() =>
                     exploreOverlay.open({
                       type: 'explore',
-                      openedFocus: canonicalFocus,
                     })
                   }
                 >
@@ -361,11 +338,7 @@ export function MapDetail({
               rows={view.onThisMap}
               focus={focus}
               onToggle={(kind) =>
-                void writeFocus(
-                  focus !== undefined && 'kind' in focus && focus.kind === kind
-                    ? undefined
-                    : { kind },
-                )
+                void writeFocus(toggleMapDetailKind({ focus, kind, view }))
               }
             />
             {view.activity === undefined ? null : (
@@ -391,12 +364,9 @@ export function MapDetail({
                       fact.destination === undefined ? (
                         fact.value
                       ) : (
-                        <AnchorLink
-                          to={MAP_DETAIL_ROUTE}
-                          params={fact.destination}
-                        >
+                        <Anchor href={fact.destination.href}>
                           {fact.value}
-                        </AnchorLink>
+                        </Anchor>
                       ),
                   }))}
                 />

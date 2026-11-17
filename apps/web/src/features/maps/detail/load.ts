@@ -4,7 +4,7 @@
  * Missing records and invalid public ids are not-found outcomes. Other SDK and
  * origin failures are sanitized before they cross the route boundary.
  */
-import { MissingRecordError, SchemaValidationError } from '@mapletip/data';
+import { MissingRecordError } from '@mapletip/data';
 import { getMapPage } from '@mapletip/data/maps';
 
 import { MAPLEKIT_RELEASE, type BuildId } from '@/config/maplekit';
@@ -44,12 +44,7 @@ export async function loadMapDetail({
       view: projectMapDetail({ record, buildId }),
     };
   } catch (error) {
-    if (
-      error instanceof MissingRecordError ||
-      error instanceof SchemaValidationError
-    ) {
-      return { status: 'not-found' };
-    }
+    if (error instanceof MissingRecordError) return { status: 'not-found' };
     if (isAbortError(error)) throw error;
     if (import.meta.env.SSR) {
       console.error('Map Detail data load failed.', error);

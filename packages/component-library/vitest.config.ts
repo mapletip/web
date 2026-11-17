@@ -22,6 +22,18 @@ if (
 }
 
 type EmulateMediaOptions = Parameters<Page['emulateMedia']>[0];
+interface DragPointerOptions {
+  readonly startX: number;
+  readonly startY: number;
+  readonly endX: number;
+  readonly endY: number;
+}
+interface PinchAtOptions {
+  readonly x: number;
+  readonly y: number;
+  readonly startDistance: number;
+  readonly endDistance: number;
+}
 
 // Custom browser commands run on the Node/Playwright side of the browser test
 // server, which the in-page test context cannot reach. Declare the call-site
@@ -30,19 +42,9 @@ declare module 'vitest/browser' {
   interface BrowserCommands {
     emulateMedia(options: EmulateMediaOptions): Promise<void>;
     movePointer(x: number, y: number): Promise<void>;
-    dragPointer(
-      startX: number,
-      startY: number,
-      endX: number,
-      endY: number,
-    ): Promise<void>;
+    dragPointer(options: DragPointerOptions): Promise<void>;
     wheelAt(x: number, y: number, deltaY: number): Promise<void>;
-    pinchAt(
-      x: number,
-      y: number,
-      startDistance: number,
-      endDistance: number,
-    ): Promise<void>;
+    pinchAt(options: PinchAtOptions): Promise<void>;
   }
 }
 
@@ -63,9 +65,10 @@ const movePointer: BrowserCommand<[x: number, y: number]> = async (
   await page.mouse.move(x, y);
 };
 
-const dragPointer: BrowserCommand<
-  [startX: number, startY: number, endX: number, endY: number]
-> = async (context, startX, startY, endX, endY) => {
+const dragPointer: BrowserCommand<[options: DragPointerOptions]> = async (
+  context,
+  { startX, startY, endX, endY },
+) => {
   const { page } = context as unknown as { page: Page };
   await page.mouse.move(startX, startY);
   await page.mouse.down();
@@ -84,9 +87,10 @@ const wheelAt: BrowserCommand<[x: number, y: number, deltaY: number]> = async (
   await page.mouse.wheel(0, deltaY);
 };
 
-const pinchAt: BrowserCommand<
-  [x: number, y: number, startDistance: number, endDistance: number]
-> = async (context, x, y, startDistance, endDistance) => {
+const pinchAt: BrowserCommand<[options: PinchAtOptions]> = async (
+  context,
+  { x, y, startDistance, endDistance },
+) => {
   const { page } = context as unknown as { page: Page };
   const session = await page.context().newCDPSession(page);
   const touchPoints = (distance: number) => [

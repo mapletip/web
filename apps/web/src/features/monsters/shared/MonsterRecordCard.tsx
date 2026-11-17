@@ -59,10 +59,7 @@ export function MonsterRecordCard({
         ? {}
         : {
             destination: { href: destination.href },
-            renderLink: createRecordCardLinkRenderer({
-              to: destination.to,
-              params: destination.params,
-            }),
+            renderLink: createRecordCardLinkRenderer(),
           })}
     />
   );

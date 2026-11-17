@@ -14,7 +14,7 @@ import { routeTree } from '@/routeTree.gen';
 
 import { MapDetail } from '../MapDetail';
 import {
-  compareMapDetailMonsters,
+  comparatorForMapDetailMonsters,
   projectMapDetail,
   UNNAMED_MAP_LABEL,
   type MapDetailEntityView,
@@ -115,13 +115,19 @@ function renderControlledMapView({
   );
 }
 
-function renderDetail(
-  mapId: string,
+function renderDetail({
+  mapId,
   withoutInformation = false,
-  connections?: ReturnType<typeof mapPageRecordFixture>['connections'],
-  monsters?: ReturnType<typeof mapPageRecordFixture>['monsters'],
-  npcs?: ReturnType<typeof mapPageRecordFixture>['npcs'],
-) {
+  connections,
+  monsters,
+  npcs,
+}: {
+  readonly mapId: string;
+  readonly withoutInformation?: boolean;
+  readonly connections?: ReturnType<typeof mapPageRecordFixture>['connections'];
+  readonly monsters?: ReturnType<typeof mapPageRecordFixture>['monsters'];
+  readonly npcs?: ReturnType<typeof mapPageRecordFixture>['npcs'];
+}) {
   const record = mapPageRecordFixture({ mapId });
   const projectedRecord = withoutInformation
     ? {
@@ -291,7 +297,7 @@ describe('MapDetail information', () => {
   });
 
   it('shows the map image and markers', () => {
-    const { container } = renderDetail('practice-grove');
+    const { container } = renderDetail({ mapId: 'practice-grove' });
 
     expect(
       screen.getByRole('group', { name: 'Practice Grove map' }),
@@ -691,7 +697,7 @@ describe('MapDetail information', () => {
   });
 
   it('shows the no-image message in the stage box', () => {
-    renderDetail('quiet-gallery');
+    renderDetail({ mapId: 'quiet-gallery' });
 
     expect(
       screen.getByRole('group', {
@@ -705,7 +711,7 @@ describe('MapDetail information', () => {
   });
 
   it('shows an image and the locations notice when positions are unavailable', () => {
-    const { container } = renderDetail('stillwater-stage');
+    const { container } = renderDetail({ mapId: 'stillwater-stage' });
 
     expect(
       screen.getByRole('img', { name: 'Stillwater Stage map' }),
@@ -717,7 +723,7 @@ describe('MapDetail information', () => {
   });
 
   it('omits activity, description, and an empty Map information block', () => {
-    renderDetail('practice-grove', true);
+    renderDetail({ mapId: 'practice-grove', withoutInformation: true });
 
     expect(
       screen.getByRole('heading', { level: 1, name: 'Practice Grove' }),
@@ -732,7 +738,7 @@ describe('MapDetail information', () => {
   });
 
   it('shows activity, description, and known map information', () => {
-    renderDetail('lantern-square');
+    renderDetail({ mapId: 'lantern-square' });
 
     expect(screen.getByText('Part of Market')).toBeVisible();
     expect(
@@ -755,7 +761,10 @@ describe('MapDetail information', () => {
   });
 
   it('omits known empty Connections while retaining the Monsters section', () => {
-    renderDetail('practice-grove', false, { state: 'absent', items: [] });
+    renderDetail({
+      mapId: 'practice-grove',
+      connections: { state: 'absent', items: [] },
+    });
 
     expect(
       screen.getByRole('navigation', { name: 'Record sections' }),
@@ -767,7 +776,10 @@ describe('MapDetail information', () => {
   });
 
   it('omits Connections for a known zero count while keeping Monsters', () => {
-    renderDetail('practice-grove', false, { state: 'known', items: [] });
+    renderDetail({
+      mapId: 'practice-grove',
+      connections: { state: 'known', items: [] },
+    });
 
     expect(
       screen.getByRole('navigation', { name: 'Record sections' }),
@@ -779,7 +791,10 @@ describe('MapDetail information', () => {
   });
 
   it('shows an unavailable message and unknown count for unresolved connections', () => {
-    renderDetail('practice-grove', false, { state: 'unknown', items: [] });
+    renderDetail({
+      mapId: 'practice-grove',
+      connections: { state: 'unknown', items: [] },
+    });
 
     expect(
       within(
@@ -799,18 +814,21 @@ describe('MapDetail information', () => {
     const connected = record.connections.items[0];
     if (connected === undefined)
       throw new Error('Expected fixture connection.');
-    renderDetail('practice-grove', false, {
-      state: 'known',
-      items: [
-        {
-          ...connected,
-          name: { state: 'unknown' },
-          minimap: {
-            state: 'absent',
-            coverageKey: 'fixture:connection-minimap',
+    renderDetail({
+      mapId: 'practice-grove',
+      connections: {
+        state: 'known',
+        items: [
+          {
+            ...connected,
+            name: { state: 'unknown' },
+            minimap: {
+              state: 'absent',
+              coverageKey: 'fixture:connection-minimap',
+            },
           },
-        },
-      ],
+        ],
+      },
     });
 
     const card = screen.getByTestId('map-connection-card');
@@ -830,7 +848,7 @@ describe('MapDetail information', () => {
     const user = userEvent.setup();
     const record = mapPageRecordFixture({ mapId: 'lantern-square' });
     expect(record.connections.items).toHaveLength(7);
-    renderDetail('lantern-square');
+    renderDetail({ mapId: 'lantern-square' });
 
     const search = screen.getByRole('textbox', {
       name: 'Search connected maps',
@@ -858,9 +876,12 @@ describe('MapDetail information', () => {
     const record = mapPageRecordFixture({ mapId: 'lantern-square' });
     const sixConnections = record.connections.items.slice(0, 6);
     expect(sixConnections).toHaveLength(6);
-    renderDetail('lantern-square', false, {
-      ...record.connections,
-      items: sixConnections,
+    renderDetail({
+      mapId: 'lantern-square',
+      connections: {
+        ...record.connections,
+        items: sixConnections,
+      },
     });
 
     expect(
@@ -879,7 +900,7 @@ describe('MapDetail information', () => {
     if (plainPebble === undefined) {
       throw new Error('Expected Plain Pebble in the fixture map.');
     }
-    renderDetail('practice-grove');
+    renderDetail({ mapId: 'practice-grove' });
 
     expect(screen.getByText('4 monster types, 5 total spawns')).toBeVisible();
     const cards = screen.getAllByTestId('map-monster-card');
@@ -921,7 +942,7 @@ describe('MapDetail information', () => {
     });
     const monsters = view.monsters.monsters;
     expect(monsters).toHaveLength(7);
-    renderDetail('synthetic-monster-yard');
+    renderDetail({ mapId: 'synthetic-monster-yard' });
     const sort = screen.getByRole('combobox', { name: 'Sort monsters' });
     const readCardNames = () =>
       screen
@@ -941,7 +962,7 @@ describe('MapDetail information', () => {
 
     expect(
       [...monsters]
-        .sort((left, right) => compareMapDetailMonsters(left, right, 'spawns'))
+        .sort(comparatorForMapDetailMonsters({ sort: 'spawns' }))
         .map(({ name }) => name),
     ).toEqual([
       'Zero Yield Drone',
@@ -954,7 +975,7 @@ describe('MapDetail information', () => {
     ]);
     expect(
       [...monsters]
-        .sort((left, right) => compareMapDetailMonsters(left, right, 'name'))
+        .sort(comparatorForMapDetailMonsters({ sort: 'name' }))
         .map(({ name }) => name),
     ).toEqual([
       'Big Number Brute',
@@ -971,9 +992,12 @@ describe('MapDetail information', () => {
     const record = mapPageRecordFixture({ mapId: 'synthetic-monster-yard' });
     const sixMonsters = record.monsters.items.slice(0, 6);
     expect(sixMonsters).toHaveLength(6);
-    renderDetail('synthetic-monster-yard', false, undefined, {
-      ...record.monsters,
-      items: sixMonsters,
+    renderDetail({
+      mapId: 'synthetic-monster-yard',
+      monsters: {
+        ...record.monsters,
+        items: sixMonsters,
+      },
     });
 
     expect(
@@ -1017,9 +1041,9 @@ describe('MapDetail information', () => {
   });
 
   it('shows the known-empty monster message and zero count', () => {
-    renderDetail('practice-grove', false, undefined, {
-      state: 'known',
-      items: [],
+    renderDetail({
+      mapId: 'practice-grove',
+      monsters: { state: 'known', items: [] },
     });
 
     expect(screen.getByRole('link', { name: 'Monsters (0)' })).toHaveAttribute(
@@ -1033,9 +1057,9 @@ describe('MapDetail information', () => {
   });
 
   it('shows unavailable and partial Monster collection states', () => {
-    renderDetail('practice-grove', false, undefined, {
-      state: 'unknown',
-      items: [],
+    renderDetail({
+      mapId: 'practice-grove',
+      monsters: { state: 'unknown', items: [] },
     });
 
     expect(screen.getByRole('link', { name: 'Monsters (?)' })).toHaveAttribute(
@@ -1048,9 +1072,9 @@ describe('MapDetail information', () => {
   });
 
   it('shows a note when Monster information is partial', () => {
-    renderDetail('practice-grove', false, undefined, {
-      state: 'partial',
-      items: [],
+    renderDetail({
+      mapId: 'practice-grove',
+      monsters: { state: 'partial', items: [] },
     });
 
     expect(screen.getByRole('heading', { name: 'Monsters (0)' })).toBeVisible();
@@ -1060,9 +1084,9 @@ describe('MapDetail information', () => {
   });
 
   it('shows each NPC collection notice and its section count', () => {
-    renderDetail('practice-grove', false, undefined, undefined, {
-      state: 'unknown',
-      items: [],
+    renderDetail({
+      mapId: 'practice-grove',
+      npcs: { state: 'unknown', items: [] },
     });
 
     expect(screen.getByRole('link', { name: 'NPCs (?)' })).toHaveAttribute(
@@ -1074,9 +1098,9 @@ describe('MapDetail information', () => {
   });
 
   it('shows the partial NPC information notice', () => {
-    renderDetail('practice-grove', false, undefined, undefined, {
-      state: 'partial',
-      items: [],
+    renderDetail({
+      mapId: 'practice-grove',
+      npcs: { state: 'partial', items: [] },
     });
 
     expect(screen.getByRole('heading', { name: 'NPCs (0)' })).toBeVisible();
@@ -1086,9 +1110,9 @@ describe('MapDetail information', () => {
   });
 
   it('shows the known-empty NPC notice', () => {
-    renderDetail('practice-grove', false, undefined, undefined, {
-      state: 'known',
-      items: [],
+    renderDetail({
+      mapId: 'practice-grove',
+      npcs: { state: 'known', items: [] },
     });
 
     expect(screen.getByRole('heading', { name: 'NPCs (0)' })).toBeVisible();
@@ -1101,9 +1125,9 @@ describe('MapDetail information', () => {
       ({ name }) => name.state === 'known' && name.value === 'Bellkeeper',
     );
     if (bellkeeper === undefined) throw new Error('Expected Bellkeeper.');
-    renderDetail('lantern-square', false, undefined, undefined, {
-      state: 'known',
-      items: [bellkeeper],
+    renderDetail({
+      mapId: 'lantern-square',
+      npcs: { state: 'known', items: [bellkeeper] },
     });
 
     const card = screen.getByTestId('map-npc-card');

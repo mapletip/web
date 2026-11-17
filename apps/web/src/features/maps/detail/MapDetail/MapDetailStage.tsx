@@ -1,5 +1,6 @@
 import { Stack, Text } from '@mantine/core';
 import { MarkerStage, type MarkerStageView } from '@mapletip/component-library';
+import { useMemo } from 'react';
 import type { ReactElement, ReactNode } from 'react';
 
 import type { MapDetailStageView } from '../project';
@@ -11,40 +12,50 @@ export const MAP_IMAGE_UNAVAILABLE_MESSAGE = "Map image isn't available.";
 
 export function MapDetailStage({
   stage,
-  interactive = false,
-  wheelZoom = false,
+  className,
+  interactive,
+  wheelZoom,
   view,
   onViewChange,
-  selectedIds = [],
+  selectedIds,
   onActivate,
   renderDetails,
 }: {
   readonly stage: MapDetailStageView;
-  readonly interactive?: boolean;
-  readonly wheelZoom?: boolean;
+  readonly className?: string | undefined;
+  readonly interactive: boolean;
+  readonly wheelZoom: boolean;
   readonly view?: MarkerStageView | undefined;
-  readonly onViewChange?:
-    ((view: MarkerStageView | undefined) => void) | undefined;
-  readonly selectedIds?: readonly string[];
-  readonly onActivate?: (markerIds: readonly string[]) => void;
-  readonly renderDetails?: (markerIds: readonly string[]) => ReactNode;
+  readonly onViewChange: (view: MarkerStageView | undefined) => void;
+  readonly selectedIds: readonly string[];
+  readonly onActivate: (markerIds: readonly string[]) => void;
+  readonly renderDetails: (markerIds: readonly string[]) => ReactNode;
 }): ReactElement {
+  const markers = useMemo(
+    () =>
+      stage.markers.map((marker) => ({
+        ...marker,
+        content: <MarkerContent marker={marker} />,
+      })),
+    [stage.markers],
+  );
+
   return (
     <Stack className={classes['mapStage']} gap="xs">
       <MarkerStage
+        className={className}
         image={stage.image}
-        markers={stage.markers.map((marker) => ({
-          ...marker,
-          content: <MarkerContent marker={marker} />,
-        }))}
+        markers={markers}
         connectors={stage.connectors}
         selectedIds={selectedIds}
-        {...(onActivate === undefined ? {} : { onActivate })}
-        {...(renderDetails === undefined ? {} : { renderDetails })}
+        onActivate={onActivate}
+        renderDetails={renderDetails}
         {...(view === undefined ? {} : { view })}
-        {...(onViewChange === undefined ? {} : { onViewChange })}
+        onViewChange={onViewChange}
         interactive={interactive}
         wheelZoom={wheelZoom}
+        controlsLabel="Map controls"
+        fitLabel="Fit map"
         unavailableMessage={MAP_IMAGE_UNAVAILABLE_MESSAGE}
       />
       {stage.positionsUnavailable ? (

@@ -4,13 +4,7 @@ import { mapPublicId } from '../../src/mocks/release';
 import { expect, test } from '../fixtures';
 
 async function captureReady(page: Page): Promise<void> {
-  await page.waitForFunction(() => {
-    const main = document.querySelector('main');
-    return (
-      main !== null &&
-      Object.keys(main).some((key) => key.startsWith('__reactProps'))
-    );
-  });
+  await expect(page.getByRole('button', { name: 'Explore map' })).toBeEnabled();
   await page.evaluate(async () => {
     await document.fonts.ready;
   });

@@ -12,9 +12,13 @@ import {
   requireBuildId,
   resolveBuildIdParam,
 } from '@/features/detail';
-import { MapDetail, mapDetailMetadata } from '@/features/maps/detail';
-import { mapDetailSearchSchema } from '@/features/maps/detail/focus';
-import { loadMapDetail } from '@/features/maps/detail/load';
+import {
+  loadMapDetail,
+  MapDetail,
+  mapDetailMetadata,
+  mapDetailSearchSchema,
+} from '@/features/maps/detail';
+import { MAP_DETAIL_ROUTE } from '@/features/maps/shared';
 
 export const Route = createFileRoute('/maplestory/{-$buildId}/maps/$slugId')({
   validateSearch: mapDetailSearchSchema,
@@ -44,11 +48,12 @@ export const Route = createFileRoute('/maplestory/{-$buildId}/maps/$slugId')({
     if (address.slug !== result.view.slug) {
       // eslint-disable-next-line @typescript-eslint/only-throw-error
       throw redirect({
-        to: '/maplestory/{-$buildId}/maps/$slugId',
+        to: MAP_DETAIL_ROUTE,
         params: {
           buildId: canonicalBuildParam(buildId),
           slugId: formatRecordAddress(result.view.slug, result.view.publicId),
         },
+        search: true,
         statusCode: 301,
       });
     }
@@ -66,7 +71,7 @@ export const Route = createFileRoute('/maplestory/{-$buildId}/maps/$slugId')({
       };
     }
 
-    const { focus } = mapDetailSearchSchema.parse(match.search);
+    const { focus } = match.search;
     const head = mapDetailMetadata({
       view: loaderData,
       buildId: loaderData.buildId,

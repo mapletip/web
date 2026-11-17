@@ -61,6 +61,13 @@
   transform-origin: center bottom;
 }
 
+.markerContent {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  transform-origin: bottom center;
+}
+
 .marker[data-selected='true'],
 .markerStatic[data-selected='true'] {
   z-index: 2;

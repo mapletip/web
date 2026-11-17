@@ -19,6 +19,7 @@ function readScale(context: ReactZoomPanPinchContextState): number {
 
 export function TransformControls({
   fitLabel,
+  controlsLabel,
   maxScale,
   minScale,
   motionReduced,
@@ -27,6 +28,7 @@ export function TransformControls({
   zoomOutLabel,
 }: {
   readonly fitLabel: string;
+  readonly controlsLabel: string;
   readonly maxScale: number;
   readonly minScale: number;
   readonly motionReduced: boolean;
@@ -44,7 +46,7 @@ export function TransformControls({
       className={classes['controls']}
       gap={0}
       role="group"
-      aria-label="Map controls"
+      aria-label={controlsLabel}
     >
       <Tooltip label={zoomInLabel} withArrow>
         <ActionIcon

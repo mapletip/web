@@ -1,6 +1,6 @@
-import { ActionIcon, Select } from '@mantine/core';
+import { ActionIcon, Combobox, TextInput, useCombobox } from '@mantine/core';
 import { MagnifyingGlass, X } from '@phosphor-icons/react';
-import { useRef, useState, type ReactElement } from 'react';
+import { useState, type ReactElement } from 'react';
 
 import type { MapDetailEntityView } from '../project';
 
@@ -18,11 +18,17 @@ export function MapDetailFind({
   readonly onChoose: (focusKey: string) => void;
 }): ReactElement {
   const [mobileFindOpen, setMobileFindOpen] = useState(false);
-  const findInputRef = useRef<HTMLInputElement>(null);
-  const data = entities.map((entity) => ({
-    value: entity.focusKey,
-    label: `${entity.name} — ${entity.kindLabel}`,
-  }));
+  const combobox = useCombobox({
+    onDropdownClose: () => combobox.resetSelectedOption(),
+  });
+  const normalizedFindText = findText.trim().toLocaleLowerCase('en');
+  const matches = entities
+    .filter(({ name, kindLabel }) =>
+      `${name} ${kindLabel}`
+        .toLocaleLowerCase('en')
+        .includes(normalizedFindText),
+    )
+    .slice(0, 10);
 
   return (
     <div
@@ -42,43 +48,62 @@ export function MapDetailFind({
           <MagnifyingGlass size={18} aria-hidden="true" />
         )}
       </ActionIcon>
-      <Select
-        className={classes['findField']}
-        ref={findInputRef}
-        aria-label="Find on this map"
-        autoComplete="off"
-        data={data}
-        searchable
-        limit={10}
-        nothingFoundMessage="Nothing was found."
-        value={null}
-        searchValue={findText}
-        onSearchChange={(nextFindText) => {
-          if (
-            nextFindText === '' &&
-            document.activeElement !== findInputRef.current
-          ) {
-            return;
-          }
-          onFindTextChange(nextFindText);
-        }}
-        onChange={(focusKey) => {
-          if (focusKey !== null) onChoose(focusKey);
-        }}
-        maxDropdownHeight={360}
-        openOnFocus={findText.trim().length > 0}
-        placeholder="Monster, NPC, or map"
-        leftSection={<MagnifyingGlass size={18} aria-hidden="true" />}
-        leftSectionPointerEvents="none"
-        comboboxProps={{
-          withinPortal: true,
-          position: 'bottom-start',
-          offset: 6,
-          shadow: 'sm',
-          zIndex: 1001,
-          middlewares: { flip: false, shift: true },
-        }}
-      />
+      <div className={classes['findField']}>
+        <Combobox
+          store={combobox}
+          onOptionSubmit={(focusKey) => {
+            onChoose(focusKey);
+            combobox.closeDropdown();
+          }}
+          withinPortal
+          position="bottom-start"
+          offset={6}
+          shadow="sm"
+          zIndex={1001}
+          middlewares={{ flip: false, shift: true }}
+        >
+          <Combobox.Target withExpandedAttribute>
+            <TextInput
+              role="combobox"
+              aria-label="Find on this map"
+              autoComplete="off"
+              value={findText}
+              onChange={(event) => {
+                const nextFindText = event.currentTarget.value;
+                onFindTextChange(nextFindText);
+                if (nextFindText.trim() === '') combobox.closeDropdown();
+                else combobox.openDropdown();
+                combobox.updateSelectedOptionIndex();
+              }}
+              onFocus={() => {
+                if (findText.trim() !== '') combobox.openDropdown();
+              }}
+              onClick={() => {
+                if (findText.trim() !== '') combobox.openDropdown();
+              }}
+              placeholder="Monster, NPC, or map"
+              leftSection={<MagnifyingGlass size={18} aria-hidden="true" />}
+              leftSectionPointerEvents="none"
+            />
+          </Combobox.Target>
+          <Combobox.Dropdown>
+            <Combobox.Options mah={360} style={{ overflowY: 'auto' }}>
+              {matches.length === 0 ? (
+                <Combobox.Empty>Nothing was found.</Combobox.Empty>
+              ) : (
+                matches.map((entity) => (
+                  <Combobox.Option
+                    key={entity.focusKey}
+                    value={entity.focusKey}
+                  >
+                    {entity.name} — {entity.kindLabel}
+                  </Combobox.Option>
+                ))
+              )}
+            </Combobox.Options>
+          </Combobox.Dropdown>
+        </Combobox>
+      </div>
     </div>
   );
 }
