@@ -24,6 +24,19 @@ async function readMapDetailHistoryState(
   });
 }
 
+async function waitForMapDetailHydration(
+  page: Page,
+  selector = 'main',
+): Promise<void> {
+  await page.waitForFunction((query) => {
+    const element = document.querySelector(query);
+    return (
+      element !== null &&
+      Object.keys(element).some((key) => key.startsWith('__reactProps'))
+    );
+  }, selector);
+}
+
 test('Map Detail renders its canonical address, redirects stale slugs, and returns 404 for invalid records', async ({
   page,
   request,
@@ -126,6 +139,8 @@ test('Map Detail shows all record sections at the project viewport and has no na
 }) => {
   const publicId = mapPublicId({ sourceId: 'cw-launch:lantern-square' });
   await page.goto(`/maplestory/maps/lantern-square-${publicId}`);
+  await page.waitForLoadState('networkidle');
+  await waitForMapDetailHydration(page);
 
   const navigation = page.getByRole('navigation', {
     name: 'Record sections',
@@ -153,6 +168,77 @@ test('Map Detail shows all record sections at the project viewport and has no na
     viewport: document.documentElement.clientWidth,
   }));
   expect(widths.document).toBeLessThanOrEqual(widths.viewport);
+});
+
+test('Connections search filters the town fixture by connected map name', async ({
+  page,
+}) => {
+  const publicId = mapPublicId({ sourceId: 'cw-launch:lantern-square' });
+  await page.goto(`/maplestory/maps/lantern-square-${publicId}`);
+  await waitForMapDetailHydration(page, 'input[placeholder="Map name"]');
+
+  const search = page.getByRole('textbox', { name: 'Search connected maps' });
+  await expect(search).toBeVisible();
+  await expect(page.getByText('Showing 7 of 7 connected maps')).toHaveCount(0);
+  await search.click();
+  await search.pressSequentially('PRACTICE');
+  await expect(search).toHaveValue('PRACTICE');
+  await expect(page.getByText('Showing 1 of 7 connected maps')).toBeVisible();
+  await expect(page.getByTestId('map-connection-card')).toHaveCount(1);
+  await expect(
+    page.getByTestId('map-connection-card').getByRole('heading', {
+      name: 'Practice Grove',
+    }),
+  ).toBeVisible();
+});
+
+test('Map Detail sorts monsters by level, spawns and name', async ({
+  page,
+}) => {
+  const publicId = mapPublicId({
+    sourceId: 'cw-launch:synthetic-monster-yard',
+  });
+  await page.goto(`/maplestory/maps/synthetic-monster-yard-${publicId}`);
+  await page.waitForLoadState('networkidle');
+  await waitForMapDetailHydration(page);
+
+  const cards = page.getByTestId('map-monster-card');
+  const names = () => cards.locator('h3').allTextContents();
+  const sort = page.getByRole('combobox', { name: 'Sort monsters' });
+  await expect(sort).toHaveValue('Level: Low to high');
+  expect(await names()).toEqual([
+    'Plain Pebble',
+    'Twin Sprout',
+    'Patchy Records',
+    'Zero Yield Drone',
+    'Hollow Husk',
+    'Big Number Brute',
+    'Crowned Warden',
+  ]);
+
+  await sort.click();
+  await page.getByRole('option', { name: 'Spawns: Most to fewest' }).click();
+  expect(await names()).toEqual([
+    'Zero Yield Drone',
+    'Hollow Husk',
+    'Twin Sprout',
+    'Crowned Warden',
+    'Patchy Records',
+    'Big Number Brute',
+    'Plain Pebble',
+  ]);
+
+  await sort.click();
+  await page.getByRole('option', { name: 'Name: A to Z' }).click();
+  expect(await names()).toEqual([
+    'Big Number Brute',
+    'Crowned Warden',
+    'Hollow Husk',
+    'Patchy Records',
+    'Plain Pebble',
+    'Twin Sprout',
+    'Zero Yield Drone',
+  ]);
 });
 
 test('Map Detail shows its stage and markers on desktop and mobile', async ({

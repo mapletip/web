@@ -1,5 +1,6 @@
-import { Button, Group, Stack, Text, Tooltip } from '@mantine/core';
+import { Button, Group, Select, Stack, Text, Tooltip } from '@mantine/core';
 import { MapPin } from '@phosphor-icons/react';
+import { useMemo, useState } from 'react';
 import type { ReactElement } from 'react';
 
 import { DetailCardList } from '@/features/detail';
@@ -9,9 +10,22 @@ import {
 } from '@/features/monsters/shared';
 
 import { isMapDetailEntityFocused, type MapDetailFocus } from '../focus';
-import type { MapDetailMonstersView } from '../project';
+import {
+  compareMapDetailMonsters,
+  type MapDetailMonsterSort,
+  type MapDetailMonstersView,
+} from '../project';
 
 import classes from './MapDetailMonsters.module.css';
+
+const monsterSortOptions = [
+  { label: 'Level: Low to high', value: 'level' },
+  { label: 'Spawns: Most to fewest', value: 'spawns' },
+  { label: 'Name: A to Z', value: 'name' },
+] as const satisfies readonly {
+  label: string;
+  value: MapDetailMonsterSort;
+}[];
 
 export function MapDetailMonsters({
   monsters,
@@ -22,12 +36,36 @@ export function MapDetailMonsters({
   readonly focus: MapDetailFocus | undefined;
   readonly onLocate: (focusKey: string) => void;
 }): ReactElement {
+  const [sort, setSort] = useState<MapDetailMonsterSort>('level');
+  const hasSort = monsters.monsters.length >= 7;
+  const sortedMonsters = useMemo(
+    () =>
+      [...monsters.monsters].sort((left, right) =>
+        compareMapDetailMonsters(left, right, sort),
+      ),
+    [monsters.monsters, sort],
+  );
   return (
     <Stack gap="md">
       {monsters.notice === undefined ? null : <Text>{monsters.notice}</Text>}
       {monsters.summary === undefined ? null : <Text>{monsters.summary}</Text>}
+      {hasSort ? (
+        <div className={classes['sort']}>
+          <Select
+            aria-label="Sort monsters"
+            value={sort}
+            data={monsterSortOptions.map(({ label, value }) => ({
+              label,
+              value,
+            }))}
+            onChange={(value) => {
+              if (value !== null) setSort(value);
+            }}
+          />
+        </div>
+      ) : null}
       <DetailCardList
-        items={monsters.monsters}
+        items={sortedMonsters}
         getKey={(monster) => monster.key}
         density={MONSTER_RECORD_CARD_DENSITY}
         itemTestId="map-monster-card"

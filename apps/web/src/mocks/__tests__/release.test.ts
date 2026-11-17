@@ -136,6 +136,10 @@ describe('fixture release', () => {
         .size,
     ).toBeGreaterThanOrEqual(7);
 
+    expect(
+      pageFor('synthetic-monster-yard').monsters.items.length,
+    ).toBeGreaterThanOrEqual(7);
+
     expect(pageFor('quiet-gallery').stage.state).toBe('absent');
     const positionless = pageFor('stillwater-stage');
     expect(positionless.stage.state).toBe('known');

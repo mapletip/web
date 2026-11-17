@@ -734,6 +734,71 @@ export const fixtureMaps: readonly FixtureMap[] = [
     ],
     returnMapId: townMapId,
   })),
+  {
+    id: 'synthetic-monster-yard',
+    name: 'Synthetic Monster Yard',
+    streetName: 'Lantern Hills',
+    geography: {
+      regionKey: 'fixture:lantern-hills',
+      regionLabel: 'Lantern Hills',
+    },
+    stage: { assetId: 'synthetic-monster-yard', width: 900, height: 600 },
+    monsters: [
+      { monsterId: 'plain-pebble', points: [{ x: 100, y: 390 }] },
+      {
+        monsterId: 'twin-sprout-a',
+        points: [
+          { x: 200, y: 390 },
+          { x: 240, y: 390 },
+          { x: 280, y: 390 },
+          { x: 320, y: 390 },
+        ],
+      },
+      {
+        monsterId: 'hollow-husk',
+        points: [
+          { x: 360, y: 390 },
+          { x: 400, y: 390 },
+          { x: 440, y: 390 },
+          { x: 480, y: 390 },
+          { x: 520, y: 390 },
+        ],
+      },
+      {
+        monsterId: 'patchy-records',
+        points: [
+          { x: 560, y: 390 },
+          { x: 600, y: 390 },
+        ],
+      },
+      {
+        monsterId: 'zero-yield-drone',
+        points: [
+          { x: 640, y: 390 },
+          { x: 660, y: 390 },
+          { x: 680, y: 390 },
+          { x: 700, y: 390 },
+          { x: 720, y: 390 },
+          { x: 740, y: 390 },
+        ],
+      },
+      {
+        monsterId: 'big-number-brute',
+        points: [{ x: 760, y: 390 }],
+      },
+      {
+        monsterId: 'crowned-warden',
+        points: [
+          { x: 800, y: 390 },
+          { x: 840, y: 390 },
+          { x: 880, y: 390 },
+        ],
+      },
+    ],
+    npcs: [],
+    connections: [{ mapId: townMapId, points: [{ x: 430, y: 270 }] }],
+    returnMapId: townMapId,
+  },
 ];
 
 export const world: { readonly builds: readonly FixtureBuild[] } = {

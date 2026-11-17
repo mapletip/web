@@ -14,6 +14,7 @@ import { routeTree } from '@/routeTree.gen';
 
 import { MapDetail } from '../MapDetail';
 import {
+  compareMapDetailMonsters,
   projectMapDetail,
   UNNAMED_MAP_LABEL,
   type MapDetailEntityView,
@@ -825,6 +826,47 @@ describe('MapDetail information', () => {
     );
   });
 
+  it('searches Connections from seven and reports matches and no matches', async () => {
+    const user = userEvent.setup();
+    renderDetail('lantern-square');
+
+    const search = screen.getByRole('textbox', {
+      name: 'Search connected maps',
+    });
+    expect(screen.queryByText('Showing 7 of 7 connected maps')).toBeNull();
+    await user.type(search, 'PRACTICE');
+    expect(screen.getByText('Showing 1 of 7 connected maps')).toBeVisible();
+    expect(screen.getAllByTestId('map-connection-card')).toHaveLength(1);
+    expect(
+      within(screen.getByTestId('map-connection-card')).getByRole('heading', {
+        name: 'Practice Grove',
+      }),
+    ).toBeVisible();
+
+    await user.clear(search);
+    await user.type(search, 'no matching map');
+    expect(screen.getByText('Showing 0 of 7 connected maps')).toBeVisible();
+    expect(screen.getByRole('status')).toHaveTextContent(
+      'No connected maps match.',
+    );
+    expect(screen.queryByTestId('map-connection-card')).not.toBeInTheDocument();
+  });
+
+  it('omits the Connections search below seven cards', () => {
+    const record = mapPageRecordFixture({ mapId: 'lantern-square' });
+    renderDetail('lantern-square', false, {
+      ...record.connections,
+      items: record.connections.items.slice(0, 6),
+    });
+
+    expect(
+      screen.queryByRole('textbox', { name: 'Search connected maps' }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/Showing .* connected maps/u),
+    ).not.toBeInTheDocument();
+  });
+
   it('shows a monster summary, card facts, boss badge, and Monster Detail link', () => {
     const record = mapPageRecordFixture({ mapId: 'practice-grove' });
     const plainPebble = record.monsters.items.find(
@@ -866,6 +908,70 @@ describe('MapDetail information', () => {
     );
     if (bossCard === undefined) throw new Error('Expected a boss card.');
     expect(within(bossCard).getByText('Boss')).toBeVisible();
+  });
+
+  it('projects all three monster sort orders from seven and shows the control', () => {
+    const view = projectMapDetail({
+      record: mapPageRecordFixture({ mapId: 'synthetic-monster-yard' }),
+      buildId: 'cw-launch',
+    });
+    const monsters = view.monsters.monsters;
+    renderDetail('synthetic-monster-yard');
+    const sort = screen.getByRole('combobox', { name: 'Sort monsters' });
+    const readCardNames = () =>
+      screen
+        .getAllByTestId('map-monster-card')
+        .map((card) => within(card).getByRole('heading').textContent);
+
+    expect(sort).toHaveValue('Level: Low to high');
+    expect(readCardNames()).toEqual([
+      'Plain Pebble',
+      'Twin Sprout',
+      'Patchy Records',
+      'Zero Yield Drone',
+      'Hollow Husk',
+      'Big Number Brute',
+      'Crowned Warden',
+    ]);
+
+    expect(
+      [...monsters]
+        .sort((left, right) => compareMapDetailMonsters(left, right, 'spawns'))
+        .map(({ name }) => name),
+    ).toEqual([
+      'Zero Yield Drone',
+      'Hollow Husk',
+      'Twin Sprout',
+      'Crowned Warden',
+      'Patchy Records',
+      'Big Number Brute',
+      'Plain Pebble',
+    ]);
+    expect(
+      [...monsters]
+        .sort((left, right) => compareMapDetailMonsters(left, right, 'name'))
+        .map(({ name }) => name),
+    ).toEqual([
+      'Big Number Brute',
+      'Crowned Warden',
+      'Hollow Husk',
+      'Patchy Records',
+      'Plain Pebble',
+      'Twin Sprout',
+      'Zero Yield Drone',
+    ]);
+  });
+
+  it('omits the monster sort below seven cards', () => {
+    const record = mapPageRecordFixture({ mapId: 'synthetic-monster-yard' });
+    renderDetail('synthetic-monster-yard', false, undefined, {
+      ...record.monsters,
+      items: record.monsters.items.slice(0, 6),
+    });
+
+    expect(
+      screen.queryByRole('combobox', { name: 'Sort monsters' }),
+    ).not.toBeInTheDocument();
   });
 
   it('keeps spawn counts as plain text when monsters have no stage positions', () => {
