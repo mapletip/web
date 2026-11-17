@@ -72,6 +72,57 @@ export interface FixtureDrop {
   readonly confidence?: 'maybe';
 }
 
+export interface FixtureMapPoint {
+  readonly x: number;
+  readonly y: number;
+}
+
+export interface FixtureMapMonster {
+  readonly monsterId: string;
+  readonly points: readonly FixtureMapPoint[];
+  readonly respawn?: 'ordinary' | 'none' | 'mixed';
+}
+
+export interface FixtureMapNpc {
+  readonly id: string;
+  readonly name: string;
+  readonly points: readonly FixtureMapPoint[];
+}
+
+export interface FixtureMapConnection {
+  readonly mapId: string;
+  readonly points: readonly FixtureMapPoint[];
+}
+
+export interface FixtureMapWarp {
+  readonly ends: readonly [FixtureMapPoint, FixtureMapPoint];
+}
+
+export interface FixtureMap {
+  readonly id: string;
+  readonly name?: string;
+  readonly streetName?: string;
+  readonly activity?: string;
+  readonly description?: string;
+  readonly geography?: {
+    readonly regionKey?: string;
+    readonly regionLabel?: string;
+    readonly areaKey?: string;
+    readonly areaLabel?: string;
+  };
+  readonly stage?: {
+    readonly assetId: string;
+    readonly width: number;
+    readonly height: number;
+  };
+  readonly positionsPublished?: boolean;
+  readonly monsters: readonly FixtureMapMonster[];
+  readonly npcs: readonly FixtureMapNpc[];
+  readonly connections: readonly FixtureMapConnection[];
+  readonly returnMapId: string;
+  readonly warps?: readonly FixtureMapWarp[];
+}
+
 export interface FixtureBuild {
   readonly familyId: string;
   readonly buildId: string;
@@ -79,6 +130,7 @@ export interface FixtureBuild {
   readonly monsters: readonly FixtureMonster[];
   readonly items: readonly FixtureItem[];
   readonly drops: Readonly<Record<string, readonly FixtureDrop[]>>;
+  readonly maps: readonly FixtureMap[];
 }
 
 const known = <T>(value: T): FixtureFact<T> => ({ state: 'known', value });
@@ -533,6 +585,144 @@ const historical = (itemId: string): FixtureDrop => ({
   confidence: 'maybe',
 });
 
+const fixtureMapTargets: readonly Omit<
+  FixtureMap,
+  'connections' | 'returnMapId'
+>[] = [
+  {
+    id: 'practice-grove',
+    name: 'Practice Grove',
+    streetName: 'Lantern Hills',
+    geography: {
+      regionKey: 'fixture:lantern-hills',
+      regionLabel: 'Lantern Hills',
+    },
+    stage: { assetId: 'practice-grove', width: 900, height: 600 },
+    monsters: [
+      {
+        monsterId: 'plain-pebble',
+        points: [{ x: 240, y: 390 }],
+      },
+      {
+        monsterId: 'twin-sprout-a',
+        points: [
+          { x: 240, y: 390 },
+          { x: 380, y: 350 },
+        ],
+      },
+      {
+        monsterId: 'hollow-husk',
+        points: [{ x: 570, y: 420 }],
+        respawn: 'mixed',
+      },
+    ],
+    npcs: [],
+    warps: [
+      {
+        ends: [
+          { x: 85, y: 500 },
+          { x: 800, y: 470 },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'quiet-gallery',
+    name: 'Quiet Gallery',
+    monsters: [],
+    npcs: [
+      {
+        id: 'gallery-guide',
+        name: 'Gallery Guide',
+        points: [{ x: 400, y: 300 }],
+      },
+    ],
+  },
+  {
+    id: 'stillwater-stage',
+    name: 'Stillwater Stage',
+    stage: { assetId: 'stillwater-stage', width: 900, height: 600 },
+    positionsPublished: false,
+    monsters: [{ monsterId: 'plain-pebble', points: [{ x: 330, y: 390 }] }],
+    npcs: [],
+  },
+  {
+    id: 'unnamed-stage',
+    stage: { assetId: 'unnamed-stage', width: 900, height: 600 },
+    monsters: [],
+    npcs: [],
+  },
+  {
+    id: 'brass-walk',
+    name: 'Brass Walk',
+    stage: { assetId: 'brass-walk', width: 900, height: 600 },
+    monsters: [],
+    npcs: [
+      { id: 'brass-guide', name: 'Brass Guide', points: [{ x: 470, y: 320 }] },
+    ],
+  },
+  {
+    id: 'paper-lane',
+    name: 'Paper Lane',
+    stage: { assetId: 'paper-lane', width: 900, height: 600 },
+    monsters: [],
+    npcs: [],
+  },
+  {
+    id: 'cloud-arch',
+    name: 'Cloud Arch',
+    stage: { assetId: 'cloud-arch', width: 900, height: 600 },
+    monsters: [],
+    npcs: [],
+  },
+];
+
+const townMapId = 'lantern-square';
+
+export const fixtureMaps: readonly FixtureMap[] = [
+  {
+    id: townMapId,
+    name: 'Lantern Square',
+    streetName: 'Lantern Hills',
+    activity: 'Market',
+    description: 'A gathering place beneath paper lanterns.',
+    geography: {
+      regionKey: 'fixture:lantern-hills',
+      regionLabel: 'Lantern Hills',
+    },
+    stage: { assetId: 'lantern-square', width: 1100, height: 700 },
+    monsters: [],
+    npcs: (
+      [
+        ['bellkeeper', 'Bellkeeper'],
+        ['map-seller', 'Map Seller'],
+        ['lantern-maker', 'Lantern Maker'],
+        ['tea-host', 'Tea Host'],
+        ['courier', 'Courier'],
+        ['storyteller', 'Storyteller'],
+        ['gardener', 'Town Gardener'],
+        ['clock-mender', 'Clock Mender'],
+      ] as const
+    ).map(([id, name], index) => ({
+      id: `town-${id}`,
+      name,
+      points: [{ x: 140 + index * 105, y: 420 }],
+    })),
+    connections: fixtureMapTargets.map((map, index) => ({
+      mapId: map.id,
+      points: [{ x: 90 + index * 140, y: 160 + (index % 3) * 90 }],
+    })),
+    returnMapId: 'practice-grove',
+  },
+  ...fixtureMapTargets.map((map, index): FixtureMap => ({
+    ...map,
+    connections: [
+      { mapId: townMapId, points: [{ x: 430, y: 270 + index * 20 }] },
+    ],
+    returnMapId: townMapId,
+  })),
+];
+
 export const world: { readonly builds: readonly FixtureBuild[] } = {
   builds: [
     {
@@ -541,6 +731,7 @@ export const world: { readonly builds: readonly FixtureBuild[] } = {
       historicalDrops: 'supported',
       monsters: cwMonsters,
       items: cwItems,
+      maps: fixtureMaps,
       drops: {
         'plain-pebble': [historical('pebble-token')],
         'crowned-warden': wardenItemIds.map(historical),
@@ -604,6 +795,7 @@ export const world: { readonly builds: readonly FixtureBuild[] } = {
           category: { kind: 'item-class', value: 'consume' },
         },
       ],
+      maps: fixtureMaps.map((map) => ({ ...map, monsters: [] })),
       drops: {
         'native-alpha': [
           { itemId: 'native-flake', assertionKind: 'native' },
