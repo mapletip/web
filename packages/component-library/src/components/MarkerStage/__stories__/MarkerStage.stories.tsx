@@ -77,9 +77,17 @@ function marker(label: string) {
   );
 }
 
-function frame({ width, props }: { width: number; props: MarkerStageProps }) {
+function frame({
+  width,
+  props,
+  testId,
+}: {
+  width: number;
+  props: MarkerStageProps;
+  testId: string;
+}) {
   return (
-    <div style={{ width, maxWidth: '100%' }}>
+    <div data-testid={testId} style={{ width, maxWidth: '100%' }}>
       <MarkerStage {...props} />
     </div>
   );
@@ -90,7 +98,10 @@ function SavedRestoredViewStory(): ReactElement {
   const [savedView, setSavedView] = useState<MarkerStageView | undefined>();
 
   return (
-    <div style={{ width: 680, maxWidth: '100%' }}>
+    <div
+      data-testid="marker-stage-saved-restored"
+      style={{ width: 680, maxWidth: '100%' }}
+    >
       <div
         style={{
           display: 'flex',
@@ -165,27 +176,32 @@ const wideImageArgs: MarkerStageProps = {
 
 export const WideImage: Story = {
   args: wideImageArgs,
-  render: (args) => frame({ width: 680, props: args }),
+  render: (args) =>
+    frame({ width: 680, props: args, testId: 'marker-stage-wide-image' }),
 };
 
 export const NoneSelected: Story = {
   args: wideImageArgs,
-  render: (args) => frame({ width: 680, props: args }),
+  render: (args) =>
+    frame({ width: 680, props: args, testId: 'marker-stage-none-selected' }),
 };
 
 export const OneSelected: Story = {
   args: { ...wideImageArgs, selectedIds: ['east'] },
-  render: (args) => frame({ width: 680, props: args }),
+  render: (args) =>
+    frame({ width: 680, props: args, testId: 'marker-stage-one-selected' }),
 };
 
 export const ManySelected: Story = {
   args: { ...wideImageArgs, selectedIds: ['west', 'north', 'south'] },
-  render: (args) => frame({ width: 680, props: args }),
+  render: (args) =>
+    frame({ width: 680, props: args, testId: 'marker-stage-many-selected' }),
 };
 
 export const Focused: Story = {
   args: { ...wideImageArgs, selectedIds: ['east'] },
-  render: (args) => frame({ width: 680, props: args }),
+  render: (args) =>
+    frame({ width: 680, props: args, testId: 'marker-stage-focused' }),
   play: async () => {
     await userEvent.tab();
     await userEvent.tab();
@@ -200,7 +216,8 @@ export const ConnectedPairs: Story = {
       { id: 'north-south', from: 'north', to: 'south' },
     ],
   },
-  render: (args) => frame({ width: 680, props: args }),
+  render: (args) =>
+    frame({ width: 680, props: args, testId: 'marker-stage-connected-pairs' }),
 };
 
 export const ZoomedWithLinesAndSelection: Story = {
@@ -212,7 +229,12 @@ export const ZoomedWithLinesAndSelection: Story = {
     ],
     selectedIds: ['east', 'south'],
   },
-  render: (args) => frame({ width: 680, props: args }),
+  render: (args) =>
+    frame({
+      width: 680,
+      props: args,
+      testId: 'marker-stage-zoomed-lines-selection',
+    }),
   play: async ({ canvasElement }) => {
     const zoomIn = canvasElement.querySelector<HTMLButtonElement>(
       'button[aria-label="Zoom in"]',
@@ -241,12 +263,18 @@ export const CoincidentMarkers: Story = {
       },
     ],
   },
-  render: (args) => frame({ width: 680, props: args }),
+  render: (args) =>
+    frame({
+      width: 680,
+      props: args,
+      testId: 'marker-stage-coincident-markers',
+    }),
 };
 
 export const Static: Story = {
   args: { ...wideImageArgs, interactive: false, selectedIds: ['east'] },
-  render: (args) => frame({ width: 680, props: args }),
+  render: (args) =>
+    frame({ width: 680, props: args, testId: 'marker-stage-static' }),
 };
 
 export const TallImage: Story = {
@@ -268,7 +296,8 @@ export const TallImage: Story = {
     ],
     unavailableMessage,
   },
-  render: (args) => frame({ width: 240, props: args }),
+  render: (args) =>
+    frame({ width: 240, props: args, testId: 'marker-stage-tall-image' }),
 };
 
 export const TinyImage: Story = {
@@ -284,7 +313,8 @@ export const TinyImage: Story = {
     ],
     unavailableMessage,
   },
-  render: (args) => frame({ width: 320, props: args }),
+  render: (args) =>
+    frame({ width: 320, props: args, testId: 'marker-stage-tiny-image' }),
 };
 
 export const DetailsAtCenter: Story = {
@@ -306,7 +336,8 @@ export const DetailsAtCenter: Story = {
       </div>
     ),
   },
-  render: (args) => frame({ width: 680, props: args }),
+  render: (args) =>
+    frame({ width: 680, props: args, testId: 'marker-stage-details-centre' }),
 };
 
 export const DetailsNearEachEdge: Story = {
@@ -349,7 +380,12 @@ export const DetailsNearEachEdge: Story = {
       </div>
     ),
   },
-  render: (args) => frame({ width: 680, props: args }),
+  render: (args) =>
+    frame({
+      width: 680,
+      props: args,
+      testId: 'marker-stage-details-near-edge',
+    }),
 };
 
 export const Unavailable: Story = {
@@ -365,7 +401,8 @@ export const Unavailable: Story = {
     ],
     unavailableMessage,
   },
-  render: (args) => frame({ width: 680, props: args }),
+  render: (args) =>
+    frame({ width: 680, props: args, testId: 'marker-stage-unavailable' }),
 };
 
 export const SavedAndRestoredView: Story = {

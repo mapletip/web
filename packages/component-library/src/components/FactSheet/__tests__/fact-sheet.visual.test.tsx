@@ -56,6 +56,19 @@ const narrow: VisualCase = {
   ],
 };
 
+const linkedValue: VisualCase = {
+  name: 'fact-sheet-linked-value-dark',
+  story: dark.LinkedValue,
+  storyId: 'components-factsheet--linked-value',
+  width: 420,
+  height: 180,
+  element: page.getByTestId('fact-sheet-linked-value'),
+  visible: [
+    page.getByText('Return map'),
+    page.getByRole('link', { name: 'Ellinia', exact: true }),
+  ],
+};
+
 describe('fact-sheet-twelve-facts-dark', () => {
   test('matches the approved baseline', async () => {
     await openVisualCase(twelveFacts);
@@ -101,5 +114,21 @@ describe('fact-sheet-narrow-dark', () => {
     );
 
     await expectApprovedScreenshot(narrow);
+  });
+});
+
+describe('fact-sheet-linked-value-dark', () => {
+  test('matches the approved baseline', async () => {
+    await openVisualCase(linkedValue);
+
+    for (const locator of linkedValue.visible ?? []) {
+      await expect.element(locator).toBeVisible();
+    }
+
+    expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(
+      linkedValue.width,
+    );
+
+    await expectApprovedScreenshot(linkedValue);
   });
 });

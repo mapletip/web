@@ -78,13 +78,15 @@ export const LinkedCardWithFooterButton: Story = {
   args: { title: 'Practice Meadow' },
   render: () => (
     <Stage>
-      <RecordCard
-        layout="mediaAside"
-        title="Practice Meadow"
-        secondaryLine="West Practice Grounds · Meadow District"
-        footer={<Button size="xs">Locate</Button>}
-        destination={{ href: '/synthetic/maps/practice-meadow' }}
-      />
+      <div data-testid="record-card-linked-footer-button">
+        <RecordCard
+          layout="mediaAside"
+          title="Practice Meadow"
+          secondaryLine="West Practice Grounds · Meadow District"
+          footer={<Button size="xs">Locate</Button>}
+          destination={{ href: '/synthetic/maps/practice-meadow' }}
+        />
+      </div>
     </Stage>
   ),
 };

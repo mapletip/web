@@ -35,8 +35,10 @@
   text-decoration: none;
 }
 
+/* The card draws the focus ring; drop the theme's outline and gap band on the title. */
 .link:focus-visible {
   outline: none;
+  box-shadow: none;
 }
 
 .link::after {
