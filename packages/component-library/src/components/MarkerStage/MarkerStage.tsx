@@ -136,7 +136,6 @@ export function MarkerStage({
             const markerClassName = [
               classes['marker'],
               interactive ? classes['markerButton'] : classes['markerStatic'],
-              selected ? classes['markerSelected'] : undefined,
             ]
               .filter(Boolean)
               .join(' ');

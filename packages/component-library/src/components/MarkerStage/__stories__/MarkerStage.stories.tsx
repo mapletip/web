@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
+import { userEvent } from 'storybook/test';
 
 import { MarkerStage } from '@/components/MarkerStage';
 import type { MarkerStageProps } from '@/components/MarkerStage';
@@ -6,7 +7,15 @@ import type { MarkerStageProps } from '@/components/MarkerStage';
 const meta = {
   title: 'Components/MarkerStage',
   component: MarkerStage,
-  parameters: { layout: 'centered' },
+  parameters: {
+    layout: 'centered',
+    docs: {
+      description: {
+        component: 'A host-rendered image stage.',
+      },
+    },
+  },
+  tags: ['autodocs'],
 } satisfies Meta<typeof MarkerStage>;
 
 export default meta;
@@ -33,8 +42,8 @@ function marker(label: string) {
       aria-hidden="true"
       style={{
         display: 'grid',
-        width: 24,
-        height: 24,
+        width: 'var(--marker-stage-marker-size)',
+        height: 'var(--marker-stage-marker-size)',
         placeItems: 'center',
         border: '2px solid white',
         borderRadius: '50%',
@@ -116,6 +125,15 @@ export const OneSelected: Story = {
 export const ManySelected: Story = {
   args: { ...wideImageArgs, selectedIds: ['west', 'north', 'south'] },
   render: (args) => frame({ width: 680, props: args }),
+};
+
+export const Focused: Story = {
+  args: { ...wideImageArgs, selectedIds: ['east'] },
+  render: (args) => frame({ width: 680, props: args }),
+  play: async () => {
+    await userEvent.tab();
+    await userEvent.tab();
+  },
 };
 
 export const ConnectedPairs: Story = {
