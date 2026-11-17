@@ -1,6 +1,6 @@
 import { MantineProvider } from '@mantine/core';
 import { cssVariablesResolver, theme } from '@mapletip/theme';
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 
 import '@/styles.css';
@@ -65,6 +65,22 @@ describe('FactSheet', () => {
     mount({ facts: [{ label: 'Health', value: '23,000,000' }] });
 
     expect(screen.getByRole('definition').textContent).toBe('23,000,000');
+  });
+
+  it('renders an inline link value inside its definition', () => {
+    mount({
+      facts: [
+        {
+          label: 'Return map',
+          value: <a href="/maplestory/maps/ellinia">Ellinia</a>,
+        },
+      ],
+    });
+
+    const definition = screen.getByRole('definition');
+    expect(
+      within(definition).getByRole('link', { name: 'Ellinia' }),
+    ).toHaveAttribute('href', '/maplestory/maps/ellinia');
   });
 
   it('shows a known zero rather than treating it as missing', () => {
