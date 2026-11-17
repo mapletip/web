@@ -8,8 +8,7 @@
 import { openRelease } from '@mapletip/data/release';
 
 import { MAPLEKIT_RELEASE, type BuildId } from '@/config/maplekit';
-
-import { isAbortError, sanitizeMonsterLoadError } from '../load-error';
+import { isAbortError, sanitizeLoadError } from '@/features/detail/load-error';
 
 import {
   projectMonsterBrowseRows,
@@ -27,7 +26,7 @@ export const MONSTER_BROWSE_UNAVAILABLE_MESSAGE =
   'Monster data could not be loaded.';
 
 export function sanitizeMonsterBrowseError(error: unknown): unknown {
-  return sanitizeMonsterLoadError(error, MONSTER_BROWSE_UNAVAILABLE_MESSAGE);
+  return sanitizeLoadError(error, MONSTER_BROWSE_UNAVAILABLE_MESSAGE);
 }
 
 export async function loadMonsterBrowse(

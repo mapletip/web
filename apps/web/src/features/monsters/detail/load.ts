@@ -9,8 +9,7 @@ import { MissingRecordError } from '@mapletip/data';
 import { getMonsterPage } from '@mapletip/data/monsters';
 
 import { MAPLEKIT_RELEASE, type BuildId } from '@/config/maplekit';
-
-import { isAbortError, sanitizeMonsterLoadError } from '../load-error';
+import { isAbortError, sanitizeLoadError } from '@/features/detail/load-error';
 
 import { projectMonsterDetail, type MonsterDetailView } from './project';
 
@@ -28,7 +27,7 @@ export type MonsterDetailLoadResult =
   | { readonly status: 'not-found' };
 
 export function sanitizeMonsterDetailError(error: unknown): unknown {
-  return sanitizeMonsterLoadError(error, MONSTER_DETAIL_UNAVAILABLE_MESSAGE);
+  return sanitizeLoadError(error, MONSTER_DETAIL_UNAVAILABLE_MESSAGE);
 }
 
 /** Load and project one verified monster page record by build and public id. */

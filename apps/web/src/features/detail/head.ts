@@ -2,7 +2,7 @@ import { SITE_ORIGIN } from '@/config/site';
 
 export interface DetailBreadcrumbItem {
   readonly label: string;
-  readonly path: string;
+  readonly path?: string;
 }
 
 export interface BuildDetailHeadOptions {
@@ -73,7 +73,9 @@ export function buildDetailHead({
                 '@type': 'ListItem',
                 position: index + 1,
                 name: item.label,
-                item: `${SITE_ORIGIN}${item.path}`,
+                ...(item.path === undefined
+                  ? {}
+                  : { item: `${SITE_ORIGIN}${item.path}` }),
               })),
             }),
           },

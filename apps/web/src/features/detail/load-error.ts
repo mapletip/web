@@ -7,7 +7,7 @@ export function isAbortError(error: unknown): boolean {
  * Replace an SDK or origin failure with a generic Error so raw URLs, HTTP
  * statuses, digests, and wire paths never cross the route serialization boundary.
  */
-export function sanitizeMonsterLoadError(
+export function sanitizeLoadError(
   error: unknown,
   fallbackMessage: string,
 ): unknown {

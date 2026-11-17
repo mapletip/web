@@ -265,6 +265,32 @@ describe('DetailBreadcrumbs', () => {
     );
     expect(screen.getByText('Snail')).toHaveAttribute('aria-current', 'page');
   });
+
+  it('renders breadcrumbs without a destination as plain text', () => {
+    renderWithMantine(
+      <DetailBreadcrumbs
+        items={[
+          { label: 'Home', path: '/' },
+          { label: 'Maps', path: '/maplestory/maps' },
+          { label: 'Victoria Island' },
+          { label: 'Henesys' },
+          {
+            label: 'Henesys Hunting Ground I',
+            path: '/maplestory/maps/map-id',
+          },
+        ]}
+      />,
+    );
+
+    expect(
+      screen.queryByRole('link', { name: 'Victoria Island' }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('link', { name: 'Henesys' }),
+    ).not.toBeInTheDocument();
+    expect(screen.getByText('Victoria Island')).not.toHaveAttribute('href');
+    expect(screen.getByText('Henesys')).not.toHaveAttribute('href');
+  });
 });
 
 describe('RecordNotFound', () => {
