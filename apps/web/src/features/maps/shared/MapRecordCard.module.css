@@ -34,6 +34,13 @@
   outline-offset: 3px;
 }
 
+.minimapUnavailable {
+  display: grid;
+  place-items: center;
+  padding: var(--mantine-spacing-xs);
+  text-align: center;
+}
+
 .minimapPopover {
   max-width: calc(85vw + 16px);
   padding: 8px;

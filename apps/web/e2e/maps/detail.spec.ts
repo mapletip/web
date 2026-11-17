@@ -31,6 +31,22 @@ test('Map Detail renders its canonical address, redirects stale slugs, and retur
     }),
   ).toHaveAttribute('href', '/maplestory/maps');
 
+  const connectionPath = `/maplestory/maps/lantern-square-${mapPublicId({ sourceId: 'cw-launch:lantern-square' })}`;
+  const connectionsNavigation = page
+    .getByRole('navigation', { name: 'Record sections' })
+    .getByRole('link', { name: 'Connections (1)' });
+  await expect(connectionsNavigation).toHaveAttribute('href', '#connections');
+  const connectionCard = page.getByTestId('map-connection-card');
+  await expect(connectionCard.getByRole('link')).toHaveAttribute(
+    'href',
+    connectionPath,
+  );
+  await connectionCard.getByRole('link').click();
+  await expect(page).toHaveURL(`http://127.0.0.1:4173${connectionPath}`);
+  await expect(
+    page.getByRole('heading', { level: 1, name: 'Lantern Square' }),
+  ).toBeVisible();
+
   const redirectResponse = await request.get(stale, { maxRedirects: 0 });
   expect(redirectResponse.status()).toBe(301);
   const location = redirectResponse.headers()['location'];

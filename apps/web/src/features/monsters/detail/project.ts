@@ -4,6 +4,7 @@ import type { MonsterPageRecordV1 } from '@mapletip/data/monsters';
 
 import { MAPLEKIT_RELEASE, type BuildId } from '@/config/maplekit';
 import { buildRecordDetailPath, nonBlank } from '@/features/detail';
+import type { MapRecordCardView } from '@/features/maps/shared';
 
 import {
   formatMonsterNumber,
@@ -52,14 +53,9 @@ export interface MonsterDetailDropGroupView {
   readonly entries: readonly MonsterDetailDropEntryView[];
 }
 
-export interface MonsterDetailLocationMapView {
+export interface MonsterDetailLocationMapView extends MapRecordCardView {
   /** Stable Map product key; names are not unique. */
-  readonly key: string;
-  readonly name: string;
-  readonly geographyLine?: string;
-  readonly minimapUrl?: string;
   readonly placementCount: number;
-  readonly placementLabel: string;
 }
 
 export interface MonsterDetailQuestEntryView {
@@ -367,13 +363,15 @@ function projectMonsterLocations(
       return {
         key: entry.mapKey,
         name,
-        ...(street === undefined ? {} : { geographyLine: street }),
+        ...(street === undefined ? {} : { secondaryLine: street }),
         ...(minimapUrl === undefined ? {} : { minimapUrl }),
+        footerParts: [
+          {
+            value: formatMonsterNumber(entry.placementCount),
+            label: entry.placementCount === 1 ? 'spawn' : 'spawns',
+          },
+        ],
         placementCount: entry.placementCount,
-        placementLabel:
-          entry.placementCount === 1
-            ? '1 spawn'
-            : `${formatMonsterNumber(entry.placementCount)} spawns`,
       } satisfies MonsterDetailLocationMapView;
     })
     .sort(

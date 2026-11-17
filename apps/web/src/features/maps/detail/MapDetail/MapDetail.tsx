@@ -1,15 +1,17 @@
 import { Stack, Text, Title } from '@mantine/core';
-import { FactSheet } from '@mapletip/component-library';
+import { FactSheet, RecordSections } from '@mapletip/component-library';
+import { ShareNetwork } from '@phosphor-icons/react';
 import type { ReactElement } from 'react';
 
 import { DetailPageShell } from '@/components/DetailPageShell';
 import { AnchorLink } from '@/components/RouterLinks';
 import { DetailBreadcrumbs } from '@/features/detail';
+import { MAP_DETAIL_ROUTE } from '@/features/maps/shared';
 
 import { mapDetailBreadcrumbs } from '../metadata';
 import type { MapDetailView } from '../project';
 
-const MAP_DETAIL_ROUTE = '/maplestory/{-$buildId}/maps/$slugId' as const;
+import { MapDetailConnections } from './MapDetailConnections';
 
 export interface MapDetailProps {
   readonly view: MapDetailView;
@@ -17,6 +19,11 @@ export interface MapDetailProps {
 
 /** Server-rendered identity and map information for one Map. */
 export function MapDetail({ view }: MapDetailProps): ReactElement {
+  const noKnownConnections =
+    view.connections.maps.length === 0 &&
+    (view.connections.state === 'absent' ||
+      (view.connections.state === 'known' && view.connections.count === 0));
+
   return (
     <DetailPageShell>
       <Stack gap="lg">
@@ -59,6 +66,29 @@ export function MapDetail({ view }: MapDetailProps): ReactElement {
               }))}
             />
           </Stack>
+        )}
+        {noKnownConnections ? null : (
+          <RecordSections
+            sections={[
+              {
+                id: 'connections',
+                title: 'Connections',
+                icon: (
+                  <ShareNetwork
+                    size={16}
+                    color="var(--mantine-primary-color-filled)"
+                  />
+                ),
+                count:
+                  view.connections.count === 'unknown'
+                    ? 'unknown'
+                    : view.connections.count,
+                content: (
+                  <MapDetailConnections connections={view.connections} />
+                ),
+              },
+            ]}
+          />
         )}
       </Stack>
     </DetailPageShell>
