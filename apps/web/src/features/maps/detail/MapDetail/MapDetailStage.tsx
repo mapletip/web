@@ -4,6 +4,7 @@ import type { ReactElement, ReactNode } from 'react';
 
 import type { MapDetailStageView } from '../project';
 
+import classes from './MapDetail.module.css';
 import { MarkerContent } from './markers';
 
 export const MAP_IMAGE_UNAVAILABLE_MESSAGE = "Map image isn't available.";
@@ -11,18 +12,20 @@ export const MAP_IMAGE_UNAVAILABLE_MESSAGE = "Map image isn't available.";
 export function MapDetailStage({
   stage,
   interactive = false,
+  wheelZoom = false,
   selectedIds = [],
   onActivate,
   renderDetails,
 }: {
   readonly stage: MapDetailStageView;
   readonly interactive?: boolean;
+  readonly wheelZoom?: boolean;
   readonly selectedIds?: readonly string[];
   readonly onActivate?: (markerIds: readonly string[]) => void;
   readonly renderDetails?: (markerIds: readonly string[]) => ReactNode;
 }): ReactElement {
   return (
-    <Stack gap="xs">
+    <Stack className={classes['mapStage']} gap="xs">
       <MarkerStage
         image={stage.image}
         markers={stage.markers.map((marker) => ({
@@ -34,6 +37,7 @@ export function MapDetailStage({
         {...(onActivate === undefined ? {} : { onActivate })}
         {...(renderDetails === undefined ? {} : { renderDetails })}
         interactive={interactive}
+        wheelZoom={wheelZoom}
         unavailableMessage={MAP_IMAGE_UNAVAILABLE_MESSAGE}
       />
       {stage.positionsUnavailable ? (
