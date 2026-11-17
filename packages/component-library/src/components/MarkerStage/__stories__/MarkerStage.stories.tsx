@@ -147,6 +147,24 @@ export const ConnectedPairs: Story = {
   render: (args) => frame({ width: 680, props: args }),
 };
 
+export const ZoomedWithLinesAndSelection: Story = {
+  args: {
+    ...wideImageArgs,
+    connectors: [
+      { id: 'west-east', from: 'west', to: 'east' },
+      { id: 'north-south', from: 'north', to: 'south' },
+    ],
+    selectedIds: ['east', 'south'],
+  },
+  render: (args) => frame({ width: 680, props: args }),
+  play: async ({ canvasElement }) => {
+    const zoomIn = canvasElement.querySelector<HTMLButtonElement>(
+      'button[aria-label="Zoom in"]',
+    );
+    if (zoomIn !== null) await userEvent.click(zoomIn);
+  },
+};
+
 export const CoincidentMarkers: Story = {
   args: {
     ...wideImageArgs,

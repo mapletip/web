@@ -52,6 +52,14 @@ export interface MarkerStageProps {
   readonly renderDetails?: (markerIds: readonly string[]) => ReactNode;
   /** Whether markers can be activated. Defaults to true. */
   readonly interactive?: boolean;
+  /** Enables wheel zoom on an interactive stage. Defaults to false. */
+  readonly wheelZoom?: boolean;
+  /** Accessible name for the zoom-in control. Defaults to "Zoom in". */
+  readonly zoomInLabel?: string;
+  /** Accessible name for the zoom-out control. Defaults to "Zoom out". */
+  readonly zoomOutLabel?: string;
+  /** Accessible name for the fit control. Defaults to "Fit map". */
+  readonly fitLabel?: string;
   /** Host wording shown when the image is missing or fails to load. */
   readonly unavailableMessage: string;
 }
