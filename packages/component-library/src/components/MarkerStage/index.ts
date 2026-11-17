@@ -4,4 +4,5 @@ export type {
   MarkerStageImage,
   MarkerStageMarker,
   MarkerStageProps,
+  MarkerStageView,
 } from '@/components/MarkerStage/types';

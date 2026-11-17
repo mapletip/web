@@ -31,11 +31,17 @@ import type {
   MarkerStageImage,
   MarkerStageMarker,
   MarkerStageProps,
+  MarkerStageView,
 } from '@/components/MarkerStage/types';
+import {
+  transformToView,
+  viewToTransform,
+} from '@/components/MarkerStage/view';
 
 const MIN_SCALE = 0.5;
 const MAX_SCALE = 8;
 const SELECTION_ANIMATION_MS = 260;
+const TRANSFORM_EPSILON = 0.01;
 
 function markerStyle(
   x: number,
@@ -49,6 +55,23 @@ function markerStyle(
     top: `${(y / imageHeight) * 100}%`,
     transform: `translate(-50%, -100%) scale(${1 / scale})`,
   };
+}
+
+function isFittedTransform(transform: ReactZoomPanPinchRef): boolean {
+  const { contentComponent, wrapperComponent } = transform.instance;
+  if (contentComponent === null || wrapperComponent === null) return false;
+
+  return (
+    Math.abs(transform.state.scale - 1) <= TRANSFORM_EPSILON &&
+    Math.abs(
+      transform.state.positionX -
+        (wrapperComponent.clientWidth - contentComponent.offsetWidth) / 2,
+    ) <= TRANSFORM_EPSILON &&
+    Math.abs(
+      transform.state.positionY -
+        (wrapperComponent.clientHeight - contentComponent.offsetHeight) / 2,
+    ) <= TRANSFORM_EPSILON
+  );
 }
 
 interface InteractiveMarkerProps {
@@ -85,6 +108,7 @@ function InteractiveMarker({
   const markerContent = group.map(({ content, id }) => (
     <Fragment key={id}>{content}</Fragment>
   ));
+  // Mantine handles Escape from the dropdown; mirror it on the trigger.
   const markerButton = (
     <UnstyledButton
       type="button"
@@ -132,6 +156,7 @@ function InteractiveMarker({
       middlewares={{ flip: true, shift: true, size: true }}
       floatingStrategy="absolute"
       withinPortal={false}
+      closeOnEscape
       returnFocus
     >
       <Popover.Target>{markerButton}</Popover.Target>
@@ -175,6 +200,8 @@ export function MarkerStage({
   onActivate,
   interactive = true,
   wheelZoom = false,
+  view,
+  onViewChange,
   zoomInLabel = 'Zoom in',
   zoomOutLabel = 'Zoom out',
   fitLabel = 'Fit map',
@@ -187,7 +214,10 @@ export function MarkerStage({
   const previousSelectionRef = useRef<{
     readonly interactive: boolean;
     readonly key: string;
+    readonly viewKey: string;
   } | null>(null);
+  const previousViewKeyRef = useRef<string | undefined>(undefined);
+  const fitPendingRef = useRef(false);
   const [failedSrc, setFailedSrc] = useState<string | null>(null);
   const [openDetailsTarget, setOpenDetailsTarget] = useState<string | null>(
     null,
@@ -201,6 +231,10 @@ export function MarkerStage({
   const accessibleName = availableImage?.alt || unavailableMessage;
   const selectedIdSet = new Set(selectedIds);
   const selectedKey = [...selectedIds].sort().join('\u0000');
+  const viewKey =
+    view === undefined
+      ? 'none'
+      : `${view.zoom}\u0000${view.centerX}\u0000${view.centerY}`;
   const markerGroups = useMemo(() => groupMarkers(markers), [markers]);
   const markersById = new Map(markers.map((marker) => [marker.id, marker]));
   const stageStyle: CSSProperties & {
@@ -224,13 +258,63 @@ export function MarkerStage({
   }, [availableImage, interactive]);
 
   useEffect(() => {
+    const previousViewKey = previousViewKeyRef.current;
+    previousViewKeyRef.current = viewKey;
+    if (!interactive || availableImage === undefined) return;
+
+    const transform = transformRef.current;
+    const wrapper = transform?.instance.wrapperComponent;
+    if (transform == null || wrapper == null) return;
+
+    if (view === undefined) {
+      if (previousViewKey !== undefined && previousViewKey !== 'none') {
+        void transform.resetTransform(0);
+      }
+      return;
+    }
+
+    const nextTransform = viewToTransform({
+      view,
+      stageWidth: wrapper.clientWidth,
+      stageHeight: wrapper.clientHeight,
+      imageWidth: availableImage.width,
+      imageHeight: availableImage.height,
+    });
+    const currentTransform = transform.state;
+    if (
+      Math.abs(currentTransform.positionX - nextTransform.positionX) <=
+        TRANSFORM_EPSILON &&
+      Math.abs(currentTransform.positionY - nextTransform.positionY) <=
+        TRANSFORM_EPSILON &&
+      Math.abs(currentTransform.scale - nextTransform.scale) <=
+        TRANSFORM_EPSILON
+    ) {
+      return;
+    }
+
+    void transform.setTransform(
+      nextTransform.positionX,
+      nextTransform.positionY,
+      nextTransform.scale,
+      0,
+    );
+  }, [availableImage, interactive, view, viewKey]);
+
+  useEffect(() => {
     const previous = previousSelectionRef.current;
-    previousSelectionRef.current = { interactive, key: selectedKey };
+    previousSelectionRef.current = { interactive, key: selectedKey, viewKey };
     if (previous === null) return;
 
     const selectionChanged = previous.key !== selectedKey;
+    const viewChanged = previous.viewKey !== viewKey;
     const becameInteractive = !previous.interactive && interactive;
-    if ((!selectionChanged && !becameInteractive) || !interactive) return;
+    if (
+      (!selectionChanged && !becameInteractive) ||
+      !interactive ||
+      viewChanged
+    ) {
+      return;
+    }
 
     const transform = transformRef.current;
     const viewport = viewportRef.current;
@@ -264,7 +348,30 @@ export function MarkerStage({
       maxScale: transform.state.scale,
       animationTime: reducedMotion ? 0 : SELECTION_ANIMATION_MS,
     });
-  }, [interactive, markerGroups, reducedMotion, selectedKey]);
+  }, [interactive, markerGroups, reducedMotion, selectedKey, viewKey]);
+
+  const reportView = (transform: ReactZoomPanPinchRef): void => {
+    if (availableImage === undefined) return;
+    const wrapper = transform.instance.wrapperComponent;
+    if (wrapper === null) return;
+
+    const nextView: MarkerStageView = transformToView({
+      ...transform.state,
+      stageWidth: wrapper.clientWidth,
+      stageHeight: wrapper.clientHeight,
+      imageWidth: availableImage.width,
+      imageHeight: availableImage.height,
+    });
+    onViewChange?.(nextView);
+  };
+
+  const handleFit = (): void => {
+    const transform = transformRef.current;
+    const alreadyFitted = transform !== null && isFittedTransform(transform);
+
+    fitPendingRef.current = !alreadyFitted;
+    if (alreadyFitted) onViewChange?.(undefined);
+  };
 
   const renderImageBox = (): ReactElement => (
     <div className={classes['imageBox']}>
@@ -391,12 +498,33 @@ export function MarkerStage({
         wheel={{ disabled: !wheelZoom }}
         zoomAnimation={{ disabled: reducedMotion }}
         velocityAnimation={{ disabled: reducedMotion }}
+        onPanningStop={(ref, event) => {
+          if (event.type !== 'wheel') reportView(ref);
+        }}
+        onPinchStop={reportView}
+        onWheelStop={reportView}
+        onZoomStop={(ref, event) => {
+          if (event.type === 'wheel') return;
+          if (fitPendingRef.current) {
+            if (isFittedTransform(ref)) {
+              fitPendingRef.current = false;
+              onViewChange?.(undefined);
+              return;
+            }
+          }
+          reportView(ref);
+        }}
       >
         <TransformComponent
           wrapperClass={classes['viewport']!}
           contentClass={classes['transformedContent']!}
           wrapperStyle={{ width: '100%', height: '100%' }}
-          contentStyle={{ width: '100%', height: '100%' }}
+          contentStyle={{
+            width:
+              'min(100cqw, calc(100cqh * var(--marker-stage-image-aspect-ratio)))',
+            height:
+              'min(100cqh, calc(100cqw / var(--marker-stage-image-aspect-ratio)))',
+          }}
         >
           {renderImageBox()}
         </TransformComponent>
@@ -405,6 +533,7 @@ export function MarkerStage({
           maxScale={MAX_SCALE}
           minScale={MIN_SCALE}
           motionReduced={reducedMotion}
+          onFit={handleFit}
           zoomInLabel={zoomInLabel}
           zoomOutLabel={zoomOutLabel}
         />

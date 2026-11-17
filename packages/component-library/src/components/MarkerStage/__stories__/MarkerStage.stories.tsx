@@ -1,8 +1,12 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
+import { useState, type ReactElement } from 'react';
 import { userEvent } from 'storybook/test';
 
 import { MarkerStage } from '@/components/MarkerStage';
-import type { MarkerStageProps } from '@/components/MarkerStage';
+import type {
+  MarkerStageProps,
+  MarkerStageView,
+} from '@/components/MarkerStage';
 
 const meta = {
   title: 'Components/MarkerStage',
@@ -11,7 +15,22 @@ const meta = {
     layout: 'centered',
     docs: {
       description: {
-        component: 'A host-rendered image stage.',
+        component: `A host-rendered image stage.
+
+**Props**
+
+- \`image\`: optional image object with its source URL, intrinsic pixel width and height, and accessible name. Omit it when the image is unavailable.
+- \`markers\`: required list of host-rendered targets. Each has a stable id, image-pixel coordinates, accessible label, and content.
+- \`connectors\`: optional id and endpoint pairs drawn between marker ids.
+- \`selectedIds\`: ids the host currently selects; defaults to none.
+- \`onActivate\`: receives all marker ids at an activated point.
+- \`renderDetails\`: returns optional content for an activated point.
+- \`interactive\`: enables marker buttons and stage controls; defaults to true.
+- \`wheelZoom\`: enables wheel zoom; defaults to false.
+- \`view\`: optional saved view, with zoom relative to fit and centre coordinates in image pixels. Applying \`undefined\` after a saved view returns to fit.
+- \`onViewChange\`: receives one settled view after pan or zoom, or \`undefined\` after Fit.
+- \`zoomInLabel\`, \`zoomOutLabel\`, \`fitLabel\`: accessible names for the three controls.
+- \`unavailableMessage\`: required message shown when no image is available or its request fails.`,
       },
     },
   },
@@ -62,6 +81,43 @@ function frame({ width, props }: { width: number; props: MarkerStageProps }) {
   return (
     <div style={{ width, maxWidth: '100%' }}>
       <MarkerStage {...props} />
+    </div>
+  );
+}
+
+function SavedRestoredViewStory(): ReactElement {
+  const [view, setView] = useState<MarkerStageView | undefined>();
+  const [savedView, setSavedView] = useState<MarkerStageView | undefined>();
+
+  return (
+    <div style={{ width: 680, maxWidth: '100%' }}>
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 8,
+          marginBottom: 12,
+        }}
+      >
+        <button
+          type="button"
+          disabled={view === undefined}
+          onClick={() => setSavedView(view)}
+        >
+          Save view
+        </button>
+        <button
+          type="button"
+          disabled={savedView === undefined}
+          onClick={() => setView(savedView)}
+        >
+          Restore view
+        </button>
+        <output aria-live="polite">
+          {savedView === undefined ? 'No saved view' : 'View saved'}
+        </output>
+      </div>
+      <MarkerStage {...wideImageArgs} view={view} onViewChange={setView} />
     </div>
   );
 }
@@ -310,4 +366,9 @@ export const Unavailable: Story = {
     unavailableMessage,
   },
   render: (args) => frame({ width: 680, props: args }),
+};
+
+export const SavedAndRestoredView: Story = {
+  args: wideImageArgs,
+  render: () => <SavedRestoredViewStory />,
 };

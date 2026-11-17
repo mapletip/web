@@ -36,6 +36,16 @@ export interface MarkerStageConnector {
   readonly to: string;
 }
 
+/** A saved camera relative to the fitted image size and in image pixels. */
+export interface MarkerStageView {
+  /** Zoom relative to the fitted view. Values are clamped between 0.5 and 8. */
+  readonly zoom: number;
+  /** Image pixel positioned at the horizontal centre of the stage. */
+  readonly centerX: number;
+  /** Image pixel positioned at the vertical centre of the stage. */
+  readonly centerY: number;
+}
+
 /** Props for a fitted image stage with markers supplied by its host. */
 export interface MarkerStageProps {
   /** Image to show. Omit it when no image is available. */
@@ -54,6 +64,10 @@ export interface MarkerStageProps {
   readonly interactive?: boolean;
   /** Enables wheel zoom on an interactive stage. Defaults to false. */
   readonly wheelZoom?: boolean;
+  /** Saved view to apply on mount and whenever it changes. */
+  readonly view?: MarkerStageView | undefined;
+  /** Reports the settled view, or undefined when Fit is selected. */
+  readonly onViewChange?: (view: MarkerStageView | undefined) => void;
   /** Accessible name for the zoom-in control. Defaults to "Zoom in". */
   readonly zoomInLabel?: string;
   /** Accessible name for the zoom-out control. Defaults to "Zoom out". */

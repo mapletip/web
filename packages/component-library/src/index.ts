@@ -33,6 +33,7 @@ export type {
   MarkerStageImage,
   MarkerStageMarker,
   MarkerStageProps,
+  MarkerStageView,
 } from '@/components/MarkerStage';
 export { FactSheet } from '@/components/FactSheet';
 export type {
