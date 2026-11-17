@@ -65,6 +65,38 @@ export function resolveMapDetailFocus({
   return keys.length === 0 ? undefined : { keys };
 }
 
+/** Apply the activation rule for an entity chip, then restore canonical order. */
+export function activateMapDetailEntity({
+  focus,
+  focusKey,
+  modified,
+  view,
+}: {
+  readonly focus: MapDetailFocus | undefined;
+  readonly focusKey: string;
+  readonly modified: boolean;
+  readonly view: MapDetailView;
+}): MapDetailFocus | undefined {
+  let nextFocus: MapDetailFocus | undefined;
+
+  if (modified) {
+    if (focus === undefined || 'kind' in focus) {
+      nextFocus = { keys: [focusKey] };
+    } else if (focus.keys.includes(focusKey)) {
+      const keys = focus.keys.filter((key) => key !== focusKey);
+      nextFocus = keys.length === 0 ? undefined : { keys };
+    } else {
+      nextFocus = { keys: [...focus.keys, focusKey] };
+    }
+  } else {
+    nextFocus = isOnlyMapDetailFocusKey({ focus, focusKey })
+      ? undefined
+      : { keys: [focusKey] };
+  }
+
+  return resolveMapDetailFocus({ focus: nextFocus, view });
+}
+
 /** Format the already-resolved selection in canonical entity order. */
 export function formatMapDetailFocus({
   focus,

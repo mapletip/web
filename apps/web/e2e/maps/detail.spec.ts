@@ -209,6 +209,130 @@ test('Map Detail legend chips select entities and ring their markers at desktop 
   await expect(stage.locator('[data-selected="true"]')).toHaveCount(2);
 });
 
+test('Map Detail legend Ctrl-click selects two monsters in legend order and survives reload', async ({
+  page,
+}, testInfo) => {
+  test.skip(
+    testInfo.project.name !== 'desktop',
+    'Desktop pointer interaction.',
+  );
+  await page.setViewportSize({ width: 1440, height: 900 });
+  const publicId = mapPublicId({ sourceId: 'cw-launch:practice-grove' });
+  await page.goto(`/maplestory/maps/practice-grove-${publicId}`);
+  await page.waitForLoadState('networkidle');
+
+  const stage = page.getByRole('group', { name: 'Practice Grove map' });
+  const legend = page.getByRole('region', { name: 'Scrollable map legend' });
+  const twinSprout = legend.getByRole('checkbox', {
+    name: 'Twin Sprout, Monster',
+  });
+  const hollowHusk = legend.getByRole('checkbox', {
+    name: 'Hollow Husk, Monster',
+  });
+
+  await legend.getByText('Twin Sprout', { exact: true }).click();
+  await expect(page).toHaveURL(/focus=monster-[a-z0-9]{8}/u);
+  await expect(twinSprout).toBeChecked();
+  const twinSproutKey = new URL(page.url()).searchParams.get('focus');
+  expect(twinSproutKey).toMatch(/^monster-[a-z0-9]{8}$/u);
+
+  await legend.getByText('Hollow Husk', { exact: true }).click();
+  await expect(page).toHaveURL(/focus=monster-[a-z0-9]{8}/u);
+  await expect(twinSprout).not.toBeChecked();
+  await expect(hollowHusk).toBeChecked();
+  const hollowHuskKey = new URL(page.url()).searchParams.get('focus');
+  expect(hollowHuskKey).toMatch(/^monster-[a-z0-9]{8}$/u);
+
+  await legend
+    .getByText('Twin Sprout', { exact: true })
+    .click({ modifiers: ['Control'] });
+  const legendNames = await legend
+    .getByRole('checkbox')
+    .evaluateAll((inputs) =>
+      inputs.map((input) => input.getAttribute('aria-label')),
+    );
+  const canonicalSelection =
+    legendNames.indexOf('Twin Sprout, Monster') <
+    legendNames.indexOf('Hollow Husk, Monster')
+      ? `${twinSproutKey},${hollowHuskKey}`
+      : `${hollowHuskKey},${twinSproutKey}`;
+  await expect
+    .poll(() => new URL(page.url()).searchParams.get('focus'))
+    .toBe(canonicalSelection);
+  await expect(twinSprout).toBeChecked();
+  await expect(hollowHusk).toBeChecked();
+  await expect(stage.locator('[data-selected="true"]')).toHaveCount(3);
+  const twinSproutMarkers = stage.getByRole('button', {
+    name: /Twin Sprout, Monster/u,
+  });
+  await expect(twinSproutMarkers).toHaveCount(2);
+  await expect(twinSproutMarkers.nth(0)).toHaveAttribute(
+    'data-selected',
+    'true',
+  );
+  await expect(twinSproutMarkers.nth(1)).toHaveAttribute(
+    'data-selected',
+    'true',
+  );
+  await expect(
+    stage.getByRole('button', { name: /Hollow Husk, Monster/u }),
+  ).toHaveAttribute('data-selected', 'true');
+
+  await page.reload();
+  await expect
+    .poll(() => new URL(page.url()).searchParams.get('focus'))
+    .toBe(canonicalSelection);
+  await expect(twinSprout).toBeChecked();
+  await expect(hollowHusk).toBeChecked();
+  await expect(stage.locator('[data-selected="true"]')).toHaveCount(3);
+  await expect(twinSproutMarkers.nth(0)).toHaveAttribute(
+    'data-selected',
+    'true',
+  );
+  await expect(twinSproutMarkers.nth(1)).toHaveAttribute(
+    'data-selected',
+    'true',
+  );
+  await expect(
+    stage.getByRole('button', { name: /Hollow Husk, Monster/u }),
+  ).toHaveAttribute('data-selected', 'true');
+});
+
+test('Map Detail legend Ctrl+Space adds the focused chip to the selection', async ({
+  page,
+}, testInfo) => {
+  test.skip(
+    testInfo.project.name !== 'desktop',
+    'Keyboard interaction is desktop only.',
+  );
+  await page.setViewportSize({ width: 1440, height: 900 });
+  const publicId = mapPublicId({ sourceId: 'cw-launch:practice-grove' });
+  await page.goto(`/maplestory/maps/practice-grove-${publicId}`);
+  await page.waitForLoadState('networkidle');
+
+  const legend = page.getByRole('region', { name: 'Scrollable map legend' });
+  const hollowHusk = legend.getByRole('checkbox', {
+    name: 'Hollow Husk, Monster',
+  });
+  const twinSprout = legend.getByRole('checkbox', {
+    name: 'Twin Sprout, Monster',
+  });
+
+  await legend.getByText('Twin Sprout', { exact: true }).click();
+  await expect(page).toHaveURL(/focus=monster-[a-z0-9]{8}/u);
+  await expect(twinSprout).toBeChecked();
+  await hollowHusk.evaluate((input) => input.focus());
+  await expect(hollowHusk).toBeFocused();
+
+  await page.keyboard.press('Control+Space');
+
+  await expect(twinSprout).toBeChecked();
+  await expect(hollowHusk).toBeChecked();
+  await expect
+    .poll(() => new URL(page.url()).searchParams.get('focus'))
+    .toMatch(/^monster-[a-z0-9]{8},monster-[a-z0-9]{8}$/u);
+});
+
 test('Map Detail shows the stage message when a map has no image', async ({
   page,
 }) => {

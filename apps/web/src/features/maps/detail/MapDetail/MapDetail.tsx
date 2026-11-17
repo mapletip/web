@@ -22,8 +22,8 @@ import { MAP_DETAIL_ROUTE } from '@/features/maps/shared';
 import { MONSTER_DETAIL_ROUTE } from '@/features/monsters/shared';
 
 import {
+  activateMapDetailEntity,
   formatMapDetailFocus,
-  isOnlyMapDetailFocusKey,
   mapDetailFocusMarkerIds,
   parseMapDetailFocus,
   resolveMapDetailFocus,
@@ -154,12 +154,8 @@ export function MapDetail({
     const resolvedFocus = resolveMapDetailFocus({ focus: nextFocus, view });
     onFocusChange?.(formatMapDetailFocus({ focus: resolvedFocus }));
   };
-  const activateEntity = (focusKey: string) => {
-    writeFocus(
-      isOnlyMapDetailFocusKey({ focus, focusKey })
-        ? undefined
-        : { keys: [focusKey] },
-    );
+  const activateEntity = (focusKey: string, modified = false) => {
+    writeFocus(activateMapDetailEntity({ focus, focusKey, modified, view }));
   };
   const markerFocusKeys = new Map(
     view.stage.markers.map((marker) => [marker.id, marker.focusKey]),
