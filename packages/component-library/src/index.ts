@@ -28,6 +28,12 @@ export type {
 } from '@/components/EntityChip';
 export { SpriteStage } from '@/components/SpriteStage';
 export type { SpriteStageProps } from '@/components/SpriteStage';
+export { MarkerStage } from '@/components/MarkerStage';
+export type {
+  MarkerStageImage,
+  MarkerStageMarker,
+  MarkerStageProps,
+} from '@/components/MarkerStage';
 export { FactSheet } from '@/components/FactSheet';
 export type {
   Fact,

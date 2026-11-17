@@ -1,0 +1,48 @@
+import { MantineProvider } from '@mantine/core';
+import { theme } from '@mapletip/theme';
+import { renderToString } from 'react-dom/server';
+import { describe, expect, it } from 'vitest';
+
+import { MarkerStage } from '@/components/MarkerStage';
+import type { MarkerStageProps } from '@/components/MarkerStage';
+
+function renderStage(props: Partial<MarkerStageProps>): string {
+  return renderToString(
+    <MantineProvider theme={theme} forceColorScheme="dark">
+      <MarkerStage
+        image={{
+          src: '/synthetic-image.svg',
+          width: 400,
+          height: 200,
+          alt: 'Synthetic landscape',
+        }}
+        markers={[]}
+        unavailableMessage="Image unavailable."
+        {...props}
+      />
+    </MantineProvider>,
+  );
+}
+
+describe('MarkerStage server rendering', () => {
+  it('renders marker percentage positions without waiting for layout', () => {
+    const html = renderStage({
+      markers: [
+        { id: 'quarter', x: 100, y: 50, content: <span>Quarter point</span> },
+        { id: 'edge', x: 400, y: 200, content: <span>Edge point</span> },
+      ],
+    });
+
+    expect(html).toContain('aria-label="Synthetic landscape"');
+    expect(html).toContain('alt="Synthetic landscape"');
+
+    const quarter = html.match(
+      /<span\b[^>]*data-marker-id="quarter"[^>]*>/u,
+    )?.[0];
+    const edge = html.match(/<span\b[^>]*data-marker-id="edge"[^>]*>/u)?.[0];
+    expect(quarter).toContain('left:25%');
+    expect(quarter).toContain('top:25%');
+    expect(edge).toContain('left:100%');
+    expect(edge).toContain('top:100%');
+  });
+});
