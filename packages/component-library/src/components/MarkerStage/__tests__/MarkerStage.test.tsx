@@ -90,6 +90,60 @@ describe('MarkerStage', () => {
     });
   });
 
+  it('draws decorative lines between the named marker coordinates', () => {
+    const { container } = mount({
+      markers: [
+        {
+          id: 'first',
+          x: 100,
+          y: 50,
+          label: 'First point',
+          content: <span>First</span>,
+        },
+        {
+          id: 'second',
+          x: 300,
+          y: 150,
+          label: 'Second point',
+          content: <span>Second</span>,
+        },
+      ],
+      connectors: [{ id: 'first-second', from: 'first', to: 'second' }],
+    });
+
+    const overlay = container.querySelector('svg');
+    const line = container.querySelector('svg line');
+    expect(overlay).toHaveAttribute('viewBox', '0 0 400 200');
+    expect(overlay).toHaveAttribute('preserveAspectRatio', 'xMidYMid meet');
+    expect(overlay).toHaveAttribute('aria-hidden', 'true');
+    expect(overlay).toHaveAttribute('focusable', 'false');
+    expect(overlay).toHaveAttribute('pointer-events', 'none');
+    expect(line).toHaveAttribute('x1', '100');
+    expect(line).toHaveAttribute('y1', '50');
+    expect(line).toHaveAttribute('x2', '300');
+    expect(line).toHaveAttribute('y2', '150');
+  });
+
+  it('skips connector pairs with a missing marker', () => {
+    const { container } = mount({
+      markers: [
+        {
+          id: 'first',
+          x: 100,
+          y: 50,
+          label: 'First point',
+          content: <span>First</span>,
+        },
+      ],
+      connectors: [
+        { id: 'missing-start', from: 'missing', to: 'first' },
+        { id: 'missing-end', from: 'first', to: 'missing' },
+      ],
+    });
+
+    expect(container.querySelectorAll('svg line')).toHaveLength(0);
+  });
+
   it('reports activation without changing the host-controlled selection', () => {
     const onActivate = vi.fn();
     mount({

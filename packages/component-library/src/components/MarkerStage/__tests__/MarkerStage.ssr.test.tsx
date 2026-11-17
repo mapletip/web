@@ -57,4 +57,34 @@ describe('MarkerStage server rendering', () => {
     expect(edge).toContain('left:100%');
     expect(edge).toContain('top:100%');
   });
+
+  it('renders connector lines in the server response', () => {
+    const html = renderStage({
+      markers: [
+        {
+          id: 'first',
+          x: 100,
+          y: 50,
+          label: 'First point',
+          content: <span>First</span>,
+        },
+        {
+          id: 'second',
+          x: 300,
+          y: 150,
+          label: 'Second point',
+          content: <span>Second</span>,
+        },
+      ],
+      connectors: [{ id: 'first-second', from: 'first', to: 'second' }],
+    });
+
+    expect(html).toContain('<svg');
+    expect(html).toContain('aria-hidden="true"');
+    expect(html).toContain('<line');
+    expect(html).toContain('x1="100"');
+    expect(html).toContain('y1="50"');
+    expect(html).toContain('x2="300"');
+    expect(html).toContain('y2="150"');
+  });
 });

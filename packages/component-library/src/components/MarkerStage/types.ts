@@ -26,12 +26,24 @@ export interface MarkerStageMarker {
   readonly content: ReactNode;
 }
 
+/** A host-named pair of markers to join with a decorative line. */
+export interface MarkerStageConnector {
+  /** Stable identifier for this connection. */
+  readonly id: string;
+  /** Identifier of the marker where the line starts. */
+  readonly from: string;
+  /** Identifier of the marker where the line ends. */
+  readonly to: string;
+}
+
 /** Props for a fitted image stage with markers supplied by its host. */
 export interface MarkerStageProps {
   /** Image to show. Omit it when no image is available. */
   readonly image?: MarkerStageImage | undefined;
   /** Host-rendered markers positioned in the image's pixel coordinate space. */
   readonly markers: readonly MarkerStageMarker[];
+  /** Optional marker pairs joined by decorative lines in image pixel coordinates. */
+  readonly connectors?: readonly MarkerStageConnector[];
   /** Marker ids selected by the host. */
   readonly selectedIds?: readonly string[];
   /** Reports every id at an activated point. */
