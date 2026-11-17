@@ -66,7 +66,8 @@ export const mapDetailHistoryStateSchema = z
 export interface MapDetailProps {
   readonly view: MapDetailView;
   readonly focusValue?: string | undefined;
-  readonly onFocusChange?: ((focus: string | undefined) => void) | undefined;
+  readonly onFocusChange?:
+    ((focus: string | undefined) => void | Promise<void>) | undefined;
 }
 
 function EntityName({
@@ -215,12 +216,12 @@ export function MapDetail({
   };
 
   useEffect(() => {
-    if (focusValue !== canonicalFocus) onFocusChange?.(canonicalFocus);
+    if (focusValue !== canonicalFocus) void onFocusChange?.(canonicalFocus);
   }, [canonicalFocus, focusValue, onFocusChange]);
 
   const writeFocus = (nextFocus: MapDetailFocus | undefined) => {
     const resolvedFocus = resolveMapDetailFocus({ focus: nextFocus, view });
-    onFocusChange?.(formatMapDetailFocus({ focus: resolvedFocus }));
+    return onFocusChange?.(formatMapDetailFocus({ focus: resolvedFocus }));
   };
   const closeExplore = () => {
     if (exploreOverlayState === undefined) return;
@@ -230,8 +231,26 @@ export function MapDetail({
       void exploreOverlay.release('explore');
     }
   };
+  const nextEntityFocus = (focusKey: string, modified = false) =>
+    activateMapDetailEntity({
+      focus,
+      focusKey,
+      modified,
+      view,
+    });
+
   const activateEntity = (focusKey: string, modified = false) => {
-    writeFocus(activateMapDetailEntity({ focus, focusKey, modified, view }));
+    const nextFocus = nextEntityFocus(focusKey, modified);
+    void writeFocus(nextFocus);
+    return nextFocus;
+  };
+  const locateMonster = async (focusKey: string) => {
+    const nextFocus = nextEntityFocus(focusKey);
+    await writeFocus(nextFocus);
+    exploreOverlay.open({
+      type: 'explore',
+      openedFocus: formatMapDetailFocus({ focus: nextFocus }),
+    });
   };
   const markerFocusKeys = new Map(
     view.stage.markers.map((marker) => [marker.id, marker.focusKey]),
@@ -264,7 +283,15 @@ export function MapDetail({
     id: 'monsters',
     title: 'Monsters',
     count: view.monsters.count,
-    content: <MapDetailMonsters monsters={view.monsters} />,
+    content: (
+      <MapDetailMonsters
+        monsters={view.monsters}
+        focus={focus}
+        onLocate={(focusKey) => {
+          void locateMonster(focusKey);
+        }}
+      />
+    ),
   });
   sections.push({
     id: 'npcs',
@@ -334,7 +361,7 @@ export function MapDetail({
               rows={view.onThisMap}
               focus={focus}
               onToggle={(kind) =>
-                writeFocus(
+                void writeFocus(
                   focus !== undefined && 'kind' in focus && focus.kind === kind
                     ? undefined
                     : { kind },

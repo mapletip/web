@@ -850,11 +850,57 @@ describe('MapDetail information', () => {
       `/maplestory/monsters/plain-pebble-${plainPebble.publicId}`,
     );
 
+    const sproutCard = cards.find((card) =>
+      card.textContent?.includes('Twin Sprout'),
+    );
+    if (sproutCard === undefined)
+      throw new Error('Expected a Twin Sprout card.');
+    expect(
+      within(sproutCard).getByRole('button', {
+        name: 'Locate 2 Twin Sprout spawns on map',
+      }),
+    ).toBeVisible();
+
     const bossCard = cards.find((card) =>
       card.textContent?.includes('Crowned Warden'),
     );
     if (bossCard === undefined) throw new Error('Expected a boss card.');
     expect(within(bossCard).getByText('Boss')).toBeVisible();
+  });
+
+  it('keeps spawn counts as plain text when monsters have no stage positions', () => {
+    const record = mapPageRecordFixture({ mapId: 'practice-grove' });
+    const view = projectMapDetail({
+      record: {
+        ...record,
+        monsters: {
+          ...record.monsters,
+          items: record.monsters.items.map((monster) => ({
+            ...monster,
+            points: { state: 'absent' as const, items: monster.points.items },
+          })),
+        },
+      },
+      buildId: 'cw-launch',
+    });
+    const sprout = view.monsters.monsters.find(
+      ({ name }) => name === 'Twin Sprout',
+    );
+    if (sprout === undefined) throw new Error('Expected Twin Sprout.');
+    expect(sprout.canLocate).toBe(false);
+    expect(sprout.locateAccessibleName).toBe(
+      'Locate 2 Twin Sprout spawns on map',
+    );
+
+    renderMapView({ view });
+
+    const sproutCard = screen
+      .getAllByTestId('map-monster-card')
+      .find((card) => card.textContent?.includes('Twin Sprout'));
+    if (sproutCard === undefined)
+      throw new Error('Expected a Twin Sprout card.');
+    expect(within(sproutCard).getByText('2 spawns')).toBeVisible();
+    expect(within(sproutCard).queryByRole('button')).not.toBeInTheDocument();
   });
 
   it('shows the known-empty monster message and zero count', () => {

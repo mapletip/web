@@ -174,6 +174,45 @@ test('Map Detail shows its stage and markers on desktop and mobile', async ({
   await expect(page.locator('[data-marker-ids]').first()).toBeVisible();
 });
 
+for (const viewport of [
+  { width: 1440, height: 900 },
+  { width: 390, height: 844 },
+]) {
+  test(`Locate opens Explore with the selected monster at ${viewport.width}px and Back closes it`, async ({
+    page,
+  }) => {
+    await page.setViewportSize(viewport);
+    const publicId = mapPublicId({ sourceId: 'cw-launch:practice-grove' });
+    await page.goto(`/maplestory/maps/practice-grove-${publicId}`);
+    await page.waitForLoadState('networkidle');
+
+    const sproutCard = page
+      .getByTestId('map-monster-card')
+      .filter({ hasText: 'Twin Sprout' });
+    await sproutCard
+      .getByRole('button', { name: 'Locate 2 Twin Sprout spawns on map' })
+      .click();
+
+    const dialog = page.getByRole('dialog', { name: 'Practice Grove' });
+    await expect(dialog).toBeVisible();
+    await expect(page).toHaveURL(/focus=monster-[a-z0-9]{8}/u);
+    const exploreStage = dialog.getByRole('group', {
+      name: 'Practice Grove map',
+    });
+    await expect(exploreStage.locator('[data-selected="true"]')).toHaveCount(2);
+
+    await page.goBack();
+
+    await expect(dialog).toBeHidden();
+    await expect(page).toHaveURL(/focus=monster-[a-z0-9]{8}/u);
+    await expect(
+      page
+        .getByRole('group', { name: 'Practice Grove map' })
+        .locator('[data-selected="true"]'),
+    ).toHaveCount(2);
+  });
+}
+
 test('Map Detail selection follows the address on desktop and stays static on mobile', async ({
   page,
   escapedDataRequests,
@@ -193,7 +232,7 @@ test('Map Detail selection follows the address on desktop and stays static on mo
     const dataRequestsAfterLoad = [...escapedDataRequests];
     await marker.click();
     await expect(page).toHaveURL(/focus=monster-[a-z0-9]{8}/u);
-    await expect(page.locator('[data-selected="true"]')).toHaveCount(2);
+    await expect(stage.locator('[data-selected="true"]')).toHaveCount(2);
     expect(escapedDataRequests).toEqual(dataRequestsAfterLoad);
 
     await marker.click();
@@ -205,7 +244,7 @@ test('Map Detail selection follows the address on desktop and stays static on mo
     expect(escapedDataRequests).toEqual(dataRequestsAfterLoad);
 
     await page.reload();
-    await expect(page.locator('[data-selected="true"]')).toHaveCount(2);
+    await expect(stage.locator('[data-selected="true"]')).toHaveCount(2);
     return;
   }
 
@@ -390,8 +429,12 @@ test('Map Detail restores a zoomed and panned stage after reload', async ({
   const stage = page.getByRole('group', { name: 'Practice Grove map' });
   const image = stage.getByRole('img', { name: 'Practice Grove map' });
   await stage.getByRole('button', { name: 'Zoom in' }).click();
+  await expect
+    .poll(
+      async () => (await readMapDetailHistoryState(page)).mapDetailStageView,
+    )
+    .toBeDefined();
   const zoomedState = await readMapDetailHistoryState(page);
-  expect(zoomedState.mapDetailStageView).toBeDefined();
 
   const imageBox = await image.boundingBox();
   expect(imageBox).not.toBeNull();
@@ -458,8 +501,12 @@ test('Map Detail restores its stage view after following a connection and going 
   await page.goto(`/maplestory/maps/practice-grove-${publicId}`);
   const stage = page.getByRole('group', { name: 'Practice Grove map' });
   await stage.getByRole('button', { name: 'Zoom in' }).click();
+  await expect
+    .poll(
+      async () => (await readMapDetailHistoryState(page)).mapDetailStageView,
+    )
+    .toBeDefined();
   const savedView = (await readMapDetailHistoryState(page)).mapDetailStageView;
-  expect(savedView).toBeDefined();
 
   await page
     .getByTestId('map-connection-card')
@@ -570,8 +617,12 @@ test('opening Explore keeps the inline stage view', async ({
   await page.goto(`/maplestory/maps/practice-grove-${publicId}`);
   const inlineStage = page.getByRole('group', { name: 'Practice Grove map' });
   await inlineStage.getByRole('button', { name: 'Zoom in' }).click();
+  await expect
+    .poll(
+      async () => (await readMapDetailHistoryState(page)).mapDetailStageView,
+    )
+    .toBeDefined();
   const inlineView = (await readMapDetailHistoryState(page)).mapDetailStageView;
-  expect(inlineView).toBeDefined();
 
   await page.getByRole('button', { name: 'Explore map' }).click();
   await expect(

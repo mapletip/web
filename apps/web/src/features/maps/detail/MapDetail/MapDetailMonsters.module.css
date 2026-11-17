@@ -1,0 +1,65 @@
+.locateButton {
+  width: max-content;
+  max-width: 100%;
+  min-width: 44px;
+  height: 44px;
+  min-height: 44px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: var(--mantine-radius-md);
+  background: transparent;
+  color: var(--mantine-color-text);
+  font-size: 0.875rem;
+  font-weight: 700;
+  line-height: 1.25;
+  white-space: nowrap;
+}
+
+.locateVisual {
+  display: inline-flex;
+  min-height: 28px;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0 2px;
+  border-radius: var(--mantine-radius-md);
+}
+
+.locatePin {
+  flex: 0 0 16px;
+  color: var(--mantine-color-red-4);
+}
+
+.spawnCount {
+  color: var(--mantine-color-orange-4);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.locateButton:hover,
+.locateButton:focus-visible {
+  background: transparent;
+}
+
+.locateButton:hover .locateVisual,
+.locateButton:focus-visible .locateVisual {
+  background: var(--mantine-color-default-hover);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.locateButton:focus-visible {
+  outline: 3px solid var(--mantine-primary-color-filled, Highlight);
+  outline-offset: 2px;
+}
+
+@media (forced-colors: active) {
+  .locatePin,
+  .spawnCount {
+    color: CanvasText;
+  }
+
+  .locateButton:focus-visible {
+    outline-color: Highlight;
+  }
+}
