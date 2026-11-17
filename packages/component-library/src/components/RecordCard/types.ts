@@ -6,7 +6,7 @@ export interface RecordCardDestination {
   readonly href: string;
 }
 
-/** Props applied to the single link surrounding a linked card. */
+/** Props applied to the card's title link. */
 export interface RecordCardLinkRenderProps {
   readonly href: string;
   readonly className: string;
