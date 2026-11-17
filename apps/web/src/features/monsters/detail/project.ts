@@ -3,7 +3,7 @@ import { mapMinimapUrl } from '@mapletip/data/maps';
 import type { MonsterPageRecordV1 } from '@mapletip/data/monsters';
 
 import { MAPLEKIT_RELEASE, type BuildId } from '@/config/maplekit';
-import { buildRecordDetailPath } from '@/features/detail';
+import { buildRecordDetailPath, nonBlank } from '@/features/detail';
 
 import {
   formatMonsterNumber,
@@ -223,11 +223,6 @@ function positiveDimension(
   return typeof value === 'number' && Number.isFinite(value) && value > 0
     ? value
     : undefined;
-}
-
-function nonBlank(value: string | null | undefined): string | undefined {
-  const trimmed = value?.trim();
-  return trimmed === undefined || trimmed.length === 0 ? undefined : trimmed;
 }
 
 /** Advancement codes need the Jobs catalog; only the class-base codes are labelled here. */

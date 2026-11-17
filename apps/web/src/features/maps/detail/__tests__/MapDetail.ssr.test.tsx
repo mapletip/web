@@ -62,6 +62,16 @@ describe('MapDetail server rendering', () => {
     expect(html).toContain('href="/maplestory/maps"');
     expect(html).toContain('Lantern Hills');
     expect(html).toContain('Lantern Market');
+    expect(html.replaceAll('<!-- -->', '')).toContain('Part of Market');
+    expect(html).toContain('A gathering place beneath paper lanterns.');
+    expect(html).toContain('Map information');
+    expect(html).toContain('Floral Life');
+    expect(html).toContain('10 min');
+    expect(html).toContain('Swimming');
+    expect(html).not.toContain('Flying');
+    expect(html).toContain(
+      `href="/maplestory/maps/practice-grove-${source.information.returnMap.state === 'known' ? source.information.returnMap.value.publicId : ''}"`,
+    );
     expect(html).toContain(
       `<title>Lantern Square - MapleStory Map, Monster Spawns &amp; NPCs | Classic World</title>`,
     );

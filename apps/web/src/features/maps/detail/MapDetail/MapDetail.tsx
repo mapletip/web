@@ -1,17 +1,21 @@
 import { Stack, Text, Title } from '@mantine/core';
+import { FactSheet } from '@mapletip/component-library';
 import type { ReactElement } from 'react';
 
 import { DetailPageShell } from '@/components/DetailPageShell';
+import { AnchorLink } from '@/components/RouterLinks';
 import { DetailBreadcrumbs } from '@/features/detail';
 
 import { mapDetailBreadcrumbs } from '../metadata';
 import type { MapDetailView } from '../project';
 
+const MAP_DETAIL_ROUTE = '/maplestory/{-$buildId}/maps/$slugId' as const;
+
 export interface MapDetailProps {
   readonly view: MapDetailView;
 }
 
-/** Server-rendered identity skeleton for one Map. */
+/** Server-rendered identity and map information for one Map. */
 export function MapDetail({ view }: MapDetailProps): ReactElement {
   return (
     <DetailPageShell>
@@ -24,7 +28,38 @@ export function MapDetail({ view }: MapDetailProps): ReactElement {
           {view.subtitle === undefined ? null : (
             <Text c="dimmed">{view.subtitle}</Text>
           )}
+          {view.activity === undefined ? null : (
+            <Text>Part of {view.activity}</Text>
+          )}
+          {view.description === undefined ? null : (
+            <Text>{view.description}</Text>
+          )}
         </div>
+        {view.facts.length === 0 ? null : (
+          <Stack
+            component="section"
+            aria-labelledby="map-information-heading"
+            gap="sm"
+          >
+            <Title id="map-information-heading" order={2}>
+              Map information
+            </Title>
+            <FactSheet
+              facts={view.facts.map((fact) => ({
+                label: fact.label,
+                explanation: fact.explanation,
+                value:
+                  fact.destination === undefined ? (
+                    fact.value
+                  ) : (
+                    <AnchorLink to={MAP_DETAIL_ROUTE} params={fact.destination}>
+                      {fact.value}
+                    </AnchorLink>
+                  ),
+              }))}
+            />
+          </Stack>
+        )}
       </Stack>
     </DetailPageShell>
   );
