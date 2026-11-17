@@ -1,3 +1,4 @@
+import type { MapPageRecordV1 } from '@mapletip/data/maps';
 import type { MonsterPageRecordV1 } from '@mapletip/data/monsters';
 
 /**
@@ -116,6 +117,7 @@ export interface FixtureMap {
     readonly height: number;
   };
   readonly positionsPublished?: boolean;
+  readonly information?: Partial<MapPageRecordV1['information']>;
   readonly monsters: readonly FixtureMapMonster[];
   readonly npcs: readonly FixtureMapNpc[];
   readonly connections: readonly FixtureMapConnection[];
@@ -686,6 +688,12 @@ export const fixtureMaps: readonly FixtureMap[] = [
     streetName: 'Lantern Hills',
     activity: 'Market',
     description: 'A gathering place beneath paper lanterns.',
+    information: {
+      music: { state: 'known', value: 'Floral Life' },
+      timeLimitSeconds: { state: 'known', value: 600 },
+      swimming: { state: 'known', value: true },
+      flying: { state: 'known', value: false },
+    },
     geography: {
       regionKey: 'fixture:lantern-hills',
       regionLabel: 'Lantern Hills',
