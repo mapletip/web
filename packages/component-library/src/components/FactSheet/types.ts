@@ -11,7 +11,8 @@ interface FactBase {
 
 /** A fact with a value the host has already formatted for display. */
 export interface KnownFact extends FactBase {
-  readonly value: string;
+  /** The host supplies formatted text or an inline element such as a link. */
+  readonly value: ReactNode;
   readonly notKnown?: never;
 }
 

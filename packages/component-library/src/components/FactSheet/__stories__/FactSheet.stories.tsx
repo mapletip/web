@@ -115,6 +115,23 @@ export const MixedKnown: Story = {
   ),
 };
 
+export const LinkedValue: Story = {
+  render: () => (
+    <Stage>
+      <Box p="md" bg="var(--mapletip-color-canvas)">
+        <FactSheet
+          facts={[
+            {
+              label: 'Return map',
+              value: <a href="/maplestory/maps/ellinia">Ellinia</a>,
+            },
+          ]}
+        />
+      </Box>
+    </Stage>
+  ),
+};
+
 export const Narrow: Story = {
   render: () => (
     <Stage>
