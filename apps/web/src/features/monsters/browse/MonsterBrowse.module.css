@@ -18,6 +18,7 @@
 
 .identityName {
   min-width: 0;
+  font-size: var(--mantine-font-size-sm);
   overflow-wrap: anywhere;
 }
 
