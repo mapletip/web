@@ -1,13 +1,14 @@
 import { createFileRoute, notFound, redirect } from '@tanstack/react-router';
 
 import { BrowseUnavailable } from '@/components/BrowseUnavailable';
-import { BUILDS, DEFAULT_BUILD_ID, type BuildId } from '@/config/maplekit';
+import { BUILDS, DEFAULT_BUILD_ID } from '@/config/maplekit';
 import {
   RecordNotFound,
   buildCollectionPath,
   canonicalBuildParam,
   formatRecordAddress,
   parseRecordAddress,
+  requireBuildId,
   resolveBuildIdParam,
 } from '@/features/detail';
 import {
@@ -16,23 +17,14 @@ import {
 } from '@/features/monsters/detail';
 import { loadMonsterDetail } from '@/features/monsters/detail/load';
 
-function resolveMonsterDetailBuildId(rawBuildId?: string): BuildId {
-  const buildId = resolveBuildIdParam(rawBuildId);
-  if (buildId === null) {
-    // eslint-disable-next-line @typescript-eslint/only-throw-error
-    throw notFound();
-  }
-  return buildId;
-}
-
 export const Route = createFileRoute(
   '/maplestory/{-$buildId}/monsters/$slugId',
 )({
   beforeLoad: ({ params }) => {
-    resolveMonsterDetailBuildId(params.buildId);
+    requireBuildId(params.buildId);
   },
   loader: async ({ params, abortController }) => {
-    const buildId = resolveMonsterDetailBuildId(params.buildId);
+    const buildId = requireBuildId(params.buildId);
     const address = parseRecordAddress(params.slugId);
     if (address === null) {
       // eslint-disable-next-line @typescript-eslint/only-throw-error

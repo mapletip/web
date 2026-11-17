@@ -28,22 +28,30 @@ export function DetailBreadcrumbs({
     <nav aria-label="Breadcrumb">
       <Breadcrumbs separator="/">
         {items.map((item, index) => {
+          const key = `${index}:${item.label}`;
           if (index === items.length - 1) {
             return (
-              <Text key={item.path} size="sm" aria-current="page">
+              <Text key={key} size="sm" aria-current="page">
                 {item.label}
               </Text>
             );
           }
           if (item.linkProps) {
             return (
-              <AnchorLink key={item.path} size="sm" {...item.linkProps}>
+              <AnchorLink key={key} size="sm" {...item.linkProps}>
                 {item.label}
               </AnchorLink>
             );
           }
+          if (item.path === undefined) {
+            return (
+              <Text key={key} size="sm">
+                {item.label}
+              </Text>
+            );
+          }
           return (
-            <Anchor key={item.path} href={item.path} size="sm">
+            <Anchor key={key} href={item.path} size="sm">
               {item.label}
             </Anchor>
           );
