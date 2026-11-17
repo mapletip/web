@@ -7,6 +7,8 @@ export {
 export {
   projectMapDetail,
   UNNAMED_MAP_LABEL,
+  type MapDetailNpcView,
+  type MapDetailNpcsView,
   type MapDetailMonsterView,
   type MapDetailMonstersView,
   type MapDetailView,

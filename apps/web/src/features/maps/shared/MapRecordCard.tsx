@@ -9,6 +9,7 @@ import type { BuildId } from '@/config/maplekit';
 import classes from './MapRecordCard.module.css';
 
 export const MAP_DETAIL_ROUTE = '/maplestory/{-$buildId}/maps/$slugId' as const;
+export const MAP_RECORD_CARD_DENSITY = { base: 1, sm: 2 } as const;
 
 export interface MapRecordCardFooterPart {
   readonly value: string;
@@ -132,7 +133,11 @@ export function MapRecordCard({ map }: MapRecordCardProps): ReactElement {
       title={map.name}
       secondaryLine={map.secondaryLine}
       media={media}
-      footer={renderFooterParts(map.footerParts)}
+      footer={
+        map.footerParts.length === 0
+          ? undefined
+          : renderFooterParts(map.footerParts)
+      }
       {...(destination === undefined
         ? {}
         : {

@@ -14,7 +14,8 @@ import { CaretRight, MagnifyingGlass } from '@phosphor-icons/react';
 import { useId, useState } from 'react';
 import type { ReactElement } from 'react';
 
-import { MapRecordCard } from '@/features/maps/shared';
+import { DetailCardList } from '@/features/detail';
+import { MAP_RECORD_CARD_DENSITY, MapRecordCard } from '@/features/maps/shared';
 
 import type { MonsterDetailLocationsView } from '../project';
 
@@ -140,22 +141,14 @@ export function MonsterDetailLocations({
 
   function renderMapList(mapList: typeof maps, drawer = false): ReactElement {
     return (
-      <Box
-        component="ul"
-        className={classes['list']}
-        data-location-drawer={drawer ? 'true' : undefined}
-      >
-        {mapList.map((map) => (
-          <Box
-            component="li"
-            className={classes['item']}
-            data-testid="monster-location-card"
-            key={map.key}
-          >
-            <MapRecordCard map={map} />
-          </Box>
-        ))}
-      </Box>
+      <DetailCardList
+        items={mapList}
+        getKey={(map) => map.key}
+        density={MAP_RECORD_CARD_DENSITY}
+        itemTestId="monster-location-card"
+        {...(drawer ? {} : { mobileItemLimit: MOBILE_CAP })}
+        renderItem={(map) => <MapRecordCard map={map} />}
+      />
     );
   }
 

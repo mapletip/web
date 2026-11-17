@@ -10,6 +10,11 @@ export {
 export { nonBlank } from './nonBlank';
 export { requireBuildId } from './requireBuildId';
 export {
+  DEFAULT_DETAIL_CARD_LIST_DENSITY,
+  DetailCardList,
+  type DetailCardListProps,
+} from './DetailCardList';
+export {
   DetailBreadcrumbs,
   type DetailBreadcrumb,
   type DetailBreadcrumbsProps,

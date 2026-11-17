@@ -130,4 +130,32 @@ describe('MapDetail server rendering', () => {
       `href="/maplestory/monsters/plain-pebble-${record.monsters.items[0]?.publicId}"`,
     );
   });
+
+  it('renders the NPCs section heading and a card in server HTML', async () => {
+    const view = projectMapDetail({
+      record: mapPageRecordFixture({ mapId: 'lantern-square' }),
+      buildId: 'cw-launch',
+    });
+    mockedLoadMapDetail.mockResolvedValue({ status: 'found', view });
+
+    const router = createRouter({
+      routeTree,
+      history: createMemoryHistory({ initialEntries: [view.canonicalPath] }),
+    });
+    await router.load();
+
+    const html = renderToString(
+      <RouterContextProvider router={router}>
+        <MantineProvider theme={theme} forceColorScheme="dark">
+          <MapDetail view={view} />
+        </MantineProvider>
+      </RouterContextProvider>,
+    );
+
+    expect(html).toContain('id="npcs"');
+    expect(html).toContain('NPCs');
+    expect(html).toContain('data-testid="map-npc-card"');
+    expect(html).toContain('Bellkeeper');
+    expect(html).toContain('data-fallback="true"');
+  });
 });

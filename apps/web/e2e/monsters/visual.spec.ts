@@ -25,7 +25,6 @@ test('desktop Monster Detail shows an enlarged minimap on hover', async ({
     name: 'Enlarge Practice Map 01 minimap',
   });
   await expect(trigger).toBeVisible();
-  await trigger.scrollIntoViewIfNeeded();
   await trigger.hover();
 
   const preview = page.getByRole('tooltip', {

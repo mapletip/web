@@ -22,7 +22,7 @@ describe('MonsterDetailQuests', () => {
         {
           key: 'fixture:quest:001',
           name: 'Practice Hunt',
-          minimumLevelBadge: 'Lv. 10+',
+          minimumLevelLabel: 'Lv. 10+',
           jobSummary: 'Warrior',
           defeatLabel: 'Defeat ×30',
           repeatable: true,

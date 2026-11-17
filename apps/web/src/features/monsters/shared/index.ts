@@ -21,3 +21,13 @@ export {
   type UnknownFactState,
 } from './monster-data';
 export { resolveMonsterSpriteUrl } from './sprite';
+export {
+  MONSTER_RECORD_CARD_DENSITY,
+  MonsterRecordCard,
+} from './MonsterRecordCard';
+export {
+  projectMonsterRecordCard,
+  projectMonsterRespawnLabel,
+  type MapPageMonsterRecord,
+  type MonsterRecordCardView,
+} from './monsterRecordCardProjection';

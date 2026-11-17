@@ -1,11 +1,10 @@
-import { Box, Stack, Text } from '@mantine/core';
+import { Stack, Text } from '@mantine/core';
 import type { ReactElement } from 'react';
 
-import { MapRecordCard } from '@/features/maps/shared';
+import { DetailCardList } from '@/features/detail';
+import { MAP_RECORD_CARD_DENSITY, MapRecordCard } from '@/features/maps/shared';
 
 import type { MapDetailConnectionsView } from '../project';
-
-import classes from './RecordCardGrid.module.css';
 
 export interface MapDetailConnectionsProps {
   readonly connections: MapDetailConnectionsView;
@@ -20,20 +19,13 @@ export function MapDetailConnections({
       {connections.notice === undefined ? null : (
         <Text>{connections.notice}</Text>
       )}
-      {connections.maps.length === 0 ? null : (
-        <Box component="ul" className={classes['list']}>
-          {connections.maps.map((map) => (
-            <Box
-              component="li"
-              className={classes['item']}
-              data-testid="map-connection-card"
-              key={map.key}
-            >
-              <MapRecordCard map={map} />
-            </Box>
-          ))}
-        </Box>
-      )}
+      <DetailCardList
+        items={connections.maps}
+        getKey={(map) => map.key}
+        density={MAP_RECORD_CARD_DENSITY}
+        itemTestId="map-connection-card"
+        renderItem={(map) => <MapRecordCard map={map} />}
+      />
     </Stack>
   );
 }

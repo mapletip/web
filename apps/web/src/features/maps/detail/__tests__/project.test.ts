@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
+import { UNNAMED_NPC_LABEL } from '@/features/npcs/shared';
+
 import { projectMapDetail, UNNAMED_MAP_LABEL } from '../project';
 
 import { mapPageRecordFixture } from './mapPageFixture';
@@ -7,12 +9,29 @@ import { mapPageRecordFixture } from './mapPageFixture';
 type MapPageMonster = ReturnType<
   typeof mapPageRecordFixture
 >['monsters']['items'][number];
+type MapPageNpc = ReturnType<
+  typeof mapPageRecordFixture
+>['npcs']['items'][number];
 
 function monster(
   source: MapPageMonster,
   overrides: Partial<MapPageMonster>,
 ): MapPageMonster {
   return { ...source, ...overrides };
+}
+
+function npc(
+  source: MapPageNpc,
+  options: { readonly key: string; readonly name?: string },
+): MapPageNpc {
+  return {
+    ...source,
+    key: options.key,
+    name:
+      options.name === undefined
+        ? { state: 'unknown' }
+        : { state: 'known', value: options.name },
+  };
 }
 
 function connection(
@@ -46,6 +65,68 @@ function connection(
 }
 
 describe('projectMapDetail', () => {
+  it('projects NPCs in natural name order and labels unknown names once', () => {
+    const record = mapPageRecordFixture({ mapId: 'lantern-square' });
+    const template = record.npcs.items[0];
+    if (template === undefined) throw new Error('Expected a fixture NPC.');
+
+    const view = projectMapDetail({
+      record: {
+        ...record,
+        npcs: {
+          state: 'known',
+          items: [
+            npc(template, { key: 'npc-10', name: 'Guide 10' }),
+            npc(template, { key: 'npc-unknown' }),
+            npc(template, { key: 'npc-2', name: 'Guide 2' }),
+            npc(template, { key: 'npc-1', name: 'Guide 1' }),
+          ],
+        },
+      },
+      buildId: 'cw-launch',
+    });
+
+    expect(view.npcs.count).toBe(4);
+    expect(view.npcs.npcs.map(({ name }) => name)).toEqual([
+      'Guide 1',
+      'Guide 2',
+      'Guide 10',
+      UNNAMED_NPC_LABEL,
+    ]);
+    expect(UNNAMED_NPC_LABEL).toBe('Unnamed NPC');
+  });
+
+  it('projects NPC notices and counts for each collection state', () => {
+    const record = mapPageRecordFixture({ mapId: 'lantern-square' });
+    const template = record.npcs.items[0];
+    if (template === undefined) throw new Error('Expected a fixture NPC.');
+    const projectNpcs = (npcs: typeof record.npcs) =>
+      projectMapDetail({ record: { ...record, npcs }, buildId: 'cw-launch' })
+        .npcs;
+
+    expect(projectNpcs({ state: 'unknown', items: [] })).toMatchObject({
+      count: 'unknown',
+      notice: 'NPC information is unavailable.',
+    });
+    expect(
+      projectNpcs({
+        state: 'partial',
+        items: [npc(template, { key: 'npc-known', name: 'Guide' })],
+      }),
+    ).toMatchObject({
+      count: 1,
+      notice: 'Some NPC information may be missing.',
+    });
+    expect(projectNpcs({ state: 'known', items: [] })).toMatchObject({
+      count: 0,
+      notice: 'No NPCs are recorded on this map.',
+    });
+    expect(projectNpcs({ state: 'absent', items: [] })).toMatchObject({
+      count: 0,
+      notice: 'No NPCs are recorded on this map.',
+    });
+  });
+
   it('projects a named map and default-build canonical path', () => {
     const record = mapPageRecordFixture({ mapId: 'practice-grove' });
     const view = projectMapDetail({ record, buildId: 'cw-launch' });
@@ -178,10 +259,7 @@ describe('projectMapDetail', () => {
     const unnamed = connections.maps.find(
       ({ name }) => name === UNNAMED_MAP_LABEL,
     );
-    expect(unnamed?.footerParts).toEqual([
-      { value: '2', label: 'monsters' },
-      { value: '0', label: 'NPCs' },
-    ]);
+    expect(unnamed?.footerParts).toEqual([{ value: '2', label: 'monsters' }]);
     expect(unnamed?.minimapUrl).toBeUndefined();
     expect(unnamed?.minimapUnavailableLabel).toBe('Minimap unavailable');
   });
@@ -384,8 +462,7 @@ describe('projectMapDetail', () => {
     expect(view.monsters.monsters[0]).toMatchObject({
       name: 'Boss',
       bossLabel: 'Boss',
-      spriteWidth: 80,
-      spriteHeight: 96,
+      levelLabel: 'Lv 1',
     });
     expect(view.monsters.monsters[0]?.spriteUrl).toContain(spriteId);
     expect(view.monsters.monsters[1]?.bossLabel).toBeUndefined();

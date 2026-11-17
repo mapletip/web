@@ -116,10 +116,6 @@ describe('MonsterDetailLocations', () => {
     await waitFor(() => expect(drawer).toBeVisible());
     const drawerCards = within(drawer).getAllByTestId('monster-location-card');
     expect(drawerCards).toHaveLength(12);
-    expect(within(drawer).getByRole('list')).toHaveAttribute(
-      'data-location-drawer',
-      'true',
-    );
     expect(
       within(drawer).getByRole('img', { name: 'Practice Map 01 minimap' }),
     ).toBeVisible();

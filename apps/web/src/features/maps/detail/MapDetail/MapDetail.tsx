@@ -17,6 +17,7 @@ import type { MapDetailView } from '../project';
 
 import { MapDetailConnections } from './MapDetailConnections';
 import { MapDetailMonsters } from './MapDetailMonsters';
+import { MapDetailNpcs } from './MapDetailNpcs';
 
 export interface MapDetailProps {
   readonly view: MapDetailView;
@@ -41,6 +42,12 @@ export function MapDetail({ view }: MapDetailProps): ReactElement {
     title: 'Monsters',
     count: view.monsters.count,
     content: <MapDetailMonsters monsters={view.monsters} />,
+  });
+  sections.push({
+    id: 'npcs',
+    title: 'NPCs',
+    count: view.npcs.count,
+    content: <MapDetailNpcs npcs={view.npcs} />,
   });
 
   return (

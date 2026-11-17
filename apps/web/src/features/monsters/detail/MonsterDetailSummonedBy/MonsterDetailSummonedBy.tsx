@@ -1,6 +1,7 @@
 import { Box, Group } from '@mantine/core';
-import { EntityChip } from '@mapletip/component-library';
 import type { ReactElement } from 'react';
+
+import { ItemRecordChip } from '@/features/items/shared';
 
 import type { MonsterDetailSummonedByView } from '../project';
 
@@ -25,7 +26,7 @@ export function MonsterDetailSummonedBy({
       {summonedBy.entries.map((item) => (
         <Box component="li" className={classes['item']} key={item.key}>
           <Group className={classes['chip']}>
-            <EntityChip name={item.name} iconSrc={item.iconUrl} />
+            <ItemRecordChip item={item} />
           </Group>
         </Box>
       ))}

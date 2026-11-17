@@ -16,20 +16,6 @@
   gap: var(--mantine-spacing-sm);
 }
 
-.list {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--mantine-spacing-sm);
-  min-width: 0;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.item {
-  min-width: 0;
-}
-
 .drawerTitle {
   min-width: 0;
 }
@@ -57,19 +43,5 @@
 @media (max-width: 47.99em) {
   .controls {
     grid-template-columns: minmax(0, 1fr);
-  }
-
-  .list {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .list:not([data-location-drawer='true']) > .item:nth-child(n + 6) {
-    display: none;
-  }
-}
-
-@media (min-width: 48em) {
-  .list:not([data-location-drawer='true']) > .item:nth-child(n + 11) {
-    display: none;
   }
 }
