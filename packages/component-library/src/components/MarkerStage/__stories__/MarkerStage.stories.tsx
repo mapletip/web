@@ -57,20 +57,92 @@ function frame({ width, props }: { width: number; props: MarkerStageProps }) {
   );
 }
 
-export const WideImage: Story = {
-  args: {
-    image: {
-      src: syntheticImage({ width: 600, height: 300, color: '#bfd6d7' }),
-      width: 600,
-      height: 300,
-      alt: 'Synthetic wide image',
-    },
-    markers: [
-      { id: 'west', x: 125, y: 200, content: marker('A') },
-      { id: 'east', x: 480, y: 170, content: marker('B') },
-    ],
-    unavailableMessage,
+const wideImageArgs: MarkerStageProps = {
+  image: {
+    src: syntheticImage({ width: 600, height: 300, color: '#bfd6d7' }),
+    width: 600,
+    height: 300,
+    alt: 'Synthetic wide image',
   },
+  markers: [
+    {
+      id: 'west',
+      x: 125,
+      y: 200,
+      label: 'West point',
+      content: marker('A'),
+    },
+    {
+      id: 'east',
+      x: 480,
+      y: 170,
+      label: 'East point',
+      content: marker('B'),
+    },
+    {
+      id: 'north',
+      x: 330,
+      y: 80,
+      label: 'North point',
+      content: marker('C'),
+    },
+    {
+      id: 'south',
+      x: 260,
+      y: 260,
+      label: 'South point',
+      content: marker('D'),
+    },
+  ],
+  selectedIds: [],
+  unavailableMessage,
+};
+
+export const WideImage: Story = {
+  args: wideImageArgs,
+  render: (args) => frame({ width: 680, props: args }),
+};
+
+export const NoneSelected: Story = {
+  args: wideImageArgs,
+  render: (args) => frame({ width: 680, props: args }),
+};
+
+export const OneSelected: Story = {
+  args: { ...wideImageArgs, selectedIds: ['east'] },
+  render: (args) => frame({ width: 680, props: args }),
+};
+
+export const ManySelected: Story = {
+  args: { ...wideImageArgs, selectedIds: ['west', 'north', 'south'] },
+  render: (args) => frame({ width: 680, props: args }),
+};
+
+export const CoincidentMarkers: Story = {
+  args: {
+    ...wideImageArgs,
+    markers: [
+      {
+        id: 'first',
+        x: 260,
+        y: 150,
+        label: 'First point',
+        content: marker(''),
+      },
+      {
+        id: 'second',
+        x: 260,
+        y: 150,
+        label: 'Second point',
+        content: marker(''),
+      },
+    ],
+  },
+  render: (args) => frame({ width: 680, props: args }),
+};
+
+export const Static: Story = {
+  args: { ...wideImageArgs, interactive: false, selectedIds: ['east'] },
   render: (args) => frame({ width: 680, props: args }),
 };
 
@@ -82,7 +154,15 @@ export const TallImage: Story = {
       height: 480,
       alt: 'Synthetic tall image',
     },
-    markers: [{ id: 'centre', x: 120, y: 300, content: marker('A') }],
+    markers: [
+      {
+        id: 'centre',
+        x: 120,
+        y: 300,
+        label: 'Centre point',
+        content: marker('A'),
+      },
+    ],
     unavailableMessage,
   },
   render: (args) => frame({ width: 240, props: args }),
@@ -96,7 +176,9 @@ export const TinyImage: Story = {
       height: 8,
       alt: 'Synthetic tiny image',
     },
-    markers: [{ id: 'centre', x: 6, y: 6, content: marker('A') }],
+    markers: [
+      { id: 'centre', x: 6, y: 6, label: 'Centre point', content: marker('A') },
+    ],
     unavailableMessage,
   },
   render: (args) => frame({ width: 320, props: args }),
@@ -104,7 +186,15 @@ export const TinyImage: Story = {
 
 export const Unavailable: Story = {
   args: {
-    markers: [{ id: 'hidden', x: 10, y: 20, content: marker('A') }],
+    markers: [
+      {
+        id: 'hidden',
+        x: 10,
+        y: 20,
+        label: 'Hidden point',
+        content: marker('A'),
+      },
+    ],
     unavailableMessage,
   },
   render: (args) => frame({ width: 680, props: args }),

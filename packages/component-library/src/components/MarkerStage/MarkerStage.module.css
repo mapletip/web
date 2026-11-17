@@ -21,6 +21,35 @@
   transform: translate(-50%, -100%);
 }
 
+.markerButton,
+.markerStatic {
+  box-sizing: border-box;
+  display: flex;
+  min-width: 44px;
+  min-height: 44px;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 0;
+}
+
+.markerButton {
+  border: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+}
+
+.markerStatic {
+  pointer-events: none;
+}
+
+.markerSelected,
+.markerButton:focus-visible {
+  outline: 2px solid var(--mantine-color-text, currentColor);
+  outline-offset: 2px;
+}
+
 .unavailable {
   position: absolute;
   inset: 0;
@@ -41,5 +70,10 @@
 
   .unavailable {
     color: CanvasText;
+  }
+
+  .markerSelected,
+  .markerButton:focus-visible {
+    outline-color: Highlight;
   }
 }

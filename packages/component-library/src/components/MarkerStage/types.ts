@@ -20,6 +20,8 @@ export interface MarkerStageMarker {
   readonly x: number;
   /** Vertical position in image pixels. */
   readonly y: number;
+  /** Accessible name for this marker. */
+  readonly label: string;
   /** Content rendered with its bottom centre on the supplied point. */
   readonly content: ReactNode;
 }
@@ -30,6 +32,12 @@ export interface MarkerStageProps {
   readonly image?: MarkerStageImage | undefined;
   /** Host-rendered markers positioned in the image's pixel coordinate space. */
   readonly markers: readonly MarkerStageMarker[];
+  /** Marker ids selected by the host. */
+  readonly selectedIds?: readonly string[];
+  /** Reports every id at an activated point. */
+  readonly onActivate?: (markerIds: readonly string[]) => void;
+  /** Whether markers can be activated. Defaults to true. */
+  readonly interactive?: boolean;
   /** Host wording shown when the image is missing or fails to load. */
   readonly unavailableMessage: string;
 }
