@@ -11,7 +11,7 @@
 .name {
   min-width: 0;
   margin: 0;
-  font-size: var(--mantine-font-size-md);
+  font-size: var(--mantine-font-size-sm);
   font-weight: 650;
   line-height: 1.3;
   overflow-wrap: anywhere;
@@ -19,6 +19,7 @@
 
 .name a {
   color: var(--mantine-color-anchor);
+  font-size: var(--mantine-font-size-sm);
   text-decoration: none;
 }
 
