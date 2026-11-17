@@ -19,6 +19,37 @@
   max-height: 100%;
 }
 
+.minimapTrigger {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  border-radius: var(--mantine-radius-xs);
+  background: transparent;
+  cursor: zoom-in;
+}
+
+.minimapTrigger:focus-visible {
+  outline: 2px solid var(--mapletip-color-focus);
+  outline-offset: 3px;
+}
+
+.minimapPopover {
+  max-width: calc(85vw + 16px);
+  padding: 8px;
+}
+
+.expandedMinimap {
+  display: block;
+  width: min(40rem, 85vw);
+  height: auto;
+  max-height: 80vh;
+  border-radius: var(--mantine-radius-xs);
+  background: var(--mapletip-color-canvas);
+  image-rendering: pixelated;
+  object-fit: contain;
+}
+
 .spawnCount {
   color: var(--mapletip-color-muted);
   font-size: 0.95rem;
