@@ -6,6 +6,7 @@ import {
 } from '@tanstack/react-router';
 import { fireEvent, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { useState } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 
 import portalImage from '@/assets/maplestory/maps/minimap-portal.png?no-inline';
@@ -55,6 +56,56 @@ function renderMapView({
         <MapDetail
           view={view}
           focusValue={focusValue}
+          {...(onFocusChange === undefined ? {} : { onFocusChange })}
+        />
+      </MantineProvider>
+    </RouterContextProvider>,
+  );
+}
+
+function ControlledMapDetail({
+  view,
+  initialFocus,
+  onFocusChange,
+}: {
+  readonly view: MapDetailView;
+  readonly initialFocus?: string | undefined;
+  readonly onFocusChange?: ((focus: string | undefined) => void) | undefined;
+}) {
+  const [focusValue, setFocusValue] = useState(initialFocus);
+  return (
+    <MapDetail
+      view={view}
+      focusValue={focusValue}
+      onFocusChange={(focus) => {
+        setFocusValue(focus);
+        onFocusChange?.(focus);
+      }}
+    />
+  );
+}
+
+function renderControlledMapView({
+  view,
+  focusValue,
+  onFocusChange,
+}: {
+  readonly view: MapDetailView;
+  readonly focusValue?: string | undefined;
+  readonly onFocusChange?: ((focus: string | undefined) => void) | undefined;
+}) {
+  matchDesktopBreakpoint();
+  const router = createRouter({
+    routeTree,
+    history: createMemoryHistory({ initialEntries: [view.canonicalPath] }),
+  });
+
+  return render(
+    <RouterContextProvider router={router}>
+      <MantineProvider env="test">
+        <ControlledMapDetail
+          view={view}
+          initialFocus={focusValue}
           {...(onFocusChange === undefined ? {} : { onFocusChange })}
         />
       </MantineProvider>
@@ -129,6 +180,160 @@ describe('MapDetail information', () => {
     });
 
     expect(onFocusChange).toHaveBeenCalledWith(monster.focusKey);
+  });
+
+  it('selects and clears a legend chip with the marker activation rule', async () => {
+    const view = projectMapDetail({
+      record: mapPageRecordFixture({ mapId: 'practice-grove' }),
+      buildId: 'cw-launch',
+    });
+    const monster = view.entities.find(({ name }) => name === 'Hollow Husk');
+    if (monster === undefined) throw new Error('Expected Hollow Husk.');
+    const onFocusChange = vi.fn();
+    const user = userEvent.setup();
+    renderControlledMapView({ view, onFocusChange });
+
+    const chip = screen.getByRole('checkbox', {
+      name: `${monster.name}, ${monster.kindLabel}`,
+    });
+    const legend = within(screen.getByRole('group', { name: 'Map legend' }));
+    await user.click(legend.getByText(monster.name, { exact: true }));
+    expect(chip).toBeChecked();
+    expect(onFocusChange).toHaveBeenLastCalledWith(monster.focusKey);
+    expect(
+      screen
+        .getByRole('group', { name: 'Practice Grove map' })
+        .querySelectorAll('[data-selected="true"]'),
+    ).toHaveLength(1);
+
+    await user.click(legend.getByText(monster.name, { exact: true }));
+    expect(chip).not.toBeChecked();
+    expect(onFocusChange).toHaveBeenLastCalledWith(undefined);
+    expect(
+      screen
+        .getByRole('group', { name: 'Practice Grove map' })
+        .querySelectorAll('[data-selected="true"]'),
+    ).toHaveLength(0);
+  });
+
+  it('selects both markers for a warp legend chip', async () => {
+    const view = projectMapDetail({
+      record: mapPageRecordFixture({ mapId: 'practice-grove' }),
+      buildId: 'cw-launch',
+    });
+    const warp = view.entities.find(({ kind }) => kind === 'warp');
+    if (warp === undefined) throw new Error('Expected a fixture Warp.');
+    const onFocusChange = vi.fn();
+    const user = userEvent.setup();
+    renderControlledMapView({ view, onFocusChange });
+
+    const legend = within(screen.getByRole('group', { name: 'Map legend' }));
+    await user.click(legend.getByText(warp.name, { exact: true }));
+
+    expect(onFocusChange).toHaveBeenLastCalledWith(warp.focusKey);
+    expect(
+      screen
+        .getByRole('group', { name: 'Practice Grove map' })
+        .querySelectorAll('[data-selected="true"]'),
+    ).toHaveLength(2);
+  });
+
+  it('checks every chip in a focused whole kind', () => {
+    const view = projectMapDetail({
+      record: mapPageRecordFixture({ mapId: 'practice-grove' }),
+      buildId: 'cw-launch',
+    });
+    renderMapView({ view, focusValue: 'monsters' });
+
+    const monsterChips = view.entities.filter(({ kind }) => kind === 'monster');
+    expect(monsterChips.length).toBeGreaterThan(1);
+    for (const entity of monsterChips) {
+      const chip = screen.getByRole('checkbox', {
+        name: `${entity.name}, ${entity.kindLabel}`,
+      });
+      expect(chip).toBeChecked();
+    }
+    for (const entity of view.entities.filter(
+      ({ kind }) => kind !== 'monster',
+    )) {
+      expect(
+        screen.getByRole('checkbox', {
+          name: `${entity.name}, ${entity.kindLabel}`,
+        }),
+      ).not.toBeChecked();
+    }
+  });
+
+  it('shows four chips without tabs and tabs with kind counts above four', async () => {
+    const baseView = projectMapDetail({
+      record: mapPageRecordFixture({ mapId: 'practice-grove' }),
+      buildId: 'cw-launch',
+    });
+    const fourEntityView = {
+      ...baseView,
+      entities: baseView.entities.slice(0, 4),
+    };
+    const fourChipRender = renderMapView({ view: fourEntityView });
+    expect(screen.getAllByRole('checkbox')).toHaveLength(4);
+    expect(screen.queryByRole('tablist')).not.toBeInTheDocument();
+    fourChipRender.unmount();
+
+    const connection = baseView.entities.find(
+      ({ kind }) => kind === 'connection',
+    );
+    const warp = baseView.entities.find(({ kind }) => kind === 'warp');
+    const monster = baseView.entities.find(({ kind }) => kind === 'monster');
+    if (
+      connection === undefined ||
+      warp === undefined ||
+      monster === undefined
+    ) {
+      throw new Error(
+        'Expected fixture Connection, Warp, and Monster entities.',
+      );
+    }
+    const fiveEntityView: MapDetailView = {
+      ...baseView,
+      entities: [
+        connection,
+        warp,
+        monster,
+        {
+          focusKey: 'npc-00000001',
+          kind: 'npc',
+          name: 'Bellkeeper',
+          kindLabel: 'NPC',
+        },
+        {
+          focusKey: 'npc-00000002',
+          kind: 'npc',
+          name: 'Market Guide',
+          kindLabel: 'NPC',
+        },
+      ],
+    };
+    const onFocusChange = vi.fn();
+    const user = userEvent.setup();
+    renderMapView({ view: fiveEntityView, onFocusChange });
+
+    const tabList = screen.getByRole('tablist', { name: 'Map legend kinds' });
+    expect(
+      within(tabList)
+        .getAllByRole('tab')
+        .map((tab) => tab.textContent),
+    ).toEqual([
+      'All (5)',
+      'Connections (1)',
+      'Warps (1)',
+      'Monsters (1)',
+      'NPCs (2)',
+    ]);
+    expect(
+      within(tabList).queryByRole('tab', { name: /Spawns/u }),
+    ).not.toBeInTheDocument();
+    await user.click(within(tabList).getByRole('tab', { name: 'NPCs (2)' }));
+    expect(screen.getAllByRole('checkbox')).toHaveLength(2);
+    expect(onFocusChange).not.toHaveBeenCalled();
   });
 
   it('selects and clears one marker entity and links its details to Monster Detail', async () => {

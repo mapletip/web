@@ -11,6 +11,167 @@
   gap: var(--mantine-spacing-lg);
 }
 
+.legend {
+  margin-top: 4px;
+  min-width: 0;
+  width: 100%;
+}
+
+.legendChips {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-width: 0;
+  width: 100%;
+}
+
+.legendChip {
+  align-items: center;
+  display: inline-flex;
+  flex: 0 1 auto;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.legendChipLabel {
+  align-items: center;
+  background: var(
+    --mantine-color-default,
+    var(--mapletip-color-panel, var(--mantine-color-body))
+  );
+  border: 1px solid
+    var(--mantine-color-default-border, var(--mapletip-color-border-strong));
+  border-radius: var(--mantine-radius-sm, 4px);
+  box-sizing: border-box;
+  color: var(--mantine-color-text, var(--mapletip-color-ink));
+  display: inline-flex;
+  flex-flow: row nowrap;
+  font-weight: 500;
+  height: auto;
+  line-height: 1.25;
+  max-width: 100%;
+  min-height: 34px;
+  min-width: 0;
+  padding: 0 8px;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.legendChipLabel > span {
+  align-items: center;
+  display: inline-flex;
+  flex: 1 1 auto;
+  flex-flow: row nowrap;
+  gap: 6px;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.legendChipIconWrapper {
+  display: none;
+}
+
+.legendChipLabel:hover {
+  background: var(--mantine-color-default-hover, var(--mapletip-color-hover));
+}
+
+.legendChipLabel[data-checked] {
+  background: var(
+    --mantine-primary-color-light,
+    var(--mapletip-color-selection)
+  );
+  border-color: var(
+    --mantine-primary-color-filled,
+    var(--mapletip-color-selection-edge)
+  );
+}
+
+.legendChip:focus-within .legendChipLabel {
+  outline: 3px solid var(--mantine-primary-color-filled, Highlight);
+  outline-offset: -4px;
+}
+
+.legendChipName {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.legendChipLabel :global([data-marker-visual='connection']) {
+  flex: 0 0 20px;
+  height: 20px;
+  width: 20px;
+}
+
+.legendChipLabel :global([data-marker-visual='warp']) {
+  flex: 0 0 16px;
+  height: 16px;
+  width: 16px;
+}
+
+.legendChipLabel :global([data-marker-visual='monster-dot']),
+.legendChipLabel :global([data-marker-visual='npc-dot']) {
+  flex: 0 0 10px;
+}
+
+.legendChipLabel :global([data-marker-visual='monster-sprite']) {
+  flex: 0 0 32px;
+  height: 32px;
+  width: 32px;
+}
+
+.legendTabs,
+.legendScrollArea {
+  min-width: 0;
+  width: 100%;
+}
+
+.legendTabList {
+  border-bottom: 0;
+  column-gap: 4px;
+  flex-wrap: wrap;
+  row-gap: 2px;
+}
+
+.legendTab {
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  color: var(--mantine-color-dimmed, #9b9892);
+  flex: 0 0 auto;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.25;
+  min-height: 32px;
+  padding: 5px 8px 4px;
+  white-space: nowrap;
+}
+
+.legendTab[data-active] {
+  border-bottom-color: var(--mantine-primary-color-filled, #c77724);
+  color: var(--mantine-primary-color-filled, #c77724);
+  font-weight: 600;
+}
+
+.legendTab:focus-visible {
+  outline: 2px solid var(--mantine-primary-color-filled, Highlight);
+  outline-offset: 1px;
+}
+
+.legendTabPanel {
+  padding-top: 2px;
+}
+
+.legendScrollArea :global(.mantine-ScrollArea-viewport) {
+  overscroll-behavior: auto;
+  touch-action: pan-y;
+}
+
+.legendScrollArea :global(.mantine-ScrollArea-content) {
+  min-width: 100%;
+}
+
 .connectionMarker,
 .warpMarker {
   box-sizing: border-box;
