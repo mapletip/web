@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as ApiHealthzRouteImport } from './routes/api/healthz'
 import { Route as MaplestoryChar123BuildIdChar125ItemsRouteImport } from './routes/maplestory/{-$buildId}/items'
+import { Route as MaplestoryChar123BuildIdChar125MapsSlugIdRouteImport } from './routes/maplestory/{-$buildId}/maps/$slugId'
 import { Route as MaplestoryChar123BuildIdChar125MonstersIndexRouteImport } from './routes/maplestory/{-$buildId}/monsters/index'
 import { Route as MaplestoryChar123BuildIdChar125MonstersSlugIdRouteImport } from './routes/maplestory/{-$buildId}/monsters/$slugId'
 import { Route as MaplestoryChar123BuildIdChar125ItemsChar123ScopeChar125Char123ChildChar125RouteImport } from './routes/maplestory/{-$buildId}/items/{-$scope}/{-$child}'
@@ -36,6 +37,12 @@ const MaplestoryChar123BuildIdChar125ItemsRoute =
   MaplestoryChar123BuildIdChar125ItemsRouteImport.update({
     id: '/maplestory/{-$buildId}/items',
     path: '/maplestory/{-$buildId}/items',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const MaplestoryChar123BuildIdChar125MapsSlugIdRoute =
+  MaplestoryChar123BuildIdChar125MapsSlugIdRouteImport.update({
+    id: '/maplestory/{-$buildId}/maps/$slugId',
+    path: '/maplestory/{-$buildId}/maps/$slugId',
     getParentRoute: () => rootRouteImport,
   } as any)
 const MaplestoryChar123BuildIdChar125MonstersIndexRoute =
@@ -64,6 +71,7 @@ export interface FileRoutesByFullPath {
   '/privacy': typeof PrivacyRoute
   '/api/healthz': typeof ApiHealthzRoute
   '/maplestory/{-$buildId}/items': typeof MaplestoryChar123BuildIdChar125ItemsRouteWithChildren
+  '/maplestory/{-$buildId}/maps/$slugId': typeof MaplestoryChar123BuildIdChar125MapsSlugIdRoute
   '/maplestory/{-$buildId}/monsters/$slugId': typeof MaplestoryChar123BuildIdChar125MonstersSlugIdRoute
   '/maplestory/{-$buildId}/monsters/': typeof MaplestoryChar123BuildIdChar125MonstersIndexRoute
   '/maplestory/{-$buildId}/items/{-$scope}/{-$child}': typeof MaplestoryChar123BuildIdChar125ItemsChar123ScopeChar125Char123ChildChar125Route
@@ -73,6 +81,7 @@ export interface FileRoutesByTo {
   '/privacy': typeof PrivacyRoute
   '/api/healthz': typeof ApiHealthzRoute
   '/maplestory/{-$buildId}/items': typeof MaplestoryChar123BuildIdChar125ItemsRouteWithChildren
+  '/maplestory/{-$buildId}/maps/$slugId': typeof MaplestoryChar123BuildIdChar125MapsSlugIdRoute
   '/maplestory/{-$buildId}/monsters/$slugId': typeof MaplestoryChar123BuildIdChar125MonstersSlugIdRoute
   '/maplestory/{-$buildId}/monsters': typeof MaplestoryChar123BuildIdChar125MonstersIndexRoute
   '/maplestory/{-$buildId}/items/{-$scope}/{-$child}': typeof MaplestoryChar123BuildIdChar125ItemsChar123ScopeChar125Char123ChildChar125Route
@@ -83,6 +92,7 @@ export interface FileRoutesById {
   '/privacy': typeof PrivacyRoute
   '/api/healthz': typeof ApiHealthzRoute
   '/maplestory/{-$buildId}/items': typeof MaplestoryChar123BuildIdChar125ItemsRouteWithChildren
+  '/maplestory/{-$buildId}/maps/$slugId': typeof MaplestoryChar123BuildIdChar125MapsSlugIdRoute
   '/maplestory/{-$buildId}/monsters/$slugId': typeof MaplestoryChar123BuildIdChar125MonstersSlugIdRoute
   '/maplestory/{-$buildId}/monsters/': typeof MaplestoryChar123BuildIdChar125MonstersIndexRoute
   '/maplestory/{-$buildId}/items/{-$scope}/{-$child}': typeof MaplestoryChar123BuildIdChar125ItemsChar123ScopeChar125Char123ChildChar125Route
@@ -94,6 +104,7 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/api/healthz'
     | '/maplestory/{-$buildId}/items'
+    | '/maplestory/{-$buildId}/maps/$slugId'
     | '/maplestory/{-$buildId}/monsters/$slugId'
     | '/maplestory/{-$buildId}/monsters/'
     | '/maplestory/{-$buildId}/items/{-$scope}/{-$child}'
@@ -103,6 +114,7 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/api/healthz'
     | '/maplestory/{-$buildId}/items'
+    | '/maplestory/{-$buildId}/maps/$slugId'
     | '/maplestory/{-$buildId}/monsters/$slugId'
     | '/maplestory/{-$buildId}/monsters'
     | '/maplestory/{-$buildId}/items/{-$scope}/{-$child}'
@@ -112,6 +124,7 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/api/healthz'
     | '/maplestory/{-$buildId}/items'
+    | '/maplestory/{-$buildId}/maps/$slugId'
     | '/maplestory/{-$buildId}/monsters/$slugId'
     | '/maplestory/{-$buildId}/monsters/'
     | '/maplestory/{-$buildId}/items/{-$scope}/{-$child}'
@@ -122,6 +135,7 @@ export interface RootRouteChildren {
   PrivacyRoute: typeof PrivacyRoute
   ApiHealthzRoute: typeof ApiHealthzRoute
   MaplestoryChar123BuildIdChar125ItemsRoute: typeof MaplestoryChar123BuildIdChar125ItemsRouteWithChildren
+  MaplestoryChar123BuildIdChar125MapsSlugIdRoute: typeof MaplestoryChar123BuildIdChar125MapsSlugIdRoute
   MaplestoryChar123BuildIdChar125MonstersSlugIdRoute: typeof MaplestoryChar123BuildIdChar125MonstersSlugIdRoute
   MaplestoryChar123BuildIdChar125MonstersIndexRoute: typeof MaplestoryChar123BuildIdChar125MonstersIndexRoute
 }
@@ -154,6 +168,13 @@ declare module '@tanstack/react-router' {
       path: '/maplestory/{-$buildId}/items'
       fullPath: '/maplestory/{-$buildId}/items'
       preLoaderRoute: typeof MaplestoryChar123BuildIdChar125ItemsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/maplestory/{-$buildId}/maps/$slugId': {
+      id: '/maplestory/{-$buildId}/maps/$slugId'
+      path: '/maplestory/{-$buildId}/maps/$slugId'
+      fullPath: '/maplestory/{-$buildId}/maps/$slugId'
+      preLoaderRoute: typeof MaplestoryChar123BuildIdChar125MapsSlugIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/maplestory/{-$buildId}/monsters/': {
@@ -201,6 +222,8 @@ const rootRouteChildren: RootRouteChildren = {
   ApiHealthzRoute: ApiHealthzRoute,
   MaplestoryChar123BuildIdChar125ItemsRoute:
     MaplestoryChar123BuildIdChar125ItemsRouteWithChildren,
+  MaplestoryChar123BuildIdChar125MapsSlugIdRoute:
+    MaplestoryChar123BuildIdChar125MapsSlugIdRoute,
   MaplestoryChar123BuildIdChar125MonstersSlugIdRoute:
     MaplestoryChar123BuildIdChar125MonstersSlugIdRoute,
   MaplestoryChar123BuildIdChar125MonstersIndexRoute:

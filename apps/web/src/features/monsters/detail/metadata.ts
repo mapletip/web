@@ -2,7 +2,6 @@ import { BUILDS, type BuildId } from '@/config/maplekit';
 import {
   buildCollectionPath,
   buildDetailHead,
-  buildRecordDetailPath,
   canonicalBuildParam,
   type DetailBreadcrumb,
   type DetailHeadPayload,
@@ -11,10 +10,7 @@ import {
 import type { MonsterDetailView } from './project';
 
 export interface MonsterDetailMetadataOptions {
-  readonly view: Pick<
-    MonsterDetailView,
-    'name' | 'slug' | 'publicId' | 'canonicalPath'
-  >;
+  readonly view: Pick<MonsterDetailView, 'name' | 'canonicalPath'>;
   readonly buildId: BuildId;
   readonly noIndex?: boolean;
 }
@@ -41,9 +37,7 @@ export function monsterDetailBreadcrumbs({
     },
     {
       label: view.name,
-      path:
-        view.canonicalPath ||
-        buildRecordDetailPath('monsters', view.slug, view.publicId, buildId),
+      path: view.canonicalPath,
     },
   ];
 }
@@ -55,15 +49,12 @@ export function monsterDetailMetadata({
   noIndex = false,
 }: MonsterDetailMetadataOptions): DetailHeadPayload {
   const buildLabel = BUILDS[buildId].label;
-  const canonicalPath =
-    view.canonicalPath ||
-    buildRecordDetailPath('monsters', view.slug, view.publicId, buildId);
   const breadcrumbs = monsterDetailBreadcrumbs({ view, buildId });
 
   return buildDetailHead({
     title: `${view.name} – MapleStory ${buildLabel} Monster – MapleTip`,
     description: `${view.name} in MapleStory ${buildLabel}. View monster stats, spawn locations, drops, and quests on MapleTip.`,
-    canonicalPath,
+    canonicalPath: view.canonicalPath,
     ogType: 'website',
     noIndex,
     breadcrumbs,
