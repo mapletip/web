@@ -16,6 +16,7 @@ import { MapDetail } from '../MapDetail';
 import {
   projectMapDetail,
   UNNAMED_MAP_LABEL,
+  type MapDetailEntityView,
   type MapDetailView,
 } from '../project';
 
@@ -150,6 +151,117 @@ function renderDetail(
 }
 
 describe('MapDetail information', () => {
+  it('filters find suggestions in entity order and limits them to ten', async () => {
+    const baseView = projectMapDetail({
+      record: mapPageRecordFixture({ mapId: 'practice-grove' }),
+      buildId: 'cw-launch',
+    });
+    const entities: MapDetailEntityView[] = Array.from(
+      { length: 12 },
+      (_, index) => ({
+        focusKey: `monster-${String(index).padStart(8, '0')}`,
+        kind: 'monster',
+        name: `Sprout ${String(index).padStart(2, '0')}`,
+        kindLabel: 'Monster',
+      }),
+    );
+    const view = { ...baseView, entities };
+    const user = userEvent.setup();
+    renderMapView({ view });
+
+    const input = screen.getByRole('combobox', { name: 'Find on this map' });
+    await user.type(input, 'SPROUT');
+
+    expect(input).toHaveAttribute('aria-expanded', 'true');
+    expect(
+      screen
+        .getAllByRole('option', { hidden: true })
+        .map((option) => option.textContent),
+    ).toEqual(
+      entities
+        .slice(0, 10)
+        .map(({ name, kindLabel }) => `${name} — ${kindLabel}`),
+    );
+  });
+
+  it('shows the no-match message without changing the selection', async () => {
+    const view = projectMapDetail({
+      record: mapPageRecordFixture({ mapId: 'practice-grove' }),
+      buildId: 'cw-launch',
+    });
+    const selected = view.entities.find(({ kind }) => kind === 'monster');
+    if (selected === undefined) throw new Error('Expected a fixture Monster.');
+    const onFocusChange = vi.fn();
+    const user = userEvent.setup();
+    renderControlledMapView({
+      view,
+      focusValue: selected.focusKey,
+      onFocusChange,
+    });
+
+    await user.type(
+      screen.getByRole('combobox', { name: 'Find on this map' }),
+      'no map entity has this name',
+    );
+
+    expect(screen.getByText('Nothing was found.')).toBeInTheDocument();
+    expect(
+      screen.getByRole('checkbox', {
+        name: `${selected.name}, ${selected.kindLabel}`,
+      }),
+    ).toBeChecked();
+    expect(onFocusChange).not.toHaveBeenCalled();
+  });
+
+  it('selects a chosen find suggestion through the entity activation path', async () => {
+    const view = projectMapDetail({
+      record: mapPageRecordFixture({ mapId: 'practice-grove' }),
+      buildId: 'cw-launch',
+    });
+    const sprout = view.entities.find(({ name }) => name === 'Twin Sprout');
+    if (sprout === undefined) throw new Error('Expected Twin Sprout.');
+    const onFocusChange = vi.fn();
+    const user = userEvent.setup();
+    renderControlledMapView({ view, onFocusChange });
+
+    const input = screen.getByRole('combobox', { name: 'Find on this map' });
+    await user.type(input, 'sprout');
+    fireEvent.click(
+      screen.getByRole('option', {
+        name: 'Twin Sprout — Monster',
+        hidden: true,
+      }),
+    );
+
+    expect(onFocusChange).toHaveBeenLastCalledWith(sprout.focusKey);
+    expect(input).toHaveValue('sprout');
+    expect(
+      screen.getByRole('checkbox', {
+        name: `${sprout.name}, ${sprout.kindLabel}`,
+      }),
+    ).toBeChecked();
+  });
+
+  it('toggles the narrow-screen find field with the search button', async () => {
+    const view = projectMapDetail({
+      record: mapPageRecordFixture({ mapId: 'practice-grove' }),
+      buildId: 'cw-launch',
+    });
+    const user = userEvent.setup();
+    const { container } = renderMapView({ view });
+    const shell = container.querySelector('[data-mobile-find-open]');
+    if (shell === null) throw new Error('Expected the find toolbar.');
+
+    expect(shell).toHaveAttribute('data-mobile-find-open', 'false');
+    await user.click(screen.getByRole('button', { name: 'Search map' }));
+    expect(shell).toHaveAttribute('data-mobile-find-open', 'true');
+    expect(
+      screen.getByRole('button', { name: 'Close map search' }),
+    ).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Close map search' }));
+    expect(shell).toHaveAttribute('data-mobile-find-open', 'false');
+  });
+
   it('shows the map image and markers', () => {
     const { container } = renderDetail('practice-grove');
 

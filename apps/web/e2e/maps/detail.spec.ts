@@ -21,6 +21,7 @@ test('Map Detail renders its canonical address, redirects stale slugs, and retur
   expect(html).toContain('BreadcrumbList');
 
   await page.goto(canonical);
+  await page.waitForLoadState('networkidle');
   await expect(
     page.getByRole('heading', { level: 1, name: 'Practice Grove' }),
   ).toBeVisible();
@@ -48,6 +49,7 @@ test('Map Detail renders its canonical address, redirects stale slugs, and retur
   ).toBeVisible();
 
   await page.goto(canonical);
+  await page.waitForLoadState('networkidle');
 
   const connectionPath = `/maplestory/maps/lantern-square-${mapPublicId({ sourceId: 'cw-launch:lantern-square' })}`;
   const connectionsNavigation = page
@@ -245,6 +247,34 @@ test('Map Detail legend chips select entities and ring their markers at desktop 
   await expect(page).toHaveURL(/focus=monster-[a-z0-9]{8}/u);
   await expect(chip).toBeChecked();
   await expect(stage.locator('[data-selected="true"]')).toHaveCount(2);
+});
+
+test('Map Detail Find selects Twin Sprout and writes its focus to the address', async ({
+  page,
+}, testInfo) => {
+  const width = testInfo.project.name === 'mobile' ? 390 : 1440;
+  await page.setViewportSize({ width, height: 900 });
+  const publicId = mapPublicId({ sourceId: 'cw-launch:practice-grove' });
+  await page.goto(`/maplestory/maps/practice-grove-${publicId}`);
+  await page.waitForLoadState('networkidle');
+
+  if (width < 768) {
+    await page.getByRole('button', { name: 'Search map' }).click();
+    await expect(
+      page.getByRole('button', { name: 'Close map search' }),
+    ).toBeVisible();
+  }
+
+  const find = page.getByRole('combobox', { name: 'Find on this map' });
+  await find.fill('sprout');
+  await page.getByRole('option', { name: 'Twin Sprout — Monster' }).click();
+
+  await expect(page).toHaveURL(/focus=monster-[a-z0-9]{8}/u);
+  await expect(
+    page
+      .getByRole('group', { name: 'Practice Grove map' })
+      .locator('[data-selected="true"]'),
+  ).toHaveCount(2);
 });
 
 test('Map Detail legend Ctrl-click selects two monsters in legend order and survives reload', async ({
