@@ -547,15 +547,17 @@ async function projectMapPages(options: {
               },
             }),
         information: {
-          flying: { state: 'unknown' },
+          flying: fixture.information?.flying ?? { state: 'unknown' },
           forcedReturnMap: { state: 'unknown' },
           hpDrain: { state: 'unknown' },
           hpDrainProtectionItem: { state: 'unknown' },
           levelLimit: { state: 'unknown' },
-          music: { state: 'unknown' },
+          music: fixture.information?.music ?? { state: 'unknown' },
           returnMap: { state: 'known', value: mapReference(returnTarget) },
-          swimming: { state: 'unknown' },
-          timeLimitSeconds: { state: 'unknown' },
+          swimming: fixture.information?.swimming ?? { state: 'unknown' },
+          timeLimitSeconds: fixture.information?.timeLimitSeconds ?? {
+            state: 'unknown',
+          },
         },
         stage:
           map.stage === undefined
