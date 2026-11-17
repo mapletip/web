@@ -103,6 +103,37 @@ describe('MapDetail server rendering', () => {
     expect(jsonLd.itemListElement[3]).not.toHaveProperty('item');
   });
 
+  it('marks a focused address noindex and keeps focus off the canonical link', async () => {
+    const record = mapPageRecordFixture({ mapId: 'practice-grove' });
+    const view = projectMapDetail({ record, buildId: 'cw-launch' });
+    const focusKey = view.monsters.monsters[0]?.focusKey;
+    if (focusKey === undefined) throw new Error('Expected a fixture Monster.');
+    mockedLoadMapDetail.mockResolvedValue({ status: 'found', view });
+
+    const router = createRouter({
+      routeTree,
+      history: createMemoryHistory({
+        initialEntries: [`${view.canonicalPath}?focus=${focusKey}`],
+      }),
+    });
+    await router.load();
+
+    const html = renderToString(
+      <RouterContextProvider router={router}>
+        <MantineProvider theme={theme} forceColorScheme="dark">
+          <HeadContent />
+          <MapDetail view={view} />
+        </MantineProvider>
+      </RouterContextProvider>,
+    );
+
+    expect(html).toContain('<meta name="robots" content="noindex,follow"');
+    expect(html).toContain(
+      `<link rel="canonical" href="${SITE_ORIGIN}${view.canonicalPath}"/>`,
+    );
+    expect(html).not.toContain(`${view.canonicalPath}?focus=`);
+  });
+
   it('renders the Monsters section heading and a linked card in server HTML', async () => {
     const record = mapPageRecordFixture({ mapId: 'practice-grove' });
     const view = projectMapDetail({ record, buildId: 'cw-launch' });
@@ -128,7 +159,7 @@ describe('MapDetail server rendering', () => {
     expect(html).toContain('Plain Pebble');
     expect(html).toContain('alt="Practice Grove map"');
     expect(html).toMatch(
-      /data-marker-ids="[^"]+" style="left:26\.[0-9]+%;top:65%"/u,
+      /<span(?=[^>]*data-marker-ids="[^"]+")(?=[^>]*style="[^"]*left:26\.[0-9]+%;top:65%[^"]*")[^>]*>/u,
     );
     expect(html).toContain(
       `href="/maplestory/monsters/plain-pebble-${record.monsters.items[0]?.publicId}"`,

@@ -3,11 +3,14 @@ import { mapMinimapUrl, type MapPageRecordV1 } from '@mapletip/data/maps';
 import { MAPLEKIT_RELEASE, type BuildId } from '@/config/maplekit';
 import { buildRecordDetailPath, nonBlank } from '@/features/detail';
 import {
+  MAP_DETAIL_ROUTE,
   projectMapRecordDestination,
   type MapRecordCardView,
 } from '@/features/maps/shared';
 import {
   formatMonsterNumber,
+  MONSTER_DETAIL_ROUTE,
+  type monsterDetailLinkProps,
   projectMonsterRecordCard,
   projectMonsterRespawnLabel,
   type MonsterRecordCardView,
@@ -32,6 +35,7 @@ export interface MapDetailView {
   readonly activity?: string;
   readonly description?: string;
   readonly stage: MapDetailStageView;
+  readonly entities: readonly MapDetailEntityView[];
   readonly facts: readonly MapDetailFactView[];
   readonly connections?: MapDetailConnectionsView;
   readonly monsters: MapDetailMonstersView;
@@ -40,6 +44,27 @@ export interface MapDetailView {
 
 export type MapDetailStageMarkerKind =
   'monster' | 'npc' | 'connection' | 'warp';
+
+export interface MapDetailEntityView {
+  readonly focusKey: string;
+  readonly kind: MapDetailStageMarkerKind;
+  readonly name: string;
+  readonly kindLabel: string;
+  readonly spriteUrl?: string;
+  readonly link?:
+    | {
+        readonly to: typeof MONSTER_DETAIL_ROUTE;
+        readonly params: NonNullable<
+          ReturnType<typeof monsterDetailLinkProps>
+        >['params'];
+      }
+    | {
+        readonly to: typeof MAP_DETAIL_ROUTE;
+        readonly params: NonNullable<
+          NonNullable<MapDetailConnectionsView>['maps'][number]['destination']
+        >['params'];
+      };
+}
 
 export interface MapDetailStageImage {
   readonly src: string;
@@ -54,6 +79,7 @@ export interface MapDetailStageMarker {
   readonly y: number;
   readonly kind: MapDetailStageMarkerKind;
   readonly entityKey: string;
+  readonly focusKey: string;
   readonly label: string;
   readonly spriteUrl?: string;
 }
@@ -75,10 +101,15 @@ export interface MapDetailConnectionsView {
   readonly state: MapPageRecordV1['connections']['state'];
   readonly count: number | 'unknown';
   readonly notice?: string;
-  readonly maps: readonly MapRecordCardView[];
+  readonly maps: readonly MapDetailConnectionView[];
+}
+
+export interface MapDetailConnectionView extends MapRecordCardView {
+  readonly focusKey: string;
 }
 
 export interface MapDetailMonsterView extends MonsterRecordCardView {
+  readonly focusKey: string;
   readonly placementCount: number;
   readonly spawnCountLabel: string;
   readonly respawnLabel?: string;
@@ -94,6 +125,7 @@ export interface MapDetailMonstersView {
 
 export interface MapDetailNpcView extends NpcRecordCardView {
   readonly key: string;
+  readonly focusKey: string;
 }
 
 export interface MapDetailNpcsView {
@@ -321,6 +353,7 @@ function projectMonsters({
       const respawnLabel = projectMonsterRespawnLabel(monster.respawn);
       const view: MapDetailMonsterView = {
         ...card,
+        focusKey: `monster-${monster.focusToken}`,
         placementCount: monster.placementCount,
         spawnCountLabel: `${formatMonsterNumber(monster.placementCount)} ${monster.placementCount === 1 ? 'spawn' : 'spawns'}`,
         ...(respawnLabel === undefined ? {} : { respawnLabel }),
@@ -374,7 +407,7 @@ function projectConnections({
   readonly buildId: BuildId;
 }): MapDetailConnectionsView | undefined {
   const maps = record.connections.items
-    .map((connection): MapRecordCardView => {
+    .map((connection): MapDetailConnectionView => {
       const name =
         connection.name.state === 'known'
           ? (nonBlank(connection.name.value) ?? UNNAMED_MAP_LABEL)
@@ -385,6 +418,7 @@ function projectConnections({
           : undefined;
       return {
         key: connection.key,
+        focusKey: `connection-${connection.focusToken}`,
         name,
         ...(minimapUrl === undefined ? {} : { minimapUrl }),
         ...(minimapUrl === undefined
@@ -437,6 +471,7 @@ function projectNpcs(record: MapPageRecordV1): MapDetailNpcsView {
   const npcs = record.npcs.items
     .map((npc) => ({
       key: npc.key,
+      focusKey: `npc-${npc.focusToken}`,
       ...projectNpcRecordCard(npc),
     }))
     .sort((left, right) => nameCollator.compare(left.name, right.name));
@@ -461,12 +496,14 @@ function projectNpcs(record: MapPageRecordV1): MapDetailNpcsView {
 function projectPointMarkers({
   kind,
   entityKey,
+  focusKey,
   name,
   positions,
   spriteUrl,
 }: {
   readonly kind: MapDetailStageMarkerKind;
   readonly entityKey: string;
+  readonly focusKey: string;
   readonly name: string;
   readonly positions: MapDetailPositionCollection;
   readonly spriteUrl?: string;
@@ -480,8 +517,20 @@ function projectPointMarkers({
     y,
     kind,
     entityKey,
+    focusKey,
     label: `${name}, ${stageMarkerKindLabels[kind]}, ${index + 1} of ${count}`,
     ...(spriteUrl === undefined ? {} : { spriteUrl }),
+  }));
+}
+
+type MapDetailWarpView = MapPageRecordV1['warps']['items'][number] & {
+  readonly focusKey: string;
+};
+
+function projectWarps(record: MapPageRecordV1): MapDetailWarpView[] {
+  return record.warps.items.map((warp) => ({
+    ...warp,
+    focusKey: `warp-${warp.focusToken}`,
   }));
 }
 
@@ -491,12 +540,14 @@ function projectStage({
   connections,
   monsters,
   npcs,
+  warps,
 }: {
   readonly record: MapPageRecordV1;
   readonly name: string;
   readonly connections: MapDetailConnectionsView | undefined;
   readonly monsters: MapDetailMonstersView;
   readonly npcs: MapDetailNpcsView;
+  readonly warps: readonly MapDetailWarpView[];
 }): MapDetailStageView {
   const image =
     record.stage.state === 'known'
@@ -515,18 +566,19 @@ function projectStage({
     monsters.monsters.map((monster) => [monster.key, monster]),
   );
   const connectionsByKey = new Map(
-    (connections?.maps ?? []).map((connection) => [
-      connection.key,
-      connection.name,
-    ]),
+    (connections?.maps ?? []).map((connection) => [connection.key, connection]),
   );
-  const npcsByKey = new Map(npcs.npcs.map((npc) => [npc.key, npc.name]));
+  const npcsByKey = new Map(npcs.npcs.map((npc) => [npc.key, npc]));
   const pointCollections: readonly {
     readonly kind: Exclude<MapDetailStageMarkerKind, 'warp'>;
     readonly collection: MapDetailStagePointCollection;
-    readonly describe: (
-      key: string,
-    ) => { readonly name: string; readonly spriteUrl?: string } | undefined;
+    readonly describe: (key: string) =>
+      | {
+          readonly name: string;
+          readonly focusKey: string;
+          readonly spriteUrl?: string;
+        }
+      | undefined;
   }[] = [
     {
       kind: 'monster',
@@ -537,6 +589,7 @@ function projectStage({
           ? undefined
           : {
               name: monster.name,
+              focusKey: monster.focusKey,
               ...(monster.spriteUrl === undefined
                 ? {}
                 : { spriteUrl: monster.spriteUrl }),
@@ -547,16 +600,23 @@ function projectStage({
       kind: 'npc',
       collection: record.npcs,
       describe: (key) => {
-        const name = npcsByKey.get(key);
-        return name === undefined ? undefined : { name };
+        const npc = npcsByKey.get(key);
+        return npc === undefined
+          ? undefined
+          : { name: npc.name, focusKey: npc.focusKey };
       },
     },
     {
       kind: 'connection',
       collection: record.connections,
       describe: (key) => {
-        const name = connectionsByKey.get(key);
-        return name === undefined ? undefined : { name };
+        const connection = connectionsByKey.get(key);
+        return connection === undefined
+          ? undefined
+          : {
+              name: connection.name,
+              focusKey: connection.focusKey,
+            };
       },
     },
   ];
@@ -573,6 +633,7 @@ function projectStage({
         ...projectPointMarkers({
           kind,
           entityKey: entity.key,
+          focusKey: description.focusKey,
           name: description.name,
           positions: entity.points,
           ...(description.spriteUrl === undefined
@@ -585,7 +646,7 @@ function projectStage({
 
   const connectors: MapDetailStageConnector[] = [];
   if (record.warps.state === 'known' || record.warps.state === 'partial') {
-    for (const warp of record.warps.items) {
+    for (const warp of warps) {
       const from = `warp:${warp.focusToken}:1`;
       const to = `warp:${warp.focusToken}:2`;
       markers.push(
@@ -595,6 +656,7 @@ function projectStage({
           y,
           kind: 'warp' as const,
           entityKey: warp.focusToken,
+          focusKey: warp.focusKey,
           label: `Warp, Warp, ${index + 1} of ${warp.ends.length}`,
         })),
       );
@@ -635,12 +697,59 @@ export function projectMapDetail({
   const connections = projectConnections({ record, buildId });
   const monsters = projectMonsters({ record, buildId });
   const npcs = projectNpcs(record);
+  const warps = projectWarps(record);
+  const entities: MapDetailEntityView[] = [
+    ...(connections?.maps.map((connection) => ({
+      focusKey: connection.focusKey,
+      kind: 'connection' as const,
+      name: connection.name,
+      kindLabel: 'Connection',
+      ...(connection.destination === undefined
+        ? {}
+        : {
+            link: {
+              to: MAP_DETAIL_ROUTE,
+              params: connection.destination.params,
+            },
+          }),
+    })) ?? []),
+    ...warps.map((warp) => ({
+      focusKey: warp.focusKey,
+      kind: 'warp' as const,
+      name: 'Warp',
+      kindLabel: 'Warp',
+    })),
+    ...monsters.monsters.map((monster) => ({
+      focusKey: monster.focusKey,
+      kind: 'monster' as const,
+      name: monster.name,
+      kindLabel: 'Monster',
+      ...(monster.spriteUrl === undefined
+        ? {}
+        : { spriteUrl: monster.spriteUrl }),
+      ...(monster.destination === undefined
+        ? {}
+        : {
+            link: {
+              to: MONSTER_DETAIL_ROUTE,
+              params: monster.destination.params,
+            },
+          }),
+    })),
+    ...npcs.npcs.map((npc) => ({
+      focusKey: npc.focusKey,
+      kind: 'npc' as const,
+      name: npc.name,
+      kindLabel: 'NPC',
+    })),
+  ];
   const stage = projectStage({
     record,
     name: name ?? UNNAMED_MAP_LABEL,
     connections,
     monsters,
     npcs,
+    warps,
   });
 
   return {
@@ -656,6 +765,7 @@ export function projectMapDetail({
     ...(activity === undefined ? {} : { activity }),
     ...(description === undefined ? {} : { description }),
     stage,
+    entities,
     facts: projectFacts({ information: record.information, buildId }),
     ...(connections === undefined ? {} : { connections }),
     monsters,

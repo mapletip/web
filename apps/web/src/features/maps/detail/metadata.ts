@@ -14,6 +14,7 @@ export interface MapDetailMetadataOptions {
     'name' | 'canonicalPath' | 'regionLabel' | 'areaLabel'
   >;
   readonly buildId: BuildId;
+  readonly noIndex?: boolean;
 }
 
 /** Shared breadcrumb trail for Map Detail metadata and page content. */
@@ -34,6 +35,7 @@ export function mapDetailBreadcrumbs({
 export function mapDetailMetadata({
   view,
   buildId,
+  noIndex = false,
 }: MapDetailMetadataOptions): DetailHeadPayload {
   const buildLabel = BUILDS[buildId].label;
   return buildDetailHead({
@@ -41,6 +43,7 @@ export function mapDetailMetadata({
     description: `Map details for ${view.name} in ${buildLabel}, with recorded spawn and connection information where available.`,
     canonicalPath: view.canonicalPath,
     ogType: 'website',
+    noIndex,
     breadcrumbs: mapDetailBreadcrumbs({ view, buildId }),
   });
 }

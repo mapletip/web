@@ -130,7 +130,7 @@ test('Map Detail shows all record sections at the project viewport and has no na
   expect(widths.document).toBeLessThanOrEqual(widths.viewport);
 });
 
-test('Map Detail shows its static stage and markers on desktop and mobile', async ({
+test('Map Detail shows its stage and markers on desktop and mobile', async ({
   page,
 }) => {
   const publicId = mapPublicId({ sourceId: 'cw-launch:practice-grove' });
@@ -147,6 +147,46 @@ test('Map Detail shows its static stage and markers on desktop and mobile', asyn
     page.getByRole('group', { name: 'Practice Grove map' }),
   ).toBeVisible();
   await expect(page.locator('[data-marker-ids]').first()).toBeVisible();
+});
+
+test('Map Detail selection follows the address on desktop and stays static on mobile', async ({
+  page,
+  escapedDataRequests,
+}, testInfo) => {
+  const publicId = mapPublicId({ sourceId: 'cw-launch:practice-grove' });
+  const mapPath = `/maplestory/maps/practice-grove-${publicId}`;
+  await page.goto(mapPath);
+
+  const stage = page.getByRole('group', { name: 'Practice Grove map' });
+  const viewportWidth = testInfo.project.use.viewport?.width ?? 1366;
+
+  if (viewportWidth >= 992) {
+    const marker = stage.getByRole('button', {
+      name: 'Twin Sprout, Monster, 2 of 2',
+    });
+    await expect(marker).toBeVisible();
+    const dataRequestsAfterLoad = [...escapedDataRequests];
+    await marker.click();
+    await expect(page).toHaveURL(/focus=monster-[a-z0-9]{8}/u);
+    await expect(page.locator('[data-selected="true"]')).toHaveCount(2);
+    expect(escapedDataRequests).toEqual(dataRequestsAfterLoad);
+
+    await marker.click();
+    await expect(page).not.toHaveURL(/focus=/u);
+    expect(escapedDataRequests).toEqual(dataRequestsAfterLoad);
+
+    await marker.click();
+    await expect(page).toHaveURL(/focus=monster-[a-z0-9]{8}/u);
+    expect(escapedDataRequests).toEqual(dataRequestsAfterLoad);
+
+    await page.reload();
+    await expect(page.locator('[data-selected="true"]')).toHaveCount(2);
+    return;
+  }
+
+  expect(viewportWidth).toBe(390);
+  await expect(stage.locator('button[data-marker-ids]')).toHaveCount(0);
+  await expect(stage.locator('[data-marker-ids]').first()).toBeVisible();
 });
 
 test('Map Detail shows the stage message when a map has no image', async ({
