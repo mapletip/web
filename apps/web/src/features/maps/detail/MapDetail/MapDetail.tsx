@@ -10,10 +10,9 @@ import { useMediaQuery } from '@mantine/hooks';
 import {
   FactSheet,
   RecordSections,
-  Thumbnail,
   type RecordSection,
 } from '@mapletip/component-library';
-import { Bug, DoorOpen, ShareNetwork, User } from '@phosphor-icons/react';
+import { ShareNetwork } from '@phosphor-icons/react';
 import { useEffect, type ReactElement } from 'react';
 
 import { DetailPageShell } from '@/components/DetailPageShell';
@@ -38,6 +37,7 @@ import { MapDetailConnections } from './MapDetailConnections';
 import { MapDetailMonsters } from './MapDetailMonsters';
 import { MapDetailNpcs } from './MapDetailNpcs';
 import { MapDetailStage } from './MapDetailStage';
+import { EntityIcon } from './markers';
 
 export interface MapDetailProps {
   readonly view: MapDetailView;
@@ -63,26 +63,6 @@ function EntityName({
       {entity.name}
     </AnchorLink>
   );
-}
-
-function EntityIcon({
-  entity,
-}: {
-  readonly entity: MapDetailEntityView;
-}): ReactElement {
-  if (entity.spriteUrl !== undefined) {
-    return <Thumbnail src={entity.spriteUrl} size={24} alt="" />;
-  }
-  const iconProps = { 'aria-hidden': true, size: 22 } as const;
-  switch (entity.kind) {
-    case 'monster':
-      return <Bug {...iconProps} />;
-    case 'npc':
-      return <User {...iconProps} />;
-    case 'connection':
-    case 'warp':
-      return <DoorOpen {...iconProps} />;
-  }
 }
 
 function MarkerDetails({

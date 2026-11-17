@@ -9,6 +9,7 @@ import {
 import { renderToString } from 'react-dom/server';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import portalImage from '@/assets/maplestory/maps/minimap-portal.png?no-inline';
 import { SITE_ORIGIN } from '@/config/site';
 import { routeTree } from '@/routeTree.gen';
 
@@ -158,6 +159,7 @@ describe('MapDetail server rendering', () => {
     expect(html).toContain('data-testid="map-monster-card"');
     expect(html).toContain('Plain Pebble');
     expect(html).toContain('alt="Practice Grove map"');
+    expect(html).toContain(`src="${portalImage}"`);
     expect(html).toMatch(
       /<span(?=[^>]*data-marker-ids="[^"]+")(?=[^>]*style="[^"]*left:26\.[0-9]+%;top:65%[^"]*")[^>]*>/u,
     );

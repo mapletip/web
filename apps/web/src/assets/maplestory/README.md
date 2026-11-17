@@ -2,7 +2,7 @@
 
 Staging area for MapleStory game assets. All MapleStory artwork belongs here,
 under a subdirectory describing where it is used — `navigation/` holds the
-header category icons.
+header category icons and `maps/` holds Map Detail marker art.
 
 Import them with `?no-inline`. Every file here is under Vite's 4 KB inline
 threshold, so a plain import would ship it as base64 inside the JS bundle.

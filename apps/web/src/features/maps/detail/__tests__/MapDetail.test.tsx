@@ -8,6 +8,7 @@ import { fireEvent, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 
+import portalImage from '@/assets/maplestory/maps/minimap-portal.png?no-inline';
 import { routeTree } from '@/routeTree.gen';
 
 import { MapDetail } from '../MapDetail';
@@ -154,6 +155,13 @@ describe('MapDetail information', () => {
       name: 'Marker details',
     });
     expect(
+      details.querySelector('[data-marker-visual="monster-sprite"]'),
+    ).toHaveAttribute(
+      'src',
+      view.entities.find(({ focusKey }) => focusKey === monster.focusKey)
+        ?.spriteUrl,
+    );
+    expect(
       within(details).getByRole('link', {
         name: 'Hollow Husk',
         hidden: true,
@@ -225,6 +233,9 @@ describe('MapDetail information', () => {
     const details = await screen.findByRole('group', {
       name: 'Marker details',
     });
+    expect(
+      details.querySelector('[data-marker-visual="connection"] img'),
+    ).toHaveAttribute('src', portalImage);
     expect(
       within(details).getByRole('link', {
         name: connection.name,
