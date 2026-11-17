@@ -1,9 +1,12 @@
 import {
+  ActionIcon,
   Button,
   Group,
+  Modal,
   Stack,
   Text,
   Title,
+  Tooltip,
   useMantineTheme,
 } from '@mantine/core';
 import { useMediaQuery } from '@mantine/hooks';
@@ -12,7 +15,7 @@ import {
   RecordSections,
   type RecordSection,
 } from '@mapletip/component-library';
-import { ShareNetwork } from '@phosphor-icons/react';
+import { ArrowsOut, ShareNetwork } from '@phosphor-icons/react';
 import { useEffect, type ReactElement } from 'react';
 
 import { DetailPageShell } from '@/components/DetailPageShell';
@@ -20,6 +23,7 @@ import { AnchorLink } from '@/components/RouterLinks';
 import { DetailBreadcrumbs } from '@/features/detail';
 import { MAP_DETAIL_ROUTE } from '@/features/maps/shared';
 import { MONSTER_DETAIL_ROUTE } from '@/features/monsters/shared';
+import { useRouteOverlay } from '@/features/route-overlay/useRouteOverlay';
 
 import {
   activateMapDetailEntity,
@@ -29,17 +33,16 @@ import {
   resolveMapDetailFocus,
   type MapDetailFocus,
 } from '../focus';
+import { mapDetailOverlayOptions } from '../mapDetailOverlay';
 import { mapDetailBreadcrumbs } from '../metadata';
 import type { MapDetailEntityView, MapDetailView } from '../project';
 
 import classes from './MapDetail.module.css';
 import { MapDetailConnections } from './MapDetailConnections';
-import { MapDetailFind } from './MapDetailFind';
-import { MapDetailLegend } from './MapDetailLegend';
 import { MapDetailMonsters } from './MapDetailMonsters';
 import { MapDetailNpcs } from './MapDetailNpcs';
 import { MapDetailOnThisMap } from './MapDetailOnThisMap';
-import { MapDetailStage } from './MapDetailStage';
+import { MapDetailStagePanel } from './MapDetailStagePanel';
 import { EntityIcon } from './markers';
 
 export interface MapDetailProps {
@@ -140,6 +143,13 @@ export function MapDetail({
     `(min-width: ${theme.breakpoints.md})`,
     false,
   );
+  const exploreFullScreen = !useMediaQuery('(min-width: 48rem)', false);
+  const exploreOverlay = useRouteOverlay(mapDetailOverlayOptions);
+  const exploreOverlayState =
+    exploreOverlay.overlay?.type === 'explore'
+      ? exploreOverlay.overlay
+      : undefined;
+  const exploreOpened = exploreOverlayState !== undefined;
   const parsedFocus = parseMapDetailFocus({ value: focusValue });
   const focus = resolveMapDetailFocus({ focus: parsedFocus, view });
   const canonicalFocus = formatMapDetailFocus({ focus });
@@ -155,6 +165,14 @@ export function MapDetail({
   const writeFocus = (nextFocus: MapDetailFocus | undefined) => {
     const resolvedFocus = resolveMapDetailFocus({ focus: nextFocus, view });
     onFocusChange?.(formatMapDetailFocus({ focus: resolvedFocus }));
+  };
+  const closeExplore = () => {
+    if (exploreOverlayState === undefined) return;
+    if (canonicalFocus === exploreOverlayState.openedFocus) {
+      exploreOverlay.dismiss('explore');
+    } else {
+      void exploreOverlay.release('explore');
+    }
   };
   const activateEntity = (focusKey: string, modified = false) => {
     writeFocus(activateMapDetailEntity({ focus, focusKey, modified, view }));
@@ -213,12 +231,14 @@ export function MapDetail({
         </div>
         <div className={classes['hero']}>
           <div className={classes['stageColumn']}>
-            <div className={classes['stageWithFind']}>
-              <MapDetailStage
-                stage={view.stage}
-                interactive={interactive}
+            <div className={classes['stagePanelWithExplore']}>
+              <MapDetailStagePanel
+                view={view}
+                focus={focus}
                 selectedIds={selectedIds}
-                onActivate={activateMarkers}
+                interactive={interactive}
+                onActivate={activateEntity}
+                onActivateMarkers={activateMarkers}
                 renderDetails={(markerIds) => (
                   <MarkerDetails
                     markerIds={markerIds}
@@ -227,16 +247,23 @@ export function MapDetail({
                   />
                 )}
               />
-              <MapDetailFind
-                entities={view.entities}
-                onChoose={activateEntity}
-              />
+              <Tooltip label="Explore map" withArrow>
+                <ActionIcon
+                  aria-label="Explore map"
+                  className={classes['exploreButton']}
+                  size={32}
+                  variant="white"
+                  onClick={() =>
+                    exploreOverlay.open({
+                      type: 'explore',
+                      openedFocus: canonicalFocus,
+                    })
+                  }
+                >
+                  <ArrowsOut size={20} aria-hidden="true" />
+                </ActionIcon>
+              </Tooltip>
             </div>
-            <MapDetailLegend
-              entities={view.entities}
-              focus={focus}
-              onActivate={activateEntity}
-            />
           </div>
           <Stack className={classes['informationColumn']} gap="lg">
             <MapDetailOnThisMap
@@ -288,6 +315,36 @@ export function MapDetail({
         </div>
         <RecordSections sections={sections} />
       </Stack>
+      <Modal
+        classNames={{
+          body: classes['exploreModalBody'],
+          content: classes['exploreModalContent'],
+        }}
+        closeButtonProps={{ 'aria-label': 'Close map' }}
+        fullScreen={exploreFullScreen}
+        onClose={closeExplore}
+        opened={exploreOpened}
+        size={1120}
+        title={view.name}
+      >
+        <MapDetailStagePanel
+          view={view}
+          focus={focus}
+          selectedIds={selectedIds}
+          interactive
+          wheelZoom
+          expanded
+          onActivate={activateEntity}
+          onActivateMarkers={activateMarkers}
+          renderDetails={(markerIds) => (
+            <MarkerDetails
+              markerIds={markerIds}
+              view={view}
+              onChoose={activateEntity}
+            />
+          )}
+        />
+      </Modal>
     </DetailPageShell>
   );
 }

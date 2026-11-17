@@ -27,6 +27,10 @@ vi.mock('@/features/route-overlay/useRouteOverlay', async () => {
         overlay,
         open: setOverlay,
         dismiss: () => setOverlay(undefined),
+        release: () => {
+          setOverlay(undefined);
+          return Promise.resolve();
+        },
         invalidate: () => {
           setOverlay(undefined);
           return Promise.resolve();

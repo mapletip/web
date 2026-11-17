@@ -151,6 +151,33 @@ function renderDetail(
 }
 
 describe('MapDetail information', () => {
+  it('uses the same stage panel for inline and Explore views', async () => {
+    const view = projectMapDetail({
+      record: mapPageRecordFixture({ mapId: 'practice-grove' }),
+      buildId: 'cw-launch',
+    });
+    const user = userEvent.setup();
+    renderMapView({ view });
+
+    expect(screen.getAllByTestId('map-detail-stage-panel')).toHaveLength(1);
+    await user.click(screen.getByRole('button', { name: 'Explore map' }));
+
+    const dialog = await screen.findByRole('dialog', {
+      name: 'Practice Grove',
+    });
+    const explorePanel = within(dialog).getByTestId('map-detail-stage-panel');
+    expect(
+      within(explorePanel).getByRole('group', { name: 'Map legend' }),
+    ).toBeInTheDocument();
+    expect(
+      within(explorePanel).getByRole('group', { name: 'Practice Grove map' }),
+    ).toBeInTheDocument();
+    expect(
+      within(explorePanel).getByRole('combobox', { name: 'Find on this map' }),
+    ).toBeInTheDocument();
+    expect(screen.getAllByTestId('map-detail-stage-panel')).toHaveLength(2);
+  });
+
   it('filters find suggestions in entity order and limits them to ten', async () => {
     const baseView = projectMapDetail({
       record: mapPageRecordFixture({ mapId: 'practice-grove' }),
