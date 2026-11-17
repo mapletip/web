@@ -37,10 +37,33 @@ export interface MapDetailView {
   readonly stage: MapDetailStageView;
   readonly entities: readonly MapDetailEntityView[];
   readonly facts: readonly MapDetailFactView[];
-  readonly connections?: MapDetailConnectionsView;
+  readonly onThisMap: readonly MapDetailOnThisMapRowView[];
+  readonly connections: MapDetailConnectionsView;
   readonly monsters: MapDetailMonstersView;
   readonly npcs: MapDetailNpcsView;
 }
+
+interface MapDetailOnThisMapRowBaseView {
+  readonly count: number | 'unknown';
+  readonly countLabel: string;
+  readonly state: MapPageRecordV1['connections']['state'];
+}
+
+export interface MapDetailOnThisMapToggleRowView extends MapDetailOnThisMapRowBaseView {
+  readonly key: 'connections' | 'monsters' | 'npcs';
+  readonly label: 'Connections' | 'Monsters' | 'NPCs';
+  readonly focus: 'connections' | 'monsters' | 'npcs';
+  readonly accessibleName: string;
+  readonly disabled: boolean;
+}
+
+export interface MapDetailOnThisMapSpawnsRowView extends MapDetailOnThisMapRowBaseView {
+  readonly key: 'spawns';
+  readonly label: 'Spawns';
+}
+
+export type MapDetailOnThisMapRowView =
+  MapDetailOnThisMapToggleRowView | MapDetailOnThisMapSpawnsRowView;
 
 export type MapDetailStageMarkerKind =
   'monster' | 'npc' | 'connection' | 'warp';
@@ -118,6 +141,7 @@ export interface MapDetailMonsterView extends MonsterRecordCardView {
 export interface MapDetailMonstersView {
   readonly state: MapPageRecordV1['monsters']['state'];
   readonly count: number | 'unknown';
+  readonly totalSpawns: number;
   readonly notice?: string;
   readonly summary?: string;
   readonly monsters: readonly MapDetailMonsterView[];
@@ -393,6 +417,7 @@ function projectMonsters({
   return {
     state: record.monsters.state,
     count,
+    totalSpawns,
     ...(notice === undefined ? {} : { notice }),
     ...(summary === undefined ? {} : { summary }),
     monsters,
@@ -405,7 +430,7 @@ function projectConnections({
 }: {
   readonly record: MapPageRecordV1;
   readonly buildId: BuildId;
-}): MapDetailConnectionsView | undefined {
+}): MapDetailConnectionsView {
   const maps = record.connections.items
     .map((connection): MapDetailConnectionView => {
       const name =
@@ -457,14 +482,108 @@ function projectConnections({
     plural: 'connections',
   });
 
-  if (notice === undefined && maps.length === 0) return undefined;
-
   return {
     state: record.connections.state,
     count: record.connections.state === 'unknown' ? 'unknown' : maps.length,
     ...(notice === undefined ? {} : { notice }),
     maps,
   };
+}
+
+function onThisMapCountLabel({
+  count,
+  state,
+}: {
+  readonly count: number | 'unknown';
+  readonly state: MapPageRecordV1['connections']['state'];
+}): string {
+  if (count === 'unknown') return '?';
+  return `${count}${state === 'partial' ? '+' : ''}`;
+}
+
+function projectOnThisMapToggleRow({
+  key,
+  label,
+  count,
+  state,
+  focus,
+  singular,
+  plural,
+}: {
+  readonly key: 'connections' | 'monsters' | 'npcs';
+  readonly label: 'Connections' | 'Monsters' | 'NPCs';
+  readonly count: number | 'unknown';
+  readonly state: MapPageRecordV1['connections']['state'];
+  readonly focus: 'connections' | 'monsters' | 'npcs';
+  readonly singular: string;
+  readonly plural: string;
+}): MapDetailOnThisMapToggleRowView {
+  const countLabel = onThisMapCountLabel({ count, state });
+
+  return {
+    key,
+    label,
+    count,
+    countLabel,
+    state,
+    focus,
+    accessibleName: `Highlight ${label} on map, ${countLabel} ${countLabel === '1' ? singular : plural}`,
+    disabled: count === 0,
+  };
+}
+
+function projectOnThisMap({
+  connections,
+  monsters,
+  npcs,
+}: {
+  readonly connections: MapDetailConnectionsView;
+  readonly monsters: MapDetailMonstersView;
+  readonly npcs: MapDetailNpcsView;
+}): readonly MapDetailOnThisMapRowView[] {
+  return [
+    projectOnThisMapToggleRow({
+      key: 'connections',
+      label: 'Connections',
+      count: connections.count,
+      state: connections.state,
+      focus: 'connections',
+      singular: 'Connection',
+      plural: 'Connections',
+    }),
+    projectOnThisMapToggleRow({
+      key: 'monsters',
+      label: 'Monsters',
+      count: monsters.count,
+      state: monsters.state,
+      focus: 'monsters',
+      singular: 'Monster',
+      plural: 'Monsters',
+    }),
+    ...(monsters.monsters.length > 0
+      ? [
+          {
+            key: 'spawns' as const,
+            label: 'Spawns' as const,
+            count: monsters.totalSpawns,
+            countLabel: onThisMapCountLabel({
+              count: monsters.totalSpawns,
+              state: monsters.state,
+            }),
+            state: monsters.state,
+          },
+        ]
+      : []),
+    projectOnThisMapToggleRow({
+      key: 'npcs',
+      label: 'NPCs',
+      count: npcs.count,
+      state: npcs.state,
+      focus: 'npcs',
+      singular: 'NPC',
+      plural: 'NPCs',
+    }),
+  ];
 }
 
 function projectNpcs(record: MapPageRecordV1): MapDetailNpcsView {
@@ -699,7 +818,7 @@ export function projectMapDetail({
   const npcs = projectNpcs(record);
   const warps = projectWarps(record);
   const entities: MapDetailEntityView[] = [
-    ...(connections?.maps.map((connection) => ({
+    ...connections.maps.map((connection) => ({
       focusKey: connection.focusKey,
       kind: 'connection' as const,
       name: connection.name,
@@ -712,7 +831,7 @@ export function projectMapDetail({
               params: connection.destination.params,
             },
           }),
-    })) ?? []),
+    })),
     ...warps.map((warp) => ({
       focusKey: warp.focusKey,
       kind: 'warp' as const,
@@ -743,6 +862,7 @@ export function projectMapDetail({
       kindLabel: 'NPC',
     })),
   ];
+  const onThisMap = projectOnThisMap({ connections, monsters, npcs });
   const stage = projectStage({
     record,
     name: name ?? UNNAMED_MAP_LABEL,
@@ -767,7 +887,8 @@ export function projectMapDetail({
     stage,
     entities,
     facts: projectFacts({ information: record.information, buildId }),
-    ...(connections === undefined ? {} : { connections }),
+    onThisMap,
+    connections,
     monsters,
     npcs,
     canonicalPath: buildRecordDetailPath(

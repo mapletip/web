@@ -1,6 +1,10 @@
 import { z } from 'zod';
 
-import type { MapDetailStageMarker, MapDetailView } from './project';
+import type {
+  MapDetailOnThisMapRowView,
+  MapDetailStageMarker,
+  MapDetailView,
+} from './project';
 
 export const mapDetailSearchSchema = z
   .object({
@@ -51,11 +55,19 @@ export function resolveMapDetailFocus({
 }): MapDetailFocus | undefined {
   if (focus === undefined) return undefined;
   if ('kind' in focus) {
-    return view.entities.some(
-      ({ kind }) => kind === MAP_DETAIL_FOCUS_KIND[focus.kind],
-    )
-      ? focus
-      : undefined;
+    let count: number | 'unknown';
+    switch (focus.kind) {
+      case 'connections':
+        count = view.connections.count;
+        break;
+      case 'monsters':
+        count = view.monsters.count;
+        break;
+      case 'npcs':
+        count = view.npcs.count;
+        break;
+    }
+    return count === 'unknown' || count > 0 ? focus : undefined;
   }
 
   const selected = new Set(focus.keys);
@@ -156,4 +168,20 @@ export function isMapDetailEntityFocused({
   if (focus === undefined) return false;
   if ('kind' in focus) return MAP_DETAIL_FOCUS_KIND[focus.kind] === kind;
   return focus.keys.includes(focusKey);
+}
+
+/** Whether a whole-kind focus selects an On this map toggle row. */
+export function isMapDetailOnThisMapRowSelected({
+  focus,
+  row,
+}: {
+  readonly focus: MapDetailFocus | undefined;
+  readonly row: MapDetailOnThisMapRowView;
+}): boolean {
+  return (
+    'focus' in row &&
+    focus !== undefined &&
+    'kind' in focus &&
+    focus.kind === row.focus
+  );
 }

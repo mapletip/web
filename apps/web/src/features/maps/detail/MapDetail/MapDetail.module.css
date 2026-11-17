@@ -242,6 +242,111 @@
   min-width: 0;
 }
 
+.onThisMap {
+  background: var(--mantine-color-dark-8, #17191c);
+  border: 1px solid var(--mantine-color-default-border, #dedbd5);
+  border-radius: var(--mantine-radius-md, 8px);
+  box-sizing: border-box;
+  min-width: 0;
+  padding: 10px 12px;
+  width: 100%;
+}
+
+.onThisMapHeading {
+  color: var(--mantine-color-text);
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1.35;
+  margin: 0 0 7px;
+}
+
+.onThisMapRows {
+  display: grid;
+  list-style: none;
+  margin: 0;
+  min-width: 0;
+  padding: 0;
+}
+
+.onThisMapRow {
+  border-bottom: 1px solid var(--mantine-color-default-border, #dedbd5);
+  min-width: 0;
+}
+
+.onThisMapRow:last-child {
+  border-bottom: 0;
+}
+
+.onThisMapAction,
+.onThisMapStatic {
+  align-items: center;
+  box-sizing: border-box;
+  color: inherit;
+  display: grid;
+  gap: 4px 6px;
+  grid-template-columns: 16px minmax(0, 1fr) auto;
+  min-height: 40px;
+  min-width: 0;
+  padding: 5px 8px;
+  text-align: left;
+  width: 100%;
+}
+
+.onThisMapAction {
+  background: transparent;
+  border: 0;
+  border-radius: var(--mantine-radius-sm, 4px);
+  cursor: pointer;
+  min-height: 44px;
+}
+
+.onThisMapAction:hover:not(:disabled) {
+  background: var(--mantine-color-default-hover, rgb(0 0 0 / 6%));
+}
+
+.onThisMapAction[aria-pressed='true'],
+.onThisMapAction[data-selected='true'] {
+  background: var(--mantine-primary-color-light, rgb(163 74 24 / 12%));
+  box-shadow: inset 2px 0 var(--mantine-primary-color-filled, #a34a18);
+}
+
+.onThisMapAction:focus-visible {
+  outline: 2px solid var(--mantine-primary-color-filled, #a34a18);
+  outline-offset: 1px;
+}
+
+.onThisMapAction:disabled {
+  color: var(--mantine-color-dimmed, #9b9892);
+  cursor: not-allowed;
+}
+
+.onThisMapIcon {
+  align-items: center;
+  color: var(--mantine-color-dimmed, #9b9892);
+  display: inline-flex;
+  flex: 0 0 16px;
+  height: 18px;
+  justify-content: center;
+  width: 16px;
+}
+
+.onThisMapLabel {
+  font-size: 0.875rem;
+  font-weight: 550;
+  line-height: 1.35;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.onThisMapCount {
+  font-size: 0.875rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  justify-self: end;
+  line-height: 1.3;
+  white-space: nowrap;
+}
+
 @media (min-width: 62rem) {
   .hero {
     grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);

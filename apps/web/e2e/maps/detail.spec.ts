@@ -189,6 +189,44 @@ test('Map Detail selection follows the address on desktop and stays static on mo
   await expect(stage.locator('[data-marker-ids]').first()).toBeVisible();
 });
 
+test('On this map selects every town NPC and restores the selection after reload', async ({
+  page,
+}) => {
+  const publicId = mapPublicId({ sourceId: 'cw-launch:lantern-square' });
+  await page.goto(`/maplestory/maps/lantern-square-${publicId}`);
+  await page.waitForLoadState('networkidle');
+
+  const npcRow = page
+    .getByRole('region', { name: 'On this map' })
+    .getByRole('button', { name: /Highlight NPCs on map/u });
+  await npcRow.click();
+  await expect(page).toHaveURL(/focus=npcs/u);
+  await expect(npcRow).toHaveAttribute('aria-pressed', 'true');
+
+  const expectNpcMarkersRinged = async () => {
+    const selected = await page
+      .getByRole('group', { name: 'Lantern Square map' })
+      .locator('[data-marker-ids*="npc:"]')
+      .evaluateAll((markers) =>
+        markers.map(
+          (marker) => marker.getAttribute('data-selected') === 'true',
+        ),
+      );
+    expect(selected.length).toBeGreaterThan(0);
+    expect(selected.every(Boolean)).toBe(true);
+  };
+
+  await expectNpcMarkersRinged();
+  await page.reload();
+  await expect(page).toHaveURL(/focus=npcs/u);
+  await expect(
+    page
+      .getByRole('region', { name: 'On this map' })
+      .getByRole('button', { name: /Highlight NPCs on map/u }),
+  ).toHaveAttribute('aria-pressed', 'true');
+  await expectNpcMarkersRinged();
+});
+
 test('Map Detail legend chips select entities and ring their markers at desktop and mobile widths', async ({
   page,
 }, testInfo) => {

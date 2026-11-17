@@ -164,6 +164,75 @@ describe('MapDetail information', () => {
     ).toBeGreaterThan(0);
   });
 
+  it('toggles a whole kind from On this map and disables empty kinds', async () => {
+    const view = projectMapDetail({
+      record: mapPageRecordFixture({ mapId: 'lantern-square' }),
+      buildId: 'cw-launch',
+    });
+    const onFocusChange = vi.fn();
+    const user = userEvent.setup();
+    renderControlledMapView({ view, onFocusChange });
+
+    const rail = screen.getByRole('region', { name: 'On this map' });
+    const npcs = within(rail).getByRole('button', {
+      name: /Highlight NPCs on map/u,
+    });
+    const monsters = within(rail).getByRole('button', {
+      name: /Highlight Monsters on map/u,
+    });
+
+    expect(monsters).toBeDisabled();
+    expect(monsters).toHaveAttribute('aria-pressed', 'false');
+    expect(within(rail).queryByText('Spawns')).not.toBeInTheDocument();
+
+    await user.click(npcs);
+    expect(npcs).toHaveAttribute('aria-pressed', 'true');
+    expect(onFocusChange).toHaveBeenLastCalledWith('npcs');
+
+    await user.click(npcs);
+    expect(npcs).toHaveAttribute('aria-pressed', 'false');
+    expect(onFocusChange).toHaveBeenLastCalledWith(undefined);
+  });
+
+  it('shows partial counts with plus signs and unresolved counts as question marks', () => {
+    const record = mapPageRecordFixture({ mapId: 'practice-grove' });
+    const town = mapPageRecordFixture({ mapId: 'lantern-square' });
+    const partialView = projectMapDetail({
+      record: {
+        ...record,
+        connections: { state: 'partial', items: record.connections.items },
+        monsters: { state: 'partial', items: record.monsters.items },
+        npcs: { state: 'partial', items: town.npcs.items },
+      },
+      buildId: 'cw-launch',
+    });
+    const { unmount } = renderMapView({ view: partialView });
+    const rail = screen.getByRole('region', { name: 'On this map' });
+    expect(rail).toHaveTextContent('Connections1+');
+    expect(rail).toHaveTextContent('Monsters4+');
+    expect(rail).toHaveTextContent(
+      `Spawns${partialView.monsters.totalSpawns}+`,
+    );
+    expect(rail).toHaveTextContent('NPCs8+');
+    unmount();
+
+    const unknownView = projectMapDetail({
+      record: {
+        ...record,
+        connections: { state: 'unknown', items: [] },
+        monsters: { state: 'unknown', items: [] },
+        npcs: { state: 'unknown', items: [] },
+      },
+      buildId: 'cw-launch',
+    });
+    renderMapView({ view: unknownView });
+    const unknownRail = screen.getByRole('region', { name: 'On this map' });
+    expect(unknownRail).toHaveTextContent('Connections?');
+    expect(unknownRail).toHaveTextContent('Monsters?');
+    expect(unknownRail).toHaveTextContent('NPCs?');
+    expect(unknownRail).not.toHaveTextContent('NPCs0');
+  });
+
   it('rewrites unknown focus entities out of the address', () => {
     const view = projectMapDetail({
       record: mapPageRecordFixture({ mapId: 'practice-grove' }),
