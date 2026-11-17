@@ -67,6 +67,10 @@ export function MonsterDetailLocations({
   const [query, setQuery] = useState('');
   const [sort, setSort] = useState<LocationSort>('spawns');
   const desktopDrawer = useMediaQuery('(min-width: 48em)', false);
+  const canHoverMinimap = useMediaQuery(
+    '(min-width: 48em) and (hover: hover) and (pointer: fine)',
+    false,
+  );
 
   if (locations.state === 'no-locations') {
     return <Text>No locations are listed for this monster.</Text>;
@@ -151,7 +155,7 @@ export function MonsterDetailLocations({
             data-testid="monster-location-card"
             key={map.key}
           >
-            <MapRecordCard map={map} />
+            <MapRecordCard map={map} canHoverMinimap={canHoverMinimap} />
           </Box>
         ))}
       </Box>

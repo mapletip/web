@@ -1,3 +1,5 @@
+import { monsterPublicId, monsterSlug } from '../../src/mocks/release';
+
 import { test, expect } from './fixtures';
 import type { MonsterPage } from './page/monster-page';
 
@@ -5,6 +7,39 @@ async function openBossesAndUndead(monsterPage: MonsterPage): Promise<void> {
   await monsterPage.filters.checkbox('Boss', /^Yes/u).click();
   await monsterPage.filters.checkbox('Undead', /^Yes/u).click();
 }
+
+test('desktop Monster Detail shows an enlarged minimap on hover', async ({
+  page,
+  monsterPage,
+}) => {
+  await page.setViewportSize({ width: 1366, height: 900 });
+  const publicId = monsterPublicId('crowned-warden');
+  const slug = monsterSlug('Crowned Warden', publicId);
+  await monsterPage.goto(`/maplestory/monsters/${slug}-${publicId}`);
+
+  await page
+    .getByRole('textbox', { name: 'Find a map' })
+    .first()
+    .fill('Practice Map 01');
+  const trigger = page.getByRole('button', {
+    name: 'Enlarge Practice Map 01 minimap',
+  });
+  await expect(trigger).toBeVisible();
+  await trigger.scrollIntoViewIfNeeded();
+  await trigger.hover();
+
+  const preview = page.getByRole('tooltip', {
+    name: 'Practice Map 01 full-size minimap preview',
+  });
+  await expect(preview).toBeVisible();
+  await expect(
+    preview.getByRole('img', { name: 'Practice Map 01 minimap enlarged' }),
+  ).toBeVisible();
+  await monsterPage.captureReady();
+  await expect(preview).toHaveScreenshot(
+    'desktop-monster-detail-minimap-hover.png',
+  );
+});
 
 test('desktop page with expanded drops and certainty details', async ({
   page,
