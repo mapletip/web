@@ -21,7 +21,7 @@
     "@mantine/core": "catalog:",
     "@mantine/hooks": "catalog:",
     "@mapletip/component-library": "workspace:*",
-    "@mapletip/data": "0.7.0",
+    "@mapletip/data": "0.9.0",
     "@mapletip/theme": "workspace:*",
     "@phosphor-icons/react": "catalog:",
     "@tanstack/react-router": "catalog:",

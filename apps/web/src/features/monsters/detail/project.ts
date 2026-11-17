@@ -1,4 +1,5 @@
 import { itemIconUrl } from '@mapletip/data/items';
+import { mapMinimapUrl } from '@mapletip/data/maps';
 import type { MonsterPageRecordV1 } from '@mapletip/data/monsters';
 
 import { MAPLEKIT_RELEASE, type BuildId } from '@/config/maplekit';
@@ -229,14 +230,6 @@ function nonBlank(value: string | null | undefined): string | undefined {
   return trimmed === undefined || trimmed.length === 0 ? undefined : trimmed;
 }
 
-function mapMinimapUrl(contentId: string): string {
-  const prefix = contentId.slice(0, 2);
-  return new URL(
-    `media/images/${prefix}/${contentId}.png`,
-    MAPLEKIT_RELEASE.baseUrl,
-  ).toString();
-}
-
 /** Advancement codes need the Jobs catalog; only the class-base codes are labelled here. */
 const JOB_FAMILY_LABELS: Readonly<Record<number, string>> = {
   0: 'Beginner',
@@ -370,7 +363,7 @@ function projectMonsterLocations(
       const street = nonBlank(entry.streetName);
       const minimapUrl =
         entry.minimap.state === 'known'
-          ? mapMinimapUrl(entry.minimap.value)
+          ? mapMinimapUrl(MAPLEKIT_RELEASE.baseUrl, entry.minimap.value)
           : undefined;
       const name =
         nonBlank(entry.name.state === 'known' ? entry.name.value : undefined) ??

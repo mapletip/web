@@ -1,3 +1,4 @@
+import type { MapPagePackV1, MapPageRecordV1 } from '@mapletip/data/maps';
 import type {
   MonsterCatalogV2_5,
   MonsterDropBrowseV1,
@@ -9,6 +10,8 @@ import type {
   FixtureBuild,
   FixtureFact,
   FixtureLocation,
+  FixtureMap,
+  FixtureMapPoint,
   FixtureMonster,
 } from './world';
 import { world } from './world';
@@ -30,6 +33,8 @@ export interface FixtureBuildArtifacts {
   readonly catalog: FileDescriptor;
   readonly dropBrowse: FileDescriptor;
   readonly pagePack: FileDescriptor;
+  readonly mapProductManifest: FileDescriptor;
+  readonly mapPagePack: FileDescriptor;
 }
 
 export interface FixtureRelease {
@@ -67,13 +72,21 @@ function known<T>(value: T): FixtureFact<T> {
   return { state: 'known', value };
 }
 
-export function monsterPublicId(sourceId: string): string {
+function fixturePublicId(reference: string): string {
   let hash = FNV1A_64_OFFSET;
-  for (const byte of encoder.encode(`monster:${sourceId}`)) {
+  for (const byte of encoder.encode(reference)) {
     hash ^= BigInt(byte);
     hash = BigInt.asUintN(64, hash * FNV1A_64_PRIME);
   }
   return (hash % BASE36_8_MOD).toString(36).padStart(8, '0');
+}
+
+export function monsterPublicId(sourceId: string): string {
+  return fixturePublicId(`monster:${sourceId}`);
+}
+
+export function mapPublicId(options: { readonly sourceId: string }): string {
+  return fixturePublicId(`map:${options.sourceId}`);
 }
 
 export function monsterSlug(
@@ -84,6 +97,11 @@ export function monsterSlug(
   return segments && segments.length > 0
     ? segments.join('-')
     : `monster-${publicId}`;
+}
+
+function mapSlug(name: string | undefined): string {
+  const segments = name?.toLowerCase().match(/[a-z0-9]+/gu);
+  return segments && segments.length > 0 ? segments.join('-') : 'map';
 }
 
 function projectMonster(
@@ -321,6 +339,370 @@ function projectMonsterPage(
   };
 }
 
+type ResolvedFixtureMap = {
+  readonly fixture: FixtureMap;
+  readonly key: string;
+  readonly publicId: string;
+  readonly slug: string;
+  readonly markImage: Extract<
+    MapPageRecordV1['markImage'],
+    { readonly state: 'known' }
+  >;
+  readonly stage?: Extract<
+    MapPageRecordV1['stage'],
+    { readonly state: 'known' }
+  >['value'];
+};
+
+type MapReference = Extract<
+  MapPageRecordV1['information']['returnMap'],
+  { readonly state: 'known' }
+>['value'];
+
+function mapNameFact(name: string | undefined): MapPageRecordV1['name'] {
+  return name === undefined ? { state: 'unknown' } : known(name);
+}
+
+function mapReference(map: ResolvedFixtureMap): MapReference {
+  return {
+    key: map.key,
+    publicId: map.publicId,
+    slug: map.slug,
+    name: mapNameFact(map.fixture.name),
+    markImage: map.markImage,
+  };
+}
+
+function mapPoints(
+  points: readonly FixtureMapPoint[],
+  positionsPublished: boolean,
+): MapPageRecordV1['connections']['items'][number]['points'] {
+  if (!positionsPublished) return { state: 'unknown', items: [] };
+  return {
+    state: points.length === 0 ? 'absent' : 'known',
+    items: [...points],
+  };
+}
+
+async function projectMapPages(options: {
+  readonly build: FixtureBuild;
+  readonly scope: MapPageRecordV1['scope'];
+  readonly maps: readonly FixtureMap[];
+  readonly monsters: ReadonlyMap<string, MonsterCatalogV2_5['records'][number]>;
+  readonly key: (prefix: string, id: string) => Promise<string>;
+}): Promise<readonly MapPageRecordV1[]> {
+  const { build, scope, maps, monsters, key } = options;
+  const resolved = await Promise.all(
+    maps.map(async (fixture): Promise<ResolvedFixtureMap> => {
+      const publicId = mapPublicId({
+        sourceId: `${build.buildId}:${fixture.id}`,
+      });
+      return {
+        fixture,
+        key: await key('map', `${build.buildId}:${fixture.id}`),
+        publicId,
+        slug: mapSlug(fixture.name),
+        markImage: {
+          state: 'known',
+          value: await sha256Hex(
+            encoder.encode(`fixture:map-mark:${build.buildId}:${fixture.id}`),
+          ),
+        },
+        ...(fixture.stage === undefined
+          ? {}
+          : {
+              stage: {
+                contentId: await sha256Hex(
+                  encoder.encode(
+                    `fixture:map-stage:${build.buildId}:${fixture.stage.assetId}`,
+                  ),
+                ),
+                width: fixture.stage.width,
+                height: fixture.stage.height,
+              },
+            }),
+      };
+    }),
+  );
+  const mapsBySourceId = new Map(resolved.map((map) => [map.fixture.id, map]));
+  const positionsPublished = (map: FixtureMap): boolean =>
+    map.stage !== undefined && map.positionsPublished !== false;
+
+  return Promise.all(
+    resolved.map(async (map): Promise<MapPageRecordV1> => {
+      const fixture = map.fixture;
+      const returnTarget = mapsBySourceId.get(fixture.returnMapId);
+      if (returnTarget === undefined) {
+        throw new Error(
+          `Fixture Map "${fixture.id}" returns to unknown Map "${fixture.returnMapId}".`,
+        );
+      }
+      const published = positionsPublished(fixture);
+      const mapMonsters = fixture.monsters.map((placement) => {
+        const record = monsters.get(placement.monsterId);
+        if (record === undefined) {
+          throw new Error(
+            `Fixture Map "${fixture.id}" references unknown Monster "${placement.monsterId}".`,
+          );
+        }
+        const level = record.stats[0];
+        const boss = record.traits[0];
+        if (level === undefined || boss === undefined) {
+          throw new Error(
+            `Fixture Monster "${placement.monsterId}" has no level or boss fact.`,
+          );
+        }
+        if (placement.points.length === 0) {
+          throw new Error(
+            `Fixture Monster "${placement.monsterId}" needs a placement.`,
+          );
+        }
+        return {
+          key: record.key,
+          publicId: record.publicId,
+          slug: record.slug,
+          name: record.name,
+          level,
+          boss,
+          sprite: { contentId: record.sprite },
+          placementCount: placement.points.length,
+          points: mapPoints(placement.points, published),
+          respawn: { kind: placement.respawn ?? 'ordinary' },
+          focusToken: fixturePublicId(
+            `map-focus:${fixture.id}:monster:${placement.monsterId}`,
+          ),
+        } satisfies MapPageRecordV1['monsters']['items'][number];
+      });
+      const mapNpcs = await Promise.all(
+        fixture.npcs.map(
+          async (npc) =>
+            ({
+              key: await key('npc', `${build.buildId}:${fixture.id}:${npc.id}`),
+              name: known(npc.name),
+              sprite: { state: 'unknown' as const },
+              points: mapPoints(npc.points, published),
+              focusToken: fixturePublicId(
+                `map-focus:${fixture.id}:npc:${npc.id}`,
+              ),
+            }) satisfies MapPageRecordV1['npcs']['items'][number],
+        ),
+      );
+      const connections = fixture.connections.map((connection) => {
+        const target = mapsBySourceId.get(connection.mapId);
+        if (target === undefined) {
+          throw new Error(
+            `Fixture Map "${fixture.id}" connects to unknown Map "${connection.mapId}".`,
+          );
+        }
+        return {
+          key: target.key,
+          publicId: target.publicId,
+          slug: target.slug,
+          name: mapNameFact(target.fixture.name),
+          markImage: target.markImage,
+          minimap:
+            target.stage === undefined
+              ? {
+                  state: 'absent' as const,
+                  coverageKey: `fixture:map:${target.fixture.id}:minimap`,
+                }
+              : { state: 'known' as const, value: target.stage.contentId },
+          monsterCount: target.fixture.monsters.length,
+          npcCount: target.fixture.npcs.length,
+          points: mapPoints(connection.points, published),
+          focusToken: fixturePublicId(
+            `map-focus:${fixture.id}:connection:${connection.mapId}`,
+          ),
+        } satisfies MapPageRecordV1['connections']['items'][number];
+      });
+
+      return {
+        format: 'mapletip.map-page',
+        contractVersion: '1.0',
+        scope,
+        key: map.key,
+        publicId: map.publicId,
+        slug: map.slug,
+        name: mapNameFact(fixture.name),
+        streetName:
+          fixture.streetName === undefined
+            ? { state: 'unknown' }
+            : known(fixture.streetName),
+        activity:
+          fixture.activity === undefined
+            ? { state: 'unknown' }
+            : known(fixture.activity),
+        description:
+          fixture.description === undefined
+            ? { state: 'unknown' }
+            : known(fixture.description),
+        markImage: map.markImage,
+        ...(fixture.geography === undefined
+          ? {}
+          : {
+              geography: {
+                ...fixture.geography,
+                provenance: 'reviewed-overlay' as const,
+                status: 'verified' as const,
+              },
+            }),
+        information: {
+          flying: { state: 'unknown' },
+          forcedReturnMap: { state: 'unknown' },
+          hpDrain: { state: 'unknown' },
+          hpDrainProtectionItem: { state: 'unknown' },
+          levelLimit: { state: 'unknown' },
+          music: { state: 'unknown' },
+          returnMap: { state: 'known', value: mapReference(returnTarget) },
+          swimming: { state: 'unknown' },
+          timeLimitSeconds: { state: 'unknown' },
+        },
+        stage:
+          map.stage === undefined
+            ? {
+                state: 'absent',
+                coverageKey: `fixture:map:${fixture.id}:stage`,
+              }
+            : { state: 'known', value: map.stage },
+        monsters: {
+          state: mapMonsters.length === 0 ? 'absent' : 'known',
+          items: mapMonsters,
+        },
+        npcs: {
+          state: mapNpcs.length === 0 ? 'absent' : 'known',
+          items: mapNpcs,
+        },
+        connections: {
+          state: connections.length === 0 ? 'absent' : 'known',
+          items: connections,
+        },
+        warps: {
+          state:
+            fixture.warps === undefined || fixture.warps.length === 0
+              ? 'absent'
+              : 'known',
+          items: (fixture.warps ?? []).map((warp, index) => ({
+            ends: [...warp.ends],
+            focusToken: fixturePublicId(
+              `map-focus:${fixture.id}:warp:${index}`,
+            ),
+          })),
+        },
+      } satisfies MapPageRecordV1;
+    }),
+  );
+}
+
+interface BuildMapProductOptions {
+  readonly build: FixtureBuild;
+  readonly scope: MapPageRecordV1['scope'];
+  readonly maps: readonly FixtureMap[];
+  readonly monsters: ReadonlyMap<string, MonsterCatalogV2_5['records'][number]>;
+  readonly key: (prefix: string, id: string) => Promise<string>;
+  readonly put: (dir: string, value: unknown) => Promise<FileDescriptor>;
+  readonly minimapIds: Set<string>;
+}
+
+interface BuiltMapProduct {
+  readonly pagePack: FileDescriptor;
+  readonly productManifest: FileDescriptor;
+  readonly productDescriptor: Record<string, unknown>;
+}
+
+async function buildMapProduct(
+  options: BuildMapProductOptions,
+): Promise<BuiltMapProduct> {
+  const { build, scope, maps, monsters, key, put, minimapIds } = options;
+  const mapPages = [
+    ...(await projectMapPages({ build, scope, maps, monsters, key })),
+  ].sort((left, right) => left.publicId.localeCompare(right.publicId));
+  const mapPagePackRange: RangeDescriptor = {
+    count: mapPages.length,
+    firstKey: mapPages[0]?.publicId ?? '',
+    lastKey: mapPages.at(-1)?.publicId ?? '',
+  };
+  const pagePack = await put('v2/maps/page-packs', {
+    format: 'mapletip.map-page-pack',
+    contractVersion: '1.0',
+    recordKind: 'map-page',
+    scope,
+    records: Object.fromEntries(mapPages.map((page) => [page.publicId, page])),
+  } satisfies MapPagePackV1);
+  for (const page of mapPages) {
+    if (page.stage.state === 'known') {
+      minimapIds.add(page.stage.value.contentId);
+    }
+  }
+
+  // getMapPage reads the manifest and page pack; the Maps catalog is required by
+  // the product-manifest schema but its records are not used for page lookup.
+  const mapCatalog = await put('v2/catalogs', {
+    format: 'mapletip.domain-catalog/1',
+    contractVersion: '2.1',
+    scope,
+    domain: 'maps',
+    coverage: 'partial',
+    recordCount: 0,
+    records: [],
+  });
+  const mapCatalogRange: RangeDescriptor = {
+    count: 0,
+    firstKey: '',
+    lastKey: '',
+  };
+  const mapCapabilities = [
+    'evidence-pages-v2',
+    'map-page-v1',
+    'maps-v1',
+    'wire-2.0',
+  ];
+  const mapProductId = `maps-${ZERO}`;
+  const productManifest = await put('v2/products', {
+    format: 'mapletip.product-manifest',
+    contractVersion: '2.0',
+    scope,
+    productId: 'maps',
+    coverage: 'partial',
+    identity: {
+      identityFormat: 'mapletip-product-id-v2',
+      productId: mapProductId,
+      inputFingerprint: ZERO,
+      semanticFingerprint: ZERO,
+      schemaFingerprint: ZERO,
+      producerFingerprint: ZERO,
+      optionsFingerprint: ZERO,
+      projectionRevision: 'fixture',
+      productDigest: ZERO,
+    },
+    requiredClientCapabilities: mapCapabilities,
+    packingPolicy: { targetBytes: 524288, maxBytes: 1048576 },
+    catalog: { ...mapCatalog, ...mapCatalogRange },
+    detailPacks: [],
+    pagePacks: [{ ...pagePack, ...mapPagePackRange }],
+    relationshipPacks: [],
+    totalEntityCount: mapPages.length,
+  });
+  return {
+    pagePack,
+    productManifest,
+    productDescriptor: {
+      productId: mapProductId,
+      familyId: build.familyId,
+      buildId: build.buildId,
+      productDigest: ZERO,
+      contractVersion: '2.0',
+      schemaSha256: ZERO,
+      coverage: 'partial',
+      completionClass: 'local-diagnostic',
+      requiredClientCapabilities: mapCapabilities,
+      productManifest,
+      productAlias: productManifest,
+      catalog: mapCatalog,
+      catalogAlias: mapCatalog,
+    },
+  };
+}
+
 export async function buildRelease(fixtureWorld: {
   readonly builds: readonly FixtureBuild[];
 }): Promise<FixtureRelease> {
@@ -521,6 +903,19 @@ export async function buildRelease(fixtureWorld: {
         ),
       ),
     });
+    const mapsArtifacts = await buildMapProduct({
+      build,
+      scope,
+      maps: build.maps,
+      monsters: new Map(
+        projectedMonsters.map(
+          ({ monster, record }) => [monster.id, record] as const,
+        ),
+      ),
+      key,
+      put,
+      minimapIds,
+    });
     const capabilities = [
       'evidence-pages-v2',
       'monster-core-v1',
@@ -575,14 +970,16 @@ export async function buildRelease(fixtureWorld: {
     buildDescriptors.push({
       familyId: build.familyId,
       buildId: build.buildId,
-      productCapabilities: ['monster-core-v1'],
-      products: [descriptor],
+      productCapabilities: ['maps-v1', 'monster-core-v1'],
+      products: [descriptor, mapsArtifacts.productDescriptor],
     });
     builds.set(build.buildId, {
       productManifest,
       catalog,
       dropBrowse,
       pagePack,
+      mapProductManifest: mapsArtifacts.productManifest,
+      mapPagePack: mapsArtifacts.pagePack,
     });
   }
 
@@ -604,6 +1001,8 @@ export async function buildRelease(fixtureWorld: {
       'monster-core-v1',
       'monster-drop-browse-v1',
       'monster-page-v1',
+      'map-page-v1',
+      'maps-v1',
       'product-input-identity-v1',
       'record-packs-v1',
       'release-manifest-v1',
