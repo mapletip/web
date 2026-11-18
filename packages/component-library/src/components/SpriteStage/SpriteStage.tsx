@@ -1,5 +1,5 @@
 import { Image, Text } from '@mantine/core';
-import { useEffect, useRef, useState, type ReactElement } from 'react';
+import { useState, type ReactElement } from 'react';
 
 import classes from '@/components/SpriteStage/SpriteStage.module.css';
 import type { SpriteStageProps } from '@/components/SpriteStage/types';
@@ -20,21 +20,10 @@ export function SpriteStage({
   width,
   height,
 }: SpriteStageProps): ReactElement {
-  const imageRef = useRef<HTMLImageElement>(null);
   const [failedSrc, setFailedSrc] = useState<string | null>(null);
   const hasSource = src !== undefined && src !== '';
   // Keyed by source, so a new source is never treated as the failed one.
   const failed = hasSource && failedSrc === src;
-
-  // An image that failed before hydration (a broken response behind server HTML)
-  // never fires `error` again, so its state is read from the element instead.
-  useEffect(() => {
-    if (!hasSource) return;
-    const image = imageRef.current;
-    if (image?.complete === true && image.naturalWidth === 0) {
-      setFailedSrc(src);
-    }
-  }, [hasSource, src]);
 
   if (hasSource && !failed) {
     return (
@@ -44,7 +33,6 @@ export function SpriteStage({
           <span className={classes['glow']} aria-hidden="true" />
           <span className={classes['shadow']} aria-hidden="true" />
           <Image
-            ref={imageRef}
             className={classes['sprite']}
             src={src}
             alt={name}
