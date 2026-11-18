@@ -10,14 +10,14 @@ import {
   type MapDetailConnectionsView,
 } from '../project';
 
-export interface MapDetailConnectionsProps {
+export interface ConnectionCardListProps {
   readonly connections: MapDetailConnectionsView;
 }
 
 /** Display the projected connection state and its map cards. */
-export function MapDetailConnections({
+export function ConnectionCardList({
   connections,
-}: MapDetailConnectionsProps): ReactElement {
+}: ConnectionCardListProps): ReactElement {
   const [query, setQuery] = useState('');
   const hasSearch = connections.maps.length >= 7;
   return (

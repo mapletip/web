@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { useState } from 'react';
 import { describe, expect, it } from 'vitest';
 
-import { MonsterDetailLocations } from '../MonsterDetailLocations';
+import { LocationCardList } from '../LocationCardList';
 import type {
   MonsterDetailLocationMapView,
   MonsterDetailLocationsView,
@@ -41,7 +41,7 @@ function StatefulLocations({
 }) {
   const [drawerOpened, setDrawerOpened] = useState(false);
   return (
-    <MonsterDetailLocations
+    <LocationCardList
       locations={locations}
       monsterName="Practice Snail"
       monsterSpriteUrl="/synthetic-monster.png"
@@ -60,7 +60,7 @@ function mount(locations: MonsterDetailLocationsView) {
   );
 }
 
-describe('MonsterDetailLocations', () => {
+describe('LocationCardList', () => {
   it('shows honest absent and unavailable states', () => {
     const { rerender } = mount({ state: 'no-locations', count: 0 });
     expect(

@@ -3,7 +3,7 @@ import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
 
-import { MonsterDetailDrops } from '../MonsterDetailDrops';
+import { DropChipGroups } from '../DropChipGroups';
 import type { MonsterDetailDropsView } from '../project';
 
 function renderDrops(
@@ -12,12 +12,12 @@ function renderDrops(
 ) {
   return render(
     <MantineProvider>
-      <MonsterDetailDrops drops={drops} buildId={buildId} />
+      <DropChipGroups drops={drops} buildId={buildId} />
     </MantineProvider>,
   );
 }
 
-describe('MonsterDetailDrops', () => {
+describe('DropChipGroups', () => {
   it('renders groups, legend, plain names, placeholders and certainty details', async () => {
     const user = userEvent.setup();
     const drops: MonsterDetailDropsView = {

@@ -15,7 +15,7 @@ import {
   type MapDetailMonstersView,
 } from '../project';
 
-import classes from './MapDetailMonsters.module.css';
+import classes from './MonsterCardList.module.css';
 
 const monsterSortOptions = [
   { label: 'Level: Low to high', value: 'level' },
@@ -26,7 +26,7 @@ const monsterSortOptions = [
   value: MapDetailMonsterSort;
 }[];
 
-export function MapDetailMonsters({
+export function MonsterCardList({
   monsters,
   onLocate,
 }: {

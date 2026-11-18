@@ -5,16 +5,16 @@ import { ItemRecordChip } from '@/features/items/shared';
 
 import type { MonsterDetailSummonedByView } from '../project';
 
-import classes from './MonsterDetailSummonedBy.module.css';
+import classes from './SummonItemChips.module.css';
 
-export interface MonsterDetailSummonedByProps {
+export interface SummonItemChipsProps {
   readonly summonedBy: MonsterDetailSummonedByView;
 }
 
 /** Render summoning items as plain, unlinked item chips. */
-export function MonsterDetailSummonedBy({
+export function SummonItemChips({
   summonedBy,
-}: MonsterDetailSummonedByProps): ReactElement | null {
+}: SummonItemChipsProps): ReactElement | null {
   if (summonedBy.state === 'absent') return null;
 
   return (

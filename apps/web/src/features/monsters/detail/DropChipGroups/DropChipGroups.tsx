@@ -8,18 +8,18 @@ import { DropCertaintyLegend } from '@/features/monsters/shared/DropCertaintyLeg
 
 import type { MonsterDetailDropsView } from '../project';
 
-import classes from './MonsterDetailDrops.module.css';
+import classes from './DropChipGroups.module.css';
 
-export interface MonsterDetailDropsProps {
+export interface DropChipGroupsProps {
   readonly drops: MonsterDetailDropsView;
   readonly buildId: BuildId;
 }
 
 /** Render every projected drop, preserving the SDK's within-group order. */
-export function MonsterDetailDrops({
+export function DropChipGroups({
   drops,
   buildId,
-}: MonsterDetailDropsProps): ReactElement {
+}: DropChipGroupsProps): ReactElement {
   if (drops.state === 'no-recorded') {
     return <Text size="sm">No recorded drop information.</Text>;
   }

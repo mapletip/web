@@ -2,18 +2,18 @@ import { MantineProvider } from '@mantine/core';
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 
-import { MonsterDetailQuests } from '../MonsterDetailQuests';
 import type { MonsterDetailQuestsView } from '../project';
+import { QuestCardList } from '../QuestCardList';
 
 function renderQuests(quests: MonsterDetailQuestsView) {
   return render(
     <MantineProvider>
-      <MonsterDetailQuests quests={quests} />
+      <QuestCardList quests={quests} />
     </MantineProvider>,
   );
 }
 
-describe('MonsterDetailQuests', () => {
+describe('QuestCardList', () => {
   it('renders a concise quest card with plain names, compact roles and shared count', () => {
     const quests: MonsterDetailQuestsView = {
       state: 'present',
@@ -75,9 +75,7 @@ describe('MonsterDetailQuests', () => {
 
     rerender(
       <MantineProvider>
-        <MonsterDetailQuests
-          quests={{ state: 'unavailable', count: 'unknown' }}
-        />
+        <QuestCardList quests={{ state: 'unavailable', count: 'unknown' }} />
       </MantineProvider>,
     );
     expect(screen.getByText('Quest information is unavailable.')).toBeVisible();

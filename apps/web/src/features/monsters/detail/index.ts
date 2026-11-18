@@ -5,18 +5,6 @@
  */
 export { MonsterDetail, type MonsterDetailProps } from './MonsterDetail';
 export {
-  MonsterDetailLocations,
-  type MonsterDetailLocationsProps,
-} from './MonsterDetailLocations';
-export {
-  MonsterDetailQuests,
-  type MonsterDetailQuestsProps,
-} from './MonsterDetailQuests';
-export {
-  MonsterDetailSummonedBy,
-  type MonsterDetailSummonedByProps,
-} from './MonsterDetailSummonedBy';
-export {
   monsterDetailBreadcrumbs,
   monsterDetailMetadata,
   type MonsterDetailMetadataOptions,
