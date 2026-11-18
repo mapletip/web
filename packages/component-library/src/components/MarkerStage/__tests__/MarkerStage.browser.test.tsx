@@ -81,6 +81,42 @@ afterEach(async () => {
 });
 
 describe('MarkerStage selected marker ring', () => {
+  it('renders the production selection ring and exposes the marker size', async () => {
+    await mount();
+
+    const target = page
+      .getByRole('button', { name: 'Selected point' })
+      .element();
+    const stage = page
+      .getByRole('group', { name: 'Synthetic image' })
+      .element();
+    const ring = getComputedStyle(target, '::before');
+
+    expect(ring.borderColor).toBe('rgb(255, 235, 59)');
+    expect(ring.borderStyle).toBe('solid');
+    expect(ring.borderWidth).toBe('2px');
+    expect(ring.opacity).toBe('0.8');
+    expect(
+      getComputedStyle(stage).getPropertyValue('--marker-stage-marker-size'),
+    ).toBe('clamp(18px, 5cqi, 44px)');
+  });
+
+  it('renders the production focus ring above the selected ring on keyboard focus', async () => {
+    await mount();
+    const target = page.getByRole('button', { name: 'Selected point' });
+
+    await userEvent.tab();
+    await expect.element(target).toHaveFocus();
+
+    const focusRing = getComputedStyle(target.element(), '::after');
+    expect(focusRing.borderColor).toBe('rgb(255, 235, 59)');
+    expect(focusRing.borderStyle).toBe('solid');
+    expect(focusRing.borderWidth).toBe('3px');
+    expect(focusRing.boxShadow).toBe(
+      'rgba(255, 235, 59, 0.58) 0px 0px 0px 4px',
+    );
+  });
+
   it('remains visible in forced-colours mode', async () => {
     await commands.emulateMedia({ forcedColors: 'active' });
     await mount();
@@ -88,11 +124,11 @@ describe('MarkerStage selected marker ring', () => {
     const target = page
       .getByRole('button', { name: 'Selected point' })
       .element();
-    const style = getComputedStyle(target);
+    const style = getComputedStyle(target, '::before');
 
-    expect(style.outlineStyle).toBe('solid');
-    expect(Number.parseFloat(style.outlineWidth)).toBeGreaterThan(0);
-    expect(style.outlineOffset).toBe('2px');
+    expect(style.borderStyle).toBe('solid');
+    expect(style.borderWidth).toBe('2px');
+    expect(style.borderColor).not.toBe('rgba(0, 0, 0, 0)');
   });
 });
 

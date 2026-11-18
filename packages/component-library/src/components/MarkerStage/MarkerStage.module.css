@@ -1,8 +1,14 @@
 .stage {
+  --marker-stage-ring-color: #ffeb3b;
+  --marker-stage-focus-halo-color: rgb(255 235 59 / 58%);
+  --marker-stage-connector-color: #f08c46;
+  --marker-stage-marker-size: clamp(18px, 5cqi, 44px);
+
   position: relative;
   width: 100%;
   overflow: hidden;
   isolation: isolate;
+  container-type: inline-size;
 }
 
 .image {
@@ -18,13 +24,14 @@
 .connectors {
   position: absolute;
   inset: 0;
+  z-index: 0;
   width: 100%;
   height: 100%;
 }
 
 .connector {
-  stroke: var(--mapletip-color-brand);
-  stroke-width: 2;
+  stroke: var(--marker-stage-connector-color);
+  stroke-width: 3;
   vector-effect: non-scaling-stroke;
 }
 
@@ -32,6 +39,10 @@
   position: absolute;
   z-index: 1;
   transform: translate(-50%, -100%);
+}
+
+.marker[data-selected='true'] {
+  z-index: 2;
 }
 
 .markerButton,
@@ -51,6 +62,7 @@
   color: inherit;
   cursor: pointer;
   font: inherit;
+  outline: none;
 }
 
 .markerStatic {
@@ -74,10 +86,36 @@
   padding-top: var(--mantine-spacing-xl);
 }
 
-.markerSelected,
+.marker[data-selected='true']:not(:focus-visible)::before,
+.markerButton:focus-visible::after {
+  position: absolute;
+  bottom: -6px;
+  left: 50%;
+  box-sizing: border-box;
+  border-radius: 50%;
+  background: transparent;
+  content: '';
+  pointer-events: none;
+  transform: translateX(-50%);
+}
+
+.marker[data-selected='true']:not(:focus-visible)::before {
+  width: calc(var(--marker-stage-marker-size) + 12px);
+  height: calc(var(--marker-stage-marker-size) + 12px);
+  border: 2px solid var(--marker-stage-ring-color);
+  opacity: 0.8;
+}
+
 .markerButton:focus-visible {
-  outline: 2px solid var(--mantine-color-text, currentColor);
-  outline-offset: 2px;
+  z-index: 3;
+  outline: none;
+}
+
+.markerButton:focus-visible::after {
+  width: clamp(24px, calc(var(--marker-stage-marker-size) + 12px), 56px);
+  height: clamp(24px, calc(var(--marker-stage-marker-size) + 12px), 56px);
+  border: 3px solid var(--marker-stage-ring-color);
+  box-shadow: 0 0 0 4px var(--marker-stage-focus-halo-color);
 }
 
 .unavailable {
@@ -95,15 +133,13 @@
 
 @media (forced-colors: active) {
   .stage {
+    --marker-stage-ring-color: Highlight;
+    --marker-stage-focus-halo-color: Highlight;
+
     border: 1px solid ButtonBorder;
   }
 
   .unavailable {
     color: CanvasText;
-  }
-
-  .markerSelected,
-  .markerButton:focus-visible {
-    outline-color: Highlight;
   }
 }
