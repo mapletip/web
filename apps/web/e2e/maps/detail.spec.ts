@@ -189,6 +189,26 @@ test('Map Detail selection follows the address on desktop and stays static on mo
   await expect(stage.locator('[data-marker-ids]').first()).toBeVisible();
 });
 
+test('Map Detail legend chips select entities and ring their markers at desktop and mobile widths', async ({
+  page,
+}, testInfo) => {
+  const width = testInfo.project.name === 'mobile' ? 390 : 1440;
+  await page.setViewportSize({ width, height: 900 });
+  const publicId = mapPublicId({ sourceId: 'cw-launch:practice-grove' });
+  await page.goto(`/maplestory/maps/practice-grove-${publicId}`);
+  await page.waitForLoadState('networkidle');
+
+  const stage = page.getByRole('group', { name: 'Practice Grove map' });
+  const legend = page.getByRole('region', { name: 'Scrollable map legend' });
+  const chip = legend.getByRole('checkbox', { name: 'Twin Sprout, Monster' });
+  await expect(chip).not.toBeChecked();
+  await legend.getByText('Twin Sprout', { exact: true }).click();
+
+  await expect(page).toHaveURL(/focus=monster-[a-z0-9]{8}/u);
+  await expect(chip).toBeChecked();
+  await expect(stage.locator('[data-selected="true"]')).toHaveCount(2);
+});
+
 test('Map Detail shows the stage message when a map has no image', async ({
   page,
 }) => {

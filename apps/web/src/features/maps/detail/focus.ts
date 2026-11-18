@@ -110,3 +110,18 @@ export function isOnlyMapDetailFocusKey({
     focus.keys[0] === focusKey
   );
 }
+
+/** Whether a legend entity belongs to the current entity or whole-kind focus. */
+export function isMapDetailEntityFocused({
+  focus,
+  focusKey,
+  kind,
+}: {
+  readonly focus: MapDetailFocus | undefined;
+  readonly focusKey: string;
+  readonly kind: MapDetailStageMarker['kind'];
+}): boolean {
+  if (focus === undefined) return false;
+  if ('kind' in focus) return MAP_DETAIL_FOCUS_KIND[focus.kind] === kind;
+  return focus.keys.includes(focusKey);
+}

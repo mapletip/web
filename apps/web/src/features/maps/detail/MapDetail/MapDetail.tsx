@@ -34,6 +34,7 @@ import type { MapDetailEntityView, MapDetailView } from '../project';
 
 import classes from './MapDetail.module.css';
 import { MapDetailConnections } from './MapDetailConnections';
+import { MapDetailLegend } from './MapDetailLegend';
 import { MapDetailMonsters } from './MapDetailMonsters';
 import { MapDetailNpcs } from './MapDetailNpcs';
 import { MapDetailStage } from './MapDetailStage';
@@ -223,6 +224,11 @@ export function MapDetail({
                   onChoose={activateEntity}
                 />
               )}
+            />
+            <MapDetailLegend
+              entities={view.entities}
+              focus={focus}
+              onActivate={activateEntity}
             />
           </div>
           <Stack className={classes['informationColumn']} gap="lg">
