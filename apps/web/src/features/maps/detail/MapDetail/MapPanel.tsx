@@ -4,12 +4,12 @@ import type { ReactElement, ReactNode } from 'react';
 import type { MapDetailFocus } from '../focus';
 import type { MapDetailView } from '../project';
 
+import { FindCombobox } from './FindCombobox';
 import classes from './MapDetail.module.css';
-import { MapDetailFind } from './MapDetailFind';
-import { MapDetailLegend } from './MapDetailLegend';
-import { MapDetailStage } from './MapDetailStage';
+import { MapStage } from './MapStage';
+import { MarkerLegend } from './MarkerLegend';
 
-export function MapDetailStagePanel({
+export function MapPanel({
   view,
   focus,
   selectedIds,
@@ -45,7 +45,7 @@ export function MapDetailStagePanel({
       data-testid="map-detail-stage-panel"
     >
       <div className={classes['stageWithFind']}>
-        <MapDetailStage
+        <MapStage
           stage={view.stage}
           className={expanded ? classes['expandedStage'] : undefined}
           interactive={interactive}
@@ -56,14 +56,14 @@ export function MapDetailStagePanel({
           onActivate={onActivateMarkers}
           renderDetails={renderDetails}
         />
-        <MapDetailFind
+        <FindCombobox
           entities={view.entities}
           findText={findText}
           onFindTextChange={onFindTextChange}
           onChoose={onActivate}
         />
       </div>
-      <MapDetailLegend
+      <MarkerLegend
         entities={view.entities}
         focus={focus}
         onActivate={onActivate}

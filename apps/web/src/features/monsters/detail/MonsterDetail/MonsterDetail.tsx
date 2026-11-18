@@ -18,13 +18,13 @@ import { DetailBreadcrumbs } from '@/features/detail';
 import { MONSTER_STAT_BY_ID } from '@/features/monsters/shared';
 import { useRouteOverlay } from '@/features/route-overlay/useRouteOverlay';
 
+import { DropChipGroups } from '../DropChipGroups';
+import { LocationCardList } from '../LocationCardList';
 import { monsterDetailBreadcrumbs } from '../metadata';
-import { MonsterDetailDrops } from '../MonsterDetailDrops';
-import { MonsterDetailLocations } from '../MonsterDetailLocations';
 import { monsterDetailOverlayOptions } from '../monsterDetailOverlay';
-import { MonsterDetailQuests } from '../MonsterDetailQuests';
-import { MonsterDetailSummonedBy } from '../MonsterDetailSummonedBy';
 import type { MonsterDetailStatView, MonsterDetailView } from '../project';
+import { QuestCardList } from '../QuestCardList';
+import { SummonItemChips } from '../SummonItemChips';
 
 import classes from './MonsterDetail.module.css';
 
@@ -146,7 +146,7 @@ export function MonsterDetail({ view }: MonsterDetailProps): ReactElement {
               ),
               count: view.locations.count,
               content: (
-                <MonsterDetailLocations
+                <LocationCardList
                   locations={view.locations}
                   monsterName={view.name}
                   monsterSpriteUrl={spriteUrl}
@@ -169,7 +169,7 @@ export function MonsterDetail({ view }: MonsterDetailProps): ReactElement {
               ),
               count: view.drops.count,
               content: (
-                <MonsterDetailDrops drops={view.drops} buildId={view.buildId} />
+                <DropChipGroups drops={view.drops} buildId={view.buildId} />
               ),
             },
             {
@@ -182,7 +182,7 @@ export function MonsterDetail({ view }: MonsterDetailProps): ReactElement {
                 />
               ),
               count: view.quests.count,
-              content: <MonsterDetailQuests quests={view.quests} />,
+              content: <QuestCardList quests={view.quests} />,
             },
             ...(view.summonedBy.state === 'present'
               ? [
@@ -196,9 +196,7 @@ export function MonsterDetail({ view }: MonsterDetailProps): ReactElement {
                       />
                     ),
                     count: view.summonedBy.count,
-                    content: (
-                      <MonsterDetailSummonedBy summonedBy={view.summonedBy} />
-                    ),
+                    content: <SummonItemChips summonedBy={view.summonedBy} />,
                   },
                 ]
               : []),

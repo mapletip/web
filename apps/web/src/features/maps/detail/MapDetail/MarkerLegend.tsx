@@ -24,7 +24,7 @@ const isModified = (event: {
   readonly metaKey: boolean;
 }): boolean => event.ctrlKey || event.metaKey;
 
-export function MapDetailLegend({
+export function MarkerLegend({
   entities,
   focus,
   onActivate,

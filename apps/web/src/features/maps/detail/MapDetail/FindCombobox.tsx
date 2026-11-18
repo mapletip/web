@@ -6,7 +6,7 @@ import type { MapDetailEntityView } from '../project';
 
 import classes from './MapDetail.module.css';
 
-export function MapDetailFind({
+export function FindCombobox({
   entities,
   findText,
   onFindTextChange,

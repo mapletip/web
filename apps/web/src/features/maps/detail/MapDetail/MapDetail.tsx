@@ -46,13 +46,13 @@ import { mapDetailOverlayOptions } from '../mapDetailOverlay';
 import { mapDetailBreadcrumbs } from '../metadata';
 import type { MapDetailEntityView, MapDetailView } from '../project';
 
+import { ConnectionCardList } from './ConnectionCardList';
 import classes from './MapDetail.module.css';
-import { MapDetailConnections } from './MapDetailConnections';
-import { MapDetailMonsters } from './MapDetailMonsters';
-import { MapDetailNpcs } from './MapDetailNpcs';
-import { MapDetailOnThisMap } from './MapDetailOnThisMap';
-import { MapDetailStagePanel } from './MapDetailStagePanel';
+import { MapPanel } from './MapPanel';
 import { EntityIcon } from './markers';
+import { MonsterCardList } from './MonsterCardList';
+import { NpcCardList } from './NpcCardList';
+import { OnThisMapRail } from './OnThisMapRail';
 
 const mapDetailStageViewSchema = z
   .object({
@@ -276,7 +276,7 @@ export function MapDetail({
         <ShareNetwork size={16} color="var(--mantine-primary-color-filled)" />
       ),
       count: view.connections.count,
-      content: <MapDetailConnections connections={view.connections} />,
+      content: <ConnectionCardList connections={view.connections} />,
     });
   }
   sections.push({
@@ -284,7 +284,7 @@ export function MapDetail({
     title: 'Monsters',
     count: view.monsters.count,
     content: (
-      <MapDetailMonsters
+      <MonsterCardList
         monsters={view.monsters}
         onLocate={(focusKey) => {
           void locateMonster(focusKey);
@@ -296,7 +296,7 @@ export function MapDetail({
     id: 'npcs',
     title: 'NPCs',
     count: view.npcs.count,
-    content: <MapDetailNpcs npcs={view.npcs} />,
+    content: <NpcCardList npcs={view.npcs} />,
   });
 
   return (
@@ -314,7 +314,7 @@ export function MapDetail({
         <div className={classes['hero']}>
           <div className={classes['stageColumn']}>
             <div className={classes['stagePanelWithExplore']}>
-              <MapDetailStagePanel
+              <MapPanel
                 view={view}
                 focus={focus}
                 selectedIds={selectedIds}
@@ -354,7 +354,7 @@ export function MapDetail({
             </div>
           </div>
           <Stack className={classes['informationColumn']} gap="lg">
-            <MapDetailOnThisMap
+            <OnThisMapRail
               rows={view.onThisMap}
               focus={focus}
               onToggle={(kind) =>
@@ -411,7 +411,7 @@ export function MapDetail({
         size={1120}
         title={view.name}
       >
-        <MapDetailStagePanel
+        <MapPanel
           view={view}
           focus={focus}
           selectedIds={selectedIds}

@@ -6,7 +6,7 @@ import { NPC_RECORD_CARD_DENSITY, NpcRecordCard } from '@/features/npcs/shared';
 
 import type { MapDetailNpcsView } from '../project';
 
-export function MapDetailNpcs({
+export function NpcCardList({
   npcs,
 }: {
   readonly npcs: MapDetailNpcsView;
