@@ -441,29 +441,29 @@ describe('projectMonsterDetail', () => {
         {
           key: 'fixture:map:top',
           name: 'High Meadow',
-          geographyLine: 'West Path',
+          secondaryLine: 'West Path',
           minimapUrl: `https://d0.mapletip.com/media/images/cc/${minimapId}.png`,
+          footerParts: [{ value: '20', label: 'spawns' }],
           placementCount: 20,
-          placementLabel: '20 spawns',
         },
         {
           key: 'fixture:map:unnamed',
           name: 'Map name unavailable',
-          geographyLine: 'Harbor Road',
+          secondaryLine: 'Harbor Road',
+          footerParts: [{ value: '10', label: 'spawns' }],
           placementCount: 10,
-          placementLabel: '10 spawns',
         },
         {
           key: 'fixture:map:duplicate-a',
           name: 'Twin Glade',
+          footerParts: [{ value: '5', label: 'spawns' }],
           placementCount: 5,
-          placementLabel: '5 spawns',
         },
         {
           key: 'fixture:map:duplicate-b',
           name: 'Twin Glade',
+          footerParts: [{ value: '5', label: 'spawns' }],
           placementCount: 5,
-          placementLabel: '5 spawns',
         },
       ],
     });
@@ -500,9 +500,9 @@ describe('projectMonsterDetail', () => {
       maps: [
         {
           name: 'Quiet Clearing',
-          geographyLine: 'Forest Edge',
+          secondaryLine: 'Forest Edge',
+          footerParts: [{ value: '1', label: 'spawn' }],
           placementCount: 1,
-          placementLabel: '1 spawn',
         },
       ],
     });

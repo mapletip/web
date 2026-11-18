@@ -1,12 +1,11 @@
-import type { MapPageRecordV1 } from '@mapletip/data/maps';
+import { mapMinimapUrl, type MapPageRecordV1 } from '@mapletip/data/maps';
 
-import type { BuildId } from '@/config/maplekit';
+import { MAPLEKIT_RELEASE, type BuildId } from '@/config/maplekit';
+import { buildRecordDetailPath, nonBlank } from '@/features/detail';
 import {
-  buildRecordDetailPath,
-  canonicalBuildParam,
-  formatRecordAddress,
-  nonBlank,
-} from '@/features/detail';
+  projectMapRecordDestination,
+  type MapRecordCardView,
+} from '@/features/maps/shared';
 
 export const UNNAMED_MAP_LABEL = 'Unnamed map';
 
@@ -23,6 +22,13 @@ export interface MapDetailView {
   readonly activity?: string;
   readonly description?: string;
   readonly facts: readonly MapDetailFactView[];
+  readonly connections: MapDetailConnectionsView;
+}
+
+export interface MapDetailConnectionsView {
+  readonly state: MapPageRecordV1['connections']['state'];
+  readonly count: number | 'unknown';
+  readonly maps: readonly MapRecordCardView[];
 }
 
 export interface MapDetailFactView {
@@ -45,29 +51,6 @@ function knownText(fact: { readonly state: string; readonly value?: string }) {
   return nonBlank(fact.value);
 }
 
-function mapDestination({
-  map,
-  buildId,
-}: {
-  readonly map: {
-    readonly slug: string;
-    readonly publicId: string;
-    readonly name: { readonly state: string; readonly value?: string };
-  };
-  readonly buildId: BuildId;
-}) {
-  const name = knownText(map.name) ?? UNNAMED_MAP_LABEL;
-  const slugId = formatRecordAddress(map.slug, map.publicId);
-  const buildParam = canonicalBuildParam(buildId);
-  return {
-    name,
-    destination: {
-      ...(buildParam === undefined ? {} : { buildId: buildParam }),
-      slugId,
-    },
-  };
-}
-
 function addMapFact({
   facts,
   field,
@@ -84,12 +67,16 @@ function addMapFact({
   readonly buildId: BuildId;
 }) {
   if (field.state !== 'known') return;
-  const target = mapDestination({ map: field.value, buildId });
+  const target = field.value;
   facts.push({
     label,
-    value: target.name,
+    value: knownText(target.name) ?? UNNAMED_MAP_LABEL,
     explanation,
-    destination: target.destination,
+    destination: projectMapRecordDestination({
+      slug: target.slug,
+      publicId: target.publicId,
+      buildId,
+    }).params,
   });
 }
 
@@ -204,6 +191,63 @@ function projectFacts({
   return facts;
 }
 
+const connectionNameCollator = new Intl.Collator('en', {
+  numeric: true,
+  sensitivity: 'base',
+});
+
+function projectConnections({
+  record,
+  buildId,
+}: {
+  readonly record: MapPageRecordV1;
+  readonly buildId: BuildId;
+}): MapDetailConnectionsView {
+  const maps = record.connections.items
+    .map((connection): MapRecordCardView => {
+      const name =
+        connection.name.state === 'known'
+          ? (nonBlank(connection.name.value) ?? UNNAMED_MAP_LABEL)
+          : UNNAMED_MAP_LABEL;
+      const minimapUrl =
+        connection.minimap.state === 'known'
+          ? mapMinimapUrl(MAPLEKIT_RELEASE.baseUrl, connection.minimap.value)
+          : undefined;
+      return {
+        key: connection.key,
+        name,
+        ...(minimapUrl === undefined ? {} : { minimapUrl }),
+        ...(minimapUrl === undefined
+          ? { minimapUnavailableLabel: 'Minimap unavailable' }
+          : {}),
+        footerParts: [
+          {
+            value: connection.monsterCount.toLocaleString('en-US'),
+            label: connection.monsterCount === 1 ? 'monster' : 'monsters',
+          },
+          {
+            value: connection.npcCount.toLocaleString('en-US'),
+            label: connection.npcCount === 1 ? 'NPC' : 'NPCs',
+          },
+        ],
+        destination: projectMapRecordDestination({
+          slug: connection.slug,
+          publicId: connection.publicId,
+          buildId,
+        }),
+      };
+    })
+    .sort((left, right) =>
+      connectionNameCollator.compare(left.name, right.name),
+    );
+
+  return {
+    state: record.connections.state,
+    count: record.connections.state === 'unknown' ? 'unknown' : maps.length,
+    maps,
+  };
+}
+
 /** Project display-ready identity, geography, description, activity, and facts. */
 export function projectMapDetail({
   record,
@@ -236,6 +280,7 @@ export function projectMapDetail({
     ...(activity === undefined ? {} : { activity }),
     ...(description === undefined ? {} : { description }),
     facts: projectFacts({ information: record.information, buildId }),
+    connections: projectConnections({ record, buildId }),
     canonicalPath: buildRecordDetailPath(
       'maps',
       record.slug,

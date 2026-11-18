@@ -39,6 +39,7 @@ describe('loadMapDetail', () => {
       publicId: record.publicId,
       signal: controller.signal,
     });
+    expect(getMapPage).toHaveBeenCalledTimes(1);
     expect(result).toEqual({
       status: 'found',
       view: projectMapDetail({ record, buildId: 'gms-v83' }),

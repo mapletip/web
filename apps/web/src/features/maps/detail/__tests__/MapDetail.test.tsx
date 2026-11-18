@@ -10,24 +10,33 @@ import { describe, expect, it } from 'vitest';
 import { routeTree } from '@/routeTree.gen';
 
 import { MapDetail } from '../MapDetail';
-import { projectMapDetail } from '../project';
+import { projectMapDetail, UNNAMED_MAP_LABEL } from '../project';
 
 import { mapPageRecordFixture } from './mapPageFixture';
 
-function renderDetail(mapId: string, withoutInformation = false) {
+function renderDetail(
+  mapId: string,
+  withoutInformation = false,
+  connections?: ReturnType<typeof mapPageRecordFixture>['connections'],
+) {
   const record = mapPageRecordFixture({ mapId });
+  const projectedRecord = withoutInformation
+    ? {
+        ...record,
+        activity: { state: 'unknown' as const },
+        description: { state: 'absent' as const, coverageKey: 'description' },
+        information: {
+          ...record.information,
+          returnMap: { state: 'unknown' as const },
+        },
+      }
+    : record;
+  const recordWithConnections =
+    connections === undefined
+      ? projectedRecord
+      : { ...projectedRecord, connections };
   const view = projectMapDetail({
-    record: withoutInformation
-      ? {
-          ...record,
-          activity: { state: 'unknown' },
-          description: { state: 'absent', coverageKey: 'description' },
-          information: {
-            ...record.information,
-            returnMap: { state: 'unknown' },
-          },
-        }
-      : record,
+    record: recordWithConnections,
     buildId: 'cw-launch',
   });
   const router = createRouter({
@@ -81,5 +90,75 @@ describe('MapDetail information', () => {
       expect.stringMatching(/^\/maplestory\/maps\/practice-grove-/u),
     );
     expect(within(information).queryByText('Flying')).not.toBeInTheDocument();
+  });
+
+  it('omits the section and navigation for a known empty connection collection', () => {
+    renderDetail('practice-grove', false, { state: 'absent', items: [] });
+
+    expect(
+      screen.queryByRole('navigation', { name: 'Record sections' }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('heading', { name: /Connections/u }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('omits the section for a known zero connection count', () => {
+    renderDetail('practice-grove', false, { state: 'known', items: [] });
+
+    expect(
+      screen.queryByRole('navigation', { name: 'Record sections' }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('heading', { name: /Connections/u }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('shows an unavailable message and unknown count for unresolved connections', () => {
+    renderDetail('practice-grove', false, { state: 'unknown', items: [] });
+
+    expect(
+      within(
+        screen.getByRole('navigation', { name: 'Record sections' }),
+      ).getByRole('link', { name: 'Connections (?)' }),
+    ).toHaveAttribute('href', '#connections');
+    expect(
+      screen.getByRole('heading', { name: 'Connections (?)' }),
+    ).toBeVisible();
+    expect(
+      screen.getByText('Connection information is unavailable.'),
+    ).toBeVisible();
+  });
+
+  it('links connection cards to their same-build Map Detail address', () => {
+    const record = mapPageRecordFixture({ mapId: 'practice-grove' });
+    const connected = record.connections.items[0];
+    if (connected === undefined)
+      throw new Error('Expected fixture connection.');
+    renderDetail('practice-grove', false, {
+      state: 'known',
+      items: [
+        {
+          ...connected,
+          name: { state: 'unknown' },
+          minimap: {
+            state: 'absent',
+            coverageKey: 'fixture:connection-minimap',
+          },
+        },
+      ],
+    });
+
+    const card = screen.getByTestId('map-connection-card');
+    expect(
+      within(card).getByRole('heading', { name: UNNAMED_MAP_LABEL }),
+    ).toBeVisible();
+    expect(
+      within(card).getByRole('img', { name: 'Minimap unavailable' }),
+    ).toBeVisible();
+    expect(within(card).getByRole('link')).toHaveAttribute(
+      'href',
+      `/maplestory/maps/${connected.slug}-${connected.publicId}`,
+    );
   });
 });

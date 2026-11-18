@@ -14,10 +14,15 @@ function map(index: number): MonsterDetailLocationMapView {
   return {
     key: `fixture:map:${index}`,
     name: `Practice Map ${String(index).padStart(2, '0')}`,
-    geographyLine: `Practice Street ${index}`,
+    secondaryLine: `Practice Street ${index}`,
     ...(index === 1 ? { minimapUrl: '/synthetic-minimap.png' } : {}),
+    footerParts: [
+      {
+        value: index.toLocaleString('en-US'),
+        label: index === 1 ? 'spawn' : 'spawns',
+      },
+    ],
     placementCount: index,
-    placementLabel: index === 1 ? '1 spawn' : `${index} spawns`,
   };
 }
 
@@ -90,9 +95,7 @@ describe('MonsterDetailLocations', () => {
       name: 'View all 12 maps',
     });
     expect(expandButtons.length).toBe(2);
-    const firstSpawnCount = screen.getAllByTestId(
-      'monster-location-spawn-count',
-    )[0]!;
+    const firstSpawnCount = screen.getAllByTestId('map-card-footer')[0]!;
     expect(firstSpawnCount).toBeVisible();
     expect(firstSpawnCount).toHaveTextContent('12 spawns');
 

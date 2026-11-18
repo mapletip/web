@@ -213,7 +213,7 @@ describe('MonsterDetail hero', () => {
     ).toBeVisible();
     expect(screen.getByText('Quiet Clearing')).toBeVisible();
     expect(screen.getByText('Forest Edge')).toBeVisible();
-    const spawnCount = screen.getByTestId('monster-location-spawn-count');
+    const spawnCount = screen.getByTestId('map-card-footer');
     expect(spawnCount).toBeVisible();
     expect(spawnCount).toHaveTextContent('1 spawn');
   });

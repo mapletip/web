@@ -4,6 +4,36 @@ import { projectMapDetail, UNNAMED_MAP_LABEL } from '../project';
 
 import { mapPageRecordFixture } from './mapPageFixture';
 
+function connection(
+  record: ReturnType<typeof mapPageRecordFixture>,
+  options: {
+    readonly name: string;
+    readonly slug: string;
+    readonly publicId: string;
+    readonly monsterCount?: number;
+    readonly npcCount?: number;
+    readonly minimap?:
+      | { readonly state: 'known'; readonly value: string }
+      | { readonly state: 'absent'; readonly coverageKey: string };
+  },
+): (typeof record.connections.items)[number] {
+  const original = record.connections.items[0];
+  if (original === undefined) throw new Error('Expected a fixture connection.');
+  return {
+    ...original,
+    key: `fixture:map:${options.slug}`,
+    slug: options.slug,
+    publicId: options.publicId,
+    name: { state: 'known', value: options.name },
+    monsterCount: options.monsterCount ?? 0,
+    npcCount: options.npcCount ?? 0,
+    minimap: options.minimap ?? {
+      state: 'absent',
+      coverageKey: 'fixture:minimap',
+    },
+  };
+}
+
 describe('projectMapDetail', () => {
   it('projects a named map and default-build canonical path', () => {
     const record = mapPageRecordFixture({ mapId: 'practice-grove' });
@@ -18,6 +48,136 @@ describe('projectMapDetail', () => {
       canonicalPath: `/maplestory/maps/practice-grove-${record.publicId}`,
     });
     expect(view.subtitle).toBeUndefined();
+  });
+
+  it('projects sorted connection cards with natural number order and same-build destinations', () => {
+    const record = mapPageRecordFixture({ mapId: 'practice-grove' });
+    const view = projectMapDetail({
+      record: {
+        ...record,
+        connections: {
+          state: 'known',
+          items: [
+            connection(record, {
+              name: 'Hunting Ground X',
+              slug: 'hunting-ground-x',
+              publicId: 'a0000004',
+            }),
+            connection(record, {
+              name: 'Hunting Ground 10',
+              slug: 'hunting-ground-10',
+              publicId: 'a0000003',
+            }),
+            connection(record, {
+              name: 'Hunting Ground II',
+              slug: 'hunting-ground-ii',
+              publicId: 'a0000002',
+            }),
+            connection(record, {
+              name: 'Hunting Ground 2',
+              slug: 'hunting-ground-2',
+              publicId: 'a0000001',
+            }),
+          ],
+        },
+      },
+      buildId: 'gms-v83',
+    });
+
+    expect(view.connections.state).toBe('known');
+    expect(view.connections.count).toBe(4);
+    expect(view.connections.maps.map(({ name }) => name)).toEqual([
+      'Hunting Ground 2',
+      'Hunting Ground 10',
+      'Hunting Ground II',
+      'Hunting Ground X',
+    ]);
+    expect(view.connections.maps[0]?.destination).toEqual({
+      href: '/maplestory/gms-v83/maps/hunting-ground-2-a0000001',
+      params: {
+        buildId: 'gms-v83',
+        slugId: 'hunting-ground-2-a0000001',
+      },
+    });
+  });
+
+  it('projects count wording, unnamed maps, and absent minimaps for connection cards', () => {
+    const record = mapPageRecordFixture({ mapId: 'practice-grove' });
+    const single = connection(record, {
+      name: 'Quiet Gallery',
+      slug: 'quiet-gallery',
+      publicId: 'a0000001',
+      monsterCount: 1,
+      npcCount: 1,
+      minimap: { state: 'known', value: 'a'.repeat(64) },
+    });
+    const multiple = {
+      ...connection(record, {
+        name: 'Brass Walk',
+        slug: 'brass-walk',
+        publicId: 'a0000002',
+        monsterCount: 2,
+        npcCount: 0,
+      }),
+      name: { state: 'unknown' as const },
+    };
+    const view = projectMapDetail({
+      record: {
+        ...record,
+        connections: { state: 'known', items: [single, multiple] },
+      },
+      buildId: 'cw-launch',
+    });
+
+    const quietGallery = view.connections.maps.find(
+      ({ name }) => name === 'Quiet Gallery',
+    );
+    expect(quietGallery?.footerParts).toEqual([
+      { value: '1', label: 'monster' },
+      { value: '1', label: 'NPC' },
+    ]);
+    expect(quietGallery?.minimapUrl).toContain(
+      `/media/images/aa/${'a'.repeat(64)}.png`,
+    );
+
+    const unnamed = view.connections.maps.find(
+      ({ name }) => name === UNNAMED_MAP_LABEL,
+    );
+    expect(unnamed?.footerParts).toEqual([
+      { value: '2', label: 'monsters' },
+      { value: '0', label: 'NPCs' },
+    ]);
+    expect(unnamed?.minimapUrl).toBeUndefined();
+    expect(unnamed?.minimapUnavailableLabel).toBe('Minimap unavailable');
+  });
+
+  it('retains partial and unknown connection states', () => {
+    const record = mapPageRecordFixture({ mapId: 'practice-grove' });
+    const item = connection(record, {
+      name: 'Quiet Gallery',
+      slug: 'quiet-gallery',
+      publicId: 'a0000001',
+    });
+
+    const partial = projectMapDetail({
+      record: { ...record, connections: { state: 'partial', items: [item] } },
+      buildId: 'cw-launch',
+    });
+    expect(partial.connections).toMatchObject({
+      state: 'partial',
+      count: 1,
+      maps: [{ name: 'Quiet Gallery' }],
+    });
+
+    const unknown = projectMapDetail({
+      record: { ...record, connections: { state: 'unknown', items: [] } },
+      buildId: 'cw-launch',
+    });
+    expect(unknown.connections).toEqual({
+      state: 'unknown',
+      count: 'unknown',
+      maps: [],
+    });
   });
 
   it('uses the unnamed label and street name when the map name is unknown', () => {
