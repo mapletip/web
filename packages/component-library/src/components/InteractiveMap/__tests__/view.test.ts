@@ -1,15 +1,15 @@
 import { describe, expect, it } from 'vitest';
 
-import type { MarkerStageView } from '@/components/MarkerStage/types';
+import type { InteractiveMapView } from '@/components/InteractiveMap/types';
 import {
   transformToView,
   viewToTransform,
-} from '@/components/MarkerStage/view';
+} from '@/components/InteractiveMap/view';
 
-const view: MarkerStageView = { zoom: 2.5, centerX: 130, centerY: 72 };
+const view: InteractiveMapView = { zoom: 2.5, centerX: 130, centerY: 72 };
 const image = { imageWidth: 400, imageHeight: 200 };
 
-describe('MarkerStage view conversion', () => {
+describe('InteractiveMap view conversion', () => {
   it.each([
     { stageWidth: 400, stageHeight: 200 },
     { stageWidth: 800, stageHeight: 400 },

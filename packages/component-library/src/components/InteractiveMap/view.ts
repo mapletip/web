@@ -1,8 +1,8 @@
 import {
-  MARKER_STAGE_MAX_ZOOM,
-  MARKER_STAGE_MIN_ZOOM,
-  type MarkerStageView,
-} from '@/components/MarkerStage/types';
+  INTERACTIVE_MAP_MAX_ZOOM,
+  INTERACTIVE_MAP_MIN_ZOOM,
+  type InteractiveMapView,
+} from '@/components/InteractiveMap/types';
 
 interface ViewGeometry {
   readonly stageWidth: number;
@@ -18,7 +18,7 @@ interface Transform {
 }
 
 interface ViewToTransformOptions extends ViewGeometry {
-  readonly view: MarkerStageView;
+  readonly view: InteractiveMapView;
 }
 
 interface TransformToViewOptions extends ViewGeometry, Transform {}
@@ -88,13 +88,13 @@ function clampCentre({
 }
 
 function clampView(
-  view: MarkerStageView,
+  view: InteractiveMapView,
   sizes: ReturnType<typeof geometry>,
-): MarkerStageView {
+): InteractiveMapView {
   const zoom = clamp({
     value: finiteOr(view.zoom, 1),
-    minimum: MARKER_STAGE_MIN_ZOOM,
-    maximum: MARKER_STAGE_MAX_ZOOM,
+    minimum: INTERACTIVE_MAP_MIN_ZOOM,
+    maximum: INTERACTIVE_MAP_MAX_ZOOM,
   });
 
   return {
@@ -141,7 +141,7 @@ export function transformToView({
   positionY,
   scale,
   ...dimensions
-}: TransformToViewOptions): MarkerStageView {
+}: TransformToViewOptions): InteractiveMapView {
   const sizes = geometry(dimensions);
   const zoom = finiteOr(scale, 1);
 

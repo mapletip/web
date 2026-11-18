@@ -1,8 +1,8 @@
 .stage {
-  --marker-stage-ring-color: #ffeb3b;
-  --marker-stage-focus-halo-color: rgb(255 235 59 / 58%);
-  --marker-stage-connector-color: #f08c46;
-  --marker-stage-marker-size: clamp(18px, 5cqi, 44px);
+  --interactive-map-ring-color: #ffeb3b;
+  --interactive-map-focus-halo-color: rgb(255 235 59 / 58%);
+  --interactive-map-connector-color: #f08c46;
+  --interactive-map-marker-size: clamp(18px, 5cqi, 44px);
 
   position: relative;
   width: 100%;
@@ -25,9 +25,9 @@
 .imageBox {
   position: absolute;
   inset: 0;
-  width: min(100cqw, calc(100cqh * var(--marker-stage-image-aspect-ratio)));
-  height: min(100cqh, calc(100cqw / var(--marker-stage-image-aspect-ratio)));
-  aspect-ratio: var(--marker-stage-image-aspect-ratio);
+  width: min(100cqw, calc(100cqh * var(--interactive-map-image-aspect-ratio)));
+  height: min(100cqh, calc(100cqw / var(--interactive-map-image-aspect-ratio)));
+  aspect-ratio: var(--interactive-map-image-aspect-ratio);
   margin: auto;
 }
 
@@ -50,7 +50,7 @@
 }
 
 .connector {
-  stroke: var(--marker-stage-connector-color);
+  stroke: var(--interactive-map-connector-color);
   stroke-width: 3;
   vector-effect: non-scaling-stroke;
 }
@@ -124,9 +124,9 @@
 
 .markerButton[data-selected='true']::before,
 .markerStatic[data-selected='true']::before {
-  width: calc(var(--marker-stage-marker-size) + 12px);
-  height: calc(var(--marker-stage-marker-size) + 12px);
-  border: 2px solid var(--marker-stage-ring-color);
+  width: calc(var(--interactive-map-marker-size) + 12px);
+  height: calc(var(--interactive-map-marker-size) + 12px);
+  border: 2px solid var(--interactive-map-ring-color);
   opacity: 0.8;
 }
 
@@ -138,10 +138,10 @@
 }
 
 .markerButton:focus-visible::after {
-  width: clamp(24px, calc(var(--marker-stage-marker-size) + 12px), 56px);
-  height: clamp(24px, calc(var(--marker-stage-marker-size) + 12px), 56px);
-  border: 3px solid var(--marker-stage-ring-color);
-  box-shadow: 0 0 0 4px var(--marker-stage-focus-halo-color);
+  width: clamp(24px, calc(var(--interactive-map-marker-size) + 12px), 56px);
+  height: clamp(24px, calc(var(--interactive-map-marker-size) + 12px), 56px);
+  border: 3px solid var(--interactive-map-ring-color);
+  box-shadow: 0 0 0 4px var(--interactive-map-focus-halo-color);
 }
 
 .controls {
@@ -221,8 +221,8 @@
 
 @media (forced-colors: active) {
   .stage {
-    --marker-stage-ring-color: Highlight;
-    --marker-stage-focus-halo-color: Highlight;
+    --interactive-map-ring-color: Highlight;
+    --interactive-map-focus-halo-color: Highlight;
 
     border: 1px solid ButtonBorder;
   }

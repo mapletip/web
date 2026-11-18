@@ -1,4 +1,4 @@
-import type { MarkerStageView } from '@mapletip/component-library';
+import type { InteractiveMapView } from '@mapletip/component-library';
 import type { ReactElement, ReactNode } from 'react';
 
 import type { MapDetailFocus } from '../focus';
@@ -30,8 +30,8 @@ export function MapDetailStagePanel({
   readonly interactive: boolean;
   readonly wheelZoom?: boolean;
   readonly expanded?: boolean;
-  readonly stageView?: MarkerStageView | undefined;
-  readonly onViewChange: (view: MarkerStageView | undefined) => void;
+  readonly stageView?: InteractiveMapView | undefined;
+  readonly onViewChange: (view: InteractiveMapView | undefined) => void;
   readonly findText: string;
   readonly onFindTextChange: (findText: string) => void;
   readonly onActivate: (focusKey: string, modified?: boolean) => void;

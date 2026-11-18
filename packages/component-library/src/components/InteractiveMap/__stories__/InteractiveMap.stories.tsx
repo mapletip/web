@@ -2,15 +2,15 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { useState, type ReactElement } from 'react';
 import { userEvent } from 'storybook/test';
 
-import { MarkerStage } from '@/components/MarkerStage';
+import { InteractiveMap } from '@/components/InteractiveMap';
 import type {
-  MarkerStageProps,
-  MarkerStageView,
-} from '@/components/MarkerStage';
+  InteractiveMapProps,
+  InteractiveMapView,
+} from '@/components/InteractiveMap';
 
 const meta = {
-  title: 'Components/MarkerStage',
-  component: MarkerStage,
+  title: 'Components/InteractiveMap',
+  component: InteractiveMap,
   parameters: {
     layout: 'centered',
     docs: {
@@ -35,7 +35,7 @@ const meta = {
     },
   },
   tags: ['autodocs'],
-} satisfies Meta<typeof MarkerStage>;
+} satisfies Meta<typeof InteractiveMap>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;
@@ -61,8 +61,8 @@ function marker(label: string) {
       aria-hidden="true"
       style={{
         display: 'grid',
-        width: 'var(--marker-stage-marker-size)',
-        height: 'var(--marker-stage-marker-size)',
+        width: 'var(--interactive-map-marker-size)',
+        height: 'var(--interactive-map-marker-size)',
         placeItems: 'center',
         border: '2px solid white',
         borderRadius: '50%',
@@ -83,23 +83,23 @@ function frame({
   testId,
 }: {
   width: number;
-  props: MarkerStageProps;
+  props: InteractiveMapProps;
   testId: string;
 }) {
   return (
     <div data-testid={testId} style={{ width, maxWidth: '100%' }}>
-      <MarkerStage {...props} />
+      <InteractiveMap {...props} />
     </div>
   );
 }
 
 function SavedRestoredViewStory(): ReactElement {
-  const [view, setView] = useState<MarkerStageView | undefined>();
-  const [savedView, setSavedView] = useState<MarkerStageView | undefined>();
+  const [view, setView] = useState<InteractiveMapView | undefined>();
+  const [savedView, setSavedView] = useState<InteractiveMapView | undefined>();
 
   return (
     <div
-      data-testid="marker-stage-saved-restored"
+      data-testid="interactive-map-saved-restored"
       style={{ width: 680, maxWidth: '100%' }}
     >
       <div
@@ -128,12 +128,12 @@ function SavedRestoredViewStory(): ReactElement {
           {savedView === undefined ? 'No saved view' : 'View saved'}
         </output>
       </div>
-      <MarkerStage {...wideImageArgs} view={view} onViewChange={setView} />
+      <InteractiveMap {...wideImageArgs} view={view} onViewChange={setView} />
     </div>
   );
 }
 
-const wideImageArgs: MarkerStageProps = {
+const wideImageArgs: InteractiveMapProps = {
   image: {
     src: syntheticImage({ width: 600, height: 300, color: '#bfd6d7' }),
     width: 600,
@@ -177,31 +177,31 @@ const wideImageArgs: MarkerStageProps = {
 export const WideImage: Story = {
   args: wideImageArgs,
   render: (args) =>
-    frame({ width: 680, props: args, testId: 'marker-stage-wide-image' }),
+    frame({ width: 680, props: args, testId: 'interactive-map-wide-image' }),
 };
 
 export const NoneSelected: Story = {
   args: wideImageArgs,
   render: (args) =>
-    frame({ width: 680, props: args, testId: 'marker-stage-none-selected' }),
+    frame({ width: 680, props: args, testId: 'interactive-map-none-selected' }),
 };
 
 export const OneSelected: Story = {
   args: { ...wideImageArgs, selectedIds: ['east'] },
   render: (args) =>
-    frame({ width: 680, props: args, testId: 'marker-stage-one-selected' }),
+    frame({ width: 680, props: args, testId: 'interactive-map-one-selected' }),
 };
 
 export const ManySelected: Story = {
   args: { ...wideImageArgs, selectedIds: ['west', 'north', 'south'] },
   render: (args) =>
-    frame({ width: 680, props: args, testId: 'marker-stage-many-selected' }),
+    frame({ width: 680, props: args, testId: 'interactive-map-many-selected' }),
 };
 
 export const Focused: Story = {
   args: { ...wideImageArgs, selectedIds: ['east'] },
   render: (args) =>
-    frame({ width: 680, props: args, testId: 'marker-stage-focused' }),
+    frame({ width: 680, props: args, testId: 'interactive-map-focused' }),
   play: async () => {
     await userEvent.tab();
     await userEvent.tab();
@@ -217,7 +217,11 @@ export const ConnectedPairs: Story = {
     ],
   },
   render: (args) =>
-    frame({ width: 680, props: args, testId: 'marker-stage-connected-pairs' }),
+    frame({
+      width: 680,
+      props: args,
+      testId: 'interactive-map-connected-pairs',
+    }),
 };
 
 export const ZoomedWithLinesAndSelection: Story = {
@@ -233,7 +237,7 @@ export const ZoomedWithLinesAndSelection: Story = {
     frame({
       width: 680,
       props: args,
-      testId: 'marker-stage-zoomed-lines-selection',
+      testId: 'interactive-map-zoomed-lines-selection',
     }),
   play: async ({ canvasElement }) => {
     const zoomIn = canvasElement.querySelector<HTMLButtonElement>(
@@ -267,14 +271,14 @@ export const CoincidentMarkers: Story = {
     frame({
       width: 680,
       props: args,
-      testId: 'marker-stage-coincident-markers',
+      testId: 'interactive-map-coincident-markers',
     }),
 };
 
 export const Static: Story = {
   args: { ...wideImageArgs, interactive: false, selectedIds: ['east'] },
   render: (args) =>
-    frame({ width: 680, props: args, testId: 'marker-stage-static' }),
+    frame({ width: 680, props: args, testId: 'interactive-map-static' }),
 };
 
 export const TallImage: Story = {
@@ -297,7 +301,7 @@ export const TallImage: Story = {
     unavailableMessage,
   },
   render: (args) =>
-    frame({ width: 240, props: args, testId: 'marker-stage-tall-image' }),
+    frame({ width: 240, props: args, testId: 'interactive-map-tall-image' }),
 };
 
 export const TinyImage: Story = {
@@ -314,7 +318,7 @@ export const TinyImage: Story = {
     unavailableMessage,
   },
   render: (args) =>
-    frame({ width: 320, props: args, testId: 'marker-stage-tiny-image' }),
+    frame({ width: 320, props: args, testId: 'interactive-map-tiny-image' }),
 };
 
 export const DetailsAtCenter: Story = {
@@ -337,7 +341,11 @@ export const DetailsAtCenter: Story = {
     ),
   },
   render: (args) =>
-    frame({ width: 680, props: args, testId: 'marker-stage-details-centre' }),
+    frame({
+      width: 680,
+      props: args,
+      testId: 'interactive-map-details-centre',
+    }),
 };
 
 export const DetailsNearEachEdge: Story = {
@@ -384,7 +392,7 @@ export const DetailsNearEachEdge: Story = {
     frame({
       width: 680,
       props: args,
-      testId: 'marker-stage-details-near-edge',
+      testId: 'interactive-map-details-near-edge',
     }),
 };
 
@@ -402,7 +410,7 @@ export const Unavailable: Story = {
     unavailableMessage,
   },
   render: (args) =>
-    frame({ width: 680, props: args, testId: 'marker-stage-unavailable' }),
+    frame({ width: 680, props: args, testId: 'interactive-map-unavailable' }),
 };
 
 export const SavedAndRestoredView: Story = {
