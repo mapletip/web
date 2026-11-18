@@ -31,10 +31,44 @@ export interface MapDetailView {
   readonly canonicalPath: string;
   readonly activity?: string;
   readonly description?: string;
+  readonly stage: MapDetailStageView;
   readonly facts: readonly MapDetailFactView[];
   readonly connections?: MapDetailConnectionsView;
   readonly monsters: MapDetailMonstersView;
   readonly npcs: MapDetailNpcsView;
+}
+
+export type MapDetailStageMarkerKind =
+  'monster' | 'npc' | 'connection' | 'warp';
+
+export interface MapDetailStageImage {
+  readonly src: string;
+  readonly width: number;
+  readonly height: number;
+  readonly alt: string;
+}
+
+export interface MapDetailStageMarker {
+  readonly id: string;
+  readonly x: number;
+  readonly y: number;
+  readonly kind: MapDetailStageMarkerKind;
+  readonly entityKey: string;
+  readonly label: string;
+  readonly spriteUrl?: string;
+}
+
+export interface MapDetailStageConnector {
+  readonly id: string;
+  readonly from: string;
+  readonly to: string;
+}
+
+export interface MapDetailStageView {
+  readonly image?: MapDetailStageImage;
+  readonly markers: readonly MapDetailStageMarker[];
+  readonly connectors: readonly MapDetailStageConnector[];
+  readonly positionsUnavailable: boolean;
 }
 
 export interface MapDetailConnectionsView {
@@ -83,6 +117,27 @@ export interface ProjectMapDetailOptions {
   readonly record: MapPageRecordV1;
   readonly buildId: BuildId;
 }
+
+type MapDetailPoint =
+  MapPageRecordV1['monsters']['items'][number]['points']['items'][number];
+type MapDetailPositionCollection = {
+  readonly state: string;
+  readonly items: readonly MapDetailPoint[];
+};
+type MapDetailStagePointCollection = {
+  readonly state: string;
+  readonly items: readonly {
+    readonly key: string;
+    readonly points: MapDetailPositionCollection;
+  }[];
+};
+
+const stageMarkerKindLabels: Record<MapDetailStageMarkerKind, string> = {
+  monster: 'Monster',
+  npc: 'NPC',
+  connection: 'Connection',
+  warp: 'Warp',
+};
 
 function knownText(fact: { readonly state: string; readonly value?: string }) {
   if (fact.state !== 'known') return undefined;
@@ -403,6 +458,162 @@ function projectNpcs(record: MapPageRecordV1): MapDetailNpcsView {
   };
 }
 
+function projectPointMarkers({
+  kind,
+  entityKey,
+  name,
+  positions,
+  spriteUrl,
+}: {
+  readonly kind: MapDetailStageMarkerKind;
+  readonly entityKey: string;
+  readonly name: string;
+  readonly positions: MapDetailPositionCollection;
+  readonly spriteUrl?: string;
+}): MapDetailStageMarker[] {
+  if (positions.state !== 'known' && positions.state !== 'partial') return [];
+
+  const count = positions.items.length;
+  return positions.items.map(({ x, y }, index) => ({
+    id: `${kind}:${entityKey}:${index + 1}`,
+    x,
+    y,
+    kind,
+    entityKey,
+    label: `${name}, ${stageMarkerKindLabels[kind]}, ${index + 1} of ${count}`,
+    ...(spriteUrl === undefined ? {} : { spriteUrl }),
+  }));
+}
+
+function projectStage({
+  record,
+  name,
+  connections,
+  monsters,
+  npcs,
+}: {
+  readonly record: MapPageRecordV1;
+  readonly name: string;
+  readonly connections: MapDetailConnectionsView | undefined;
+  readonly monsters: MapDetailMonstersView;
+  readonly npcs: MapDetailNpcsView;
+}): MapDetailStageView {
+  const image =
+    record.stage.state === 'known'
+      ? {
+          src: mapMinimapUrl(
+            MAPLEKIT_RELEASE.baseUrl,
+            record.stage.value.contentId,
+          ),
+          width: record.stage.value.width,
+          height: record.stage.value.height,
+          alt: `${name} map`,
+        }
+      : undefined;
+  const markers: MapDetailStageMarker[] = [];
+  const monstersByKey = new Map(
+    monsters.monsters.map((monster) => [monster.key, monster]),
+  );
+  const connectionsByKey = new Map(
+    (connections?.maps ?? []).map((connection) => [
+      connection.key,
+      connection.name,
+    ]),
+  );
+  const npcsByKey = new Map(npcs.npcs.map((npc) => [npc.key, npc.name]));
+  const pointCollections: readonly {
+    readonly kind: Exclude<MapDetailStageMarkerKind, 'warp'>;
+    readonly collection: MapDetailStagePointCollection;
+    readonly describe: (
+      key: string,
+    ) => { readonly name: string; readonly spriteUrl?: string } | undefined;
+  }[] = [
+    {
+      kind: 'monster',
+      collection: record.monsters,
+      describe: (key) => {
+        const monster = monstersByKey.get(key);
+        return monster === undefined
+          ? undefined
+          : {
+              name: monster.name,
+              ...(monster.spriteUrl === undefined
+                ? {}
+                : { spriteUrl: monster.spriteUrl }),
+            };
+      },
+    },
+    {
+      kind: 'npc',
+      collection: record.npcs,
+      describe: (key) => {
+        const name = npcsByKey.get(key);
+        return name === undefined ? undefined : { name };
+      },
+    },
+    {
+      kind: 'connection',
+      collection: record.connections,
+      describe: (key) => {
+        const name = connectionsByKey.get(key);
+        return name === undefined ? undefined : { name };
+      },
+    },
+  ];
+
+  for (const { kind, collection, describe } of pointCollections) {
+    if (collection.state !== 'known' && collection.state !== 'partial') {
+      continue;
+    }
+
+    for (const entity of collection.items) {
+      const description = describe(entity.key);
+      if (description === undefined) continue;
+      markers.push(
+        ...projectPointMarkers({
+          kind,
+          entityKey: entity.key,
+          name: description.name,
+          positions: entity.points,
+          ...(description.spriteUrl === undefined
+            ? {}
+            : { spriteUrl: description.spriteUrl }),
+        }),
+      );
+    }
+  }
+
+  const connectors: MapDetailStageConnector[] = [];
+  if (record.warps.state === 'known' || record.warps.state === 'partial') {
+    for (const warp of record.warps.items) {
+      const from = `warp:${warp.focusToken}:1`;
+      const to = `warp:${warp.focusToken}:2`;
+      markers.push(
+        ...warp.ends.map(({ x, y }, index) => ({
+          id: `warp:${warp.focusToken}:${index + 1}`,
+          x,
+          y,
+          kind: 'warp' as const,
+          entityKey: warp.focusToken,
+          label: `Warp, Warp, ${index + 1} of ${warp.ends.length}`,
+        })),
+      );
+      connectors.push({
+        id: `warp:${warp.focusToken}`,
+        from,
+        to,
+      });
+    }
+  }
+
+  return {
+    ...(image === undefined ? {} : { image }),
+    markers,
+    connectors,
+    positionsUnavailable: image !== undefined && markers.length === 0,
+  };
+}
+
 /** Project display-ready identity, geography, description, activity, and facts. */
 export function projectMapDetail({
   record,
@@ -422,6 +633,15 @@ export function projectMapDetail({
       ? nonBlank(record.description.value)
       : undefined;
   const connections = projectConnections({ record, buildId });
+  const monsters = projectMonsters({ record, buildId });
+  const npcs = projectNpcs(record);
+  const stage = projectStage({
+    record,
+    name: name ?? UNNAMED_MAP_LABEL,
+    connections,
+    monsters,
+    npcs,
+  });
 
   return {
     publicId: record.publicId,
@@ -435,10 +655,11 @@ export function projectMapDetail({
     ...(areaLabel === undefined ? {} : { areaLabel }),
     ...(activity === undefined ? {} : { activity }),
     ...(description === undefined ? {} : { description }),
+    stage,
     facts: projectFacts({ information: record.information, buildId }),
     ...(connections === undefined ? {} : { connections }),
-    monsters: projectMonsters({ record, buildId }),
-    npcs: projectNpcs(record),
+    monsters,
+    npcs,
     canonicalPath: buildRecordDetailPath(
       'maps',
       record.slug,

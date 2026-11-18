@@ -65,6 +65,146 @@ function connection(
 }
 
 describe('projectMapDetail', () => {
+  it('projects stage markers with stable labels and pairs the ends of each warp', () => {
+    const record = mapPageRecordFixture({ mapId: 'practice-grove' });
+    const view = projectMapDetail({ record, buildId: 'cw-launch' });
+    const stage = view.stage;
+    const firstMonster = record.monsters.items[0];
+    const firstWarp = record.warps.items[0];
+
+    expect(stage.image).toMatchObject({
+      width: record.stage.state === 'known' ? record.stage.value.width : 0,
+      height: record.stage.state === 'known' ? record.stage.value.height : 0,
+      alt: 'Practice Grove map',
+    });
+    expect(stage.positionsUnavailable).toBe(false);
+    expect(stage.markers.map(({ label }) => label)).toEqual([
+      'Plain Pebble, Monster, 1 of 1',
+      'Twin Sprout, Monster, 1 of 2',
+      'Twin Sprout, Monster, 2 of 2',
+      'Hollow Husk, Monster, 1 of 1',
+      'Crowned Warden, Monster, 1 of 1',
+      'Lantern Square, Connection, 1 of 1',
+      'Warp, Warp, 1 of 2',
+      'Warp, Warp, 2 of 2',
+    ]);
+    expect(stage.markers[0]).toMatchObject({
+      id: `monster:${firstMonster?.key}:1`,
+      kind: 'monster',
+      entityKey: firstMonster?.key,
+      x: 240,
+      y: 390,
+      spriteUrl: view.monsters.monsters.find(
+        ({ key }) => key === firstMonster?.key,
+      )?.spriteUrl,
+    });
+    expect(stage.connectors).toEqual([
+      {
+        id: `warp:${firstWarp?.focusToken}`,
+        from: `warp:${firstWarp?.focusToken}:1`,
+        to: `warp:${firstWarp?.focusToken}:2`,
+      },
+    ]);
+    expect(
+      projectMapDetail({ record, buildId: 'cw-launch' }).stage.markers.map(
+        ({ id }) => id,
+      ),
+    ).toEqual(stage.markers.map(({ id }) => id));
+  });
+
+  it('includes known and partial positions and skips unresolved position collections', () => {
+    const record = mapPageRecordFixture({ mapId: 'practice-grove' });
+    const firstMonster = record.monsters.items[0];
+    const secondMonster = record.monsters.items[1];
+    const firstNpc = mapPageRecordFixture({ mapId: 'lantern-square' }).npcs
+      .items[0];
+    const firstConnection = record.connections.items[0];
+    if (
+      firstMonster === undefined ||
+      secondMonster === undefined ||
+      firstNpc === undefined ||
+      firstConnection === undefined
+    ) {
+      throw new Error('Expected stage position fixture entries.');
+    }
+
+    const view = projectMapDetail({
+      record: {
+        ...record,
+        monsters: {
+          state: 'partial',
+          items: [
+            {
+              ...firstMonster,
+              points: {
+                state: 'partial',
+                items: [
+                  { x: 10, y: 20 },
+                  { x: 30, y: 40 },
+                ],
+              },
+            },
+            {
+              ...secondMonster,
+              points: { state: 'unknown', items: secondMonster.points.items },
+            },
+          ],
+        },
+        npcs: {
+          state: 'partial',
+          items: [
+            {
+              ...firstNpc,
+              points: { state: 'absent', items: firstNpc.points.items },
+            },
+          ],
+        },
+        connections: {
+          state: 'partial',
+          items: [
+            {
+              ...firstConnection,
+              points: {
+                state: 'partial',
+                items: firstConnection.points.items,
+              },
+            },
+          ],
+        },
+        warps: { state: 'partial', items: record.warps.items },
+      },
+      buildId: 'cw-launch',
+    });
+
+    expect(view.stage.markers.map(({ kind, label }) => [kind, label])).toEqual([
+      ['monster', 'Plain Pebble, Monster, 1 of 2'],
+      ['monster', 'Plain Pebble, Monster, 2 of 2'],
+      ['connection', 'Lantern Square, Connection, 1 of 1'],
+      ['warp', 'Warp, Warp, 1 of 2'],
+      ['warp', 'Warp, Warp, 2 of 2'],
+    ]);
+    expect(view.stage.positionsUnavailable).toBe(false);
+  });
+
+  it('projects no image separately from an image with no usable positions', () => {
+    const noImage = projectMapDetail({
+      record: mapPageRecordFixture({ mapId: 'quiet-gallery' }),
+      buildId: 'cw-launch',
+    });
+    const noPositions = projectMapDetail({
+      record: mapPageRecordFixture({ mapId: 'stillwater-stage' }),
+      buildId: 'cw-launch',
+    });
+
+    expect(noImage.stage.image).toBeUndefined();
+    expect(noImage.stage.positionsUnavailable).toBe(false);
+    expect(noPositions.stage.image).toMatchObject({
+      alt: 'Stillwater Stage map',
+    });
+    expect(noPositions.stage.markers).toEqual([]);
+    expect(noPositions.stage.positionsUnavailable).toBe(true);
+  });
+
   it('projects NPCs in natural name order and labels unknown names once', () => {
     const record = mapPageRecordFixture({ mapId: 'lantern-square' });
     const template = record.npcs.items[0];

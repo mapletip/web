@@ -52,7 +52,7 @@ function renderDetail(
     history: createMemoryHistory({ initialEntries: [view.canonicalPath] }),
   });
 
-  render(
+  return render(
     <RouterContextProvider router={router}>
       <MantineProvider>
         <MapDetail view={view} />
@@ -62,6 +62,46 @@ function renderDetail(
 }
 
 describe('MapDetail information', () => {
+  it('shows the map image with its static markers', () => {
+    const { container } = renderDetail('practice-grove');
+
+    expect(
+      screen.getByRole('group', { name: 'Practice Grove map' }),
+    ).toBeVisible();
+    expect(
+      screen.getByRole('img', { name: 'Practice Grove map' }),
+    ).toBeVisible();
+    expect(
+      container.querySelectorAll('[data-marker-ids]').length,
+    ).toBeGreaterThan(0);
+  });
+
+  it('shows the no-image message in the stage box', () => {
+    renderDetail('quiet-gallery');
+
+    expect(
+      screen.getByRole('group', {
+        name: "Map image isn't available.",
+      }),
+    ).toBeVisible();
+    expect(screen.getByText("Map image isn't available.")).toBeVisible();
+    expect(
+      screen.queryByText("Locations on this map aren't available yet."),
+    ).not.toBeInTheDocument();
+  });
+
+  it('shows an image and the locations notice when positions are unavailable', () => {
+    const { container } = renderDetail('stillwater-stage');
+
+    expect(
+      screen.getByRole('img', { name: 'Stillwater Stage map' }),
+    ).toBeVisible();
+    expect(
+      screen.getByText("Locations on this map aren't available yet."),
+    ).toBeVisible();
+    expect(container.querySelectorAll('[data-marker-ids]')).toHaveLength(0);
+  });
+
   it('omits activity, description, and an empty Map information block', () => {
     renderDetail('practice-grove', true);
 

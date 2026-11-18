@@ -15,9 +15,11 @@ import { MAP_DETAIL_ROUTE } from '@/features/maps/shared';
 import { mapDetailBreadcrumbs } from '../metadata';
 import type { MapDetailView } from '../project';
 
+import classes from './MapDetail.module.css';
 import { MapDetailConnections } from './MapDetailConnections';
 import { MapDetailMonsters } from './MapDetailMonsters';
 import { MapDetailNpcs } from './MapDetailNpcs';
+import { MapDetailStage } from './MapDetailStage';
 
 export interface MapDetailProps {
   readonly view: MapDetailView;
@@ -61,38 +63,48 @@ export function MapDetail({ view }: MapDetailProps): ReactElement {
           {view.subtitle === undefined ? null : (
             <Text c="dimmed">{view.subtitle}</Text>
           )}
-          {view.activity === undefined ? null : (
-            <Text>Part of {view.activity}</Text>
-          )}
-          {view.description === undefined ? null : (
-            <Text>{view.description}</Text>
-          )}
         </div>
-        {view.facts.length === 0 ? null : (
-          <Stack
-            component="section"
-            aria-labelledby="map-information-heading"
-            gap="sm"
-          >
-            <Title id="map-information-heading" order={2}>
-              Map information
-            </Title>
-            <FactSheet
-              facts={view.facts.map((fact) => ({
-                label: fact.label,
-                explanation: fact.explanation,
-                value:
-                  fact.destination === undefined ? (
-                    fact.value
-                  ) : (
-                    <AnchorLink to={MAP_DETAIL_ROUTE} params={fact.destination}>
-                      {fact.value}
-                    </AnchorLink>
-                  ),
-              }))}
-            />
+        <div className={classes['hero']}>
+          <div className={classes['stageColumn']}>
+            <MapDetailStage stage={view.stage} />
+          </div>
+          <Stack className={classes['informationColumn']} gap="lg">
+            {view.activity === undefined ? null : (
+              <Text>Part of {view.activity}</Text>
+            )}
+            {view.description === undefined ? null : (
+              <Text>{view.description}</Text>
+            )}
+            {view.facts.length === 0 ? null : (
+              <Stack
+                component="section"
+                aria-labelledby="map-information-heading"
+                gap="sm"
+              >
+                <Title id="map-information-heading" order={2}>
+                  Map information
+                </Title>
+                <FactSheet
+                  facts={view.facts.map((fact) => ({
+                    label: fact.label,
+                    explanation: fact.explanation,
+                    value:
+                      fact.destination === undefined ? (
+                        fact.value
+                      ) : (
+                        <AnchorLink
+                          to={MAP_DETAIL_ROUTE}
+                          params={fact.destination}
+                        >
+                          {fact.value}
+                        </AnchorLink>
+                      ),
+                  }))}
+                />
+              </Stack>
+            )}
           </Stack>
-        )}
+        </div>
         <RecordSections sections={sections} />
       </Stack>
     </DetailPageShell>
