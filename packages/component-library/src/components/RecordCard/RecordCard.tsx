@@ -1,4 +1,5 @@
 import { Card, Group, Stack, Text, Title } from '@mantine/core';
+import { CaretRight } from '@phosphor-icons/react';
 import type { ReactElement, ReactNode } from 'react';
 
 import classes from '@/components/RecordCard/RecordCard.module.css';
@@ -38,17 +39,20 @@ export function RecordCard({
   destination,
   renderLink: linkRenderer,
 }: RecordCardProps): ReactElement {
-  const mediaAside = layout === 'mediaAside';
+  const mediaAside = layout === 'mediaAside' || layout === 'compactMediaAside';
+  const compactMediaAside = layout === 'compactMediaAside';
   const hasMedia = media !== undefined;
   const hasFooter = footer !== undefined;
+  let cardClassName = classes['card'];
+  let cardPadding: 'xs' | 'sm' | 'md' = 'md';
+  if (mediaAside) {
+    cardClassName = `${classes['card']} ${compactMediaAside ? classes['compactMediaAside'] : classes['mediaAside']}`;
+    cardPadding = compactMediaAside ? 'xs' : 'sm';
+  }
   const body = (
     <Card
-      className={
-        mediaAside
-          ? `${classes['card']} ${classes['mediaAside']}`
-          : classes['card']
-      }
-      padding={mediaAside ? 'sm' : 'md'}
+      className={cardClassName}
+      padding={cardPadding}
       radius="md"
       withBorder
       data-record-card="true"
@@ -79,6 +83,13 @@ export function RecordCard({
       ) : null}
       {footer === undefined ? null : (
         <div className={classes['footer']}>{footer}</div>
+      )}
+      {destination === undefined || !compactMediaAside ? null : (
+        <CaretRight
+          className={classes['chevron']}
+          aria-hidden="true"
+          size={16}
+        />
       )}
     </Card>
   );

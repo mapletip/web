@@ -79,4 +79,36 @@ describe('RecordCard', () => {
     expect(screen.getByRole('heading', { name: 'Static map' })).toBeVisible();
     expect(screen.queryByRole('link', { name: 'Static map' })).toBeNull();
   });
+
+  it('shows the trailing chevron only on linked compact cards', () => {
+    const { container } = mount(
+      <>
+        <RecordCard
+          layout="compactMediaAside"
+          title="Linked map"
+          destination={{ href: '/maps/linked-map' }}
+        />
+        <RecordCard layout="compactMediaAside" title="Static map" />
+        <RecordCard
+          title="Linked wide map"
+          destination={{ href: '/maps/wide' }}
+        />
+      </>,
+    );
+
+    const linked = screen
+      .getByRole('heading', { name: 'Linked map' })
+      .closest('[data-record-card="true"]');
+    const unlinked = screen
+      .getByRole('heading', { name: 'Static map' })
+      .closest('[data-record-card="true"]');
+    expect(linked?.querySelector('svg[aria-hidden="true"]')).not.toBeNull();
+    expect(linked?.closest('a')).toHaveAttribute('href', '/maps/linked-map');
+    expect(unlinked?.querySelector('svg')).toBeNull();
+    const wide = screen
+      .getByRole('heading', { name: 'Linked wide map' })
+      .closest('[data-record-card="true"]');
+    expect(wide?.querySelector('svg')).toBeNull();
+    expect(container.querySelectorAll('a')).toHaveLength(2);
+  });
 });

@@ -1,10 +1,14 @@
-import { Badge, Box, Text } from '@mantine/core';
-import { RecordCard } from '@mapletip/component-library';
+import { Text } from '@mantine/core';
 import type { ReactElement } from 'react';
 
-import type { MonsterDetailQuestsView } from '../project';
+import { DetailCardList } from '@/features/detail';
+import {
+  QUEST_RECORD_CARD_DENSITY,
+  QuestMonsterRequirementSlot,
+  QuestRecordCard,
+} from '@/features/quests/shared';
 
-import classes from './MonsterDetailQuests.module.css';
+import type { MonsterDetailQuestsView } from '../project';
 
 export interface MonsterDetailQuestsProps {
   readonly quests: MonsterDetailQuestsView;
@@ -22,62 +26,21 @@ export function MonsterDetailQuests({
   }
 
   return (
-    <Box
-      component="ul"
-      className={classes['list']}
-      aria-label="Quests that require this monster"
-    >
-      {quests.entries.map((quest) => (
-        <Box component="li" className={classes['item']} key={quest.key}>
-          <RecordCard
-            title={quest.name}
-            secondaryLine={
-              <span className={classes['facts']}>
-                {quest.jobSummary === undefined ? null : (
-                  <span>{quest.jobSummary}</span>
-                )}
-                <Badge
-                  component="span"
-                  variant="light"
-                  color="gray"
-                  size="xs"
-                  radius="sm"
-                  tt="none"
-                >
-                  {quest.defeatLabel}
-                </Badge>
-              </span>
-            }
-            badges={
-              <>
-                {quest.minimumLevelBadge === undefined ? null : (
-                  <Badge
-                    variant="light"
-                    color="gray"
-                    size="xs"
-                    radius="sm"
-                    tt="none"
-                  >
-                    {quest.minimumLevelBadge}
-                  </Badge>
-                )}
-                {quest.repeatable ? (
-                  <Badge
-                    variant="outline"
-                    color="gray"
-                    size="xs"
-                    radius="sm"
-                    tt="none"
-                  >
-                    Repeatable
-                  </Badge>
-                ) : null}
-              </>
-            }
-            footer={quest.sharedCountNote}
+    <DetailCardList
+      items={quests.entries}
+      getKey={(quest) => quest.key}
+      listLabel="Quests that require this monster"
+      density={QUEST_RECORD_CARD_DENSITY}
+      renderItem={(quest) => (
+        <QuestRecordCard quest={quest}>
+          <QuestMonsterRequirementSlot
+            defeatLabel={quest.defeatLabel}
+            {...(quest.sharedCountNote === undefined
+              ? {}
+              : { sharedCountNote: quest.sharedCountNote })}
           />
-        </Box>
-      ))}
-    </Box>
+        </QuestRecordCard>
+      )}
+    />
   );
 }

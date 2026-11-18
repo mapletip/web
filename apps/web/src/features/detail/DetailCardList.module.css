@@ -1,0 +1,16 @@
+.list {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.item {
+  min-width: 0;
+}
+
+@media (max-width: 47.99em) {
+  .item[data-mobile-hidden='true'] {
+    display: none;
+  }
+}

@@ -8,10 +8,14 @@ import {
 } from '@/features/maps/shared';
 import {
   formatMonsterNumber,
-  monsterDetailLinkProps,
-  resolveMonsterSpriteUrl,
-  UNNAMED_MONSTER_LABEL,
+  projectMonsterRecordCard,
+  projectMonsterRespawnLabel,
+  type MonsterRecordCardView,
 } from '@/features/monsters/shared';
+import {
+  projectNpcRecordCard,
+  type NpcRecordCardView,
+} from '@/features/npcs/shared';
 
 export const UNNAMED_MAP_LABEL = 'Unnamed map';
 
@@ -30,6 +34,7 @@ export interface MapDetailView {
   readonly facts: readonly MapDetailFactView[];
   readonly connections?: MapDetailConnectionsView;
   readonly monsters: MapDetailMonstersView;
+  readonly npcs: MapDetailNpcsView;
 }
 
 export interface MapDetailConnectionsView {
@@ -39,22 +44,10 @@ export interface MapDetailConnectionsView {
   readonly maps: readonly MapRecordCardView[];
 }
 
-export interface MapDetailMonsterView {
-  readonly key: string;
-  readonly name: string;
-  readonly spriteUrl?: string;
-  readonly spriteWidth?: number;
-  readonly spriteHeight?: number;
-  readonly bossLabel?: 'Boss';
-  readonly levelLabel?: string;
+export interface MapDetailMonsterView extends MonsterRecordCardView {
+  readonly placementCount: number;
   readonly spawnCountLabel: string;
   readonly respawnLabel?: string;
-  readonly destination?: {
-    readonly href: string;
-    readonly params: NonNullable<
-      ReturnType<typeof monsterDetailLinkProps>
-    >['params'];
-  };
 }
 
 export interface MapDetailMonstersView {
@@ -63,6 +56,17 @@ export interface MapDetailMonstersView {
   readonly notice?: string;
   readonly summary?: string;
   readonly monsters: readonly MapDetailMonsterView[];
+}
+
+export interface MapDetailNpcView extends NpcRecordCardView {
+  readonly key: string;
+}
+
+export interface MapDetailNpcsView {
+  readonly state: MapPageRecordV1['npcs']['state'];
+  readonly count: number | 'unknown';
+  readonly notice?: string;
+  readonly npcs: readonly MapDetailNpcView[];
 }
 
 export interface MapDetailFactView {
@@ -231,36 +235,22 @@ const nameCollator = new Intl.Collator('en', {
   sensitivity: 'base',
 });
 
-function projectMonsterRespawn(
-  respawn: MapPageRecordV1['monsters']['items'][number]['respawn'],
-): string | undefined {
-  switch (respawn.kind) {
-    case 'ordinary':
-      return undefined;
-    case 'none':
-      return 'No respawn';
-    case 'delayed':
-      return `Respawns after ${formatSeconds(respawn.seconds)}`;
-    case 'mixed':
-      return 'Mixed respawn';
+function projectSectionNotice({
+  state,
+  empty,
+  noun,
+  plural,
+}: {
+  readonly state: 'unknown' | 'partial' | 'known' | 'absent';
+  readonly empty: boolean;
+  readonly noun: string;
+  readonly plural: string;
+}): string | undefined {
+  if (state === 'unknown') {
+    return `${noun.charAt(0).toUpperCase()}${noun.slice(1)} information is unavailable.`;
   }
-}
-
-function projectMonsterNotice(
-  state: MapPageRecordV1['monsters']['state'],
-  noRecordedMonsters: boolean,
-): string | undefined {
-  switch (state) {
-    case 'unknown':
-      return 'Monster information is unavailable.';
-    case 'partial':
-      return 'Some monster information may be missing.';
-    case 'absent':
-    case 'known':
-      return noRecordedMonsters
-        ? 'No monsters are recorded on this map.'
-        : undefined;
-  }
+  if (state === 'partial') return `Some ${noun} information may be missing.`;
+  return empty ? `No ${plural} are recorded on this map.` : undefined;
 }
 
 function projectMonsters({
@@ -272,54 +262,16 @@ function projectMonsters({
 }): MapDetailMonstersView {
   const monsters = record.monsters.items
     .map((monster) => {
-      const name =
-        monster.name.state === 'known'
-          ? (nonBlank(monster.name.value) ?? UNNAMED_MONSTER_LABEL)
-          : UNNAMED_MONSTER_LABEL;
-      const spriteContentId =
-        monster.sprite.contentId.state === 'known'
-          ? monster.sprite.contentId.value
-          : undefined;
-      const spriteUrl =
-        spriteContentId === undefined
-          ? undefined
-          : resolveMonsterSpriteUrl(spriteContentId);
-      const level =
-        monster.level.state === 'known' ? monster.level.value : undefined;
-      const respawnLabel = projectMonsterRespawn(monster.respawn);
-      const link = monsterDetailLinkProps(monster, buildId);
+      const card = projectMonsterRecordCard(monster, { buildId });
+      const respawnLabel = projectMonsterRespawnLabel(monster.respawn);
       const view: MapDetailMonsterView = {
-        key: monster.key,
-        name,
-        ...(spriteUrl === undefined ? {} : { spriteUrl }),
-        ...(typeof monster.sprite.width === 'number'
-          ? { spriteWidth: monster.sprite.width }
-          : {}),
-        ...(typeof monster.sprite.height === 'number'
-          ? { spriteHeight: monster.sprite.height }
-          : {}),
-        ...(monster.boss.state === 'known' && monster.boss.value
-          ? { bossLabel: 'Boss' }
-          : {}),
-        ...(level === undefined ? {} : { levelLabel: `Lv ${level}` }),
+        ...card,
+        placementCount: monster.placementCount,
         spawnCountLabel: `${formatMonsterNumber(monster.placementCount)} ${monster.placementCount === 1 ? 'spawn' : 'spawns'}`,
         ...(respawnLabel === undefined ? {} : { respawnLabel }),
-        ...(link === undefined
-          ? {}
-          : {
-              destination: {
-                href: buildRecordDetailPath(
-                  'monsters',
-                  monster.slug,
-                  monster.publicId,
-                  buildId,
-                ),
-                params: link.params,
-              },
-            }),
       };
 
-      return { level, view };
+      return { level: card.level, view };
     })
     .sort((left, right) => {
       const levelOrder =
@@ -339,10 +291,12 @@ function projectMonsters({
   const noRecordedMonsters =
     monsters.length === 0 &&
     (record.monsters.state === 'absent' || record.monsters.state === 'known');
-  const notice = projectMonsterNotice(
-    record.monsters.state,
-    noRecordedMonsters,
-  );
+  const notice = projectSectionNotice({
+    state: record.monsters.state,
+    empty: noRecordedMonsters,
+    noun: 'monster',
+    plural: 'monsters',
+  });
   const summary =
     record.monsters.state === 'unknown' || noRecordedMonsters
       ? undefined
@@ -355,20 +309,6 @@ function projectMonsters({
     ...(summary === undefined ? {} : { summary }),
     monsters,
   };
-}
-
-function projectConnectionNotice(
-  state: MapPageRecordV1['connections']['state'],
-): string | undefined {
-  switch (state) {
-    case 'unknown':
-      return 'Connection information is unavailable.';
-    case 'partial':
-      return 'Some connection information may be missing.';
-    case 'absent':
-    case 'known':
-      return undefined;
-  }
 }
 
 function projectConnections({
@@ -396,14 +336,22 @@ function projectConnections({
           ? { minimapUnavailableLabel: 'Minimap unavailable' }
           : {}),
         footerParts: [
-          {
-            value: connection.monsterCount.toLocaleString('en-US'),
-            label: connection.monsterCount === 1 ? 'monster' : 'monsters',
-          },
-          {
-            value: connection.npcCount.toLocaleString('en-US'),
-            label: connection.npcCount === 1 ? 'NPC' : 'NPCs',
-          },
+          ...(connection.monsterCount > 0
+            ? [
+                {
+                  value: connection.monsterCount.toLocaleString('en-US'),
+                  label: connection.monsterCount === 1 ? 'monster' : 'monsters',
+                },
+              ]
+            : []),
+          ...(connection.npcCount > 0
+            ? [
+                {
+                  value: connection.npcCount.toLocaleString('en-US'),
+                  label: connection.npcCount === 1 ? 'NPC' : 'NPCs',
+                },
+              ]
+            : []),
         ],
         destination: projectMapRecordDestination({
           slug: connection.slug,
@@ -413,7 +361,12 @@ function projectConnections({
       };
     })
     .sort((left, right) => nameCollator.compare(left.name, right.name));
-  const notice = projectConnectionNotice(record.connections.state);
+  const notice = projectSectionNotice({
+    state: record.connections.state,
+    empty: false,
+    noun: 'connection',
+    plural: 'connections',
+  });
 
   if (notice === undefined && maps.length === 0) return undefined;
 
@@ -422,6 +375,31 @@ function projectConnections({
     count: record.connections.state === 'unknown' ? 'unknown' : maps.length,
     ...(notice === undefined ? {} : { notice }),
     maps,
+  };
+}
+
+function projectNpcs(record: MapPageRecordV1): MapDetailNpcsView {
+  const npcs = record.npcs.items
+    .map((npc) => ({
+      key: npc.key,
+      ...projectNpcRecordCard(npc),
+    }))
+    .sort((left, right) => nameCollator.compare(left.name, right.name));
+  const noRecordedNpcs =
+    npcs.length === 0 &&
+    (record.npcs.state === 'absent' || record.npcs.state === 'known');
+  const notice = projectSectionNotice({
+    state: record.npcs.state,
+    empty: noRecordedNpcs,
+    noun: 'NPC',
+    plural: 'NPCs',
+  });
+
+  return {
+    state: record.npcs.state,
+    count: record.npcs.state === 'unknown' ? 'unknown' : npcs.length,
+    ...(notice === undefined ? {} : { notice }),
+    npcs,
   };
 }
 
@@ -460,6 +438,7 @@ export function projectMapDetail({
     facts: projectFacts({ information: record.information, buildId }),
     ...(connections === undefined ? {} : { connections }),
     monsters: projectMonsters({ record, buildId }),
+    npcs: projectNpcs(record),
     canonicalPath: buildRecordDetailPath(
       'maps',
       record.slug,

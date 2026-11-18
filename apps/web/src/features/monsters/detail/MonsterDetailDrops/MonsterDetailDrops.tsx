@@ -1,8 +1,8 @@
 import { Group, Stack, Text, Title } from '@mantine/core';
-import { EntityChip } from '@mapletip/component-library';
 import type { ReactElement } from 'react';
 
 import type { BuildId } from '@/config/maplekit';
+import { ItemRecordChip } from '@/features/items/shared';
 import { DropCertaintyDisclosure } from '@/features/monsters/shared/DropCertaintyDisclosure';
 import { DropCertaintyLegend } from '@/features/monsters/shared/DropCertaintyLegend';
 
@@ -39,12 +39,9 @@ export function MonsterDetailDrops({
             </Title>
             <Group className={classes['items']} gap="xs">
               {group.entries.map((entry, index) => (
-                <EntityChip
+                <ItemRecordChip
                   key={`${entry.name}:${entry.assertionKind}:${entry.sourceBuild ?? ''}:${index}`}
-                  name={entry.name}
-                  {...(entry.iconUrl === undefined
-                    ? {}
-                    : { iconSrc: entry.iconUrl })}
+                  item={entry}
                   trailing={
                     <DropCertaintyDisclosure
                       itemName={entry.name}

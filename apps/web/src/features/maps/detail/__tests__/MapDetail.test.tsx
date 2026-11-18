@@ -19,6 +19,7 @@ function renderDetail(
   withoutInformation = false,
   connections?: ReturnType<typeof mapPageRecordFixture>['connections'],
   monsters?: ReturnType<typeof mapPageRecordFixture>['monsters'],
+  npcs?: ReturnType<typeof mapPageRecordFixture>['npcs'],
 ) {
   const record = mapPageRecordFixture({ mapId });
   const projectedRecord = withoutInformation
@@ -40,8 +41,10 @@ function renderDetail(
     monsters === undefined
       ? recordWithConnections
       : { ...recordWithConnections, monsters };
+  const projectedMap =
+    npcs === undefined ? projectedPage : { ...projectedPage, npcs };
   const view = projectMapDetail({
-    record: projectedPage,
+    record: projectedMap,
     buildId: 'cw-launch',
   });
   const router = createRouter({
@@ -242,5 +245,60 @@ describe('MapDetail information', () => {
     expect(
       screen.getByText('Some monster information may be missing.'),
     ).toBeVisible();
+  });
+
+  it('shows each NPC collection notice and its section count', () => {
+    renderDetail('practice-grove', false, undefined, undefined, {
+      state: 'unknown',
+      items: [],
+    });
+
+    expect(screen.getByRole('link', { name: 'NPCs (?)' })).toHaveAttribute(
+      'href',
+      '#npcs',
+    );
+    expect(screen.getByRole('heading', { name: 'NPCs (?)' })).toBeVisible();
+    expect(screen.getByText('NPC information is unavailable.')).toBeVisible();
+  });
+
+  it('shows the partial NPC information notice', () => {
+    renderDetail('practice-grove', false, undefined, undefined, {
+      state: 'partial',
+      items: [],
+    });
+
+    expect(screen.getByRole('heading', { name: 'NPCs (0)' })).toBeVisible();
+    expect(
+      screen.getByText('Some NPC information may be missing.'),
+    ).toBeVisible();
+  });
+
+  it('shows the known-empty NPC notice', () => {
+    renderDetail('practice-grove', false, undefined, undefined, {
+      state: 'known',
+      items: [],
+    });
+
+    expect(screen.getByRole('heading', { name: 'NPCs (0)' })).toBeVisible();
+    expect(screen.getByText('No NPCs are recorded on this map.')).toBeVisible();
+  });
+
+  it('shows NPC cards as plain text with the standard missing-image placeholder', () => {
+    const record = mapPageRecordFixture({ mapId: 'lantern-square' });
+    const bellkeeper = record.npcs.items.find(
+      ({ name }) => name.state === 'known' && name.value === 'Bellkeeper',
+    );
+    if (bellkeeper === undefined) throw new Error('Expected Bellkeeper.');
+    renderDetail('lantern-square', false, undefined, undefined, {
+      state: 'known',
+      items: [bellkeeper],
+    });
+
+    const card = screen.getByTestId('map-npc-card');
+    expect(
+      within(card).getByRole('heading', { name: 'Bellkeeper' }),
+    ).toBeVisible();
+    expect(within(card).queryByRole('link')).not.toBeInTheDocument();
+    expect(card.querySelector('img[data-fallback="true"]')).not.toBeNull();
   });
 });

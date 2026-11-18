@@ -101,6 +101,16 @@ describe('EntityChip', () => {
     });
   });
 
+  it('accepts a larger icon size while keeping the placeholder aligned', () => {
+    const { container } = mount({ iconSize: 28 });
+    const image = container.querySelector('img');
+
+    expect(image).toHaveStyle({
+      width: 'calc(1.75rem * var(--mantine-scale))',
+      height: 'calc(1.75rem * var(--mantine-scale))',
+    });
+  });
+
   it('keeps a trailing control outside the link', () => {
     mount({
       destination,

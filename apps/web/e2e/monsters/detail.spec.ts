@@ -386,9 +386,7 @@ test('Monster Detail opens every location in a drawer from its responsive cap', 
   await expect(locationsHeading).toBeVisible();
   await monsterPage.captureReady();
   const previewMinimapColors = await minimapBackgrounds(
-    page
-      .locator('ul:not([data-location-drawer]) [data-map-minimap="true"]')
-      .first(),
+    page.getByRole('main').locator('[data-map-minimap="true"]').first(),
   );
   expect(previewMinimapColors.well).not.toBe(previewMinimapColors.card);
   await expect(page).toHaveScreenshot(
@@ -400,9 +398,9 @@ test('Monster Detail opens every location in a drawer from its responsive cap', 
     .getByRole('link', { name: 'Locations (12)' });
   await expect(locationNavigation).toHaveAttribute('href', '#locations');
 
-  const inlineCards = page.locator(
-    'ul:not([data-location-drawer]) [data-testid="monster-location-card"]',
-  );
+  const inlineCards = page
+    .getByRole('main')
+    .getByTestId('monster-location-card');
   const initialCap = testInfo.project.name === 'mobile' ? 5 : 10;
   await expect(inlineCards.filter({ visible: true })).toHaveCount(initialCap);
 

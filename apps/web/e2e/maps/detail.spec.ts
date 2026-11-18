@@ -96,3 +96,37 @@ test('Map Detail renders its canonical address, redirects stale slugs, and retur
     ).toHaveAttribute('href', '/maplestory/maps');
   }
 });
+
+test('Map Detail shows all record sections at the project viewport and has no narrow overflow', async ({
+  page,
+}) => {
+  const publicId = mapPublicId({ sourceId: 'cw-launch:lantern-square' });
+  await page.goto(`/maplestory/maps/lantern-square-${publicId}`);
+
+  const navigation = page.getByRole('navigation', {
+    name: 'Record sections',
+  });
+  await expect(
+    navigation.getByRole('link', { name: /^Connections \(/u }),
+  ).toBeVisible();
+  await expect(
+    navigation.getByRole('link', { name: 'Monsters (0)' }),
+  ).toBeVisible();
+  await expect(
+    navigation.getByRole('link', { name: 'NPCs (8)' }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole('heading', { name: /^Connections \(/u }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole('heading', { name: 'Monsters (0)' }),
+  ).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'NPCs (8)' })).toBeVisible();
+
+  await page.setViewportSize({ width: 320, height: 844 });
+  const widths = await page.evaluate(() => ({
+    document: document.documentElement.scrollWidth,
+    viewport: document.documentElement.clientWidth,
+  }));
+  expect(widths.document).toBeLessThanOrEqual(widths.viewport);
+});

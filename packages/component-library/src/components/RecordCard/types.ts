@@ -22,7 +22,7 @@ export interface RecordCardProps {
   /** Main record label shown as the card heading. */
   readonly title: string;
   /** Place media beside the text with the footer aligned below the text. */
-  readonly layout?: 'default' | 'mediaAside';
+  readonly layout?: 'default' | 'mediaAside' | 'compactMediaAside';
   readonly secondaryLine?: ReactNode;
   readonly badges?: ReactNode;
   /** Optional illustration or other media shown beside the text. */

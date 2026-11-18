@@ -9,16 +9,14 @@ import type {
 } from '@/components/EntityChip/types';
 import { Thumbnail } from '@/components/Thumbnail';
 
-/** Edge length of the chip icon, shared by images and placeholders. */
-const ICON_SIZE = 24;
-
 function EntityChipContent({
   name,
   iconSrc,
-}: Pick<EntityChipProps, 'name' | 'iconSrc'>): ReactElement {
+  iconSize,
+}: Pick<EntityChipProps, 'name' | 'iconSrc' | 'iconSize'>): ReactElement {
   return (
     <span className={classes['content']}>
-      <Thumbnail src={iconSrc} size={ICON_SIZE} />
+      <Thumbnail src={iconSrc} size={iconSize ?? 24} />
       <span className={classes['name']}>{name}</span>
     </span>
   );
@@ -57,11 +55,14 @@ function renderLink(
 export function EntityChip({
   name,
   iconSrc,
+  iconSize,
   destination,
   renderLink: linkRenderer,
   trailing,
 }: EntityChipProps): ReactElement {
-  const content = <EntityChipContent name={name} iconSrc={iconSrc} />;
+  const content = (
+    <EntityChipContent name={name} iconSrc={iconSrc} iconSize={iconSize} />
+  );
 
   return (
     <span

@@ -35,6 +35,8 @@ export interface EntityChipProps {
    * chip shows a neutral placeholder of the same size.
    */
   readonly iconSrc?: string | undefined;
+  /** Edge length of the icon and its placeholder. Defaults to 24px. */
+  readonly iconSize?: number | undefined;
   /**
    * Destination for the record's own page. When omitted, the icon and name are
    * plain text: not focusable and not announced as a link.
