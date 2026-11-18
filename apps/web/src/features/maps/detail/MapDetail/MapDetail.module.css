@@ -1,7 +1,79 @@
+.markerPalette {
+  --map-detail-marker-warp-ring-color: #f08c46;
+  --map-detail-marker-monster-color: #ffd166;
+  --map-detail-marker-npc-color: #20c997;
+  --map-detail-marker-border-color: #fff;
+}
+
 .hero {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: var(--mantine-spacing-lg);
+}
+
+.connectionMarker,
+.warpMarker {
+  box-sizing: border-box;
+  display: block;
+}
+
+.connectionMarker {
+  height: 24px;
+  width: 24px;
+}
+
+.warpMarker {
+  box-shadow: 0 0 0 1px var(--map-detail-marker-warp-ring-color);
+  border-radius: 50%;
+  height: 22px;
+  padding: 2px;
+  width: 22px;
+}
+
+.portalImage {
+  display: block;
+  height: 100%;
+  image-rendering: pixelated;
+  object-fit: contain;
+  width: 100%;
+}
+
+.warpImage {
+  filter: hue-rotate(115deg) saturate(1.45);
+}
+
+.monsterSprite {
+  display: block;
+  image-rendering: pixelated;
+  object-fit: contain;
+}
+
+.stageMonsterSprite {
+  height: var(--marker-stage-marker-size);
+  width: var(--marker-stage-marker-size);
+}
+
+.detailMonsterSprite {
+  height: 24px;
+  width: 24px;
+}
+
+.monsterDot,
+.npcDot {
+  background: var(--map-detail-marker-monster-color);
+  border: 1px solid var(--map-detail-marker-border-color);
+  box-sizing: border-box;
+  display: block;
+  height: 10px;
+  width: 10px;
+}
+
+.monsterDot {
+  border-radius: 50%;
+}
+
+.npcDot {
+  background: var(--map-detail-marker-npc-color);
 }
 
 .stageColumn,
