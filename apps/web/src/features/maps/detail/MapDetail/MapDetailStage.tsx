@@ -1,7 +1,7 @@
 import { Stack, Text } from '@mantine/core';
 import { MarkerStage, Thumbnail } from '@mapletip/component-library';
 import { Bug, DoorOpen, User } from '@phosphor-icons/react';
-import type { ReactElement } from 'react';
+import type { ReactElement, ReactNode } from 'react';
 
 import type { MapDetailStageMarker, MapDetailStageView } from '../project';
 
@@ -33,8 +33,16 @@ function MapDetailMarkerContent({
 
 export function MapDetailStage({
   stage,
+  interactive = false,
+  selectedIds = [],
+  onActivate,
+  renderDetails,
 }: {
   readonly stage: MapDetailStageView;
+  readonly interactive?: boolean;
+  readonly selectedIds?: readonly string[];
+  readonly onActivate?: (markerIds: readonly string[]) => void;
+  readonly renderDetails?: (markerIds: readonly string[]) => ReactNode;
 }): ReactElement {
   return (
     <Stack gap="xs">
@@ -45,7 +53,10 @@ export function MapDetailStage({
           content: <MapDetailMarkerContent marker={marker} />,
         }))}
         connectors={stage.connectors}
-        interactive={false}
+        selectedIds={selectedIds}
+        {...(onActivate === undefined ? {} : { onActivate })}
+        {...(renderDetails === undefined ? {} : { renderDetails })}
+        interactive={interactive}
         unavailableMessage={MAP_IMAGE_UNAVAILABLE_MESSAGE}
       />
       {stage.positionsUnavailable ? (

@@ -1,4 +1,8 @@
-export { monsterDetailLinkProps, type MonsterPublicAddress } from './address';
+export {
+  MONSTER_DETAIL_ROUTE,
+  monsterDetailLinkProps,
+  type MonsterPublicAddress,
+} from './address';
 export {
   getMonsterDropCategoryId,
   getMonsterDropCategoryLabel,

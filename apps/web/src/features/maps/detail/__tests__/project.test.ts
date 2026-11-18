@@ -92,6 +92,7 @@ describe('projectMapDetail', () => {
       id: `monster:${firstMonster?.key}:1`,
       kind: 'monster',
       entityKey: firstMonster?.key,
+      focusKey: `monster-${firstMonster?.focusToken}`,
       x: 240,
       y: 390,
       spriteUrl: view.monsters.monsters.find(
@@ -105,11 +106,43 @@ describe('projectMapDetail', () => {
         to: `warp:${firstWarp?.focusToken}:2`,
       },
     ]);
+    const firstConnection = record.connections.items[0];
+    expect(
+      stage.markers.find((marker) => marker.kind === 'connection'),
+    ).toMatchObject({ focusKey: `connection-${firstConnection?.focusToken}` });
+    expect(
+      stage.markers.find((marker) => marker.kind === 'warp'),
+    ).toMatchObject({ focusKey: `warp-${firstWarp?.focusToken}` });
     expect(
       projectMapDetail({ record, buildId: 'cw-launch' }).stage.markers.map(
         ({ id }) => id,
       ),
     ).toEqual(stage.markers.map(({ id }) => id));
+  });
+
+  it('projects one focus entity list in connection, warp, monster, and NPC order', () => {
+    const record = mapPageRecordFixture({ mapId: 'practice-grove' });
+    const view = projectMapDetail({ record, buildId: 'cw-launch' });
+    const expected = [
+      ...(view.connections?.maps.map(({ focusKey, name }) => [
+        focusKey,
+        name,
+      ]) ?? []),
+      ...record.warps.items.map(({ focusToken }) => [
+        `warp-${focusToken}`,
+        'Warp',
+      ]),
+      ...view.monsters.monsters.map(({ focusKey, name }) => [focusKey, name]),
+      ...view.npcs.npcs.map(({ focusKey, name }) => [focusKey, name]),
+    ];
+
+    expect(view.entities.map(({ focusKey, name }) => [focusKey, name])).toEqual(
+      expected,
+    );
+    expect(view.entities.find(({ kind }) => kind === 'monster')).toMatchObject({
+      kindLabel: 'Monster',
+      link: { to: '/maplestory/{-$buildId}/monsters/$slugId' },
+    });
   });
 
   it('includes known and partial positions and skips unresolved position collections', () => {

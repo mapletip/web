@@ -4,15 +4,62 @@ import {
   createMemoryHistory,
   createRouter,
 } from '@tanstack/react-router';
-import { render, screen, within } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { fireEvent, render, screen, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { describe, expect, it, vi } from 'vitest';
 
 import { routeTree } from '@/routeTree.gen';
 
 import { MapDetail } from '../MapDetail';
-import { projectMapDetail, UNNAMED_MAP_LABEL } from '../project';
+import {
+  projectMapDetail,
+  UNNAMED_MAP_LABEL,
+  type MapDetailView,
+} from '../project';
 
 import { mapPageRecordFixture } from './mapPageFixture';
+
+function matchDesktopBreakpoint(): void {
+  window.matchMedia = (query: string) =>
+    ({
+      matches: query.includes('62'),
+      media: query,
+      onchange: null,
+      addListener: () => undefined,
+      removeListener: () => undefined,
+      addEventListener: () => undefined,
+      removeEventListener: () => undefined,
+      dispatchEvent: () => false,
+    }) as MediaQueryList;
+}
+
+function renderMapView({
+  view,
+  focusValue,
+  onFocusChange,
+}: {
+  readonly view: MapDetailView;
+  readonly focusValue?: string | undefined;
+  readonly onFocusChange?: ((focus: string | undefined) => void) | undefined;
+}) {
+  matchDesktopBreakpoint();
+  const router = createRouter({
+    routeTree,
+    history: createMemoryHistory({ initialEntries: [view.canonicalPath] }),
+  });
+
+  return render(
+    <RouterContextProvider router={router}>
+      <MantineProvider env="test">
+        <MapDetail
+          view={view}
+          focusValue={focusValue}
+          {...(onFocusChange === undefined ? {} : { onFocusChange })}
+        />
+      </MantineProvider>
+    </RouterContextProvider>,
+  );
+}
 
 function renderDetail(
   mapId: string,
@@ -47,22 +94,11 @@ function renderDetail(
     record: projectedMap,
     buildId: 'cw-launch',
   });
-  const router = createRouter({
-    routeTree,
-    history: createMemoryHistory({ initialEntries: [view.canonicalPath] }),
-  });
-
-  return render(
-    <RouterContextProvider router={router}>
-      <MantineProvider>
-        <MapDetail view={view} />
-      </MantineProvider>
-    </RouterContextProvider>,
-  );
+  return renderMapView({ view });
 }
 
 describe('MapDetail information', () => {
-  it('shows the map image with its static markers', () => {
+  it('shows the map image and markers', () => {
     const { container } = renderDetail('practice-grove');
 
     expect(
@@ -74,6 +110,127 @@ describe('MapDetail information', () => {
     expect(
       container.querySelectorAll('[data-marker-ids]').length,
     ).toBeGreaterThan(0);
+  });
+
+  it('rewrites unknown focus entities out of the address', () => {
+    const view = projectMapDetail({
+      record: mapPageRecordFixture({ mapId: 'practice-grove' }),
+      buildId: 'cw-launch',
+    });
+    const monster = view.monsters.monsters[0];
+    if (monster === undefined) throw new Error('Expected a fixture Monster.');
+    const onFocusChange = vi.fn();
+
+    renderMapView({
+      view,
+      focusValue: `${monster.focusKey},npc-00000000`,
+      onFocusChange,
+    });
+
+    expect(onFocusChange).toHaveBeenCalledWith(monster.focusKey);
+  });
+
+  it('selects and clears one marker entity and links its details to Monster Detail', async () => {
+    const record = mapPageRecordFixture({ mapId: 'practice-grove' });
+    const view = projectMapDetail({ record, buildId: 'cw-launch' });
+    const monster = view.monsters.monsters.find(
+      ({ name }) => name === 'Hollow Husk',
+    );
+    if (monster?.destination === undefined) {
+      throw new Error('Expected Hollow Husk to have a detail page.');
+    }
+    const marker = view.stage.markers.find(
+      ({ focusKey }) => focusKey === monster.focusKey,
+    );
+    if (marker === undefined) throw new Error('Expected a Hollow Husk marker.');
+
+    const onFocusChange = vi.fn();
+    const user = userEvent.setup();
+    const rendered = renderMapView({ view, onFocusChange });
+    await user.click(screen.getByRole('button', { name: marker.label }));
+
+    expect(onFocusChange).toHaveBeenCalledWith(monster.focusKey);
+    const details = await screen.findByRole('group', {
+      name: 'Marker details',
+    });
+    expect(
+      within(details).getByRole('link', {
+        name: 'Hollow Husk',
+        hidden: true,
+      }),
+    ).toHaveAttribute('href', monster.destination.href);
+
+    rendered.unmount();
+    onFocusChange.mockClear();
+    renderMapView({
+      view,
+      focusValue: monster.focusKey,
+      onFocusChange,
+    });
+    await user.click(screen.getByRole('button', { name: marker.label }));
+    expect(onFocusChange).toHaveBeenCalledWith(undefined);
+  });
+
+  it('lets the player choose an entity at a shared position', async () => {
+    const view = projectMapDetail({
+      record: mapPageRecordFixture({ mapId: 'practice-grove' }),
+      buildId: 'cw-launch',
+    });
+    const twin = view.monsters.monsters.find(
+      ({ name }) => name === 'Twin Sprout',
+    );
+    if (twin === undefined) throw new Error('Expected Twin Sprout.');
+    const marker = view.stage.markers.find(
+      ({ focusKey }) => focusKey === twin.focusKey,
+    );
+    if (marker === undefined) throw new Error('Expected a Twin Sprout marker.');
+    const onFocusChange = vi.fn();
+    const user = userEvent.setup();
+    renderMapView({ view, onFocusChange });
+
+    await user.click(
+      screen.getByRole('button', { name: /Plain Pebble.*Twin Sprout/u }),
+    );
+    const details = await screen.findByRole('group', {
+      name: 'Marker details',
+    });
+    fireEvent.click(
+      within(details).getByRole('button', {
+        name: 'Select Twin Sprout',
+        hidden: true,
+      }),
+    );
+
+    expect(onFocusChange).toHaveBeenCalledWith(twin.focusKey);
+  });
+
+  it('links connection marker details to the connected Map', async () => {
+    const view = projectMapDetail({
+      record: mapPageRecordFixture({ mapId: 'practice-grove' }),
+      buildId: 'cw-launch',
+    });
+    const connection = view.connections?.maps[0];
+    if (connection?.destination === undefined) {
+      throw new Error('Expected a linked Map connection.');
+    }
+    const marker = view.stage.markers.find(
+      ({ focusKey }) => focusKey === connection.focusKey,
+    );
+    if (marker === undefined) throw new Error('Expected a connection marker.');
+    const user = userEvent.setup();
+    renderMapView({ view });
+
+    await user.click(screen.getByRole('button', { name: marker.label }));
+
+    const details = await screen.findByRole('group', {
+      name: 'Marker details',
+    });
+    expect(
+      within(details).getByRole('link', {
+        name: connection.name,
+        hidden: true,
+      }),
+    ).toHaveAttribute('href', connection.destination.href);
   });
 
   it('shows the no-image message in the stage box', () => {

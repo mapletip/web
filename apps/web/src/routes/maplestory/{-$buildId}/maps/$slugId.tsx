@@ -1,4 +1,5 @@
 import { createFileRoute, notFound, redirect } from '@tanstack/react-router';
+import { useCallback } from 'react';
 
 import { BrowseUnavailable } from '@/components/BrowseUnavailable';
 import { BUILDS, DEFAULT_BUILD_ID } from '@/config/maplekit';
@@ -12,9 +13,12 @@ import {
   resolveBuildIdParam,
 } from '@/features/detail';
 import { MapDetail, mapDetailMetadata } from '@/features/maps/detail';
+import { mapDetailSearchSchema } from '@/features/maps/detail/focus';
 import { loadMapDetail } from '@/features/maps/detail/load';
 
 export const Route = createFileRoute('/maplestory/{-$buildId}/maps/$slugId')({
+  validateSearch: mapDetailSearchSchema,
+  staleTime: Infinity,
   beforeLoad: ({ params }) => {
     requireBuildId(params.buildId);
   },
@@ -62,9 +66,11 @@ export const Route = createFileRoute('/maplestory/{-$buildId}/maps/$slugId')({
       };
     }
 
+    const { focus } = mapDetailSearchSchema.parse(match.search);
     const head = mapDetailMetadata({
       view: loaderData,
       buildId: loaderData.buildId,
+      noIndex: focus !== undefined,
     });
     return {
       meta: [...head.meta],
@@ -79,8 +85,23 @@ export const Route = createFileRoute('/maplestory/{-$buildId}/maps/$slugId')({
 
 function MapDetailPage() {
   const view = Route.useLoaderData();
+  const { focus } = Route.useSearch();
+  const navigate = Route.useNavigate();
+  const onFocusChange = useCallback(
+    (nextFocus: string | undefined) => {
+      void navigate({
+        search: (previous) => ({ ...previous, focus: nextFocus }),
+        state: (previous) => previous,
+        replace: true,
+        resetScroll: false,
+      });
+    },
+    [navigate],
+  );
 
-  return <MapDetail view={view} />;
+  return (
+    <MapDetail view={view} focusValue={focus} onFocusChange={onFocusChange} />
+  );
 }
 
 function MapDetailNotFound() {
