@@ -1,7 +1,7 @@
 import { MantineProvider } from '@mantine/core';
 import { cssVariablesResolver, theme } from '@mapletip/theme';
 import { fireEvent, render, screen } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import '@/styles.css';
 import { MarkerStage } from '@/components/MarkerStage';
@@ -59,8 +59,20 @@ describe('MarkerStage', () => {
   it('places markers by image percentages with their bottom centre on the point', () => {
     const { container } = mount({
       markers: [
-        { id: 'first', x: 100, y: 50, content: <span>First</span> },
-        { id: 'second', x: 300, y: 150, content: <span>Second</span> },
+        {
+          id: 'first',
+          x: 100,
+          y: 50,
+          label: 'First point',
+          content: <span>First</span>,
+        },
+        {
+          id: 'second',
+          x: 300,
+          y: 150,
+          label: 'Second point',
+          content: <span>Second</span>,
+        },
       ],
     });
 
@@ -78,10 +90,156 @@ describe('MarkerStage', () => {
     });
   });
 
+  it('reports activation without changing the host-controlled selection', () => {
+    const onActivate = vi.fn();
+    mount({
+      markers: [
+        {
+          id: 'first',
+          x: 100,
+          y: 50,
+          label: 'First point',
+          content: <span>First</span>,
+        },
+        {
+          id: 'second',
+          x: 300,
+          y: 150,
+          label: 'Second point',
+          content: <span>Second</span>,
+        },
+      ],
+      selectedIds: ['first'],
+      onActivate,
+    });
+
+    const first = screen.getByRole('button', { name: 'First point' });
+    const second = screen.getByRole('button', { name: 'Second point' });
+    fireEvent.click(second);
+
+    expect(onActivate).toHaveBeenCalledExactlyOnceWith(['second']);
+    expect(first).toHaveAttribute('aria-pressed', 'true');
+    expect(second).toHaveAttribute('aria-pressed', 'false');
+  });
+
+  it('uses one target for two markers at the same point', () => {
+    const onActivate = vi.fn();
+    mount({
+      markers: [
+        {
+          id: 'first',
+          x: 100,
+          y: 50,
+          label: 'First point',
+          content: <span>First</span>,
+        },
+        {
+          id: 'second',
+          x: 100,
+          y: 50,
+          label: 'Second point',
+          content: <span>Second</span>,
+        },
+      ],
+      selectedIds: ['second'],
+      onActivate,
+    });
+
+    const target = screen.getByRole('button', {
+      name: 'First point, Second point (2)',
+    });
+    expect(screen.getAllByRole('button')).toHaveLength(1);
+    expect(target).toHaveAttribute('data-marker-ids', 'first second');
+    expect(target).toHaveAttribute('aria-pressed', 'true');
+
+    fireEvent.click(target);
+    expect(onActivate).toHaveBeenCalledExactlyOnceWith(['first', 'second']);
+  });
+
+  it('uses one target for three markers at the same point', () => {
+    const onActivate = vi.fn();
+    mount({
+      markers: [
+        {
+          id: 'first',
+          x: 100,
+          y: 50,
+          label: 'First point',
+          content: <span>First</span>,
+        },
+        {
+          id: 'second',
+          x: 100,
+          y: 50,
+          label: 'Second point',
+          content: <span>Second</span>,
+        },
+        {
+          id: 'third',
+          x: 100,
+          y: 50,
+          label: 'Third point',
+          content: <span>Third</span>,
+        },
+      ],
+      onActivate,
+    });
+
+    const target = screen.getByRole('button', {
+      name: 'First point, Second point, Third point (3)',
+    });
+    expect(screen.getAllByRole('button')).toHaveLength(1);
+    fireEvent.click(target);
+    expect(onActivate).toHaveBeenCalledExactlyOnceWith([
+      'first',
+      'second',
+      'third',
+    ]);
+  });
+
+  it('renders static markers without focus stops or activation', () => {
+    const onActivate = vi.fn();
+    const { container } = mount({
+      interactive: false,
+      markers: [
+        {
+          id: 'static',
+          x: 100,
+          y: 50,
+          label: 'Static point',
+          content: <span>Static</span>,
+        },
+      ],
+      selectedIds: ['static'],
+      onActivate,
+    });
+
+    const target = container.querySelector('[data-marker-id="static"]');
+    expect(target).not.toBeNull();
+    expect(target).toHaveAttribute('data-selected', 'true');
+    expect(target).toHaveAttribute('inert');
+    expect(
+      container.querySelectorAll(
+        'button, a, input, select, textarea, [tabindex]',
+      ),
+    ).toHaveLength(0);
+
+    fireEvent.click(target!);
+    expect(onActivate).not.toHaveBeenCalled();
+  });
+
   it('shows the host message without markers when the image is missing', () => {
     const { container } = mount({
       image: undefined,
-      markers: [{ id: 'hidden', x: 10, y: 20, content: <span>Hidden</span> }],
+      markers: [
+        {
+          id: 'hidden',
+          x: 10,
+          y: 20,
+          label: 'Hidden point',
+          content: <span>Hidden</span>,
+        },
+      ],
     });
 
     expect(screen.getByText('Image unavailable.')).toBeVisible();
@@ -92,7 +250,15 @@ describe('MarkerStage', () => {
 
   it('shows the host message without markers when the image fails to load', () => {
     const { container } = mount({
-      markers: [{ id: 'hidden', x: 10, y: 20, content: <span>Hidden</span> }],
+      markers: [
+        {
+          id: 'hidden',
+          x: 10,
+          y: 20,
+          label: 'Hidden point',
+          content: <span>Hidden</span>,
+        },
+      ],
     });
 
     fireEvent.error(screen.getByRole('img'));
