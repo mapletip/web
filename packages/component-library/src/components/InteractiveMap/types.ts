@@ -25,7 +25,7 @@ export interface InteractiveMapMarker {
   readonly y: number;
   /** Accessible name for this marker. */
   readonly label: string;
-  /** Content rendered with its bottom centre on the supplied point. */
+  /** Content rendered centred on the supplied point. */
   readonly content: ReactNode;
 }
 

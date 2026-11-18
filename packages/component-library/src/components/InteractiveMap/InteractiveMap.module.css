@@ -64,14 +64,14 @@
 
 .markerTarget {
   position: absolute;
-  bottom: 0;
   left: 0;
-  transform-origin: left bottom;
+  top: 0;
+  transform-origin: left top;
 }
 
 .markerContent {
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   justify-content: center;
 }
 
@@ -86,7 +86,7 @@
   display: flex;
   min-width: 44px;
   min-height: 44px;
-  align-items: flex-end;
+  align-items: center;
   justify-content: center;
   padding: 0;
 }
@@ -94,7 +94,7 @@
 .markerButton {
   position: relative;
   border: 0;
-  transform: translateX(-50%);
+  transform: translate(-50%, -50%);
   background: transparent;
   color: inherit;
   cursor: pointer;
@@ -105,21 +105,21 @@
 .markerStatic {
   position: absolute;
   pointer-events: none;
-  transform: translate(-50%, -100%);
+  transform: translate(-50%, -50%);
 }
 
 .markerButton::before,
 .markerStatic::before,
 .markerButton:focus-visible::after {
   position: absolute;
-  bottom: -6px;
+  top: 50%;
   left: 50%;
   box-sizing: border-box;
   border-radius: 50%;
   background: transparent;
   content: '';
   pointer-events: none;
-  transform: translateX(-50%);
+  transform: translate(-50%, -50%);
 }
 
 .markerButton[data-selected='true']::before,
