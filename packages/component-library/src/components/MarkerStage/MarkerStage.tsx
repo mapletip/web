@@ -1,4 +1,10 @@
-import { Image, Text, UnstyledButton } from '@mantine/core';
+import {
+  CloseButton,
+  Image,
+  Popover,
+  Text,
+  UnstyledButton,
+} from '@mantine/core';
 import {
   Fragment,
   useState,
@@ -38,9 +44,13 @@ export function MarkerStage({
   selectedIds = [],
   onActivate,
   interactive = true,
+  renderDetails,
   unavailableMessage,
 }: MarkerStageProps): ReactElement {
   const [failedSrc, setFailedSrc] = useState<string | null>(null);
+  const [openDetailsTarget, setOpenDetailsTarget] = useState<string | null>(
+    null,
+  );
   const src = image?.src;
   const hasSource = src !== undefined && src !== '';
   // Key by source so a replacement image is not treated as the failed one.
@@ -104,7 +114,14 @@ export function MarkerStage({
           ) : null}
           {groupMarkers(markers).map((group) => {
             const markerIds = group.map(({ id }) => id);
+            const targetKey = `${group[0]!.x},${group[0]!.y}`;
             const selected = markerIds.some((id) => selectedIdSet.has(id));
+            const details =
+              interactive && openDetailsTarget === targetKey
+                ? renderDetails?.(markerIds)
+                : undefined;
+            const hasDetails = details != null && details !== false;
+            const detailsOpen = openDetailsTarget === targetKey && hasDetails;
             const label =
               group.length === 1
                 ? group[0]!.label
@@ -130,22 +147,35 @@ export function MarkerStage({
               'data-selected': selected ? 'true' : undefined,
               style: markerStyle,
             };
+            const activate = () => {
+              onActivate?.(markerIds);
+              const activationDetails = renderDetails?.(markerIds);
+              setOpenDetailsTarget(
+                activationDetails != null && activationDetails !== false
+                  ? targetKey
+                  : null,
+              );
+            };
 
-            return interactive ? (
+            const target = interactive ? (
               <UnstyledButton
-                key={markerIds[0]}
                 {...markerData}
                 type="button"
                 className={markerClassName}
                 aria-label={label}
                 aria-pressed={selected}
-                onClick={() => onActivate?.(markerIds)}
+                onClick={activate}
+                onKeyDown={(event) => {
+                  if (event.key === 'Escape' && detailsOpen) {
+                    event.preventDefault();
+                    setOpenDetailsTarget(null);
+                  }
+                }}
               >
                 {markerContent}
               </UnstyledButton>
             ) : (
               <span
-                key={markerIds[0]}
                 {...markerData}
                 className={markerClassName}
                 aria-hidden="true"
@@ -153,6 +183,36 @@ export function MarkerStage({
               >
                 {markerContent}
               </span>
+            );
+
+            if (!interactive || renderDetails === undefined) {
+              return <Fragment key={markerIds[0]}>{target}</Fragment>;
+            }
+
+            return (
+              <Popover
+                key={markerIds[0]}
+                opened={detailsOpen}
+                onChange={(opened) => {
+                  if (!opened) setOpenDetailsTarget(null);
+                }}
+                position="bottom"
+                middlewares={{ flip: true, shift: true, size: true }}
+                floatingStrategy="absolute"
+                withinPortal={false}
+                returnFocus
+              >
+                <Popover.Target>{target}</Popover.Target>
+                <Popover.Dropdown className={classes['detailsDropdown']}>
+                  <CloseButton
+                    type="button"
+                    className={classes['detailsClose']}
+                    aria-label="Close details"
+                    onClick={() => setOpenDetailsTarget(null)}
+                  />
+                  <div className={classes['detailsContent']}>{details}</div>
+                </Popover.Dropdown>
+              </Popover>
             );
           })}
         </>

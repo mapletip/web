@@ -195,6 +195,71 @@ export const TinyImage: Story = {
   render: (args) => frame({ width: 320, props: args }),
 };
 
+export const DetailsAtCenter: Story = {
+  args: {
+    ...wideImageArgs,
+    markers: [
+      {
+        id: 'centre',
+        x: 300,
+        y: 150,
+        label: 'Centre point',
+        content: marker('A'),
+      },
+    ],
+    renderDetails: (markerIds) => (
+      <div>
+        <strong>{markerIds.join(', ')}</strong>
+        <p>Details shown beside the center point.</p>
+      </div>
+    ),
+  },
+  render: (args) => frame({ width: 680, props: args }),
+};
+
+export const DetailsNearEachEdge: Story = {
+  args: {
+    ...wideImageArgs,
+    markers: [
+      {
+        id: 'top',
+        x: 20,
+        y: 20,
+        label: 'Top edge point',
+        content: marker('T'),
+      },
+      {
+        id: 'right',
+        x: 580,
+        y: 40,
+        label: 'Right edge point',
+        content: marker('R'),
+      },
+      {
+        id: 'bottom',
+        x: 580,
+        y: 280,
+        label: 'Bottom edge point',
+        content: marker('B'),
+      },
+      {
+        id: 'left',
+        x: 20,
+        y: 260,
+        label: 'Left edge point',
+        content: marker('L'),
+      },
+    ],
+    renderDetails: (markerIds) => (
+      <div>
+        <strong>{markerIds.join(', ')}</strong>
+        <p>Details stay within the stage near every edge.</p>
+      </div>
+    ),
+  },
+  render: (args) => frame({ width: 680, props: args }),
+};
+
 export const Unavailable: Story = {
   args: {
     markers: [
