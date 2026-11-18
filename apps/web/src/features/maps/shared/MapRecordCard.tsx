@@ -1,12 +1,9 @@
 import { HoverCard, Image, Text } from '@mantine/core';
 import { useMediaQuery } from '@mantine/hooks';
-import {
-  RecordCard,
-  type RecordCardLinkRenderer,
-} from '@mapletip/component-library';
+import { RecordCard } from '@mapletip/component-library';
 import type { ReactElement } from 'react';
 
-import { AnchorLink } from '@/components/RouterLinks';
+import { createRecordCardLinkRenderer } from '@/components/RouterLinks';
 import type { BuildId } from '@/config/maplekit';
 
 import classes from './MapRecordCard.module.css';
@@ -39,20 +36,6 @@ export interface MapRecordCardView {
 
 export interface MapRecordCardProps {
   readonly map: MapRecordCardView;
-}
-
-function renderMapDetailLink(
-  destination: MapRecordCardDestination,
-): RecordCardLinkRenderer {
-  return (_recordDestination, props) => (
-    <AnchorLink
-      to={MAP_DETAIL_ROUTE}
-      params={destination.params}
-      className={props.className}
-    >
-      {props.children}
-    </AnchorLink>
-  );
 }
 
 function renderFooterParts(
@@ -154,7 +137,10 @@ export function MapRecordCard({ map }: MapRecordCardProps): ReactElement {
         ? {}
         : {
             destination: { href: destination.href },
-            renderLink: renderMapDetailLink(destination),
+            renderLink: createRecordCardLinkRenderer({
+              to: MAP_DETAIL_ROUTE,
+              params: destination.params,
+            }),
           })}
     />
   );

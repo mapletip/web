@@ -120,7 +120,7 @@ describe('fixture release', () => {
     };
 
     const huntingMap = pageFor('practice-grove');
-    expect(huntingMap.monsters.items).toHaveLength(3);
+    expect(huntingMap.monsters.items).toHaveLength(4);
     expect(huntingMap.warps.items).toHaveLength(1);
     const occupiedPoints = huntingMap.monsters.items.flatMap((monster) =>
       monster.points.items.map(({ x, y }) => `${x},${y}`),

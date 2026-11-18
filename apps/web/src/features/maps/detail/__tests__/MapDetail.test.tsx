@@ -18,6 +18,7 @@ function renderDetail(
   mapId: string,
   withoutInformation = false,
   connections?: ReturnType<typeof mapPageRecordFixture>['connections'],
+  monsters?: ReturnType<typeof mapPageRecordFixture>['monsters'],
 ) {
   const record = mapPageRecordFixture({ mapId });
   const projectedRecord = withoutInformation
@@ -35,8 +36,12 @@ function renderDetail(
     connections === undefined
       ? projectedRecord
       : { ...projectedRecord, connections };
+  const projectedPage =
+    monsters === undefined
+      ? recordWithConnections
+      : { ...recordWithConnections, monsters };
   const view = projectMapDetail({
-    record: recordWithConnections,
+    record: projectedPage,
     buildId: 'cw-launch',
   });
   const router = createRouter({
@@ -92,26 +97,28 @@ describe('MapDetail information', () => {
     expect(within(information).queryByText('Flying')).not.toBeInTheDocument();
   });
 
-  it('omits the section and navigation for a known empty connection collection', () => {
+  it('omits known empty Connections while retaining the Monsters section', () => {
     renderDetail('practice-grove', false, { state: 'absent', items: [] });
 
     expect(
-      screen.queryByRole('navigation', { name: 'Record sections' }),
-    ).not.toBeInTheDocument();
+      screen.getByRole('navigation', { name: 'Record sections' }),
+    ).toBeVisible();
     expect(
       screen.queryByRole('heading', { name: /Connections/u }),
     ).not.toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Monsters (4)' })).toBeVisible();
   });
 
-  it('omits the section for a known zero connection count', () => {
+  it('omits Connections for a known zero count while keeping Monsters', () => {
     renderDetail('practice-grove', false, { state: 'known', items: [] });
 
     expect(
-      screen.queryByRole('navigation', { name: 'Record sections' }),
-    ).not.toBeInTheDocument();
+      screen.getByRole('navigation', { name: 'Record sections' }),
+    ).toBeVisible();
     expect(
       screen.queryByRole('heading', { name: /Connections/u }),
     ).not.toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Monsters (4)' })).toBeVisible();
   });
 
   it('shows an unavailable message and unknown count for unresolved connections', () => {
@@ -160,5 +167,80 @@ describe('MapDetail information', () => {
       'href',
       `/maplestory/maps/${connected.slug}-${connected.publicId}`,
     );
+  });
+
+  it('shows a monster summary, card facts, boss badge, and Monster Detail link', () => {
+    const record = mapPageRecordFixture({ mapId: 'practice-grove' });
+    const plainPebble = record.monsters.items.find(
+      ({ name }) => name.state === 'known' && name.value === 'Plain Pebble',
+    );
+    if (plainPebble === undefined) {
+      throw new Error('Expected Plain Pebble in the fixture map.');
+    }
+    renderDetail('practice-grove');
+
+    expect(screen.getByText('4 monster types, 5 total spawns')).toBeVisible();
+    const cards = screen.getAllByTestId('map-monster-card');
+    const pebbleCard = cards.find((card) =>
+      card.textContent?.includes('Plain Pebble'),
+    );
+    if (pebbleCard === undefined)
+      throw new Error('Expected a Plain Pebble card.');
+    expect(within(pebbleCard).getByText('Lv 1')).toBeVisible();
+    expect(within(pebbleCard).getByText('1 spawn')).toBeVisible();
+    expect(within(pebbleCard).getByText('No respawn')).toBeVisible();
+    expect(within(pebbleCard).getByRole('link')).toHaveAttribute(
+      'href',
+      `/maplestory/monsters/plain-pebble-${plainPebble.publicId}`,
+    );
+
+    const bossCard = cards.find((card) =>
+      card.textContent?.includes('Crowned Warden'),
+    );
+    if (bossCard === undefined) throw new Error('Expected a boss card.');
+    expect(within(bossCard).getByText('Boss')).toBeVisible();
+  });
+
+  it('shows the known-empty monster message and zero count', () => {
+    renderDetail('practice-grove', false, undefined, {
+      state: 'known',
+      items: [],
+    });
+
+    expect(screen.getByRole('link', { name: 'Monsters (0)' })).toHaveAttribute(
+      'href',
+      '#monsters',
+    );
+    expect(
+      screen.getByText('No monsters are recorded on this map.'),
+    ).toBeVisible();
+    expect(screen.queryByText(/total spawn/u)).not.toBeInTheDocument();
+  });
+
+  it('shows unavailable and partial Monster collection states', () => {
+    renderDetail('practice-grove', false, undefined, {
+      state: 'unknown',
+      items: [],
+    });
+
+    expect(screen.getByRole('link', { name: 'Monsters (?)' })).toHaveAttribute(
+      'href',
+      '#monsters',
+    );
+    expect(
+      screen.getByText('Monster information is unavailable.'),
+    ).toBeVisible();
+  });
+
+  it('shows a note when Monster information is partial', () => {
+    renderDetail('practice-grove', false, undefined, {
+      state: 'partial',
+      items: [],
+    });
+
+    expect(screen.getByRole('heading', { name: 'Monsters (0)' })).toBeVisible();
+    expect(
+      screen.getByText('Some monster information may be missing.'),
+    ).toBeVisible();
   });
 });

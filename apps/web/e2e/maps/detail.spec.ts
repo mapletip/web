@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 
-import { mapPublicId } from '../../src/mocks/release';
+import { mapPublicId, monsterPublicId } from '../../src/mocks/release';
 
 test('Map Detail renders its canonical address, redirects stale slugs, and returns 404 for invalid records', async ({
   page,
@@ -30,6 +30,25 @@ test('Map Detail renders its canonical address, redirects stale slugs, and retur
       name: 'Maps',
     }),
   ).toHaveAttribute('href', '/maplestory/maps');
+
+  await expect(
+    page
+      .getByRole('navigation', { name: 'Record sections' })
+      .getByRole('link', { name: 'Monsters (4)' }),
+  ).toHaveAttribute('href', '#monsters');
+  const monsterPath = `/maplestory/monsters/crowned-warden-${monsterPublicId('crowned-warden')}`;
+  const bossCard = page
+    .getByTestId('map-monster-card')
+    .filter({ hasText: 'Crowned Warden' });
+  await expect(bossCard.getByText('Boss')).toBeVisible();
+  await expect(bossCard.getByRole('link')).toHaveAttribute('href', monsterPath);
+  await bossCard.getByRole('link').click();
+  await expect(page).toHaveURL(`http://127.0.0.1:4173${monsterPath}`);
+  await expect(
+    page.getByRole('heading', { level: 1, name: 'Crowned Warden' }),
+  ).toBeVisible();
+
+  await page.goto(canonical);
 
   const connectionPath = `/maplestory/maps/lantern-square-${mapPublicId({ sourceId: 'cw-launch:lantern-square' })}`;
   const connectionsNavigation = page

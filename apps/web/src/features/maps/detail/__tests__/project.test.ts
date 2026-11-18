@@ -4,6 +4,17 @@ import { projectMapDetail, UNNAMED_MAP_LABEL } from '../project';
 
 import { mapPageRecordFixture } from './mapPageFixture';
 
+type MapPageMonster = ReturnType<
+  typeof mapPageRecordFixture
+>['monsters']['items'][number];
+
+function monster(
+  source: MapPageMonster,
+  overrides: Partial<MapPageMonster>,
+): MapPageMonster {
+  return { ...source, ...overrides };
+}
+
 function connection(
   record: ReturnType<typeof mapPageRecordFixture>,
   options: {
@@ -50,6 +61,22 @@ describe('projectMapDetail', () => {
     expect(view.subtitle).toBeUndefined();
   });
 
+  it('omits known empty Connections from the projected view', () => {
+    const record = mapPageRecordFixture({ mapId: 'practice-grove' });
+
+    const knownEmpty = projectMapDetail({
+      record: { ...record, connections: { state: 'known', items: [] } },
+      buildId: 'cw-launch',
+    });
+    const absent = projectMapDetail({
+      record: { ...record, connections: { state: 'absent', items: [] } },
+      buildId: 'cw-launch',
+    });
+
+    expect(knownEmpty.connections).toBeUndefined();
+    expect(absent.connections).toBeUndefined();
+  });
+
   it('projects sorted connection cards with natural number order and same-build destinations', () => {
     const record = mapPageRecordFixture({ mapId: 'practice-grove' });
     const view = projectMapDetail({
@@ -84,15 +111,19 @@ describe('projectMapDetail', () => {
       buildId: 'gms-v83',
     });
 
-    expect(view.connections.state).toBe('known');
-    expect(view.connections.count).toBe(4);
-    expect(view.connections.maps.map(({ name }) => name)).toEqual([
+    const connections = view.connections;
+    if (connections === undefined)
+      throw new Error('Expected projected connections.');
+
+    expect(connections.state).toBe('known');
+    expect(connections.count).toBe(4);
+    expect(connections.maps.map(({ name }) => name)).toEqual([
       'Hunting Ground 2',
       'Hunting Ground 10',
       'Hunting Ground II',
       'Hunting Ground X',
     ]);
-    expect(view.connections.maps[0]?.destination).toEqual({
+    expect(connections.maps[0]?.destination).toEqual({
       href: '/maplestory/gms-v83/maps/hunting-ground-2-a0000001',
       params: {
         buildId: 'gms-v83',
@@ -129,7 +160,11 @@ describe('projectMapDetail', () => {
       buildId: 'cw-launch',
     });
 
-    const quietGallery = view.connections.maps.find(
+    const connections = view.connections;
+    if (connections === undefined)
+      throw new Error('Expected projected connections.');
+
+    const quietGallery = connections.maps.find(
       ({ name }) => name === 'Quiet Gallery',
     );
     expect(quietGallery?.footerParts).toEqual([
@@ -140,7 +175,7 @@ describe('projectMapDetail', () => {
       `/media/images/aa/${'a'.repeat(64)}.png`,
     );
 
-    const unnamed = view.connections.maps.find(
+    const unnamed = connections.maps.find(
       ({ name }) => name === UNNAMED_MAP_LABEL,
     );
     expect(unnamed?.footerParts).toEqual([
@@ -166,6 +201,7 @@ describe('projectMapDetail', () => {
     expect(partial.connections).toMatchObject({
       state: 'partial',
       count: 1,
+      notice: 'Some connection information may be missing.',
       maps: [{ name: 'Quiet Gallery' }],
     });
 
@@ -176,7 +212,217 @@ describe('projectMapDetail', () => {
     expect(unknown.connections).toEqual({
       state: 'unknown',
       count: 'unknown',
+      notice: 'Connection information is unavailable.',
       maps: [],
+    });
+  });
+
+  it('orders Monsters by known level, then natural name, with unknown levels last', () => {
+    const record = mapPageRecordFixture({ mapId: 'practice-grove' });
+    const source = record.monsters.items[0];
+    if (source === undefined) throw new Error('Expected a fixture monster.');
+    const view = projectMapDetail({
+      record: {
+        ...record,
+        monsters: {
+          state: 'known',
+          items: [
+            monster(source, {
+              key: 'fixture:monster:ten',
+              name: { state: 'known', value: 'Monster 10' },
+              level: { state: 'known', value: 2 },
+              placementCount: 3,
+            }),
+            monster(source, {
+              key: 'fixture:monster:unknown',
+              name: { state: 'known', value: 'Unknown Level' },
+              level: { state: 'unknown' },
+              placementCount: 4,
+            }),
+            monster(source, {
+              key: 'fixture:monster:one',
+              name: { state: 'known', value: 'Monster 2' },
+              level: { state: 'known', value: 2 },
+              placementCount: 2,
+            }),
+            monster(source, {
+              key: 'fixture:monster:level-one',
+              name: { state: 'known', value: 'First' },
+              level: { state: 'known', value: 1 },
+              placementCount: 1,
+            }),
+          ],
+        },
+      },
+      buildId: 'cw-launch',
+    });
+
+    expect(view.monsters.monsters.map(({ name }) => name)).toEqual([
+      'First',
+      'Monster 2',
+      'Monster 10',
+      'Unknown Level',
+    ]);
+    expect(view.monsters).toMatchObject({
+      state: 'known',
+      count: 4,
+      summary: '4 monster types, 10 total spawns',
+    });
+  });
+
+  it('uses singular summary labels for one monster type and one spawn', () => {
+    const record = mapPageRecordFixture({ mapId: 'practice-grove' });
+    const view = projectMapDetail({
+      record: {
+        ...record,
+        monsters: {
+          state: 'known',
+          items: [record.monsters.items[0]!],
+        },
+      },
+      buildId: 'cw-launch',
+    });
+
+    expect(view.monsters.summary).toBe('1 monster type, 1 total spawn');
+  });
+
+  it('projects respawn labels and omits ordinary respawn', () => {
+    const record = mapPageRecordFixture({ mapId: 'practice-grove' });
+    const source = record.monsters.items[0];
+    if (source === undefined) throw new Error('Expected a fixture monster.');
+    const view = projectMapDetail({
+      record: {
+        ...record,
+        monsters: {
+          state: 'known',
+          items: [
+            monster(source, {
+              key: 'fixture:monster:ordinary',
+              name: { state: 'known', value: 'Ordinary' },
+              respawn: { kind: 'ordinary' },
+            }),
+            monster(source, {
+              key: 'fixture:monster:none',
+              name: { state: 'known', value: 'None' },
+              respawn: { kind: 'none' },
+            }),
+            monster(source, {
+              key: 'fixture:monster:delayed-minutes',
+              name: { state: 'known', value: 'Delayed minutes' },
+              respawn: { kind: 'delayed', seconds: 120 },
+            }),
+            monster(source, {
+              key: 'fixture:monster:delayed-seconds',
+              name: { state: 'known', value: 'Delayed seconds' },
+              respawn: { kind: 'delayed', seconds: 45 },
+            }),
+            monster(source, {
+              key: 'fixture:monster:mixed',
+              name: { state: 'known', value: 'Mixed' },
+              respawn: { kind: 'mixed' },
+            }),
+          ],
+        },
+      },
+      buildId: 'cw-launch',
+    });
+
+    expect(
+      Object.fromEntries(
+        view.monsters.monsters.map(({ name, respawnLabel }) => [
+          name,
+          respawnLabel,
+        ]),
+      ),
+    ).toEqual({
+      Ordinary: undefined,
+      None: 'No respawn',
+      'Delayed minutes': 'Respawns after 2 min',
+      'Delayed seconds': 'Respawns after 45 sec',
+      Mixed: 'Mixed respawn',
+    });
+  });
+
+  it('shows Boss only for a known true boss fact and omits unknown sprites', () => {
+    const record = mapPageRecordFixture({ mapId: 'practice-grove' });
+    const source = record.monsters.items[0];
+    if (source === undefined) throw new Error('Expected a fixture monster.');
+    const spriteId = 'a'.repeat(64);
+    const view = projectMapDetail({
+      record: {
+        ...record,
+        monsters: {
+          state: 'known',
+          items: [
+            monster(source, {
+              key: 'fixture:monster:boss',
+              name: { state: 'known', value: 'Boss' },
+              boss: { state: 'known', value: true },
+              sprite: {
+                contentId: { state: 'known', value: spriteId },
+                width: 80,
+                height: 96,
+              },
+            }),
+            monster(source, {
+              key: 'fixture:monster:not-boss',
+              name: { state: 'known', value: 'Not boss' },
+              boss: { state: 'known', value: false },
+            }),
+            monster(source, {
+              key: 'fixture:monster:unknown-boss',
+              name: { state: 'known', value: 'Unknown boss' },
+              boss: { state: 'unknown' },
+              sprite: { contentId: { state: 'unknown' } },
+            }),
+          ],
+        },
+      },
+      buildId: 'cw-launch',
+    });
+
+    expect(view.monsters.monsters[0]).toMatchObject({
+      name: 'Boss',
+      bossLabel: 'Boss',
+      spriteWidth: 80,
+      spriteHeight: 96,
+    });
+    expect(view.monsters.monsters[0]?.spriteUrl).toContain(spriteId);
+    expect(view.monsters.monsters[1]?.bossLabel).toBeUndefined();
+    expect(view.monsters.monsters[2]).toMatchObject({
+      name: 'Unknown boss',
+    });
+    expect(view.monsters.monsters[2]?.bossLabel).toBeUndefined();
+    expect(view.monsters.monsters[2]?.spriteUrl).toBeUndefined();
+  });
+
+  it('retains unknown Monster collection state and count', () => {
+    const record = mapPageRecordFixture({ mapId: 'practice-grove' });
+    const view = projectMapDetail({
+      record: { ...record, monsters: { state: 'unknown', items: [] } },
+      buildId: 'cw-launch',
+    });
+
+    expect(view.monsters).toEqual({
+      state: 'unknown',
+      count: 'unknown',
+      notice: 'Monster information is unavailable.',
+      monsters: [],
+    });
+  });
+
+  it('projects a known-empty Monster notice without an empty summary', () => {
+    const record = mapPageRecordFixture({ mapId: 'practice-grove' });
+    const view = projectMapDetail({
+      record: { ...record, monsters: { state: 'known', items: [] } },
+      buildId: 'cw-launch',
+    });
+
+    expect(view.monsters).toEqual({
+      state: 'known',
+      count: 0,
+      notice: 'No monsters are recorded on this map.',
+      monsters: [],
     });
   });
 

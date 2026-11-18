@@ -3,3 +3,4 @@ export {
   MapDetailConnections,
   type MapDetailConnectionsProps,
 } from './MapDetailConnections';
+export { MapDetailMonsters } from './MapDetailMonsters';

@@ -5,7 +5,7 @@ import { MapRecordCard } from '@/features/maps/shared';
 
 import type { MapDetailConnectionsView } from '../project';
 
-import classes from './MapDetailConnections.module.css';
+import classes from './RecordCardGrid.module.css';
 
 export interface MapDetailConnectionsProps {
   readonly connections: MapDetailConnectionsView;
@@ -17,12 +17,9 @@ export function MapDetailConnections({
 }: MapDetailConnectionsProps): ReactElement {
   return (
     <Stack gap="md">
-      {connections.state === 'unknown' ? (
-        <Text>Connection information is unavailable.</Text>
-      ) : null}
-      {connections.state === 'partial' ? (
-        <Text>Some connection information may be missing.</Text>
-      ) : null}
+      {connections.notice === undefined ? null : (
+        <Text>{connections.notice}</Text>
+      )}
       {connections.maps.length === 0 ? null : (
         <Box component="ul" className={classes['list']}>
           {connections.maps.map((map) => (
