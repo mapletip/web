@@ -118,6 +118,17 @@ export const ManySelected: Story = {
   render: (args) => frame({ width: 680, props: args }),
 };
 
+export const ConnectedPairs: Story = {
+  args: {
+    ...wideImageArgs,
+    connectors: [
+      { id: 'west-east', from: 'west', to: 'east' },
+      { id: 'north-south', from: 'north', to: 'south' },
+    ],
+  },
+  render: (args) => frame({ width: 680, props: args }),
+};
+
 export const CoincidentMarkers: Story = {
   args: {
     ...wideImageArgs,

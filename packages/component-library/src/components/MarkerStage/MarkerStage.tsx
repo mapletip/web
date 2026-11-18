@@ -34,6 +34,7 @@ function groupMarkers(
 export function MarkerStage({
   image,
   markers,
+  connectors = [],
   selectedIds = [],
   onActivate,
   interactive = true,
@@ -47,6 +48,7 @@ export function MarkerStage({
   const availableImage = hasSource && !failed ? image : undefined;
   const accessibleName = availableImage?.alt || unavailableMessage;
   const selectedIdSet = new Set(selectedIds);
+  const markersById = new Map(markers.map((marker) => [marker.id, marker]));
   const stageStyle: CSSProperties = {
     aspectRatio:
       availableImage === undefined
@@ -73,6 +75,33 @@ export function MarkerStage({
             fit="contain"
             onError={() => setFailedSrc(availableImage.src)}
           />
+          {connectors.length > 0 ? (
+            <svg
+              className={classes['connectors']}
+              viewBox={`0 0 ${availableImage.width} ${availableImage.height}`}
+              preserveAspectRatio="xMidYMid meet"
+              aria-hidden="true"
+              focusable="false"
+              pointerEvents="none"
+            >
+              {connectors.map(({ id, from, to }) => {
+                const start = markersById.get(from);
+                const end = markersById.get(to);
+                if (start === undefined || end === undefined) return null;
+
+                return (
+                  <line
+                    key={id}
+                    className={classes['connector']}
+                    x1={start.x}
+                    y1={start.y}
+                    x2={end.x}
+                    y2={end.y}
+                  />
+                );
+              })}
+            </svg>
+          ) : null}
           {groupMarkers(markers).map((group) => {
             const markerIds = group.map(({ id }) => id);
             const selected = markerIds.some((id) => selectedIdSet.has(id));
