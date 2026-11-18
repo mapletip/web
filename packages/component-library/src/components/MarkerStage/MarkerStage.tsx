@@ -8,6 +8,7 @@ import {
 import { useReducedMotion } from '@mantine/hooks';
 import {
   Fragment,
+  useCallback,
   useEffect,
   useMemo,
   useRef,
@@ -59,8 +60,25 @@ function markerStyle({
   return {
     left: `${(x / imageWidth) * 100}%`,
     top: `${(y / imageHeight) * 100}%`,
-    transform: 'translate(-50%, -100%)',
   };
+}
+
+interface TransformPosition {
+  readonly positionX: number;
+  readonly positionY: number;
+  readonly scale: number;
+}
+
+function transformChanged(
+  previous: TransformPosition | null,
+  next: TransformPosition,
+): boolean {
+  return (
+    previous !== null &&
+    (Math.abs(previous.positionX - next.positionX) > TRANSFORM_EPSILON ||
+      Math.abs(previous.positionY - next.positionY) > TRANSFORM_EPSILON ||
+      Math.abs(previous.scale - next.scale) > TRANSFORM_EPSILON)
+  );
 }
 
 function isFittedTransform(transform: ReactZoomPanPinchRef): boolean {
@@ -127,17 +145,10 @@ function InteractiveMarker({
         if (element === null) markerTargetRefs.current.delete(targetKey);
         else markerTargetRefs.current.set(targetKey, element);
       }}
-      className={`${classes['marker']} ${classes['markerButton']}`}
-      data-marker-position={markerIds[0]}
+      className={classes['markerButton']}
       data-marker-id={markerIds.length === 1 ? markerIds[0] : undefined}
       data-marker-ids={markerIds.join(' ')}
       data-selected={selected ? 'true' : undefined}
-      style={markerStyle({
-        x: group[0]!.x,
-        y: group[0]!.y,
-        imageWidth: image.width,
-        imageHeight: image.height,
-      })}
       aria-label={label}
       aria-pressed={selected}
       onClick={onActivate}
@@ -148,15 +159,25 @@ function InteractiveMarker({
         }
       }}
     >
-      <KeepScale className={classes['markerContent']}>
-        {markerContent}
-      </KeepScale>
+      <span className={classes['markerContent']}>{markerContent}</span>
     </UnstyledButton>
   );
+  const markerAnchor = (target: ReactNode): ReactElement => (
+    <span
+      className={classes['marker']}
+      data-marker-position={markerIds[0]}
+      style={markerStyle({
+        x: group[0]!.x,
+        y: group[0]!.y,
+        imageWidth: image.width,
+        imageHeight: image.height,
+      })}
+    >
+      <KeepScale className={classes['markerTarget']}>{target}</KeepScale>
+    </span>
+  );
 
-  if (!hasDetailsRenderer) {
-    return markerButton;
-  }
+  if (!hasDetailsRenderer) return markerAnchor(markerButton);
 
   return (
     <Popover
@@ -176,7 +197,7 @@ function InteractiveMarker({
       closeOnEscape
       returnFocus
     >
-      <Popover.Target>{markerButton}</Popover.Target>
+      {markerAnchor(<Popover.Target>{markerButton}</Popover.Target>)}
       <Popover.Dropdown className={classes['detailsDropdown']}>
         <CloseButton
           type="button"
@@ -237,6 +258,7 @@ export function MarkerStage({
     readonly viewKey: string;
   } | null>(null);
   const previousViewKeyRef = useRef<string | undefined>(undefined);
+  const panStartTransformRef = useRef<TransformPosition | null>(null);
   const [failedSrc, setFailedSrc] = useState<string | null>(null);
   const [openDetails, setOpenDetails] = useState<{
     readonly targetKey: string;
@@ -311,6 +333,28 @@ export function MarkerStage({
     );
   }, [availableImage, interactive, view, viewKey]);
 
+  const reportView = useCallback(
+    (transform: ReactZoomPanPinchRef): void => {
+      if (availableImage === undefined) return;
+      const wrapper = transform.instance.wrapperComponent;
+      if (wrapper === null) return;
+      if (isFittedTransform(transform)) {
+        onViewChange?.(undefined);
+        return;
+      }
+
+      const nextView: MarkerStageView = transformToView({
+        ...transform.state,
+        stageWidth: wrapper.clientWidth,
+        stageHeight: wrapper.clientHeight,
+        imageWidth: availableImage.width,
+        imageHeight: availableImage.height,
+      });
+      onViewChange?.(nextView);
+    },
+    [availableImage, onViewChange],
+  );
+
   useEffect(() => {
     const previous = previousSelectionRef.current;
     previousSelectionRef.current = { interactive, key: selectedKey, viewKey };
@@ -354,27 +398,21 @@ export function MarkerStage({
     });
     if (selectionVisible) return;
 
-    void transform.zoomToElement(selectedTargets, {
-      minScale: MARKER_STAGE_MIN_ZOOM,
-      maxScale: transform.state.scale,
-      animationTime: reducedMotion ? 0 : SELECTION_ANIMATION_MS,
-    });
-  }, [interactive, markerGroups, reducedMotion, selectedKey, viewKey]);
-
-  const reportView = (transform: ReactZoomPanPinchRef): void => {
-    if (availableImage === undefined) return;
-    const wrapper = transform.instance.wrapperComponent;
-    if (wrapper === null) return;
-
-    const nextView: MarkerStageView = transformToView({
-      ...transform.state,
-      stageWidth: wrapper.clientWidth,
-      stageHeight: wrapper.clientHeight,
-      imageWidth: availableImage.width,
-      imageHeight: availableImage.height,
-    });
-    onViewChange?.(nextView);
-  };
+    void transform
+      .zoomToElement(selectedTargets, {
+        minScale: MARKER_STAGE_MIN_ZOOM,
+        maxScale: transform.state.scale,
+        animationTime: reducedMotion ? 0 : SELECTION_ANIMATION_MS,
+      })
+      .then(() => reportView(transform));
+  }, [
+    interactive,
+    markerGroups,
+    reducedMotion,
+    reportView,
+    selectedKey,
+    viewKey,
+  ]);
 
   const handleFit = (): void => {
     const transform = transformRef.current;
@@ -510,18 +548,27 @@ export function MarkerStage({
         wheel={{ disabled: !wheelZoom }}
         zoomAnimation={{ disabled: reducedMotion }}
         velocityAnimation={{ disabled: reducedMotion }}
+        onPanningStart={(ref) => {
+          panStartTransformRef.current = {
+            positionX: ref.state.positionX,
+            positionY: ref.state.positionY,
+            scale: ref.state.scale,
+          };
+        }}
         onPanningStop={(ref, event) => {
-          if (event.type !== 'wheel') reportView(ref);
+          if (event.type === 'wheel') return;
+          const changed = transformChanged(panStartTransformRef.current, {
+            positionX: ref.state.positionX,
+            positionY: ref.state.positionY,
+            scale: ref.state.scale,
+          });
+          panStartTransformRef.current = null;
+          if (changed) reportView(ref);
         }}
         onPinchStop={reportView}
         onWheelStop={reportView}
         onZoomStop={(ref, event) => {
-          if (event.type === 'wheel') return;
-          if (isFittedTransform(ref)) {
-            onViewChange?.(undefined);
-            return;
-          }
-          reportView(ref);
+          if (event.type !== 'wheel') reportView(ref);
         }}
       >
         <TransformComponent

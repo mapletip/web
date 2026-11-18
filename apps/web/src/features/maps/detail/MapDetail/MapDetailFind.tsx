@@ -59,7 +59,6 @@ export function MapDetailFind({
           position="bottom-start"
           offset={6}
           shadow="sm"
-          zIndex={1001}
           middlewares={{ flip: false, shift: true }}
         >
           <Combobox.Target withExpandedAttribute>

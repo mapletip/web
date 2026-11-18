@@ -15,7 +15,6 @@ export {
   type DetailLinkProps,
 } from './DetailBreadcrumbs';
 export {
-  DEFAULT_DETAIL_CARD_LIST_DENSITY,
   DetailCardList,
   type DetailCardListProps,
   type DetailCardListSearch,

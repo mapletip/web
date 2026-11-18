@@ -26,7 +26,10 @@ import { mapPageRecordFixture } from './mapPageFixture';
 function matchDesktopBreakpoint(): void {
   window.matchMedia = (query: string) =>
     ({
-      matches: query.includes('62'),
+      matches:
+        query.includes('62') ||
+        query.includes('48') ||
+        query.includes('hover: hover'),
       media: query,
       onchange: null,
       addListener: () => undefined,
@@ -618,7 +621,10 @@ describe('MapDetail information', () => {
         name: 'Hollow Husk',
         hidden: true,
       }),
-    ).toHaveAttribute('href', monster.destination.href);
+    ).toHaveAttribute(
+      'href',
+      `/maplestory${monster.destination.params.buildId === undefined ? '' : `/${monster.destination.params.buildId}`}/monsters/${monster.destination.params.slugId}`,
+    );
 
     rendered.unmount();
     onFocusChange.mockClear();
@@ -870,6 +876,29 @@ describe('MapDetail information', () => {
       'No connected maps match.',
     );
     expect(screen.queryByTestId('map-connection-card')).not.toBeInTheDocument();
+  });
+
+  it('opens a linked Connection card minimap preview on hover', async () => {
+    const user = userEvent.setup();
+    renderDetail({ mapId: 'lantern-square' });
+
+    const trigger = screen.getByRole('button', {
+      name: 'Enlarge Practice Grove minimap',
+    });
+    const card = trigger.closest('[data-testid="map-connection-card"]');
+    if (!(card instanceof HTMLElement))
+      throw new Error('Expected a Connection card.');
+    expect(
+      within(card).getByRole('link', { name: 'Practice Grove' }),
+    ).toBeVisible();
+
+    await user.hover(trigger);
+
+    expect(
+      await screen.findByRole('tooltip', {
+        name: 'Practice Grove full-size minimap preview',
+      }),
+    ).toBeVisible();
   });
 
   it('omits the Connections search at six connected maps', () => {

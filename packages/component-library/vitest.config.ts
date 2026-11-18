@@ -34,6 +34,11 @@ interface PinchAtOptions {
   readonly startDistance: number;
   readonly endDistance: number;
 }
+interface WheelAtOptions {
+  readonly x: number;
+  readonly y: number;
+  readonly deltaY: number;
+}
 
 // Custom browser commands run on the Node/Playwright side of the browser test
 // server, which the in-page test context cannot reach. Declare the call-site
@@ -43,7 +48,7 @@ declare module 'vitest/browser' {
     emulateMedia(options: EmulateMediaOptions): Promise<void>;
     movePointer(x: number, y: number): Promise<void>;
     dragPointer(options: DragPointerOptions): Promise<void>;
-    wheelAt(x: number, y: number, deltaY: number): Promise<void>;
+    wheelAt(options: WheelAtOptions): Promise<void>;
     pinchAt(options: PinchAtOptions): Promise<void>;
   }
 }
@@ -76,11 +81,9 @@ const dragPointer: BrowserCommand<[options: DragPointerOptions]> = async (
   await page.mouse.up();
 };
 
-const wheelAt: BrowserCommand<[x: number, y: number, deltaY: number]> = async (
+const wheelAt: BrowserCommand<[options: WheelAtOptions]> = async (
   context,
-  x,
-  y,
-  deltaY,
+  { x, y, deltaY },
 ) => {
   const { page } = context as unknown as { page: Page };
   await page.mouse.move(x, y);

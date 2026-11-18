@@ -50,15 +50,18 @@ describe('MarkerStage server rendering', () => {
     expect(html).toContain('alt="Synthetic landscape"');
 
     const quarter = html.match(
-      /<button\b[^>]*data-marker-position="quarter"[^>]*>/u,
+      /<span\b[^>]*data-marker-position="quarter"[^>]*>/u,
     )?.[0];
     const edge = html.match(
-      /<button\b[^>]*data-marker-position="edge"[^>]*>/u,
+      /<span\b[^>]*data-marker-position="edge"[^>]*>/u,
+    )?.[0];
+    const selectedButton = html.match(
+      /<button\b[^>]*data-marker-id="quarter"[^>]*>/u,
     )?.[0];
     expect(quarter).toContain('left:25%');
     expect(quarter).toContain('top:25%');
-    expect(quarter).toContain('data-marker-ids="quarter"');
-    expect(quarter).toContain('data-selected="true"');
+    expect(selectedButton).toContain('data-marker-ids="quarter"');
+    expect(selectedButton).toContain('data-selected="true"');
     expect(edge).toContain('left:100%');
     expect(edge).toContain('top:100%');
   });

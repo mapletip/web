@@ -71,14 +71,18 @@ export function NpcMarker(): ReactElement {
   );
 }
 
-export function MarkerContent({
-  marker,
+function markerVisual({
+  kind,
+  spriteUrl,
+  inDetails,
 }: {
-  readonly marker: MapDetailStageMarker;
+  readonly kind: MapDetailEntityView['kind'];
+  readonly spriteUrl?: string | undefined;
+  readonly inDetails: boolean;
 }): ReactElement {
-  switch (marker.kind) {
+  switch (kind) {
     case 'monster':
-      return <MonsterMarker spriteUrl={marker.spriteUrl} />;
+      return <MonsterMarker spriteUrl={spriteUrl} inDetails={inDetails} />;
     case 'npc':
       return <NpcMarker />;
     case 'connection':
@@ -88,19 +92,26 @@ export function MarkerContent({
   }
 }
 
+export function MarkerContent({
+  marker,
+}: {
+  readonly marker: MapDetailStageMarker;
+}): ReactElement {
+  return markerVisual({
+    kind: marker.kind,
+    spriteUrl: marker.spriteUrl,
+    inDetails: false,
+  });
+}
+
 export function EntityIcon({
   entity,
 }: {
   readonly entity: MapDetailEntityView;
 }): ReactElement {
-  switch (entity.kind) {
-    case 'monster':
-      return <MonsterMarker spriteUrl={entity.spriteUrl} inDetails />;
-    case 'npc':
-      return <NpcMarker />;
-    case 'connection':
-      return <ConnectionMarker />;
-    case 'warp':
-      return <WarpMarker />;
-  }
+  return markerVisual({
+    kind: entity.kind,
+    spriteUrl: entity.spriteUrl,
+    inDetails: true,
+  });
 }

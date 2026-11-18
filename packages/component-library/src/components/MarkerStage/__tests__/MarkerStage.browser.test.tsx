@@ -376,7 +376,9 @@ function expectMarkerAtImagePixel(container: HTMLElement): void {
   );
 }
 
-async function mountSelectionHarness() {
+async function mountSelectionHarness(options?: {
+  readonly onViewChange?: (view: MarkerStageView | undefined) => void;
+}) {
   function Harness() {
     const [selectedIds, setSelectedIds] = useState(['west']);
     return (
@@ -416,6 +418,9 @@ async function mountSelectionHarness() {
               },
             ]}
             selectedIds={selectedIds}
+            {...(options?.onViewChange === undefined
+              ? {}
+              : { onViewChange: options.onViewChange })}
             unavailableMessage="Image unavailable."
           />
         </div>
@@ -528,6 +533,98 @@ describe('MarkerStage pan and zoom', () => {
     expect(zoomScale(container)).toBeCloseTo(8);
     expect(zoomed.width).toBeCloseTo(fitted.width);
     expect(zoomed.height).toBeCloseTo(fitted.height);
+  });
+
+  it('keeps the target and both rings the same size from 0.5x to 8x', async () => {
+    await commands.emulateMedia({ reducedMotion: 'reduce' });
+    function Harness() {
+      const [view, setView] = useState<MarkerStageView | undefined>();
+      return (
+        <MantineProvider
+          theme={theme}
+          cssVariablesResolver={cssVariablesResolver}
+          forceColorScheme="dark"
+        >
+          <button
+            type="button"
+            onClick={() => setView({ zoom: 8, centerX: 200, centerY: 100 })}
+          >
+            Zoom to 8x
+          </button>
+          <button
+            type="button"
+            onClick={() => setView({ zoom: 0.5, centerX: 200, centerY: 100 })}
+          >
+            Zoom to 0.5x
+          </button>
+          <div style={{ width: '400px' }}>
+            <MarkerStage
+              image={{
+                src: image,
+                width: 400,
+                height: 200,
+                alt: 'Zoom size test image',
+              }}
+              markers={[
+                {
+                  id: 'west',
+                  x: 80,
+                  y: 100,
+                  label: 'West point',
+                  content: markerContent(),
+                },
+              ]}
+              selectedIds={['west']}
+              view={view}
+              unavailableMessage="Image unavailable."
+            />
+          </div>
+        </MantineProvider>
+      );
+    }
+    const container = (await render(<Harness />)).container;
+    const target = page.getByRole('button', { name: 'West point' });
+
+    function sizeAtCurrentZoom() {
+      const button = target.element();
+      const bounds = button.getBoundingClientRect();
+      const selectionRing = getComputedStyle(button, '::before');
+      const focusRing = getComputedStyle(button, '::after');
+      return {
+        hitWidth: bounds.width,
+        hitHeight: bounds.height,
+        selectionWidth: selectionRing.width,
+        selectionHeight: selectionRing.height,
+        focusWidth: focusRing.width,
+        focusHeight: focusRing.height,
+      };
+    }
+
+    async function focusWithVisibleRing() {
+      target.element().focus();
+      await userEvent.keyboard('{Enter}');
+      await expect.element(target).toHaveFocus();
+    }
+
+    await focusWithVisibleRing();
+    const fittedSize = sizeAtCurrentZoom();
+
+    await userEvent.click(page.getByRole('button', { name: 'Zoom to 8x' }));
+    await expect.poll(() => zoomScale(container)).toBeCloseTo(8);
+    await focusWithVisibleRing();
+    const maximumSize = sizeAtCurrentZoom();
+
+    await userEvent.click(page.getByRole('button', { name: 'Zoom to 0.5x' }));
+    await expect.poll(() => zoomScale(container)).toBeCloseTo(0.5);
+    await focusWithVisibleRing();
+    const minimumSize = sizeAtCurrentZoom();
+
+    expect(maximumSize).toEqual(fittedSize);
+    expect(minimumSize).toEqual(fittedSize);
+    expect(fittedSize.hitWidth).toBe(44);
+    expect(fittedSize.hitHeight).toBe(44);
+    expect(fittedSize.selectionWidth).not.toBe('auto');
+    expect(fittedSize.focusWidth).not.toBe('auto');
   });
 
   it('keeps edge marker details at the unzoomed size and inside the stage at 4x', async () => {
@@ -683,7 +780,11 @@ describe('MarkerStage pan and zoom', () => {
     )!;
     const rect = viewport.getBoundingClientRect();
 
-    await commands.wheelAt(rect.x + rect.width / 2, rect.y + 40, 400);
+    await commands.wheelAt({
+      x: rect.x + rect.width / 2,
+      y: rect.y + 40,
+      deltaY: 400,
+    });
 
     expect(zoomScale(container)).toBeCloseTo(1);
     const wheel = new WheelEvent('wheel', {
@@ -703,7 +804,11 @@ describe('MarkerStage pan and zoom', () => {
     )!;
     const rect = viewport.getBoundingClientRect();
 
-    await commands.wheelAt(rect.x + rect.width / 2, rect.y + 40, -300);
+    await commands.wheelAt({
+      x: rect.x + rect.width / 2,
+      y: rect.y + 40,
+      deltaY: -300,
+    });
     await expect.poll(() => zoomScale(container)).toBeGreaterThan(1);
 
     expect(zoomScale(container)).toBeGreaterThan(1);
@@ -711,7 +816,8 @@ describe('MarkerStage pan and zoom', () => {
 
   it('brings an off-screen changed selection into view without moving visible selections', async () => {
     await commands.emulateMedia({ reducedMotion: 'reduce' });
-    const container = await mountSelectionHarness();
+    const onViewChange = vi.fn<(view: MarkerStageView | undefined) => void>();
+    const container = await mountSelectionHarness({ onViewChange });
     const viewport = container.querySelector<HTMLElement>(
       '.react-transform-wrapper',
     )!;
@@ -743,7 +849,9 @@ describe('MarkerStage pan and zoom', () => {
     expect(eastBefore.right).toBeGreaterThan(
       viewport.getBoundingClientRect().right,
     );
+    onViewChange.mockClear();
     await userEvent.click(page.getByRole('button', { name: 'Select east' }));
+    await expect.poll(() => onViewChange.mock.calls.length).toBe(1);
 
     const eastAfter = east.element().getBoundingClientRect();
     const finalViewport = viewport.getBoundingClientRect();
@@ -815,21 +923,21 @@ describe('MarkerStage pan and zoom', () => {
     )!;
     const rect = viewport.getBoundingClientRect();
 
-    await commands.wheelAt(
-      rect.x + rect.width / 2,
-      rect.y + rect.height / 2,
-      -100,
-    );
-    await commands.wheelAt(
-      rect.x + rect.width / 2,
-      rect.y + rect.height / 2,
-      -100,
-    );
-    await commands.wheelAt(
-      rect.x + rect.width / 2,
-      rect.y + rect.height / 2,
-      -100,
-    );
+    await commands.wheelAt({
+      x: rect.x + rect.width / 2,
+      y: rect.y + rect.height / 2,
+      deltaY: -100,
+    });
+    await commands.wheelAt({
+      x: rect.x + rect.width / 2,
+      y: rect.y + rect.height / 2,
+      deltaY: -100,
+    });
+    await commands.wheelAt({
+      x: rect.x + rect.width / 2,
+      y: rect.y + rect.height / 2,
+      deltaY: -100,
+    });
 
     await expect.poll(() => onViewChange.mock.calls.length).toBe(1);
     expect(onViewChange.mock.calls[0]?.[0]?.zoom).toBeGreaterThan(1);
@@ -850,6 +958,15 @@ describe('MarkerStage pan and zoom', () => {
     await userEvent.click(page.getByRole('button', { name: 'Fit' }));
     await expect.poll(() => onViewChange.mock.calls.length).toBe(3);
     expect(onViewChange.mock.calls[2]?.[0]).toBeUndefined();
+  });
+
+  it('does not report a view after a plain click', async () => {
+    const onViewChange = vi.fn<(view: MarkerStageView | undefined) => void>();
+    await mountInteractiveStage({ onViewChange });
+
+    await userEvent.click(page.getByRole('group', { name: 'Zoom test image' }));
+
+    expect(onViewChange).not.toHaveBeenCalled();
   });
 
   it('applies a changed saved view without reporting it again', async () => {

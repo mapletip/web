@@ -3,7 +3,7 @@ import { RecordCard } from '@mapletip/component-library';
 import { Ghost } from '@phosphor-icons/react';
 import type { ReactElement, ReactNode } from 'react';
 
-import { createRecordCardLinkRenderer } from '@/components/RouterLinks';
+import { recordCardLinkRenderer } from '@/components/RouterLinks';
 
 import classes from './MonsterRecordCard.module.css';
 import type { MonsterRecordCardView } from './monsterRecordCardProjection';
@@ -59,7 +59,7 @@ export function MonsterRecordCard({
         ? {}
         : {
             destination: { href: destination.href },
-            renderLink: createRecordCardLinkRenderer(),
+            renderLink: recordCardLinkRenderer,
           })}
     />
   );

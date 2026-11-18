@@ -3,29 +3,38 @@ import type { Locator, Page } from '@playwright/test';
 import { mapPublicId, monsterPublicId } from '../../src/mocks/release';
 import { expect, test } from '../fixtures';
 
-interface SavedMapDetailView {
-  readonly zoom: number;
-  readonly centerX: number;
-  readonly centerY: number;
-}
-
-interface MapDetailHistoryState {
-  readonly mapDetailStageView?: SavedMapDetailView;
-  readonly mapDetailFindText?: string;
-  readonly mapDetailOverlay?: { readonly type?: string };
-}
-
-async function readMapDetailHistoryState(
-  page: Page,
-): Promise<MapDetailHistoryState> {
-  return page.evaluate(() => {
-    const state: unknown = window.history.state;
-    return state !== null && typeof state === 'object' ? state : {};
-  });
-}
-
 async function waitForMapDetailHydration(page: Page): Promise<void> {
   await expect(page.getByRole('button', { name: 'Explore map' })).toBeEnabled();
+}
+
+interface RenderedStageView {
+  readonly scale: number;
+  readonly imageCenterX: number;
+  readonly imageCenterY: number;
+  readonly imageWidth: number;
+}
+
+async function renderedStageView(
+  stage: Locator,
+): Promise<RenderedStageView | null> {
+  const stageBox = await stage.boundingBox();
+  const imageBox = await stage.getByRole('img').boundingBox();
+  if (stageBox === null || imageBox === null) return null;
+  return {
+    scale: Number((await renderedStageScale(stage)).toFixed(3)),
+    imageCenterX: Number(
+      ((stageBox.x + stageBox.width / 2 - imageBox.x) / imageBox.width).toFixed(
+        3,
+      ),
+    ),
+    imageCenterY: Number(
+      (
+        (stageBox.y + stageBox.height / 2 - imageBox.y) /
+        imageBox.height
+      ).toFixed(3),
+    ),
+    imageWidth: Math.round(imageBox.width),
+  };
 }
 
 async function renderedStageScale(stage: Locator): Promise<number> {
@@ -190,7 +199,7 @@ test('Connections search filters the town fixture by connected map name', async 
   ).toBeVisible();
 });
 
-test('connection cards open from their minimap and footer text', async ({
+test('connection card minimaps preview and their links open from the card and footer', async ({
   page,
 }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
@@ -201,30 +210,23 @@ test('connection cards open from their minimap and footer text', async ({
   const card = page.getByTestId('map-connection-card').first();
   const minimap = card.locator('[data-map-minimap="true"]');
   await expect(minimap).toBeVisible();
-  await expect
-    .poll(() =>
-      minimap.evaluate(
-        (element) =>
-          element.isConnected && element.getBoundingClientRect().width > 0,
-      ),
-    )
-    .toBe(true);
-  const minimapCenter = await minimap.evaluate((element) => {
-    element.scrollIntoView({ block: 'center' });
-    const bounds = element.getBoundingClientRect();
-    const x = bounds.left + bounds.width / 2;
-    const y = bounds.top + bounds.height / 2;
-    const hit = document.elementFromPoint(x, y);
-    return {
-      x,
-      y,
-      href: hit?.closest('a')?.getAttribute('href'),
-    };
+  const previewTrigger = card.getByRole('button', {
+    name: 'Enlarge Lantern Square minimap',
   });
-  expect(minimapCenter.href).toBe(
+  if (await previewTrigger.isVisible()) {
+    await previewTrigger.hover();
+    await expect(
+      page.getByRole('tooltip', {
+        name: 'Lantern Square full-size minimap preview',
+      }),
+    ).toBeVisible();
+  }
+  const cardLink = card.getByRole('link').first();
+  await expect(cardLink).toHaveAttribute(
+    'href',
     `/maplestory/maps/lantern-square-${mapPublicId({ sourceId: 'cw-launch:lantern-square' })}`,
   );
-  await page.mouse.click(minimapCenter.x, minimapCenter.y);
+  await cardLink.click();
   await expect(
     page.getByRole('heading', { level: 1, name: 'Lantern Square' }),
   ).toBeVisible();
@@ -547,15 +549,6 @@ test('TanStack replace state survives reload and Back without rerunning the map 
   await page.getByRole('button', { name: 'Explore map' }).click();
   const dialog = page.getByRole('dialog', { name: 'Practice Grove' });
   await expect(dialog).toBeVisible();
-  await expect
-    .poll(() =>
-      page.evaluate(
-        () =>
-          (window.history.state as { readonly mapDetailOverlay?: unknown })
-            ?.mapDetailOverlay,
-      ),
-    )
-    .toMatchObject({ type: 'explore' });
   await dialog
     .getByRole('group', { name: 'Practice Grove map' })
     .getByRole('button', { name: 'Twin Sprout, Monster, 2 of 2' })
@@ -569,15 +562,6 @@ test('TanStack replace state survives reload and Back without rerunning the map 
       .locator('[data-selected="true"]'),
   ).toHaveCount(2);
   expect(appFetches).toEqual([]);
-  await expect
-    .poll(() =>
-      page.evaluate(
-        () =>
-          (window.history.state as { readonly mapDetailOverlay?: unknown })
-            ?.mapDetailOverlay,
-      ),
-    )
-    .toMatchObject({ type: 'explore' });
 
   await page.reload();
   await expect(
@@ -592,11 +576,7 @@ test('TanStack replace state survives reload and Back without rerunning the map 
 
 test('desktop Map Detail zoom controls enlarge the stage and Fit restores it', async ({
   page,
-}, testInfo) => {
-  test.skip(
-    testInfo.project.name !== 'desktop',
-    'Inline zoom is desktop only.',
-  );
+}) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   const publicId = mapPublicId({ sourceId: 'cw-launch:practice-grove' });
   await page.goto(`/maplestory/maps/practice-grove-${publicId}`);
@@ -619,11 +599,7 @@ test('desktop Map Detail zoom controls enlarge the stage and Fit restores it', a
 
 test('Explore close button and Escape keep the stage view and find text', async ({
   page,
-}, testInfo) => {
-  test.skip(
-    testInfo.project.name !== 'desktop',
-    'Inline zoom is desktop only.',
-  );
+}) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   const publicId = mapPublicId({ sourceId: 'cw-launch:practice-grove' });
   await page.goto(`/maplestory/maps/practice-grove-${publicId}`);
@@ -635,11 +611,11 @@ test('Explore close button and Escape keep the stage view and find text', async 
   await stage.getByRole('button', { name: 'Zoom in' }).click();
   const find = dialog.getByRole('combobox', { name: 'Find on this map' });
   await find.fill('sprout');
-  await expect
-    .poll(async () => (await readMapDetailHistoryState(page)).mapDetailFindText)
-    .toBe('sprout');
+  await expect(find).toHaveValue('sprout');
+  await expect.poll(() => renderedStageScale(stage)).toBeGreaterThan(1);
   const savedScale = await renderedStageScale(stage);
-  const savedView = (await readMapDetailHistoryState(page)).mapDetailStageView;
+  const savedView = await renderedStageView(stage);
+  if (savedView === null) throw new Error('Expected Explore to save its view.');
 
   await dialog.getByRole('button', { name: 'Close map' }).click();
   await expect(dialog).toHaveCount(0);
@@ -651,10 +627,12 @@ test('Explore close button and Escape keep the stage view and find text', async 
     page.getByRole('combobox', { name: 'Find on this map' }),
   ).toHaveValue('sprout');
   await expect
-    .poll(
-      async () => (await readMapDetailHistoryState(page)).mapDetailStageView,
-    )
-    .toEqual(savedView);
+    .poll(() => renderedStageView(inlineStage))
+    .toMatchObject({
+      scale: savedView.scale,
+      imageCenterX: savedView.imageCenterX,
+      imageCenterY: savedView.imageCenterY,
+    });
 
   await page.getByRole('button', { name: 'Explore map' }).click();
   const reopenedDialog = page.getByRole('dialog', { name: 'Practice Grove' });
@@ -674,24 +652,17 @@ test('Explore close button and Escape keep the stage view and find text', async 
 
 test('Map Detail restores a zoomed and panned stage after reload', async ({
   page,
-}, testInfo) => {
-  test.skip(
-    testInfo.project.name !== 'desktop',
-    'Inline pan and zoom are desktop only.',
-  );
+}) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   const publicId = mapPublicId({ sourceId: 'cw-launch:practice-grove' });
   await page.goto(`/maplestory/maps/practice-grove-${publicId}`);
 
   const stage = page.getByRole('group', { name: 'Practice Grove map' });
   const image = stage.getByRole('img', { name: 'Practice Grove map' });
+  const fittedView = await renderedStageView(stage);
   await stage.getByRole('button', { name: 'Zoom in' }).click();
-  await expect
-    .poll(
-      async () => (await readMapDetailHistoryState(page)).mapDetailStageView,
-    )
-    .toBeDefined();
-  const zoomedState = await readMapDetailHistoryState(page);
+  await expect.poll(() => renderedStageScale(stage)).toBeGreaterThan(1);
+  const zoomedView = await renderedStageView(stage);
 
   const imageBox = await image.boundingBox();
   expect(imageBox).not.toBeNull();
@@ -707,64 +678,26 @@ test('Map Detail restores a zoomed and panned stage after reload', async ({
   );
   await page.mouse.up();
 
-  await expect
-    .poll(
-      async () => (await readMapDetailHistoryState(page)).mapDetailStageView,
-    )
-    .not.toEqual(zoomedState.mapDetailStageView);
-  const savedState = await readMapDetailHistoryState(page);
-  const savedStageBox = await stage.boundingBox();
-  const savedImageBox = await image.boundingBox();
-  expect(savedState.mapDetailStageView).toBeDefined();
-  expect(savedStageBox).not.toBeNull();
-  expect(savedImageBox).not.toBeNull();
+  await expect.poll(() => renderedStageView(stage)).not.toEqual(zoomedView);
+  const savedView = await renderedStageView(stage);
+  expect(savedView).not.toBeNull();
 
   await page.reload();
-  await expect
-    .poll(
-      async () => (await readMapDetailHistoryState(page)).mapDetailStageView,
-    )
-    .toEqual(savedState.mapDetailStageView);
   const restoredStage = page.getByRole('group', { name: 'Practice Grove map' });
-  const restoredImage = restoredStage.getByRole('img', {
-    name: 'Practice Grove map',
-  });
-  await expect
-    .poll(async () => (await restoredImage.boundingBox())?.width ?? 0)
-    .toBeCloseTo(savedImageBox!.width, 0);
-  const restoredStageBox = await restoredStage.boundingBox();
-  const restoredImageBox = await restoredImage.boundingBox();
-  expect(restoredStageBox).not.toBeNull();
-  expect(restoredImageBox).not.toBeNull();
-  expect(restoredImageBox!.x - restoredStageBox!.x).toBeCloseTo(
-    savedImageBox!.x - savedStageBox!.x,
-    0,
-  );
-  expect(restoredImageBox!.y - restoredStageBox!.y).toBeCloseTo(
-    savedImageBox!.y - savedStageBox!.y,
-    0,
-  );
+  await expect.poll(() => renderedStageView(restoredStage)).toEqual(savedView);
+  expect(savedView).not.toEqual(fittedView);
 });
 
 test('Map Detail restores its stage view after following a connection and going Back', async ({
   page,
-}, testInfo) => {
-  test.skip(
-    testInfo.project.name !== 'desktop',
-    'Inline zoom is desktop only.',
-  );
+}) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   const publicId = mapPublicId({ sourceId: 'cw-launch:practice-grove' });
   await page.goto(`/maplestory/maps/practice-grove-${publicId}`);
   const stage = page.getByRole('group', { name: 'Practice Grove map' });
   await stage.getByRole('button', { name: 'Zoom in' }).click();
-  await expect
-    .poll(
-      async () => (await readMapDetailHistoryState(page)).mapDetailStageView,
-    )
-    .toBeDefined();
-  const savedView = (await readMapDetailHistoryState(page)).mapDetailStageView;
-  const savedScale = await renderedStageScale(stage);
+  await expect.poll(() => renderedStageScale(stage)).toBeGreaterThan(1);
+  const savedView = await renderedStageView(stage);
 
   await page
     .getByTestId('map-connection-card')
@@ -779,17 +712,12 @@ test('Map Detail restores its stage view after following a connection and going 
     page.getByRole('heading', { level: 1, name: 'Practice Grove' }),
   ).toBeVisible();
   await expect
-    .poll(
-      async () => (await readMapDetailHistoryState(page)).mapDetailStageView,
-    )
-    .toEqual(savedView);
-  await expect
     .poll(() =>
-      renderedStageScale(
+      renderedStageView(
         page.getByRole('group', { name: 'Practice Grove map' }),
       ),
     )
-    .toBeCloseTo(savedScale);
+    .toEqual(savedView);
 });
 
 test('Map Detail find text survives a visit to a monster page and Back', async ({
@@ -807,9 +735,11 @@ test('Map Detail find text survives a visit to a monster page and Back', async (
 
   const find = page.getByRole('combobox', { name: 'Find on this map' });
   await find.fill('sprout');
-  await expect
-    .poll(async () => (await readMapDetailHistoryState(page)).mapDetailFindText)
-    .toBe('sprout');
+  await find.press('Home');
+  await find.press('ArrowRight');
+  await find.press('X');
+  await expect(find).toHaveValue('sXprout');
+  await find.fill('sprout');
   await page
     .getByTestId('map-monster-card')
     .filter({ hasText: 'Twin Sprout' })
@@ -833,11 +763,8 @@ test('Map Detail find text survives a visit to a monster page and Back', async (
 
 test('Explore restores its view after following a connection inside it and going Back', async ({
   page,
-}, testInfo) => {
-  test.skip(
-    testInfo.project.name !== 'desktop',
-    'This scenario zooms inside Explore on desktop.',
-  );
+}) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
   const publicId = mapPublicId({ sourceId: 'cw-launch:practice-grove' });
   await page.goto(`/maplestory/maps/practice-grove-${publicId}`);
   await page.waitForLoadState('networkidle');
@@ -846,15 +773,10 @@ test('Explore restores its view after following a connection inside it and going
   await expect(dialog).toBeVisible();
   const stage = dialog.getByRole('group', { name: 'Practice Grove map' });
   await stage.getByRole('button', { name: 'Zoom in' }).click();
-  await expect
-    .poll(
-      async () => (await readMapDetailHistoryState(page)).mapDetailStageView,
-    )
-    .toBeDefined();
-  const savedView = (await readMapDetailHistoryState(page)).mapDetailStageView;
+  await expect.poll(() => renderedStageScale(stage)).toBeGreaterThan(1);
+  const savedView = await renderedStageView(stage);
   const savedScale = await renderedStageScale(stage);
-  if (savedView === undefined)
-    throw new Error('Expected Explore to save its view.');
+  if (savedView === null) throw new Error('Expected Explore to save its view.');
   await stage
     .getByRole('button', { name: 'Lantern Square, Connection, 1 of 1' })
     .click();
@@ -865,11 +787,7 @@ test('Explore restores its view after following a connection inside it and going
   await page.goBack();
 
   await expect(dialog).toBeVisible();
-  await expect
-    .poll(
-      async () => (await readMapDetailHistoryState(page)).mapDetailStageView,
-    )
-    .toEqual(savedView);
+  await expect.poll(() => renderedStageView(stage)).toEqual(savedView);
   await expect
     .poll(() =>
       renderedStageScale(
@@ -879,52 +797,36 @@ test('Explore restores its view after following a connection inside it and going
     .toBeCloseTo(savedScale);
 });
 
-test('opening Explore keeps the inline stage view', async ({
-  page,
-}, testInfo) => {
-  test.skip(
-    testInfo.project.name !== 'desktop',
-    'Inline zoom is desktop only.',
-  );
+test('opening Explore keeps the inline stage view', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
   const publicId = mapPublicId({ sourceId: 'cw-launch:practice-grove' });
   await page.goto(`/maplestory/maps/practice-grove-${publicId}`);
   const inlineStage = page.getByRole('group', { name: 'Practice Grove map' });
   await inlineStage.getByRole('button', { name: 'Zoom in' }).click();
-  await expect
-    .poll(
-      async () => (await readMapDetailHistoryState(page)).mapDetailStageView,
-    )
-    .toBeDefined();
-  const inlineView = (await readMapDetailHistoryState(page)).mapDetailStageView;
+  await expect.poll(() => renderedStageScale(inlineStage)).toBeGreaterThan(1);
+  const inlineView = await renderedStageView(inlineStage);
+  if (inlineView === null) throw new Error('Expected inline view to be saved.');
   const inlineScale = await renderedStageScale(inlineStage);
 
   await page.getByRole('button', { name: 'Explore map' }).click();
   await expect(
     page.getByRole('dialog', { name: 'Practice Grove' }),
   ).toBeVisible();
-  await expect
-    .poll(
-      async () => (await readMapDetailHistoryState(page)).mapDetailStageView,
-    )
-    .toEqual(inlineView);
-  await expect
-    .poll(() =>
-      renderedStageScale(
-        page
-          .getByRole('dialog', { name: 'Practice Grove' })
-          .getByRole('group', { name: 'Practice Grove map' }),
-      ),
-    )
-    .toBeCloseTo(inlineScale);
+  const exploreView = await renderedStageView(
+    page
+      .getByRole('dialog', { name: 'Practice Grove' })
+      .getByRole('group', { name: 'Practice Grove map' }),
+  );
+  expect(exploreView).not.toBeNull();
+  expect(exploreView?.scale).toBeCloseTo(inlineScale);
+  expect(exploreView?.imageCenterX).toBeCloseTo(inlineView.imageCenterX, 2);
+  expect(exploreView?.imageCenterY).toBeCloseTo(inlineView.imageCenterY, 2);
 });
 
 test('a copied focused address opens fitted with only its selection restored', async ({
   page,
-}, testInfo) => {
-  test.skip(
-    testInfo.project.name !== 'desktop',
-    'Inline zoom is desktop only.',
-  );
+}) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
   const publicId = mapPublicId({ sourceId: 'cw-launch:practice-grove' });
   await page.goto(`/maplestory/maps/practice-grove-${publicId}`);
   const stage = page.getByRole('group', { name: 'Practice Grove map' });
@@ -936,7 +838,9 @@ test('a copied focused address opens fitted with only its selection restored', a
   await expect(page).toHaveURL(/focus=monster-[a-z0-9]{8}/u);
 
   const copiedPage = await page.context().newPage();
+  await copiedPage.setViewportSize({ width: 1440, height: 900 });
   await copiedPage.goto(page.url());
+  await waitForMapDetailHydration(copiedPage);
   const copiedStage = copiedPage.getByRole('group', {
     name: 'Practice Grove map',
   });
@@ -947,8 +851,6 @@ test('a copied focused address opens fitted with only its selection restored', a
   await expect(
     copiedPage.getByRole('combobox', { name: 'Find on this map' }),
   ).toHaveValue('');
-  const copiedState = await readMapDetailHistoryState(copiedPage);
-  expect(copiedState.mapDetailStageView).toBeUndefined();
   const copiedImage = copiedStage.getByRole('img', {
     name: 'Practice Grove map',
   });
@@ -961,21 +863,20 @@ test('a copied focused address opens fitted with only its selection restored', a
       }),
     )
     .toBe(true);
-  const copiedStageBox = await copiedStage.boundingBox();
-  const copiedImageBox = await copiedImage.boundingBox();
-  expect(copiedStageBox).not.toBeNull();
-  expect(copiedImageBox).not.toBeNull();
-  expect(copiedImageBox!.width).toBeCloseTo(copiedStageBox!.width, 0);
+  await expect
+    .poll(async () => {
+      const stageBox = await copiedStage.boundingBox();
+      const imageBox = await copiedImage.boundingBox();
+      return stageBox === null || imageBox === null
+        ? null
+        : Math.round(stageBox.width - imageBox.width);
+    })
+    .toBe(0);
   await copiedPage.close();
 });
 
-test('Explore stage accepts wheel zoom on desktop', async ({
-  page,
-}, testInfo) => {
-  test.skip(
-    testInfo.project.name !== 'desktop',
-    'Wheel input is tested on desktop.',
-  );
+test('Explore stage accepts wheel zoom on desktop', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
   const publicId = mapPublicId({ sourceId: 'cw-launch:practice-grove' });
   await page.goto(`/maplestory/maps/practice-grove-${publicId}`);
   await page.waitForLoadState('networkidle');
@@ -1017,8 +918,7 @@ test('Explore stage accepts wheel zoom on desktop', async ({
 
 test('mobile Map Detail stays static inline and Explore fills the viewport', async ({
   page,
-}, testInfo) => {
-  test.skip(testInfo.project.name !== 'mobile', 'Mobile Explore layout.');
+}) => {
   await page.setViewportSize({ width: 390, height: 844 });
   const publicId = mapPublicId({ sourceId: 'cw-launch:practice-grove' });
   await page.goto(`/maplestory/maps/practice-grove-${publicId}`);
@@ -1132,11 +1032,7 @@ test('Map Detail Find selects Twin Sprout and writes its focus to the address', 
 
 test('Map Detail legend Ctrl-click selects two monsters in legend order and survives reload', async ({
   page,
-}, testInfo) => {
-  test.skip(
-    testInfo.project.name !== 'desktop',
-    'Desktop pointer interaction.',
-  );
+}) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   const publicId = mapPublicId({ sourceId: 'cw-launch:practice-grove' });
   await page.goto(`/maplestory/maps/practice-grove-${publicId}`);

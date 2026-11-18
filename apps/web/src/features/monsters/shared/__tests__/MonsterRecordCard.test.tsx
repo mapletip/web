@@ -79,7 +79,7 @@ describe('MonsterRecordCard', () => {
       },
     });
 
-    expect(screen.getByRole('link', { name: /Blue Snail/u })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: 'Blue Snail' })).toHaveAttribute(
       'href',
       '/maplestory/monsters/blue-snail-123',
     );
