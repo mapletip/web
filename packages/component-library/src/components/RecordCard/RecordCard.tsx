@@ -64,9 +64,13 @@ export function RecordCard({
         <Stack className={classes['text']} gap="xs">
           <Group align="center" gap="xs" wrap="wrap">
             <Title order={3} className={classes['title']}>
-              {title}
+              {destination === undefined
+                ? title
+                : renderLink(destination, linkRenderer, title)}
             </Title>
-            {badges}
+            {badges === undefined ? null : (
+              <div className={classes['badges']}>{badges}</div>
+            )}
           </Group>
           {secondaryLine === undefined ? null : (
             <Text className={classes['secondary']} size="sm" c="dimmed">
@@ -97,8 +101,6 @@ export function RecordCard({
   return destination === undefined ? (
     body
   ) : (
-    <div className={classes['linkedCard']}>
-      {renderLink(destination, linkRenderer, body)}
-    </div>
+    <div className={classes['linkedCard']}>{body}</div>
   );
 }

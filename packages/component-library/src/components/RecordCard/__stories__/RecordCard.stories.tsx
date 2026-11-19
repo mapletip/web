@@ -1,4 +1,4 @@
-import { Badge, Box, Image, Stack, Text } from '@mantine/core';
+import { Badge, Box, Button, Image, Stack, Text } from '@mantine/core';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 
 import { RecordCard } from '@/components/RecordCard';
@@ -69,6 +69,21 @@ export const MediaAside: Story = {
             <strong>12</strong> spawns
           </Text>
         }
+      />
+    </Stage>
+  ),
+};
+
+export const LinkedCardWithFooterButton: Story = {
+  args: { title: 'Practice Meadow' },
+  render: () => (
+    <Stage>
+      <RecordCard
+        layout="mediaAside"
+        title="Practice Meadow"
+        secondaryLine="West Practice Grounds · Meadow District"
+        footer={<Button size="xs">Locate</Button>}
+        destination={{ href: '/synthetic/maps/practice-meadow' }}
       />
     </Stage>
   ),

@@ -1,6 +1,6 @@
 import { MantineProvider } from '@mantine/core';
-import { render, screen } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { fireEvent, render, screen } from '@testing-library/react';
+import { describe, expect, it, vi } from 'vitest';
 
 import { RecordCard } from '@/components/RecordCard';
 
@@ -9,7 +9,7 @@ function mount(card: React.ReactNode) {
 }
 
 describe('RecordCard', () => {
-  it('shows title, secondary line, badges, media and footer in a linked card', () => {
+  it('links only the title and keeps the other card content outside the link', () => {
     mount(
       <RecordCard
         title="Practice Meadow"
@@ -21,16 +21,45 @@ describe('RecordCard', () => {
       />,
     );
 
-    const link = screen.getByRole('link');
+    const link = screen.getByRole('link', { name: 'Practice Meadow' });
     expect(link).toHaveAttribute('href', '/synthetic/maps/practice-meadow');
-    expect(link).toHaveAccessibleName(
-      /Practice Meadow.*Training.*West Practice Grounds.*12 spawns/u,
-    );
+    expect(link).toHaveAccessibleName('Practice Meadow');
     expect(link).not.toHaveAttribute('aria-label');
-    expect(link).toHaveTextContent('West Practice Grounds');
-    expect(link).toHaveTextContent('Training');
-    expect(link).toHaveTextContent('12 spawns');
-    expect(link.querySelector('img')).toHaveAttribute('alt', '');
+    expect(link).toHaveTextContent('Practice Meadow');
+    expect(link).not.toHaveTextContent('West Practice Grounds');
+    expect(screen.getByText('West Practice Grounds')).toBeVisible();
+    expect(screen.getByText('Training')).toBeVisible();
+    expect(screen.getByText('12 spawns')).toBeVisible();
+    expect(link.querySelector('img')).toBeNull();
+    expect(screen.getAllByRole('link')).toHaveLength(1);
+    expect(
+      screen
+        .getByRole('heading', { name: 'Practice Meadow' })
+        .closest('[data-record-card="true"]')
+        ?.querySelector('img'),
+    ).toHaveAttribute('alt', '');
+  });
+
+  it('keeps a footer button outside the link and lets it handle its own click', () => {
+    const onLocate = vi.fn();
+    mount(
+      <RecordCard
+        title="Practice Meadow"
+        destination={{ href: '/synthetic/maps/practice-meadow' }}
+        footer={<button onClick={onLocate}>Locate</button>}
+      />,
+    );
+
+    expect(
+      screen.getAllByRole('link', {
+        name: 'Practice Meadow',
+      }),
+    ).toHaveLength(1);
+    const button = screen.getByRole('button', { name: 'Locate' });
+    expect(button.closest('a')).toBeNull();
+
+    fireEvent.click(button);
+    expect(onLocate).toHaveBeenCalledOnce();
     expect(screen.getAllByRole('link')).toHaveLength(1);
   });
 
@@ -97,16 +126,15 @@ describe('RecordCard', () => {
     );
 
     const linked = screen
-      .getByRole('heading', { name: 'Linked map' })
+      .getByRole('link', { name: 'Linked map' })
       .closest('[data-record-card="true"]');
     const unlinked = screen
       .getByRole('heading', { name: 'Static map' })
       .closest('[data-record-card="true"]');
     expect(linked?.querySelector('svg[aria-hidden="true"]')).not.toBeNull();
-    expect(linked?.closest('a')).toHaveAttribute('href', '/maps/linked-map');
     expect(unlinked?.querySelector('svg')).toBeNull();
     const wide = screen
-      .getByRole('heading', { name: 'Linked wide map' })
+      .getByRole('link', { name: 'Linked wide map' })
       .closest('[data-record-card="true"]');
     expect(wide?.querySelector('svg')).toBeNull();
     expect(container.querySelectorAll('a')).toHaveLength(2);

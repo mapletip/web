@@ -19,9 +19,7 @@ const cases: readonly VisualCase[] = [
     width: 720,
     height: 280,
     visible: [
-      page.getByRole('link', {
-        name: /Practice Meadow.*Synthetic region.*West Practice Grounds.*Meadow District.*12 spawns/u,
-      }),
+      page.getByRole('link', { name: 'Practice Meadow', exact: true }),
       page.getByText('12 spawns'),
     ],
   },
