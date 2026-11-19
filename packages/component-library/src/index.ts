@@ -26,6 +26,8 @@ export type {
   EntityChipLinkRenderProps,
   EntityChipProps,
 } from '@/components/EntityChip';
+export { EntityOption } from '@/components/EntityOption';
+export type { EntityOptionProps } from '@/components/EntityOption';
 export { SpriteStage } from '@/components/SpriteStage';
 export type { SpriteStageProps } from '@/components/SpriteStage';
 export { InteractiveMap } from '@/components/InteractiveMap';

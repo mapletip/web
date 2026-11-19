@@ -1024,7 +1024,7 @@ test('Map Detail Find selects Twin Sprout and writes its focus to the address', 
 
   const find = page.getByRole('combobox', { name: 'Find on this map' });
   await find.fill('sprout');
-  await page.getByRole('option', { name: 'Twin Sprout — Monster' }).click();
+  await page.getByRole('option', { name: 'Twin Sprout, Monster' }).click();
 
   await expect(page).toHaveURL(/focus=monster-[a-z0-9]{8}/u);
   await expect(

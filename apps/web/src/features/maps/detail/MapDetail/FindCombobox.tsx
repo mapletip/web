@@ -1,10 +1,12 @@
 import { ActionIcon, Combobox, TextInput, useCombobox } from '@mantine/core';
+import { EntityOption } from '@mapletip/component-library';
 import { MagnifyingGlass, X } from '@phosphor-icons/react';
 import { useState, type ReactElement } from 'react';
 
 import type { MapDetailEntityView } from '../project';
 
 import classes from './MapDetail.module.css';
+import { EntityIcon } from './markers';
 
 export function FindCombobox({
   entities,
@@ -23,10 +25,8 @@ export function FindCombobox({
   });
   const normalizedFindText = findText.trim().toLocaleLowerCase('en');
   const matches = entities
-    .filter(({ name, kindLabel }) =>
-      `${name} ${kindLabel}`
-        .toLocaleLowerCase('en')
-        .includes(normalizedFindText),
+    .filter(({ name }) =>
+      name.toLocaleLowerCase('en').includes(normalizedFindText),
     )
     .slice(0, 10);
 
@@ -94,8 +94,13 @@ export function FindCombobox({
                   <Combobox.Option
                     key={entity.focusKey}
                     value={entity.focusKey}
+                    aria-label={`${entity.name}, ${entity.kindLabel}`}
                   >
-                    {entity.name} — {entity.kindLabel}
+                    <EntityOption
+                      icon={<EntityIcon entity={entity} />}
+                      label={entity.name}
+                      description={entity.kindLabel}
+                    />
                   </Combobox.Option>
                 ))
               )}

@@ -213,11 +213,11 @@ describe('MapDetail information', () => {
     expect(
       screen
         .getAllByRole('option', { hidden: true })
-        .map((option) => option.textContent),
+        .map((option) => option.getAttribute('aria-label')),
     ).toEqual(
       entities
         .slice(0, 10)
-        .map(({ name, kindLabel }) => `${name} — ${kindLabel}`),
+        .map(({ name, kindLabel }) => `${name}, ${kindLabel}`),
     );
   });
 
@@ -265,7 +265,7 @@ describe('MapDetail information', () => {
     await user.type(input, 'sprout');
     fireEvent.click(
       screen.getByRole('option', {
-        name: 'Twin Sprout — Monster',
+        name: 'Twin Sprout, Monster',
         hidden: true,
       }),
     );

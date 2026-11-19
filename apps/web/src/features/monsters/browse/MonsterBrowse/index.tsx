@@ -1,5 +1,9 @@
-import { Button, Group, MultiSelect, Pill, Text, Title } from '@mantine/core';
-import { FacetedBrowser, Thumbnail } from '@mapletip/component-library';
+import { Button, MultiSelect, Pill, Text, Title } from '@mantine/core';
+import {
+  FacetedBrowser,
+  EntityOption,
+  Thumbnail,
+} from '@mapletip/component-library';
 import type {
   BrowseState,
   DrawerOpenedChangeDetails,
@@ -236,14 +240,14 @@ function dropItemFacet(
           renderOption={({ option }) => {
             const iconUrl = iconUrls.get(option.value);
             return (
-              <Group gap="xs" wrap="nowrap">
-                {iconUrl === undefined ? null : (
-                  <span className={classes['dropItemOptionIcon']}>
+              <EntityOption
+                icon={
+                  iconUrl === undefined ? undefined : (
                     <Thumbnail src={iconUrl} size={24} alt="" />
-                  </span>
-                )}
-                <Text size="sm">{option.label}</Text>
-              </Group>
+                  )
+                }
+                label={option.label}
+              />
             );
           }}
           renderPill={({ option, onRemove, disabled }) => {
