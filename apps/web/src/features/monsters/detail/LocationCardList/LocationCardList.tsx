@@ -19,9 +19,9 @@ import { MAP_RECORD_CARD_DENSITY, MapRecordCard } from '@/features/maps/shared';
 
 import type { MonsterDetailLocationsView } from '../project';
 
-import classes from './MonsterDetailLocations.module.css';
+import classes from './LocationCardList.module.css';
 
-export interface MonsterDetailLocationsProps {
+export interface LocationCardListProps {
   readonly locations: MonsterDetailLocationsView;
   readonly monsterName: string;
   readonly monsterSpriteUrl: string | undefined;
@@ -57,14 +57,14 @@ const MOBILE_CAP = 5;
 const DESKTOP_CAP = 10;
 
 /** Locations cards with responsive initial caps and whole-list controls. */
-export function MonsterDetailLocations({
+export function LocationCardList({
   locations,
   monsterName,
   monsterSpriteUrl,
   drawerOpened,
   onDrawerOpen,
   onDrawerClose,
-}: MonsterDetailLocationsProps): ReactElement {
+}: LocationCardListProps): ReactElement {
   const locationsId = useId();
   const [query, setQuery] = useState('');
   const [sort, setSort] = useState<LocationSort>('spawns');

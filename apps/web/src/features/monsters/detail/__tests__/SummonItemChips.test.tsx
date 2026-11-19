@@ -2,18 +2,18 @@ import { MantineProvider } from '@mantine/core';
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 
-import { MonsterDetailSummonedBy } from '../MonsterDetailSummonedBy';
 import type { MonsterDetailSummonedByView } from '../project';
+import { SummonItemChips } from '../SummonItemChips';
 
 function renderSummonedBy(summonedBy: MonsterDetailSummonedByView) {
   return render(
     <MantineProvider>
-      <MonsterDetailSummonedBy summonedBy={summonedBy} />
+      <SummonItemChips summonedBy={summonedBy} />
     </MantineProvider>,
   );
 }
 
-describe('MonsterDetailSummonedBy', () => {
+describe('SummonItemChips', () => {
   it('shows item chips with their icon or neutral placeholder and plain names', () => {
     const summonedBy: MonsterDetailSummonedByView = {
       state: 'present',

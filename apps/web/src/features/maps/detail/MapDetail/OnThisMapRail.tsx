@@ -28,7 +28,7 @@ function rowIcon({
   }
 }
 
-export function MapDetailOnThisMap({
+export function OnThisMapRail({
   rows,
   focus,
   onToggle,

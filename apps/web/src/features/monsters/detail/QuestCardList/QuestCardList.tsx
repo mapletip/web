@@ -10,14 +10,12 @@ import {
 
 import type { MonsterDetailQuestsView } from '../project';
 
-export interface MonsterDetailQuestsProps {
+export interface QuestCardListProps {
   readonly quests: MonsterDetailQuestsView;
 }
 
 /** Quest requirements for this monster, with absent and unresolved states kept distinct. */
-export function MonsterDetailQuests({
-  quests,
-}: MonsterDetailQuestsProps): ReactElement {
+export function QuestCardList({ quests }: QuestCardListProps): ReactElement {
   if (quests.state === 'no-quests') {
     return <Text>No quests are listed for this monster.</Text>;
   }

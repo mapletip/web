@@ -13,7 +13,7 @@ import { MarkerContent } from './markers';
 
 export const MAP_IMAGE_UNAVAILABLE_MESSAGE = "Map image isn't available.";
 
-export function MapDetailStage({
+export function MapStage({
   stage,
   className,
   interactive,

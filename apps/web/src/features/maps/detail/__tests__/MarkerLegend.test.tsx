@@ -2,7 +2,7 @@ import { MantineProvider } from '@mantine/core';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
-import { MapDetailLegend } from '../MapDetail/MapDetailLegend';
+import { MarkerLegend } from '../MapDetail/MarkerLegend';
 import type { MapDetailEntityView } from '../project';
 
 const entity: MapDetailEntityView = {
@@ -16,7 +16,7 @@ function renderLegend() {
   const onActivate = vi.fn();
   render(
     <MantineProvider>
-      <MapDetailLegend
+      <MarkerLegend
         entities={[entity]}
         focus={undefined}
         onActivate={onActivate}
@@ -30,7 +30,7 @@ function renderLegend() {
   };
 }
 
-describe('MapDetailLegend', () => {
+describe('MarkerLegend', () => {
   it('activates once without a modifier on a plain click', () => {
     const { onActivate, label } = renderLegend();
     fireEvent.click(label);
