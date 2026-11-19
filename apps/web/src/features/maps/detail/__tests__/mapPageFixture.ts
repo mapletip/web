@@ -1,4 +1,4 @@
-import type { MapPagePackV1, MapPageRecordV1 } from '@mapletip/data/maps';
+import type { MapPagePackV1_1, MapPageRecordV1_1 } from '@mapletip/data/maps';
 
 import type { BuildId } from '@/config/maplekit';
 import { fixtureRelease, mapPublicId } from '@/mocks/release';
@@ -12,7 +12,7 @@ export interface MapPageFixtureOptions {
 export function mapPageRecordFixture({
   mapId,
   buildId = 'cw-launch',
-}: MapPageFixtureOptions): MapPageRecordV1 {
+}: MapPageFixtureOptions): MapPageRecordV1_1 {
   const descriptor = fixtureRelease.builds.get(buildId)?.mapPagePack;
   if (descriptor === undefined) {
     throw new Error(`Missing fixture Map page pack for ${buildId}.`);
@@ -22,7 +22,7 @@ export function mapPageRecordFixture({
     throw new Error(`Missing fixture Map page bytes for ${buildId}.`);
   }
 
-  const pack = JSON.parse(new TextDecoder().decode(bytes)) as MapPagePackV1;
+  const pack = JSON.parse(new TextDecoder().decode(bytes)) as MapPagePackV1_1;
   const publicId = mapPublicId({ sourceId: `${buildId}:${mapId}` });
   const record = pack.records[publicId];
   if (record === undefined) {

@@ -1,5 +1,8 @@
 import { mapMinimapUrl } from '@mapletip/data/maps';
-import type { MonsterPageRecordV1 } from '@mapletip/data/monsters';
+import {
+  hasMonsterPageLocationPoints,
+  type StaticMonsterPageRecord,
+} from '@mapletip/data/monsters';
 
 import { MAPLEKIT_RELEASE, type BuildId } from '@/config/maplekit';
 import { buildRecordDetailPath } from '@/features/detail';
@@ -137,7 +140,7 @@ type NumericMonsterFact =
 const STAT_FACTS: Readonly<
   Record<
     MonsterDetailStatId,
-    (record: MonsterPageRecordV1) => NumericMonsterFact
+    (record: StaticMonsterPageRecord) => NumericMonsterFact
   >
 > = {
   level: (record) => record.stats.level,
@@ -171,7 +174,7 @@ function titleCase(value: string): string {
 }
 
 function projectStat(
-  record: MonsterPageRecordV1,
+  record: StaticMonsterPageRecord,
   id: MonsterDetailStatId,
 ): MonsterDetailStatView {
   const definition = MONSTER_STAT_BY_ID[id];
@@ -189,7 +192,7 @@ function projectStat(
 }
 
 function projectElements(
-  record: MonsterPageRecordV1,
+  record: StaticMonsterPageRecord,
 ): readonly MonsterElementResponseView[] {
   if (
     record.elements.state !== 'known' &&
@@ -222,7 +225,7 @@ function positiveDimension(
 }
 
 function projectQuest(
-  quest: MonsterPageRecordV1['quests']['entries'][number],
+  quest: StaticMonsterPageRecord['quests']['entries'][number],
 ): MonsterDetailQuestEntryView {
   const groupSize = quest.countGroupSize;
   const questCard = projectQuestRecordCard(quest);
@@ -243,7 +246,7 @@ function projectQuest(
 }
 
 function projectMonsterQuests(
-  record: MonsterPageRecordV1,
+  record: StaticMonsterPageRecord,
 ): MonsterDetailQuestsView {
   if (record.quests.state === 'unknown') {
     return { state: 'unavailable', count: 'unknown' };
@@ -260,7 +263,7 @@ function projectMonsterQuests(
 }
 
 function projectMonsterSummonedBy(
-  record: MonsterPageRecordV1,
+  record: StaticMonsterPageRecord,
 ): MonsterDetailSummonedByView {
   if (record.summonedByItems.length === 0) {
     return { state: 'absent', count: 0 };
@@ -279,7 +282,7 @@ function projectMonsterSummonedBy(
 }
 
 function projectMonsterLocations(
-  record: MonsterPageRecordV1,
+  record: StaticMonsterPageRecord,
 ): MonsterDetailLocationsView {
   const locations = record.locations;
   if (locations.summary.state === 'absent') {
@@ -292,43 +295,74 @@ function projectMonsterLocations(
     return { state: 'no-locations', count: 0 };
   }
 
-  const maps = locations.entries
-    .map((entry) => {
-      const street = nonBlank(entry.streetName);
-      const minimapUrl =
-        entry.minimap.state === 'known'
-          ? mapMinimapUrl(MAPLEKIT_RELEASE.baseUrl, entry.minimap.value)
-          : undefined;
-      const name =
-        nonBlank(entry.name.state === 'known' ? entry.name.value : undefined) ??
-        'Map name unavailable';
-
-      return {
-        key: entry.mapKey,
-        name,
-        ...(street === undefined ? {} : { secondaryLine: street }),
-        ...(minimapUrl === undefined ? {} : { minimapUrl }),
-        footerParts: [
-          {
-            value: formatMonsterNumber(entry.placementCount),
-            label: entry.placementCount === 1 ? 'spawn' : 'spawns',
-          },
-        ],
-        placementCount: entry.placementCount,
-      } satisfies MonsterDetailLocationMapView;
-    })
-    .sort(
-      (left, right) =>
-        right.placementCount - left.placementCount ||
-        left.name.localeCompare(right.name, 'en', { sensitivity: 'base' }) ||
-        left.key.localeCompare(right.key),
-    );
+  const mapCard = ({
+    key,
+    name,
+    streetName,
+    placementCount,
+    minimapContentId,
+  }: {
+    readonly key: string;
+    readonly name: string | undefined;
+    readonly streetName: string | null | undefined;
+    readonly placementCount: number;
+    readonly minimapContentId: string | undefined;
+  }): MonsterDetailLocationMapView => {
+    const street = nonBlank(streetName);
+    const minimapUrl =
+      minimapContentId === undefined
+        ? undefined
+        : mapMinimapUrl(MAPLEKIT_RELEASE.baseUrl, minimapContentId);
+    return {
+      key,
+      name: nonBlank(name) ?? 'Map name unavailable',
+      ...(street === undefined ? {} : { secondaryLine: street }),
+      ...(minimapUrl === undefined ? {} : { minimapUrl }),
+      footerParts: [
+        {
+          value: formatMonsterNumber(placementCount),
+          label: placementCount === 1 ? 'spawn' : 'spawns',
+        },
+      ],
+      placementCount,
+    };
+  };
+  const maps = hasMonsterPageLocationPoints(record)
+    ? record.locations.entries.map((entry) =>
+        mapCard({
+          key: entry.mapKey,
+          name:
+            entry.mapName.state === 'known' ? entry.mapName.value : undefined,
+          streetName: entry.streetName,
+          placementCount: entry.placementCount,
+          minimapContentId:
+            entry.stage.state === 'known'
+              ? entry.stage.value.contentId
+              : undefined,
+        }),
+      )
+    : record.locations.entries.map((entry) =>
+        mapCard({
+          key: entry.mapKey,
+          name: entry.name.state === 'known' ? entry.name.value : undefined,
+          streetName: entry.streetName,
+          placementCount: entry.placementCount,
+          minimapContentId:
+            entry.minimap.state === 'known' ? entry.minimap.value : undefined,
+        }),
+      );
+  maps.sort(
+    (left, right) =>
+      right.placementCount - left.placementCount ||
+      left.name.localeCompare(right.name, 'en', { sensitivity: 'base' }) ||
+      left.key.localeCompare(right.key),
+  );
 
   return { state: 'present', count: locations.summary.mapCount, maps };
 }
 
 function projectMonsterDrops(
-  record: MonsterPageRecordV1,
+  record: StaticMonsterPageRecord,
 ): MonsterDetailDropsView {
   const groupedEntries = new Map<
     MonsterDropCategoryId,
@@ -397,7 +431,7 @@ function projectMonsterDrops(
  * view. Non-known facts keep the same wording as Monster Browse.
  */
 export function projectMonsterDetail(
-  record: MonsterPageRecordV1,
+  record: StaticMonsterPageRecord,
   buildId: BuildId,
 ): MonsterDetailView {
   const name =

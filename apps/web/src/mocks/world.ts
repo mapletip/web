@@ -1,5 +1,5 @@
-import type { MapPageRecordV1 } from '@mapletip/data/maps';
-import type { MonsterPageRecordV1 } from '@mapletip/data/monsters';
+import type { MapPageRecordV1_1 } from '@mapletip/data/maps';
+import type { MonsterPageRecordV1_2 } from '@mapletip/data/monsters';
 
 /**
  * Invented Monster Browse rows used only by the web mock and integration tests.
@@ -23,6 +23,7 @@ export type FixtureCategory =
   | { readonly kind: 'unknown' };
 
 export interface FixtureLocation {
+  /** Source Map identity used when building the corresponding Map page record. */
   readonly mapKey: string;
   readonly name?: string;
   readonly streetName?: string;
@@ -30,6 +31,7 @@ export interface FixtureLocation {
   readonly regionLabel?: string;
   readonly placementCount: number;
   readonly minimapContentId?: string;
+  readonly points?: readonly FixtureMapPoint[];
 }
 
 export interface FixtureMonster {
@@ -46,7 +48,7 @@ export interface FixtureMonster {
   readonly elements?: readonly FixtureMonsterElement[];
   readonly locationsState?: 'known' | 'absent' | 'unresolved';
   readonly locations?: readonly FixtureLocation[];
-  readonly quests?: MonsterPageRecordV1['quests'];
+  readonly quests?: MonsterPageRecordV1_2['quests'];
   readonly summonedByItemIds?: readonly string[];
   readonly sprite: SpriteState;
 }
@@ -88,6 +90,7 @@ export interface FixtureMapNpc {
   readonly id: string;
   readonly name: string;
   readonly points: readonly FixtureMapPoint[];
+  readonly questCount?: MapPageRecordV1_1['npcs']['items'][number]['questCount'];
 }
 
 export interface FixtureMapConnection {
@@ -101,6 +104,7 @@ export interface FixtureMapWarp {
 
 export interface FixtureMap {
   readonly id: string;
+  readonly key?: string;
   readonly name?: string;
   readonly streetName?: string;
   readonly activity?: string;
@@ -115,9 +119,10 @@ export interface FixtureMap {
     readonly assetId: string;
     readonly width: number;
     readonly height: number;
+    readonly contentId?: string;
   };
   readonly positionsPublished?: boolean;
-  readonly information?: Partial<MapPageRecordV1['information']>;
+  readonly information?: Partial<MapPageRecordV1_1['information']>;
   readonly monsters: readonly FixtureMapMonster[];
   readonly npcs: readonly FixtureMapNpc[];
   readonly connections: readonly FixtureMapConnection[];
@@ -341,6 +346,14 @@ const cwMonsters: readonly FixtureMonster[] = [
           repeatable: known(true),
           killCount: known(18),
           countGroupSize: known(3),
+          startNpc: {
+            state: 'known',
+            value: {
+              name: known('Lantern Maker'),
+              sprite: { state: 'unknown' },
+            },
+          },
+          event: known(false),
         },
       ],
     },
@@ -359,7 +372,13 @@ const cwMonsters: readonly FixtureMonster[] = [
         regionLabel: western ? 'Practice West' : 'Practice East',
         placementCount,
         ...(index < 2
-          ? { minimapContentId: String(index + 1).repeat(64) }
+          ? {
+              minimapContentId: String(index + 1).repeat(64),
+              points: Array.from({ length: placementCount }, (_, point) => ({
+                x: 120 + point * 35,
+                y: 240 + (point % 3) * 45,
+              })),
+            }
           : {}),
       };
     }),
@@ -374,6 +393,21 @@ const cwMonsters: readonly FixtureMonster[] = [
     exp: known(28),
     boss: known(true),
     undead: known(true),
+    quests: {
+      state: 'known',
+      entries: [
+        {
+          questKey: 'fixture:quest:lantern-festival',
+          name: known('Lantern Festival Challenge'),
+          minLevel: known(10),
+          jobCodes: { state: 'known', items: [100] },
+          repeatable: known(false),
+          killCount: known(10),
+          startNpc: { state: 'absent', coverageKey: 'fixture:quest-start-npc' },
+          event: known(true),
+        },
+      ],
+    },
     elements: [
       {
         code: 'S',
@@ -709,17 +743,18 @@ export const fixtureMaps: readonly FixtureMap[] = [
       [
         ['bellkeeper', 'Bellkeeper'],
         ['map-seller', 'Map Seller'],
-        ['lantern-maker', 'Lantern Maker'],
+        ['lantern-maker', 'Lantern Maker', { state: 'known', count: 1 }],
         ['tea-host', 'Tea Host'],
         ['courier', 'Courier'],
-        ['storyteller', 'Storyteller'],
+        ['storyteller', 'Storyteller', { state: 'partial', count: 1 }],
         ['gardener', 'Town Gardener'],
         ['clock-mender', 'Clock Mender'],
       ] as const
-    ).map(([id, name], index) => ({
+    ).map(([id, name, questCount], index) => ({
       id: `town-${id}`,
       name,
       points: [{ x: 140 + index * 105, y: 420 }],
+      ...(questCount === undefined ? {} : { questCount }),
     })),
     connections: fixtureMapTargets.map((map, index) => ({
       mapId: map.id,
