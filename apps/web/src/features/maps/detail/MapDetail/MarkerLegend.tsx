@@ -85,9 +85,9 @@ export function MarkerLegend({
           }}
           classNames={{
             root: classes['legendChip'],
-            iconWrapper: classes['legendChipIconWrapper'],
             label: classes['legendChipLabel'],
           }}
+          icon={false}
           key={entity.focusKey}
           variant="outline"
         >

@@ -23,6 +23,8 @@
   flex-wrap: wrap;
   gap: 6px;
   min-width: 0;
+  /* Room for Mantine's focus ring, drawn outside the chip, inside the scroll area. */
+  padding: 4px;
   width: 100%;
 }
 
@@ -68,10 +70,6 @@
   min-width: 0;
 }
 
-.legendChipIconWrapper {
-  display: none;
-}
-
 .legendChipLabel:hover {
   background: var(--mantine-color-default-hover, var(--mapletip-color-hover));
 }
@@ -85,11 +83,9 @@
     --mantine-primary-color-filled,
     var(--mapletip-color-selection-edge)
   );
-}
-
-.legendChip:focus-within .legendChipLabel {
-  outline: 3px solid var(--mantine-primary-color-filled, Highlight);
-  outline-offset: -4px;
+  /* A 2px edge marks selection without relying on colour or shifting layout. */
+  box-shadow: inset 0 0 0 1px
+    var(--mantine-primary-color-filled, var(--mapletip-color-selection-edge));
 }
 
 .legendChipName {
