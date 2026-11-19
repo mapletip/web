@@ -210,8 +210,8 @@
 }
 
 .stageMonsterSprite {
-  height: var(--marker-stage-marker-size);
-  width: var(--marker-stage-marker-size);
+  height: var(--interactive-map-marker-size);
+  width: var(--interactive-map-marker-size);
 }
 
 .detailMonsterSprite {

@@ -2,7 +2,7 @@ import { composeStories } from '@storybook/react-vite';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 import { commands, page, userEvent } from 'vitest/browser';
 
-import * as stories from '@/components/MarkerStage/__stories__/MarkerStage.stories';
+import * as stories from '@/components/InteractiveMap/__stories__/InteractiveMap.stories';
 import {
   expectApprovedScreenshot,
   openVisualCase,
@@ -11,7 +11,7 @@ import type { VisualCase } from '@/test-support/visual';
 
 const dark = composeStories(stories);
 
-interface MarkerStageVisualCase extends VisualCase {
+interface InteractiveMapVisualCase extends VisualCase {
   readonly testId: string;
   readonly imageAlt?: string;
   readonly connectorCount?: number;
@@ -27,26 +27,26 @@ const wideMarkers = [
 
 const wideImage = page.getByRole('img', { name: 'Synthetic wide image' });
 
-const visualCases: readonly MarkerStageVisualCase[] = [
+const visualCases: readonly InteractiveMapVisualCase[] = [
   {
-    name: 'marker-stage-wide-image-dark',
+    name: 'interactive-map-wide-image-dark',
     story: dark.WideImage,
-    storyId: 'components-markerstage--wide-image',
-    testId: 'marker-stage-wide-image',
+    storyId: 'components-interactivemap--wide-image',
+    testId: 'interactive-map-wide-image',
     width: 720,
     height: 400,
-    element: page.getByTestId('marker-stage-wide-image'),
+    element: page.getByTestId('interactive-map-wide-image'),
     imageAlt: 'Synthetic wide image',
     visible: [wideImage, ...wideMarkers],
   },
   {
-    name: 'marker-stage-tall-image-dark',
+    name: 'interactive-map-tall-image-dark',
     story: dark.TallImage,
-    storyId: 'components-markerstage--tall-image',
-    testId: 'marker-stage-tall-image',
+    storyId: 'components-interactivemap--tall-image',
+    testId: 'interactive-map-tall-image',
     width: 320,
     height: 520,
-    element: page.getByTestId('marker-stage-tall-image'),
+    element: page.getByTestId('interactive-map-tall-image'),
     imageAlt: 'Synthetic tall image',
     visible: [
       page.getByRole('img', { name: 'Synthetic tall image' }),
@@ -54,13 +54,13 @@ const visualCases: readonly MarkerStageVisualCase[] = [
     ],
   },
   {
-    name: 'marker-stage-tiny-image-dark',
+    name: 'interactive-map-tiny-image-dark',
     story: dark.TinyImage,
-    storyId: 'components-markerstage--tiny-image',
-    testId: 'marker-stage-tiny-image',
+    storyId: 'components-interactivemap--tiny-image',
+    testId: 'interactive-map-tiny-image',
     width: 360,
     height: 280,
-    element: page.getByTestId('marker-stage-tiny-image'),
+    element: page.getByTestId('interactive-map-tiny-image'),
     imageAlt: 'Synthetic tiny image',
     visible: [
       page.getByRole('img', { name: 'Synthetic tiny image' }),
@@ -68,58 +68,58 @@ const visualCases: readonly MarkerStageVisualCase[] = [
     ],
   },
   {
-    name: 'marker-stage-unavailable-dark',
+    name: 'interactive-map-unavailable-dark',
     story: dark.Unavailable,
-    storyId: 'components-markerstage--unavailable',
-    testId: 'marker-stage-unavailable',
+    storyId: 'components-interactivemap--unavailable',
+    testId: 'interactive-map-unavailable',
     width: 720,
     height: 560,
-    element: page.getByTestId('marker-stage-unavailable'),
+    element: page.getByTestId('interactive-map-unavailable'),
     visible: [page.getByText('Image unavailable.', { exact: true })],
   },
   {
-    name: 'marker-stage-none-selected-dark',
+    name: 'interactive-map-none-selected-dark',
     story: dark.NoneSelected,
-    storyId: 'components-markerstage--none-selected',
-    testId: 'marker-stage-none-selected',
+    storyId: 'components-interactivemap--none-selected',
+    testId: 'interactive-map-none-selected',
     width: 720,
     height: 400,
-    element: page.getByTestId('marker-stage-none-selected'),
+    element: page.getByTestId('interactive-map-none-selected'),
     imageAlt: 'Synthetic wide image',
     visible: [wideImage, ...wideMarkers],
   },
   {
-    name: 'marker-stage-one-selected-dark',
+    name: 'interactive-map-one-selected-dark',
     story: dark.OneSelected,
-    storyId: 'components-markerstage--one-selected',
-    testId: 'marker-stage-one-selected',
+    storyId: 'components-interactivemap--one-selected',
+    testId: 'interactive-map-one-selected',
     width: 720,
     height: 400,
-    element: page.getByTestId('marker-stage-one-selected'),
+    element: page.getByTestId('interactive-map-one-selected'),
     imageAlt: 'Synthetic wide image',
     selectedIds: ['east'],
     visible: [wideImage, ...wideMarkers],
   },
   {
-    name: 'marker-stage-many-selected-dark',
+    name: 'interactive-map-many-selected-dark',
     story: dark.ManySelected,
-    storyId: 'components-markerstage--many-selected',
-    testId: 'marker-stage-many-selected',
+    storyId: 'components-interactivemap--many-selected',
+    testId: 'interactive-map-many-selected',
     width: 720,
     height: 400,
-    element: page.getByTestId('marker-stage-many-selected'),
+    element: page.getByTestId('interactive-map-many-selected'),
     imageAlt: 'Synthetic wide image',
     selectedIds: ['west', 'north', 'south'],
     visible: [wideImage, ...wideMarkers],
   },
   {
-    name: 'marker-stage-coincident-markers-dark',
+    name: 'interactive-map-coincident-markers-dark',
     story: dark.CoincidentMarkers,
-    storyId: 'components-markerstage--coincident-markers',
-    testId: 'marker-stage-coincident-markers',
+    storyId: 'components-interactivemap--coincident-markers',
+    testId: 'interactive-map-coincident-markers',
     width: 720,
     height: 400,
-    element: page.getByTestId('marker-stage-coincident-markers'),
+    element: page.getByTestId('interactive-map-coincident-markers'),
     imageAlt: 'Synthetic wide image',
     visible: [
       wideImage,
@@ -129,13 +129,13 @@ const visualCases: readonly MarkerStageVisualCase[] = [
     ],
   },
   {
-    name: 'marker-stage-static-dark',
+    name: 'interactive-map-static-dark',
     story: dark.Static,
-    storyId: 'components-markerstage--static',
-    testId: 'marker-stage-static',
+    storyId: 'components-interactivemap--static',
+    testId: 'interactive-map-static',
     width: 720,
     height: 400,
-    element: page.getByTestId('marker-stage-static'),
+    element: page.getByTestId('interactive-map-static'),
     imageAlt: 'Synthetic wide image',
     selectedIds: ['east'],
     visible: [
@@ -147,13 +147,13 @@ const visualCases: readonly MarkerStageVisualCase[] = [
     ],
   },
   {
-    name: 'marker-stage-details-at-center-dark',
+    name: 'interactive-map-details-at-center-dark',
     story: dark.DetailsAtCenter,
-    storyId: 'components-markerstage--details-at-center',
-    testId: 'marker-stage-details-centre',
+    storyId: 'components-interactivemap--details-at-center',
+    testId: 'interactive-map-details-centre',
     width: 720,
     height: 400,
-    element: page.getByTestId('marker-stage-details-centre'),
+    element: page.getByTestId('interactive-map-details-centre'),
     imageAlt: 'Synthetic wide image',
     beforeScreenshot: async () => {
       await userEvent.click(page.getByRole('button', { name: 'Centre point' }));
@@ -165,13 +165,13 @@ const visualCases: readonly MarkerStageVisualCase[] = [
     ],
   },
   {
-    name: 'marker-stage-details-near-edge-dark',
+    name: 'interactive-map-details-near-edge-dark',
     story: dark.DetailsNearEachEdge,
-    storyId: 'components-markerstage--details-near-each-edge',
-    testId: 'marker-stage-details-near-edge',
+    storyId: 'components-interactivemap--details-near-each-edge',
+    testId: 'interactive-map-details-near-edge',
     width: 720,
     height: 400,
-    element: page.getByTestId('marker-stage-details-near-edge'),
+    element: page.getByTestId('interactive-map-details-near-edge'),
     imageAlt: 'Synthetic wide image',
     beforeScreenshot: async () => {
       await userEvent.click(
@@ -188,25 +188,25 @@ const visualCases: readonly MarkerStageVisualCase[] = [
     ],
   },
   {
-    name: 'marker-stage-connected-pairs-dark',
+    name: 'interactive-map-connected-pairs-dark',
     story: dark.ConnectedPairs,
-    storyId: 'components-markerstage--connected-pairs',
-    testId: 'marker-stage-connected-pairs',
+    storyId: 'components-interactivemap--connected-pairs',
+    testId: 'interactive-map-connected-pairs',
     width: 720,
     height: 400,
-    element: page.getByTestId('marker-stage-connected-pairs'),
+    element: page.getByTestId('interactive-map-connected-pairs'),
     imageAlt: 'Synthetic wide image',
     connectorCount: 2,
     visible: [wideImage, ...wideMarkers],
   },
   {
-    name: 'marker-stage-zoomed-lines-selection-dark',
+    name: 'interactive-map-zoomed-lines-selection-dark',
     story: dark.ZoomedWithLinesAndSelection,
-    storyId: 'components-markerstage--zoomed-with-lines-and-selection',
-    testId: 'marker-stage-zoomed-lines-selection',
+    storyId: 'components-interactivemap--zoomed-with-lines-and-selection',
+    testId: 'interactive-map-zoomed-lines-selection',
     width: 720,
     height: 400,
-    element: page.getByTestId('marker-stage-zoomed-lines-selection'),
+    element: page.getByTestId('interactive-map-zoomed-lines-selection'),
     imageAlt: 'Synthetic wide image',
     connectorCount: 2,
     selectedIds: ['east', 'south'],
@@ -220,13 +220,13 @@ const visualCases: readonly MarkerStageVisualCase[] = [
     visible: [wideImage, ...wideMarkers],
   },
   {
-    name: 'marker-stage-saved-restored-view-dark',
+    name: 'interactive-map-saved-restored-view-dark',
     story: dark.SavedAndRestoredView,
-    storyId: 'components-markerstage--saved-and-restored-view',
-    testId: 'marker-stage-saved-restored',
+    storyId: 'components-interactivemap--saved-and-restored-view',
+    testId: 'interactive-map-saved-restored',
     width: 720,
     height: 440,
-    element: page.getByTestId('marker-stage-saved-restored'),
+    element: page.getByTestId('interactive-map-saved-restored'),
     imageAlt: 'Synthetic wide image',
     beforeScreenshot: async () => {
       const image = document.images[0];

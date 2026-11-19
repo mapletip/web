@@ -1,4 +1,4 @@
-import type { MarkerStageConnector } from '@mapletip/component-library';
+import type { InteractiveMapConnector } from '@mapletip/component-library';
 import { mapMinimapUrl, type MapPageRecordV1 } from '@mapletip/data/maps';
 
 import { MAPLEKIT_RELEASE, type BuildId } from '@/config/maplekit';
@@ -103,7 +103,7 @@ export interface MapDetailStageMarker {
 export interface MapDetailStageView {
   readonly image?: MapDetailStageImage;
   readonly markers: readonly MapDetailStageMarker[];
-  readonly connectors: readonly MarkerStageConnector[];
+  readonly connectors: readonly InteractiveMapConnector[];
   readonly positionsUnavailable: boolean;
 }
 
@@ -811,7 +811,7 @@ function projectStage({
     }
   }
 
-  const connectors: MarkerStageConnector[] = [];
+  const connectors: InteractiveMapConnector[] = [];
   if (record.warps.state === 'known' || record.warps.state === 'partial') {
     for (const warp of warps) {
       const from = `warp:${warp.focusToken}:1`;

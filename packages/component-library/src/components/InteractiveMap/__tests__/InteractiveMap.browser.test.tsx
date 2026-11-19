@@ -6,11 +6,11 @@ import { commands, page, userEvent } from 'vitest/browser';
 import { render } from 'vitest-browser-react';
 
 import '@/styles.css';
-import { MarkerStage } from '@/components/MarkerStage';
+import { InteractiveMap } from '@/components/InteractiveMap';
 import type {
-  MarkerStageMarker,
-  MarkerStageView,
-} from '@/components/MarkerStage';
+  InteractiveMapMarker,
+  InteractiveMapView,
+} from '@/components/InteractiveMap';
 
 const image = `data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="400" height="200"><rect width="400" height="200" fill="#789"/></svg>')}`;
 
@@ -21,7 +21,7 @@ async function mount() {
       cssVariablesResolver={cssVariablesResolver}
       forceColorScheme="dark"
     >
-      <MarkerStage
+      <InteractiveMap
         image={{
           src: image,
           width: 400,
@@ -51,7 +51,7 @@ async function mountWithDetails() {
       cssVariablesResolver={cssVariablesResolver}
       forceColorScheme="dark"
     >
-      <MarkerStage
+      <InteractiveMap
         image={{
           src: image,
           width: 400,
@@ -88,7 +88,7 @@ afterEach(async () => {
   });
 });
 
-describe('MarkerStage selected marker ring', () => {
+describe('InteractiveMap selected marker ring', () => {
   it('renders the production selection ring and exposes the marker size', async () => {
     await mount();
 
@@ -105,7 +105,7 @@ describe('MarkerStage selected marker ring', () => {
     expect(ring.borderWidth).toBe('2px');
     expect(ring.opacity).toBe('0.8');
     expect(
-      getComputedStyle(stage).getPropertyValue('--marker-stage-marker-size'),
+      getComputedStyle(stage).getPropertyValue('--interactive-map-marker-size'),
     ).toBe('clamp(18px, 5cqi, 44px)');
   });
 
@@ -140,7 +140,7 @@ describe('MarkerStage selected marker ring', () => {
   });
 });
 
-describe('MarkerStage image layout', () => {
+describe('InteractiveMap image layout', () => {
   it('keeps the supplied image aspect ratio after the image fails', async () => {
     await render(
       <MantineProvider
@@ -148,7 +148,7 @@ describe('MarkerStage image layout', () => {
         cssVariablesResolver={cssVariablesResolver}
         forceColorScheme="dark"
       >
-        <MarkerStage
+        <InteractiveMap
           image={{
             src: 'data:image/png;base64,not-an-image',
             width: 400,
@@ -167,12 +167,12 @@ describe('MarkerStage image layout', () => {
       .element();
     expect(stage.style.aspectRatio).toBe('400 / 100');
     expect(
-      stage.style.getPropertyValue('--marker-stage-image-aspect-ratio'),
+      stage.style.getPropertyValue('--interactive-map-image-aspect-ratio'),
     ).toBe('4');
   });
 });
 
-describe('MarkerStage marker details', () => {
+describe('InteractiveMap marker details', () => {
   it('closes from the close control and returns focus to its target', async () => {
     await mountWithDetails();
 
@@ -280,8 +280,8 @@ function markerContent() {
       aria-hidden="true"
       style={{
         display: 'block',
-        width: 'var(--marker-stage-marker-size)',
-        height: 'var(--marker-stage-marker-size)',
+        width: 'var(--interactive-map-marker-size)',
+        height: 'var(--interactive-map-marker-size)',
         borderRadius: '50%',
         background: '#d44',
       }}
@@ -296,10 +296,10 @@ async function mountInteractiveStage(options?: {
   readonly zoomOutLabel?: string;
   readonly fitLabel?: string;
   readonly width?: number;
-  readonly view?: MarkerStageView;
-  readonly onViewChange?: (view: MarkerStageView | undefined) => void;
+  readonly view?: InteractiveMapView;
+  readonly onViewChange?: (view: InteractiveMapView | undefined) => void;
   readonly selectedIds?: readonly string[];
-  readonly markers?: readonly MarkerStageMarker[];
+  readonly markers?: readonly InteractiveMapMarker[];
 }) {
   const result = await render(
     <MantineProvider
@@ -313,7 +313,7 @@ async function mountInteractiveStage(options?: {
           maxWidth: '100vw',
         }}
       >
-        <MarkerStage
+        <InteractiveMap
           image={{
             src: image,
             width: 400,
@@ -377,7 +377,7 @@ function expectMarkerAtImagePixel(container: HTMLElement): void {
 }
 
 async function mountSelectionHarness(options?: {
-  readonly onViewChange?: (view: MarkerStageView | undefined) => void;
+  readonly onViewChange?: (view: InteractiveMapView | undefined) => void;
 }) {
   function Harness() {
     const [selectedIds, setSelectedIds] = useState(['west']);
@@ -394,7 +394,7 @@ async function mountSelectionHarness(options?: {
           Select west
         </button>
         <div style={{ width: '400px' }}>
-          <MarkerStage
+          <InteractiveMap
             image={{
               src: image,
               width: 400,
@@ -431,7 +431,7 @@ async function mountSelectionHarness(options?: {
   return (await render(<Harness />)).container;
 }
 
-describe('MarkerStage pan and zoom', () => {
+describe('InteractiveMap pan and zoom', () => {
   it('keeps markers on image pixels when the stage has a different aspect ratio', async () => {
     await commands.emulateMedia({ reducedMotion: 'reduce' });
     const container = await mountInteractiveStage();
@@ -538,7 +538,7 @@ describe('MarkerStage pan and zoom', () => {
   it('keeps the target and both rings the same size from 0.5x to 8x', async () => {
     await commands.emulateMedia({ reducedMotion: 'reduce' });
     function Harness() {
-      const [view, setView] = useState<MarkerStageView | undefined>();
+      const [view, setView] = useState<InteractiveMapView | undefined>();
       return (
         <MantineProvider
           theme={theme}
@@ -558,7 +558,7 @@ describe('MarkerStage pan and zoom', () => {
             Zoom to 0.5x
           </button>
           <div style={{ width: '400px' }}>
-            <MarkerStage
+            <InteractiveMap
               image={{
                 src: image,
                 width: 400,
@@ -629,7 +629,7 @@ describe('MarkerStage pan and zoom', () => {
 
   it('keeps edge marker details at the unzoomed size and inside the stage at 4x', async () => {
     function Harness() {
-      const [view, setView] = useState<MarkerStageView | undefined>();
+      const [view, setView] = useState<InteractiveMapView | undefined>();
       return (
         <MantineProvider
           theme={theme}
@@ -643,7 +643,7 @@ describe('MarkerStage pan and zoom', () => {
             Zoom to edge
           </button>
           <div style={{ width: 400 }}>
-            <MarkerStage
+            <InteractiveMap
               image={{
                 src: image,
                 width: 400,
@@ -816,7 +816,8 @@ describe('MarkerStage pan and zoom', () => {
 
   it('brings an off-screen changed selection into view without moving visible selections', async () => {
     await commands.emulateMedia({ reducedMotion: 'reduce' });
-    const onViewChange = vi.fn<(view: MarkerStageView | undefined) => void>();
+    const onViewChange =
+      vi.fn<(view: InteractiveMapView | undefined) => void>();
     const container = await mountSelectionHarness({ onViewChange });
     const viewport = container.querySelector<HTMLElement>(
       '.react-transform-wrapper',
@@ -872,7 +873,8 @@ describe('MarkerStage pan and zoom', () => {
 
   it('reports one settled view after a drag', async () => {
     await commands.emulateMedia({ reducedMotion: 'reduce' });
-    const onViewChange = vi.fn<(view: MarkerStageView | undefined) => void>();
+    const onViewChange =
+      vi.fn<(view: InteractiveMapView | undefined) => void>();
     const container = await mountInteractiveStage({ onViewChange });
     await userEvent.click(page.getByRole('button', { name: 'Zoom in' }));
     await expect.poll(() => onViewChange.mock.calls.length).toBe(1);
@@ -894,7 +896,8 @@ describe('MarkerStage pan and zoom', () => {
   });
 
   it('reports one settled view after a pinch', async () => {
-    const onViewChange = vi.fn<(view: MarkerStageView | undefined) => void>();
+    const onViewChange =
+      vi.fn<(view: InteractiveMapView | undefined) => void>();
     const container = await mountInteractiveStage({ onViewChange });
     const viewport = container.querySelector<HTMLElement>(
       '.react-transform-wrapper',
@@ -913,7 +916,8 @@ describe('MarkerStage pan and zoom', () => {
   });
 
   it('reports one settled view after a wheel burst', async () => {
-    const onViewChange = vi.fn<(view: MarkerStageView | undefined) => void>();
+    const onViewChange =
+      vi.fn<(view: InteractiveMapView | undefined) => void>();
     const container = await mountInteractiveStage({
       wheelZoom: true,
       onViewChange,
@@ -945,7 +949,8 @@ describe('MarkerStage pan and zoom', () => {
 
   it('reports zoom-in, zoom-out and Fit once each', async () => {
     await commands.emulateMedia({ reducedMotion: 'reduce' });
-    const onViewChange = vi.fn<(view: MarkerStageView | undefined) => void>();
+    const onViewChange =
+      vi.fn<(view: InteractiveMapView | undefined) => void>();
     await mountInteractiveStage({ onViewChange });
 
     await userEvent.click(page.getByRole('button', { name: 'Zoom in' }));
@@ -961,7 +966,8 @@ describe('MarkerStage pan and zoom', () => {
   });
 
   it('does not report a view after a plain click', async () => {
-    const onViewChange = vi.fn<(view: MarkerStageView | undefined) => void>();
+    const onViewChange =
+      vi.fn<(view: InteractiveMapView | undefined) => void>();
     await mountInteractiveStage({ onViewChange });
 
     await userEvent.click(page.getByRole('group', { name: 'Zoom test image' }));
@@ -970,7 +976,7 @@ describe('MarkerStage pan and zoom', () => {
   });
 
   it('applies a changed saved view without reporting it again', async () => {
-    const savedView: MarkerStageView = {
+    const savedView: InteractiveMapView = {
       zoom: 2,
       centerX: 150,
       centerY: 100,
@@ -978,7 +984,7 @@ describe('MarkerStage pan and zoom', () => {
     const onViewChange = vi.fn();
 
     function Harness() {
-      const [view, setView] = useState<MarkerStageView | undefined>();
+      const [view, setView] = useState<InteractiveMapView | undefined>();
       return (
         <MantineProvider
           theme={theme}
@@ -989,7 +995,7 @@ describe('MarkerStage pan and zoom', () => {
             Restore saved view
           </button>
           <div style={{ width: '400px' }}>
-            <MarkerStage
+            <InteractiveMap
               image={{
                 src: image,
                 width: 400,
@@ -1016,7 +1022,7 @@ describe('MarkerStage pan and zoom', () => {
 
   it('centres the same image point when a view is restored at two stage sizes', async () => {
     await page.viewport(1400, 800);
-    const view: MarkerStageView = { zoom: 2, centerX: 150, centerY: 100 };
+    const view: InteractiveMapView = { zoom: 2, centerX: 150, centerY: 100 };
 
     await render(
       <MantineProvider
@@ -1026,7 +1032,7 @@ describe('MarkerStage pan and zoom', () => {
       >
         {[400, 800].map((width) => (
           <div key={width} data-stage-size={width} style={{ width }}>
-            <MarkerStage
+            <InteractiveMap
               image={{
                 src: image,
                 width: 400,
@@ -1070,7 +1076,7 @@ describe('MarkerStage pan and zoom', () => {
   });
 
   it('keeps the restored view when the initial selection is off screen', async () => {
-    const view: MarkerStageView = { zoom: 2, centerX: 100, centerY: 100 };
+    const view: InteractiveMapView = { zoom: 2, centerX: 100, centerY: 100 };
     const container = await mountInteractiveStage({
       view,
       selectedIds: ['east'],

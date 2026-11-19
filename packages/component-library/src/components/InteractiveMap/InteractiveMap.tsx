@@ -26,22 +26,22 @@ import {
   type ReactZoomPanPinchRef,
 } from 'react-zoom-pan-pinch';
 
-import classes from '@/components/MarkerStage/MarkerStage.module.css';
-import { TransformControls } from '@/components/MarkerStage/TransformControls';
+import classes from '@/components/InteractiveMap/InteractiveMap.module.css';
+import { TransformControls } from '@/components/InteractiveMap/TransformControls';
 import {
-  MARKER_STAGE_MAX_ZOOM,
-  MARKER_STAGE_MIN_ZOOM,
-} from '@/components/MarkerStage/types';
+  INTERACTIVE_MAP_MAX_ZOOM,
+  INTERACTIVE_MAP_MIN_ZOOM,
+} from '@/components/InteractiveMap/types';
 import type {
-  MarkerStageImage,
-  MarkerStageMarker,
-  MarkerStageProps,
-  MarkerStageView,
-} from '@/components/MarkerStage/types';
+  InteractiveMapImage,
+  InteractiveMapMarker,
+  InteractiveMapProps,
+  InteractiveMapView,
+} from '@/components/InteractiveMap/types';
 import {
   transformToView,
   viewToTransform,
-} from '@/components/MarkerStage/view';
+} from '@/components/InteractiveMap/view';
 
 const SELECTION_ANIMATION_MS = 260;
 const TRANSFORM_EPSILON = 0.01;
@@ -99,8 +99,8 @@ function isFittedTransform(transform: ReactZoomPanPinchRef): boolean {
 }
 
 interface InteractiveMarkerProps {
-  readonly group: readonly MarkerStageMarker[];
-  readonly image: MarkerStageImage;
+  readonly group: readonly InteractiveMapMarker[];
+  readonly image: InteractiveMapImage;
   readonly selected: boolean;
   readonly targetKey: string;
   readonly markerTargetRefs: MutableRefObject<Map<string, HTMLButtonElement>>;
@@ -212,9 +212,9 @@ function InteractiveMarker({
 }
 
 function groupMarkers(
-  markers: readonly MarkerStageMarker[],
-): MarkerStageMarker[][] {
-  const groups = new Map<string, MarkerStageMarker[]>();
+  markers: readonly InteractiveMapMarker[],
+): InteractiveMapMarker[][] {
+  const groups = new Map<string, InteractiveMapMarker[]>();
 
   for (const marker of markers) {
     const key = `${marker.x},${marker.y}`;
@@ -230,7 +230,7 @@ function groupMarkers(
 }
 
 /** One image with host-rendered markers placed at image pixel coordinates. */
-export function MarkerStage({
+export function InteractiveMap({
   className,
   style,
   image,
@@ -248,7 +248,7 @@ export function MarkerStage({
   fitLabel = 'Fit',
   renderDetails,
   unavailableMessage,
-}: MarkerStageProps): ReactElement {
+}: InteractiveMapProps): ReactElement {
   const [portalTarget, setPortalTarget] = useState<HTMLDivElement | null>(null);
   const transformRef = useRef<ReactZoomPanPinchRef>(null);
   const markerTargetRefs = useRef(new Map<string, HTMLButtonElement>());
@@ -280,12 +280,12 @@ export function MarkerStage({
   const markerGroups = useMemo(() => groupMarkers(markers), [markers]);
   const markersById = new Map(markers.map((marker) => [marker.id, marker]));
   const stageStyle: CSSProperties & {
-    readonly '--marker-stage-image-aspect-ratio': string;
+    readonly '--interactive-map-image-aspect-ratio': string;
   } = {
     ...style,
     aspectRatio:
       image === undefined ? '4 / 3' : `${image.width} / ${image.height}`,
-    '--marker-stage-image-aspect-ratio':
+    '--interactive-map-image-aspect-ratio':
       image === undefined ? '1' : `${image.width / image.height}`,
   };
   const closeDetails = () => setOpenDetails(null);
@@ -343,7 +343,7 @@ export function MarkerStage({
         return;
       }
 
-      const nextView: MarkerStageView = transformToView({
+      const nextView: InteractiveMapView = transformToView({
         ...transform.state,
         stageWidth: wrapper.clientWidth,
         stageHeight: wrapper.clientHeight,
@@ -400,7 +400,7 @@ export function MarkerStage({
 
     void transform
       .zoomToElement(selectedTargets, {
-        minScale: MARKER_STAGE_MIN_ZOOM,
+        minScale: INTERACTIVE_MAP_MIN_ZOOM,
         maxScale: transform.state.scale,
         animationTime: reducedMotion ? 0 : SELECTION_ANIMATION_MS,
       })
@@ -540,8 +540,8 @@ export function MarkerStage({
     stageContent = (
       <TransformWrapper
         ref={transformRef}
-        minScale={MARKER_STAGE_MIN_ZOOM}
-        maxScale={MARKER_STAGE_MAX_ZOOM}
+        minScale={INTERACTIVE_MAP_MIN_ZOOM}
+        maxScale={INTERACTIVE_MAP_MAX_ZOOM}
         initialScale={1}
         limitToBounds
         centerZoomedOut
@@ -577,9 +577,9 @@ export function MarkerStage({
           wrapperStyle={{ width: '100%', height: '100%' }}
           contentStyle={{
             width:
-              'min(100cqw, calc(100cqh * var(--marker-stage-image-aspect-ratio)))',
+              'min(100cqw, calc(100cqh * var(--interactive-map-image-aspect-ratio)))',
             height:
-              'min(100cqh, calc(100cqw / var(--marker-stage-image-aspect-ratio)))',
+              'min(100cqh, calc(100cqw / var(--interactive-map-image-aspect-ratio)))',
           }}
         >
           {imageBox}
@@ -587,8 +587,8 @@ export function MarkerStage({
         <TransformControls
           fitLabel={fitLabel}
           controlsLabel={controlsLabel}
-          maxScale={MARKER_STAGE_MAX_ZOOM}
-          minScale={MARKER_STAGE_MIN_ZOOM}
+          maxScale={INTERACTIVE_MAP_MAX_ZOOM}
+          minScale={INTERACTIVE_MAP_MIN_ZOOM}
           motionReduced={reducedMotion}
           onFit={handleFit}
           zoomInLabel={zoomInLabel}

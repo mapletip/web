@@ -3,13 +3,13 @@ import { theme } from '@mapletip/theme';
 import { renderToString } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 
-import { MarkerStage } from '@/components/MarkerStage';
-import type { MarkerStageProps } from '@/components/MarkerStage';
+import { InteractiveMap } from '@/components/InteractiveMap';
+import type { InteractiveMapProps } from '@/components/InteractiveMap';
 
-function renderStage(props: Partial<MarkerStageProps>): string {
+function renderStage(props: Partial<InteractiveMapProps>): string {
   return renderToString(
     <MantineProvider theme={theme} forceColorScheme="dark">
-      <MarkerStage
+      <InteractiveMap
         image={{
           src: '/synthetic-image.svg',
           width: 400,
@@ -24,7 +24,7 @@ function renderStage(props: Partial<MarkerStageProps>): string {
   );
 }
 
-describe('MarkerStage server rendering', () => {
+describe('InteractiveMap server rendering', () => {
   it('renders marker percentage positions without waiting for layout', () => {
     const html = renderStage({
       markers: [

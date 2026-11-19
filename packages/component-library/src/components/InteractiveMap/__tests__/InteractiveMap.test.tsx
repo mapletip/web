@@ -4,27 +4,27 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
 import '@/styles.css';
-import { MarkerStage } from '@/components/MarkerStage';
+import { InteractiveMap } from '@/components/InteractiveMap';
 import type {
-  MarkerStageImage,
-  MarkerStageProps,
-} from '@/components/MarkerStage';
+  InteractiveMapImage,
+  InteractiveMapProps,
+} from '@/components/InteractiveMap';
 
-const syntheticImage: MarkerStageImage = {
+const syntheticImage: InteractiveMapImage = {
   src: '/synthetic-image.svg',
   width: 400,
   height: 200,
   alt: 'Synthetic landscape',
 };
 
-function mount(props: Partial<MarkerStageProps> = {}) {
+function mount(props: Partial<InteractiveMapProps> = {}) {
   return render(
     <MantineProvider
       theme={theme}
       cssVariablesResolver={cssVariablesResolver}
       forceColorScheme="dark"
     >
-      <MarkerStage
+      <InteractiveMap
         image={syntheticImage}
         markers={[]}
         unavailableMessage="Image unavailable."
@@ -34,7 +34,7 @@ function mount(props: Partial<MarkerStageProps> = {}) {
   );
 }
 
-describe('MarkerStage', () => {
+describe('InteractiveMap', () => {
   it('renders a labelled group and gives the image its accessible name', () => {
     mount();
 

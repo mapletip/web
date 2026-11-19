@@ -12,11 +12,11 @@ import {
 import { useMediaQuery } from '@mantine/hooks';
 import {
   FactSheet,
-  MARKER_STAGE_MAX_ZOOM,
-  MARKER_STAGE_MIN_ZOOM,
+  INTERACTIVE_MAP_MAX_ZOOM,
+  INTERACTIVE_MAP_MIN_ZOOM,
   RecordSections,
   type RecordSection,
-  type MarkerStageView,
+  type InteractiveMapView,
 } from '@mapletip/component-library';
 import { ArrowsOut, ShareNetwork } from '@phosphor-icons/react';
 import { useHydrated, useLocation, useRouter } from '@tanstack/react-router';
@@ -59,8 +59,8 @@ const mapDetailStageViewSchema = z
     zoom: z
       .number()
       .finite()
-      .min(MARKER_STAGE_MIN_ZOOM)
-      .max(MARKER_STAGE_MAX_ZOOM),
+      .min(INTERACTIVE_MAP_MIN_ZOOM)
+      .max(INTERACTIVE_MAP_MAX_ZOOM),
     centerX: z.number().finite(),
     centerY: z.number().finite(),
   })
@@ -201,7 +201,7 @@ export function MapDetail({
   });
 
   const writeHistoryState = (updates: {
-    readonly stageView?: MarkerStageView | undefined;
+    readonly stageView?: InteractiveMapView | undefined;
     readonly findText?: string | undefined;
   }) => {
     void router.navigate({
