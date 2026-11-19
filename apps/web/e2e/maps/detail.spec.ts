@@ -994,12 +994,16 @@ test('Map Detail legend chips select entities and ring their markers at desktop 
   const stage = page.getByRole('group', { name: 'Practice Grove map' });
   const legend = page.getByRole('region', { name: 'Scrollable map legend' });
   const chip = legend.getByRole('checkbox', { name: 'Twin Sprout, Monster' });
+  const label = legend.getByText('Twin Sprout', { exact: true });
   await expect(chip).not.toBeChecked();
-  await legend.getByText('Twin Sprout', { exact: true }).click();
+  const widthBefore = (await label.boundingBox())?.width;
+  await label.click();
 
   await expect(page).toHaveURL(/focus=monster-[a-z0-9]{8}/u);
   await expect(chip).toBeChecked();
   await expect(stage.locator('[data-selected="true"]')).toHaveCount(2);
+  // Selection must not resize the chip and shift the legend.
+  expect((await label.boundingBox())?.width).toBe(widthBefore);
 });
 
 test('Map Detail Find selects Twin Sprout and writes its focus to the address', async ({

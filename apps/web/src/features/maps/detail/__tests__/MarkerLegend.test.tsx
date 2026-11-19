@@ -58,4 +58,19 @@ describe('MarkerLegend', () => {
     expect(fireEvent.keyDown(input, { key: ' ' })).toBe(true);
     expect(onActivate).not.toHaveBeenCalled();
   });
+
+  it('shows no check icon on a selected chip', () => {
+    render(
+      <MantineProvider>
+        <MarkerLegend
+          entities={[entity]}
+          focus={{ keys: [entity.focusKey] }}
+          onActivate={vi.fn()}
+        />
+      </MantineProvider>,
+    );
+    const chip = screen.getByRole('checkbox', { name: 'Twin Sprout, Monster' });
+    expect(chip).toBeChecked();
+    expect(document.querySelector('.mantine-Chip-iconWrapper')).toBeNull();
+  });
 });
