@@ -315,7 +315,7 @@ describe('projectMapDetail', () => {
     expect(view.subtitle).toBeUndefined();
   });
 
-  it('omits known empty Connections from the projected view', () => {
+  it('projects empty Connections while retaining the zero count for the rail', () => {
     const record = mapPageRecordFixture({ mapId: 'practice-grove' });
 
     const knownEmpty = projectMapDetail({
@@ -327,8 +327,101 @@ describe('projectMapDetail', () => {
       buildId: 'cw-launch',
     });
 
-    expect(knownEmpty.connections).toBeUndefined();
-    expect(absent.connections).toBeUndefined();
+    expect(knownEmpty.connections).toMatchObject({ count: 0, maps: [] });
+    expect(absent.connections).toMatchObject({ count: 0, maps: [] });
+    expect(knownEmpty.onThisMap[0]).toMatchObject({
+      key: 'connections',
+      count: 0,
+      state: 'known',
+      focus: 'connections',
+    });
+    expect(absent.onThisMap[0]).toMatchObject({
+      key: 'connections',
+      count: 0,
+      state: 'absent',
+      focus: 'connections',
+    });
+  });
+
+  it('projects On this map counts and states from the map sections', () => {
+    const record = mapPageRecordFixture({ mapId: 'practice-grove' });
+    const town = mapPageRecordFixture({ mapId: 'lantern-square' });
+    const firstMonster = record.monsters.items[0];
+    const firstNpc = town.npcs.items[0];
+    const firstConnection = record.connections.items[0];
+    if (
+      firstMonster === undefined ||
+      firstNpc === undefined ||
+      firstConnection === undefined
+    ) {
+      throw new Error('Expected fixture records for each On this map section.');
+    }
+
+    const known = projectMapDetail({ record, buildId: 'cw-launch' });
+    expect(known.onThisMap.map(({ key }) => key)).toEqual([
+      'connections',
+      'monsters',
+      'spawns',
+      'npcs',
+    ]);
+    expect(known.onThisMap[0]).toMatchObject({
+      count: known.connections.count,
+      state: known.connections.state,
+    });
+    expect(known.onThisMap[1]).toMatchObject({
+      count: known.monsters.count,
+      state: known.monsters.state,
+    });
+    expect(known.onThisMap[2]).toMatchObject({
+      count: known.monsters.totalSpawns,
+      state: known.monsters.state,
+    });
+    expect(known.onThisMap[3]).toMatchObject({
+      count: known.npcs.count,
+      state: known.npcs.state,
+    });
+
+    const partial = projectMapDetail({
+      record: {
+        ...record,
+        connections: { state: 'partial', items: [firstConnection] },
+        monsters: { state: 'partial', items: [firstMonster] },
+        npcs: { state: 'partial', items: [firstNpc] },
+      },
+      buildId: 'cw-launch',
+    });
+    expect(partial.onThisMap).toMatchObject([
+      { key: 'connections', count: 1, state: 'partial', focus: 'connections' },
+      { key: 'monsters', count: 1, state: 'partial', focus: 'monsters' },
+      {
+        key: 'spawns',
+        count: firstMonster.placementCount,
+        state: 'partial',
+      },
+      { key: 'npcs', count: 1, state: 'partial', focus: 'npcs' },
+    ]);
+
+    const unknown = projectMapDetail({
+      record: {
+        ...record,
+        connections: { state: 'unknown', items: [] },
+        monsters: { state: 'unknown', items: [] },
+        npcs: { state: 'unknown', items: [] },
+      },
+      buildId: 'cw-launch',
+    });
+    expect(unknown.onThisMap).toMatchObject([
+      { key: 'connections', count: 'unknown', state: 'unknown' },
+      { key: 'monsters', count: 'unknown', state: 'unknown' },
+      { key: 'npcs', count: 'unknown', state: 'unknown' },
+    ]);
+
+    const townView = projectMapDetail({
+      record: mapPageRecordFixture({ mapId: 'lantern-square' }),
+      buildId: 'cw-launch',
+    });
+    expect(townView.monsters.count).toBe(0);
+    expect(townView.onThisMap.map(({ key }) => key)).not.toContain('spawns');
   });
 
   it('projects sorted connection cards with natural number order and same-build destinations', () => {
@@ -658,6 +751,7 @@ describe('projectMapDetail', () => {
       count: 'unknown',
       notice: 'Monster information is unavailable.',
       monsters: [],
+      totalSpawns: 0,
     });
   });
 
@@ -673,6 +767,7 @@ describe('projectMapDetail', () => {
       count: 0,
       notice: 'No monsters are recorded on this map.',
       monsters: [],
+      totalSpawns: 0,
     });
   });
 

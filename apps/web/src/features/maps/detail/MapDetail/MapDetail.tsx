@@ -37,6 +37,7 @@ import { MapDetailConnections } from './MapDetailConnections';
 import { MapDetailLegend } from './MapDetailLegend';
 import { MapDetailMonsters } from './MapDetailMonsters';
 import { MapDetailNpcs } from './MapDetailNpcs';
+import { MapDetailOnThisMap } from './MapDetailOnThisMap';
 import { MapDetailStage } from './MapDetailStage';
 import { EntityIcon } from './markers';
 
@@ -170,7 +171,10 @@ export function MapDetail({
     if (keys.size === 1) activateEntity([...keys][0]!);
   };
   const sections: RecordSection[] = [];
-  if (view.connections !== undefined) {
+  if (
+    view.connections.maps.length > 0 ||
+    view.connections.notice !== undefined
+  ) {
     sections.push({
       id: 'connections',
       title: 'Connections',
@@ -228,6 +232,17 @@ export function MapDetail({
             />
           </div>
           <Stack className={classes['informationColumn']} gap="lg">
+            <MapDetailOnThisMap
+              rows={view.onThisMap}
+              focus={focus}
+              onToggle={(kind) =>
+                writeFocus(
+                  focus !== undefined && 'kind' in focus && focus.kind === kind
+                    ? undefined
+                    : { kind },
+                )
+              }
+            />
             {view.activity === undefined ? null : (
               <Text>Part of {view.activity}</Text>
             )}
