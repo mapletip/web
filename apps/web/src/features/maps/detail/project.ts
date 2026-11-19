@@ -348,6 +348,39 @@ const nameCollator = new Intl.Collator('en', {
   sensitivity: 'base',
 });
 
+export type MapDetailMonsterSort = 'level' | 'spawns' | 'name';
+
+/** Compare Map Detail monster cards for each supported card-list order. */
+export function compareMapDetailMonsters(
+  left: MapDetailMonsterView,
+  right: MapDetailMonsterView,
+  sort: MapDetailMonsterSort,
+): number {
+  const levelOrder =
+    (left.level ?? Number.POSITIVE_INFINITY) -
+    (right.level ?? Number.POSITIVE_INFINITY);
+  const nameOrder = nameCollator.compare(left.name, right.name);
+  if (sort === 'spawns') {
+    return (
+      right.placementCount - left.placementCount ||
+      nameOrder ||
+      left.key.localeCompare(right.key)
+    );
+  }
+  if (sort === 'name') {
+    return nameOrder || levelOrder || left.key.localeCompare(right.key);
+  }
+  return levelOrder || nameOrder || left.key.localeCompare(right.key);
+}
+
+/** Match a connection card against a normalized search query. */
+export function mapDetailConnectionMatchesSearch(
+  connection: MapDetailConnectionView,
+  normalizedQuery: string,
+): boolean {
+  return connection.name.toLocaleLowerCase('en').includes(normalizedQuery);
+}
+
 function projectSectionNotice({
   state,
   empty,
@@ -394,17 +427,9 @@ function projectMonsters({
         ...(respawnLabel === undefined ? {} : { respawnLabel }),
       };
 
-      return { level: card.level, view };
+      return view;
     })
-    .sort((left, right) => {
-      const levelOrder =
-        (left.level ?? Number.POSITIVE_INFINITY) -
-        (right.level ?? Number.POSITIVE_INFINITY);
-      return (
-        levelOrder || nameCollator.compare(left.view.name, right.view.name)
-      );
-    })
-    .map(({ view }) => view);
+    .sort((left, right) => compareMapDetailMonsters(left, right, 'level'));
   const count =
     record.monsters.state === 'unknown' ? 'unknown' : monsters.length;
   const totalSpawns = record.monsters.items.reduce(
