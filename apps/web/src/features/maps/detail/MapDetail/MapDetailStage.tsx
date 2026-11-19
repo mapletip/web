@@ -1,5 +1,8 @@
 import { Stack, Text } from '@mantine/core';
-import { MarkerStage, type MarkerStageView } from '@mapletip/component-library';
+import {
+  InteractiveMap,
+  type InteractiveMapView,
+} from '@mapletip/component-library';
 import { useMemo } from 'react';
 import type { ReactElement, ReactNode } from 'react';
 
@@ -25,8 +28,8 @@ export function MapDetailStage({
   readonly className?: string | undefined;
   readonly interactive: boolean;
   readonly wheelZoom: boolean;
-  readonly view?: MarkerStageView | undefined;
-  readonly onViewChange: (view: MarkerStageView | undefined) => void;
+  readonly view?: InteractiveMapView | undefined;
+  readonly onViewChange: (view: InteractiveMapView | undefined) => void;
   readonly selectedIds: readonly string[];
   readonly onActivate: (markerIds: readonly string[]) => void;
   readonly renderDetails: (markerIds: readonly string[]) => ReactNode;
@@ -42,7 +45,7 @@ export function MapDetailStage({
 
   return (
     <Stack className={classes['mapStage']} gap="xs">
-      <MarkerStage
+      <InteractiveMap
         className={className}
         image={stage.image}
         markers={markers}

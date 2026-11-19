@@ -8,7 +8,7 @@ import {
   type ReactZoomPanPinchContextState,
 } from 'react-zoom-pan-pinch';
 
-import classes from '@/components/MarkerStage/MarkerStage.module.css';
+import classes from '@/components/InteractiveMap/InteractiveMap.module.css';
 
 const ZOOM_ANIMATION_MS = 220;
 const SCALE_EPSILON = 0.00001;

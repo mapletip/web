@@ -28,18 +28,18 @@ export type {
 } from '@/components/EntityChip';
 export { SpriteStage } from '@/components/SpriteStage';
 export type { SpriteStageProps } from '@/components/SpriteStage';
-export { MarkerStage } from '@/components/MarkerStage';
+export { InteractiveMap } from '@/components/InteractiveMap';
 export type {
-  MarkerStageConnector,
-  MarkerStageImage,
-  MarkerStageMarker,
-  MarkerStageProps,
-  MarkerStageView,
-} from '@/components/MarkerStage';
+  InteractiveMapConnector,
+  InteractiveMapImage,
+  InteractiveMapMarker,
+  InteractiveMapProps,
+  InteractiveMapView,
+} from '@/components/InteractiveMap';
 export {
-  MARKER_STAGE_MAX_ZOOM,
-  MARKER_STAGE_MIN_ZOOM,
-} from '@/components/MarkerStage';
+  INTERACTIVE_MAP_MAX_ZOOM,
+  INTERACTIVE_MAP_MIN_ZOOM,
+} from '@/components/InteractiveMap';
 export { FactSheet } from '@/components/FactSheet';
 export type {
   Fact,
