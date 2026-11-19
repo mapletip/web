@@ -826,8 +826,10 @@ describe('MapDetail information', () => {
     );
   });
 
-  it('searches Connections from seven and reports matches and no matches', async () => {
+  it('shows Connections search at exactly seven connected maps', async () => {
     const user = userEvent.setup();
+    const record = mapPageRecordFixture({ mapId: 'lantern-square' });
+    expect(record.connections.items).toHaveLength(7);
     renderDetail('lantern-square');
 
     const search = screen.getByRole('textbox', {
@@ -852,11 +854,13 @@ describe('MapDetail information', () => {
     expect(screen.queryByTestId('map-connection-card')).not.toBeInTheDocument();
   });
 
-  it('omits the Connections search below seven cards', () => {
+  it('omits the Connections search at six connected maps', () => {
     const record = mapPageRecordFixture({ mapId: 'lantern-square' });
+    const sixConnections = record.connections.items.slice(0, 6);
+    expect(sixConnections).toHaveLength(6);
     renderDetail('lantern-square', false, {
       ...record.connections,
-      items: record.connections.items.slice(0, 6),
+      items: sixConnections,
     });
 
     expect(
@@ -910,12 +914,13 @@ describe('MapDetail information', () => {
     expect(within(bossCard).getByText('Boss')).toBeVisible();
   });
 
-  it('projects all three monster sort orders from seven and shows the control', () => {
+  it('shows monster sorting and all three sort orders at exactly seven types', () => {
     const view = projectMapDetail({
       record: mapPageRecordFixture({ mapId: 'synthetic-monster-yard' }),
       buildId: 'cw-launch',
     });
     const monsters = view.monsters.monsters;
+    expect(monsters).toHaveLength(7);
     renderDetail('synthetic-monster-yard');
     const sort = screen.getByRole('combobox', { name: 'Sort monsters' });
     const readCardNames = () =>
@@ -962,11 +967,13 @@ describe('MapDetail information', () => {
     ]);
   });
 
-  it('omits the monster sort below seven cards', () => {
+  it('omits the monster sort at six types', () => {
     const record = mapPageRecordFixture({ mapId: 'synthetic-monster-yard' });
+    const sixMonsters = record.monsters.items.slice(0, 6);
+    expect(sixMonsters).toHaveLength(6);
     renderDetail('synthetic-monster-yard', false, undefined, {
       ...record.monsters,
-      items: record.monsters.items.slice(0, 6),
+      items: sixMonsters,
     });
 
     expect(

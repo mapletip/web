@@ -272,12 +272,29 @@ for (const viewport of [
     await page.goto(`/maplestory/maps/practice-grove-${publicId}`);
     await page.waitForLoadState('networkidle');
 
-    const sproutCard = page
+    const pebbleCard = page
       .getByTestId('map-monster-card')
-      .filter({ hasText: 'Twin Sprout' });
-    await sproutCard
-      .getByRole('button', { name: 'Locate 2 Twin Sprout spawns on map' })
-      .click();
+      .filter({ hasText: 'Plain Pebble' });
+    await expect(pebbleCard.getByRole('link')).toHaveAttribute(
+      'href',
+      /\/monsters\/plain-pebble-/u,
+    );
+    const locateButton = pebbleCard.getByRole('button', {
+      name: 'Locate 1 Plain Pebble spawn on map',
+    });
+    await locateButton.scrollIntoViewIfNeeded();
+    expect(
+      await locateButton.evaluate((button) => {
+        const bounds = button.getBoundingClientRect();
+        return button.contains(
+          document.elementFromPoint(
+            bounds.left + bounds.width / 2,
+            bounds.top + bounds.height / 2,
+          ),
+        );
+      }),
+    ).toBe(true);
+    await locateButton.click();
 
     const dialog = page.getByRole('dialog', { name: 'Practice Grove' });
     await expect(dialog).toBeVisible();
@@ -285,7 +302,7 @@ for (const viewport of [
     const exploreStage = dialog.getByRole('group', {
       name: 'Practice Grove map',
     });
-    await expect(exploreStage.locator('[data-selected="true"]')).toHaveCount(2);
+    await expect(exploreStage.locator('[data-selected="true"]')).toHaveCount(1);
 
     await page.goBack();
 
@@ -295,9 +312,36 @@ for (const viewport of [
       page
         .getByRole('group', { name: 'Practice Grove map' })
         .locator('[data-selected="true"]'),
-    ).toHaveCount(2);
+    ).toHaveCount(1);
   });
 }
+
+test('Escape closes marker details from the marker and popover at desktop width', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  const publicId = mapPublicId({ sourceId: 'cw-launch:practice-grove' });
+  await page.goto(`/maplestory/maps/practice-grove-${publicId}`);
+
+  const marker = page.getByRole('button', {
+    name: 'Twin Sprout, Monster, 2 of 2',
+  });
+  await marker.focus();
+  await marker.press('Space');
+  const closeButton = page.getByRole('button', { name: 'Close details' });
+  await expect(closeButton).toBeVisible();
+
+  await marker.press('Escape');
+  await expect(closeButton).toBeHidden();
+  await expect(marker).toBeFocused();
+
+  await marker.press('Space');
+  await expect(closeButton).toBeVisible();
+  await closeButton.focus();
+  await closeButton.press('Escape');
+  await expect(closeButton).toBeHidden();
+  await expect(marker).toBeFocused();
+});
 
 test('Map Detail selection follows the address on desktop and stays static on mobile', async ({
   page,
