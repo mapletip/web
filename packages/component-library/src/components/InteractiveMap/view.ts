@@ -63,7 +63,7 @@ function clamp({
   return Math.max(minimum, Math.min(value, maximum));
 }
 
-function clampCentre({
+function clampCenter({
   value,
   imageSize,
   stageSize,
@@ -99,14 +99,14 @@ function clampView(
 
   return {
     zoom,
-    centerX: clampCentre({
+    centerX: clampCenter({
       value: view.centerX,
       imageSize: sizes.imageWidth,
       stageSize: sizes.stageWidth,
       fitScale: sizes.fitScale,
       zoom,
     }),
-    centerY: clampCentre({
+    centerY: clampCenter({
       value: view.centerY,
       imageSize: sizes.imageHeight,
       stageSize: sizes.stageHeight,

@@ -78,7 +78,7 @@ library always supplies one.
 
 Selected stories are compared against committed screenshots in the dark scheme, using the
 same browser test runner as the rest of the library, so a change in layout, theme or
-responsive behaviour fails the build.
+responsive behavior fails the build.
 
 ```bash
 pnpm --filter @mapletip/component-library test:visual

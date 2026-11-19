@@ -197,9 +197,9 @@
   }
 }
 
-/* Forced colours drop gradients and shadows; the shipped stage draws its
- * boundary with a system colour, which is all that is needed. The sprite keeps
- * its own colours. */
+/* Forced colors drop gradients and shadows; the shipped stage draws its
+ * boundary with a system color, which is all that is needed. The sprite keeps
+ * its own colors. */
 @media (forced-colors: active) {
   .stage {
     border: 1px solid ButtonBorder;

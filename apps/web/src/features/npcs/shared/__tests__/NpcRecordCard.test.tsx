@@ -41,6 +41,49 @@ describe('NpcRecordCard', () => {
     expect(projectNpcRecordCard(npc)).not.toHaveProperty('spriteUrl');
   });
 
+  it('projects known, partial and unknown quest counts with production wording', () => {
+    const npc = mapPageRecordFixture({ mapId: 'lantern-square' }).npcs.items[0];
+    if (npc === undefined) throw new Error('Expected a fixture NPC.');
+
+    expect(
+      projectNpcRecordCard({
+        ...npc,
+        questCount: { state: 'known', count: 1 },
+      }).questCountLabel,
+    ).toBe('1 quest');
+    expect(
+      projectNpcRecordCard({
+        ...npc,
+        questCount: { state: 'partial', count: 1 },
+      }).questCountLabel,
+    ).toBe('1+ quests');
+    expect(
+      projectNpcRecordCard({
+        ...npc,
+        questCount: { state: 'known', count: 3 },
+      }).questCountLabel,
+    ).toBe('3 quests');
+    expect(
+      projectNpcRecordCard({
+        ...npc,
+        questCount: { state: 'unknown' },
+      }),
+    ).not.toHaveProperty('questCountLabel');
+  });
+
+  it('renders the projected quest count beneath the NPC name', () => {
+    render(
+      <MantineProvider>
+        <NpcRecordCard
+          npc={{ name: 'Bellkeeper', questCountLabel: '1 quest' }}
+        />
+      </MantineProvider>,
+    );
+
+    expect(screen.getByRole('heading', { name: 'Bellkeeper' })).toBeVisible();
+    expect(screen.getByText('1 quest')).toBeVisible();
+  });
+
   it('uses the missing-image placeholder and keeps NPC identity unlinked', () => {
     const { container } = render(
       <MantineProvider>

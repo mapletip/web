@@ -403,7 +403,7 @@ function MobileNavigation({
 /**
  * Generic, host-configured global header. Branding, destinations and selected
  * state belong to the host; this component owns semantic markup, responsive
- * presentation and supported Mantine disclosure/drawer behaviour.
+ * presentation and supported Mantine disclosure/drawer behavior.
  */
 export function Header({
   brand,

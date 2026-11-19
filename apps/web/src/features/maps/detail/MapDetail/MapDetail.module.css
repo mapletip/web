@@ -1,7 +1,8 @@
 .markerPalette {
   --map-detail-marker-warp-ring-color: #f08c46;
-  --map-detail-marker-monster-color: var(--mapletip-color-accent-gold);
-  --map-detail-marker-npc-color: var(--mapletip-color-accent-forest);
+  /* Production's marker colors; the theme's status colors are too pale in dark mode. */
+  --map-detail-marker-monster-color: #ffd166;
+  --map-detail-marker-npc-color: #20c997;
   --map-detail-marker-border-color: #fff;
 }
 
@@ -91,7 +92,7 @@
     --mantine-primary-color-filled,
     var(--mapletip-color-selection-edge)
   );
-  /* A 2px edge marks selection without relying on colour or shifting layout. */
+  /* A 2px edge marks selection without relying on color or shifting layout. */
   box-shadow: inset 0 0 0 1px
     var(--mantine-primary-color-filled, var(--mapletip-color-selection-edge));
 }

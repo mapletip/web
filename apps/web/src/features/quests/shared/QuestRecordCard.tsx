@@ -1,5 +1,5 @@
 import { Badge, Group, Text } from '@mantine/core';
-import { RecordCard } from '@mapletip/component-library';
+import { RecordCard, Thumbnail } from '@mapletip/component-library';
 import type { ReactElement, ReactNode } from 'react';
 
 import classes from './QuestRecordCard.module.css';
@@ -18,7 +18,21 @@ export function QuestRecordCard({
   return (
     <RecordCard
       title={quest.name}
-      secondaryLine={quest.jobSummary}
+      secondaryLine={
+        [
+          quest.startNpc?.name === undefined
+            ? undefined
+            : `Start: ${quest.startNpc.name}`,
+          quest.jobSummary,
+        ]
+          .filter((fact): fact is string => fact !== undefined)
+          .join(' · ') || undefined
+      }
+      media={
+        quest.startNpc?.spriteUrl === undefined ? undefined : (
+          <Thumbnail src={quest.startNpc.spriteUrl} size={44} alt="" />
+        )
+      }
       badges={
         <>
           {quest.minimumLevelLabel === undefined ? null : (
@@ -26,6 +40,17 @@ export function QuestRecordCard({
               {quest.minimumLevelLabel}
             </Badge>
           )}
+          {quest.event === true ? (
+            <Badge
+              variant="outline"
+              color="gray"
+              size="xs"
+              radius="sm"
+              tt="none"
+            >
+              Event
+            </Badge>
+          ) : null}
           {quest.repeatable ? (
             <Badge
               variant="outline"

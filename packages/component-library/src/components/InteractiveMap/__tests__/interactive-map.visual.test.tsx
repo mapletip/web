@@ -50,7 +50,7 @@ const visualCases: readonly InteractiveMapVisualCase[] = [
     imageAlt: 'Synthetic tall image',
     visible: [
       page.getByRole('img', { name: 'Synthetic tall image' }),
-      page.getByRole('button', { name: 'Centre point' }),
+      page.getByRole('button', { name: 'Center point' }),
     ],
   },
   {
@@ -64,7 +64,7 @@ const visualCases: readonly InteractiveMapVisualCase[] = [
     imageAlt: 'Synthetic tiny image',
     visible: [
       page.getByRole('img', { name: 'Synthetic tiny image' }),
-      page.getByRole('button', { name: 'Centre point' }),
+      page.getByRole('button', { name: 'Center point' }),
     ],
   },
   {
@@ -150,17 +150,17 @@ const visualCases: readonly InteractiveMapVisualCase[] = [
     name: 'interactive-map-details-at-center-dark',
     story: dark.DetailsAtCenter,
     storyId: 'components-interactivemap--details-at-center',
-    testId: 'interactive-map-details-centre',
+    testId: 'interactive-map-details-center',
     width: 720,
     height: 400,
-    element: page.getByTestId('interactive-map-details-centre'),
+    element: page.getByTestId('interactive-map-details-center'),
     imageAlt: 'Synthetic wide image',
     beforeScreenshot: async () => {
-      await userEvent.click(page.getByRole('button', { name: 'Centre point' }));
+      await userEvent.click(page.getByRole('button', { name: 'Center point' }));
     },
     visible: [
       wideImage,
-      page.getByRole('button', { name: 'Centre point' }),
+      page.getByRole('button', { name: 'Center point' }),
       page.getByText('Details shown beside the center point.'),
     ],
   },

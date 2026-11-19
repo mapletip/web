@@ -163,7 +163,7 @@ function browserProject(name: string, options: Record<string, unknown>) {
 }
 
 export default defineConfig({
-  // Pre-bundle everything tests import so Vite never re-optimises (and reloads)
+  // Pre-bundle everything tests import so Vite never re-optimizes (and reloads)
   // mid-run, which otherwise surfaces as a duplicate-React error.
   optimizeDeps: {
     include: [

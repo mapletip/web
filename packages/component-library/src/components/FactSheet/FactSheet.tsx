@@ -5,7 +5,7 @@ import classes from '@/components/FactSheet/FactSheet.module.css';
 import type { FactSheetProps } from '@/components/FactSheet/types';
 
 /**
- * One ordered description list of labelled facts.
+ * One ordered description list of labeled facts.
  *
  * Values are rendered exactly as supplied; formatting is the host's job. A fact
  * without a known value shows the host's wording in the value position instead

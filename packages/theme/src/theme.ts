@@ -191,7 +191,7 @@ export const theme: MantineThemeOverride = createTheme({
         radius: 'sm',
       },
     },
-    // Inline links must not rely on colour alone (WCAG 1.4.1)
+    // Inline links must not rely on color alone (WCAG 1.4.1)
     Anchor: {
       defaultProps: {
         underline: 'always',
