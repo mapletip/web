@@ -350,8 +350,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/component-library
       '@mapletip/data':
-        specifier: 0.9.0
-        version: 0.9.0
+        specifier: 0.11.0
+        version: 0.11.0
       '@mapletip/theme':
         specifier: workspace:*
         version: link:../../packages/theme
@@ -1129,8 +1129,8 @@ packages:
     peerDependencies:
       react: ^19.2.0
 
-  '@mapletip/data@0.9.0':
-    resolution: {integrity: sha512-v/Ka2E0/43YfGVX6Dc3KKNWWkL2F/xJNLw7hDMzQiZjJqQ55IDoEwsq+ppFG+TvtXJb9Af0sRfWy16+pEtAhDQ==}
+  '@mapletip/data@0.11.0':
+    resolution: {integrity: sha512-qsjE/hPhQc7int0hpjcXNp8zQW7c9s/98dRdntRlOWanbV6kT8oHBh7nayigbwrpmljI20g2Cwwk32ixKAjK6g==}
 
   '@msw/url@0.1.2':
     resolution: {integrity: sha512-DdeBLQxQ+ZrtmwEmaj7GQ7lbzPCgbbbyAqOz/I4ulo68hwBpfdNvQJ5bmihJUkAAKOeCmqCIG3OFZGosqFN4mA==}
@@ -4851,7 +4851,7 @@ snapshots:
     dependencies:
       react: 19.3.1
 
-  '@mapletip/data@0.9.0': {}
+  '@mapletip/data@0.11.0': {}
 
   '@msw/url@0.1.2': {}
 

@@ -1,5 +1,5 @@
 import type { InteractiveMapConnector } from '@mapletip/component-library';
-import { mapMinimapUrl, type MapPageRecordV1 } from '@mapletip/data/maps';
+import { mapMinimapUrl, type StaticMapPageRecord } from '@mapletip/data/maps';
 
 import { MAPLEKIT_RELEASE, type BuildId } from '@/config/maplekit';
 import { buildRecordDetailPath } from '@/features/detail';
@@ -47,7 +47,7 @@ export interface MapDetailView {
 interface MapDetailOnThisMapRowBaseView {
   readonly count: number | 'unknown';
   readonly countLabel: string;
-  readonly state: MapPageRecordV1['connections']['state'];
+  readonly state: StaticMapPageRecord['connections']['state'];
 }
 
 export interface MapDetailOnThisMapToggleRowView extends MapDetailOnThisMapRowBaseView {
@@ -108,7 +108,7 @@ export interface MapDetailStageView {
 }
 
 export interface MapDetailConnectionsView {
-  readonly state: MapPageRecordV1['connections']['state'];
+  readonly state: StaticMapPageRecord['connections']['state'];
   readonly count: number | 'unknown';
   readonly notice?: string;
   readonly maps: readonly MapDetailConnectionView[];
@@ -129,7 +129,7 @@ export interface MapDetailMonsterView extends MonsterRecordCardView {
 }
 
 export interface MapDetailMonstersView {
-  readonly state: MapPageRecordV1['monsters']['state'];
+  readonly state: StaticMapPageRecord['monsters']['state'];
   readonly count: number | 'unknown';
   readonly totalSpawns: number;
   readonly notice?: string;
@@ -143,7 +143,7 @@ export interface MapDetailNpcView extends NpcRecordCardView {
 }
 
 export interface MapDetailNpcsView {
-  readonly state: MapPageRecordV1['npcs']['state'];
+  readonly state: StaticMapPageRecord['npcs']['state'];
   readonly count: number | 'unknown';
   readonly notice?: string;
   readonly npcs: readonly MapDetailNpcView[];
@@ -157,12 +157,12 @@ export interface MapDetailFactView {
 }
 
 export interface ProjectMapDetailOptions {
-  readonly record: MapPageRecordV1;
+  readonly record: StaticMapPageRecord;
   readonly buildId: BuildId;
 }
 
 type MapDetailPoint =
-  MapPageRecordV1['monsters']['items'][number]['points']['items'][number];
+  StaticMapPageRecord['monsters']['items'][number]['points']['items'][number];
 type MapDetailPositionCollection = {
   readonly state: string;
   readonly items: readonly MapDetailPoint[];
@@ -200,8 +200,8 @@ function addMapFact({
 }: {
   readonly facts: MapDetailFactView[];
   readonly field:
-    | MapPageRecordV1['information']['returnMap']
-    | MapPageRecordV1['information']['forcedReturnMap'];
+    | StaticMapPageRecord['information']['returnMap']
+    | StaticMapPageRecord['information']['forcedReturnMap'];
   readonly label: string;
   readonly explanation: string;
   readonly buildId: BuildId;
@@ -224,7 +224,7 @@ function projectFacts({
   information,
   buildId,
 }: {
-  readonly information: MapPageRecordV1['information'];
+  readonly information: StaticMapPageRecord['information'];
   readonly buildId: BuildId;
 }): readonly MapDetailFactView[] {
   const facts: MapDetailFactView[] = [];
@@ -385,7 +385,7 @@ function projectSectionNotice({
 }
 
 function projectMonsterNotice(
-  state: MapPageRecordV1['monsters']['state'],
+  state: StaticMapPageRecord['monsters']['state'],
   noRecordedMonsters: boolean,
 ): string | undefined {
   return projectSectionNotice({
@@ -400,7 +400,7 @@ function projectMonsters({
   record,
   buildId,
 }: {
-  readonly record: MapPageRecordV1;
+  readonly record: StaticMapPageRecord;
   readonly buildId: BuildId;
 }): MapDetailMonstersView {
   const monsters = record.monsters.items
@@ -459,7 +459,7 @@ function projectConnections({
   record,
   buildId,
 }: {
-  readonly record: MapPageRecordV1;
+  readonly record: StaticMapPageRecord;
   readonly buildId: BuildId;
 }): MapDetailConnectionsView {
   const maps = record.connections.items
@@ -531,7 +531,7 @@ function onThisMapCountLabel({
   state,
 }: {
   readonly count: number | 'unknown';
-  readonly state: MapPageRecordV1['connections']['state'];
+  readonly state: StaticMapPageRecord['connections']['state'];
 }): string {
   if (count === 'unknown') return '?';
   return `${count}${state === 'partial' ? '+' : ''}`;
@@ -549,7 +549,7 @@ function projectOnThisMapToggleRow({
   readonly key: 'connections' | 'monsters' | 'npcs';
   readonly label: 'Connections' | 'Monsters' | 'NPCs';
   readonly count: number | 'unknown';
-  readonly state: MapPageRecordV1['connections']['state'];
+  readonly state: StaticMapPageRecord['connections']['state'];
   readonly focus: 'connections' | 'monsters' | 'npcs';
   readonly singular: string;
   readonly plural: string;
@@ -622,7 +622,7 @@ function projectOnThisMap({
   ];
 }
 
-function projectNpcs(record: MapPageRecordV1): MapDetailNpcsView {
+function projectNpcs(record: StaticMapPageRecord): MapDetailNpcsView {
   const npcs = record.npcs.items
     .map((npc) => ({
       key: npc.key,
@@ -678,12 +678,12 @@ function projectPointMarkers({
   }));
 }
 
-type MapDetailWarpView = MapPageRecordV1['warps']['items'][number] & {
+type MapDetailWarpView = StaticMapPageRecord['warps']['items'][number] & {
   readonly focusKey: string;
   readonly name: string;
 };
 
-function projectWarps(record: MapPageRecordV1): MapDetailWarpView[] {
+function projectWarps(record: StaticMapPageRecord): MapDetailWarpView[] {
   return record.warps.items.map((warp, index) => ({
     ...warp,
     focusKey: `warp-${warp.focusToken}`,
@@ -699,7 +699,7 @@ function projectStage({
   npcs,
   warps,
 }: {
-  readonly record: MapPageRecordV1;
+  readonly record: StaticMapPageRecord;
   readonly name: string;
   readonly connections: MapDetailConnectionsView;
   readonly monsters: MapDetailMonstersView;

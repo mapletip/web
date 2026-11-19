@@ -1,10 +1,19 @@
 import { MissingRecordError } from '@mapletip/data';
-import { getMapPage, type MapPageRecordV1 } from '@mapletip/data/maps';
-import { getMonsterPage, hasMonsterPublicIds } from '@mapletip/data/monsters';
+import { getMapPage, type StaticMapPageRecord } from '@mapletip/data/maps';
+import {
+  getMonsterLocationBrowse,
+  getMonsterPage,
+  hasMonsterPublicIds,
+} from '@mapletip/data/monsters';
 import { openRelease } from '@mapletip/data/release';
 import { describe, expect, it } from 'vitest';
 
-import { buildRelease, fixtureRelease, mapPublicId } from '../release';
+import {
+  buildRelease,
+  fixtureRelease,
+  mapPublicId,
+  monsterPublicId,
+} from '../release';
 import { fixtureMaps, world } from '../world';
 
 function fileFetch(files: ReadonlyMap<string, Uint8Array>): typeof fetch {
@@ -73,7 +82,7 @@ describe('fixture release', () => {
   });
 
   it('serves validated Map pages for each synthetic fixture case', async () => {
-    const pages = new Map<string, MapPageRecordV1>();
+    const pages = new Map<string, StaticMapPageRecord>();
     for (const map of fixtureMaps) {
       const publicId = mapPublicId({ sourceId: `cw-launch:${map.id}` });
       const page = await getMapPage({
@@ -112,7 +121,7 @@ describe('fixture release', () => {
     expect(gmsPage.scope.build_id).toBe('gms-v83');
     expect(gmsPage.name).toEqual({ state: 'known', value: 'Practice Grove' });
 
-    const pageFor = (id: string): MapPageRecordV1 => {
+    const pageFor = (id: string): StaticMapPageRecord => {
       const page = pages.get(id);
       if (page === undefined)
         throw new Error(`Missing fixture Map page "${id}".`);
@@ -128,6 +137,9 @@ describe('fixture release', () => {
     expect(new Set(occupiedPoints).size).toBeLessThan(occupiedPoints.length);
 
     const town = pageFor('lantern-square');
+    if (town.contractVersion !== '1.1') {
+      throw new Error('Expected Map page revision 1.1 for Lantern Square.');
+    }
     expect(town.monsters.items).toHaveLength(0);
     expect(town.npcs.items.length).toBeGreaterThanOrEqual(8);
     expect(town.connections.items.length).toBeGreaterThanOrEqual(7);
@@ -135,6 +147,14 @@ describe('fixture release', () => {
       new Set(town.connections.items.map((connection) => connection.publicId))
         .size,
     ).toBeGreaterThanOrEqual(7);
+    const lanternMaker = town.npcs.items.find(
+      (npc) => npc.name.state === 'known' && npc.name.value === 'Lantern Maker',
+    );
+    const storyteller = town.npcs.items.find(
+      (npc) => npc.name.state === 'known' && npc.name.value === 'Storyteller',
+    );
+    expect(lanternMaker?.questCount).toEqual({ state: 'known', count: 1 });
+    expect(storyteller?.questCount).toEqual({ state: 'partial', count: 1 });
 
     expect(
       pageFor('synthetic-monster-yard').monsters.items.length,
@@ -163,6 +183,69 @@ describe('fixture release', () => {
         fetch: fileFetch(fixtureRelease.files),
       }),
     ).rejects.toBeInstanceOf(MissingRecordError);
+  });
+
+  it('serves matching Monster location and Map page identities from v1.3 fixtures', async () => {
+    const options = {
+      baseUrl: 'https://d0.mapletip.com/',
+      pin: fixtureRelease.pin,
+      buildId: 'cw-launch',
+      fetch: fileFetch(fixtureRelease.files),
+    } as const;
+    const [page, eventMonster, locations] = await Promise.all([
+      getMonsterPage({
+        ...options,
+        publicId: monsterPublicId('crowned-warden'),
+      }),
+      getMonsterPage({
+        ...options,
+        publicId: monsterPublicId('crowned-revenant'),
+      }),
+      getMonsterLocationBrowse(options),
+    ]);
+    if (
+      page.contractVersion !== '1.2' ||
+      eventMonster.contractVersion !== '1.2' ||
+      locations.contractVersion !== '1.3'
+    ) {
+      throw new Error(
+        'Expected the current Monster page and location revisions.',
+      );
+    }
+    expect(page.contractVersion).toBe('1.2');
+    expect(locations.contractVersion).toBe('1.3');
+
+    const hunt = page.quests.entries.find(
+      (quest) => quest.questKey === 'fixture:quest:warden-hunt',
+    );
+    expect(hunt?.startNpc).toEqual({
+      state: 'known',
+      value: {
+        name: { state: 'known', value: 'Lantern Maker' },
+        sprite: { state: 'unknown' },
+      },
+    });
+    expect(hunt?.event).toEqual({ state: 'known', value: false });
+    const eventQuest = eventMonster.quests.entries.find(
+      (quest) => quest.questKey === 'fixture:quest:lantern-festival',
+    );
+    expect(eventQuest?.startNpc).toEqual({
+      state: 'absent',
+      coverageKey: 'fixture:quest-start-npc',
+    });
+    expect(eventQuest?.event).toEqual({ state: 'known', value: true });
+
+    const location = locations.records[page.key]?.entries[0];
+    if (location === undefined) {
+      throw new Error('Missing Crowned Warden fixture location.');
+    }
+    const mapPage = await getMapPage({
+      ...options,
+      publicId: location.publicId,
+    });
+    expect(mapPage.key).toBe(location.mapKey);
+    expect(mapPage.publicId).toBe(location.publicId);
+    expect(mapPage.slug).toBe(location.slug);
   });
 
   it('rejects a catalog whose bytes no longer match its digest', async () => {
