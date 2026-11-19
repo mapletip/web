@@ -161,7 +161,7 @@ describe('MapDetail server rendering', () => {
     expect(html).toContain('alt="Practice Grove map"');
     expect(html).toContain(`src="${portalImage}"`);
     expect(html).toMatch(
-      /<span(?=[^>]*data-marker-ids="[^"]+")(?=[^>]*style="[^"]*left:26\.[0-9]+%;top:65%[^"]*")[^>]*>/u,
+      /<[a-z]+(?=[^>]*data-marker-ids="[^"]+")(?=[^>]*style="[^"]*left:26\.[0-9]+%;top:65%[^"]*")[^>]*>/u,
     );
     expect(html).toContain(
       `href="/maplestory/monsters/plain-pebble-${record.monsters.items[0]?.publicId}"`,

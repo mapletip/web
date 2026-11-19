@@ -35,7 +35,8 @@
     "@phosphor-icons/react": "catalog:",
     "@tanstack/react-table": "catalog:",
     "@tanstack/table-core": "catalog:",
-    "mantine-datatable": "catalog:"
+    "mantine-datatable": "catalog:",
+    "react-zoom-pan-pinch": "catalog:"
   },
   "devDependencies": {
     "@mapletip/config": "workspace:*",

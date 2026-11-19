@@ -1,5 +1,6 @@
 import { MantineProvider } from '@mantine/core';
 import { cssVariablesResolver, theme } from '@mapletip/theme';
+import { useState, type ReactNode } from 'react';
 import { afterEach, describe, expect, it } from 'vitest';
 import { commands, page, userEvent } from 'vitest/browser';
 import { render } from 'vitest-browser-react';
@@ -77,7 +78,10 @@ async function mountWithDetails() {
 }
 
 afterEach(async () => {
-  await commands.emulateMedia({ forcedColors: 'none' });
+  await commands.emulateMedia({
+    forcedColors: 'none',
+    reducedMotion: 'no-preference',
+  });
 });
 
 describe('MarkerStage selected marker ring', () => {
@@ -191,5 +195,402 @@ describe('MarkerStage marker details', () => {
     await userEvent.click(page.getByRole('group', { name: 'Synthetic image' }));
 
     await expect.element(details).not.toBeInTheDocument();
+  });
+});
+
+function zoomScale(container: HTMLElement): number {
+  const content = container.querySelector<HTMLElement>(
+    '.react-transform-component',
+  );
+  const match = content?.style.transform.match(/scale\(([-\d.]+)\)/u);
+  return Number(match?.[1] ?? 1);
+}
+
+function markerContent() {
+  return (
+    <span
+      data-testid="marker-glyph"
+      aria-hidden="true"
+      style={{
+        display: 'block',
+        width: 'var(--marker-stage-marker-size)',
+        height: 'var(--marker-stage-marker-size)',
+        borderRadius: '50%',
+        background: '#d44',
+      }}
+    />
+  );
+}
+
+async function mountInteractiveStage(options?: {
+  readonly wheelZoom?: boolean;
+  readonly belowContent?: ReactNode;
+  readonly zoomInLabel?: string;
+  readonly zoomOutLabel?: string;
+  readonly fitLabel?: string;
+}) {
+  const result = await render(
+    <MantineProvider
+      theme={theme}
+      cssVariablesResolver={cssVariablesResolver}
+      forceColorScheme="dark"
+    >
+      <div style={{ width: '400px', maxWidth: '100vw' }}>
+        <MarkerStage
+          image={{
+            src: image,
+            width: 400,
+            height: 200,
+            alt: 'Zoom test image',
+          }}
+          markers={[
+            {
+              id: 'west',
+              x: 80,
+              y: 100,
+              label: 'West point',
+              content: markerContent(),
+            },
+            {
+              id: 'east',
+              x: 320,
+              y: 100,
+              label: 'East point',
+              content: markerContent(),
+            },
+          ]}
+          selectedIds={['west']}
+          connectors={[{ id: 'route', from: 'west', to: 'east' }]}
+          wheelZoom={options?.wheelZoom ?? false}
+          zoomInLabel={options?.zoomInLabel ?? 'Zoom in'}
+          zoomOutLabel={options?.zoomOutLabel ?? 'Zoom out'}
+          fitLabel={options?.fitLabel ?? 'Fit map'}
+          unavailableMessage="Image unavailable."
+        />
+        {options?.belowContent}
+      </div>
+    </MantineProvider>,
+  );
+  return result.container;
+}
+
+function expectMarkerAtImagePixel(container: HTMLElement): void {
+  const stage = container.querySelector<HTMLElement>(
+    '[role="group"][aria-label="Zoom test image"]',
+  )!;
+  const imageElement = stage.querySelector<HTMLImageElement>('img')!;
+  const marker = stage.querySelector<HTMLElement>('[data-marker-id="west"]')!;
+  const imageRect = imageElement.getBoundingClientRect();
+  const markerRect = marker.getBoundingClientRect();
+
+  expect(markerRect.left + markerRect.width / 2).toBeCloseTo(
+    imageRect.left + (80 / 400) * imageRect.width,
+    1,
+  );
+  expect(markerRect.bottom).toBeCloseTo(
+    imageRect.top + (100 / 200) * imageRect.height,
+    1,
+  );
+}
+
+async function mountSelectionHarness() {
+  function Harness() {
+    const [selectedIds, setSelectedIds] = useState(['west']);
+    return (
+      <MantineProvider
+        theme={theme}
+        cssVariablesResolver={cssVariablesResolver}
+        forceColorScheme="dark"
+      >
+        <button type="button" onClick={() => setSelectedIds(['east'])}>
+          Select east
+        </button>
+        <button type="button" onClick={() => setSelectedIds(['west'])}>
+          Select west
+        </button>
+        <div style={{ width: '400px' }}>
+          <MarkerStage
+            image={{
+              src: image,
+              width: 400,
+              height: 200,
+              alt: 'Selection test image',
+            }}
+            markers={[
+              {
+                id: 'west',
+                x: 80,
+                y: 100,
+                label: 'West point',
+                content: markerContent(),
+              },
+              {
+                id: 'east',
+                x: 320,
+                y: 100,
+                label: 'East point',
+                content: markerContent(),
+              },
+            ]}
+            selectedIds={selectedIds}
+            unavailableMessage="Image unavailable."
+          />
+        </div>
+      </MantineProvider>
+    );
+  }
+
+  return (await render(<Harness />)).container;
+}
+
+describe('MarkerStage pan and zoom', () => {
+  it('keeps markers on image pixels when the stage has a different aspect ratio', async () => {
+    await commands.emulateMedia({ reducedMotion: 'reduce' });
+    const container = await mountInteractiveStage();
+    const stage = container.querySelector<HTMLElement>(
+      '[role="group"][aria-label="Zoom test image"]',
+    )!;
+    stage.style.height = '300px';
+
+    const stageRect = stage.getBoundingClientRect();
+    expect(stageRect.width / stageRect.height).toBeCloseTo(4 / 3, 1);
+    expectMarkerAtImagePixel(container);
+
+    await userEvent.click(page.getByRole('button', { name: 'Zoom in' }));
+    expectMarkerAtImagePixel(container);
+  });
+
+  it('keeps interactive controls stacked at the bottom-right of the stage', async () => {
+    const container = await mountInteractiveStage();
+    const stage = container.querySelector<HTMLElement>(
+      '[role="group"][aria-label="Zoom test image"]',
+    )!;
+    stage.style.height = '300px';
+
+    const controls = page
+      .getByRole('group', { name: 'Map controls' })
+      .element();
+    const stageRect = stage.getBoundingClientRect();
+    const controlsRect = controls.getBoundingClientRect();
+    const zoomInRect = page
+      .getByRole('button', { name: 'Zoom in' })
+      .element()
+      .getBoundingClientRect();
+    const zoomOutRect = page
+      .getByRole('button', { name: 'Zoom out' })
+      .element()
+      .getBoundingClientRect();
+    const fitRect = page
+      .getByRole('button', { name: 'Fit map' })
+      .element()
+      .getBoundingClientRect();
+
+    expect(stageRect.right - controlsRect.right).toBeCloseTo(4, 0);
+    expect(stageRect.bottom - controlsRect.bottom).toBeCloseTo(12, 0);
+    expect(zoomInRect.top).toBeLessThan(zoomOutRect.top);
+    expect(zoomOutRect.top).toBeLessThan(fitRect.top);
+  });
+
+  it('steps by square root of two and disables controls at both limits', async () => {
+    await commands.emulateMedia({ reducedMotion: 'reduce' });
+    const container = await mountInteractiveStage();
+    const zoomIn = page.getByRole('button', { name: 'Zoom in' });
+    const zoomOut = page.getByRole('button', { name: 'Zoom out' });
+    const fit = page.getByRole('button', { name: 'Fit map' });
+
+    expect(zoomOut.element()).toBeEnabled();
+    await userEvent.click(zoomIn);
+    const firstZoom = zoomScale(container);
+    expect(firstZoom).toBeCloseTo(Math.SQRT2);
+    await userEvent.click(zoomIn);
+    expect(zoomScale(container) / firstZoom).toBeCloseTo(Math.SQRT2, 1);
+
+    await userEvent.click(fit);
+    expect(zoomScale(container)).toBeCloseTo(1);
+    await userEvent.click(zoomOut);
+    await userEvent.click(zoomOut);
+    expect(zoomScale(container)).toBeCloseTo(0.5);
+    expect(zoomOut.element()).toBeDisabled();
+
+    await userEvent.click(fit);
+    for (
+      let step = 0;
+      step < 10 && !zoomIn.element().hasAttribute('disabled');
+      step += 1
+    ) {
+      await userEvent.click(zoomIn);
+    }
+    expect(zoomScale(container)).toBeCloseTo(8);
+    expect(zoomIn.element()).toBeDisabled();
+  });
+
+  it('keeps marker content the same size at maximum zoom', async () => {
+    await commands.emulateMedia({ reducedMotion: 'reduce' });
+    const container = await mountInteractiveStage();
+    const glyph = container.querySelector<HTMLElement>(
+      '[data-testid="marker-glyph"]',
+    )!;
+    const fitted = glyph.getBoundingClientRect();
+
+    const zoomIn = page.getByRole('button', { name: 'Zoom in' });
+    for (
+      let step = 0;
+      step < 8 && !zoomIn.element().hasAttribute('disabled');
+      step += 1
+    ) {
+      await userEvent.click(zoomIn);
+    }
+
+    const zoomed = glyph.getBoundingClientRect();
+    expect(zoomScale(container)).toBeCloseTo(8);
+    expect(zoomed.width).toBeCloseTo(fitted.width);
+    expect(zoomed.height).toBeCloseTo(fitted.height);
+  });
+
+  it('uses the host supplied control labels as accessible names', async () => {
+    await mountInteractiveStage({
+      zoomInLabel: 'Enlarge image',
+      zoomOutLabel: 'Shrink image',
+      fitLabel: 'Show whole image',
+    });
+
+    expect(
+      page.getByRole('button', { name: 'Enlarge image' }).element(),
+    ).toBeEnabled();
+    expect(
+      page.getByRole('button', { name: 'Shrink image' }).element(),
+    ).toBeEnabled();
+    expect(
+      page.getByRole('button', { name: 'Show whole image' }).element(),
+    ).toBeEnabled();
+  });
+
+  it('pans by dragging the image', async () => {
+    await commands.emulateMedia({ reducedMotion: 'reduce' });
+    const container = await mountInteractiveStage();
+    await userEvent.click(page.getByRole('button', { name: 'Zoom in' }));
+
+    const viewport = container.querySelector<HTMLElement>(
+      '.react-transform-wrapper',
+    )!;
+    const rect = viewport.getBoundingClientRect();
+    const content = container.querySelector<HTMLElement>(
+      '.react-transform-component',
+    )!;
+    const before = content.style.transform;
+    await commands.dragPointer(
+      rect.x + rect.width / 2,
+      rect.y + rect.height / 2,
+      rect.x + rect.width / 2 - 70,
+      rect.y + rect.height / 2,
+    );
+
+    expect(content.style.transform).not.toBe(before);
+  });
+
+  it('supports a two-finger pinch', async () => {
+    const container = await mountInteractiveStage();
+    const viewport = container.querySelector<HTMLElement>(
+      '.react-transform-wrapper',
+    )!;
+    const rect = viewport.getBoundingClientRect();
+
+    await commands.pinchAt(
+      rect.x + rect.width / 2,
+      rect.y + rect.height / 2,
+      60,
+      150,
+    );
+
+    expect(zoomScale(container)).toBeGreaterThan(1);
+  });
+
+  it('leaves ordinary wheel input available to the page when wheel zoom is off', async () => {
+    await page.viewport(400, 500);
+    const container = await mountInteractiveStage({
+      belowContent: <div style={{ height: '1200px' }} />,
+    });
+    const viewport = container.querySelector<HTMLElement>(
+      '.react-transform-wrapper',
+    )!;
+    const rect = viewport.getBoundingClientRect();
+
+    await commands.wheelAt(rect.x + rect.width / 2, rect.y + 40, 400);
+
+    expect(zoomScale(container)).toBeCloseTo(1);
+    const wheel = new WheelEvent('wheel', {
+      deltaY: 100,
+      bubbles: true,
+      cancelable: true,
+    });
+    const pageCanScroll = viewport.dispatchEvent(wheel);
+    expect(pageCanScroll).toBe(true);
+    expect(wheel.defaultPrevented).toBe(false);
+  });
+
+  it('zooms with the wheel when the host enables it', async () => {
+    const container = await mountInteractiveStage({ wheelZoom: true });
+    const viewport = container.querySelector<HTMLElement>(
+      '.react-transform-wrapper',
+    )!;
+    const rect = viewport.getBoundingClientRect();
+
+    await commands.wheelAt(rect.x + rect.width / 2, rect.y + 40, -300);
+    await new Promise<void>((resolve) => setTimeout(resolve, 250));
+
+    expect(zoomScale(container)).toBeGreaterThan(1);
+  });
+
+  it('brings an off-screen changed selection into view without moving visible selections', async () => {
+    await commands.emulateMedia({ reducedMotion: 'reduce' });
+    const container = await mountSelectionHarness();
+    const viewport = container.querySelector<HTMLElement>(
+      '.react-transform-wrapper',
+    )!;
+    const east = page.getByRole('button', { name: 'East point' });
+    const viewportRect = viewport.getBoundingClientRect();
+    const eastRectBefore = east.element().getBoundingClientRect();
+
+    expect(eastRectBefore.right).toBeLessThanOrEqual(viewportRect.right);
+    const fittedTransform = container.querySelector<HTMLElement>(
+      '.react-transform-component',
+    )!.style.transform;
+    await userEvent.click(page.getByRole('button', { name: 'Select east' }));
+    expect(
+      container.querySelector<HTMLElement>('.react-transform-component')!.style
+        .transform,
+    ).toBe(fittedTransform);
+
+    await userEvent.click(page.getByRole('button', { name: 'Select west' }));
+    await userEvent.click(page.getByRole('button', { name: 'Zoom in' }));
+    await userEvent.click(page.getByRole('button', { name: 'Zoom in' }));
+    const stageRect = viewport.getBoundingClientRect();
+    await commands.dragPointer(
+      stageRect.x + stageRect.width / 2,
+      stageRect.y + stageRect.height / 2,
+      stageRect.x + stageRect.width / 2 + 80,
+      stageRect.y + stageRect.height / 2,
+    );
+    const eastBefore = east.element().getBoundingClientRect();
+    expect(eastBefore.right).toBeGreaterThan(
+      viewport.getBoundingClientRect().right,
+    );
+    await userEvent.click(page.getByRole('button', { name: 'Select east' }));
+
+    const eastAfter = east.element().getBoundingClientRect();
+    const finalViewport = viewport.getBoundingClientRect();
+    expect(eastAfter.left).toBeGreaterThanOrEqual(finalViewport.left);
+    expect(eastAfter.right).toBeLessThanOrEqual(finalViewport.right);
+    expect(eastAfter.top).toBeGreaterThanOrEqual(finalViewport.top);
+    expect(eastAfter.bottom).toBeLessThanOrEqual(finalViewport.bottom);
+  });
+
+  it('does not add horizontal page scrolling at 320px', async () => {
+    await page.viewport(320, 640);
+    await mountInteractiveStage();
+
+    expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(
+      document.documentElement.clientWidth,
+    );
   });
 });

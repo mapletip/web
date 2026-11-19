@@ -30,6 +30,19 @@ declare module 'vitest/browser' {
   interface BrowserCommands {
     emulateMedia(options: EmulateMediaOptions): Promise<void>;
     movePointer(x: number, y: number): Promise<void>;
+    dragPointer(
+      startX: number,
+      startY: number,
+      endX: number,
+      endY: number,
+    ): Promise<void>;
+    wheelAt(x: number, y: number, deltaY: number): Promise<void>;
+    pinchAt(
+      x: number,
+      y: number,
+      startDistance: number,
+      endDistance: number,
+    ): Promise<void>;
   }
 }
 
@@ -50,7 +63,63 @@ const movePointer: BrowserCommand<[x: number, y: number]> = async (
   await page.mouse.move(x, y);
 };
 
-const browserCommands = { emulateMedia, movePointer };
+const dragPointer: BrowserCommand<
+  [startX: number, startY: number, endX: number, endY: number]
+> = async (context, startX, startY, endX, endY) => {
+  const { page } = context as unknown as { page: Page };
+  await page.mouse.move(startX, startY);
+  await page.mouse.down();
+  await page.mouse.move(endX, endY, { steps: 5 });
+  await page.mouse.up();
+};
+
+const wheelAt: BrowserCommand<[x: number, y: number, deltaY: number]> = async (
+  context,
+  x,
+  y,
+  deltaY,
+) => {
+  const { page } = context as unknown as { page: Page };
+  await page.mouse.move(x, y);
+  await page.mouse.wheel(0, deltaY);
+};
+
+const pinchAt: BrowserCommand<
+  [x: number, y: number, startDistance: number, endDistance: number]
+> = async (context, x, y, startDistance, endDistance) => {
+  const { page } = context as unknown as { page: Page };
+  const session = await page.context().newCDPSession(page);
+  const touchPoints = (distance: number) => [
+    { id: 1, x: x - distance / 2, y },
+    { id: 2, x: x + distance / 2, y },
+  ];
+
+  // Dispatch touch input directly so the shared page's emulation stays unchanged.
+  try {
+    await session.send('Input.dispatchTouchEvent', {
+      type: 'touchStart',
+      touchPoints: touchPoints(startDistance),
+    });
+    await session.send('Input.dispatchTouchEvent', {
+      type: 'touchMove',
+      touchPoints: touchPoints(endDistance),
+    });
+    await session.send('Input.dispatchTouchEvent', {
+      type: 'touchEnd',
+      touchPoints: [],
+    });
+  } finally {
+    await session.detach();
+  }
+};
+
+const browserCommands = {
+  emulateMedia,
+  movePointer,
+  dragPointer,
+  wheelAt,
+  pinchAt,
+};
 
 /**
  * Projects are split by the boundary a test exercises, not by fashion:

@@ -76,8 +76,8 @@ describe('MarkerStage', () => {
       ],
     });
 
-    const first = container.querySelector('[data-marker-id="first"]');
-    const second = container.querySelector('[data-marker-id="second"]');
+    const first = container.querySelector('[data-marker-position="first"]');
+    const second = container.querySelector('[data-marker-position="second"]');
     expect(first).not.toBeNull();
     expect(second).not.toBeNull();
     expect(first).toHaveStyle({
@@ -202,8 +202,11 @@ describe('MarkerStage', () => {
     const target = screen.getByRole('button', {
       name: 'First point, Second point (2)',
     });
-    expect(screen.getAllByRole('button')).toHaveLength(1);
+    expect(document.querySelectorAll('button[data-marker-ids]')).toHaveLength(
+      1,
+    );
     expect(target).toHaveAttribute('data-marker-ids', 'first second');
+    expect(target).toHaveAttribute('data-selected', 'true');
     expect(target).toHaveAttribute('aria-pressed', 'true');
 
     fireEvent.click(target);
@@ -242,7 +245,10 @@ describe('MarkerStage', () => {
     const target = screen.getByRole('button', {
       name: 'First point, Second point, Third point (3)',
     });
-    expect(screen.getAllByRole('button')).toHaveLength(1);
+    expect(document.querySelectorAll('button[data-marker-ids]')).toHaveLength(
+      1,
+    );
+    expect(target).toHaveAttribute('data-marker-ids', 'first second third');
     fireEvent.click(target);
     expect(onActivate).toHaveBeenCalledExactlyOnceWith([
       'first',
@@ -268,8 +274,14 @@ describe('MarkerStage', () => {
       onActivate,
     });
 
+    const marker = container.querySelector('[data-marker-position="static"]');
     const target = container.querySelector('[data-marker-id="static"]');
+    expect(marker).not.toBeNull();
     expect(target).not.toBeNull();
+    expect(container.querySelectorAll('span[data-marker-ids]')).toHaveLength(1);
+    expect(marker).toHaveAttribute('data-selected', 'true');
+    expect(marker).toHaveAttribute('data-marker-ids', 'static');
+    expect(target).toHaveAttribute('data-marker-ids', 'static');
     expect(target).toHaveAttribute('data-selected', 'true');
     expect(target).toHaveAttribute('inert');
     expect(

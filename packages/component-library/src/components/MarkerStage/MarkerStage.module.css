@@ -8,7 +8,27 @@
   width: 100%;
   overflow: hidden;
   isolation: isolate;
-  container-type: inline-size;
+  container-type: size;
+}
+
+.viewport {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+.transformedContent {
+  width: 100%;
+  height: 100%;
+}
+
+.imageBox {
+  position: absolute;
+  inset: 0;
+  width: min(100cqw, calc(100cqh * var(--marker-stage-image-aspect-ratio)));
+  height: min(100cqh, calc(100cqw / var(--marker-stage-image-aspect-ratio)));
+  aspect-ratio: var(--marker-stage-image-aspect-ratio);
+  margin: auto;
 }
 
 .image {
@@ -38,16 +58,18 @@
 .marker {
   position: absolute;
   z-index: 1;
-  transform: translate(-50%, -100%);
+  transform-origin: center bottom;
 }
 
-.marker[data-selected='true'] {
+.marker[data-selected='true'],
+.markerStatic[data-selected='true'] {
   z-index: 2;
 }
 
 .markerButton,
 .markerStatic {
   box-sizing: border-box;
+  position: absolute;
   display: flex;
   min-width: 44px;
   min-height: 44px;
@@ -67,6 +89,86 @@
 
 .markerStatic {
   pointer-events: none;
+  transform-origin: center bottom;
+}
+
+.marker::before,
+.markerStatic::before,
+.markerButton:focus-visible::after {
+  position: absolute;
+  bottom: -6px;
+  left: 50%;
+  box-sizing: border-box;
+  border-radius: 50%;
+  background: transparent;
+  content: '';
+  pointer-events: none;
+  transform: translateX(-50%);
+}
+
+.marker[data-selected='true']::before,
+.markerStatic[data-selected='true']::before {
+  width: calc(var(--marker-stage-marker-size) + 12px);
+  height: calc(var(--marker-stage-marker-size) + 12px);
+  border: 2px solid var(--marker-stage-ring-color);
+  opacity: 0.8;
+}
+
+.markerButton:focus-visible {
+  z-index: 3;
+  outline: none;
+}
+
+.markerButton:focus-visible::after {
+  width: clamp(24px, calc(var(--marker-stage-marker-size) + 12px), 56px);
+  height: clamp(24px, calc(var(--marker-stage-marker-size) + 12px), 56px);
+  border: 3px solid var(--marker-stage-ring-color);
+  box-shadow: 0 0 0 4px var(--marker-stage-focus-halo-color);
+}
+
+.controls {
+  position: absolute;
+  top: auto;
+  right: 4px;
+  bottom: 12px;
+  left: auto;
+  z-index: 4;
+}
+
+.controls :global(.mantine-ActionIcon-root) {
+  position: relative;
+  box-sizing: border-box;
+  padding: 0;
+  border-color: transparent;
+  background: transparent;
+}
+
+.controls :global(.mantine-ActionIcon-root)::before {
+  position: absolute;
+  z-index: 0;
+  top: 50%;
+  left: 50%;
+  width: 24px;
+  height: 24px;
+  border-radius: var(--mantine-radius-sm, 4px);
+  background: var(--mantine-color-white, white);
+  content: '';
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+}
+
+.controls :global(.mantine-ActionIcon-root:hover)::before {
+  background: var(--mantine-color-gray-0, #f8f9fa);
+}
+
+.controls :global(.mantine-ActionIcon-root > *) {
+  position: relative;
+  z-index: 1;
+}
+
+.fitLabel {
+  font-size: 11px;
+  font-weight: 700;
 }
 
 .detailsDropdown {
@@ -84,38 +186,6 @@
 
 .detailsContent {
   padding-top: var(--mantine-spacing-xl);
-}
-
-.marker[data-selected='true']:not(:focus-visible)::before,
-.markerButton:focus-visible::after {
-  position: absolute;
-  bottom: -6px;
-  left: 50%;
-  box-sizing: border-box;
-  border-radius: 50%;
-  background: transparent;
-  content: '';
-  pointer-events: none;
-  transform: translateX(-50%);
-}
-
-.marker[data-selected='true']:not(:focus-visible)::before {
-  width: calc(var(--marker-stage-marker-size) + 12px);
-  height: calc(var(--marker-stage-marker-size) + 12px);
-  border: 2px solid var(--marker-stage-ring-color);
-  opacity: 0.8;
-}
-
-.markerButton:focus-visible {
-  z-index: 3;
-  outline: none;
-}
-
-.markerButton:focus-visible::after {
-  width: clamp(24px, calc(var(--marker-stage-marker-size) + 12px), 56px);
-  height: clamp(24px, calc(var(--marker-stage-marker-size) + 12px), 56px);
-  border: 3px solid var(--marker-stage-ring-color);
-  box-shadow: 0 0 0 4px var(--marker-stage-focus-halo-color);
 }
 
 .unavailable {

@@ -43,17 +43,22 @@ describe('MarkerStage server rendering', () => {
           content: <span>Edge point</span>,
         },
       ],
+      selectedIds: ['quarter'],
     });
 
     expect(html).toContain('aria-label="Synthetic landscape"');
     expect(html).toContain('alt="Synthetic landscape"');
 
     const quarter = html.match(
-      /<button\b[^>]*data-marker-id="quarter"[^>]*>/u,
+      /<button\b[^>]*data-marker-position="quarter"[^>]*>/u,
     )?.[0];
-    const edge = html.match(/<button\b[^>]*data-marker-id="edge"[^>]*>/u)?.[0];
+    const edge = html.match(
+      /<button\b[^>]*data-marker-position="edge"[^>]*>/u,
+    )?.[0];
     expect(quarter).toContain('left:25%');
     expect(quarter).toContain('top:25%');
+    expect(quarter).toContain('data-marker-ids="quarter"');
+    expect(quarter).toContain('data-selected="true"');
     expect(edge).toContain('left:100%');
     expect(edge).toContain('top:100%');
   });
