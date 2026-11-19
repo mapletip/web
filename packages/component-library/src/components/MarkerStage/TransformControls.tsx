@@ -22,6 +22,7 @@ export function TransformControls({
   maxScale,
   minScale,
   motionReduced,
+  onFit,
   zoomInLabel,
   zoomOutLabel,
 }: {
@@ -29,6 +30,7 @@ export function TransformControls({
   readonly maxScale: number;
   readonly minScale: number;
   readonly motionReduced: boolean;
+  readonly onFit: () => void;
   readonly zoomInLabel: string;
   readonly zoomOutLabel: string;
 }): ReactElement {
@@ -77,7 +79,10 @@ export function TransformControls({
           aria-label={fitLabel}
           variant="white"
           size={44}
-          onClick={() => void resetTransform(animationTime)}
+          onClick={() => {
+            onFit();
+            void resetTransform(animationTime);
+          }}
         >
           <span className={classes['fitLabel']}>Fit</span>
         </ActionIcon>

@@ -1,12 +1,16 @@
 import { MantineProvider } from '@mantine/core';
 import { cssVariablesResolver, theme } from '@mapletip/theme';
 import { useState, type ReactNode } from 'react';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { commands, page, userEvent } from 'vitest/browser';
 import { render } from 'vitest-browser-react';
 
 import '@/styles.css';
 import { MarkerStage } from '@/components/MarkerStage';
+import type {
+  MarkerStageMarker,
+  MarkerStageView,
+} from '@/components/MarkerStage';
 
 const image = `data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="400" height="200"><rect width="400" height="200" fill="#789"/></svg>')}`;
 
@@ -165,6 +169,37 @@ describe('MarkerStage marker details', () => {
     await expect.element(target).toHaveFocus();
   });
 
+  it('closes on Escape after Space activation while focus stays on the marker', async () => {
+    await mountWithDetails();
+
+    const target = page.getByRole('button', { name: 'First point' });
+    target.element().focus();
+    await userEvent.keyboard(' ');
+    const details = page.getByText('Details for first');
+    await expect.element(details).toBeVisible();
+
+    await userEvent.keyboard('{Escape}');
+
+    await expect.element(details).not.toBeInTheDocument();
+    await expect.element(target).toHaveFocus();
+  });
+
+  it('closes on Escape from inside details and returns focus to its marker', async () => {
+    await mountWithDetails();
+
+    const target = page.getByRole('button', { name: 'First point' });
+    await userEvent.click(target);
+    const details = page.getByText('Details for first');
+    await expect.element(details).toBeVisible();
+
+    const closeButton = page.getByRole('button', { name: 'Close details' });
+    closeButton.element().focus();
+    await userEvent.keyboard('{Escape}');
+
+    await expect.element(details).not.toBeInTheDocument();
+    await expect.element(target).toHaveFocus();
+  });
+
   it('moves details to another activated target and keeps them open on repeat activation', async () => {
     await mountWithDetails();
 
@@ -228,6 +263,11 @@ async function mountInteractiveStage(options?: {
   readonly zoomInLabel?: string;
   readonly zoomOutLabel?: string;
   readonly fitLabel?: string;
+  readonly width?: number;
+  readonly view?: MarkerStageView;
+  readonly onViewChange?: (view: MarkerStageView | undefined) => void;
+  readonly selectedIds?: readonly string[];
+  readonly markers?: readonly MarkerStageMarker[];
 }) {
   const result = await render(
     <MantineProvider
@@ -235,7 +275,12 @@ async function mountInteractiveStage(options?: {
       cssVariablesResolver={cssVariablesResolver}
       forceColorScheme="dark"
     >
-      <div style={{ width: '400px', maxWidth: '100vw' }}>
+      <div
+        style={{
+          width: `${options?.width ?? 400}px`,
+          maxWidth: '100vw',
+        }}
+      >
         <MarkerStage
           image={{
             src: image,
@@ -243,25 +288,31 @@ async function mountInteractiveStage(options?: {
             height: 200,
             alt: 'Zoom test image',
           }}
-          markers={[
-            {
-              id: 'west',
-              x: 80,
-              y: 100,
-              label: 'West point',
-              content: markerContent(),
-            },
-            {
-              id: 'east',
-              x: 320,
-              y: 100,
-              label: 'East point',
-              content: markerContent(),
-            },
-          ]}
-          selectedIds={['west']}
+          markers={
+            options?.markers ?? [
+              {
+                id: 'west',
+                x: 80,
+                y: 100,
+                label: 'West point',
+                content: markerContent(),
+              },
+              {
+                id: 'east',
+                x: 320,
+                y: 100,
+                label: 'East point',
+                content: markerContent(),
+              },
+            ]
+          }
+          selectedIds={options?.selectedIds ?? ['west']}
           connectors={[{ id: 'route', from: 'west', to: 'east' }]}
           wheelZoom={options?.wheelZoom ?? false}
+          view={options?.view}
+          {...(options?.onViewChange === undefined
+            ? {}
+            : { onViewChange: options.onViewChange })}
           zoomInLabel={options?.zoomInLabel ?? 'Zoom in'}
           zoomOutLabel={options?.zoomOutLabel ?? 'Zoom out'}
           fitLabel={options?.fitLabel ?? 'Fit map'}
@@ -591,6 +642,214 @@ describe('MarkerStage pan and zoom', () => {
 
     expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(
       document.documentElement.clientWidth,
+    );
+  });
+
+  it('reports one settled view after a drag', async () => {
+    await commands.emulateMedia({ reducedMotion: 'reduce' });
+    const onViewChange = vi.fn<(view: MarkerStageView | undefined) => void>();
+    const container = await mountInteractiveStage({ onViewChange });
+    await userEvent.click(page.getByRole('button', { name: 'Zoom in' }));
+    await expect.poll(() => onViewChange.mock.calls.length).toBe(1);
+    onViewChange.mockClear();
+
+    const viewport = container.querySelector<HTMLElement>(
+      '.react-transform-wrapper',
+    )!;
+    const rect = viewport.getBoundingClientRect();
+    await commands.dragPointer(
+      rect.x + rect.width / 2,
+      rect.y + rect.height / 2,
+      rect.x + rect.width / 2 - 60,
+      rect.y + rect.height / 2,
+    );
+
+    await expect.poll(() => onViewChange.mock.calls.length).toBe(1);
+    expect(onViewChange.mock.calls[0]?.[0]?.zoom).toBeGreaterThan(1);
+  });
+
+  it('reports one settled view after a pinch', async () => {
+    const onViewChange = vi.fn<(view: MarkerStageView | undefined) => void>();
+    const container = await mountInteractiveStage({ onViewChange });
+    const viewport = container.querySelector<HTMLElement>(
+      '.react-transform-wrapper',
+    )!;
+    const rect = viewport.getBoundingClientRect();
+
+    await commands.pinchAt(
+      rect.x + rect.width / 2,
+      rect.y + rect.height / 2,
+      60,
+      150,
+    );
+
+    await expect.poll(() => onViewChange.mock.calls.length).toBe(1);
+    expect(onViewChange.mock.calls[0]?.[0]?.zoom).toBeGreaterThan(1);
+  });
+
+  it('reports one settled view after a wheel burst', async () => {
+    const onViewChange = vi.fn<(view: MarkerStageView | undefined) => void>();
+    const container = await mountInteractiveStage({
+      wheelZoom: true,
+      onViewChange,
+    });
+    const viewport = container.querySelector<HTMLElement>(
+      '.react-transform-wrapper',
+    )!;
+    const rect = viewport.getBoundingClientRect();
+
+    await commands.wheelAt(
+      rect.x + rect.width / 2,
+      rect.y + rect.height / 2,
+      -100,
+    );
+    await commands.wheelAt(
+      rect.x + rect.width / 2,
+      rect.y + rect.height / 2,
+      -100,
+    );
+    await commands.wheelAt(
+      rect.x + rect.width / 2,
+      rect.y + rect.height / 2,
+      -100,
+    );
+
+    await expect.poll(() => onViewChange.mock.calls.length).toBe(1);
+    expect(onViewChange.mock.calls[0]?.[0]?.zoom).toBeGreaterThan(1);
+  });
+
+  it('reports zoom-in, zoom-out and Fit once each', async () => {
+    await commands.emulateMedia({ reducedMotion: 'reduce' });
+    const onViewChange = vi.fn<(view: MarkerStageView | undefined) => void>();
+    await mountInteractiveStage({ onViewChange });
+
+    await userEvent.click(page.getByRole('button', { name: 'Zoom in' }));
+    await expect.poll(() => onViewChange.mock.calls.length).toBe(1);
+    expect(onViewChange.mock.calls[0]?.[0]?.zoom).toBeGreaterThan(1);
+
+    await userEvent.click(page.getByRole('button', { name: 'Zoom out' }));
+    await expect.poll(() => onViewChange.mock.calls.length).toBe(2);
+
+    await userEvent.click(page.getByRole('button', { name: 'Fit map' }));
+    await expect.poll(() => onViewChange.mock.calls.length).toBe(3);
+    expect(onViewChange.mock.calls[2]?.[0]).toBeUndefined();
+  });
+
+  it('applies a changed saved view without reporting it again', async () => {
+    const savedView: MarkerStageView = {
+      zoom: 2,
+      centerX: 150,
+      centerY: 100,
+    };
+    const onViewChange = vi.fn();
+
+    function Harness() {
+      const [view, setView] = useState<MarkerStageView | undefined>();
+      return (
+        <MantineProvider
+          theme={theme}
+          cssVariablesResolver={cssVariablesResolver}
+          forceColorScheme="dark"
+        >
+          <button type="button" onClick={() => setView(savedView)}>
+            Restore saved view
+          </button>
+          <div style={{ width: '400px' }}>
+            <MarkerStage
+              image={{
+                src: image,
+                width: 400,
+                height: 200,
+                alt: 'Restored view image',
+              }}
+              markers={[]}
+              view={view}
+              onViewChange={onViewChange}
+              unavailableMessage="Image unavailable."
+            />
+          </div>
+        </MantineProvider>
+      );
+    }
+
+    const container = (await render(<Harness />)).container;
+    await userEvent.click(
+      page.getByRole('button', { name: 'Restore saved view' }),
+    );
+    await vi.waitFor(() => expect(zoomScale(container)).toBeCloseTo(2));
+    expect(onViewChange).not.toHaveBeenCalled();
+  });
+
+  it('centres the same image point when a view is restored at two stage sizes', async () => {
+    await page.viewport(1400, 800);
+    const view: MarkerStageView = { zoom: 2, centerX: 150, centerY: 100 };
+
+    await render(
+      <MantineProvider
+        theme={theme}
+        cssVariablesResolver={cssVariablesResolver}
+        forceColorScheme="dark"
+      >
+        {[400, 800].map((width) => (
+          <div key={width} data-stage-size={width} style={{ width }}>
+            <MarkerStage
+              image={{
+                src: image,
+                width: 400,
+                height: 200,
+                alt: `Restored ${width}px image`,
+              }}
+              markers={[
+                {
+                  id: 'centre',
+                  x: 150,
+                  y: 100,
+                  label: 'Saved centre',
+                  content: markerContent(),
+                },
+              ]}
+              selectedIds={[]}
+              view={view}
+              unavailableMessage="Image unavailable."
+            />
+          </div>
+        ))}
+      </MantineProvider>,
+    );
+
+    for (const width of [400, 800]) {
+      const wrapper = document.querySelector<HTMLElement>(
+        `[data-stage-size="${width}"]`,
+      )!;
+      const stage = wrapper.querySelector<HTMLElement>('[role="group"]')!;
+      const point = wrapper
+        .querySelector<HTMLElement>('[data-marker-id="centre"]')!
+        .getBoundingClientRect();
+      const stageRect = stage.getBoundingClientRect();
+
+      expect(point.left + point.width / 2).toBeCloseTo(
+        stageRect.left + stageRect.width / 2,
+        0,
+      );
+      expect(point.bottom).toBeCloseTo(stageRect.top + stageRect.height / 2, 0);
+    }
+  });
+
+  it('keeps the restored view when the initial selection is off screen', async () => {
+    const view: MarkerStageView = { zoom: 2, centerX: 100, centerY: 100 };
+    const container = await mountInteractiveStage({
+      view,
+      selectedIds: ['east'],
+    });
+    const viewport = container.querySelector<HTMLElement>(
+      '.react-transform-wrapper',
+    )!;
+    const east = page.getByRole('button', { name: 'East point' }).element();
+
+    await vi.waitFor(() => expect(zoomScale(container)).toBeCloseTo(2));
+    const viewportRect = viewport.getBoundingClientRect();
+    expect(east.getBoundingClientRect().left).toBeGreaterThan(
+      viewportRect.right,
     );
   });
 });
