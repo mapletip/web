@@ -33,10 +33,6 @@ a.identityName:focus-visible {
   text-underline-offset: 0.15em;
 }
 
-.dropItemOptionIcon img {
-  image-rendering: pixelated;
-}
-
 .dropItemPillContent {
   display: flex;
   min-width: 0;
