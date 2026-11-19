@@ -58,17 +58,24 @@
 .marker {
   position: absolute;
   z-index: 1;
-  transform-origin: center bottom;
+  width: 0;
+  height: 0;
+}
+
+.markerTarget {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  transform-origin: left bottom;
 }
 
 .markerContent {
   display: flex;
   align-items: flex-end;
   justify-content: center;
-  transform-origin: bottom center;
 }
 
-.marker[data-selected='true'],
+.marker:has(.markerButton[data-selected='true']),
 .markerStatic[data-selected='true'] {
   z-index: 2;
 }
@@ -76,7 +83,6 @@
 .markerButton,
 .markerStatic {
   box-sizing: border-box;
-  position: absolute;
   display: flex;
   min-width: 44px;
   min-height: 44px;
@@ -86,7 +92,9 @@
 }
 
 .markerButton {
+  position: relative;
   border: 0;
+  transform: translateX(-50%);
   background: transparent;
   color: inherit;
   cursor: pointer;
@@ -95,11 +103,12 @@
 }
 
 .markerStatic {
+  position: absolute;
   pointer-events: none;
-  transform-origin: center bottom;
+  transform: translate(-50%, -100%);
 }
 
-.marker::before,
+.markerButton::before,
 .markerStatic::before,
 .markerButton:focus-visible::after {
   position: absolute;
@@ -113,7 +122,7 @@
   transform: translateX(-50%);
 }
 
-.marker[data-selected='true']::before,
+.markerButton[data-selected='true']::before,
 .markerStatic[data-selected='true']::before {
   width: calc(var(--marker-stage-marker-size) + 12px);
   height: calc(var(--marker-stage-marker-size) + 12px);

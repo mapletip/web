@@ -3,7 +3,7 @@ import { useMediaQuery } from '@mantine/hooks';
 import { RecordCard } from '@mapletip/component-library';
 import type { ReactElement } from 'react';
 
-import { createRecordCardLinkRenderer } from '@/components/RouterLinks';
+import { recordCardLinkRenderer } from '@/components/RouterLinks';
 
 import classes from './MapRecordCard.module.css';
 
@@ -99,7 +99,15 @@ export function MapRecordCard({ map }: MapRecordCardProps): ReactElement {
         shadow="lg"
         role="tooltip"
       >
-        <HoverCard.Target>{minimap}</HoverCard.Target>
+        <HoverCard.Target>
+          <button
+            type="button"
+            className={classes['minimapTrigger']}
+            aria-label={`Enlarge ${map.name} minimap`}
+          >
+            {minimap}
+          </button>
+        </HoverCard.Target>
         <HoverCard.Dropdown
           className={classes['minimapPopover']}
           aria-label={`${map.name} full-size minimap preview`}
@@ -129,7 +137,7 @@ export function MapRecordCard({ map }: MapRecordCardProps): ReactElement {
         ? {}
         : {
             destination: { href: destination.href },
-            renderLink: createRecordCardLinkRenderer(),
+            renderLink: recordCardLinkRenderer,
           })}
     />
   );

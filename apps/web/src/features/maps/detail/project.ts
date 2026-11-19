@@ -4,13 +4,13 @@ import { mapMinimapUrl, type MapPageRecordV1 } from '@mapletip/data/maps';
 import { MAPLEKIT_RELEASE, type BuildId } from '@/config/maplekit';
 import { buildRecordDetailPath } from '@/features/detail';
 import {
+  mapDetailLinkProps,
   projectMapRecordDestination,
   type MapRecordCardView,
 } from '@/features/maps/shared';
 import {
   formatMonsterNumber,
-  MONSTER_DETAIL_ROUTE,
-  type monsterDetailLinkProps,
+  monsterDetailLinkProps,
   projectMonsterRecordCard,
   projectMonsterRespawnLabel,
   type MonsterRecordCardView,
@@ -75,15 +75,12 @@ export interface MapDetailEntityView {
   readonly name: string;
   readonly kindLabel: string;
   readonly spriteUrl?: string;
-  readonly link?:
-    | {
-        readonly to: typeof MONSTER_DETAIL_ROUTE;
-        readonly params: NonNullable<
-          ReturnType<typeof monsterDetailLinkProps>
-        >['params'];
-      }
-    | { readonly href: string };
+  readonly link?: MapDetailEntityLink;
 }
+
+type MapDetailEntityLink =
+  | NonNullable<ReturnType<typeof monsterDetailLinkProps>>
+  | NonNullable<ReturnType<typeof mapDetailLinkProps>>;
 
 export interface MapDetailStageImage {
   readonly src: string;
@@ -119,6 +116,7 @@ export interface MapDetailConnectionsView {
 
 export interface MapDetailConnectionView extends MapRecordCardView {
   readonly focusKey: string;
+  readonly detailLink: NonNullable<ReturnType<typeof mapDetailLinkProps>>;
 }
 
 export interface MapDetailMonsterView extends MonsterRecordCardView {
@@ -155,9 +153,7 @@ export interface MapDetailFactView {
   readonly label: string;
   readonly value: string;
   readonly explanation: string;
-  readonly destination?: {
-    readonly href: string;
-  };
+  readonly destination?: NonNullable<ReturnType<typeof mapDetailLinkProps>>;
 }
 
 export interface ProjectMapDetailOptions {
@@ -216,7 +212,7 @@ function addMapFact({
     label,
     value: knownText(target.name) ?? UNNAMED_MAP_LABEL,
     explanation,
-    destination: projectMapRecordDestination({
+    destination: mapDetailLinkProps({
       slug: target.slug,
       publicId: target.publicId,
       buildId,
@@ -369,6 +365,7 @@ export function mapDetailConnectionMatchesSearch(
   return connection.name.toLocaleLowerCase('en').includes(normalizedQuery);
 }
 
+/** Map Detail wording for unavailable, incomplete and known-empty sections. */
 function projectSectionNotice({
   state,
   empty,
@@ -385,6 +382,18 @@ function projectSectionNotice({
   }
   if (state === 'partial') return `Some ${noun} information may be missing.`;
   return empty ? `No ${plural} are recorded on this map.` : undefined;
+}
+
+function projectMonsterNotice(
+  state: MapPageRecordV1['monsters']['state'],
+  noRecordedMonsters: boolean,
+): string | undefined {
+  return projectSectionNotice({
+    state,
+    empty: noRecordedMonsters,
+    noun: 'monster',
+    plural: 'monsters',
+  });
 }
 
 function projectMonsters({
@@ -427,12 +436,10 @@ function projectMonsters({
   const noRecordedMonsters =
     monsters.length === 0 &&
     (record.monsters.state === 'absent' || record.monsters.state === 'known');
-  const notice = projectSectionNotice({
-    state: record.monsters.state,
-    empty: noRecordedMonsters,
-    noun: 'monster',
-    plural: 'monsters',
-  });
+  const notice = projectMonsterNotice(
+    record.monsters.state,
+    noRecordedMonsters,
+  );
   const summary =
     record.monsters.state === 'unknown' || noRecordedMonsters
       ? undefined
@@ -492,6 +499,11 @@ function projectConnections({
             : []),
         ],
         destination: projectMapRecordDestination({
+          slug: connection.slug,
+          publicId: connection.publicId,
+          buildId,
+        }),
+        detailLink: mapDetailLinkProps({
           slug: connection.slug,
           publicId: connection.publicId,
           buildId,
@@ -689,7 +701,7 @@ function projectStage({
 }: {
   readonly record: MapPageRecordV1;
   readonly name: string;
-  readonly connections: MapDetailConnectionsView | undefined;
+  readonly connections: MapDetailConnectionsView;
   readonly monsters: MapDetailMonstersView;
   readonly npcs: MapDetailNpcsView;
   readonly warps: readonly MapDetailWarpView[];
@@ -711,7 +723,7 @@ function projectStage({
     monsters.monsters.map((monster) => [monster.key, monster]),
   );
   const connectionsByKey = new Map(
-    (connections?.maps ?? []).map((connection) => [connection.key, connection]),
+    connections.maps.map((connection) => [connection.key, connection]),
   );
   const npcsByKey = new Map(npcs.npcs.map((npc) => [npc.key, npc]));
   const pointCollections: readonly {
@@ -867,7 +879,7 @@ export function projectMapDetail({
       ...(connection.destination === undefined
         ? {}
         : {
-            link: { href: connection.destination.href },
+            link: connection.detailLink,
           }),
     })),
     ...warps.map((warp) => ({
@@ -887,10 +899,7 @@ export function projectMapDetail({
       ...(monster.destination === undefined
         ? {}
         : {
-            link: {
-              to: MONSTER_DETAIL_ROUTE,
-              params: monster.destination.params,
-            },
+            link: monster.destination,
           }),
     })),
     ...npcs.npcs.map((npc) => ({

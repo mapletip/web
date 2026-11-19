@@ -904,7 +904,11 @@ describe('projectMapDetail', () => {
       'Allowed',
     ]);
     expect(view.facts[1]?.destination).toEqual({
-      href: `/maplestory/maps/lantern-square-${returnMap.value.publicId}`,
+      to: '/maplestory/{-$buildId}/maps/$slugId',
+      params: {
+        buildId: undefined,
+        slugId: `lantern-square-${returnMap.value.publicId}`,
+      },
     });
     expect(view.facts[1]?.explanation).toBe(
       'Ordinary revival and generic Return Scrolls can send you to this map. Some items and activities use another destination.',
@@ -943,7 +947,11 @@ describe('projectMapDetail', () => {
         explanation:
           'Ordinary revival and generic Return Scrolls can send you to this map. Some items and activities use another destination.',
         destination: {
-          href: `/maplestory/maps/${returnMap.value.slug}-${returnMap.value.publicId}`,
+          to: '/maplestory/{-$buildId}/maps/$slugId',
+          params: {
+            buildId: undefined,
+            slugId: `${returnMap.value.slug}-${returnMap.value.publicId}`,
+          },
         },
       },
     ]);

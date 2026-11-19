@@ -1,5 +1,4 @@
 import {
-  Anchor,
   ActionIcon,
   Button,
   Group,
@@ -21,12 +20,13 @@ import {
 } from '@mapletip/component-library';
 import { ArrowsOut, ShareNetwork } from '@phosphor-icons/react';
 import { useHydrated, useLocation, useRouter } from '@tanstack/react-router';
-import { useEffect, type ReactElement } from 'react';
+import { useEffect, useState, type ReactElement } from 'react';
 import { z } from 'zod';
 
 import { DetailPageShell } from '@/components/DetailPageShell';
 import { AnchorLink } from '@/components/RouterLinks';
 import { DetailBreadcrumbs } from '@/features/detail';
+import { MAP_DETAIL_ROUTE } from '@/features/maps/shared';
 import { MONSTER_DETAIL_ROUTE } from '@/features/monsters/shared';
 import { useRouteOverlay } from '@/features/route-overlay/useRouteOverlay';
 
@@ -86,9 +86,6 @@ function EntityName({
   readonly entity: MapDetailEntityView;
 }): ReactElement | string {
   if (entity.link === undefined) return entity.name;
-  if ('href' in entity.link) {
-    return <Anchor href={entity.link.href}>{entity.name}</Anchor>;
-  }
   if (entity.link.to === MONSTER_DETAIL_ROUTE) {
     return (
       <AnchorLink to={MONSTER_DETAIL_ROUTE} params={entity.link.params}>
@@ -96,7 +93,11 @@ function EntityName({
       </AnchorLink>
     );
   }
-  return entity.name;
+  return (
+    <AnchorLink to={MAP_DETAIL_ROUTE} params={entity.link.params}>
+      {entity.name}
+    </AnchorLink>
+  );
 }
 
 function MarkerDetails({
@@ -161,10 +162,30 @@ export function MapDetail({
   );
   const hydrated = useHydrated();
   const router = useRouter();
+  // The history index survives the replace writes below but changes on push,
+  // Back and Forward, so find text re-reads history only on entry changes.
+  const historyIndex = useLocation({
+    select: (location) => location.state.__TSR_index,
+  });
   const locationState = useLocation({ select: (location) => location.state });
   const historyState = mapDetailHistoryStateSchema.parse(locationState);
   const stageView = hydrated ? historyState.mapDetailStageView : undefined;
-  const findText = hydrated ? (historyState.mapDetailFindText ?? '') : '';
+  const [findState, setFindState] = useState(() => ({
+    historyIndex,
+    hydrated,
+    value: hydrated ? (historyState.mapDetailFindText ?? '') : '',
+  }));
+  if (
+    findState.historyIndex !== historyIndex ||
+    findState.hydrated !== hydrated
+  ) {
+    setFindState({
+      historyIndex,
+      hydrated,
+      value: hydrated ? (historyState.mapDetailFindText ?? '') : '',
+    });
+  }
+  const findText = findState.value;
   const exploreOverlay = useRouteOverlay(mapDetailOverlayOptions);
   const exploreOverlayState =
     exploreOverlay.overlay?.type === 'explore'
@@ -220,18 +241,19 @@ export function MapDetail({
     return onFocusChange?.(formatMapDetailFocus({ focus: resolvedFocus }));
   };
   const closeExplore = () => void exploreOverlay.release('explore');
-  const nextEntityFocus = (focusKey: string, modified = false) =>
-    activateMapDetailEntity({
-      focus,
-      focusKey,
-      modified,
-      view,
-    });
-
   const activateEntity = (focusKey: string, modified = false) => {
-    const nextFocus = nextEntityFocus(focusKey, modified);
-    void writeFocus(nextFocus);
-    return nextFocus;
+    void writeFocus(
+      activateMapDetailEntity({
+        focus,
+        focusKey,
+        modified,
+        view,
+      }),
+    );
+  };
+  const changeFindText = (nextFindText: string) => {
+    setFindState((current) => ({ ...current, value: nextFindText }));
+    writeHistoryState({ findText: nextFindText });
   };
   const locateMonster = async (focusKey: string) => {
     const nextFocus = selectMapDetailEntity({ focusKey, view });
@@ -302,9 +324,7 @@ export function MapDetail({
                   writeHistoryState({ stageView: nextView })
                 }
                 findText={findText}
-                onFindTextChange={(nextFindText) =>
-                  writeHistoryState({ findText: nextFindText })
-                }
+                onFindTextChange={changeFindText}
                 onActivate={activateEntity}
                 onActivateMarkers={activateMarkers}
                 renderDetails={(markerIds) => (
@@ -364,9 +384,12 @@ export function MapDetail({
                       fact.destination === undefined ? (
                         fact.value
                       ) : (
-                        <Anchor href={fact.destination.href}>
+                        <AnchorLink
+                          to={fact.destination.to}
+                          params={fact.destination.params}
+                        >
                           {fact.value}
-                        </Anchor>
+                        </AnchorLink>
                       ),
                   }))}
                 />
@@ -400,9 +423,7 @@ export function MapDetail({
             writeHistoryState({ stageView: nextView })
           }
           findText={findText}
-          onFindTextChange={(nextFindText) =>
-            writeHistoryState({ findText: nextFindText })
-          }
+          onFindTextChange={changeFindText}
           onActivate={activateEntity}
           onActivateMarkers={activateMarkers}
           renderDetails={(markerIds) => (
