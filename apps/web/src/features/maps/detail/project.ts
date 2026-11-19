@@ -1,5 +1,9 @@
 import type { InteractiveMapConnector } from '@mapletip/component-library';
-import { mapMinimapUrl, type StaticMapPageRecord } from '@mapletip/data/maps';
+import {
+  mapMarkUrl,
+  mapMinimapUrl,
+  type StaticMapPageRecord,
+} from '@mapletip/data/maps';
 
 import { MAPLEKIT_RELEASE, type BuildId } from '@/config/maplekit';
 import { buildRecordDetailPath } from '@/features/detail';
@@ -29,6 +33,7 @@ export interface MapDetailView {
   readonly slug: string;
   readonly buildId: BuildId;
   readonly name: string;
+  readonly markUrl?: string;
   readonly subtitle?: string;
   readonly regionLabel?: string;
   readonly areaLabel?: string;
@@ -189,6 +194,14 @@ function knownText(fact: { readonly state: string; readonly value?: string }) {
 
 function formatSeconds(seconds: number): string {
   return seconds % 60 === 0 ? `${seconds / 60} min` : `${seconds} sec`;
+}
+
+function projectMapMarkUrl(
+  markImage: StaticMapPageRecord['markImage'],
+): string | undefined {
+  return markImage.state === 'known'
+    ? mapMarkUrl(MAPLEKIT_RELEASE.baseUrl, markImage.value)
+    : undefined;
 }
 
 function addMapFact({
@@ -760,7 +773,13 @@ function projectStage({
         const npc = npcsByKey.get(key);
         return npc === undefined
           ? undefined
-          : { name: npc.name, focusKey: npc.focusKey };
+          : {
+              name: npc.name,
+              focusKey: npc.focusKey,
+              ...(npc.spriteUrl === undefined
+                ? {}
+                : { spriteUrl: npc.spriteUrl }),
+            };
       },
     },
     {
@@ -866,6 +885,7 @@ export function projectMapDetail({
     record.description.state === 'known'
       ? nonBlank(record.description.value)
       : undefined;
+  const markUrl = projectMapMarkUrl(record.markImage);
   const connections = projectConnections({ record, buildId });
   const monsters = projectMonsters({ record, buildId });
   const npcs = projectNpcs(record);
@@ -907,6 +927,7 @@ export function projectMapDetail({
       kind: 'npc' as const,
       name: npc.name,
       kindLabel: 'NPC',
+      ...(npc.spriteUrl === undefined ? {} : { spriteUrl: npc.spriteUrl }),
     })),
   ].sort((left, right) => {
     const kindOrder = {
@@ -936,6 +957,7 @@ export function projectMapDetail({
     slug: record.slug,
     buildId,
     name: name ?? UNNAMED_MAP_LABEL,
+    ...(markUrl === undefined ? {} : { markUrl }),
     ...(name === undefined && streetName !== undefined
       ? { subtitle: streetName }
       : {}),

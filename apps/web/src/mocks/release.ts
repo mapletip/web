@@ -51,6 +51,7 @@ export interface FixtureRelease {
   readonly builds: ReadonlyMap<string, FixtureBuildArtifacts>;
   readonly spriteIds: ReadonlyMap<string, string>;
   readonly minimapIds: ReadonlySet<string>;
+  readonly markIds: ReadonlySet<string>;
 }
 
 type RangeDescriptor = {
@@ -600,7 +601,14 @@ async function projectMapPages(options: {
             ({
               key: await key('npc', `${build.buildId}:${fixture.id}:${npc.id}`),
               name: known(npc.name),
-              sprite: { state: 'unknown' as const },
+              sprite:
+                npc.sprite === undefined
+                  ? { state: 'unknown' as const }
+                  : known(
+                      await sha256Hex(
+                        encoder.encode(`fixture:sprite:${npc.sprite}`),
+                      ),
+                    ),
               questCount: npc.questCount ?? { state: 'known', count: 0 },
               points: mapPoints(npc.points, published),
               focusToken: fixturePublicId(
@@ -725,6 +733,7 @@ interface BuildMapProductOptions {
   readonly key: (prefix: string, id: string) => Promise<string>;
   readonly put: (dir: string, value: unknown) => Promise<FileDescriptor>;
   readonly minimapIds: Set<string>;
+  readonly markIds: Set<string>;
 }
 
 interface BuiltMapProduct {
@@ -736,7 +745,8 @@ interface BuiltMapProduct {
 async function buildMapProduct(
   options: BuildMapProductOptions,
 ): Promise<BuiltMapProduct> {
-  const { build, scope, maps, monsters, key, put, minimapIds } = options;
+  const { build, scope, maps, monsters, key, put, minimapIds, markIds } =
+    options;
   const mapPages = [
     ...(await projectMapPages({ build, scope, maps, monsters, key })),
   ].sort((left, right) => left.publicId.localeCompare(right.publicId));
@@ -756,6 +766,7 @@ async function buildMapProduct(
     if (page.stage.state === 'known') {
       minimapIds.add(page.stage.value.contentId);
     }
+    if (page.markImage.state === 'known') markIds.add(page.markImage.value);
   }
 
   // getMapPage reads the manifest and page pack; the Maps catalog is required by
@@ -834,6 +845,7 @@ export async function buildRelease(fixtureWorld: {
   const builds = new Map<string, FixtureBuildArtifacts>();
   const spriteIds = new Map<string, string>();
   const minimapIds = new Set<string>();
+  const markIds = new Set<string>();
 
   async function put(dir: string, value: unknown): Promise<FileDescriptor> {
     const bytes = encoder.encode(JSON.stringify(value));
@@ -1057,6 +1069,7 @@ export async function buildRelease(fixtureWorld: {
       key,
       put,
       minimapIds,
+      markIds,
     });
     const capabilities = [
       'evidence-pages-v2',
@@ -1163,6 +1176,7 @@ export async function buildRelease(fixtureWorld: {
     builds,
     spriteIds,
     minimapIds,
+    markIds,
   };
 }
 

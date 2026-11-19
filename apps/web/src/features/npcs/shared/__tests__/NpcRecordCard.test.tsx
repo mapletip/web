@@ -1,10 +1,46 @@
 import { MantineProvider } from '@mantine/core';
+import { mapNpcSpriteUrl } from '@mapletip/data/maps';
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 
+import { MAPLEKIT_RELEASE } from '@/config/maplekit';
+import { mapPageRecordFixture } from '@/features/maps/detail/__tests__/mapPageFixture';
+
 import { NpcRecordCard } from '../NpcRecordCard';
+import { projectNpcRecordCard } from '../npcRecordCardProjection';
 
 describe('NpcRecordCard', () => {
+  it('projects known NPC sprite IDs with the SDK resolver', () => {
+    const source = mapPageRecordFixture({ mapId: 'lantern-square' });
+    const npc = source.npcs.items[0];
+    if (npc === undefined) throw new Error('Expected a fixture NPC.');
+    const contentId = 'c'.repeat(64);
+
+    const projection = projectNpcRecordCard({
+      ...npc,
+      sprite: { state: 'known', value: contentId },
+    });
+    const expectedUrl = mapNpcSpriteUrl(MAPLEKIT_RELEASE.baseUrl, contentId);
+    expect(projection.spriteUrl).toBe(expectedUrl);
+
+    const { container } = render(
+      <MantineProvider>
+        <NpcRecordCard npc={projection} />
+      </MantineProvider>,
+    );
+    expect(container.querySelector('img')).toHaveAttribute('src', expectedUrl);
+    expect(container.querySelector('img[data-fallback="true"]')).toBeNull();
+  });
+
+  it('keeps unknown NPC sprites unset', () => {
+    const npc = mapPageRecordFixture({
+      mapId: 'lantern-square',
+    }).npcs.items.find(({ sprite }) => sprite.state !== 'known');
+    if (npc === undefined) throw new Error('Expected an NPC without a sprite.');
+
+    expect(projectNpcRecordCard(npc)).not.toHaveProperty('spriteUrl');
+  });
+
   it('uses the missing-image placeholder and keeps NPC identity unlinked', () => {
     const { container } = render(
       <MantineProvider>

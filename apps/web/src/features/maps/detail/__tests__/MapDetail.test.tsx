@@ -743,6 +743,29 @@ describe('MapDetail information', () => {
     ).not.toBeInTheDocument();
   });
 
+  it('shows the Map mark beside its name when its URL is available', () => {
+    const baseView = projectMapDetail({
+      record: mapPageRecordFixture({ mapId: 'practice-grove' }),
+      buildId: 'cw-launch',
+    });
+    const view = { ...baseView, markUrl: '/marks/practice-grove.png' };
+    renderMapView({ view });
+
+    const heading = screen.getByRole('heading', {
+      level: 1,
+      name: 'Practice Grove',
+    });
+    expect(heading).toBeVisible();
+    expect(heading.parentElement?.querySelector('img')).toHaveAttribute(
+      'src',
+      '/marks/practice-grove.png',
+    );
+    expect(heading.parentElement?.querySelector('img')).toHaveAttribute(
+      'alt',
+      '',
+    );
+  });
+
   it('shows activity, description, and known map information', () => {
     renderDetail({ mapId: 'lantern-square' });
 
@@ -1150,18 +1173,18 @@ describe('MapDetail information', () => {
 
   it('shows NPC cards as plain text with the standard missing-image placeholder', () => {
     const record = mapPageRecordFixture({ mapId: 'lantern-square' });
-    const bellkeeper = record.npcs.items.find(
-      ({ name }) => name.state === 'known' && name.value === 'Bellkeeper',
+    const mapSeller = record.npcs.items.find(
+      ({ name }) => name.state === 'known' && name.value === 'Map Seller',
     );
-    if (bellkeeper === undefined) throw new Error('Expected Bellkeeper.');
+    if (mapSeller === undefined) throw new Error('Expected Map Seller.');
     renderDetail({
       mapId: 'lantern-square',
-      npcs: { state: 'known', items: [bellkeeper] },
+      npcs: { state: 'known', items: [mapSeller] },
     });
 
     const card = screen.getByTestId('map-npc-card');
     expect(
-      within(card).getByRole('heading', { name: 'Bellkeeper' }),
+      within(card).getByRole('heading', { name: 'Map Seller' }),
     ).toBeVisible();
     expect(within(card).queryByRole('link')).not.toBeInTheDocument();
     expect(card.querySelector('img[data-fallback="true"]')).not.toBeNull();

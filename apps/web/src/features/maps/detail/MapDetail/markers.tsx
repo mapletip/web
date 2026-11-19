@@ -34,6 +34,25 @@ export function WarpMarker(): ReactElement {
   );
 }
 
+function SpriteMarker({
+  spriteUrl,
+  inDetails = false,
+  visual,
+}: {
+  readonly spriteUrl: string;
+  readonly inDetails?: boolean;
+  readonly visual: 'monster-sprite' | 'npc-sprite';
+}): ReactElement {
+  return (
+    <img
+      className={`${classes['sprite']} ${inDetails ? classes['detailSprite'] : classes['stageSprite']}`}
+      src={spriteUrl}
+      alt=""
+      data-marker-visual={visual}
+    />
+  );
+}
+
 export function MonsterMarker({
   spriteUrl,
   inDetails = false,
@@ -52,16 +71,31 @@ export function MonsterMarker({
   }
 
   return (
-    <img
-      className={`${classes['monsterSprite']} ${inDetails ? classes['detailMonsterSprite'] : classes['stageMonsterSprite']}`}
-      src={spriteUrl}
-      alt=""
-      data-marker-visual="monster-sprite"
+    <SpriteMarker
+      spriteUrl={spriteUrl}
+      inDetails={inDetails}
+      visual="monster-sprite"
     />
   );
 }
 
-export function NpcMarker(): ReactElement {
+export function NpcMarker({
+  spriteUrl,
+  inDetails = false,
+}: {
+  readonly spriteUrl?: string | undefined;
+  readonly inDetails?: boolean;
+}): ReactElement {
+  if (spriteUrl !== undefined) {
+    return (
+      <SpriteMarker
+        spriteUrl={spriteUrl}
+        inDetails={inDetails}
+        visual="npc-sprite"
+      />
+    );
+  }
+
   return (
     <span
       className={`${classes['markerPalette']} ${classes['npcDot']}`}
@@ -84,7 +118,7 @@ function markerVisual({
     case 'monster':
       return <MonsterMarker spriteUrl={spriteUrl} inDetails={inDetails} />;
     case 'npc':
-      return <NpcMarker />;
+      return <NpcMarker spriteUrl={spriteUrl} inDetails={inDetails} />;
     case 'connection':
       return <ConnectionMarker />;
     case 'warp':
