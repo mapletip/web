@@ -121,9 +121,11 @@
   opacity: 0.8;
 }
 
+/* The marker draws its own round ring; drop the theme's square outline and gap band. */
 .markerButton:focus-visible {
   z-index: 3;
   outline: none;
+  box-shadow: none;
 }
 
 .markerButton:focus-visible::after {

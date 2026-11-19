@@ -45,6 +45,18 @@ const cases: readonly VisualCase[] = [
       page.getByRole('heading', { name: 'Linked training map' }),
     ],
   },
+  {
+    name: 'record-card-linked-footer-button-dark',
+    story: dark.LinkedCardWithFooterButton,
+    storyId: 'components-recordcard--linked-card-with-footer-button',
+    width: 720,
+    height: 280,
+    element: page.getByTestId('record-card-linked-footer-button'),
+    visible: [
+      page.getByRole('link', { name: 'Practice Meadow', exact: true }),
+      page.getByRole('button', { name: 'Locate', exact: true }),
+    ],
+  },
 ];
 
 describe('RecordCard visual states', () => {
@@ -74,6 +86,18 @@ describe('RecordCard visual states', () => {
 
   test('matches the unlinked cards baseline', async () => {
     const visualCase = cases[2]!;
+    await openVisualCase(visualCase);
+    for (const locator of visualCase.visible ?? []) {
+      await expect.element(locator).toBeVisible();
+    }
+    expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(
+      visualCase.width,
+    );
+    await expectApprovedScreenshot(visualCase);
+  });
+
+  test('matches the linked card with footer button baseline', async () => {
+    const visualCase = cases[3]!;
     await openVisualCase(visualCase);
     for (const locator of visualCase.visible ?? []) {
       await expect.element(locator).toBeVisible();

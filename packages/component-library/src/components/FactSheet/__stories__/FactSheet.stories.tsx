@@ -118,7 +118,11 @@ export const MixedKnown: Story = {
 export const LinkedValue: Story = {
   render: () => (
     <Stage>
-      <Box p="md" bg="var(--mapletip-color-canvas)">
+      <Box
+        data-testid="fact-sheet-linked-value"
+        p="md"
+        bg="var(--mapletip-color-canvas)"
+      >
         <FactSheet
           facts={[
             {
