@@ -898,11 +898,7 @@ test('Explore stage accepts wheel zoom on desktop', async ({ page }) => {
   expect(controlsBox).not.toBeNull();
   expect(
     Math.abs(
-      stageBox!.y +
-        stageBox!.height -
-        controlsBox!.y -
-        controlsBox!.height -
-        12,
+      stageBox!.y + stageBox!.height - controlsBox!.y - controlsBox!.height - 8,
     ),
   ).toBeLessThanOrEqual(3);
   expect(controlsBox!.height).toBeLessThan(150);

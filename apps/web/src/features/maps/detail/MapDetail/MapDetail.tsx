@@ -339,8 +339,8 @@ export function MapDetail({
                 <ActionIcon
                   aria-label="Explore map"
                   className={classes['exploreButton']}
-                  size={32}
-                  variant="white"
+                  size="md"
+                  variant="default"
                   disabled={!hydrated}
                   onClick={() =>
                     exploreOverlay.open({
@@ -348,7 +348,7 @@ export function MapDetail({
                     })
                   }
                 >
-                  <ArrowsOut size={20} aria-hidden="true" />
+                  <ArrowsOut size={16} aria-hidden="true" />
                 </ActionIcon>
               </Tooltip>
             </div>

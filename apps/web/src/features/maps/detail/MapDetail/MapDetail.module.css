@@ -263,10 +263,11 @@
   width: 100%;
 }
 
+/* Matches the InteractiveMap zoom bar: default 28px ActionIcon, 8px inset. */
 .exploreButton {
   position: absolute;
-  right: 12px;
-  top: 12px;
+  right: 8px;
+  top: 8px;
   z-index: 5;
 }
 
