@@ -14,9 +14,12 @@ import {
   FactSheet,
   RecordSections,
   type RecordSection,
+  type MarkerStageView,
 } from '@mapletip/component-library';
 import { ArrowsOut, ShareNetwork } from '@phosphor-icons/react';
+import { useHydrated, useLocation, useRouter } from '@tanstack/react-router';
 import { useEffect, type ReactElement } from 'react';
+import { z } from 'zod';
 
 import { DetailPageShell } from '@/components/DetailPageShell';
 import { AnchorLink } from '@/components/RouterLinks';
@@ -44,6 +47,21 @@ import { MapDetailNpcs } from './MapDetailNpcs';
 import { MapDetailOnThisMap } from './MapDetailOnThisMap';
 import { MapDetailStagePanel } from './MapDetailStagePanel';
 import { EntityIcon } from './markers';
+
+const mapDetailStageViewSchema = z
+  .object({
+    zoom: z.number().finite().min(0.5).max(8),
+    centerX: z.number().finite(),
+    centerY: z.number().finite(),
+  })
+  .strict();
+
+export const mapDetailHistoryStateSchema = z
+  .object({
+    mapDetailStageView: mapDetailStageViewSchema.optional().catch(undefined),
+    mapDetailFindText: z.string().optional().catch(undefined),
+  })
+  .catch({});
 
 export interface MapDetailProps {
   readonly view: MapDetailView;
@@ -144,6 +162,12 @@ export function MapDetail({
     false,
   );
   const exploreFullScreen = !useMediaQuery('(min-width: 48rem)', false);
+  const hydrated = useHydrated();
+  const router = useRouter();
+  const locationState = useLocation({ select: (location) => location.state });
+  const historyState = mapDetailHistoryStateSchema.parse(locationState);
+  const stageView = hydrated ? historyState.mapDetailStageView : undefined;
+  const findText = hydrated ? (historyState.mapDetailFindText ?? '') : '';
   const exploreOverlay = useRouteOverlay(mapDetailOverlayOptions);
   const exploreOverlayState =
     exploreOverlay.overlay?.type === 'explore'
@@ -157,6 +181,38 @@ export function MapDetail({
     focus,
     markers: view.stage.markers,
   });
+
+  const writeHistoryState = (updates: {
+    readonly stageView?: MarkerStageView | undefined;
+    readonly findText?: string | undefined;
+  }) => {
+    void router.navigate({
+      to: '.',
+      search: true,
+      hash: true,
+      replace: true,
+      resetScroll: false,
+      hashScrollIntoView: false,
+      state: (previous) => {
+        const nextState = { ...previous } as Record<string, unknown>;
+        if ('stageView' in updates) {
+          if (updates.stageView === undefined) {
+            delete nextState['mapDetailStageView'];
+          } else {
+            nextState['mapDetailStageView'] = updates.stageView;
+          }
+        }
+        if ('findText' in updates) {
+          if (updates.findText === undefined || updates.findText === '') {
+            delete nextState['mapDetailFindText'];
+          } else {
+            nextState['mapDetailFindText'] = updates.findText;
+          }
+        }
+        return nextState;
+      },
+    });
+  };
 
   useEffect(() => {
     if (focusValue !== canonicalFocus) onFocusChange?.(canonicalFocus);
@@ -237,6 +293,14 @@ export function MapDetail({
                 focus={focus}
                 selectedIds={selectedIds}
                 interactive={interactive}
+                stageView={stageView}
+                onViewChange={(nextView) =>
+                  writeHistoryState({ stageView: nextView })
+                }
+                findText={findText}
+                onFindTextChange={(nextFindText) =>
+                  writeHistoryState({ findText: nextFindText })
+                }
                 onActivate={activateEntity}
                 onActivateMarkers={activateMarkers}
                 renderDetails={(markerIds) => (
@@ -334,6 +398,14 @@ export function MapDetail({
           interactive
           wheelZoom
           expanded
+          stageView={stageView}
+          onViewChange={(nextView) =>
+            writeHistoryState({ stageView: nextView })
+          }
+          findText={findText}
+          onFindTextChange={(nextFindText) =>
+            writeHistoryState({ findText: nextFindText })
+          }
           onActivate={activateEntity}
           onActivateMarkers={activateMarkers}
           renderDetails={(markerIds) => (

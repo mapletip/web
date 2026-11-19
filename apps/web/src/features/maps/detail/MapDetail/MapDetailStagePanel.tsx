@@ -1,3 +1,4 @@
+import type { MarkerStageView } from '@mapletip/component-library';
 import type { ReactElement, ReactNode } from 'react';
 
 import type { MapDetailFocus } from '../focus';
@@ -15,6 +16,10 @@ export function MapDetailStagePanel({
   interactive,
   wheelZoom = false,
   expanded = false,
+  stageView,
+  onViewChange,
+  findText,
+  onFindTextChange,
   onActivate,
   onActivateMarkers,
   renderDetails,
@@ -25,6 +30,10 @@ export function MapDetailStagePanel({
   readonly interactive: boolean;
   readonly wheelZoom?: boolean;
   readonly expanded?: boolean;
+  readonly stageView?: MarkerStageView | undefined;
+  readonly onViewChange: (view: MarkerStageView | undefined) => void;
+  readonly findText: string;
+  readonly onFindTextChange: (findText: string) => void;
   readonly onActivate: (focusKey: string, modified?: boolean) => void;
   readonly onActivateMarkers: (markerIds: readonly string[]) => void;
   readonly renderDetails: (markerIds: readonly string[]) => ReactNode;
@@ -40,11 +49,18 @@ export function MapDetailStagePanel({
           stage={view.stage}
           interactive={interactive}
           wheelZoom={wheelZoom}
+          view={stageView}
+          onViewChange={onViewChange}
           selectedIds={selectedIds}
           onActivate={onActivateMarkers}
           renderDetails={renderDetails}
         />
-        <MapDetailFind entities={view.entities} onChoose={onActivate} />
+        <MapDetailFind
+          entities={view.entities}
+          findText={findText}
+          onFindTextChange={onFindTextChange}
+          onChoose={onActivate}
+        />
       </div>
       <MapDetailLegend
         entities={view.entities}

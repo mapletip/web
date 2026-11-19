@@ -1,5 +1,5 @@
 import { Stack, Text } from '@mantine/core';
-import { MarkerStage } from '@mapletip/component-library';
+import { MarkerStage, type MarkerStageView } from '@mapletip/component-library';
 import type { ReactElement, ReactNode } from 'react';
 
 import type { MapDetailStageView } from '../project';
@@ -13,6 +13,8 @@ export function MapDetailStage({
   stage,
   interactive = false,
   wheelZoom = false,
+  view,
+  onViewChange,
   selectedIds = [],
   onActivate,
   renderDetails,
@@ -20,6 +22,9 @@ export function MapDetailStage({
   readonly stage: MapDetailStageView;
   readonly interactive?: boolean;
   readonly wheelZoom?: boolean;
+  readonly view?: MarkerStageView | undefined;
+  readonly onViewChange?:
+    ((view: MarkerStageView | undefined) => void) | undefined;
   readonly selectedIds?: readonly string[];
   readonly onActivate?: (markerIds: readonly string[]) => void;
   readonly renderDetails?: (markerIds: readonly string[]) => ReactNode;
@@ -36,6 +41,8 @@ export function MapDetailStage({
         selectedIds={selectedIds}
         {...(onActivate === undefined ? {} : { onActivate })}
         {...(renderDetails === undefined ? {} : { renderDetails })}
+        {...(view === undefined ? {} : { view })}
+        {...(onViewChange === undefined ? {} : { onViewChange })}
         interactive={interactive}
         wheelZoom={wheelZoom}
         unavailableMessage={MAP_IMAGE_UNAVAILABLE_MESSAGE}
