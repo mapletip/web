@@ -1,3 +1,5 @@
+import type { Page } from '@playwright/test';
+
 import { mapPublicId, monsterPublicId } from '../../src/mocks/release';
 import { expect, test } from '../fixtures';
 
@@ -189,6 +191,185 @@ test('Map Detail selection follows the address on desktop and stays static on mo
   expect(viewportWidth).toBe(390);
   await expect(stage.locator('button[data-marker-ids]')).toHaveCount(0);
   await expect(stage.locator('[data-marker-ids]').first()).toBeVisible();
+});
+
+async function openExploreAndSelectTwinSprout(
+  page: Page,
+  initialFocus?: string,
+) {
+  const publicId = mapPublicId({ sourceId: 'cw-launch:practice-grove' });
+  const focusSearch =
+    initialFocus === undefined ? '' : `?focus=${initialFocus}`;
+  await page.goto(`/maplestory/maps/practice-grove-${publicId}${focusSearch}`);
+  await page.waitForLoadState('networkidle');
+  await page.getByRole('button', { name: 'Explore map' }).click();
+
+  const dialog = page.getByRole('dialog', { name: 'Practice Grove' });
+  await expect(dialog).toBeVisible();
+  const stage = dialog.getByRole('group', { name: 'Practice Grove map' });
+  await stage
+    .getByRole('button', { name: 'Twin Sprout, Monster, 2 of 2' })
+    .first()
+    .click();
+  await expect(page).toHaveURL(/focus=monster-[a-z0-9]{8}/u);
+  await expect(stage.locator('[data-selected="true"]')).toHaveCount(2);
+  return dialog;
+}
+
+test('Explore closes by its control and keeps marker selection at both viewports', async ({
+  page,
+}) => {
+  const dialog = await openExploreAndSelectTwinSprout(page);
+  await dialog.getByRole('button', { name: 'Close map' }).click();
+
+  await expect(dialog).toBeHidden();
+  await expect(page).toHaveURL(/focus=monster-[a-z0-9]{8}/u);
+  await expect(
+    page.getByRole('heading', { level: 1, name: 'Practice Grove' }),
+  ).toBeVisible();
+  await expect(
+    page
+      .getByRole('group', { name: 'Practice Grove map' })
+      .locator('[data-selected="true"]'),
+  ).toHaveCount(2);
+});
+
+test('Escape closes Explore and keeps marker selection at both viewports', async ({
+  page,
+}) => {
+  const dialog = await openExploreAndSelectTwinSprout(page);
+  await page.keyboard.press('Escape');
+
+  await expect(dialog).toBeHidden();
+  await expect(page).toHaveURL(/focus=monster-[a-z0-9]{8}/u);
+  await expect(
+    page.getByRole('heading', { level: 1, name: 'Practice Grove' }),
+  ).toBeVisible();
+  await expect(
+    page
+      .getByRole('group', { name: 'Practice Grove map' })
+      .locator('[data-selected="true"]'),
+  ).toHaveCount(2);
+});
+
+test('browser Back closes Explore and restores the entry selection at both viewports', async ({
+  page,
+}) => {
+  const dialog = await openExploreAndSelectTwinSprout(page, 'monsters');
+  await page.goBack();
+
+  await expect(dialog).toBeHidden();
+  await expect(page).toHaveURL(/focus=monsters/u);
+  await expect(
+    page.getByRole('heading', { level: 1, name: 'Practice Grove' }),
+  ).toBeVisible();
+  await expect(
+    page
+      .getByRole('group', { name: 'Practice Grove map' })
+      .locator('[data-selected="true"]'),
+  ).toHaveCount(4);
+});
+
+test('desktop Map Detail zoom controls enlarge the stage and Fit restores it', async ({
+  page,
+}, testInfo) => {
+  test.skip(
+    testInfo.project.name !== 'desktop',
+    'Inline zoom is desktop only.',
+  );
+  await page.setViewportSize({ width: 1440, height: 900 });
+  const publicId = mapPublicId({ sourceId: 'cw-launch:practice-grove' });
+  await page.goto(`/maplestory/maps/practice-grove-${publicId}`);
+  await page.waitForLoadState('networkidle');
+
+  const stage = page.getByRole('group', { name: 'Practice Grove map' });
+  const image = stage.getByRole('img', { name: 'Practice Grove map' });
+  const fitted = await image.boundingBox();
+  expect(fitted).not.toBeNull();
+  await stage.getByRole('button', { name: 'Zoom in' }).click();
+  await expect
+    .poll(async () => (await image.boundingBox())?.width ?? 0)
+    .toBeGreaterThan(fitted!.width * 1.3);
+
+  await stage.getByRole('button', { name: 'Fit map' }).click();
+  await expect
+    .poll(async () => (await image.boundingBox())?.width ?? 0)
+    .toBeCloseTo(fitted!.width, 0);
+});
+
+test('Explore stage accepts wheel zoom on desktop', async ({
+  page,
+}, testInfo) => {
+  test.skip(
+    testInfo.project.name !== 'desktop',
+    'Wheel input is tested on desktop.',
+  );
+  const publicId = mapPublicId({ sourceId: 'cw-launch:practice-grove' });
+  await page.goto(`/maplestory/maps/practice-grove-${publicId}`);
+  await page.waitForLoadState('networkidle');
+  await page.getByRole('button', { name: 'Explore map' }).click();
+
+  const dialog = page.getByRole('dialog', { name: 'Practice Grove' });
+  const image = dialog
+    .getByRole('group', { name: 'Practice Grove map' })
+    .getByRole('img', { name: 'Practice Grove map' });
+  const fitted = await image.boundingBox();
+  expect(fitted).not.toBeNull();
+  const stageBox = await dialog
+    .getByRole('group', { name: 'Practice Grove map' })
+    .boundingBox();
+  expect(stageBox).not.toBeNull();
+  const controlsBox = await dialog
+    .getByRole('group', { name: 'Map controls' })
+    .boundingBox();
+  expect(controlsBox).not.toBeNull();
+  expect(
+    Math.abs(
+      stageBox!.y +
+        stageBox!.height -
+        controlsBox!.y -
+        controlsBox!.height -
+        12,
+    ),
+  ).toBeLessThanOrEqual(3);
+  expect(controlsBox!.height).toBeLessThan(150);
+  await page.mouse.move(
+    stageBox!.x + stageBox!.width * 0.95,
+    stageBox!.y + stageBox!.height / 2,
+  );
+  await page.mouse.wheel(0, -500);
+  await expect
+    .poll(async () => (await image.boundingBox())?.width ?? 0)
+    .toBeGreaterThan(fitted!.width * 1.1);
+});
+
+test('mobile Map Detail stays static inline and Explore fills the viewport', async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== 'mobile', 'Mobile Explore layout.');
+  await page.setViewportSize({ width: 390, height: 844 });
+  const publicId = mapPublicId({ sourceId: 'cw-launch:practice-grove' });
+  await page.goto(`/maplestory/maps/practice-grove-${publicId}`);
+  await page.waitForLoadState('networkidle');
+
+  const inlineStage = page.getByRole('group', { name: 'Practice Grove map' });
+  await expect(inlineStage.locator('button[data-marker-ids]')).toHaveCount(0);
+  await expect(
+    inlineStage.getByRole('group', { name: 'Map controls' }),
+  ).toHaveCount(0);
+
+  await page.getByRole('button', { name: 'Explore map' }).click();
+  const dialog = page.getByRole('dialog', { name: 'Practice Grove' });
+  await expect(dialog).toBeVisible();
+  const box = await dialog.boundingBox();
+  expect(box?.width).toBe(390);
+  expect(box?.height).toBe(844);
+  const exploreStage = dialog.getByRole('group', {
+    name: 'Practice Grove map',
+  });
+  await expect(
+    exploreStage.getByRole('group', { name: 'Map controls' }),
+  ).toBeVisible();
 });
 
 test('On this map selects every town NPC and restores the selection after reload', async ({

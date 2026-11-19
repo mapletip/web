@@ -247,15 +247,78 @@
   position: relative;
 }
 
+.stagePanel {
+  min-width: 0;
+  width: 100%;
+}
+
+.stagePanel[data-expanded='true'] .mapStage > :global([role='group']) {
+  height: clamp(220px, min(50vh, 600px), 600px);
+}
+
+.mapStage {
+  min-width: 0;
+  width: 100%;
+}
+
+.stagePanelWithExplore {
+  min-width: 0;
+  position: relative;
+  width: 100%;
+}
+
+.exploreButton {
+  position: absolute;
+  right: 12px;
+  top: 12px;
+  z-index: 5;
+}
+
+.exploreButton::before {
+  background: var(--mantine-color-white, white);
+  border-radius: var(--mantine-radius-sm, 4px);
+  content: '';
+  height: 24px;
+  left: 50%;
+  pointer-events: none;
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 24px;
+  z-index: 0;
+}
+
+.exploreButton:hover::before {
+  background: var(--mantine-color-gray-0, #f8f9fa);
+}
+
+.exploreButton > * {
+  position: relative;
+  z-index: 1;
+}
+
+.exploreModalContent:not([data-full-screen]) {
+  max-height: calc(100dvh - 16px);
+  max-width: min(1120px, calc(100vw - 32px));
+  overflow: hidden;
+}
+
+.exploreModalBody {
+  max-height: calc(100dvh - 76px);
+  min-height: 0;
+  overflow: auto;
+  padding: 12px;
+}
+
 .findShell {
   align-items: center;
   display: flex;
   gap: 8px;
   left: 12px;
-  max-width: calc(100% - 24px);
+  max-width: calc(100% - 64px);
   position: absolute;
   top: 12px;
-  width: min(360px, calc(100% - 24px));
+  width: min(360px, calc(100% - 64px));
   z-index: 4;
 }
 
@@ -288,6 +351,10 @@
 }
 
 @media (max-width: 767px) {
+  .stagePanel[data-expanded='true'] .mapStage > :global([role='group']) {
+    height: clamp(140px, min(38vh, 420px), 420px);
+  }
+
   .findShell[data-mobile-find-open='false'] {
     width: var(--input-height-sm);
   }
@@ -304,6 +371,10 @@
     flex: 1 1 auto;
     min-width: 0;
     width: auto;
+  }
+
+  .findShell[data-mobile-find-open='true'] {
+    max-width: calc(100% - 64px);
   }
 }
 

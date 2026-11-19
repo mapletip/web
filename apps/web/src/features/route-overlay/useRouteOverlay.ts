@@ -16,6 +16,7 @@ export interface RouteOverlayController<T extends RouteOverlayState> {
   readonly overlay: T | undefined;
   readonly open: (overlay: T) => void;
   readonly dismiss: (type: T['type']) => void;
+  readonly release: (type: T['type']) => Promise<void>;
   readonly invalidate: (type: T['type']) => Promise<void>;
   readonly apply: (
     type: T['type'],
@@ -74,15 +75,11 @@ export function useRouteOverlay<T extends RouteOverlayState>(
     [readOverlay, router],
   );
 
-  const invalidate = useCallback(
+  const release = useCallback(
     async (type: T['type']) => {
       const current = readOverlay(router.state.location.state);
       if (current?.type !== type) return;
 
-      const expectedHref = router.state.location.href;
-
-      // Browser history cannot delete a Forward entry. Neutralize this
-      // overlay before going back so Forward returns to a closed route.
       await router.navigate({
         to: '.',
         search: true,
@@ -97,6 +94,20 @@ export function useRouteOverlay<T extends RouteOverlayState>(
           return nextState;
         },
       });
+    },
+    [readOverlay, router, stateKey],
+  );
+
+  const invalidate = useCallback(
+    async (type: T['type']) => {
+      const current = readOverlay(router.state.location.state);
+      if (current?.type !== type) return;
+
+      const expectedHref = router.state.location.href;
+
+      // Browser history cannot delete a Forward entry. Neutralize this
+      // overlay before going back so Forward returns to a closed route.
+      await release(type);
 
       if (
         readOverlay(router.state.location.state) === undefined &&
@@ -105,7 +116,7 @@ export function useRouteOverlay<T extends RouteOverlayState>(
         router.history.back();
       }
     },
-    [readOverlay, router, stateKey],
+    [readOverlay, release, router],
   );
 
   const apply = useCallback(
@@ -123,7 +134,7 @@ export function useRouteOverlay<T extends RouteOverlayState>(
   );
 
   return useMemo(
-    () => ({ overlay, open, dismiss, invalidate, apply }),
-    [overlay, open, dismiss, invalidate, apply],
+    () => ({ overlay, open, dismiss, release, invalidate, apply }),
+    [overlay, open, dismiss, release, invalidate, apply],
   );
 }
