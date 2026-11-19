@@ -10,7 +10,11 @@ import {
   projectItemRecordChip,
   type ItemRecordChipView,
 } from '@/features/items/shared';
-import type { MapRecordCardView } from '@/features/maps/shared';
+import {
+  projectMapRecordDestination,
+  type MapRecordCardDestination,
+  type MapRecordCardView,
+} from '@/features/maps/shared';
 import {
   projectQuestRecordCard,
   type QuestRecordCardView,
@@ -65,6 +69,25 @@ export interface MonsterDetailDropGroupView {
 export interface MonsterDetailLocationMapView extends MapRecordCardView {
   /** Stable Map product key; names are not unique. */
   readonly placementCount: number;
+}
+
+type MonsterPageLocationEntry =
+  StaticMonsterPageRecord['locations']['entries'][number];
+
+function projectMonsterLocationDestination({
+  entry,
+  buildId,
+}: {
+  readonly entry: MonsterPageLocationEntry;
+  readonly buildId: BuildId;
+}): MapRecordCardDestination | undefined {
+  if (!('publicId' in entry) || !('slug' in entry)) return undefined;
+
+  return projectMapRecordDestination({
+    publicId: entry.publicId,
+    slug: entry.slug,
+    buildId,
+  });
 }
 
 export interface MonsterDetailQuestEntryView extends QuestRecordCardView {
@@ -281,9 +304,13 @@ function projectMonsterSummonedBy(
   return { state: 'present', count: entries.length, entries };
 }
 
-function projectMonsterLocations(
-  record: StaticMonsterPageRecord,
-): MonsterDetailLocationsView {
+function projectMonsterLocations({
+  record,
+  buildId,
+}: {
+  readonly record: StaticMonsterPageRecord;
+  readonly buildId: BuildId;
+}): MonsterDetailLocationsView {
   const locations = record.locations;
   if (locations.summary.state === 'absent') {
     return { state: 'no-locations', count: 0 };
@@ -301,12 +328,14 @@ function projectMonsterLocations(
     streetName,
     placementCount,
     minimapContentId,
+    destination,
   }: {
     readonly key: string;
     readonly name: string | undefined;
     readonly streetName: string | null | undefined;
     readonly placementCount: number;
     readonly minimapContentId: string | undefined;
+    readonly destination: MapRecordCardDestination | undefined;
   }): MonsterDetailLocationMapView => {
     const street = nonBlank(streetName);
     const minimapUrl =
@@ -318,6 +347,7 @@ function projectMonsterLocations(
       name: nonBlank(name) ?? 'Map name unavailable',
       ...(street === undefined ? {} : { secondaryLine: street }),
       ...(minimapUrl === undefined ? {} : { minimapUrl }),
+      ...(destination === undefined ? {} : { destination }),
       footerParts: [
         {
           value: formatMonsterNumber(placementCount),
@@ -335,6 +365,7 @@ function projectMonsterLocations(
             entry.mapName.state === 'known' ? entry.mapName.value : undefined,
           streetName: entry.streetName,
           placementCount: entry.placementCount,
+          destination: projectMonsterLocationDestination({ entry, buildId }),
           minimapContentId:
             entry.stage.state === 'known'
               ? entry.stage.value.contentId
@@ -347,6 +378,7 @@ function projectMonsterLocations(
           name: entry.name.state === 'known' ? entry.name.value : undefined,
           streetName: entry.streetName,
           placementCount: entry.placementCount,
+          destination: projectMonsterLocationDestination({ entry, buildId }),
           minimapContentId:
             entry.minimap.state === 'known' ? entry.minimap.value : undefined,
         }),
@@ -458,7 +490,7 @@ export function projectMonsterDetail(
     ...(record.undead.state === 'known' ? { undead: record.undead.value } : {}),
     elements: projectElements(record),
     stats: MONSTER_STAT_DEFINITIONS.map(({ id }) => projectStat(record, id)),
-    locations: projectMonsterLocations(record),
+    locations: projectMonsterLocations({ record, buildId }),
     drops: projectMonsterDrops(record),
     quests: projectMonsterQuests(record),
     summonedBy: projectMonsterSummonedBy(record),

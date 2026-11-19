@@ -1,5 +1,8 @@
 import { itemIconUrl } from '@mapletip/data/items';
-import type { MonsterPageRecordV1 } from '@mapletip/data/monsters';
+import type {
+  MonsterPageRecordV1,
+  MonsterPageRecordV1_2,
+} from '@mapletip/data/monsters';
 import { describe, expect, it } from 'vitest';
 
 import { MAPLEKIT_RELEASE } from '@/config/maplekit';
@@ -57,6 +60,32 @@ function pageQuest(
   };
 }
 
+function addressableMonsterPageFixture(): MonsterPageRecordV1_2 {
+  return {
+    ...monsterPageFixture(),
+    contractVersion: '1.2',
+    scope: { build_id: 'gms-v83', family_id: 'gms' },
+    locations: {
+      summary: { state: 'known', mapCount: 1, placementCount: 3 },
+      entries: [
+        {
+          mapKey: 'fixture:map:addressed',
+          mapSourceId: 'gms-v83:fixture:map:addressed',
+          mapName: { state: 'known', value: 'Addressed Meadow' },
+          publicId: '22kodknn',
+          slug: 'addressed-meadow',
+          placementCount: 3,
+          stage: {
+            state: 'absent',
+            coverageKey: 'fixture:map:addressed:stage',
+          },
+          points: { state: 'absent', packedPairs: [] },
+        },
+      ],
+    },
+  } as unknown as MonsterPageRecordV1_2;
+}
+
 describe('projectMonsterDetail', () => {
   it('projects identity fields and unprefixed canonical path for default build', () => {
     const view = projectMonsterDetail(
@@ -109,6 +138,44 @@ describe('projectMonsterDetail', () => {
     expect(view.canonicalPath).toBe(
       '/maplestory/gms-v83/monsters/pianus-jp565851',
     );
+  });
+
+  it('links location cards with page addresses and leaves older entries unlinked', () => {
+    const linked = projectMonsterDetail(
+      addressableMonsterPageFixture(),
+      'gms-v83',
+    );
+    const linkedMaps = linked.locations;
+    if (linkedMaps.state !== 'present') {
+      throw new Error('Expected the addressable location to be present.');
+    }
+    expect(linkedMaps.maps[0]).toMatchObject({
+      name: 'Addressed Meadow',
+      destination: {
+        href: '/maplestory/gms-v83/maps/addressed-meadow-22kodknn',
+      },
+    });
+
+    const legacy = projectMonsterDetail(
+      monsterPageFixture({
+        locations: {
+          summary: { state: 'known', mapCount: 1, placementCount: 2 },
+          entries: [
+            pageLocation(
+              'fixture:map:legacy',
+              { state: 'known', value: 'Legacy Meadow' },
+              2,
+            ),
+          ],
+        },
+      }),
+      'cw-launch',
+    );
+    const legacyMaps = legacy.locations;
+    if (legacyMaps.state !== 'present') {
+      throw new Error('Expected the legacy location to be present.');
+    }
+    expect(legacyMaps.maps[0]).not.toHaveProperty('destination');
   });
 
   it('falls back to UNNAMED_MONSTER_LABEL when name is non-known', () => {
