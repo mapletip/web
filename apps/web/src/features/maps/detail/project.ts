@@ -2,7 +2,7 @@ import type { MarkerStageConnector } from '@mapletip/component-library';
 import { mapMinimapUrl, type MapPageRecordV1 } from '@mapletip/data/maps';
 
 import { MAPLEKIT_RELEASE, type BuildId } from '@/config/maplekit';
-import { buildRecordDetailPath, nonBlank } from '@/features/detail';
+import { buildRecordDetailPath } from '@/features/detail';
 import {
   projectMapRecordDestination,
   type MapRecordCardView,
@@ -19,6 +19,7 @@ import {
   projectNpcRecordCard,
   type NpcRecordCardView,
 } from '@/features/npcs/shared';
+import { nonBlank } from '@/util/nonBlank';
 
 export const UNNAMED_MAP_LABEL = 'Unnamed map';
 
@@ -292,8 +293,7 @@ function projectFacts({
     facts.push({
       label: 'HP drain',
       value: `${hpDrain.value} HP`,
-      explanation:
-        'This map can lower your HP without a monster hit. Bring healing; the amount does not say how often it happens.',
+      explanation: 'This map can lower your HP without being hit by a monster.',
     });
   }
 
@@ -305,8 +305,7 @@ function projectFacts({
     facts.push({
       label: 'HP drain protection',
       value: protectionItem,
-      explanation:
-        "Equip this item to prevent the map's HP drain; carrying it is not enough.",
+      explanation: "Equip this item to prevent the map's HP drain.",
     });
   }
 
@@ -314,8 +313,7 @@ function projectFacts({
     facts.push({
       label: 'Swimming',
       value: 'Allowed',
-      explanation:
-        'You swim on this map. Jump to rise and use the direction controls to move through the water.',
+      explanation: 'You swim on this map.',
     });
   }
 

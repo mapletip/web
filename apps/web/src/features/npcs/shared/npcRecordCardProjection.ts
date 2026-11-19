@@ -1,6 +1,6 @@
 import type { MapPageRecordV1 } from '@mapletip/data/maps';
 
-import { nonBlank } from '@/features/detail';
+import { nonBlank } from '@/util/nonBlank';
 
 export const UNNAMED_NPC_LABEL = 'Unnamed NPC';
 

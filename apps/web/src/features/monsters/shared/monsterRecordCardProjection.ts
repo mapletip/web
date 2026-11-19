@@ -1,7 +1,8 @@
 import type { MapPageRecordV1 } from '@mapletip/data/maps';
 
 import type { BuildId } from '@/config/maplekit';
-import { buildRecordDetailPath, nonBlank } from '@/features/detail';
+import { buildRecordDetailPath } from '@/features/detail';
+import { nonBlank } from '@/util/nonBlank';
 
 import { monsterDetailLinkProps } from './address';
 import { formatMonsterNumber } from './monster-data';

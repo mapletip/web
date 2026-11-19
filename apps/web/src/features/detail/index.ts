@@ -7,7 +7,6 @@ export {
   resolveBuildIdParam,
   type ParsedRecordAddress,
 } from './address';
-export { nonBlank } from './nonBlank';
 export { requireBuildId } from './requireBuildId';
 export {
   DetailBreadcrumbs,

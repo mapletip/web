@@ -2,7 +2,7 @@ import { mapMinimapUrl } from '@mapletip/data/maps';
 import type { MonsterPageRecordV1 } from '@mapletip/data/monsters';
 
 import { MAPLEKIT_RELEASE, type BuildId } from '@/config/maplekit';
-import { buildRecordDetailPath, nonBlank } from '@/features/detail';
+import { buildRecordDetailPath } from '@/features/detail';
 import {
   projectItemRecordChip,
   type ItemRecordChipView,
@@ -12,6 +12,7 @@ import {
   projectQuestRecordCard,
   type QuestRecordCardView,
 } from '@/features/quests/shared';
+import { nonBlank } from '@/util/nonBlank';
 
 import {
   formatMonsterNumber,
