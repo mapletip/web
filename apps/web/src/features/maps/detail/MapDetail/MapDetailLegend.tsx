@@ -1,5 +1,5 @@
 import { Chip, ScrollArea, Tabs } from '@mantine/core';
-import { useState, type ReactElement } from 'react';
+import { useState, type MouseEvent, type ReactElement } from 'react';
 
 import { isMapDetailEntityFocused, type MapDetailFocus } from '../focus';
 import type { MapDetailEntityView } from '../project';
@@ -19,6 +19,11 @@ const legendKinds = [
 
 type LegendTab = 'all' | (typeof legendKinds)[number]['value'];
 
+const isModified = (event: {
+  readonly ctrlKey: boolean;
+  readonly metaKey: boolean;
+}): boolean => event.ctrlKey || event.metaKey;
+
 export function MapDetailLegend({
   entities,
   focus,
@@ -26,7 +31,7 @@ export function MapDetailLegend({
 }: {
   readonly entities: readonly MapDetailEntityView[];
   readonly focus: MapDetailFocus | undefined;
-  readonly onActivate: (focusKey: string) => void;
+  readonly onActivate: (focusKey: string, modified?: boolean) => void;
 }): ReactElement | null {
   const [activeTab, setActiveTab] = useState<LegendTab>('all');
   if (entities.length === 0) return null;
@@ -62,7 +67,22 @@ export function MapDetailLegend({
             focusKey: entity.focusKey,
             kind: entity.kind,
           })}
-          onChange={() => onActivate(entity.focusKey)}
+          onClick={(event) => onActivate(entity.focusKey, isModified(event))}
+          // Firefox drops the modifier on keyboard clicks and doesn't forward a
+          // modified label click to the input, so handle those two here.
+          onKeyDown={(event) => {
+            if (event.key !== ' ' || !isModified(event)) return;
+            event.preventDefault();
+            onActivate(entity.focusKey, true);
+          }}
+          wrapperProps={{
+            onClick: (event: MouseEvent<HTMLDivElement>) => {
+              if (event.target instanceof HTMLInputElement) return;
+              if (!isModified(event)) return;
+              event.preventDefault();
+              onActivate(entity.focusKey, true);
+            },
+          }}
           classNames={{
             root: classes['legendChip'],
             iconWrapper: classes['legendChipIconWrapper'],

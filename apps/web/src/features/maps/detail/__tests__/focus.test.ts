@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  activateMapDetailEntity,
   formatMapDetailFocus,
   mapDetailFocusMarkerIds,
   mapDetailSearchSchema,
@@ -108,6 +109,94 @@ describe('Map Detail focus', () => {
     expect(formatMapDetailFocus({ focus: resolved })).toBe(
       `${first.focusKey},${second.focusKey}`,
     );
+  });
+
+  it('adds a modified entity and keeps the legend order', () => {
+    const view = practiceGrove();
+    const [first, second] = view.entities.filter(
+      ({ kind }) => kind === 'monster',
+    );
+    if (first === undefined || second === undefined) {
+      throw new Error('Expected multiple fixture Monsters.');
+    }
+
+    const focus = activateMapDetailEntity({
+      focus: { keys: [second.focusKey] },
+      focusKey: first.focusKey,
+      modified: true,
+      view,
+    });
+
+    expect(focus).toEqual({ keys: [first.focusKey, second.focusKey] });
+  });
+
+  it('removes one entity from a modified selection', () => {
+    const view = practiceGrove();
+    const [first, second] = view.entities.filter(
+      ({ kind }) => kind === 'monster',
+    );
+    if (first === undefined || second === undefined) {
+      throw new Error('Expected multiple fixture Monsters.');
+    }
+
+    expect(
+      activateMapDetailEntity({
+        focus: { keys: [first.focusKey, second.focusKey] },
+        focusKey: first.focusKey,
+        modified: true,
+        view,
+      }),
+    ).toEqual({ keys: [second.focusKey] });
+  });
+
+  it('clears focus when the last entity is removed with a modifier', () => {
+    const view = practiceGrove();
+    const key = entityKey(view, 'monster');
+
+    expect(
+      activateMapDetailEntity({
+        focus: { keys: [key] },
+        focusKey: key,
+        modified: true,
+        view,
+      }),
+    ).toBeUndefined();
+  });
+
+  it('replaces a multiple selection without a modifier', () => {
+    const view = practiceGrove();
+    const monsters = view.entities.filter(({ kind }) => kind === 'monster');
+    const [first, second, replacement] = monsters;
+    if (
+      first === undefined ||
+      second === undefined ||
+      replacement === undefined
+    ) {
+      throw new Error('Expected three fixture Monsters.');
+    }
+
+    expect(
+      activateMapDetailEntity({
+        focus: { keys: [first.focusKey, second.focusKey] },
+        focusKey: replacement.focusKey,
+        modified: false,
+        view,
+      }),
+    ).toEqual({ keys: [replacement.focusKey] });
+  });
+
+  it('starts a modified selection from a whole kind', () => {
+    const view = practiceGrove();
+    const key = entityKey(view, 'monster');
+
+    expect(
+      activateMapDetailEntity({
+        focus: { kind: 'monsters' },
+        focusKey: key,
+        modified: true,
+        view,
+      }),
+    ).toEqual({ keys: [key] });
   });
 
   it('drops malformed parts and duplicate keys while parsing', () => {

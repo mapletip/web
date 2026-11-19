@@ -216,6 +216,38 @@ describe('MapDetail information', () => {
     ).toHaveLength(0);
   });
 
+  it('replaces a multiple selection with a plain legend chip activation', async () => {
+    const view = projectMapDetail({
+      record: mapPageRecordFixture({ mapId: 'practice-grove' }),
+      buildId: 'cw-launch',
+    });
+    const [first, second] = view.entities.filter(
+      ({ kind }) => kind === 'monster',
+    );
+    if (first === undefined || second === undefined) {
+      throw new Error('Expected multiple fixture Monsters.');
+    }
+    const onFocusChange = vi.fn();
+    const user = userEvent.setup();
+    renderControlledMapView({
+      view,
+      focusValue: `${first.focusKey},${second.focusKey}`,
+      onFocusChange,
+    });
+
+    const firstChip = screen.getByRole('checkbox', {
+      name: `${first.name}, ${first.kindLabel}`,
+    });
+    const secondChip = screen.getByRole('checkbox', {
+      name: `${second.name}, ${second.kindLabel}`,
+    });
+
+    await user.click(secondChip);
+    expect(onFocusChange).toHaveBeenLastCalledWith(second.focusKey);
+    expect(firstChip).not.toBeChecked();
+    expect(secondChip).toBeChecked();
+  });
+
   it('selects both markers for a warp legend chip', async () => {
     const view = projectMapDetail({
       record: mapPageRecordFixture({ mapId: 'practice-grove' }),
