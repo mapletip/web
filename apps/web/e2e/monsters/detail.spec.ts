@@ -1,6 +1,10 @@
 import type { Locator, Request } from '@playwright/test';
 
-import { monsterPublicId, monsterSlug } from '../../src/mocks/release';
+import {
+  mapPublicId,
+  monsterPublicId,
+  monsterSlug,
+} from '../../src/mocks/release';
 
 import { expect, test } from './fixtures';
 
@@ -57,6 +61,8 @@ function expectMonsterPageArtifacts(expected: RegExp[]): void {
     /^\/v1\/build-indexes\/[a-f0-9]{64}\.json$/u,
     /^\/v2\/products\/[a-f0-9]{64}\.json$/u,
     /^\/v2\/monsters\/page-packs\/[a-f0-9]{64}\.json$/u,
+    // Linked location cards preload their map on intent (router defaultPreload).
+    /^\/v2\/maps\/page-packs\/[a-f0-9]{64}\.json$/u,
   );
 }
 
@@ -417,7 +423,11 @@ test('Monster Detail opens every location in a drawer from its responsive cap', 
   const drawer = page.getByRole('dialog');
   const drawerCards = drawer.getByTestId('monster-location-card');
   await expect(drawerCards.filter({ visible: true })).toHaveCount(12);
-  await expect(drawerCards.getByRole('link')).toHaveCount(0);
+  await expect(drawerCards.getByRole('link')).toHaveCount(12);
+  const firstLocationMapPath = `/maplestory/maps/practice-map-01-${mapPublicId({ sourceId: 'cw-launch:fixture:map:01' })}`;
+  await expect(
+    drawerCards.filter({ hasText: 'Practice Map 01' }).getByRole('link'),
+  ).toHaveAttribute('href', firstLocationMapPath);
   await expect(inlineCards.filter({ visible: true })).toHaveCount(initialCap);
 
   const searchIds = await page
@@ -508,6 +518,34 @@ test('Monster Detail opens every location in a drawer from its responsive cap', 
   await expect(expandTrigger).toBeFocused();
   await expect(
     inlineCards.first().getByRole('heading', { name: 'Practice Map 01' }),
+  ).toBeVisible();
+});
+
+test('Monster Detail location cards open their Map Detail page', async ({
+  page,
+  monsterPage,
+  expectedArtifactRequests,
+}) => {
+  const item: DetailCase = {
+    buildId: 'cw-launch',
+    prefix: '/maplestory',
+    sourceId: 'crowned-warden',
+    name: 'Crowned Warden',
+    buildLabel: 'Classic World',
+  };
+  expectMonsterPageArtifacts(expectedArtifactRequests);
+  await monsterPage.goto(canonicalPath(item));
+
+  const mapPath = `/maplestory/maps/practice-map-01-${mapPublicId({ sourceId: 'cw-launch:fixture:map:01' })}`;
+  const locationCard = page
+    .getByTestId('monster-location-card')
+    .filter({ hasText: 'Practice Map 01' });
+  await expect(locationCard.getByRole('link')).toHaveAttribute('href', mapPath);
+  await locationCard.getByRole('link').click();
+
+  await expect(page).toHaveURL(`http://127.0.0.1:4173${mapPath}`);
+  await expect(
+    page.getByRole('heading', { level: 1, name: 'Practice Map 01' }),
   ).toBeVisible();
 });
 

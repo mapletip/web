@@ -1,8 +1,15 @@
 import { MantineProvider } from '@mantine/core';
+import {
+  RouterContextProvider,
+  createMemoryHistory,
+  createRouter,
+} from '@tanstack/react-router';
 import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useState } from 'react';
 import { describe, expect, it } from 'vitest';
+
+import { routeTree } from '@/routeTree.gen';
 
 import { LocationCardList } from '../LocationCardList';
 import type {
@@ -16,6 +23,9 @@ function map(index: number): MonsterDetailLocationMapView {
     name: `Practice Map ${String(index).padStart(2, '0')}`,
     secondaryLine: `Practice Street ${index}`,
     ...(index === 1 ? { minimapUrl: '/synthetic-minimap.png' } : {}),
+    ...(index === 1
+      ? { destination: { href: '/maplestory/maps/practice-map-01-abc12345' } }
+      : {}),
     footerParts: [
       {
         value: index.toLocaleString('en-US'),
@@ -53,27 +63,33 @@ function StatefulLocations({
 }
 
 function mount(locations: MonsterDetailLocationsView) {
-  return render(
-    <MantineProvider>
-      <StatefulLocations locations={locations} />
-    </MantineProvider>,
+  const router = createRouter({
+    routeTree,
+    history: createMemoryHistory({ initialEntries: ['/maplestory/monsters'] }),
+  });
+  const renderLocations = (nextLocations: MonsterDetailLocationsView) => (
+    <RouterContextProvider router={router}>
+      <MantineProvider>
+        <StatefulLocations locations={nextLocations} />
+      </MantineProvider>
+    </RouterContextProvider>
   );
+  const result = render(renderLocations(locations));
+  return {
+    ...result,
+    rerenderLocations: (nextLocations: MonsterDetailLocationsView) =>
+      result.rerender(renderLocations(nextLocations)),
+  };
 }
 
 describe('LocationCardList', () => {
   it('shows honest absent and unavailable states', () => {
-    const { rerender } = mount({ state: 'no-locations', count: 0 });
+    const { rerenderLocations } = mount({ state: 'no-locations', count: 0 });
     expect(
       screen.getByText('No locations are listed for this monster.'),
     ).toBeVisible();
 
-    rerender(
-      <MantineProvider>
-        <StatefulLocations
-          locations={{ state: 'unavailable', count: 'unknown' }}
-        />
-      </MantineProvider>,
-    );
+    rerenderLocations({ state: 'unavailable', count: 'unknown' });
     expect(
       screen.getByText('Location information is unavailable.'),
     ).toBeVisible();
@@ -81,13 +97,11 @@ describe('LocationCardList', () => {
 
   it('searches and sorts the whole list and opens all maps in a drawer', async () => {
     const user = userEvent.setup();
-    const { container } = mount(present());
+    mount(present());
 
     const cards = screen.getAllByTestId('monster-location-card');
     expect(cards).toHaveLength(10);
-    expect(
-      container.querySelectorAll('[data-testid="monster-location-card"] a'),
-    ).toHaveLength(0);
+    expect(within(cards[0]!).queryByRole('link')).toBeNull();
     expect(
       within(cards[0]!).getByRole('heading', { name: 'Practice Map 12' }),
     ).toBeVisible();
@@ -102,6 +116,9 @@ describe('LocationCardList', () => {
     const search = screen.getByRole('textbox', { name: 'Find a map' });
     await user.type(search, 'Map 01');
     expect(screen.getAllByTestId('monster-location-card')).toHaveLength(1);
+    expect(
+      screen.getByRole('link', { name: /Practice Map 01/u }),
+    ).toHaveAttribute('href', '/maplestory/maps/practice-map-01-abc12345');
     expect(
       screen.getByRole('heading', { name: 'Practice Map 01' }),
     ).toBeVisible();
@@ -196,7 +213,7 @@ describe('LocationCardList', () => {
 
   it('omits search and sort controls for three maps or fewer and reports an empty search', async () => {
     const user = userEvent.setup();
-    const { rerender } = mount(present(3));
+    const { rerenderLocations } = mount(present(3));
 
     expect(screen.queryByRole('textbox', { name: 'Find a map' })).toBeNull();
     expect(
@@ -204,11 +221,7 @@ describe('LocationCardList', () => {
     ).toBeNull();
     expect(screen.queryByRole('button', { name: /View all/u })).toBeNull();
 
-    rerender(
-      <MantineProvider>
-        <StatefulLocations locations={present(4)} />
-      </MantineProvider>,
-    );
+    rerenderLocations(present(4));
     const search = screen.getByRole('textbox', { name: 'Find a map' });
     await user.type(search, 'not on this list');
     expect(screen.getByRole('status')).toHaveTextContent(
@@ -216,11 +229,7 @@ describe('LocationCardList', () => {
     );
     expect(screen.queryAllByTestId('monster-location-card')).toHaveLength(0);
 
-    rerender(
-      <MantineProvider>
-        <StatefulLocations locations={present(3)} />
-      </MantineProvider>,
-    );
+    rerenderLocations(present(3));
     expect(screen.queryByRole('textbox', { name: 'Find a map' })).toBeNull();
   });
 });
