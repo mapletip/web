@@ -34,6 +34,7 @@ import type { MapDetailEntityView, MapDetailView } from '../project';
 
 import classes from './MapDetail.module.css';
 import { MapDetailConnections } from './MapDetailConnections';
+import { MapDetailFind } from './MapDetailFind';
 import { MapDetailLegend } from './MapDetailLegend';
 import { MapDetailMonsters } from './MapDetailMonsters';
 import { MapDetailNpcs } from './MapDetailNpcs';
@@ -212,19 +213,25 @@ export function MapDetail({
         </div>
         <div className={classes['hero']}>
           <div className={classes['stageColumn']}>
-            <MapDetailStage
-              stage={view.stage}
-              interactive={interactive}
-              selectedIds={selectedIds}
-              onActivate={activateMarkers}
-              renderDetails={(markerIds) => (
-                <MarkerDetails
-                  markerIds={markerIds}
-                  view={view}
-                  onChoose={activateEntity}
-                />
-              )}
-            />
+            <div className={classes['stageWithFind']}>
+              <MapDetailStage
+                stage={view.stage}
+                interactive={interactive}
+                selectedIds={selectedIds}
+                onActivate={activateMarkers}
+                renderDetails={(markerIds) => (
+                  <MarkerDetails
+                    markerIds={markerIds}
+                    view={view}
+                    onChoose={activateEntity}
+                  />
+                )}
+              />
+              <MapDetailFind
+                entities={view.entities}
+                onChoose={activateEntity}
+              />
+            </div>
             <MapDetailLegend
               entities={view.entities}
               focus={focus}

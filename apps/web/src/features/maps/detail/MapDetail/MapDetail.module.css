@@ -242,6 +242,41 @@
   min-width: 0;
 }
 
+.stageWithFind {
+  min-width: 0;
+  position: relative;
+}
+
+.findShell {
+  align-items: center;
+  display: flex;
+  gap: 8px;
+  left: 12px;
+  max-width: calc(100% - 24px);
+  position: absolute;
+  top: 12px;
+  width: min(360px, calc(100% - 24px));
+  z-index: 4;
+}
+
+.findField {
+  box-sizing: border-box;
+  min-width: 0;
+  width: 100%;
+}
+
+.findField :global(.mantine-Select-root),
+.findField :global(.mantine-Input-wrapper),
+.findField :global(.mantine-Select-input) {
+  min-width: 0;
+  width: 100%;
+}
+
+.findToggle {
+  display: none;
+  flex: 0 0 auto;
+}
+
 .onThisMap {
   background: var(--mantine-color-dark-8, #17191c);
   border: 1px solid var(--mantine-color-default-border, #dedbd5);
@@ -250,6 +285,26 @@
   min-width: 0;
   padding: 10px 12px;
   width: 100%;
+}
+
+@media (max-width: 767px) {
+  .findShell[data-mobile-find-open='false'] {
+    width: var(--input-height-sm);
+  }
+
+  .findToggle {
+    display: inline-flex;
+  }
+
+  .findShell[data-mobile-find-open='false'] .findField {
+    display: none;
+  }
+
+  .findShell[data-mobile-find-open='true'] .findField {
+    flex: 1 1 auto;
+    min-width: 0;
+    width: auto;
+  }
 }
 
 .onThisMapHeading {
