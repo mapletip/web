@@ -14,6 +14,17 @@ import type {
 
 const image = `data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="400" height="200"><rect width="400" height="200" fill="#789"/></svg>')}`;
 
+function expectCentredRing(style: CSSStyleDeclaration, target: Element): void {
+  const targetRect = target.getBoundingClientRect();
+  expect(Number.parseFloat(style.top)).toBeCloseTo(targetRect.height / 2, 1);
+  expect(Number.parseFloat(style.left)).toBeCloseTo(targetRect.width / 2, 1);
+
+  const transform = new DOMMatrixReadOnly(style.transform);
+  const halfSize = Number.parseFloat(style.width) / 2;
+  expect(transform.e).toBeCloseTo(-halfSize, 1);
+  expect(transform.f).toBeCloseTo(-halfSize, 1);
+}
+
 async function mount() {
   await render(
     <MantineProvider
@@ -104,6 +115,7 @@ describe('InteractiveMap selected marker ring', () => {
     expect(ring.borderStyle).toBe('solid');
     expect(ring.borderWidth).toBe('2px');
     expect(ring.opacity).toBe('0.8');
+    expectCentredRing(ring, target);
     expect(
       getComputedStyle(stage).getPropertyValue('--interactive-map-marker-size'),
     ).toBe('clamp(18px, 5cqi, 44px)');
@@ -120,6 +132,7 @@ describe('InteractiveMap selected marker ring', () => {
     expect(focusRing.borderColor).toBe('rgb(255, 235, 59)');
     expect(focusRing.borderStyle).toBe('solid');
     expect(focusRing.borderWidth).toBe('3px');
+    expectCentredRing(focusRing, target.element());
     expect(focusRing.boxShadow).toBe(
       'rgba(255, 235, 59, 0.58) 0px 0px 0px 4px',
     );
@@ -300,6 +313,7 @@ async function mountInteractiveStage(options?: {
   readonly onViewChange?: (view: InteractiveMapView | undefined) => void;
   readonly selectedIds?: readonly string[];
   readonly markers?: readonly InteractiveMapMarker[];
+  readonly interactive?: boolean;
 }) {
   const result = await render(
     <MantineProvider
@@ -340,6 +354,7 @@ async function mountInteractiveStage(options?: {
           }
           selectedIds={options?.selectedIds ?? ['west']}
           connectors={[{ id: 'route', from: 'west', to: 'east' }]}
+          interactive={options?.interactive ?? true}
           wheelZoom={options?.wheelZoom ?? false}
           view={options?.view}
           {...(options?.onViewChange === undefined
@@ -370,7 +385,7 @@ function expectMarkerAtImagePixel(container: HTMLElement): void {
     imageRect.left + (80 / 400) * imageRect.width,
     1,
   );
-  expect(markerRect.bottom).toBeCloseTo(
+  expect(markerRect.top + markerRect.height / 2).toBeCloseTo(
     imageRect.top + (100 / 200) * imageRect.height,
     1,
   );
@@ -432,7 +447,7 @@ async function mountSelectionHarness(options?: {
 }
 
 describe('InteractiveMap pan and zoom', () => {
-  it('keeps markers on image pixels when the stage has a different aspect ratio', async () => {
+  it('keeps marker centres on image pixels when the stage has a different aspect ratio', async () => {
     await commands.emulateMedia({ reducedMotion: 'reduce' });
     const container = await mountInteractiveStage();
     const stage = container.querySelector<HTMLElement>(
@@ -445,6 +460,12 @@ describe('InteractiveMap pan and zoom', () => {
     expectMarkerAtImagePixel(container);
 
     await userEvent.click(page.getByRole('button', { name: 'Zoom in' }));
+    expectMarkerAtImagePixel(container);
+  });
+
+  it('centres static markers on their image pixels', async () => {
+    const container = await mountInteractiveStage({ interactive: false });
+    expect(container.querySelector('[data-marker-id="west"]')).not.toBeNull();
     expectMarkerAtImagePixel(container);
   });
 
@@ -1071,7 +1092,10 @@ describe('InteractiveMap pan and zoom', () => {
         stageRect.left + stageRect.width / 2,
         0,
       );
-      expect(point.bottom).toBeCloseTo(stageRect.top + stageRect.height / 2, 0);
+      expect(point.top + point.height / 2).toBeCloseTo(
+        stageRect.top + stageRect.height / 2,
+        0,
+      );
     }
   });
 

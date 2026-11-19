@@ -20,7 +20,7 @@ const meta = {
 **Props**
 
 - \`image\`: optional image object with its source URL, intrinsic pixel width and height, and accessible name. Omit it when the image is unavailable.
-- \`markers\`: required list of host-rendered targets. Each has a stable id, image-pixel coordinates, accessible label, and content.
+- \`markers\`: required list of host-rendered targets. Each has a stable id, image-pixel coordinates, accessible label, and content centred on its point. Interactive targets are 44×44px and centred on the same point.
 - \`connectors\`: optional id and endpoint pairs drawn between marker ids.
 - \`selectedIds\`: ids the host currently selects; defaults to none.
 - \`onActivate\`: receives all marker ids at an activated point.

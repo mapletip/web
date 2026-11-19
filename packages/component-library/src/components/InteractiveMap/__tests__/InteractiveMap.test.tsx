@@ -56,7 +56,7 @@ describe('InteractiveMap', () => {
     expect(screen.getByRole('img')).toHaveAttribute('height', '200');
   });
 
-  it('places markers by image percentages with their bottom centre on the point', () => {
+  it('places marker anchors at image percentage coordinates', () => {
     const { container } = mount({
       markers: [
         {
