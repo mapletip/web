@@ -1,14 +1,12 @@
-import { HoverCard, Image, Text } from '@mantine/core';
+import { HoverCard, Image, Text, useMantineTheme } from '@mantine/core';
 import { useMediaQuery } from '@mantine/hooks';
 import { RecordCard } from '@mapletip/component-library';
 import type { ReactElement } from 'react';
 
 import { createRecordCardLinkRenderer } from '@/components/RouterLinks';
-import type { BuildId } from '@/config/maplekit';
 
 import classes from './MapRecordCard.module.css';
 
-export const MAP_DETAIL_ROUTE = '/maplestory/{-$buildId}/maps/$slugId' as const;
 export const MAP_RECORD_CARD_DENSITY = { base: 1, sm: 2 } as const;
 
 export interface MapRecordCardFooterPart {
@@ -18,10 +16,6 @@ export interface MapRecordCardFooterPart {
 
 export interface MapRecordCardDestination {
   readonly href: string;
-  readonly params: {
-    readonly buildId?: BuildId;
-    readonly slugId: string;
-  };
 }
 
 /** Display-ready values shared by map cards on detail pages. */
@@ -56,8 +50,9 @@ function renderFooterParts(
 
 /** Map-specific card with the optional minimap hover preview. */
 export function MapRecordCard({ map }: MapRecordCardProps): ReactElement {
+  const theme = useMantineTheme();
   const canHoverMinimap = useMediaQuery(
-    '(min-width: 48em) and (hover: hover) and (pointer: fine)',
+    `(min-width: ${theme.breakpoints.sm}) and (hover: hover) and (pointer: fine)`,
     false,
   );
   let minimap: ReactElement | undefined;
@@ -104,15 +99,7 @@ export function MapRecordCard({ map }: MapRecordCardProps): ReactElement {
         shadow="lg"
         role="tooltip"
       >
-        <HoverCard.Target>
-          <button
-            type="button"
-            className={classes['minimapTrigger']}
-            aria-label={`Enlarge ${map.name} minimap`}
-          >
-            {minimap}
-          </button>
-        </HoverCard.Target>
+        <HoverCard.Target>{minimap}</HoverCard.Target>
         <HoverCard.Dropdown
           className={classes['minimapPopover']}
           aria-label={`${map.name} full-size minimap preview`}
@@ -142,10 +129,7 @@ export function MapRecordCard({ map }: MapRecordCardProps): ReactElement {
         ? {}
         : {
             destination: { href: destination.href },
-            renderLink: createRecordCardLinkRenderer({
-              to: MAP_DETAIL_ROUTE,
-              params: destination.params,
-            }),
+            renderLink: createRecordCardLinkRenderer(),
           })}
     />
   );

@@ -106,7 +106,9 @@ describe('Map Detail markers', () => {
     );
 
     expect(visual?.className).toContain(classes['monsterDot']);
-    expect(styles).toContain('--map-detail-marker-monster-color: #ffd166;');
+    expect(styles).toContain(
+      '--map-detail-marker-monster-color: var(--mapletip-color-accent-gold);',
+    );
     expect(styles).toMatch(/\.monsterDot\s*\{[^}]*border-radius:\s*50%;/su);
     expect(styles).toMatch(
       /\.monsterDot,\s*\.npcDot\s*\{[^}]*height:\s*10px;[^}]*width:\s*10px;/su,
@@ -118,7 +120,9 @@ describe('Map Detail markers', () => {
     const visual = container.querySelector('[data-marker-visual="npc-dot"]');
 
     expect(visual?.className).toContain(classes['npcDot']);
-    expect(styles).toContain('--map-detail-marker-npc-color: #20c997;');
+    expect(styles).toContain(
+      '--map-detail-marker-npc-color: var(--mapletip-color-accent-forest);',
+    );
     expect(styles).not.toMatch(/\.npcDot\s*\{[^}]*border-radius:/su);
     expect(visual?.querySelector('img')).toBeNull();
   });

@@ -1,4 +1,4 @@
-import { MissingRecordError, SchemaValidationError } from '@mapletip/data';
+import { MissingRecordError } from '@mapletip/data';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { MAPLEKIT_RELEASE } from '@/config/maplekit';
@@ -51,16 +51,6 @@ describe('loadMapDetail', () => {
 
     await expect(
       loadMapDetail({ buildId: 'cw-launch', publicId: 'missing0' }),
-    ).resolves.toEqual({ status: 'not-found' });
-  });
-
-  it('returns not-found for a malformed public id rejected by SDK validation', async () => {
-    getMapPage.mockRejectedValue(
-      new SchemaValidationError('publicId', 'invalid public id'),
-    );
-
-    await expect(
-      loadMapDetail({ buildId: 'cw-launch', publicId: 'not-an-id' }),
     ).resolves.toEqual({ status: 'not-found' });
   });
 

@@ -2,23 +2,13 @@ import type { RouteOverlayOptions } from '@/features/route-overlay/useRouteOverl
 
 interface MapDetailOverlay {
   readonly type: 'explore';
-  readonly openedFocus: string | undefined;
 }
 
 function parseMapDetailOverlay(value: unknown): MapDetailOverlay | undefined {
   if (value === null || typeof value !== 'object') return undefined;
-  const candidate = value as {
-    readonly type?: unknown;
-    readonly openedFocus?: unknown;
-  };
+  const candidate = value as { readonly type?: unknown };
   if (candidate.type !== 'explore') return undefined;
-  if (
-    candidate.openedFocus !== undefined &&
-    typeof candidate.openedFocus !== 'string'
-  ) {
-    return undefined;
-  }
-  return { type: 'explore', openedFocus: candidate.openedFocus };
+  return { type: 'explore' };
 }
 
 function sameMapDetailOverlay(

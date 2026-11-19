@@ -1,7 +1,8 @@
-import type { MarkerStageView } from '@/components/MarkerStage/types';
-
-const MIN_ZOOM = 0.5;
-const MAX_ZOOM = 8;
+import {
+  MARKER_STAGE_MAX_ZOOM,
+  MARKER_STAGE_MIN_ZOOM,
+  type MarkerStageView,
+} from '@/components/MarkerStage/types';
 
 interface ViewGeometry {
   readonly stageWidth: number;
@@ -92,8 +93,8 @@ function clampView(
 ): MarkerStageView {
   const zoom = clamp({
     value: finiteOr(view.zoom, 1),
-    minimum: MIN_ZOOM,
-    maximum: MAX_ZOOM,
+    minimum: MARKER_STAGE_MIN_ZOOM,
+    maximum: MARKER_STAGE_MAX_ZOOM,
   });
 
   return {

@@ -1,4 +1,7 @@
-import type { ReactNode } from 'react';
+import type { CSSProperties, ReactNode } from 'react';
+
+export const MARKER_STAGE_MIN_ZOOM = 0.5;
+export const MARKER_STAGE_MAX_ZOOM = 8;
 
 /** Image details used to reserve the stage and label its image. */
 export interface MarkerStageImage {
@@ -48,6 +51,10 @@ export interface MarkerStageView {
 
 /** Props for a fitted image stage with markers supplied by its host. */
 export interface MarkerStageProps {
+  /** Additional class name applied to the stage root. */
+  readonly className?: string | undefined;
+  /** Additional inline styles applied to the stage root. */
+  readonly style?: CSSProperties | undefined;
   /** Image to show. Omit it when no image is available. */
   readonly image?: MarkerStageImage | undefined;
   /** Host-rendered markers positioned in the image's pixel coordinate space. */
@@ -72,7 +79,9 @@ export interface MarkerStageProps {
   readonly zoomInLabel?: string;
   /** Accessible name for the zoom-out control. Defaults to "Zoom out". */
   readonly zoomOutLabel?: string;
-  /** Accessible name for the fit control. Defaults to "Fit map". */
+  /** Accessible name for the stage controls. Defaults to "Stage controls". */
+  readonly controlsLabel?: string;
+  /** Accessible name for the fit control. Defaults to "Fit". */
   readonly fitLabel?: string;
   /** Host wording shown when the image is missing or fails to load. */
   readonly unavailableMessage: string;

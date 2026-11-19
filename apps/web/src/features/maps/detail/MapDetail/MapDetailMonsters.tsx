@@ -9,9 +9,8 @@ import {
   MonsterRecordCard,
 } from '@/features/monsters/shared';
 
-import { isMapDetailEntityFocused, type MapDetailFocus } from '../focus';
 import {
-  compareMapDetailMonsters,
+  comparatorForMapDetailMonsters,
   type MapDetailMonsterSort,
   type MapDetailMonstersView,
 } from '../project';
@@ -29,20 +28,15 @@ const monsterSortOptions = [
 
 export function MapDetailMonsters({
   monsters,
-  focus,
   onLocate,
 }: {
   readonly monsters: MapDetailMonstersView;
-  readonly focus: MapDetailFocus | undefined;
   readonly onLocate: (focusKey: string) => void;
 }): ReactElement {
   const [sort, setSort] = useState<MapDetailMonsterSort>('level');
   const hasSort = monsters.monsters.length >= 7;
   const sortedMonsters = useMemo(
-    () =>
-      [...monsters.monsters].sort((left, right) =>
-        compareMapDetailMonsters(left, right, sort),
-      ),
+    () => [...monsters.monsters].sort(comparatorForMapDetailMonsters({ sort })),
     [monsters.monsters, sort],
   );
   return (
@@ -83,15 +77,6 @@ export function MapDetailMonsters({
                     variant="subtle"
                     size="xs"
                     aria-label={monster.locateAccessibleName}
-                    data-selected={
-                      isMapDetailEntityFocused({
-                        focus,
-                        focusKey: monster.focusKey,
-                        kind: 'monster',
-                      })
-                        ? 'true'
-                        : 'false'
-                    }
                     className={classes['locateButton']}
                     onClick={() => onLocate(monster.focusKey)}
                   >

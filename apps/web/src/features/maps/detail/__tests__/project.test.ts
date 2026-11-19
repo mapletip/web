@@ -1,7 +1,5 @@
 import { describe, expect, it } from 'vitest';
 
-import { UNNAMED_NPC_LABEL } from '@/features/npcs/shared';
-
 import { projectMapDetail, UNNAMED_MAP_LABEL } from '../project';
 
 import { mapPageRecordFixture } from './mapPageFixture';
@@ -85,8 +83,8 @@ describe('projectMapDetail', () => {
       'Hollow Husk, Monster, 1 of 1',
       'Crowned Warden, Monster, 1 of 1',
       'Lantern Square, Connection, 1 of 1',
-      'Warp, Warp, 1 of 2',
-      'Warp, Warp, 2 of 2',
+      'Warp 1, 1 of 2',
+      'Warp 1, 2 of 2',
     ]);
     expect(stage.markers[0]).toMatchObject({
       id: `monster:${firstMonster?.key}:1`,
@@ -120,25 +118,22 @@ describe('projectMapDetail', () => {
     ).toEqual(stage.markers.map(({ id }) => id));
   });
 
-  it('projects one focus entity list in connection, warp, monster, and NPC order', () => {
+  it('projects entities in kind and name order', () => {
     const record = mapPageRecordFixture({ mapId: 'practice-grove' });
     const view = projectMapDetail({ record, buildId: 'cw-launch' });
-    const expected = [
-      ...(view.connections?.maps.map(({ focusKey, name }) => [
-        focusKey,
-        name,
-      ]) ?? []),
-      ...record.warps.items.map(({ focusToken }) => [
-        `warp-${focusToken}`,
-        'Warp',
-      ]),
-      ...view.monsters.monsters.map(({ focusKey, name }) => [focusKey, name]),
-      ...view.npcs.npcs.map(({ focusKey, name }) => [focusKey, name]),
-    ];
-
-    expect(view.entities.map(({ focusKey, name }) => [focusKey, name])).toEqual(
-      expected,
-    );
+    expect(view.entities.map(({ name }) => name)).toEqual([
+      'Lantern Square',
+      'Warp 1',
+      'Crowned Warden',
+      'Hollow Husk',
+      'Plain Pebble',
+      'Twin Sprout',
+    ]);
+    expect(
+      view.entities
+        .filter(({ kind }) => kind === 'monster')
+        .map(({ name }) => name),
+    ).toEqual(['Crowned Warden', 'Hollow Husk', 'Plain Pebble', 'Twin Sprout']);
     expect(view.entities.find(({ kind }) => kind === 'monster')).toMatchObject({
       kindLabel: 'Monster',
       link: { to: '/maplestory/{-$buildId}/monsters/$slugId' },
@@ -213,8 +208,8 @@ describe('projectMapDetail', () => {
       ['monster', 'Plain Pebble, Monster, 1 of 2'],
       ['monster', 'Plain Pebble, Monster, 2 of 2'],
       ['connection', 'Lantern Square, Connection, 1 of 1'],
-      ['warp', 'Warp, Warp, 1 of 2'],
-      ['warp', 'Warp, Warp, 2 of 2'],
+      ['warp', 'Warp 1, 1 of 2'],
+      ['warp', 'Warp 1, 2 of 2'],
     ]);
     expect(view.stage.positionsUnavailable).toBe(false);
   });
@@ -236,6 +231,39 @@ describe('projectMapDetail', () => {
     });
     expect(noPositions.stage.markers).toEqual([]);
     expect(noPositions.stage.positionsUnavailable).toBe(true);
+  });
+
+  it('does not call known empty point collections unavailable', () => {
+    const record = mapPageRecordFixture({ mapId: 'stillwater-stage' });
+    const view = projectMapDetail({
+      record: {
+        ...record,
+        monsters: { state: 'known', items: [] },
+        npcs: { state: 'known', items: [] },
+        connections: { state: 'known', items: [] },
+        warps: { state: 'known', items: [] },
+      },
+      buildId: 'cw-launch',
+    });
+
+    expect(view.stage.markers).toEqual([]);
+    expect(view.stage.positionsUnavailable).toBe(false);
+  });
+
+  it('considers the warp collection when deciding whether positions are unavailable', () => {
+    const record = mapPageRecordFixture({ mapId: 'stillwater-stage' });
+    const view = projectMapDetail({
+      record: {
+        ...record,
+        monsters: { state: 'unknown', items: [] },
+        npcs: { state: 'unknown', items: [] },
+        connections: { state: 'unknown', items: [] },
+        warps: { state: 'known', items: [] },
+      },
+      buildId: 'cw-launch',
+    });
+
+    expect(view.stage.positionsUnavailable).toBe(false);
   });
 
   it('projects NPCs in natural name order and labels unknown names once', () => {
@@ -264,9 +292,8 @@ describe('projectMapDetail', () => {
       'Guide 1',
       'Guide 2',
       'Guide 10',
-      UNNAMED_NPC_LABEL,
+      'Unnamed NPC',
     ]);
-    expect(UNNAMED_NPC_LABEL).toBe('Unnamed NPC');
   });
 
   it('projects NPC notices and counts for each collection state', () => {
@@ -472,10 +499,6 @@ describe('projectMapDetail', () => {
     ]);
     expect(connections.maps[0]?.destination).toEqual({
       href: '/maplestory/gms-v83/maps/hunting-ground-2-a0000001',
-      params: {
-        buildId: 'gms-v83',
-        slugId: 'hunting-ground-2-a0000001',
-      },
     });
   });
 
@@ -881,7 +904,7 @@ describe('projectMapDetail', () => {
       'Allowed',
     ]);
     expect(view.facts[1]?.destination).toEqual({
-      slugId: `lantern-square-${returnMap.value.publicId}`,
+      href: `/maplestory/maps/lantern-square-${returnMap.value.publicId}`,
     });
     expect(view.facts[1]?.explanation).toBe(
       'Ordinary revival and generic Return Scrolls can send you to this map. Some items and activities use another destination.',
@@ -920,7 +943,7 @@ describe('projectMapDetail', () => {
         explanation:
           'Ordinary revival and generic Return Scrolls can send you to this map. Some items and activities use another destination.',
         destination: {
-          slugId: `${returnMap.value.slug}-${returnMap.value.publicId}`,
+          href: `/maplestory/maps/${returnMap.value.slug}-${returnMap.value.publicId}`,
         },
       },
     ]);

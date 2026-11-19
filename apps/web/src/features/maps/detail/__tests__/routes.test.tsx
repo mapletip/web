@@ -1,14 +1,15 @@
 import { MantineProvider } from '@mantine/core';
 import {
+  RouterContextProvider,
   RouterProvider,
   createMemoryHistory,
   createRouter,
 } from '@tanstack/react-router';
-import { render, screen, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { SITE_ORIGIN } from '@/config/site';
+import { Route as MapDetailRoute } from '@/routes/maplestory/{-$buildId}/maps/$slugId';
 import { routeTree } from '@/routeTree.gen';
 
 import { loadMapDetail } from '../load';
@@ -123,18 +124,22 @@ describe('Map Detail route', () => {
     });
 
     matchDesktopBreakpoint();
+    const RouteComponent = MapDetailRoute.options.component;
+    if (RouteComponent === undefined) {
+      throw new Error('Expected the Map Detail route component.');
+    }
     render(
       <MantineProvider>
-        <RouterProvider router={router} />
+        <RouterContextProvider router={router}>
+          <RouteComponent />
+        </RouterContextProvider>
       </MantineProvider>,
     );
 
-    const user = userEvent.setup();
-    await user.click(
-      await screen.findByRole('button', {
-        name: 'Twin Sprout, Monster, 2 of 2',
-      }),
-    );
+    const marker = screen.getByRole('button', {
+      name: 'Twin Sprout, Monster, 2 of 2',
+    });
+    fireEvent.click(marker);
 
     await waitFor(() => {
       expect(history.location.search).toMatch(/focus=monster-[a-z0-9]{8}/u);
@@ -150,12 +155,15 @@ describe('Map Detail route', () => {
     mockedLoadMapDetail.mockResolvedValue({ status: 'found', view });
 
     const history = createMemoryHistory({
-      initialEntries: [`/maplestory/maps/old-slug-${record.publicId}`],
+      initialEntries: [
+        `/maplestory/maps/old-slug-${record.publicId}?focus=monsters`,
+      ],
     });
     const router = createRouter({ routeTree, history });
     await router.load();
 
     expect(history.location.pathname).toBe(view.canonicalPath);
+    expect(history.location.search).toBe('?focus=monsters');
   });
 
   it('returns not-found for an unknown id and links to Maps', async () => {

@@ -1,9 +1,9 @@
+import type { MarkerStageConnector } from '@mapletip/component-library';
 import { mapMinimapUrl, type MapPageRecordV1 } from '@mapletip/data/maps';
 
 import { MAPLEKIT_RELEASE, type BuildId } from '@/config/maplekit';
 import { buildRecordDetailPath, nonBlank } from '@/features/detail';
 import {
-  MAP_DETAIL_ROUTE,
   projectMapRecordDestination,
   type MapRecordCardView,
 } from '@/features/maps/shared';
@@ -81,12 +81,7 @@ export interface MapDetailEntityView {
           ReturnType<typeof monsterDetailLinkProps>
         >['params'];
       }
-    | {
-        readonly to: typeof MAP_DETAIL_ROUTE;
-        readonly params: NonNullable<
-          NonNullable<MapDetailConnectionsView>['maps'][number]['destination']
-        >['params'];
-      };
+    | { readonly href: string };
 }
 
 export interface MapDetailStageImage {
@@ -107,16 +102,10 @@ export interface MapDetailStageMarker {
   readonly spriteUrl?: string;
 }
 
-export interface MapDetailStageConnector {
-  readonly id: string;
-  readonly from: string;
-  readonly to: string;
-}
-
 export interface MapDetailStageView {
   readonly image?: MapDetailStageImage;
   readonly markers: readonly MapDetailStageMarker[];
-  readonly connectors: readonly MapDetailStageConnector[];
+  readonly connectors: readonly MarkerStageConnector[];
   readonly positionsUnavailable: boolean;
 }
 
@@ -166,8 +155,7 @@ export interface MapDetailFactView {
   readonly value: string;
   readonly explanation: string;
   readonly destination?: {
-    readonly buildId?: BuildId;
-    readonly slugId: string;
+    readonly href: string;
   };
 }
 
@@ -231,7 +219,7 @@ function addMapFact({
       slug: target.slug,
       publicId: target.publicId,
       buildId,
-    }).params,
+    }),
   });
 }
 
@@ -351,26 +339,28 @@ const nameCollator = new Intl.Collator('en', {
 export type MapDetailMonsterSort = 'level' | 'spawns' | 'name';
 
 /** Compare Map Detail monster cards for each supported card-list order. */
-export function compareMapDetailMonsters(
-  left: MapDetailMonsterView,
-  right: MapDetailMonsterView,
-  sort: MapDetailMonsterSort,
-): number {
-  const levelOrder =
-    (left.level ?? Number.POSITIVE_INFINITY) -
-    (right.level ?? Number.POSITIVE_INFINITY);
-  const nameOrder = nameCollator.compare(left.name, right.name);
-  if (sort === 'spawns') {
-    return (
-      right.placementCount - left.placementCount ||
-      nameOrder ||
-      left.key.localeCompare(right.key)
-    );
-  }
-  if (sort === 'name') {
-    return nameOrder || levelOrder || left.key.localeCompare(right.key);
-  }
-  return levelOrder || nameOrder || left.key.localeCompare(right.key);
+export function comparatorForMapDetailMonsters({
+  sort,
+}: {
+  readonly sort: MapDetailMonsterSort;
+}): (left: MapDetailMonsterView, right: MapDetailMonsterView) => number {
+  return (left, right) => {
+    const levelOrder =
+      (left.level ?? Number.POSITIVE_INFINITY) -
+      (right.level ?? Number.POSITIVE_INFINITY);
+    const nameOrder = nameCollator.compare(left.name, right.name);
+    if (sort === 'spawns') {
+      return (
+        right.placementCount - left.placementCount ||
+        nameOrder ||
+        left.key.localeCompare(right.key)
+      );
+    }
+    if (sort === 'name') {
+      return nameOrder || levelOrder || left.key.localeCompare(right.key);
+    }
+    return levelOrder || nameOrder || left.key.localeCompare(right.key);
+  };
 }
 
 /** Match a connection card against a normalized search query. */
@@ -429,7 +419,7 @@ function projectMonsters({
 
       return view;
     })
-    .sort((left, right) => compareMapDetailMonsters(left, right, 'level'));
+    .sort(comparatorForMapDetailMonsters({ sort: 'level' }));
   const count =
     record.monsters.state === 'unknown' ? 'unknown' : monsters.length;
   const totalSpawns = record.monsters.items.reduce(
@@ -680,12 +670,14 @@ function projectPointMarkers({
 
 type MapDetailWarpView = MapPageRecordV1['warps']['items'][number] & {
   readonly focusKey: string;
+  readonly name: string;
 };
 
 function projectWarps(record: MapPageRecordV1): MapDetailWarpView[] {
-  return record.warps.items.map((warp) => ({
+  return record.warps.items.map((warp, index) => ({
     ...warp,
     focusKey: `warp-${warp.focusToken}`,
+    name: `Warp ${index + 1}`,
   }));
 }
 
@@ -775,6 +767,16 @@ function projectStage({
       },
     },
   ];
+  const positionStates = [
+    ...pointCollections.flatMap(({ collection }) => {
+      if (collection.state !== 'known' && collection.state !== 'partial') {
+        return [collection.state];
+      }
+      if (collection.items.length === 0) return [collection.state];
+      return collection.items.map(({ points }) => points.state);
+    }),
+    record.warps.state,
+  ];
 
   for (const { kind, collection, describe } of pointCollections) {
     if (collection.state !== 'known' && collection.state !== 'partial') {
@@ -799,7 +801,7 @@ function projectStage({
     }
   }
 
-  const connectors: MapDetailStageConnector[] = [];
+  const connectors: MarkerStageConnector[] = [];
   if (record.warps.state === 'known' || record.warps.state === 'partial') {
     for (const warp of warps) {
       const from = `warp:${warp.focusToken}:1`;
@@ -812,7 +814,7 @@ function projectStage({
           kind: 'warp' as const,
           entityKey: warp.focusToken,
           focusKey: warp.focusKey,
-          label: `Warp, Warp, ${index + 1} of ${warp.ends.length}`,
+          label: `${warp.name}, ${index + 1} of ${warp.ends.length}`,
         })),
       );
       connectors.push({
@@ -827,7 +829,12 @@ function projectStage({
     ...(image === undefined ? {} : { image }),
     markers,
     connectors,
-    positionsUnavailable: image !== undefined && markers.length === 0,
+    positionsUnavailable:
+      image !== undefined &&
+      positionStates.length > 0 &&
+      positionStates.every(
+        (state) => state === 'unknown' || state === 'absent',
+      ),
   };
 }
 
@@ -862,16 +869,13 @@ export function projectMapDetail({
       ...(connection.destination === undefined
         ? {}
         : {
-            link: {
-              to: MAP_DETAIL_ROUTE,
-              params: connection.destination.params,
-            },
+            link: { href: connection.destination.href },
           }),
     })),
     ...warps.map((warp) => ({
       focusKey: warp.focusKey,
       kind: 'warp' as const,
-      name: 'Warp',
+      name: warp.name,
       kindLabel: 'Warp',
     })),
     ...monsters.monsters.map((monster) => ({
@@ -897,7 +901,19 @@ export function projectMapDetail({
       name: npc.name,
       kindLabel: 'NPC',
     })),
-  ];
+  ].sort((left, right) => {
+    const kindOrder = {
+      connection: 0,
+      warp: 1,
+      monster: 2,
+      npc: 3,
+    } as const;
+    return (
+      kindOrder[left.kind] - kindOrder[right.kind] ||
+      nameCollator.compare(left.name, right.name) ||
+      left.focusKey.localeCompare(right.focusKey)
+    );
+  });
   const onThisMap = projectOnThisMap({ connections, monsters, npcs });
   const stage = projectStage({
     record,

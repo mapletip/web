@@ -14,7 +14,7 @@ export const mapDetailSearchSchema = z
   })
   .passthrough();
 
-export const MAP_DETAIL_FOCUS_KIND = {
+const MAP_DETAIL_FOCUS_KIND = {
   monsters: 'monster',
   npcs: 'npc',
   connections: 'connection',
@@ -140,7 +140,7 @@ export function mapDetailFocusMarkerIds({
 }
 
 /** Whether activating an entity again should clear the current selection. */
-export function isOnlyMapDetailFocusKey({
+function isOnlyMapDetailFocusKey({
   focus,
   focusKey,
 }: {
@@ -153,6 +153,84 @@ export function isOnlyMapDetailFocusKey({
     focus.keys.length === 1 &&
     focus.keys[0] === focusKey
   );
+}
+
+/** Select one entity without applying the activation toggle rule. */
+export function selectMapDetailEntity({
+  focusKey,
+  view,
+}: {
+  readonly focusKey: string;
+  readonly view: MapDetailView;
+}): MapDetailFocus | undefined {
+  return resolveMapDetailFocus({ focus: { keys: [focusKey] }, view });
+}
+
+/** Toggle a whole entity kind using the same rule as its summary row. */
+export function toggleMapDetailKind({
+  focus,
+  kind,
+  view,
+}: {
+  readonly focus: MapDetailFocus | undefined;
+  readonly kind: MapDetailFocusKind;
+  readonly view: MapDetailView;
+}): MapDetailFocus | undefined {
+  const nextFocus =
+    focus !== undefined && 'kind' in focus && focus.kind === kind
+      ? undefined
+      : { kind };
+  return resolveMapDetailFocus({ focus: nextFocus, view });
+}
+
+/** Resolve marker ids to unique entities in their marker order. */
+export function mapDetailEntitiesForMarkers({
+  markerIds,
+  view,
+}: {
+  readonly markerIds: readonly string[];
+  readonly view: MapDetailView;
+}) {
+  const markersById = new Map(
+    view.stage.markers.map((marker) => [marker.id, marker]),
+  );
+  const entitiesByFocusKey = new Map(
+    view.entities.map((entity) => [entity.focusKey, entity]),
+  );
+  const seen = new Set<string>();
+  const entities = [];
+
+  for (const markerId of markerIds) {
+    const marker = markersById.get(markerId);
+    if (marker === undefined || seen.has(marker.focusKey)) continue;
+    seen.add(marker.focusKey);
+    const entity = entitiesByFocusKey.get(marker.focusKey);
+    if (entity !== undefined) entities.push(entity);
+  }
+
+  return entities;
+}
+
+/** Apply marker activation only when the activated point represents one entity. */
+export function activateMapDetailMarkers({
+  focus,
+  markerIds,
+  view,
+}: {
+  readonly focus: MapDetailFocus | undefined;
+  readonly markerIds: readonly string[];
+  readonly view: MapDetailView;
+}): { readonly focus: MapDetailFocus | undefined } | undefined {
+  const entities = mapDetailEntitiesForMarkers({ markerIds, view });
+  if (entities.length !== 1) return undefined;
+  return {
+    focus: activateMapDetailEntity({
+      focus,
+      focusKey: entities[0]!.focusKey,
+      modified: false,
+      view,
+    }),
+  };
 }
 
 /** Whether a legend entity belongs to the current entity or whole-kind focus. */

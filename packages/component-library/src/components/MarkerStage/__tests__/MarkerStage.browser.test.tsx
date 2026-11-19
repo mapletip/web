@@ -140,6 +140,38 @@ describe('MarkerStage selected marker ring', () => {
   });
 });
 
+describe('MarkerStage image layout', () => {
+  it('keeps the supplied image aspect ratio after the image fails', async () => {
+    await render(
+      <MantineProvider
+        theme={theme}
+        cssVariablesResolver={cssVariablesResolver}
+        forceColorScheme="dark"
+      >
+        <MarkerStage
+          image={{
+            src: 'data:image/png;base64,not-an-image',
+            width: 400,
+            height: 100,
+            alt: 'Broken test image',
+          }}
+          markers={[]}
+          unavailableMessage="Image unavailable."
+        />
+      </MantineProvider>,
+    );
+
+    await expect.element(page.getByText('Image unavailable.')).toBeVisible();
+    const stage = page
+      .getByRole('group', { name: 'Image unavailable.' })
+      .element();
+    expect(stage.style.aspectRatio).toBe('400 / 100');
+    expect(
+      stage.style.getPropertyValue('--marker-stage-image-aspect-ratio'),
+    ).toBe('4');
+  });
+});
+
 describe('MarkerStage marker details', () => {
   it('closes from the close control and returns focus to its target', async () => {
     await mountWithDetails();
@@ -315,7 +347,7 @@ async function mountInteractiveStage(options?: {
             : { onViewChange: options.onViewChange })}
           zoomInLabel={options?.zoomInLabel ?? 'Zoom in'}
           zoomOutLabel={options?.zoomOutLabel ?? 'Zoom out'}
-          fitLabel={options?.fitLabel ?? 'Fit map'}
+          fitLabel={options?.fitLabel ?? 'Fit'}
           unavailableMessage="Image unavailable."
         />
         {options?.belowContent}
@@ -419,7 +451,7 @@ describe('MarkerStage pan and zoom', () => {
     stage.style.height = '300px';
 
     const controls = page
-      .getByRole('group', { name: 'Map controls' })
+      .getByRole('group', { name: 'Stage controls' })
       .element();
     const stageRect = stage.getBoundingClientRect();
     const controlsRect = controls.getBoundingClientRect();
@@ -432,7 +464,7 @@ describe('MarkerStage pan and zoom', () => {
       .element()
       .getBoundingClientRect();
     const fitRect = page
-      .getByRole('button', { name: 'Fit map' })
+      .getByRole('button', { name: 'Fit' })
       .element()
       .getBoundingClientRect();
 
@@ -447,7 +479,7 @@ describe('MarkerStage pan and zoom', () => {
     const container = await mountInteractiveStage();
     const zoomIn = page.getByRole('button', { name: 'Zoom in' });
     const zoomOut = page.getByRole('button', { name: 'Zoom out' });
-    const fit = page.getByRole('button', { name: 'Fit map' });
+    const fit = page.getByRole('button', { name: 'Fit' });
 
     expect(zoomOut.element()).toBeEnabled();
     await userEvent.click(zoomIn);
@@ -498,6 +530,91 @@ describe('MarkerStage pan and zoom', () => {
     expect(zoomed.height).toBeCloseTo(fitted.height);
   });
 
+  it('keeps edge marker details at the unzoomed size and inside the stage at 4x', async () => {
+    function Harness() {
+      const [view, setView] = useState<MarkerStageView | undefined>();
+      return (
+        <MantineProvider
+          theme={theme}
+          cssVariablesResolver={cssVariablesResolver}
+          forceColorScheme="dark"
+        >
+          <button
+            type="button"
+            onClick={() => setView({ zoom: 4, centerX: 350, centerY: 25 })}
+          >
+            Zoom to edge
+          </button>
+          <div style={{ width: 400 }}>
+            <MarkerStage
+              image={{
+                src: image,
+                width: 400,
+                height: 200,
+                alt: 'Edge test image',
+              }}
+              markers={[
+                {
+                  id: 'edge',
+                  x: 380,
+                  y: 50,
+                  label: 'Edge point',
+                  content: markerContent(),
+                },
+              ]}
+              view={view}
+              onViewChange={setView}
+              renderDetails={() => (
+                <div style={{ width: 180, fontSize: 14 }}>
+                  Details near the edge
+                </div>
+              )}
+              unavailableMessage="Image unavailable."
+            />
+          </div>
+        </MantineProvider>
+      );
+    }
+
+    await render(<Harness />);
+    const stage = page.getByRole('group', { name: 'Edge test image' });
+    const marker = page.getByRole('button', { name: 'Edge point' });
+    await userEvent.click(marker);
+    const details = page.getByText('Details near the edge');
+    await expect.element(details).toBeVisible();
+    const initialDropdown = document.querySelector<HTMLElement>(
+      '.mantine-Popover-dropdown',
+    );
+    expect(initialDropdown).not.toBeNull();
+    if (initialDropdown === null)
+      throw new Error('Details dropdown is missing.');
+    const initialWidth = initialDropdown.getBoundingClientRect().width;
+    const initialFontSize = getComputedStyle(initialDropdown).fontSize;
+
+    await userEvent.click(page.getByRole('button', { name: 'Close details' }));
+    await userEvent.click(page.getByRole('button', { name: 'Zoom to edge' }));
+    await expect
+      .poll(() => zoomScale(stage.element().parentElement!))
+      .toBeCloseTo(4);
+    await userEvent.click(marker);
+    await expect.element(details).toBeVisible();
+
+    const dropdown = document.querySelector<HTMLElement>(
+      '.mantine-Popover-dropdown',
+    );
+    expect(dropdown).not.toBeNull();
+    if (dropdown === null) throw new Error('Details dropdown is missing.');
+    const dropdownRect = dropdown.getBoundingClientRect();
+    const stageRect = stage.element().getBoundingClientRect();
+    expect(dropdownRect.width).toBeCloseTo(initialWidth);
+    expect(getComputedStyle(dropdown).fontSize).toBe(initialFontSize);
+    expect(stage.element().contains(dropdown)).toBe(true);
+    expect(dropdownRect.left).toBeGreaterThanOrEqual(stageRect.left);
+    expect(dropdownRect.right).toBeLessThanOrEqual(stageRect.right);
+    expect(dropdownRect.top).toBeGreaterThanOrEqual(stageRect.top);
+    expect(dropdownRect.bottom).toBeLessThanOrEqual(stageRect.bottom);
+  });
+
   it('uses the host supplied control labels as accessible names', async () => {
     await mountInteractiveStage({
       zoomInLabel: 'Enlarge image',
@@ -529,12 +646,12 @@ describe('MarkerStage pan and zoom', () => {
       '.react-transform-component',
     )!;
     const before = content.style.transform;
-    await commands.dragPointer(
-      rect.x + rect.width / 2,
-      rect.y + rect.height / 2,
-      rect.x + rect.width / 2 - 70,
-      rect.y + rect.height / 2,
-    );
+    await commands.dragPointer({
+      startX: rect.x + rect.width / 2,
+      startY: rect.y + rect.height / 2,
+      endX: rect.x + rect.width / 2 - 70,
+      endY: rect.y + rect.height / 2,
+    });
 
     expect(content.style.transform).not.toBe(before);
   });
@@ -546,12 +663,12 @@ describe('MarkerStage pan and zoom', () => {
     )!;
     const rect = viewport.getBoundingClientRect();
 
-    await commands.pinchAt(
-      rect.x + rect.width / 2,
-      rect.y + rect.height / 2,
-      60,
-      150,
-    );
+    await commands.pinchAt({
+      x: rect.x + rect.width / 2,
+      y: rect.y + rect.height / 2,
+      startDistance: 60,
+      endDistance: 150,
+    });
 
     expect(zoomScale(container)).toBeGreaterThan(1);
   });
@@ -587,7 +704,7 @@ describe('MarkerStage pan and zoom', () => {
     const rect = viewport.getBoundingClientRect();
 
     await commands.wheelAt(rect.x + rect.width / 2, rect.y + 40, -300);
-    await new Promise<void>((resolve) => setTimeout(resolve, 250));
+    await expect.poll(() => zoomScale(container)).toBeGreaterThan(1);
 
     expect(zoomScale(container)).toBeGreaterThan(1);
   });
@@ -616,12 +733,12 @@ describe('MarkerStage pan and zoom', () => {
     await userEvent.click(page.getByRole('button', { name: 'Zoom in' }));
     await userEvent.click(page.getByRole('button', { name: 'Zoom in' }));
     const stageRect = viewport.getBoundingClientRect();
-    await commands.dragPointer(
-      stageRect.x + stageRect.width / 2,
-      stageRect.y + stageRect.height / 2,
-      stageRect.x + stageRect.width / 2 + 80,
-      stageRect.y + stageRect.height / 2,
-    );
+    await commands.dragPointer({
+      startX: stageRect.x + stageRect.width / 2,
+      startY: stageRect.y + stageRect.height / 2,
+      endX: stageRect.x + stageRect.width / 2 + 80,
+      endY: stageRect.y + stageRect.height / 2,
+    });
     const eastBefore = east.element().getBoundingClientRect();
     expect(eastBefore.right).toBeGreaterThan(
       viewport.getBoundingClientRect().right,
@@ -657,12 +774,12 @@ describe('MarkerStage pan and zoom', () => {
       '.react-transform-wrapper',
     )!;
     const rect = viewport.getBoundingClientRect();
-    await commands.dragPointer(
-      rect.x + rect.width / 2,
-      rect.y + rect.height / 2,
-      rect.x + rect.width / 2 - 60,
-      rect.y + rect.height / 2,
-    );
+    await commands.dragPointer({
+      startX: rect.x + rect.width / 2,
+      startY: rect.y + rect.height / 2,
+      endX: rect.x + rect.width / 2 - 60,
+      endY: rect.y + rect.height / 2,
+    });
 
     await expect.poll(() => onViewChange.mock.calls.length).toBe(1);
     expect(onViewChange.mock.calls[0]?.[0]?.zoom).toBeGreaterThan(1);
@@ -676,12 +793,12 @@ describe('MarkerStage pan and zoom', () => {
     )!;
     const rect = viewport.getBoundingClientRect();
 
-    await commands.pinchAt(
-      rect.x + rect.width / 2,
-      rect.y + rect.height / 2,
-      60,
-      150,
-    );
+    await commands.pinchAt({
+      x: rect.x + rect.width / 2,
+      y: rect.y + rect.height / 2,
+      startDistance: 60,
+      endDistance: 150,
+    });
 
     await expect.poll(() => onViewChange.mock.calls.length).toBe(1);
     expect(onViewChange.mock.calls[0]?.[0]?.zoom).toBeGreaterThan(1);
@@ -730,7 +847,7 @@ describe('MarkerStage pan and zoom', () => {
     await userEvent.click(page.getByRole('button', { name: 'Zoom out' }));
     await expect.poll(() => onViewChange.mock.calls.length).toBe(2);
 
-    await userEvent.click(page.getByRole('button', { name: 'Fit map' }));
+    await userEvent.click(page.getByRole('button', { name: 'Fit' }));
     await expect.poll(() => onViewChange.mock.calls.length).toBe(3);
     expect(onViewChange.mock.calls[2]?.[0]).toBeUndefined();
   });

@@ -1,12 +1,16 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  activateMapDetailMarkers,
   activateMapDetailEntity,
   formatMapDetailFocus,
+  mapDetailEntitiesForMarkers,
   mapDetailFocusMarkerIds,
   mapDetailSearchSchema,
   parseMapDetailFocus,
   resolveMapDetailFocus,
+  selectMapDetailEntity,
+  toggleMapDetailKind,
 } from '../focus';
 import { projectMapDetail, type MapDetailView } from '../project';
 
@@ -158,6 +162,67 @@ describe('Map Detail focus', () => {
         focus: { keys: [key] },
         focusKey: key,
         modified: true,
+        view,
+      }),
+    ).toBeUndefined();
+  });
+
+  it('selects a located monster even when it was already selected', () => {
+    const view = practiceGrove();
+    const key = entityKey(view, 'monster');
+
+    expect(selectMapDetailEntity({ focusKey: key, view })).toEqual({
+      keys: [key],
+    });
+    expect(selectMapDetailEntity({ focusKey: key, view })).toEqual({
+      keys: [key],
+    });
+  });
+
+  it('toggles a whole kind and clears only the matching whole-kind focus', () => {
+    const view = practiceGrove();
+
+    expect(
+      toggleMapDetailKind({ focus: undefined, kind: 'monsters', view }),
+    ).toEqual({ kind: 'monsters' });
+    expect(
+      toggleMapDetailKind({
+        focus: { kind: 'monsters' },
+        kind: 'monsters',
+        view,
+      }),
+    ).toBeUndefined();
+    expect(
+      toggleMapDetailKind({
+        focus: { keys: [entityKey(view, 'monster')] },
+        kind: 'monsters',
+        view,
+      }),
+    ).toEqual({ kind: 'monsters' });
+  });
+
+  it('resolves a marker group to unique entities and toggles only a single entity', () => {
+    const view = practiceGrove();
+    const twinMarkers = view.stage.markers.filter(({ label }) =>
+      label.startsWith('Twin Sprout'),
+    );
+    const markerIds = twinMarkers.map(({ id }) => id);
+    const twin = view.entities.find(({ name }) => name === 'Twin Sprout');
+    if (twin === undefined) throw new Error('Expected Twin Sprout.');
+
+    expect(mapDetailEntitiesForMarkers({ markerIds, view })).toEqual([twin]);
+    expect(
+      activateMapDetailMarkers({ focus: undefined, markerIds, view }),
+    ).toEqual({ focus: { keys: [twin.focusKey] } });
+
+    const mixedMarkers = [
+      markerIds[0],
+      view.stage.markers.find((marker) => marker.kind === 'connection')?.id,
+    ].filter((id): id is string => id !== undefined);
+    expect(
+      activateMapDetailMarkers({
+        focus: undefined,
+        markerIds: mixedMarkers,
         view,
       }),
     ).toBeUndefined();
