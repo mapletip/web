@@ -494,10 +494,12 @@ describe('InteractiveMap pan and zoom', () => {
       .element()
       .getBoundingClientRect();
 
-    expect(stageRect.right - controlsRect.right).toBeCloseTo(4, 0);
-    expect(stageRect.bottom - controlsRect.bottom).toBeCloseTo(12, 0);
-    expect(zoomInRect.top).toBeLessThan(zoomOutRect.top);
-    expect(zoomOutRect.top).toBeLessThan(fitRect.top);
+    expect(stageRect.right - controlsRect.right).toBeCloseTo(8, 0);
+    expect(stageRect.bottom - controlsRect.bottom).toBeCloseTo(8, 0);
+    // One attached bar: each 28px button starts where the one above ends.
+    expect(zoomInRect.height).toBeCloseTo(28, 0);
+    expect(zoomOutRect.top).toBeCloseTo(zoomInRect.bottom, 0);
+    expect(fitRect.top).toBeCloseTo(zoomOutRect.bottom, 0);
   });
 
   it('steps by square root of two and disables controls at both limits', async () => {

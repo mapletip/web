@@ -147,45 +147,19 @@
 .controls {
   position: absolute;
   top: auto;
-  right: 4px;
-  bottom: 12px;
+  right: 8px;
+  bottom: 8px;
   left: auto;
   z-index: 4;
 }
 
-.controls :global(.mantine-ActionIcon-root) {
-  position: relative;
-  box-sizing: border-box;
-  padding: 0;
-  border-color: transparent;
-  background: transparent;
-}
-
-.controls :global(.mantine-ActionIcon-root)::before {
-  position: absolute;
-  z-index: 0;
-  top: 50%;
-  left: 50%;
-  width: 24px;
-  height: 24px;
-  border-radius: var(--mantine-radius-sm, 4px);
-  background: var(--mantine-color-white, white);
-  content: '';
-  pointer-events: none;
-  transform: translate(-50%, -50%);
-}
-
-.controls :global(.mantine-ActionIcon-root:hover)::before {
-  background: var(--mantine-color-gray-0, #f8f9fa);
-}
-
-.controls :global(.mantine-ActionIcon-root > *) {
-  position: relative;
-  z-index: 1;
+/* Mantine clears a disabled ActionIcon's border, which breaks the joined bar. */
+.controls :global(.mantine-ActionIcon-root:disabled) {
+  border-color: var(--mantine-color-default-border);
 }
 
 .fitLabel {
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 700;
 }
 
