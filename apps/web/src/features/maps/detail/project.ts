@@ -135,6 +135,8 @@ export interface MapDetailMonsterView extends MonsterRecordCardView {
   readonly focusKey: string;
   readonly placementCount: number;
   readonly spawnCountLabel: string;
+  readonly canLocate: boolean;
+  readonly locateAccessibleName: string;
   readonly respawnLabel?: string;
 }
 
@@ -375,11 +377,20 @@ function projectMonsters({
     .map((monster) => {
       const card = projectMonsterRecordCard(monster, { buildId });
       const respawnLabel = projectMonsterRespawnLabel(monster.respawn);
+      const canLocate =
+        record.stage.state === 'known' &&
+        (record.monsters.state === 'known' ||
+          record.monsters.state === 'partial') &&
+        (monster.points.state === 'known' ||
+          monster.points.state === 'partial') &&
+        monster.points.items.length > 0;
       const view: MapDetailMonsterView = {
         ...card,
         focusKey: `monster-${monster.focusToken}`,
         placementCount: monster.placementCount,
         spawnCountLabel: `${formatMonsterNumber(monster.placementCount)} ${monster.placementCount === 1 ? 'spawn' : 'spawns'}`,
+        canLocate,
+        locateAccessibleName: `Locate ${formatMonsterNumber(monster.placementCount)} ${card.name} ${monster.placementCount === 1 ? 'spawn' : 'spawns'} on map`,
         ...(respawnLabel === undefined ? {} : { respawnLabel }),
       };
 

@@ -88,14 +88,13 @@ function MapDetailPage() {
   const { focus } = Route.useSearch();
   const navigate = Route.useNavigate();
   const onFocusChange = useCallback(
-    (nextFocus: string | undefined) => {
-      void navigate({
+    (nextFocus: string | undefined) =>
+      navigate({
         search: (previous) => ({ ...previous, focus: nextFocus }),
         state: (previous) => previous,
         replace: true,
         resetScroll: false,
-      });
-    },
+      }),
     [navigate],
   );
 
