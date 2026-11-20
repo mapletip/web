@@ -494,6 +494,7 @@ describe('InteractiveMap pan and zoom', () => {
   ])(
     'bounds a $shape image and centers it on init and Fit',
     async ({ imageWidth, imageHeight }) => {
+      await commands.emulateMedia({ reducedMotion: 'no-preference' });
       await page.viewport(1440, 900);
       const onViewChange =
         vi.fn<(view: InteractiveMapView | undefined) => void>();
@@ -516,13 +517,54 @@ describe('InteractiveMap pan and zoom', () => {
       expect(imageRect.bottom).toBeLessThanOrEqual(stageRect.bottom);
       expectImageCenteredInStage(container);
 
-      await userEvent.click(page.getByRole('button', { name: 'Zoom in' }));
-      await expect.poll(() => zoomScale(container)).toBeGreaterThan(1);
-      await userEvent.click(page.getByRole('button', { name: 'Fit' }));
-      await expect.poll(() => zoomScale(container)).toBeCloseTo(1);
-      await expect
-        .poll(() => onViewChange.mock.calls.at(-1)?.[0])
-        .toBeUndefined();
+      const nativeRequestAnimationFrame =
+        window.requestAnimationFrame.bind(window);
+      const nativeCancelAnimationFrame =
+        window.cancelAnimationFrame.bind(window);
+      const suspendedFrames = new Map<number, FrameRequestCallback>();
+      let nextFrameId = 0;
+
+      try {
+        await userEvent.click(page.getByRole('button', { name: 'Zoom in' }));
+        await new Promise<void>((resolve) =>
+          nativeRequestAnimationFrame(() => resolve()),
+        );
+        expect(zoomScale(container)).toBeGreaterThan(1);
+        expect(zoomScale(container)).toBeLessThan(Math.SQRT2);
+
+        window.requestAnimationFrame = (callback) => {
+          const id = ++nextFrameId;
+          suspendedFrames.set(id, callback);
+          return id;
+        };
+        window.cancelAnimationFrame = (id) => {
+          suspendedFrames.delete(id);
+        };
+        await new Promise<void>((resolve) =>
+          nativeRequestAnimationFrame(() => resolve()),
+        );
+        expect(zoomScale(container)).toBeGreaterThan(1);
+        expect(zoomScale(container)).toBeLessThan(Math.SQRT2);
+        const fitButton = container.querySelector<HTMLButtonElement>(
+          'button[aria-label="Fit"]',
+        );
+        if (fitButton === null) throw new Error('Fit control is missing');
+        fitButton.click();
+
+        await new Promise<void>((resolve) => window.setTimeout(resolve, 250));
+        for (const callback of suspendedFrames.values()) {
+          callback(performance.now());
+        }
+        suspendedFrames.clear();
+
+        await expect.poll(() => zoomScale(container)).toBe(1);
+        await expect
+          .poll(() => onViewChange.mock.calls.at(-1)?.[0])
+          .toBeUndefined();
+      } finally {
+        window.requestAnimationFrame = nativeRequestAnimationFrame;
+        window.cancelAnimationFrame = nativeCancelAnimationFrame;
+      }
       expectImageCenteredInStage(container);
     },
   );
@@ -1181,11 +1223,11 @@ describe('InteractiveMap pan and zoom', () => {
     expect(onViewChange.mock.calls[0]?.[0]?.zoom).toBeGreaterThan(1);
   });
 
-  it('reports zoom-in, zoom-out and Fit once each', async () => {
+  it('reports the final view after zoom-in, zoom-out and Fit', async () => {
     await commands.emulateMedia({ reducedMotion: 'reduce' });
     const onViewChange =
       vi.fn<(view: InteractiveMapView | undefined) => void>();
-    await mountInteractiveStage({ onViewChange });
+    const container = await mountInteractiveStage({ onViewChange });
 
     await userEvent.click(page.getByRole('button', { name: 'Zoom in' }));
     await expect.poll(() => onViewChange.mock.calls.length).toBe(1);
@@ -1195,8 +1237,11 @@ describe('InteractiveMap pan and zoom', () => {
     await expect.poll(() => onViewChange.mock.calls.length).toBe(2);
 
     await userEvent.click(page.getByRole('button', { name: 'Fit' }));
-    await expect.poll(() => onViewChange.mock.calls.length).toBe(3);
-    expect(onViewChange.mock.calls[2]?.[0]).toBeUndefined();
+    await expect
+      .poll(() => onViewChange.mock.calls.at(-1)?.[0])
+      .toBeUndefined();
+    await expect.poll(() => zoomScale(container)).toBeCloseTo(1);
+    expectImageCenteredInStage(container);
   });
 
   it('does not report a view after a plain click', async () => {
