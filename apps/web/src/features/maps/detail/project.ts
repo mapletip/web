@@ -56,20 +56,14 @@ interface MapDetailOnThisMapRowBaseView {
 }
 
 export interface MapDetailOnThisMapToggleRowView extends MapDetailOnThisMapRowBaseView {
-  readonly key: 'connections' | 'monsters' | 'npcs';
-  readonly label: 'Connections' | 'Monsters' | 'NPCs';
+  readonly key: 'connections' | 'monsters' | 'spawns' | 'npcs';
+  readonly label: 'Connections' | 'Monsters' | 'Spawns' | 'NPCs';
   readonly focus: 'connections' | 'monsters' | 'npcs';
   readonly accessibleName: string;
   readonly disabled: boolean;
 }
 
-export interface MapDetailOnThisMapSpawnsRowView extends MapDetailOnThisMapRowBaseView {
-  readonly key: 'spawns';
-  readonly label: 'Spawns';
-}
-
-export type MapDetailOnThisMapRowView =
-  MapDetailOnThisMapToggleRowView | MapDetailOnThisMapSpawnsRowView;
+export type MapDetailOnThisMapRowView = MapDetailOnThisMapToggleRowView;
 
 export type MapDetailStageMarkerKind =
   'monster' | 'npc' | 'connection' | 'warp';
@@ -154,7 +148,19 @@ export interface MapDetailNpcsView {
   readonly npcs: readonly MapDetailNpcView[];
 }
 
+export type MapDetailFactId =
+  | 'music'
+  | 'returnMap'
+  | 'forcedReturnMap'
+  | 'timeLimit'
+  | 'levelLimit'
+  | 'hpDrain'
+  | 'hpDrainProtection'
+  | 'swimming'
+  | 'flying';
+
 export interface MapDetailFactView {
+  readonly id: MapDetailFactId;
   readonly label: string;
   readonly value: string;
   readonly explanation: string;
@@ -206,12 +212,14 @@ function projectMapMarkUrl(
 
 function addMapFact({
   facts,
+  id,
   field,
   label,
   explanation,
   buildId,
 }: {
   readonly facts: MapDetailFactView[];
+  readonly id: 'returnMap' | 'forcedReturnMap';
   readonly field:
     | StaticMapPageRecord['information']['returnMap']
     | StaticMapPageRecord['information']['forcedReturnMap'];
@@ -222,6 +230,7 @@ function addMapFact({
   if (field.state !== 'known') return;
   const target = field.value;
   facts.push({
+    id,
     label,
     value: knownText(target.name) ?? UNNAMED_MAP_LABEL,
     explanation,
@@ -257,6 +266,7 @@ function projectFacts({
     music.state === 'known' ? nonBlank(music.value) : undefined;
   if (musicTitle !== undefined) {
     facts.push({
+      id: 'music',
       label: 'Music',
       value: musicTitle,
       explanation: 'The background music played on this map.',
@@ -265,6 +275,7 @@ function projectFacts({
 
   addMapFact({
     facts,
+    id: 'returnMap',
     field: returnMap,
     label: 'Return map',
     explanation:
@@ -273,6 +284,7 @@ function projectFacts({
   });
   addMapFact({
     facts,
+    id: 'forcedReturnMap',
     field: forcedReturnMap,
     label: 'Forced return',
     explanation:
@@ -282,6 +294,7 @@ function projectFacts({
 
   if (timeLimitSeconds.state === 'known') {
     facts.push({
+      id: 'timeLimit',
       label: 'Time limit',
       value: formatSeconds(timeLimitSeconds.value),
       explanation:
@@ -291,6 +304,7 @@ function projectFacts({
 
   if (levelLimit.state === 'known') {
     facts.push({
+      id: 'levelLimit',
       label: 'Level limit',
       value: `Lv ${levelLimit.value}`,
       explanation:
@@ -300,6 +314,7 @@ function projectFacts({
 
   if (hpDrain.state === 'known') {
     facts.push({
+      id: 'hpDrain',
       label: 'HP drain',
       value: `${hpDrain.value} HP`,
       explanation: 'This map can lower your HP without being hit by a monster.',
@@ -312,6 +327,7 @@ function projectFacts({
       : undefined;
   if (protectionItem !== undefined) {
     facts.push({
+      id: 'hpDrainProtection',
       label: 'HP drain protection',
       value: protectionItem,
       explanation: "Equip this item to prevent the map's HP drain.",
@@ -320,6 +336,7 @@ function projectFacts({
 
   if (swimming.state === 'known' && swimming.value) {
     facts.push({
+      id: 'swimming',
       label: 'Swimming',
       value: 'Allowed',
       explanation: 'You swim on this map.',
@@ -328,6 +345,7 @@ function projectFacts({
 
   if (flying.state === 'known' && flying.value) {
     facts.push({
+      id: 'flying',
       label: 'Flying',
       value: 'Allowed',
       explanation:
@@ -553,19 +571,23 @@ function onThisMapCountLabel({
 function projectOnThisMapToggleRow({
   key,
   label,
+  accessibleLabel = label,
   count,
   state,
   focus,
   singular,
   plural,
+  disabled,
 }: {
-  readonly key: 'connections' | 'monsters' | 'npcs';
-  readonly label: 'Connections' | 'Monsters' | 'NPCs';
+  readonly key: 'connections' | 'monsters' | 'spawns' | 'npcs';
+  readonly label: 'Connections' | 'Monsters' | 'Spawns' | 'NPCs';
+  readonly accessibleLabel?: string;
   readonly count: number | 'unknown';
   readonly state: StaticMapPageRecord['connections']['state'];
   readonly focus: 'connections' | 'monsters' | 'npcs';
   readonly singular: string;
   readonly plural: string;
+  readonly disabled?: boolean;
 }): MapDetailOnThisMapToggleRowView {
   const countLabel = onThisMapCountLabel({ count, state });
 
@@ -576,8 +598,8 @@ function projectOnThisMapToggleRow({
     countLabel,
     state,
     focus,
-    accessibleName: `Highlight ${label} on map, ${countLabel} ${countLabel === '1' ? singular : plural}`,
-    disabled: count === 0,
+    accessibleName: `Highlight ${accessibleLabel} on map, ${countLabel} ${countLabel === '1' ? singular : plural}`,
+    disabled: disabled ?? count === 0,
   };
 }
 
@@ -585,10 +607,12 @@ function projectOnThisMap({
   connections,
   monsters,
   npcs,
+  hasMonsterPositions,
 }: {
   readonly connections: MapDetailConnectionsView;
   readonly monsters: MapDetailMonstersView;
   readonly npcs: MapDetailNpcsView;
+  readonly hasMonsterPositions: boolean;
 }): readonly MapDetailOnThisMapRowView[] {
   return [
     projectOnThisMapToggleRow({
@@ -608,19 +632,21 @@ function projectOnThisMap({
       focus: 'monsters',
       singular: 'Monster',
       plural: 'Monsters',
+      disabled: monsters.count === 0 || !hasMonsterPositions,
     }),
     ...(monsters.monsters.length > 0
       ? [
-          {
-            key: 'spawns' as const,
-            label: 'Spawns' as const,
+          projectOnThisMapToggleRow({
+            key: 'spawns',
+            label: 'Spawns',
+            accessibleLabel: 'monster spawns',
             count: monsters.totalSpawns,
-            countLabel: onThisMapCountLabel({
-              count: monsters.totalSpawns,
-              state: monsters.state,
-            }),
             state: monsters.state,
-          },
+            focus: 'monsters',
+            singular: 'spawn',
+            plural: 'spawns',
+            disabled: monsters.count === 0 || !hasMonsterPositions,
+          }),
         ]
       : []),
     projectOnThisMapToggleRow({
@@ -942,7 +968,6 @@ export function projectMapDetail({
       left.focusKey.localeCompare(right.focusKey)
     );
   });
-  const onThisMap = projectOnThisMap({ connections, monsters, npcs });
   const stage = projectStage({
     record,
     name: name ?? UNNAMED_MAP_LABEL,
@@ -950,6 +975,12 @@ export function projectMapDetail({
     monsters,
     npcs,
     warps,
+  });
+  const onThisMap = projectOnThisMap({
+    connections,
+    monsters,
+    npcs,
+    hasMonsterPositions: stage.markers.some(({ kind }) => kind === 'monster'),
   });
 
   return {

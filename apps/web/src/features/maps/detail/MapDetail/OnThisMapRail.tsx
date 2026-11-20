@@ -1,4 +1,4 @@
-import { Box, Text, UnstyledButton } from '@mantine/core';
+import { Box, Stack, Text, UnstyledButton } from '@mantine/core';
 import { Ghost, MapPin, Signpost, UsersThree } from '@phosphor-icons/react';
 import type { ReactElement } from 'react';
 
@@ -38,15 +38,11 @@ export function OnThisMapRail({
   readonly onToggle: (kind: MapDetailFocusKind) => void;
 }): ReactElement {
   return (
-    <Box
-      component="section"
-      className={classes['onThisMap']}
-      aria-labelledby="on-this-map-heading"
-    >
+    <Stack component="section" aria-labelledby="on-this-map-heading" gap={7}>
       <Text
         id="on-this-map-heading"
         component="h2"
-        className={classes['onThisMapHeading']}
+        className={classes['referenceRailHeading']}
         fw={600}
       >
         On this map
@@ -75,25 +71,21 @@ export function OnThisMapRail({
                 row.key === 'spawns' ? 'monster-spawns' : row.key
               }
             >
-              {'focus' in row ? (
-                <UnstyledButton
-                  className={classes['onThisMapAction']}
-                  type="button"
-                  aria-label={row.accessibleName}
-                  aria-pressed={selected}
-                  data-selected={selected ? 'true' : undefined}
-                  disabled={row.disabled}
-                  onClick={() => onToggle(row.focus)}
-                >
-                  {content}
-                </UnstyledButton>
-              ) : (
-                <div className={classes['onThisMapStatic']}>{content}</div>
-              )}
+              <UnstyledButton
+                className={classes['onThisMapAction']}
+                type="button"
+                aria-label={row.accessibleName}
+                aria-pressed={selected}
+                data-selected={selected ? 'true' : undefined}
+                disabled={row.disabled}
+                onClick={() => onToggle(row.focus)}
+              >
+                {content}
+              </UnstyledButton>
             </Box>
           );
         })}
       </Box>
-    </Box>
+    </Stack>
   );
 }

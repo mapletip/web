@@ -4,6 +4,7 @@ import {
   activateMapDetailMarkers,
   activateMapDetailEntity,
   formatMapDetailFocus,
+  isMapDetailOnThisMapRowSelected,
   mapDetailEntitiesForMarkers,
   mapDetailFocusMarkerIds,
   mapDetailSearchSchema,
@@ -199,6 +200,31 @@ describe('Map Detail focus', () => {
         view,
       }),
     ).toEqual({ kind: 'monsters' });
+  });
+
+  it('shares the Monsters pressed state with the Spawns row', () => {
+    const view = practiceGrove();
+    const monsters = view.onThisMap.find(({ key }) => key === 'monsters');
+    const spawns = view.onThisMap.find(({ key }) => key === 'spawns');
+    if (monsters === undefined || spawns === undefined) {
+      throw new Error('Expected monster and spawn summary rows.');
+    }
+
+    expect(
+      isMapDetailOnThisMapRowSelected({
+        focus: { kind: 'monsters' },
+        row: monsters,
+      }),
+    ).toBe(true);
+    expect(
+      isMapDetailOnThisMapRowSelected({
+        focus: { kind: 'monsters' },
+        row: spawns,
+      }),
+    ).toBe(true);
+    expect(
+      isMapDetailOnThisMapRowSelected({ focus: { kind: 'npcs' }, row: spawns }),
+    ).toBe(false);
   });
 
   it('resolves a marker group to unique entities and toggles only a single entity', () => {

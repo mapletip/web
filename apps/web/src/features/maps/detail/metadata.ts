@@ -22,11 +22,17 @@ export function mapDetailBreadcrumbs({
   view,
   buildId,
 }: MapDetailMetadataOptions): readonly DetailBreadcrumb[] {
+  const areaMatchesMap =
+    view.areaLabel?.trim().toLocaleLowerCase('en') ===
+    view.name.trim().toLocaleLowerCase('en');
+
   return [
     { label: 'Home', path: '/', linkProps: { to: '/' } },
     { label: 'Maps', path: buildCollectionPath('maps', buildId) },
     ...(view.regionLabel === undefined ? [] : [{ label: view.regionLabel }]),
-    ...(view.areaLabel === undefined ? [] : [{ label: view.areaLabel }]),
+    ...(view.areaLabel === undefined || areaMatchesMap
+      ? []
+      : [{ label: view.areaLabel }]),
     { label: view.name, path: view.canonicalPath },
   ];
 }

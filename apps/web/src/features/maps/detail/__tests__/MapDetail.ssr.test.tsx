@@ -63,9 +63,14 @@ describe('MapDetail server rendering', () => {
     expect(html).toContain('href="/maplestory/maps"');
     expect(html).toContain('Lantern Hills');
     expect(html).toContain('Lantern Market');
-    expect(html.replaceAll('<!-- -->', '')).toContain('Part of Market');
+    expect(html.replaceAll('<!-- -->', '')).toContain(
+      'Part of <strong>Market</strong>',
+    );
+    expect(html).toContain('aria-label="Map reference"');
     expect(html).toContain('A gathering place beneath paper lanterns.');
     expect(html).toContain('Map information');
+    expect(html).toContain('data-columns="1"');
+    expect(html).toContain('data-map-fact-icon="music"');
     expect(html).toContain('Floral Life');
     expect(html).toContain('10 min');
     expect(html).toContain('Swimming');
