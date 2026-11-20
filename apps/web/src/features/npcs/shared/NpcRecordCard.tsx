@@ -3,7 +3,7 @@ import type { ReactElement } from 'react';
 
 import type { NpcRecordCardView } from './npcRecordCardProjection';
 
-export const NPC_RECORD_CARD_DENSITY = { base: 1, sm: 3, md: 4 } as const;
+export const NPC_RECORD_CARD_DENSITY = { base: 2, sm: 3, md: 4 } as const;
 
 /** NPC-owned compact identity card. */
 export function NpcRecordCard({

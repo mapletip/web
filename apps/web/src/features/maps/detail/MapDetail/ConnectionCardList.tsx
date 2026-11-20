@@ -22,9 +22,6 @@ export function ConnectionCardList({
   const hasSearch = connections.maps.length >= 7;
   return (
     <Stack gap="md">
-      {connections.notice === undefined ? null : (
-        <Text>{connections.notice}</Text>
-      )}
       <DetailCardList
         items={connections.maps}
         getKey={(map) => map.key}

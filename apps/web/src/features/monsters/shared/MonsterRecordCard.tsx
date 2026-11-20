@@ -1,5 +1,5 @@
 import { Badge, Image } from '@mantine/core';
-import { RecordCard } from '@mapletip/component-library';
+import { RecordCard, type RecordCardProps } from '@mapletip/component-library';
 import { Ghost } from '@phosphor-icons/react';
 import type { ReactElement, ReactNode } from 'react';
 
@@ -8,7 +8,7 @@ import { recordCardLinkRenderer } from '@/components/RouterLinks';
 import classes from './MonsterRecordCard.module.css';
 import type { MonsterRecordCardView } from './monsterRecordCardProjection';
 
-export const MONSTER_RECORD_CARD_DENSITY = { base: 1, sm: 3, md: 4 } as const;
+export const MONSTER_RECORD_CARD_DENSITY = { base: 2, sm: 3, md: 4 } as const;
 
 function MonsterSprite({
   spriteUrl,
@@ -37,15 +37,18 @@ function MonsterSprite({
 export function MonsterRecordCard({
   monster,
   children,
+  linkScope,
 }: {
   readonly monster: MonsterRecordCardView;
   readonly children?: ReactNode;
+  readonly linkScope?: RecordCardProps['linkScope'];
 }): ReactElement {
   const destination = monster.destination;
 
   return (
     <RecordCard
       layout="compactMediaAside"
+      {...(linkScope === undefined ? {} : { linkScope })}
       title={monster.name}
       secondaryLine={monster.levelLabel}
       badges={

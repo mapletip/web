@@ -21,7 +21,13 @@ const baseMonster: MonsterRecordCardView = {
   bossLabel: 'Boss',
 };
 
-function mount(monster: MonsterRecordCardView) {
+function mount({
+  monster,
+  linkScope,
+}: {
+  readonly monster: MonsterRecordCardView;
+  readonly linkScope?: 'card' | 'header' | undefined;
+}) {
   const router = createRouter({
     routeTree,
     history: createMemoryHistory({ initialEntries: ['/maplestory/maps'] }),
@@ -29,7 +35,7 @@ function mount(monster: MonsterRecordCardView) {
   return render(
     <RouterContextProvider router={router}>
       <MantineProvider>
-        <MonsterRecordCard monster={monster}>
+        <MonsterRecordCard monster={monster} linkScope={linkScope}>
           <span>8 spawns</span>
         </MonsterRecordCard>
       </MantineProvider>
@@ -39,7 +45,7 @@ function mount(monster: MonsterRecordCardView) {
 
 describe('MonsterRecordCard', () => {
   it('renders sprite identity, known facts and the host relationship slot', () => {
-    mount(baseMonster);
+    mount({ monster: baseMonster });
 
     const card = screen
       .getByText('8 spawns')
@@ -56,8 +62,10 @@ describe('MonsterRecordCard', () => {
 
   it('uses the unnamed fallback and omits unknown level and boss facts', () => {
     const { container } = mount({
-      key: 'monster:unknown',
-      name: 'Monster name unavailable',
+      monster: {
+        key: 'monster:unknown',
+        name: 'Monster name unavailable',
+      },
     });
 
     expect(
@@ -71,11 +79,13 @@ describe('MonsterRecordCard', () => {
 
   it('links only when the projected record has an address', () => {
     mount({
-      ...baseMonster,
-      destination: {
-        to: '/maplestory/{-$buildId}/monsters/$slugId',
-        params: { buildId: undefined, slugId: 'blue-snail-123' },
-        href: '/maplestory/monsters/blue-snail-123',
+      monster: {
+        ...baseMonster,
+        destination: {
+          to: '/maplestory/{-$buildId}/monsters/$slugId',
+          params: { buildId: undefined, slugId: 'blue-snail-123' },
+          href: '/maplestory/monsters/blue-snail-123',
+        },
       },
     });
 
@@ -83,5 +93,25 @@ describe('MonsterRecordCard', () => {
       'href',
       '/maplestory/monsters/blue-snail-123',
     );
+  });
+
+  it('forwards the header link scope to RecordCard', () => {
+    mount({
+      monster: {
+        ...baseMonster,
+        destination: {
+          to: '/maplestory/{-$buildId}/monsters/$slugId',
+          params: { buildId: undefined, slugId: 'blue-snail-123' },
+          href: '/maplestory/monsters/blue-snail-123',
+        },
+      },
+      linkScope: 'header',
+    });
+
+    expect(
+      screen
+        .getByRole('link', { name: 'Blue Snail' })
+        .closest('[data-record-card-link-scope]'),
+    ).toHaveAttribute('data-record-card-link-scope', 'header');
   });
 });

@@ -23,13 +23,13 @@ import {
 
 import { mapPageRecordFixture } from './mapPageFixture';
 
-function matchDesktopBreakpoint(): void {
+function matchViewport({ width }: { readonly width: number }): void {
   window.matchMedia = (query: string) =>
     ({
       matches:
-        query.includes('62') ||
-        query.includes('48') ||
-        query.includes('hover: hover'),
+        (query.includes('62') && width >= 992) ||
+        (query.includes('48') && width >= 768) ||
+        (query.includes('hover: hover') && width >= 768),
       media: query,
       onchange: null,
       addListener: () => undefined,
@@ -44,12 +44,14 @@ function renderMapView({
   view,
   focusValue,
   onFocusChange,
+  viewportWidth = 1280,
 }: {
   readonly view: MapDetailView;
   readonly focusValue?: string | undefined;
   readonly onFocusChange?: ((focus: string | undefined) => void) | undefined;
+  readonly viewportWidth?: number | undefined;
 }) {
-  matchDesktopBreakpoint();
+  matchViewport({ width: viewportWidth });
   const router = createRouter({
     routeTree,
     history: createMemoryHistory({ initialEntries: [view.canonicalPath] }),
@@ -94,12 +96,14 @@ function renderControlledMapView({
   view,
   focusValue,
   onFocusChange,
+  viewportWidth = 1280,
 }: {
   readonly view: MapDetailView;
   readonly focusValue?: string | undefined;
   readonly onFocusChange?: ((focus: string | undefined) => void) | undefined;
+  readonly viewportWidth?: number | undefined;
 }) {
-  matchDesktopBreakpoint();
+  matchViewport({ width: viewportWidth });
   const router = createRouter({
     routeTree,
     history: createMemoryHistory({ initialEntries: [view.canonicalPath] }),
@@ -186,6 +190,33 @@ describe('MapDetail information', () => {
       within(explorePanel).getByRole('combobox', { name: 'Find on this map' }),
     ).toBeInTheDocument();
     expect(screen.getAllByTestId('map-detail-stage-panel')).toHaveLength(2);
+  });
+
+  it('opens Explore when locating a monster at a phone viewport width', async () => {
+    const view = projectMapDetail({
+      record: mapPageRecordFixture({ mapId: 'practice-grove' }),
+      buildId: 'cw-launch',
+    });
+    const user = userEvent.setup();
+    renderControlledMapView({ view, viewportWidth: 390 });
+
+    await user.click(
+      screen.getByRole('button', {
+        name: 'Locate 2 Twin Sprout spawns on map',
+      }),
+    );
+
+    const dialog = await screen.findByRole('dialog', {
+      name: 'Practice Grove',
+    });
+    expect(
+      within(dialog).getByRole('group', { name: 'Practice Grove map' }),
+    ).toBeVisible();
+    expect(
+      within(dialog)
+        .getByRole('group', { name: 'Practice Grove map' })
+        .querySelector('[data-selected="true"]'),
+    ).toBeInTheDocument();
   });
 
   it('filters find suggestions in entity order and limits them to ten', async () => {
@@ -906,34 +937,55 @@ describe('MapDetail information', () => {
     ).toBe(stageColumn);
   });
 
-  it('omits known empty Connections while retaining the Monsters section', () => {
+  it('omits absent Connections and renders the remaining sections open', () => {
     renderDetail({
       mapId: 'practice-grove',
       connections: { state: 'absent', items: [] },
     });
 
     expect(
-      screen.getByRole('navigation', { name: 'Record sections' }),
-    ).toBeVisible();
-    expect(
-      screen.queryByRole('heading', { name: /Connections/u }),
+      screen.queryByRole('navigation', { name: 'Record sections' }),
     ).not.toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'Monsters (4)' })).toBeVisible();
+    expect(
+      screen.queryByRole('region', { name: 'Connections' }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByRole('region', { name: 'Monsters on this map' }),
+    ).toBeVisible();
   });
 
-  it('omits Connections for a known zero count while keeping Monsters', () => {
+  it('omits known-empty Connections while keeping other sections', () => {
     renderDetail({
       mapId: 'practice-grove',
       connections: { state: 'known', items: [] },
     });
 
     expect(
-      screen.getByRole('navigation', { name: 'Record sections' }),
-    ).toBeVisible();
-    expect(
-      screen.queryByRole('heading', { name: /Connections/u }),
+      screen.queryByRole('region', { name: 'Connections' }),
     ).not.toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'Monsters (4)' })).toBeVisible();
+    expect(
+      screen.getByRole('region', { name: 'Monsters on this map' }),
+    ).toBeVisible();
+  });
+
+  it('omits absent empty Monsters and NPCs sections', () => {
+    const record = mapPageRecordFixture({ mapId: 'practice-grove' });
+    const view = projectMapDetail({
+      record: {
+        ...record,
+        monsters: { state: 'absent', items: [] },
+        npcs: { state: 'absent', items: [] },
+      },
+      buildId: 'cw-launch',
+    });
+    renderMapView({ view });
+
+    expect(
+      screen.queryByRole('region', { name: 'Monsters on this map' }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('region', { name: 'NPCs on this map' }),
+    ).not.toBeInTheDocument();
   });
 
   it('shows an unavailable message and unknown count for unresolved connections', () => {
@@ -942,17 +994,67 @@ describe('MapDetail information', () => {
       connections: { state: 'unknown', items: [] },
     });
 
-    expect(
-      within(
-        screen.getByRole('navigation', { name: 'Record sections' }),
-      ).getByRole('link', { name: 'Connections (?)' }),
-    ).toHaveAttribute('href', '#connections');
-    expect(
-      screen.getByRole('heading', { name: 'Connections (?)' }),
-    ).toBeVisible();
+    expect(screen.getByRole('region', { name: 'Connections' })).toBeVisible();
     expect(
       screen.getByText('Connection information is unavailable.'),
     ).toBeVisible();
+  });
+
+  it('renders direct sections in Connections, Monsters, NPCs order', () => {
+    const town = mapPageRecordFixture({ mapId: 'lantern-square' });
+    const huntingMap = mapPageRecordFixture({ mapId: 'practice-grove' });
+    const view = projectMapDetail({
+      record: { ...town, monsters: huntingMap.monsters },
+      buildId: 'cw-launch',
+    });
+    renderMapView({ view });
+
+    expect(
+      screen
+        .getAllByRole('heading', { level: 2 })
+        .map((heading) => heading.textContent)
+        .filter((title) =>
+          ['Connections', 'Monsters on this map', 'NPCs on this map'].includes(
+            title ?? '',
+          ),
+        ),
+    ).toEqual(['Connections', 'Monsters on this map', 'NPCs on this map']);
+    expect(
+      screen.queryByRole('navigation', { name: 'Record sections' }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('places partial coverage notes beside each section heading once', () => {
+    const record = mapPageRecordFixture({ mapId: 'practice-grove' });
+    const town = mapPageRecordFixture({ mapId: 'lantern-square' });
+    const view = projectMapDetail({
+      record: {
+        ...record,
+        connections: { state: 'partial', items: record.connections.items },
+        monsters: { state: 'partial', items: record.monsters.items },
+        npcs: { state: 'partial', items: town.npcs.items },
+      },
+      buildId: 'cw-launch',
+    });
+    renderMapView({ view });
+
+    const headings = [
+      'Connections',
+      'Monsters on this map',
+      'NPCs on this map',
+    ].map((title) => screen.getByRole('heading', { name: title }));
+    const coverageNotes: Readonly<Record<string, string>> = {
+      Connections: 'Some connection information may be missing.',
+      'Monsters on this map': 'Some monster information may be missing.',
+      'NPCs on this map': 'Some NPC information may be missing.',
+    };
+    for (const heading of headings) {
+      const coverageNote = coverageNotes[heading.textContent ?? ''];
+      if (coverageNote === undefined)
+        throw new Error('Expected a section note.');
+      expect(heading.parentElement).toHaveTextContent(coverageNote);
+      expect(screen.getAllByText(coverageNote)).toHaveLength(1);
+    }
   });
 
   it('links connection cards to their same-build Map Detail address', () => {
@@ -1119,6 +1221,14 @@ describe('MapDetail information', () => {
         .map((card) => within(card).getByRole('heading').textContent);
 
     expect(sort).toHaveValue('Level: Low to high');
+    const summary = screen.getByText(/^7 monster types, \d+ total spawns$/u);
+    const summaryRow = summary.closest('.mantine-Group-root');
+    expect(summaryRow).not.toBeNull();
+    expect(
+      within(summaryRow as HTMLElement).getByRole('combobox', {
+        name: 'Sort monsters',
+      }),
+    ).toBe(sort);
     expect(readCardNames()).toEqual([
       'Plain Pebble',
       'Twin Sprout',
@@ -1205,36 +1315,36 @@ describe('MapDetail information', () => {
       .find((card) => card.textContent?.includes('Twin Sprout'));
     if (sproutCard === undefined)
       throw new Error('Expected a Twin Sprout card.');
-    expect(within(sproutCard).getByText('2 spawns')).toBeVisible();
+    const spawnCount = within(sproutCard).getByText('2 spawns');
+    expect(spawnCount).toBeVisible();
+    expect(spawnCount.closest('a')).toBeNull();
     expect(within(sproutCard).queryByRole('button')).not.toBeInTheDocument();
   });
 
-  it('shows the known-empty monster message and zero count', () => {
+  it('omits known-empty Monsters and their zero-entry notice', () => {
     renderDetail({
       mapId: 'practice-grove',
       monsters: { state: 'known', items: [] },
     });
 
-    expect(screen.getByRole('link', { name: 'Monsters (0)' })).toHaveAttribute(
-      'href',
-      '#monsters',
-    );
     expect(
-      screen.getByText('No monsters are recorded on this map.'),
-    ).toBeVisible();
+      screen.queryByRole('region', { name: 'Monsters on this map' }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText('No monsters are recorded on this map.'),
+    ).toBeNull();
     expect(screen.queryByText(/total spawn/u)).not.toBeInTheDocument();
   });
 
-  it('shows unavailable and partial Monster collection states', () => {
+  it('renders an unavailable notice for an unknown Monster collection', () => {
     renderDetail({
       mapId: 'practice-grove',
       monsters: { state: 'unknown', items: [] },
     });
 
-    expect(screen.getByRole('link', { name: 'Monsters (?)' })).toHaveAttribute(
-      'href',
-      '#monsters',
-    );
+    expect(
+      screen.getByRole('region', { name: 'Monsters on this map' }),
+    ).toBeVisible();
     expect(
       screen.getByText('Monster information is unavailable.'),
     ).toBeVisible();
@@ -1246,23 +1356,26 @@ describe('MapDetail information', () => {
       monsters: { state: 'partial', items: [] },
     });
 
-    expect(screen.getByRole('heading', { name: 'Monsters (0)' })).toBeVisible();
+    const heading = screen.getByRole('heading', {
+      name: 'Monsters on this map',
+    });
+    expect(heading.parentElement).toHaveTextContent(
+      'Some monster information may be missing.',
+    );
     expect(
-      screen.getByText('Some monster information may be missing.'),
-    ).toBeVisible();
+      screen.getAllByText('Some monster information may be missing.'),
+    ).toHaveLength(1);
   });
 
-  it('shows each NPC collection notice and its section count', () => {
+  it('renders an unavailable notice for an unknown NPC collection', () => {
     renderDetail({
       mapId: 'practice-grove',
       npcs: { state: 'unknown', items: [] },
     });
 
-    expect(screen.getByRole('link', { name: 'NPCs (?)' })).toHaveAttribute(
-      'href',
-      '#npcs',
-    );
-    expect(screen.getByRole('heading', { name: 'NPCs (?)' })).toBeVisible();
+    expect(
+      screen.getByRole('region', { name: 'NPCs on this map' }),
+    ).toBeVisible();
     expect(screen.getByText('NPC information is unavailable.')).toBeVisible();
   });
 
@@ -1272,20 +1385,25 @@ describe('MapDetail information', () => {
       npcs: { state: 'partial', items: [] },
     });
 
-    expect(screen.getByRole('heading', { name: 'NPCs (0)' })).toBeVisible();
+    const heading = screen.getByRole('heading', { name: 'NPCs on this map' });
+    expect(heading.parentElement).toHaveTextContent(
+      'Some NPC information may be missing.',
+    );
     expect(
-      screen.getByText('Some NPC information may be missing.'),
-    ).toBeVisible();
+      screen.getAllByText('Some NPC information may be missing.'),
+    ).toHaveLength(1);
   });
 
-  it('shows the known-empty NPC notice', () => {
+  it('omits known-empty NPCs and their zero-entry notice', () => {
     renderDetail({
       mapId: 'practice-grove',
       npcs: { state: 'known', items: [] },
     });
 
-    expect(screen.getByRole('heading', { name: 'NPCs (0)' })).toBeVisible();
-    expect(screen.getByText('No NPCs are recorded on this map.')).toBeVisible();
+    expect(
+      screen.queryByRole('region', { name: 'NPCs on this map' }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText('No NPCs are recorded on this map.')).toBeNull();
   });
 
   it('shows NPC cards as plain text with the standard missing-image placeholder', () => {
