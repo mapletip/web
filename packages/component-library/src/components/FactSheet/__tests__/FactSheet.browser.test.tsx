@@ -6,14 +6,17 @@ import { render } from 'vitest-browser-react';
 
 import '@/styles.css';
 import { FactSheet } from '@/components/FactSheet';
-import type { Fact } from '@/components/FactSheet';
+import type { Fact, FactSheetProps } from '@/components/FactSheet';
 
 const twelveFacts: readonly Fact[] = Array.from({ length: 12 }, (_, index) => ({
   label: `Fact ${index + 1}`,
   value: String(index + 1),
 }));
 
-async function mount(facts: readonly Fact[]) {
+async function mount(
+  facts: readonly Fact[],
+  columns: FactSheetProps['columns'] = 'auto',
+) {
   return render(
     <MantineProvider
       theme={theme}
@@ -21,7 +24,7 @@ async function mount(facts: readonly Fact[]) {
       forceColorScheme="dark"
     >
       <div style={{ width: '100%' }}>
-        <FactSheet facts={facts} />
+        <FactSheet facts={facts} columns={columns} />
       </div>
     </MantineProvider>,
   );
@@ -102,5 +105,21 @@ describe('FactSheet responsive columns', () => {
     // Reading down the first column, then down the second.
     expect(tops[1]!).toBeGreaterThan(tops[0]!);
     expect(tops[6]!).toBeCloseTo(tops[0]!, 0);
+  });
+
+  it('keeps every fact in one column at desktop width when requested', async () => {
+    await page.viewport(1200, 900);
+    await mount(twelveFacts, 1);
+
+    const labels = page.getByRole('term').elements();
+    expect(labels).toHaveLength(12);
+
+    const lefts = labels.map((label) => label.getBoundingClientRect().left);
+    const tops = labels.map((label) => label.getBoundingClientRect().top);
+
+    for (const left of lefts) expect(left).toBeCloseTo(lefts[0]!, 0);
+    for (let index = 1; index < tops.length; index += 1) {
+      expect(tops[index]!).toBeGreaterThan(tops[index - 1]!);
+    }
   });
 });

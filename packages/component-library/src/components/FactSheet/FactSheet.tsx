@@ -12,7 +12,10 @@ import type { FactSheetProps } from '@/components/FactSheet/types';
  * of a zero or a blank. Facts fill the first column and then the second, so the
  * reading order is the DOM order at every width.
  */
-export function FactSheet({ facts }: FactSheetProps): ReactElement | null {
+export function FactSheet({
+  facts,
+  columns = 'auto',
+}: FactSheetProps): ReactElement | null {
   if (facts.length === 0) return null;
 
   // Two columns from the tablet breakpoint. The row count lets the grid fill
@@ -22,6 +25,7 @@ export function FactSheet({ facts }: FactSheetProps): ReactElement | null {
   return (
     <dl
       className={classes['sheet']}
+      data-columns={columns === 1 ? '1' : undefined}
       style={{ '--fact-sheet-rows': rows } as CSSProperties}
     >
       {facts.map((fact, index) => {

@@ -69,6 +69,21 @@ const linkedValue: VisualCase = {
   ],
 };
 
+const singleColumnRail: VisualCase = {
+  name: 'fact-sheet-single-column-rail-dark',
+  story: dark.SingleColumnRail,
+  storyId: 'components-factsheet--single-column-rail',
+  width: 1200,
+  height: 700,
+  element: page.getByTestId('fact-sheet-single-column-rail'),
+  visible: [
+    page.getByText('Level'),
+    page.getByText('Speed'),
+    page.getByText('23,000,000'),
+    page.getByText('-20'),
+  ],
+};
+
 describe('fact-sheet-twelve-facts-dark', () => {
   test('matches the approved baseline', async () => {
     await openVisualCase(twelveFacts);
@@ -130,5 +145,21 @@ describe('fact-sheet-linked-value-dark', () => {
     );
 
     await expectApprovedScreenshot(linkedValue);
+  });
+});
+
+describe('fact-sheet-single-column-rail-dark', () => {
+  test('matches the approved baseline', async () => {
+    await openVisualCase(singleColumnRail);
+
+    for (const locator of singleColumnRail.visible ?? []) {
+      await expect.element(locator).toBeVisible();
+    }
+
+    expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(
+      singleColumnRail.width,
+    );
+
+    await expectApprovedScreenshot(singleColumnRail);
   });
 });
