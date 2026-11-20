@@ -199,6 +199,7 @@ export function MapDetail({
     focus,
     markers: view.stage.markers,
   });
+  const hasStageImage = view.stage.image !== undefined;
 
   const writeHistoryState = (updates: {
     readonly stageView?: InteractiveMapView | undefined;
@@ -324,6 +325,7 @@ export function MapDetail({
             <div className={classes['stagePanelWithExplore']}>
               <MapPanel
                 view={view}
+                hasStageImage={hasStageImage}
                 focus={focus}
                 selectedIds={selectedIds}
                 interactive={interactive}
@@ -343,22 +345,24 @@ export function MapDetail({
                   />
                 )}
               />
-              <Tooltip label="Explore map" withArrow>
-                <ActionIcon
-                  aria-label="Explore map"
-                  className={classes['exploreButton']}
-                  size="md"
-                  variant="default"
-                  disabled={!hydrated}
-                  onClick={() =>
-                    exploreOverlay.open({
-                      type: 'explore',
-                    })
-                  }
-                >
-                  <ArrowsOut size={16} aria-hidden="true" />
-                </ActionIcon>
-              </Tooltip>
+              {hasStageImage ? (
+                <Tooltip label="Explore map" withArrow>
+                  <ActionIcon
+                    aria-label="Explore map"
+                    className={classes['exploreButton']}
+                    size="md"
+                    variant="default"
+                    disabled={!hydrated}
+                    onClick={() =>
+                      exploreOverlay.open({
+                        type: 'explore',
+                      })
+                    }
+                  >
+                    <ArrowsOut size={16} aria-hidden="true" />
+                  </ActionIcon>
+                </Tooltip>
+              ) : null}
             </div>
             {view.description === undefined ? null : (
               <Text size="sm" c="dimmed">
@@ -386,12 +390,13 @@ export function MapDetail({
         closeButtonProps={{ 'aria-label': 'Close map' }}
         fullScreen={exploreFullScreen}
         onClose={closeExplore}
-        opened={exploreOpened}
+        opened={exploreOpened && hasStageImage}
         size={1120}
         title={view.name}
       >
         <MapPanel
           view={view}
+          hasStageImage={hasStageImage}
           focus={focus}
           selectedIds={selectedIds}
           interactive

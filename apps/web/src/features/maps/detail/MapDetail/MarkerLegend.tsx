@@ -42,12 +42,13 @@ export function MarkerLegend({
       count: entities.filter((entity) => entity.kind === kind.value).length,
     }))
     .filter((kind) => kind.count > 0);
-  const dense = entities.length > 4;
+  const showTabs = kinds.length > 1 && entities.length > 12;
   const availableTabs = new Set<LegendTab>([
     'all',
     ...kinds.map(({ value }) => value),
   ]);
-  const selectedTab = availableTabs.has(activeTab) ? activeTab : 'all';
+  const selectedTab =
+    showTabs && availableTabs.has(activeTab) ? activeTab : 'all';
   const visibleEntities =
     selectedTab === 'all'
       ? entities
@@ -98,8 +99,23 @@ export function MarkerLegend({
     </div>
   );
 
-  if (!dense)
-    return <div className={classes['legend']}>{chipList(entities)}</div>;
+  const scrollArea = (
+    <ScrollArea.Autosize
+      className={classes['legendScrollArea']}
+      mah={154}
+      scrollbars="y"
+      type="auto"
+      viewportProps={{
+        role: 'region',
+        'aria-label': 'Scrollable map legend',
+        tabIndex: 0,
+      }}
+    >
+      {chipList(visibleEntities)}
+    </ScrollArea.Autosize>
+  );
+
+  if (!showTabs) return <div className={classes['legend']}>{scrollArea}</div>;
 
   return (
     <div className={classes['legend']}>
@@ -123,21 +139,7 @@ export function MarkerLegend({
             </Tabs.Tab>
           ))}
         </Tabs.List>
-        <Tabs.Panel value={selectedTab}>
-          <ScrollArea
-            className={classes['legendScrollArea']}
-            h={154}
-            scrollbars="y"
-            type="auto"
-            viewportProps={{
-              role: 'region',
-              'aria-label': 'Scrollable map legend',
-              tabIndex: 0,
-            }}
-          >
-            {chipList(visibleEntities)}
-          </ScrollArea>
-        </Tabs.Panel>
+        <Tabs.Panel value={selectedTab}>{scrollArea}</Tabs.Panel>
       </Tabs>
     </div>
   );

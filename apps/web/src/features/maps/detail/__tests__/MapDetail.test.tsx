@@ -550,20 +550,11 @@ describe('MapDetail information', () => {
     }
   });
 
-  it('shows four chips without tabs and tabs with kind counts above four', async () => {
+  it('shows mixed legends with five entities without category tabs', () => {
     const baseView = projectMapDetail({
       record: mapPageRecordFixture({ mapId: 'practice-grove' }),
       buildId: 'cw-launch',
     });
-    const fourEntityView = {
-      ...baseView,
-      entities: baseView.entities.slice(0, 4),
-    };
-    const fourChipRender = renderMapView({ view: fourEntityView });
-    expect(screen.getAllByRole('checkbox')).toHaveLength(4);
-    expect(screen.queryByRole('tablist')).not.toBeInTheDocument();
-    fourChipRender.unmount();
-
     const connection = baseView.entities.find(
       ({ kind }) => kind === 'connection',
     );
@@ -598,28 +589,17 @@ describe('MapDetail information', () => {
         },
       ],
     };
-    const onFocusChange = vi.fn();
-    const user = userEvent.setup();
-    renderMapView({ view: fiveEntityView, onFocusChange });
+    renderMapView({ view: fiveEntityView });
 
-    const tabList = screen.getByRole('tablist', { name: 'Map legend kinds' });
+    expect(screen.getAllByRole('checkbox')).toHaveLength(5);
     expect(
-      within(tabList)
-        .getAllByRole('tab')
-        .map((tab) => tab.textContent),
-    ).toEqual([
-      'All (5)',
-      'Connections (1)',
-      'Warps (1)',
-      'Monsters (1)',
-      'NPCs (2)',
-    ]);
-    expect(
-      within(tabList).queryByRole('tab', { name: /Spawns/u }),
+      screen.queryByRole('tablist', { name: 'Map legend kinds' }),
     ).not.toBeInTheDocument();
-    await user.click(within(tabList).getByRole('tab', { name: 'NPCs (2)' }));
-    expect(screen.getAllByRole('checkbox')).toHaveLength(2);
-    expect(onFocusChange).not.toHaveBeenCalled();
+    expect(
+      within(
+        screen.getByRole('region', { name: 'Scrollable map legend' }),
+      ).getAllByRole('checkbox'),
+    ).toHaveLength(5);
   });
 
   it('selects and clears one marker entity and links its details to Monster Detail', async () => {
@@ -738,7 +718,7 @@ describe('MapDetail information', () => {
     ).toHaveAttribute('href', connection.destination.href);
   });
 
-  it('shows the no-image message in the stage box', () => {
+  it('hides stage controls and Explore when the map has no image', () => {
     renderDetail({ mapId: 'quiet-gallery' });
 
     expect(
@@ -747,6 +727,21 @@ describe('MapDetail information', () => {
       }),
     ).toBeVisible();
     expect(screen.getByText("Map image isn't available.")).toBeVisible();
+    expect(
+      screen.queryByRole('combobox', { name: 'Find on this map' }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('group', { name: 'Map legend' }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: 'Explore map' }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: /^Locate /u }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByRole('complementary', { name: 'Map reference' }),
+    ).toBeVisible();
     expect(
       screen.queryByText("Locations on this map aren't available yet."),
     ).not.toBeInTheDocument();
