@@ -35,7 +35,7 @@ function mount(props: Partial<InteractiveMapProps> = {}) {
 }
 
 describe('InteractiveMap', () => {
-  it('renders a labelled group and gives the image its accessible name', () => {
+  it('renders a labeled group and gives the image its accessible name', () => {
     mount();
 
     expect(

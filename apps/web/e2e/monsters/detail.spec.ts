@@ -348,7 +348,9 @@ test('Monster Detail shows quest requirements and summoning items at each viewpo
     page.getByRole('heading', { level: 3, name: 'Synthetic Warden Hunt' }),
   ).toBeVisible();
   await expect(page.getByText('Lv. 12+', { exact: true })).toBeVisible();
-  await expect(page.getByText('Warrior', { exact: true })).toBeVisible();
+  await expect(
+    page.getByText('Start: Lantern Maker · Warrior', { exact: true }),
+  ).toBeVisible();
   await expect(page.getByText('Defeat ×18', { exact: true })).toBeVisible();
   await expect(page.getByText('Repeatable', { exact: true })).toBeVisible();
   await expect(page.getByText('Shared with 2 other monsters')).toBeVisible();

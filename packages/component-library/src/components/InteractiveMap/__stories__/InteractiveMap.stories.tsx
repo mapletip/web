@@ -20,14 +20,14 @@ const meta = {
 **Props**
 
 - \`image\`: optional image object with its source URL, intrinsic pixel width and height, and accessible name. Omit it when the image is unavailable.
-- \`markers\`: required list of host-rendered targets. Each has a stable id, image-pixel coordinates, accessible label, and content centred on its point. Interactive targets are 44×44px and centred on the same point.
+- \`markers\`: required list of host-rendered targets. Each has a stable id, image-pixel coordinates, accessible label, and content centered on its point. Interactive targets are 44×44px and centered on the same point.
 - \`connectors\`: optional id and endpoint pairs drawn between marker ids.
 - \`selectedIds\`: ids the host currently selects; defaults to none.
 - \`onActivate\`: receives all marker ids at an activated point.
 - \`renderDetails\`: returns optional content for an activated point.
 - \`interactive\`: enables marker buttons and stage controls; defaults to true.
 - \`wheelZoom\`: enables wheel zoom; defaults to false.
-- \`view\`: optional saved view, with zoom relative to fit and centre coordinates in image pixels. Applying \`undefined\` after a saved view returns to fit.
+- \`view\`: optional saved view, with zoom relative to fit and center coordinates in image pixels. Applying \`undefined\` after a saved view returns to fit.
 - \`onViewChange\`: receives one settled view after pan or zoom, or \`undefined\` after Fit.
 - \`zoomInLabel\`, \`zoomOutLabel\`, \`fitLabel\`: accessible names for the three controls.
 - \`unavailableMessage\`: required message shown when no image is available or its request fails.`,
@@ -291,10 +291,10 @@ export const TallImage: Story = {
     },
     markers: [
       {
-        id: 'centre',
+        id: 'center',
         x: 120,
         y: 300,
-        label: 'Centre point',
+        label: 'Center point',
         content: marker('A'),
       },
     ],
@@ -313,7 +313,7 @@ export const TinyImage: Story = {
       alt: 'Synthetic tiny image',
     },
     markers: [
-      { id: 'centre', x: 6, y: 6, label: 'Centre point', content: marker('A') },
+      { id: 'center', x: 6, y: 6, label: 'Center point', content: marker('A') },
     ],
     unavailableMessage,
   },
@@ -326,10 +326,10 @@ export const DetailsAtCenter: Story = {
     ...wideImageArgs,
     markers: [
       {
-        id: 'centre',
+        id: 'center',
         x: 300,
         y: 150,
-        label: 'Centre point',
+        label: 'Center point',
         content: marker('A'),
       },
     ],
@@ -344,7 +344,7 @@ export const DetailsAtCenter: Story = {
     frame({
       width: 680,
       props: args,
-      testId: 'interactive-map-details-centre',
+      testId: 'interactive-map-details-center',
     }),
 };
 

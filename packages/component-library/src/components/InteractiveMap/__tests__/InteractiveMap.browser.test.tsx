@@ -14,7 +14,7 @@ import type {
 
 const image = `data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="400" height="200"><rect width="400" height="200" fill="#789"/></svg>')}`;
 
-function expectCentredRing(style: CSSStyleDeclaration, target: Element): void {
+function expectCenterdRing(style: CSSStyleDeclaration, target: Element): void {
   const targetRect = target.getBoundingClientRect();
   expect(Number.parseFloat(style.top)).toBeCloseTo(targetRect.height / 2, 1);
   expect(Number.parseFloat(style.left)).toBeCloseTo(targetRect.width / 2, 1);
@@ -115,7 +115,7 @@ describe('InteractiveMap selected marker ring', () => {
     expect(ring.borderStyle).toBe('solid');
     expect(ring.borderWidth).toBe('2px');
     expect(ring.opacity).toBe('0.8');
-    expectCentredRing(ring, target);
+    expectCenterdRing(ring, target);
     expect(
       getComputedStyle(stage).getPropertyValue('--interactive-map-marker-size'),
     ).toBe('clamp(18px, 5cqi, 44px)');
@@ -132,13 +132,13 @@ describe('InteractiveMap selected marker ring', () => {
     expect(focusRing.borderColor).toBe('rgb(255, 235, 59)');
     expect(focusRing.borderStyle).toBe('solid');
     expect(focusRing.borderWidth).toBe('3px');
-    expectCentredRing(focusRing, target.element());
+    expectCenterdRing(focusRing, target.element());
     expect(focusRing.boxShadow).toBe(
       'rgba(255, 235, 59, 0.58) 0px 0px 0px 4px',
     );
   });
 
-  it('remains visible in forced-colours mode', async () => {
+  it('remains visible in forced-colors mode', async () => {
     await commands.emulateMedia({ forcedColors: 'active' });
     await mount();
 
@@ -447,7 +447,7 @@ async function mountSelectionHarness(options?: {
 }
 
 describe('InteractiveMap pan and zoom', () => {
-  it('keeps marker centres on image pixels when the stage has a different aspect ratio', async () => {
+  it('keeps marker centers on image pixels when the stage has a different aspect ratio', async () => {
     await commands.emulateMedia({ reducedMotion: 'reduce' });
     const container = await mountInteractiveStage();
     const stage = container.querySelector<HTMLElement>(
@@ -463,7 +463,7 @@ describe('InteractiveMap pan and zoom', () => {
     expectMarkerAtImagePixel(container);
   });
 
-  it('centres static markers on their image pixels', async () => {
+  it('centers static markers on their image pixels', async () => {
     const container = await mountInteractiveStage({ interactive: false });
     expect(container.querySelector('[data-marker-id="west"]')).not.toBeNull();
     expectMarkerAtImagePixel(container);
@@ -1043,7 +1043,7 @@ describe('InteractiveMap pan and zoom', () => {
     expect(onViewChange).not.toHaveBeenCalled();
   });
 
-  it('centres the same image point when a view is restored at two stage sizes', async () => {
+  it('centers the same image point when a view is restored at two stage sizes', async () => {
     await page.viewport(1400, 800);
     const view: InteractiveMapView = { zoom: 2, centerX: 150, centerY: 100 };
 
@@ -1064,10 +1064,10 @@ describe('InteractiveMap pan and zoom', () => {
               }}
               markers={[
                 {
-                  id: 'centre',
+                  id: 'center',
                   x: 150,
                   y: 100,
-                  label: 'Saved centre',
+                  label: 'Saved center',
                   content: markerContent(),
                 },
               ]}
@@ -1086,7 +1086,7 @@ describe('InteractiveMap pan and zoom', () => {
       )!;
       const stage = wrapper.querySelector<HTMLElement>('[role="group"]')!;
       const point = wrapper
-        .querySelector<HTMLElement>('[data-marker-id="centre"]')!
+        .querySelector<HTMLElement>('[data-marker-id="center"]')!
         .getBoundingClientRect();
       const stageRect = stage.getBoundingClientRect();
 

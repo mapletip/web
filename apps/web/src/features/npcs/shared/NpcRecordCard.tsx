@@ -16,6 +16,7 @@ export function NpcRecordCard({
       layout="compactMediaAside"
       title={npc.name}
       media={<Thumbnail src={npc.spriteUrl} size={64} alt="" />}
+      secondaryLine={npc.questCountLabel}
     />
   );
 }

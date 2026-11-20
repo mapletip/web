@@ -205,7 +205,7 @@ describe('MonsterBrowseCard', () => {
     ]);
   });
 
-  it('is a labelled list and links the monster name to its canonical detail page', () => {
+  it('is a labeled list and links the monster name to its canonical detail page', () => {
     renderCard(knownRow());
 
     const list = screen.getAllByRole('definition')[0]?.closest('dl');

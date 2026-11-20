@@ -131,7 +131,7 @@ const legalWithLinks = (
     <p>
       Reference Atlas is an independent, fictional reference surface. Content,
       names and destinations are illustrative and do not describe a real
-      organisation. Read the{' '}
+      organization. Read the{' '}
       <a href="https://example.com/editorial-guidelines">
         editorial guidelines
       </a>{' '}
@@ -238,7 +238,7 @@ export const LongContent: Story = {
       <p>
         Reference Atlas is a fictional demonstration of the shared Footer
         component. Names, collections and destinations are illustrative and do
-        not describe a real organisation or archive.
+        not describe a real organization or archive.
       </p>
     ),
   },

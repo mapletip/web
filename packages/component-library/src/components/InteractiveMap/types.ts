@@ -25,7 +25,7 @@ export interface InteractiveMapMarker {
   readonly y: number;
   /** Accessible name for this marker. */
   readonly label: string;
-  /** Content rendered centred on the supplied point. */
+  /** Content rendered centered on the supplied point. */
   readonly content: ReactNode;
 }
 
@@ -43,9 +43,9 @@ export interface InteractiveMapConnector {
 export interface InteractiveMapView {
   /** Zoom relative to the fitted view. Values are clamped between 0.5 and 8. */
   readonly zoom: number;
-  /** Image pixel positioned at the horizontal centre of the stage. */
+  /** Image pixel positioned at the horizontal center of the stage. */
   readonly centerX: number;
-  /** Image pixel positioned at the vertical centre of the stage. */
+  /** Image pixel positioned at the vertical center of the stage. */
   readonly centerY: number;
 }
 

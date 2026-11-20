@@ -189,7 +189,7 @@ describe('SpriteStage display preferences', () => {
     }
   });
 
-  it('keeps the stage distinguishable in forced-colours mode', async () => {
+  it('keeps the stage distinguishable in forced-colors mode', async () => {
     await commands.emulateMedia({ forcedColors: 'active' });
     await mountStage({ src: ordinarySprite });
 
@@ -197,7 +197,7 @@ describe('SpriteStage display preferences', () => {
     expect(stageStyle.borderStyle).toBe('solid');
     expect(stageStyle.borderWidth).not.toBe('0px');
 
-    // The sprite keeps its own colours: no forced-colour adjustment on it.
+    // The sprite keeps its own colors: no forced-color adjustment on it.
     const imageStyle = getComputedStyle(document.querySelector('img')!);
     expect(imageStyle.forcedColorAdjust).toBe('auto');
     expect(imageStyle.filter).toBe('none');

@@ -1,5 +1,7 @@
-import type { MonsterPageRecordV1 } from '@mapletip/data/monsters';
+import { mapNpcSpriteUrl } from '@mapletip/data/maps';
+import type { StaticMonsterPageRecord } from '@mapletip/data/monsters';
 
+import { MAPLEKIT_RELEASE } from '@/config/maplekit';
 import { formatMonsterNumber } from '@/features/monsters/shared';
 
 const JOB_FAMILY_LABELS: Readonly<Record<number, string>> = {
@@ -21,9 +23,14 @@ export interface QuestRecordCardView {
   readonly minimumLevelLabel?: string;
   readonly jobSummary?: string;
   readonly repeatable: boolean;
+  readonly startNpc?: {
+    readonly name?: string;
+    readonly spriteUrl?: string;
+  };
+  readonly event?: true;
 }
 
-type MonsterPageQuest = MonsterPageRecordV1['quests']['entries'][number];
+type MonsterPageQuest = StaticMonsterPageRecord['quests']['entries'][number];
 
 function projectJobSummary(
   jobCodes: MonsterPageQuest['jobCodes'],
@@ -55,6 +62,33 @@ export function projectQuestRecordCard(
   record: MonsterPageQuest,
 ): QuestRecordCardView {
   const jobSummary = projectJobSummary(record.jobCodes);
+  const startNpcFact = 'startNpc' in record ? record.startNpc : undefined;
+  const startNpcName =
+    startNpcFact?.state === 'known' && startNpcFact.value.name.state === 'known'
+      ? startNpcFact.value.name.value
+      : undefined;
+  const startNpcSpriteUrl =
+    startNpcFact?.state === 'known' &&
+    startNpcFact.value.sprite.state === 'known'
+      ? mapNpcSpriteUrl(
+          MAPLEKIT_RELEASE.baseUrl,
+          startNpcFact.value.sprite.value,
+        )
+      : undefined;
+  const startNpc =
+    startNpcName === undefined && startNpcSpriteUrl === undefined
+      ? undefined
+      : {
+          ...(startNpcName === undefined ? {} : { name: startNpcName }),
+          ...(startNpcSpriteUrl === undefined
+            ? {}
+            : { spriteUrl: startNpcSpriteUrl }),
+        };
+  const event =
+    'event' in record &&
+    record.event.state === 'known' &&
+    record.event.value === true;
+
   return {
     name:
       record.name.state === 'known'
@@ -67,5 +101,7 @@ export function projectQuestRecordCard(
       : {}),
     ...(jobSummary === undefined ? {} : { jobSummary }),
     repeatable: record.repeatable.state === 'known' && record.repeatable.value,
+    ...(startNpc === undefined ? {} : { startNpc }),
+    ...(event ? { event: true } : {}),
   };
 }

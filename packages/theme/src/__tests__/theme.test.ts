@@ -11,7 +11,7 @@ import {
 } from '../colors';
 import { cssVariablesResolver, theme } from '../index';
 
-/** WCAG 2.2 relative luminance for an opaque sRGB hex colour. */
+/** WCAG 2.2 relative luminance for an opaque sRGB hex color. */
 function relativeLuminance(hex: string): number {
   const channels = [1, 3, 5].map((start) => {
     const value = Number.parseInt(hex.slice(start, start + 2), 16) / 255;

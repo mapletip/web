@@ -61,7 +61,7 @@ describe('optional regions', () => {
     expect(results(withSummary).querySelector('[class*="bar"]')).not.toBeNull();
   });
 
-  it('renders the rail as a labelled aside when given', () => {
+  it('renders the rail as a labeled aside when given', () => {
     const root = mount({ rail: <p>Facets</p>, railLabel: 'Filters' });
     const aside = root.querySelector('aside')!;
     expect(aside.getAttribute('aria-label')).toBe('Filters');

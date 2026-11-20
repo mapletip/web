@@ -1,8 +1,8 @@
 import type { MantineColorsTuple } from '@mantine/core';
 
 /**
- * MapleTip colour foundation: dark-only Maple Twilight.
- * Single typed source of colour values in @mapletip/theme.
+ * MapleTip color foundation: dark-only Maple Twilight.
+ * Single typed source of color values in @mapletip/theme.
  *
  * Palettes are exposed to Mantine through `createTheme`; semantic roles refer to
  * these token definitions so no hex is repeated in CSS or stories.
@@ -52,7 +52,7 @@ export interface CtaColors {
   readonly border: string;
 }
 
-/** Semantic roles for the dark colour scheme. */
+/** Semantic roles for the dark color scheme. */
 export interface SchemeColors {
   readonly canvas: string;
   readonly panel: string;

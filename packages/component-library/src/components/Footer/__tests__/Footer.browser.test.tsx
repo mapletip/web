@@ -162,7 +162,7 @@ describe('Footer', () => {
       .toBeVisible();
   });
 
-  it('adds no new-tab or link-rel behaviour of its own', async () => {
+  it('adds no new-tab or link-rel behavior of its own', async () => {
     await renderFooter({ brand: brand(), groups, legal });
 
     for (const link of page.getByRole('link').elements()) {
