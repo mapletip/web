@@ -413,15 +413,11 @@ export function InteractiveMap({
     viewKey,
   ]);
 
-  const handleFit = (): void => {
+  const handleFit = (reset: Promise<void>): void => {
     const transform = transformRef.current;
-    if (
-      view !== undefined &&
-      transform !== null &&
-      isFittedTransform(transform)
-    ) {
-      onViewChange?.(undefined);
-    }
+    if (transform === null) return;
+
+    void reset.then(() => reportView(transform));
   };
 
   const imageBox =
