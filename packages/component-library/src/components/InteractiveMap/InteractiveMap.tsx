@@ -240,7 +240,7 @@ export function InteractiveMap({
   selectedIds = [],
   onActivate,
   interactive = true,
-  gestures = true,
+  gestures = 'always',
   wheelZoom = false,
   view,
   onViewChange,
@@ -252,6 +252,7 @@ export function InteractiveMap({
   unavailableMessage,
 }: InteractiveMapProps): ReactElement {
   const [portalTarget, setPortalTarget] = useState<HTMLDivElement | null>(null);
+  const [isZoomedIn, setIsZoomedIn] = useState(false);
   const transformRef = useRef<ReactZoomPanPinchRef>(null);
   const markerTargetRefs = useRef(new Map<string, HTMLButtonElement>());
   const previousSelectionRef = useRef<{
@@ -289,6 +290,12 @@ export function InteractiveMap({
       image === undefined ? '1' : `${image.width / image.height}`,
   };
   const closeDetails = () => setOpenDetails(null);
+  const updateZoomedState = useCallback(
+    (_transform: ReactZoomPanPinchRef, state: { readonly scale: number }) => {
+      setIsZoomedIn(state.scale > 1 + TRANSFORM_EPSILON);
+    },
+    [],
+  );
 
   useEffect(() => {
     const previousViewKey = previousViewKeyRef.current;
@@ -546,12 +553,12 @@ export function InteractiveMap({
         limitToBounds
         centerZoomedOut
         centerOnInit={view === undefined}
-        panning={{ disabled: !gestures }}
-        pinch={{ disabled: !gestures }}
-        doubleClick={{ disabled: !gestures }}
+        panning={{ disabled: gestures === 'zoomed' && !isZoomedIn }}
+        doubleClick={{ disabled: gestures === 'zoomed' }}
         wheel={{ disabled: !wheelZoom }}
         zoomAnimation={{ disabled: reducedMotion }}
         velocityAnimation={{ disabled: reducedMotion }}
+        onTransform={updateZoomedState}
         onPanningStart={(ref) => {
           panStartTransformRef.current = {
             positionX: ref.state.positionX,
@@ -610,7 +617,9 @@ export function InteractiveMap({
       aria-label={accessibleName}
       style={stageStyle}
       data-unavailable={availableImage === undefined ? 'true' : undefined}
-      data-gestures={interactive && !gestures ? 'off' : undefined}
+      data-gestures={
+        interactive && gestures === 'zoomed' && !isZoomedIn ? 'off' : undefined
+      }
     >
       {stageContent}
     </div>

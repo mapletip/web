@@ -1,6 +1,7 @@
 import { Stack, Text } from '@mantine/core';
 import {
   InteractiveMap,
+  type InteractiveMapProps,
   type InteractiveMapView,
 } from '@mapletip/component-library';
 import { useMemo } from 'react';
@@ -28,7 +29,7 @@ export function MapStage({
   readonly stage: MapDetailStageView;
   readonly className?: string | undefined;
   readonly interactive: boolean;
-  readonly gestures: boolean;
+  readonly gestures: NonNullable<InteractiveMapProps['gestures']>;
   readonly wheelZoom: boolean;
   readonly view?: InteractiveMapView | undefined;
   readonly onViewChange: (view: InteractiveMapView | undefined) => void;

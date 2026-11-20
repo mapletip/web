@@ -298,10 +298,10 @@
   align-items: center;
   display: flex;
   gap: 8px;
-  left: 12px;
+  left: 8px;
   max-width: calc(100% - 64px);
   position: absolute;
-  top: 12px;
+  top: 8px;
   width: min(360px, calc(100% - 64px));
   z-index: 4;
 }
@@ -330,7 +330,7 @@
   }
 
   .findShell[data-mobile-find-open='false'] {
-    width: var(--input-height-sm);
+    width: max-content;
   }
 
   .findToggle {

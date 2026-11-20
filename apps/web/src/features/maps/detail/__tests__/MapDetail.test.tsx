@@ -344,7 +344,7 @@ describe('MapDetail information', () => {
     ).toBeGreaterThan(0);
   });
 
-  it('keeps the inline map interactive with gestures off on mobile widths', () => {
+  it('keeps inline map controls available and the fit state scroll-safe on mobile', () => {
     const view = projectMapDetail({
       record: mapPageRecordFixture({ mapId: 'practice-grove' }),
       buildId: 'cw-launch',

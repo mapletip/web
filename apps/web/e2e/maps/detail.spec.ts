@@ -77,6 +77,35 @@ async function swipeUpOverStage(page: Page, stage: Locator): Promise<void> {
   }
 }
 
+async function dragRightOverStage(page: Page, stage: Locator): Promise<void> {
+  const viewport = stage.locator('.react-transform-wrapper');
+  const bounds = await viewport.boundingBox();
+  if (bounds === null) throw new Error('Expected the map stage viewport.');
+
+  const startX = bounds.x + bounds.width / 2 - 45;
+  const y = bounds.y + bounds.height / 2;
+  const endX = startX + 100;
+  const client = await page.context().newCDPSession(page);
+  try {
+    await client.send('Input.dispatchTouchEvent', {
+      type: 'touchStart',
+      touchPoints: [{ id: 1, x: startX, y }],
+    });
+    for (const progress of [0.25, 0.5, 0.75, 1]) {
+      await client.send('Input.dispatchTouchEvent', {
+        type: 'touchMove',
+        touchPoints: [{ id: 1, x: startX + (endX - startX) * progress, y }],
+      });
+    }
+    await client.send('Input.dispatchTouchEvent', {
+      type: 'touchEnd',
+      touchPoints: [],
+    });
+  } finally {
+    await client.detach();
+  }
+}
+
 test('Map Detail renders its canonical address, redirects stale slugs, and returns 404 for invalid records', async ({
   page,
   request,
@@ -1093,6 +1122,28 @@ test('mobile Map Detail keeps inline controls interactive and Explore fills the 
   await expect
     .poll(async () => (await image.boundingBox())?.width ?? 0)
     .toBeGreaterThan(fittedWidth! * 1.3);
+  const zoomedView = await renderedStageView(inlineStage);
+  await dragRightOverStage(page, inlineStage);
+  await expect
+    .poll(() => renderedStageView(inlineStage))
+    .not.toEqual(zoomedView);
+  const pannedView = await renderedStageView(inlineStage);
+  await page.reload();
+  await waitForMapDetailHydration(page);
+  const restoredStage = page.getByRole('group', {
+    name: 'Practice Grove map',
+  });
+  await expect.poll(() => renderedStageView(restoredStage)).toEqual(pannedView);
+  await restoredStage.getByRole('button', { name: 'Fit map' }).click();
+  await expect
+    .poll(() => renderedStageView(restoredStage))
+    .toMatchObject({ scale: 1, imageFitsStageOnAxis: true });
+  const scrollBeforeSwipe = await page.evaluate(() => window.scrollY);
+  await swipeUpOverStage(page, restoredStage);
+  await expect
+    .poll(() => page.evaluate(() => window.scrollY))
+    .toBeGreaterThan(scrollBeforeSwipe);
+
   await inlineStage.getByRole('button', { name: 'Fit map' }).click();
   await expect
     .poll(async () => (await image.boundingBox())?.width ?? 0)

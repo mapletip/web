@@ -8,6 +8,7 @@ import { render } from 'vitest-browser-react';
 import '@/styles.css';
 import { InteractiveMap } from '@/components/InteractiveMap';
 import type {
+  InteractiveMapProps,
   InteractiveMapMarker,
   InteractiveMapView,
 } from '@/components/InteractiveMap';
@@ -334,7 +335,7 @@ async function mountInteractiveStage(options?: {
   readonly selectedIds?: readonly string[];
   readonly markers?: readonly InteractiveMapMarker[];
   readonly interactive?: boolean;
-  readonly gestures?: boolean;
+  readonly gestures?: InteractiveMapProps['gestures'];
 }) {
   const result = await render(
     <MantineProvider
@@ -379,7 +380,7 @@ async function mountInteractiveStage(options?: {
             : { onActivate: options.onActivate })}
           connectors={[{ id: 'route', from: 'west', to: 'east' }]}
           interactive={options?.interactive ?? true}
-          gestures={options?.gestures ?? true}
+          gestures={options?.gestures ?? 'always'}
           wheelZoom={options?.wheelZoom ?? false}
           view={options?.view}
           {...(options?.onViewChange === undefined
@@ -1031,13 +1032,16 @@ describe('InteractiveMap pan and zoom', () => {
     expect(content.style.transform).not.toBe(before);
   });
 
-  it('keeps toolbar zoom available while disabling stage gestures', async () => {
+  it('enables panning only above fit in zoomed gesture mode', async () => {
     await commands.emulateMedia({ reducedMotion: 'reduce' });
     const onActivate = vi.fn<(markerIds: readonly string[]) => void>();
     const container = await mountInteractiveStage({
-      gestures: false,
+      gestures: 'zoomed',
       onActivate,
     });
+    const stage = container.querySelector<HTMLElement>(
+      '[role="group"][aria-label="Zoom test image"]',
+    )!;
     const viewport = container.querySelector<HTMLElement>(
       '.react-transform-wrapper',
     )!;
@@ -1046,28 +1050,24 @@ describe('InteractiveMap pan and zoom', () => {
     )!;
     const fittedTransform = content.style.transform;
 
+    expect(stage).toHaveAttribute('data-gestures', 'off');
     expect(getComputedStyle(viewport).touchAction).toBe('pan-y');
+
+    const fitRect = viewport.getBoundingClientRect();
+    await commands.dragPointer({
+      startX: fitRect.x + fitRect.width / 2,
+      startY: fitRect.y + fitRect.height / 2,
+      endX: fitRect.x + fitRect.width / 2 - 70,
+      endY: fitRect.y + fitRect.height / 2,
+    });
+    expect(content.style.transform).toBe(fittedTransform);
 
     await userEvent.click(page.getByRole('button', { name: 'Zoom in' }));
     await expect.poll(() => zoomScale(container)).toBeGreaterThan(1);
     const zoomedTransform = content.style.transform;
     expect(zoomedTransform).not.toBe(fittedTransform);
+    expect(stage).not.toHaveAttribute('data-gestures');
 
-    await userEvent.click(page.getByRole('button', { name: 'Zoom out' }));
-    await expect.poll(() => zoomScale(container)).toBeCloseTo(1);
-
-    await userEvent.click(page.getByRole('button', { name: 'Zoom in' }));
-    await expect.poll(() => zoomScale(container)).toBeGreaterThan(1);
-    await userEvent.click(page.getByRole('button', { name: 'Fit' }));
-    await expect.poll(() => zoomScale(container)).toBeCloseTo(1);
-
-    const marker = page.getByRole('button', { name: 'West point' });
-    await userEvent.click(marker);
-    expect(onActivate).toHaveBeenCalledWith(['west']);
-    await expect.element(marker).toHaveFocus();
-
-    await userEvent.click(page.getByRole('button', { name: 'Zoom in' }));
-    await expect.poll(() => zoomScale(container)).toBeGreaterThan(1);
     const rect = viewport.getBoundingClientRect();
     const beforeDrag = content.style.transform;
     await commands.dragPointer({
@@ -1077,7 +1077,18 @@ describe('InteractiveMap pan and zoom', () => {
       endY: rect.y + rect.height / 2,
     });
 
-    expect(content.style.transform).toBe(beforeDrag);
+    expect(content.style.transform).not.toBe(beforeDrag);
+    expect(content.style.transform).not.toBe(zoomedTransform);
+
+    await userEvent.click(page.getByRole('button', { name: 'Fit' }));
+    await expect.poll(() => zoomScale(container)).toBeCloseTo(1);
+    expect(stage).toHaveAttribute('data-gestures', 'off');
+    expect(getComputedStyle(viewport).touchAction).toBe('pan-y');
+
+    const marker = page.getByRole('button', { name: 'West point' });
+    await userEvent.click(marker);
+    expect(onActivate).toHaveBeenCalledWith(['west']);
+    await expect.element(marker).toHaveFocus();
   });
 
   it('supports a two-finger pinch', async () => {
