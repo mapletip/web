@@ -25,6 +25,7 @@ export interface DetailCardListProps<Item> {
   readonly search?: DetailCardListSearch<Item>;
   readonly itemTestId?: string;
   readonly density?: SimpleGridProps['cols'];
+  readonly equalHeightRows?: boolean;
   readonly listLabel?: string;
   readonly mobileItemLimit?: number;
 }
@@ -39,6 +40,7 @@ export function DetailCardList<Item>({
   search,
   itemTestId,
   density = DEFAULT_DETAIL_CARD_LIST_DENSITY,
+  equalHeightRows = false,
   listLabel,
   mobileItemLimit,
 }: DetailCardListProps<Item>): ReactElement {
@@ -60,6 +62,7 @@ export function DetailCardList<Item>({
         cols={density}
         spacing="sm"
         className={classes['list']}
+        data-detail-card-equal-rows={equalHeightRows ? 'true' : undefined}
         data-detail-card-list
         aria-label={listLabel}
       >

@@ -1226,6 +1226,28 @@ describe('MapDetail information', () => {
     expect(within(bossCard).getByText('Boss')).toBeVisible();
   });
 
+  it('renders respawn beside the spawn count in the same wrapping footer row', () => {
+    const record = mapPageRecordFixture({ mapId: 'practice-grove' });
+    const source = record.monsters.items[0];
+    if (source === undefined) throw new Error('Expected a fixture monster.');
+
+    renderDetail({
+      mapId: 'practice-grove',
+      monsters: {
+        ...record.monsters,
+        items: [{ ...source, respawn: { kind: 'delayed', seconds: 180 } }],
+      },
+    });
+
+    const card = screen.getByTestId('map-monster-card');
+    const spawnCount = within(card).getByText('1 spawn');
+    const respawnLabel = within(card).getByText('3m respawn');
+
+    expect(spawnCount.closest('.mantine-Group-root')).toBe(
+      respawnLabel.closest('.mantine-Group-root'),
+    );
+  });
+
   it('shows monster sorting and all three sort orders at exactly seven types', () => {
     const view = projectMapDetail({
       record: mapPageRecordFixture({ mapId: 'synthetic-monster-yard' }),
