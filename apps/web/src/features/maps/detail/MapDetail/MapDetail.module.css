@@ -319,6 +319,11 @@
   width: 100%;
 }
 
+/* Mantine's xs input is 30px; match the 28px (ActionIcon md) stage controls. */
+.findField :global(.mantine-Input-wrapper) {
+  --input-height-xs: 28px;
+}
+
 .findToggle {
   display: none;
   flex: 0 0 auto;
