@@ -27,4 +27,6 @@ export type Fact = KnownFact | NotKnownFact;
 export interface FactSheetProps {
   /** Facts in reading order. An empty list renders nothing. */
   readonly facts: readonly Fact[];
+  /** Column layout: automatic responsive columns, or always one column. */
+  readonly columns?: 1 | 'auto';
 }

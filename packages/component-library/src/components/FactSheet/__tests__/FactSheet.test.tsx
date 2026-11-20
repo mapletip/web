@@ -24,6 +24,22 @@ function rows(container: HTMLElement): HTMLElement[] {
 }
 
 describe('FactSheet', () => {
+  it('only marks the description list when single-column mode is requested', () => {
+    const facts: readonly Fact[] = [
+      { label: 'Level', value: '1' },
+      { label: 'Health', value: '10' },
+    ];
+
+    const defaultSheet = mount({ facts }).container.querySelector('dl');
+    const singleColumnSheet = mount({
+      facts,
+      columns: 1,
+    }).container.querySelector('dl');
+
+    expect(defaultSheet).not.toHaveAttribute('data-columns');
+    expect(singleColumnSheet).toHaveAttribute('data-columns', '1');
+  });
+
   it('renders every fact in the supplied order with its label and value', () => {
     const facts: readonly Fact[] = [
       { label: 'Level', value: '1' },
