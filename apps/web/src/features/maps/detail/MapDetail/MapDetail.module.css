@@ -298,10 +298,10 @@
   align-items: center;
   display: flex;
   gap: 8px;
-  left: 12px;
+  left: 8px;
   max-width: calc(100% - 64px);
   position: absolute;
-  top: 12px;
+  top: 8px;
   width: min(360px, calc(100% - 64px));
   z-index: 4;
 }
@@ -319,6 +319,11 @@
   width: 100%;
 }
 
+/* Mantine's xs input is 30px; match the 28px (ActionIcon md) stage controls. */
+.findField :global(.mantine-Input-wrapper) {
+  --input-height-xs: 28px;
+}
+
 .findToggle {
   display: none;
   flex: 0 0 auto;
@@ -330,7 +335,7 @@
   }
 
   .findShell[data-mobile-find-open='false'] {
-    width: var(--input-height-sm);
+    width: max-content;
   }
 
   .findToggle {

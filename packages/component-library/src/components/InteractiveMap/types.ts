@@ -69,6 +69,12 @@ export interface InteractiveMapProps {
   readonly renderDetails?: (markerIds: readonly string[]) => ReactNode;
   /** Whether markers can be activated. Defaults to true. */
   readonly interactive?: boolean;
+  /**
+   * Stage gesture behavior. Defaults to 'always'. 'zoomed' keeps pinch zoom
+   * enabled, and enables one-finger panning only while scale is above fit.
+   * At fit, vertical touch gestures scroll the page; double-click zoom is off.
+   */
+  readonly gestures?: 'always' | 'zoomed';
   /** Enables wheel zoom on an interactive stage. Defaults to false. */
   readonly wheelZoom?: boolean;
   /** Saved view to apply on mount and whenever it changes. */
