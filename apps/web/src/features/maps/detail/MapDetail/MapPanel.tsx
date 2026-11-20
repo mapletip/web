@@ -11,6 +11,7 @@ import { MarkerLegend } from './MarkerLegend';
 
 export function MapPanel({
   view,
+  hasStageImage,
   focus,
   selectedIds,
   interactive,
@@ -25,6 +26,7 @@ export function MapPanel({
   renderDetails,
 }: {
   readonly view: MapDetailView;
+  readonly hasStageImage: boolean;
   readonly focus: MapDetailFocus | undefined;
   readonly selectedIds: readonly string[];
   readonly interactive: boolean;
@@ -56,18 +58,22 @@ export function MapPanel({
           onActivate={onActivateMarkers}
           renderDetails={renderDetails}
         />
-        <FindCombobox
-          entities={view.entities}
-          findText={findText}
-          onFindTextChange={onFindTextChange}
-          onChoose={onActivate}
-        />
+        {hasStageImage ? (
+          <FindCombobox
+            entities={view.entities}
+            findText={findText}
+            onFindTextChange={onFindTextChange}
+            onChoose={onActivate}
+          />
+        ) : null}
       </div>
-      <MarkerLegend
-        entities={view.entities}
-        focus={focus}
-        onActivate={onActivate}
-      />
+      {hasStageImage ? (
+        <MarkerLegend
+          entities={view.entities}
+          focus={focus}
+          onActivate={onActivate}
+        />
+      ) : null}
     </div>
   );
 }
