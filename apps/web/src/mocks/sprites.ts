@@ -25,6 +25,13 @@ export function spriteResponse(contentId: string): SpriteResponse {
       body: '<svg xmlns="http://www.w3.org/2000/svg" width="160" height="96" viewBox="0 0 160 96"><rect width="160" height="96" rx="6" fill="#253b3b"/><path d="M14 75 42 55l22 8 25-34 22 10 35-22" fill="none" stroke="#8cae9a" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/><circle cx="42" cy="55" r="5" fill="#dfb86a"/></svg>',
     };
   }
+  if (fixtureRelease.markIds.has(contentId)) {
+    return {
+      status: 200,
+      contentType: 'image/svg+xml',
+      body: '<svg xmlns="http://www.w3.org/2000/svg" width="38" height="38" viewBox="0 0 38 38"><circle cx="19" cy="19" r="17" fill="#c77724"/><path d="M11 24 19 10l8 14z" fill="#f2eee4"/></svg>',
+    };
+  }
   const spriteCase = fixtureRelease.spriteIds.get(contentId) as
     SpriteCase | undefined;
   if (spriteCase === undefined || spriteCase === 'missing') {

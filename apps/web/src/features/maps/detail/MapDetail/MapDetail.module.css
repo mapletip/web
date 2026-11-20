@@ -5,6 +5,14 @@
   --map-detail-marker-border-color: #fff;
 }
 
+/* Map mark art has a frame in its outer 10%; crop it and scale back up, as production does. */
+.mapMark {
+  display: inline-flex;
+  flex: 0 0 auto;
+  clip-path: inset(10%);
+  transform: scale(1.25);
+}
+
 .hero {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
@@ -112,7 +120,8 @@
   flex: 0 0 10px;
 }
 
-.legendChipLabel :global([data-marker-visual='monster-sprite']) {
+.legendChipLabel :global([data-marker-visual='monster-sprite']),
+.legendChipLabel :global([data-marker-visual='npc-sprite']) {
   flex: 0 0 32px;
   height: 32px;
   width: 32px;
@@ -199,18 +208,18 @@
   filter: hue-rotate(115deg) saturate(1.45);
 }
 
-.monsterSprite {
+.sprite {
   display: block;
   image-rendering: pixelated;
   object-fit: contain;
 }
 
-.stageMonsterSprite {
+.stageSprite {
   height: var(--interactive-map-marker-size);
   width: var(--interactive-map-marker-size);
 }
 
-.detailMonsterSprite {
+.detailSprite {
   height: 24px;
   width: 24px;
 }

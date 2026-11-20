@@ -74,11 +74,19 @@ describe('Map Detail markers', () => {
     ).toBeInTheDocument();
     monsterDot.unmount();
 
-    const npc = render(<MarkerContent marker={stageMarker('npc')} />);
+    const npcSprite = render(
+      <MarkerContent marker={stageMarker('npc', '/sprites/npc.png')} />,
+    );
     expect(
-      npc.container.querySelector('[data-marker-visual="npc-dot"]'),
+      npcSprite.container.querySelector('[data-marker-visual="npc-sprite"]'),
+    ).toHaveAttribute('src', '/sprites/npc.png');
+    npcSprite.unmount();
+
+    const npcDot = render(<MarkerContent marker={stageMarker('npc')} />);
+    expect(
+      npcDot.container.querySelector('[data-marker-visual="npc-dot"]'),
     ).toBeInTheDocument();
-    expect(npc.container.querySelector('img')).toBeNull();
+    expect(npcDot.container.querySelector('img')).toBeNull();
   });
 
   it('renders the same entity content in details and map legends', () => {
@@ -103,9 +111,17 @@ describe('Map Detail markers', () => {
     ).toHaveAttribute('src', '/sprites/monster.png');
     monster.unmount();
 
-    const npc = render(<EntityIcon entity={entity('npc')} />);
+    const npc = render(
+      <EntityIcon entity={entity('npc', '/sprites/npc.png')} />,
+    );
     expect(
-      npc.container.querySelector('[data-marker-visual="npc-dot"]'),
+      npc.container.querySelector('[data-marker-visual="npc-sprite"]'),
+    ).toHaveAttribute('src', '/sprites/npc.png');
+    npc.unmount();
+
+    const npcDot = render(<EntityIcon entity={entity('npc')} />);
+    expect(
+      npcDot.container.querySelector('[data-marker-visual="npc-dot"]'),
     ).toBeInTheDocument();
   });
 });

@@ -91,6 +91,8 @@ export interface FixtureMapNpc {
   readonly name: string;
   readonly points: readonly FixtureMapPoint[];
   readonly questCount?: MapPageRecordV1_1['npcs']['items'][number]['questCount'];
+  /** Served like a monster sprite of the same case; unknown when omitted. */
+  readonly sprite?: SpriteCase;
 }
 
 export interface FixtureMapConnection {
@@ -755,6 +757,9 @@ export const fixtureMaps: readonly FixtureMap[] = [
       name,
       points: [{ x: 140 + index * 105, y: 420 }],
       ...(questCount === undefined ? {} : { questCount }),
+      ...(id === 'bellkeeper' || id === 'storyteller'
+        ? { sprite: 'exact' as const }
+        : {}),
     })),
     connections: fixtureMapTargets.map((map, index) => ({
       mapId: map.id,

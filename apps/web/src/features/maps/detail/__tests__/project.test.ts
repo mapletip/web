@@ -1,4 +1,7 @@
+import { mapMarkUrl, mapNpcSpriteUrl } from '@mapletip/data/maps';
 import { describe, expect, it } from 'vitest';
+
+import { MAPLEKIT_RELEASE } from '@/config/maplekit';
 
 import { projectMapDetail, UNNAMED_MAP_LABEL } from '../project';
 
@@ -63,6 +66,73 @@ function connection(
 }
 
 describe('projectMapDetail', () => {
+  it('resolves the page Map mark only when it is known', () => {
+    const record = mapPageRecordFixture({ mapId: 'practice-grove' });
+    const contentId = 'a'.repeat(64);
+
+    expect(
+      projectMapDetail({
+        record: { ...record, markImage: { state: 'known', value: contentId } },
+        buildId: 'cw-launch',
+      }).markUrl,
+    ).toBe(mapMarkUrl(MAPLEKIT_RELEASE.baseUrl, contentId));
+    expect(
+      projectMapDetail({
+        record: { ...record, markImage: { state: 'unknown' } },
+        buildId: 'cw-launch',
+      }).markUrl,
+    ).toBeUndefined();
+  });
+
+  it('resolves known NPC sprites into cards, entities, and stage markers', () => {
+    const source = mapPageRecordFixture({ mapId: 'lantern-square' });
+    const npc = source.npcs.items[0];
+    if (npc === undefined) throw new Error('Expected a fixture NPC.');
+    const contentId = 'b'.repeat(64);
+    const record = {
+      ...source,
+      npcs: {
+        ...source.npcs,
+        items: [
+          { ...npc, sprite: { state: 'known' as const, value: contentId } },
+        ],
+      },
+    };
+    const view = projectMapDetail({ record, buildId: 'cw-launch' });
+    const expectedUrl = mapNpcSpriteUrl(MAPLEKIT_RELEASE.baseUrl, contentId);
+    const projectedNpc = view.npcs.npcs[0];
+
+    expect(projectedNpc?.spriteUrl).toBe(expectedUrl);
+    expect(view.entities.find(({ kind }) => kind === 'npc')?.spriteUrl).toBe(
+      expectedUrl,
+    );
+    expect(
+      view.stage.markers.find(({ kind }) => kind === 'npc')?.spriteUrl,
+    ).toBe(expectedUrl);
+  });
+
+  it('omits NPC sprites when the sprite fact is unknown', () => {
+    const source = mapPageRecordFixture({ mapId: 'lantern-square' });
+    const npc = source.npcs.items[0];
+    if (npc === undefined) throw new Error('Expected a fixture NPC.');
+    const record = {
+      ...source,
+      npcs: {
+        ...source.npcs,
+        items: [{ ...npc, sprite: { state: 'unknown' as const } }],
+      },
+    };
+    const view = projectMapDetail({ record, buildId: 'cw-launch' });
+
+    expect(view.npcs.npcs[0]?.spriteUrl).toBeUndefined();
+    expect(
+      view.entities.find(({ kind }) => kind === 'npc')?.spriteUrl,
+    ).toBeUndefined();
+    expect(
+      view.stage.markers.find(({ kind }) => kind === 'npc')?.spriteUrl,
+    ).toBeUndefined();
+  });
+
   it('projects stage markers with stable labels and pairs the ends of each warp', () => {
     const record = mapPageRecordFixture({ mapId: 'practice-grove' });
     const view = projectMapDetail({ record, buildId: 'cw-launch' });
@@ -862,7 +932,6 @@ describe('projectMapDetail', () => {
     if (returnMap.state !== 'known') {
       throw new Error('Expected fixture return map to be known.');
     }
-
     const view = projectMapDetail({
       record: {
         ...record,
@@ -920,6 +989,10 @@ describe('projectMapDetail', () => {
     const returnMap = record.information.returnMap;
     if (returnMap.state !== 'known') {
       throw new Error('Expected fixture return map to be known.');
+    }
+    const markImage = returnMap.value.markImage;
+    if (markImage.state !== 'known') {
+      throw new Error('Expected fixture return Map mark to be known.');
     }
 
     const view = projectMapDetail({

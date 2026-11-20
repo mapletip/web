@@ -15,6 +15,7 @@ import {
   INTERACTIVE_MAP_MAX_ZOOM,
   INTERACTIVE_MAP_MIN_ZOOM,
   RecordSections,
+  Thumbnail,
   type RecordSection,
   type InteractiveMapView,
 } from '@mapletip/component-library';
@@ -306,7 +307,16 @@ export function MapDetail({
           items={mapDetailBreadcrumbs({ view, buildId: view.buildId })}
         />
         <div>
-          <Title order={1}>{view.name}</Title>
+          {view.markUrl === undefined ? (
+            <Title order={1}>{view.name}</Title>
+          ) : (
+            <Group gap="sm" align="center" wrap="nowrap">
+              <span className={classes['mapMark']}>
+                <Thumbnail src={view.markUrl} size={40} alt="" />
+              </span>
+              <Title order={1}>{view.name}</Title>
+            </Group>
+          )}
           {view.subtitle === undefined ? null : (
             <Text c="dimmed">{view.subtitle}</Text>
           )}
