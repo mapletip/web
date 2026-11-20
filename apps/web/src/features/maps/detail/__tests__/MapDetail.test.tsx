@@ -344,6 +344,26 @@ describe('MapDetail information', () => {
     ).toBeGreaterThan(0);
   });
 
+  it('keeps the inline map interactive with gestures off on mobile widths', () => {
+    const view = projectMapDetail({
+      record: mapPageRecordFixture({ mapId: 'practice-grove' }),
+      buildId: 'cw-launch',
+    });
+    const { container } = renderMapView({ view, viewportWidth: 390 });
+    const stage = screen.getByRole('group', { name: 'Practice Grove map' });
+
+    expect(stage).toHaveAttribute('data-gestures', 'off');
+    expect(
+      within(stage).getByRole('group', { name: 'Map controls' }),
+    ).toBeVisible();
+    expect(
+      within(stage).getByRole('button', { name: 'Zoom in' }),
+    ).toBeVisible();
+    expect(
+      container.querySelectorAll('button[data-marker-ids]').length,
+    ).toBeGreaterThan(0);
+  });
+
   it('toggles a whole kind from On this map and disables empty kinds', async () => {
     const view = projectMapDetail({
       record: mapPageRecordFixture({ mapId: 'lantern-square' }),

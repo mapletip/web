@@ -162,6 +162,17 @@ const visualCases: readonly InteractiveMapVisualCase[] = [
     ],
   },
   {
+    name: 'interactive-map-gestures-disabled-dark',
+    story: dark.GesturesDisabled,
+    storyId: 'components-interactivemap--gestures-disabled',
+    testId: 'interactive-map-gestures-disabled',
+    width: 720,
+    height: 400,
+    element: page.getByTestId('interactive-map-gestures-disabled'),
+    imageAlt: 'Synthetic wide image',
+    visible: [wideImage, ...wideMarkers],
+  },
+  {
     name: 'interactive-map-details-at-center-dark',
     story: dark.DetailsAtCenter,
     storyId: 'components-interactivemap--details-at-center',

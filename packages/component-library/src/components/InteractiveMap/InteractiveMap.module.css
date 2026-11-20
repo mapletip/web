@@ -25,6 +25,10 @@
   overflow: hidden;
 }
 
+.stage[data-gestures='off'] .viewport {
+  touch-action: pan-y;
+}
+
 .transformedContent {
   width: 100%;
   height: 100%;

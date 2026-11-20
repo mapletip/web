@@ -240,6 +240,7 @@ export function InteractiveMap({
   selectedIds = [],
   onActivate,
   interactive = true,
+  gestures = true,
   wheelZoom = false,
   view,
   onViewChange,
@@ -545,6 +546,9 @@ export function InteractiveMap({
         limitToBounds
         centerZoomedOut
         centerOnInit={view === undefined}
+        panning={{ disabled: !gestures }}
+        pinch={{ disabled: !gestures }}
+        doubleClick={{ disabled: !gestures }}
         wheel={{ disabled: !wheelZoom }}
         zoomAnimation={{ disabled: reducedMotion }}
         velocityAnimation={{ disabled: reducedMotion }}
@@ -606,6 +610,7 @@ export function InteractiveMap({
       aria-label={accessibleName}
       style={stageStyle}
       data-unavailable={availableImage === undefined ? 'true' : undefined}
+      data-gestures={interactive && !gestures ? 'off' : undefined}
     >
       {stageContent}
     </div>

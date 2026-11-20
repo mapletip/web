@@ -334,6 +334,7 @@ async function mountInteractiveStage(options?: {
   readonly selectedIds?: readonly string[];
   readonly markers?: readonly InteractiveMapMarker[];
   readonly interactive?: boolean;
+  readonly gestures?: boolean;
 }) {
   const result = await render(
     <MantineProvider
@@ -378,6 +379,7 @@ async function mountInteractiveStage(options?: {
             : { onActivate: options.onActivate })}
           connectors={[{ id: 'route', from: 'west', to: 'east' }]}
           interactive={options?.interactive ?? true}
+          gestures={options?.gestures ?? true}
           wheelZoom={options?.wheelZoom ?? false}
           view={options?.view}
           {...(options?.onViewChange === undefined
@@ -1027,6 +1029,55 @@ describe('InteractiveMap pan and zoom', () => {
     });
 
     expect(content.style.transform).not.toBe(before);
+  });
+
+  it('keeps toolbar zoom available while disabling stage gestures', async () => {
+    await commands.emulateMedia({ reducedMotion: 'reduce' });
+    const onActivate = vi.fn<(markerIds: readonly string[]) => void>();
+    const container = await mountInteractiveStage({
+      gestures: false,
+      onActivate,
+    });
+    const viewport = container.querySelector<HTMLElement>(
+      '.react-transform-wrapper',
+    )!;
+    const content = container.querySelector<HTMLElement>(
+      '.react-transform-component',
+    )!;
+    const fittedTransform = content.style.transform;
+
+    expect(getComputedStyle(viewport).touchAction).toBe('pan-y');
+
+    await userEvent.click(page.getByRole('button', { name: 'Zoom in' }));
+    await expect.poll(() => zoomScale(container)).toBeGreaterThan(1);
+    const zoomedTransform = content.style.transform;
+    expect(zoomedTransform).not.toBe(fittedTransform);
+
+    await userEvent.click(page.getByRole('button', { name: 'Zoom out' }));
+    await expect.poll(() => zoomScale(container)).toBeCloseTo(1);
+
+    await userEvent.click(page.getByRole('button', { name: 'Zoom in' }));
+    await expect.poll(() => zoomScale(container)).toBeGreaterThan(1);
+    await userEvent.click(page.getByRole('button', { name: 'Fit' }));
+    await expect.poll(() => zoomScale(container)).toBeCloseTo(1);
+
+    const marker = page.getByRole('button', { name: 'West point' });
+    await userEvent.click(marker);
+    expect(onActivate).toHaveBeenCalledWith(['west']);
+    await expect.element(marker).toHaveFocus();
+
+    await userEvent.click(page.getByRole('button', { name: 'Zoom in' }));
+    await expect.poll(() => zoomScale(container)).toBeGreaterThan(1);
+    const rect = viewport.getBoundingClientRect();
+    const beforeDrag = content.style.transform;
+    await commands.dragPointer({
+      startX: rect.x + rect.width / 2,
+      startY: rect.y + rect.height / 2,
+      endX: rect.x + rect.width / 2 - 70,
+      endY: rect.y + rect.height / 2,
+    });
+
+    expect(content.style.transform).toBe(beforeDrag);
   });
 
   it('supports a two-finger pinch', async () => {

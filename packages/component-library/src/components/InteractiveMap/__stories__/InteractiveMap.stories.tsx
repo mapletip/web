@@ -26,6 +26,7 @@ const meta = {
 - \`onActivate\`: receives all marker ids at an activated point.
 - \`renderDetails\`: returns optional content for an activated point.
 - \`interactive\`: enables marker buttons and stage controls; defaults to true.
+- \`gestures\`: enables drag panning, pinch zoom, and double-click zoom; defaults to true. The toolbar remains available when gestures are off.
 - \`wheelZoom\`: enables wheel zoom; defaults to false.
 - \`view\`: optional saved view, with zoom relative to fit and center coordinates in image pixels. Applying \`undefined\` after a saved view returns to fit.
 - \`onViewChange\`: receives one settled view after pan or zoom, or \`undefined\` after Fit.
@@ -307,6 +308,16 @@ export const Static: Story = {
   args: { ...wideImageArgs, interactive: false, selectedIds: ['east'] },
   render: (args) =>
     frame({ width: 680, props: args, testId: 'interactive-map-static' }),
+};
+
+export const GesturesDisabled: Story = {
+  args: { ...wideImageArgs, gestures: false },
+  render: (args) =>
+    frame({
+      width: 680,
+      props: args,
+      testId: 'interactive-map-gestures-disabled',
+    }),
 };
 
 export const TallImage: Story = {
