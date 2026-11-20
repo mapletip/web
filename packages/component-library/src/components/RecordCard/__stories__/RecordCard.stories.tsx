@@ -91,6 +91,54 @@ export const LinkedCardWithFooterButton: Story = {
   ),
 };
 
+export const HeaderScopedCardWithFooterButton: Story = {
+  args: { title: 'Practice Meadow', linkScope: 'header' },
+  render: () => (
+    <Stage>
+      <div data-testid="record-card-header-scoped-footer-button">
+        <RecordCard
+          layout="mediaAside"
+          title="Practice Meadow"
+          secondaryLine="West Practice Grounds · Meadow District"
+          footer={<Button size="xs">Locate</Button>}
+          destination={{ href: '/synthetic/maps/practice-meadow' }}
+          linkScope="header"
+        />
+      </div>
+    </Stage>
+  ),
+};
+
+export const CompactTwoColumnNarrow: Story = {
+  args: { title: 'Blue Slime', linkScope: 'header' },
+  render: () => (
+    <Box w={320} maw="100%" p="md" bg="var(--mapletip-color-canvas)">
+      <div
+        style={{
+          display: 'grid',
+          gap: 8,
+          gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+        }}
+      >
+        <RecordCard
+          layout="compactMediaAside"
+          title="Blue Slime"
+          media={<Box w={32} h={32} bg="var(--mapletip-color-border-subtle)" />}
+          destination={{ href: '/synthetic/monsters/blue-slime' }}
+          linkScope="header"
+        />
+        <RecordCard
+          layout="compactMediaAside"
+          title="Red Slime"
+          media={<Box w={32} h={32} bg="var(--mapletip-color-border-subtle)" />}
+          destination={{ href: '/synthetic/monsters/red-slime' }}
+          linkScope="header"
+        />
+      </div>
+    </Box>
+  ),
+};
+
 export const WithoutMedia: Story = {
   args: { title: 'Quiet Clearing' },
   render: () => (

@@ -1,7 +1,7 @@
 import { MantineProvider, Tooltip } from '@mantine/core';
 import { cssVariablesResolver, theme } from '@mapletip/theme';
 import { describe, expect, it, vi } from 'vitest';
-import { page } from 'vitest/browser';
+import { page, userEvent } from 'vitest/browser';
 import { render } from 'vitest-browser-react';
 
 import '@/styles.css';
@@ -27,9 +27,11 @@ describe('RecordCard stretched link in the browser', () => {
               </span>
             }
             footer={
-              <Tooltip label="Locate">
-                <button onClick={onLocate}>Locate</button>
-              </Tooltip>
+              <div style={{ width: '100%', height: 56 }}>
+                <Tooltip label="Locate">
+                  <button onClick={onLocate}>Locate</button>
+                </Tooltip>
+              </div>
             }
             destination={{ href: '#practice-meadow' }}
             renderLink={(_destination, props) => (
@@ -66,5 +68,172 @@ describe('RecordCard stretched link in the browser', () => {
 
     await link.click();
     expect(window.location.hash).toBe('#practice-meadow');
+  });
+
+  it('limits header link activation and feedback to the identity region', async () => {
+    const onLocate = vi.fn();
+    window.history.replaceState(null, '', window.location.pathname);
+
+    await render(
+      <MantineProvider
+        theme={theme}
+        cssVariablesResolver={cssVariablesResolver}
+        forceColorScheme="dark"
+      >
+        <div style={{ width: 420 }}>
+          <RecordCard
+            layout="mediaAside"
+            title="Practice Meadow"
+            secondaryLine="West Practice Grounds"
+            footer={
+              <div
+                data-testid="record-card-header-footer-space"
+                style={{ width: '100%', height: 56 }}
+              >
+                <button onClick={onLocate}>Locate</button>
+              </div>
+            }
+            destination={{ href: '#header-practice-meadow' }}
+            linkScope="header"
+          />
+        </div>
+      </MantineProvider>,
+    );
+
+    const link = page.getByRole('link', {
+      name: 'Practice Meadow',
+      exact: true,
+    });
+    const button = page.getByRole('button', { name: 'Locate' });
+    const footerSpace = page.getByTestId('record-card-header-footer-space');
+    const headerElement = link
+      .element()
+      .closest('[data-record-card-layout="mediaAside"]');
+    const cardElement = link.element().closest('[data-record-card="true"]');
+
+    if (
+      !(headerElement instanceof HTMLElement) ||
+      !(cardElement instanceof HTMLElement)
+    ) {
+      throw new Error('The linked card header or card is missing.');
+    }
+
+    await userEvent.unhover(cardElement);
+    expect(link.element().matches(':hover')).toBe(false);
+    await expect
+      .poll(() => getComputedStyle(headerElement).boxShadow)
+      .toBe('none');
+    const headerBackground = getComputedStyle(headerElement).backgroundColor;
+    const headerShadow = getComputedStyle(headerElement).boxShadow;
+    expect(headerShadow).toBe('none');
+    const buttonElement = button.element();
+    const buttonBounds = buttonElement.getBoundingClientRect();
+    const buttonHitTarget = document.elementFromPoint(
+      buttonBounds.left + buttonBounds.width / 2,
+      buttonBounds.top + buttonBounds.height / 2,
+    );
+    expect(buttonElement.contains(buttonHitTarget)).toBe(true);
+    await button.click();
+    expect(onLocate).toHaveBeenCalledOnce();
+    expect(window.location.hash).toBe('');
+
+    const footerBounds = footerSpace.element().getBoundingClientRect();
+    await footerSpace.click({
+      position: { x: footerBounds.width - 8, y: footerBounds.height / 2 },
+    });
+    expect(window.location.hash).toBe('');
+    await footerSpace.hover({
+      position: { x: footerBounds.width - 8, y: footerBounds.height / 2 },
+    });
+    expect(link.element().matches(':hover')).toBe(false);
+    expect(getComputedStyle(headerElement).backgroundColor).toBe(
+      headerBackground,
+    );
+    expect(getComputedStyle(headerElement).boxShadow).toBe(headerShadow);
+
+    await link.hover();
+    expect(link.element().matches(':hover')).toBe(true);
+    expect(getComputedStyle(headerElement).boxShadow).not.toBe(headerShadow);
+
+    await userEvent.tab({ shift: true });
+    expect(document.activeElement).toBe(link.element());
+    expect(link.element().matches(':focus-visible')).toBe(true);
+    expect(getComputedStyle(headerElement).outlineStyle).toBe('solid');
+    expect(getComputedStyle(headerElement).outlineWidth).toBe('2px');
+    expect(getComputedStyle(cardElement).outlineStyle).toBe('none');
+    expect(headerElement.getBoundingClientRect().bottom).toBeLessThan(
+      cardElement.getBoundingClientRect().bottom,
+    );
+
+    await link.click();
+    expect(window.location.hash).toBe('#header-practice-meadow');
+  });
+
+  it('fits compact cards in two columns at 320px and wraps titles between words', async () => {
+    await render(
+      <MantineProvider
+        theme={theme}
+        cssVariablesResolver={cssVariablesResolver}
+        forceColorScheme="dark"
+      >
+        <div
+          data-testid="compact-card-grid"
+          style={{
+            boxSizing: 'border-box',
+            display: 'grid',
+            gap: 8,
+            gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+            padding: 16,
+            width: 320,
+          }}
+        >
+          <RecordCard
+            layout="compactMediaAside"
+            title="Blue Slime"
+            media={<div style={{ width: 32, height: 32 }} />}
+            destination={{ href: '#blue-slime' }}
+            linkScope="header"
+          />
+          <RecordCard
+            layout="compactMediaAside"
+            title="Red Slime"
+            media={<div style={{ width: 32, height: 32 }} />}
+            destination={{ href: '#red-slime' }}
+            linkScope="header"
+          />
+        </div>
+      </MantineProvider>,
+    );
+
+    await page.viewport(320, 240);
+    const grid = page.getByTestId('compact-card-grid').element();
+    const firstCard = page
+      .getByRole('link', { name: 'Blue Slime' })
+      .element()
+      .closest('[data-record-card="true"]');
+    const titleLink = page.getByRole('link', { name: 'Blue Slime' }).element();
+
+    expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(320);
+    expect(grid.getBoundingClientRect().width).toBe(320);
+    expect(firstCard?.getBoundingClientRect().right).toBeLessThanOrEqual(320);
+    expect(getComputedStyle(titleLink).overflowWrap).toBe('break-word');
+
+    const textNode = titleLink.firstChild;
+    if (!(textNode instanceof Text)) {
+      throw new Error(
+        'The title link does not contain its expected text node.',
+      );
+    }
+    const text = textNode.textContent ?? '';
+    const wordRects = ['Blue', 'Slime'].map((word) => {
+      const start = text.indexOf(word);
+      const range = document.createRange();
+      range.setStart(textNode, start);
+      range.setEnd(textNode, start + word.length);
+      return range.getClientRects();
+    });
+    expect(wordRects[0]).toHaveLength(1);
+    expect(wordRects[1]).toHaveLength(1);
+    expect(wordRects[0]?.[0]?.y).not.toBe(wordRects[1]?.[0]?.y);
   });
 });

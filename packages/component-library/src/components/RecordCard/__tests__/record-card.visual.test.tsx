@@ -57,6 +57,29 @@ const cases: readonly VisualCase[] = [
       page.getByRole('button', { name: 'Locate', exact: true }),
     ],
   },
+  {
+    name: 'record-card-header-scoped-footer-button-dark',
+    story: dark.HeaderScopedCardWithFooterButton,
+    storyId: 'components-recordcard--header-scoped-card-with-footer-button',
+    width: 720,
+    height: 280,
+    element: page.getByTestId('record-card-header-scoped-footer-button'),
+    visible: [
+      page.getByRole('link', { name: 'Practice Meadow', exact: true }),
+      page.getByRole('button', { name: 'Locate', exact: true }),
+    ],
+  },
+  {
+    name: 'record-card-compact-two-column-narrow-dark',
+    story: dark.CompactTwoColumnNarrow,
+    storyId: 'components-recordcard--compact-two-column-narrow',
+    width: 320,
+    height: 240,
+    visible: [
+      page.getByRole('link', { name: 'Blue Slime', exact: true }),
+      page.getByRole('link', { name: 'Red Slime', exact: true }),
+    ],
+  },
 ];
 
 describe('RecordCard visual states', () => {
@@ -98,6 +121,30 @@ describe('RecordCard visual states', () => {
 
   test('matches the linked card with footer button baseline', async () => {
     const visualCase = cases[3]!;
+    await openVisualCase(visualCase);
+    for (const locator of visualCase.visible ?? []) {
+      await expect.element(locator).toBeVisible();
+    }
+    expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(
+      visualCase.width,
+    );
+    await expectApprovedScreenshot(visualCase);
+  });
+
+  test('renders the header-scoped link with its footer action', async () => {
+    const visualCase = cases[4]!;
+    await openVisualCase(visualCase);
+    for (const locator of visualCase.visible ?? []) {
+      await expect.element(locator).toBeVisible();
+    }
+    expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(
+      visualCase.width,
+    );
+    await expectApprovedScreenshot(visualCase);
+  });
+
+  test('renders compact cards without horizontal overflow at 320px', async () => {
+    const visualCase = cases[5]!;
     await openVisualCase(visualCase);
     for (const locator of visualCase.visible ?? []) {
       await expect.element(locator).toBeVisible();

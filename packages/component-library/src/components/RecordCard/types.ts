@@ -23,6 +23,12 @@ export interface RecordCardProps {
   readonly title: string;
   /** Place media beside the text with the footer aligned below the text. */
   readonly layout?: 'default' | 'mediaAside' | 'compactMediaAside';
+  /**
+   * Scope the destination link to the identity header, leaving footer controls
+   * and footer space outside the click box and link feedback. Defaults to the
+   * whole card.
+   */
+  readonly linkScope?: 'card' | 'header';
   readonly secondaryLine?: ReactNode;
   readonly badges?: ReactNode;
   /** Optional illustration or other media shown beside the text. */
