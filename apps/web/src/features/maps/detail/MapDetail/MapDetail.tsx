@@ -11,7 +11,6 @@ import {
 } from '@mantine/core';
 import { useMediaQuery } from '@mantine/hooks';
 import {
-  FactSheet,
   INTERACTIVE_MAP_MAX_ZOOM,
   INTERACTIVE_MAP_MIN_ZOOM,
   RecordSections,
@@ -50,10 +49,10 @@ import type { MapDetailEntityView, MapDetailView } from '../project';
 import { ConnectionCardList } from './ConnectionCardList';
 import classes from './MapDetail.module.css';
 import { MapPanel } from './MapPanel';
+import { MapReferenceRail } from './MapReferenceRail';
 import { EntityIcon } from './markers';
 import { MonsterCardList } from './MonsterCardList';
 import { NpcCardList } from './NpcCardList';
-import { OnThisMapRail } from './OnThisMapRail';
 
 const mapDetailStageViewSchema = z
   .object({
@@ -299,7 +298,6 @@ export function MapDetail({
     count: view.npcs.count,
     content: <NpcCardList npcs={view.npcs} />,
   });
-
   return (
     <DetailPageShell>
       <Stack gap="lg">
@@ -322,7 +320,7 @@ export function MapDetail({
           )}
         </div>
         <div className={classes['hero']}>
-          <div className={classes['stageColumn']}>
+          <Stack className={classes['stageColumn']} gap="sm">
             <div className={classes['stagePanelWithExplore']}>
               <MapPanel
                 view={view}
@@ -362,50 +360,21 @@ export function MapDetail({
                 </ActionIcon>
               </Tooltip>
             </div>
-          </div>
-          <Stack className={classes['informationColumn']} gap="lg">
-            <OnThisMapRail
-              rows={view.onThisMap}
-              focus={focus}
-              onToggle={(kind) =>
-                void writeFocus(toggleMapDetailKind({ focus, kind, view }))
-              }
-            />
-            {view.activity === undefined ? null : (
-              <Text>Part of {view.activity}</Text>
-            )}
             {view.description === undefined ? null : (
-              <Text>{view.description}</Text>
-            )}
-            {view.facts.length === 0 ? null : (
-              <Stack
-                component="section"
-                aria-labelledby="map-information-heading"
-                gap="sm"
-              >
-                <Title id="map-information-heading" order={2}>
-                  Map information
-                </Title>
-                <FactSheet
-                  facts={view.facts.map((fact) => ({
-                    label: fact.label,
-                    explanation: fact.explanation,
-                    value:
-                      fact.destination === undefined ? (
-                        fact.value
-                      ) : (
-                        <AnchorLink
-                          to={fact.destination.to}
-                          params={fact.destination.params}
-                        >
-                          {fact.value}
-                        </AnchorLink>
-                      ),
-                  }))}
-                />
-              </Stack>
+              <Text size="sm" c="dimmed">
+                {view.description}
+              </Text>
             )}
           </Stack>
+          <MapReferenceRail
+            activity={view.activity}
+            facts={view.facts}
+            focus={focus}
+            onThisMap={view.onThisMap}
+            onToggle={(kind) =>
+              void writeFocus(toggleMapDetailKind({ focus, kind, view }))
+            }
+          />
         </div>
         <RecordSections sections={sections} />
       </Stack>

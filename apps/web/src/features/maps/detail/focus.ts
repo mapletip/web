@@ -256,10 +256,5 @@ export function isMapDetailOnThisMapRowSelected({
   readonly focus: MapDetailFocus | undefined;
   readonly row: MapDetailOnThisMapRowView;
 }): boolean {
-  return (
-    'focus' in row &&
-    focus !== undefined &&
-    'kind' in focus &&
-    focus.kind === row.focus
-  );
+  return focus !== undefined && 'kind' in focus && focus.kind === row.focus;
 }
