@@ -81,7 +81,8 @@ export function FindCombobox({
                 if (findText.trim() !== '') combobox.openDropdown();
               }}
               placeholder="Monster, NPC, or map"
-              leftSection={<MagnifyingGlass size={18} aria-hidden="true" />}
+              size="xs"
+              leftSection={<MagnifyingGlass size={16} aria-hidden="true" />}
               leftSectionPointerEvents="none"
             />
           </Combobox.Target>
