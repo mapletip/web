@@ -129,6 +129,21 @@ const visualCases: readonly InteractiveMapVisualCase[] = [
     ],
   },
   {
+    name: 'interactive-map-dense-markers-dark',
+    story: dark.DenseMarkers,
+    storyId: 'components-interactivemap--dense-markers',
+    testId: 'interactive-map-dense-markers',
+    width: 720,
+    height: 400,
+    element: page.getByTestId('interactive-map-dense-markers'),
+    imageAlt: 'Synthetic wide image',
+    visible: [
+      wideImage,
+      page.getByRole('button', { name: 'First nearby point' }),
+      page.getByRole('button', { name: 'Second nearby point' }),
+    ],
+  },
+  {
     name: 'interactive-map-static-dark',
     story: dark.Static,
     storyId: 'components-interactivemap--static',

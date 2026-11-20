@@ -45,6 +45,7 @@ import {
 
 const SELECTION_ANIMATION_MS = 260;
 const TRANSFORM_EPSILON = 0.01;
+const TRANSFORM_POSITION_EPSILON = 0.5;
 
 function markerStyle({
   x,
@@ -90,11 +91,11 @@ function isFittedTransform(transform: ReactZoomPanPinchRef): boolean {
     Math.abs(
       transform.state.positionX -
         (wrapperComponent.clientWidth - contentComponent.offsetWidth) / 2,
-    ) <= TRANSFORM_EPSILON &&
+    ) <= TRANSFORM_POSITION_EPSILON &&
     Math.abs(
       transform.state.positionY -
         (wrapperComponent.clientHeight - contentComponent.offsetHeight) / 2,
-    ) <= TRANSFORM_EPSILON
+    ) <= TRANSFORM_POSITION_EPSILON
   );
 }
 
@@ -283,8 +284,6 @@ export function InteractiveMap({
     readonly '--interactive-map-image-aspect-ratio': string;
   } = {
     ...style,
-    aspectRatio:
-      image === undefined ? '4 / 3' : `${image.width} / ${image.height}`,
     '--interactive-map-image-aspect-ratio':
       image === undefined ? '1' : `${image.width / image.height}`,
   };
@@ -416,7 +415,11 @@ export function InteractiveMap({
 
   const handleFit = (): void => {
     const transform = transformRef.current;
-    if (transform !== null && isFittedTransform(transform)) {
+    if (
+      view !== undefined &&
+      transform !== null &&
+      isFittedTransform(transform)
+    ) {
       onViewChange?.(undefined);
     }
   };
@@ -545,6 +548,7 @@ export function InteractiveMap({
         initialScale={1}
         limitToBounds
         centerZoomedOut
+        centerOnInit={view === undefined}
         wheel={{ disabled: !wheelZoom }}
         zoomAnimation={{ disabled: reducedMotion }}
         velocityAnimation={{ disabled: reducedMotion }}
