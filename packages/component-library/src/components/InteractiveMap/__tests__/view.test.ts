@@ -23,6 +23,31 @@ describe('InteractiveMap view conversion', () => {
     expect(restored.centerY).toBeCloseTo(view.centerY);
   });
 
+  it.each([
+    {
+      stage: { stageWidth: 800, stageHeight: 400 },
+      image: { imageWidth: 200, imageHeight: 400 },
+      view: { zoom: 2, centerX: 100, centerY: 240 },
+      expected: { zoom: 2, centerX: 100, centerY: 240 },
+    },
+    {
+      stage: { stageWidth: 400, stageHeight: 800 },
+      image: { imageWidth: 400, imageHeight: 200 },
+      view: { zoom: 2, centerX: 160, centerY: 100 },
+      expected: { zoom: 2, centerX: 160, centerY: 100 },
+    },
+  ])(
+    'round-trips a saved view with letterboxing',
+    ({ stage, image, view, expected }) => {
+      const transform = viewToTransform({ ...stage, ...image, view });
+      const restored = transformToView({ ...stage, ...image, ...transform });
+
+      expect(restored.zoom).toBeCloseTo(expected.zoom);
+      expect(restored.centerX).toBeCloseTo(expected.centerX);
+      expect(restored.centerY).toBeCloseTo(expected.centerY);
+    },
+  );
+
   it('clamps zoom and keeps the image inside the stage', () => {
     const stage = { stageWidth: 800, stageHeight: 400 };
     const zoomedOut = viewToTransform({

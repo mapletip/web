@@ -24,7 +24,34 @@ function renderStage(props: Partial<InteractiveMapProps>): string {
   );
 }
 
+function stageTag(html: string): string {
+  return html.match(/<div\b[^>]*role="group"[^>]*>/u)?.[0] ?? '';
+}
+
+function inlineStyleProperties(stage: string): string[] {
+  const style = stage.match(/\bstyle="([^"]*)"/u)?.[1] ?? '';
+  return style
+    .split(';')
+    .map((declaration) => declaration.split(':', 1)[0] ?? '');
+}
+
 describe('InteractiveMap server rendering', () => {
+  it('renders a bounded stage without an inline image aspect ratio', () => {
+    const stage = stageTag(renderStage({}));
+
+    expect(stage).toContain('--interactive-map-image-aspect-ratio:2');
+    expect(inlineStyleProperties(stage)).not.toContain('aspect-ratio');
+  });
+
+  it('marks an unavailable stage in the server response', () => {
+    const html = renderStage({ image: undefined });
+    const stage =
+      html.match(/<div\b[^>]*data-unavailable="true"[^>]*>/u)?.[0] ?? '';
+
+    expect(stage).not.toBe('');
+    expect(inlineStyleProperties(stage)).not.toContain('aspect-ratio');
+  });
+
   it('renders marker percentage positions without waiting for layout', () => {
     const html = renderStage({
       markers: [

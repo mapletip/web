@@ -275,6 +275,34 @@ export const CoincidentMarkers: Story = {
     }),
 };
 
+export const DenseMarkers: Story = {
+  args: {
+    ...wideImageArgs,
+    markers: [
+      {
+        id: 'nearby-first',
+        x: 260,
+        y: 150,
+        label: 'First nearby point',
+        content: marker('A'),
+      },
+      {
+        id: 'nearby-second',
+        x: 292,
+        y: 150,
+        label: 'Second nearby point',
+        content: marker('B'),
+      },
+    ],
+  },
+  render: (args) =>
+    frame({
+      width: 680,
+      props: args,
+      testId: 'interactive-map-dense-markers',
+    }),
+};
+
 export const Static: Story = {
   args: { ...wideImageArgs, interactive: false, selectedIds: ['east'] },
   render: (args) =>

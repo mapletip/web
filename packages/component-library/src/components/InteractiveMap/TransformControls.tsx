@@ -32,7 +32,7 @@ export function TransformControls({
   readonly maxScale: number;
   readonly minScale: number;
   readonly motionReduced: boolean;
-  readonly onFit: () => void;
+  readonly onFit: (reset: Promise<void>) => void;
   readonly zoomInLabel: string;
   readonly zoomOutLabel: string;
 }): ReactElement {
@@ -82,8 +82,8 @@ export function TransformControls({
           variant="default"
           size="md"
           onClick={() => {
-            onFit();
-            void resetTransform(animationTime);
+            const reset = resetTransform(animationTime);
+            onFit(reset);
           }}
         >
           <span className={classes['fitLabel']}>Fit</span>

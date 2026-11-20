@@ -46,12 +46,15 @@ describe('InteractiveMap', () => {
     ).toHaveAttribute('src', syntheticImage.src);
   });
 
-  it('reserves the intrinsic aspect ratio before the image loads', () => {
+  it('keeps the image aspect ratio in a CSS variable before the image loads', () => {
     const { container } = mount();
 
-    const stage = container.querySelector('[role="group"]');
+    const stage = container.querySelector<HTMLElement>('[role="group"]');
     expect(stage).not.toBeNull();
-    expect(stage).toHaveStyle({ aspectRatio: '400 / 200' });
+    expect(stage!.style.aspectRatio).toBe('');
+    expect(
+      stage!.style.getPropertyValue('--interactive-map-image-aspect-ratio'),
+    ).toBe('2');
     expect(screen.getByRole('img')).toHaveAttribute('width', '400');
     expect(screen.getByRole('img')).toHaveAttribute('height', '200');
   });
