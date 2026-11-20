@@ -74,6 +74,38 @@ describe('RecordCard', () => {
     expect(header?.contains(footer ?? null)).toBe(false);
   });
 
+  it('keeps compact header links and their footer in the compact card layout', () => {
+    mount(
+      <RecordCard
+        title="Blue Slime"
+        layout="compactMediaAside"
+        secondaryLine="Lv 12"
+        media={<img src="/blue-slime.png" alt="" />}
+        footer={<span>3m respawn</span>}
+        destination={{ href: '/synthetic/monsters/blue-slime' }}
+        linkScope="header"
+      />,
+    );
+
+    const card = screen
+      .getByRole('link', { name: 'Blue Slime' })
+      .closest('[data-record-card="true"]');
+    const header = card?.firstElementChild;
+    const footer = screen.getByText('3m respawn').parentElement;
+
+    expect(card).toHaveAttribute(
+      'data-record-card-layout',
+      'compactMediaAside',
+    );
+    expect(header).toHaveAttribute(
+      'data-record-card-layout',
+      'compactMediaAside',
+    );
+    expect(header?.contains(screen.getByText('Lv 12'))).toBe(true);
+    expect(header?.contains(screen.getByText('3m respawn'))).toBe(false);
+    expect(footer?.parentElement).toBe(card);
+  });
+
   it('keeps a footer button outside the link and lets it handle its own click', () => {
     const onLocate = vi.fn();
     mount(

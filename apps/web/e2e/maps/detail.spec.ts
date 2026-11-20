@@ -416,6 +416,46 @@ test('Map Detail sorts monsters by level, spawns and name', async ({
   ]);
 });
 
+for (const viewport of [
+  { width: 1280, height: 900 },
+  { width: 390, height: 844 },
+]) {
+  test(`Map Detail monster cards share row heights and keep respawn inline at ${viewport.width}px`, async ({
+    page,
+  }) => {
+    await page.setViewportSize(viewport);
+    const publicId = mapPublicId({
+      sourceId: 'cw-launch:synthetic-monster-yard',
+    });
+    await page.goto(`/maplestory/maps/synthetic-monster-yard-${publicId}`);
+    await page.waitForLoadState('networkidle');
+    await waitForMapDetailHydration(page);
+
+    const cards = page.getByTestId('map-monster-card');
+    await expect(cards).toHaveCount(7);
+    const heights = await cards
+      .locator('[data-record-card="true"]')
+      .evaluateAll((elements) =>
+        elements.map((element) => element.getBoundingClientRect().height),
+      );
+    expect(Math.max(...heights) - Math.min(...heights)).toBeLessThanOrEqual(1);
+
+    if (viewport.width === 1280) {
+      const delayedCard = cards.filter({ hasText: 'Zero Yield Drone' });
+      const spawnCount = await delayedCard.getByText('6 spawns').boundingBox();
+      const respawnLabel = await delayedCard
+        .getByText('3m respawn')
+        .boundingBox();
+      if (spawnCount === null || respawnLabel === null) {
+        throw new Error(
+          'Expected spawn and respawn labels in the delayed row.',
+        );
+      }
+      expect(Math.abs(spawnCount.y - respawnLabel.y)).toBeLessThanOrEqual(3);
+    }
+  });
+}
+
 test('monster card navigation stays in the header outside its spawn footer', async ({
   page,
 }) => {

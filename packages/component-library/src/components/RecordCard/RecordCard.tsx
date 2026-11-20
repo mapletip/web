@@ -62,7 +62,7 @@ export function RecordCard({
     className: mediaAside ? layoutClass : undefined,
     'data-record-card-has-media': mediaAside ? String(hasMedia) : undefined,
     'data-record-card-has-footer': mediaAside
-      ? String(hasFooter && !headerScopedLink)
+      ? String(compactMediaAside ? hasFooter : hasFooter && !headerScopedLink)
       : undefined,
     'data-record-card-layout': mediaAside ? layout : undefined,
   };
@@ -113,37 +113,65 @@ export function RecordCard({
       <CaretRight className={classes['chevron']} aria-hidden="true" size={16} />
     );
 
+  let cardContent: ReactNode;
+  if (compactMediaAside) {
+    cardContent = (
+      <>
+        <div
+          className={[
+            classes['compactIdentity'],
+            headerScopedLink && classes['headerLinkRegion'],
+          ]
+            .filter(Boolean)
+            .join(' ')}
+          data-record-card-layout={headerScopedLink ? layout : undefined}
+        >
+          {headerContent}
+          {chevron}
+        </div>
+        {cardFooter}
+      </>
+    );
+  } else if (headerScopedLink) {
+    cardContent = (
+      <>
+        <div
+          {...layoutProps}
+          className={[classes['headerLinkRegion'], layoutProps.className]
+            .filter(Boolean)
+            .join(' ')}
+        >
+          {headerContent}
+          {chevron}
+        </div>
+        {cardFooter}
+      </>
+    );
+  } else {
+    cardContent = (
+      <>
+        {headerContent}
+        {cardFooter}
+        {chevron}
+      </>
+    );
+  }
+
   const body = (
     <Card
-      {...(!headerScopedLink ? layoutProps : {})}
-      className={[classes['card'], !headerScopedLink && layoutProps.className]
+      {...(!headerScopedLink || compactMediaAside ? layoutProps : {})}
+      className={[
+        classes['card'],
+        (!headerScopedLink || compactMediaAside) && layoutProps.className,
+      ]
         .filter(Boolean)
         .join(' ')}
-      padding={cardPadding}
+      padding={compactMediaAside ? 0 : cardPadding}
       radius="md"
       withBorder
       data-record-card="true"
     >
-      {headerScopedLink ? (
-        <>
-          <div
-            {...layoutProps}
-            className={[classes['headerLinkRegion'], layoutProps.className]
-              .filter(Boolean)
-              .join(' ')}
-          >
-            {headerContent}
-            {chevron}
-          </div>
-          {cardFooter}
-        </>
-      ) : (
-        <>
-          {headerContent}
-          {cardFooter}
-          {chevron}
-        </>
-      )}
+      {cardContent}
     </Card>
   );
 

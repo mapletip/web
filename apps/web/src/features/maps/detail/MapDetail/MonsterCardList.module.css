@@ -36,6 +36,22 @@
   white-space: nowrap;
 }
 
+.factsRow {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 6px;
+  align-content: flex-end;
+  align-self: stretch;
+}
+
+.respawnLabel {
+  font-size: 0.8125rem;
+  line-height: 1.25;
+}
+
 .locateButton:hover,
 .locateButton:focus-visible {
   background: transparent;

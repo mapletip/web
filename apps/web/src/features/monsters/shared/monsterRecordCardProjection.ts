@@ -76,10 +76,19 @@ export function projectMonsterRespawnLabel(
       return undefined;
     case 'none':
       return 'No respawn';
-    case 'delayed':
-      return respawn.seconds % 60 === 0
-        ? `Respawns after ${formatMonsterNumber(respawn.seconds / 60)} min`
-        : `Respawns after ${formatMonsterNumber(respawn.seconds)} sec`;
+    case 'delayed': {
+      const totalSeconds = respawn.seconds;
+      const hours = Math.floor(totalSeconds / 3600);
+      const minutes = Math.floor((totalSeconds % 3600) / 60);
+      const seconds = totalSeconds % 60;
+      const durationParts = [
+        ...(hours === 0 ? [] : [`${formatMonsterNumber(hours)}h`]),
+        ...(minutes === 0 ? [] : [`${formatMonsterNumber(minutes)}m`]),
+        ...(seconds === 0 ? [] : [`${formatMonsterNumber(seconds)}s`]),
+      ];
+      if (durationParts.length === 0) durationParts.push('0s');
+      return `${durationParts.join(' ')} respawn`;
+    }
     case 'mixed':
       return 'Mixed respawn';
   }

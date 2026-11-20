@@ -65,10 +65,11 @@ export function MonsterCardList({
         items={sortedMonsters}
         getKey={(monster) => monster.key}
         density={MONSTER_RECORD_CARD_DENSITY}
+        equalHeightRows
         itemTestId="map-monster-card"
         renderItem={(monster) => (
           <MonsterRecordCard monster={monster} linkScope="header">
-            <Group gap="xs" wrap="wrap">
+            <Group className={classes['factsRow']} wrap="wrap">
               {monster.canLocate ? (
                 <Tooltip
                   label="Locate"
@@ -102,7 +103,9 @@ export function MonsterCardList({
                 </Text>
               )}
               {monster.respawnLabel === undefined ? null : (
-                <Text size="sm">{monster.respawnLabel}</Text>
+                <Text className={classes['respawnLabel']} size="sm" c="dimmed">
+                  {monster.respawnLabel}
+                </Text>
               )}
             </Group>
           </MonsterRecordCard>

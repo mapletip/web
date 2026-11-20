@@ -589,7 +589,7 @@ async function projectMapPages(options: {
           sprite: { contentId: record.sprite },
           placementCount: placement.points.length,
           points: mapPoints(placement.points, published),
-          respawn: { kind: placement.respawn ?? 'ordinary' },
+          respawn: placement.respawn ?? { kind: 'ordinary' },
           focusToken: fixturePublicId(
             `map-focus:${fixture.id}:monster:${placement.monsterId}`,
           ),

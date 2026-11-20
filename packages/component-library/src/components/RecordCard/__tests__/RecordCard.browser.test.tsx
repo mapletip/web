@@ -169,7 +169,7 @@ describe('RecordCard stretched link in the browser', () => {
     expect(window.location.hash).toBe('#header-practice-meadow');
   });
 
-  it('fits compact cards in two columns at 320px and wraps titles between words', async () => {
+  it('fits compact cards in two columns at 320px without title overflow', async () => {
     await render(
       <MantineProvider
         theme={theme}
@@ -216,24 +216,78 @@ describe('RecordCard stretched link in the browser', () => {
     expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(320);
     expect(grid.getBoundingClientRect().width).toBe(320);
     expect(firstCard?.getBoundingClientRect().right).toBeLessThanOrEqual(320);
-    expect(getComputedStyle(titleLink).overflowWrap).toBe('break-word');
-
-    const textNode = titleLink.firstChild;
-    if (!(textNode instanceof Text)) {
-      throw new Error(
-        'The title link does not contain its expected text node.',
-      );
-    }
-    const text = textNode.textContent ?? '';
-    const wordRects = ['Blue', 'Slime'].map((word) => {
-      const start = text.indexOf(word);
-      const range = document.createRange();
-      range.setStart(textNode, start);
-      range.setEnd(textNode, start + word.length);
-      return range.getClientRects();
-    });
-    expect(wordRects[0]).toHaveLength(1);
-    expect(wordRects[1]).toHaveLength(1);
-    expect(wordRects[0]?.[0]?.y).not.toBe(wordRects[1]?.[0]?.y);
+    expect(getComputedStyle(titleLink).overflowWrap).toBe('anywhere');
   });
+
+  it.each([
+    { linkScope: 'card' as const, width: 180 },
+    { linkScope: 'header' as const, width: 180 },
+    { linkScope: 'card' as const, width: 300 },
+    { linkScope: 'header' as const, width: 300 },
+  ])(
+    'keeps the compact $linkScope layout intact at $width px',
+    async ({ linkScope, width }) => {
+      await render(
+        <MantineProvider
+          theme={theme}
+          cssVariablesResolver={cssVariablesResolver}
+          forceColorScheme="dark"
+        >
+          <div style={{ width }}>
+            <RecordCard
+              layout="compactMediaAside"
+              title="Slime"
+              media={
+                <div
+                  data-testid="compact-card-media"
+                  style={{ width: 48, height: 48 }}
+                />
+              }
+              footer={
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12 }}>
+                  <span>7 spawns</span>
+                  <span>3m respawn</span>
+                </div>
+              }
+              destination={{ href: '#slime' }}
+              linkScope={linkScope}
+            />
+          </div>
+        </MantineProvider>,
+      );
+
+      await page.viewport(width, 220);
+      const card = page
+        .getByRole('heading', { name: 'Slime' })
+        .element()
+        .closest('[data-record-card="true"]');
+      const title = page.getByRole('heading', { name: 'Slime' }).element();
+      const media = page
+        .getByTestId('compact-card-media')
+        .element().parentElement;
+
+      if (
+        !(card instanceof HTMLElement) ||
+        !(card.firstElementChild instanceof HTMLElement) ||
+        !(card.lastElementChild instanceof HTMLElement) ||
+        !(media instanceof HTMLElement)
+      ) {
+        throw new Error(
+          'The compact card identity, media or footer is missing.',
+        );
+      }
+
+      const identity = card.firstElementChild;
+      const footer = card.lastElementChild;
+      const mediaBounds = media.getBoundingClientRect();
+      const titleBounds = title.getBoundingClientRect();
+      const identityBounds = identity.getBoundingClientRect();
+      const footerBounds = footer.getBoundingClientRect();
+
+      expect(mediaBounds.right).toBeLessThanOrEqual(titleBounds.left);
+      expect(footerBounds.top).toBeGreaterThanOrEqual(identityBounds.bottom);
+      expect(card.getBoundingClientRect().height).toBeLessThan(140);
+      expect(footer.scrollWidth).toBeLessThanOrEqual(footer.clientWidth);
+    },
+  );
 });

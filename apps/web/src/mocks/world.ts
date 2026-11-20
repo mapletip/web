@@ -83,7 +83,7 @@ export interface FixtureMapPoint {
 export interface FixtureMapMonster {
   readonly monsterId: string;
   readonly points: readonly FixtureMapPoint[];
-  readonly respawn?: 'ordinary' | 'none' | 'mixed';
+  readonly respawn?: MapPageRecordV1_1['monsters']['items'][number]['respawn'];
 }
 
 export interface FixtureMapNpc {
@@ -640,7 +640,7 @@ const fixtureMapTargets: readonly Omit<
       {
         monsterId: 'plain-pebble',
         points: [{ x: 240, y: 390 }],
-        respawn: 'none',
+        respawn: { kind: 'none' },
       },
       {
         monsterId: 'twin-sprout-a',
@@ -652,7 +652,7 @@ const fixtureMapTargets: readonly Omit<
       {
         monsterId: 'hollow-husk',
         points: [{ x: 570, y: 420 }],
-        respawn: 'mixed',
+        respawn: { kind: 'mixed' },
       },
       {
         monsterId: 'crowned-warden',
@@ -821,6 +821,7 @@ export const fixtureMaps: readonly FixtureMap[] = [
           { x: 720, y: 390 },
           { x: 740, y: 390 },
         ],
+        respawn: { kind: 'delayed', seconds: 180 },
       },
       {
         monsterId: 'big-number-brute',
