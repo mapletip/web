@@ -13,12 +13,10 @@ import { useMediaQuery } from '@mantine/hooks';
 import {
   INTERACTIVE_MAP_MAX_ZOOM,
   INTERACTIVE_MAP_MIN_ZOOM,
-  RecordSections,
   Thumbnail,
-  type RecordSection,
   type InteractiveMapView,
 } from '@mapletip/component-library';
-import { ArrowsOut, ShareNetwork } from '@phosphor-icons/react';
+import { ArrowsOut } from '@phosphor-icons/react';
 import { useHydrated, useLocation, useRouter } from '@tanstack/react-router';
 import { useEffect, useState, type ReactElement } from 'react';
 import { z } from 'zod';
@@ -48,6 +46,7 @@ import type { MapDetailEntityView, MapDetailView } from '../project';
 
 import { ConnectionCardList } from './ConnectionCardList';
 import classes from './MapDetail.module.css';
+import { MapDetailSection } from './MapDetailSection';
 import { MapPanel } from './MapPanel';
 import { MapReferenceRail } from './MapReferenceRail';
 import { EntityIcon } from './markers';
@@ -265,40 +264,6 @@ export function MapDetail({
     const activation = activateMapDetailMarkers({ focus, markerIds, view });
     if (activation !== undefined) void writeFocus(activation.focus);
   };
-  const sections: RecordSection[] = [];
-  if (
-    view.connections.maps.length > 0 ||
-    view.connections.notice !== undefined
-  ) {
-    sections.push({
-      id: 'connections',
-      title: 'Connections',
-      icon: (
-        <ShareNetwork size={16} color="var(--mantine-primary-color-filled)" />
-      ),
-      count: view.connections.count,
-      content: <ConnectionCardList connections={view.connections} />,
-    });
-  }
-  sections.push({
-    id: 'monsters',
-    title: 'Monsters',
-    count: view.monsters.count,
-    content: (
-      <MonsterCardList
-        monsters={view.monsters}
-        onLocate={(focusKey) => {
-          void locateMonster(focusKey);
-        }}
-      />
-    ),
-  });
-  sections.push({
-    id: 'npcs',
-    title: 'NPCs',
-    count: view.npcs.count,
-    content: <NpcCardList npcs={view.npcs} />,
-  });
   return (
     <DetailPageShell>
       <Stack gap="lg">
@@ -380,7 +345,40 @@ export function MapDetail({
             }
           />
         </div>
-        <RecordSections sections={sections} />
+        <Stack gap="xl">
+          <MapDetailSection
+            id="connections"
+            title="Connections"
+            state={view.connections.state}
+            notice={view.connections.notice}
+            itemCount={view.connections.maps.length}
+          >
+            <ConnectionCardList connections={view.connections} />
+          </MapDetailSection>
+          <MapDetailSection
+            id="monsters"
+            title="Monsters on this map"
+            state={view.monsters.state}
+            notice={view.monsters.notice}
+            itemCount={view.monsters.monsters.length}
+          >
+            <MonsterCardList
+              monsters={view.monsters}
+              onLocate={(focusKey) => {
+                void locateMonster(focusKey);
+              }}
+            />
+          </MapDetailSection>
+          <MapDetailSection
+            id="npcs"
+            title="NPCs on this map"
+            state={view.npcs.state}
+            notice={view.npcs.notice}
+            itemCount={view.npcs.npcs.length}
+          >
+            <NpcCardList npcs={view.npcs} />
+          </MapDetailSection>
+        </Stack>
       </Stack>
       <Modal
         classNames={{

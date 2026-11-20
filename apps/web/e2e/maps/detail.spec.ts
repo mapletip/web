@@ -79,10 +79,11 @@ test('Map Detail renders its canonical address, redirects stale slugs, and retur
   ).toHaveAttribute('href', '/maplestory/maps');
 
   await expect(
-    page
-      .getByRole('navigation', { name: 'Record sections' })
-      .getByRole('link', { name: 'Monsters (4)' }),
-  ).toHaveAttribute('href', '#monsters');
+    page.getByRole('heading', { name: 'Monsters on this map' }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole('navigation', { name: 'Record sections' }),
+  ).toHaveCount(0);
   const monsterPath = `/maplestory/monsters/crowned-warden-${monsterPublicId('crowned-warden')}`;
   const bossCard = page
     .getByTestId('map-monster-card')
@@ -99,10 +100,9 @@ test('Map Detail renders its canonical address, redirects stale slugs, and retur
   await page.waitForLoadState('networkidle');
 
   const connectionPath = `/maplestory/maps/lantern-square-${mapPublicId({ sourceId: 'cw-launch:lantern-square' })}`;
-  const connectionsNavigation = page
-    .getByRole('navigation', { name: 'Record sections' })
-    .getByRole('link', { name: 'Connections (1)' });
-  await expect(connectionsNavigation).toHaveAttribute('href', '#connections');
+  await expect(
+    page.getByRole('heading', { name: 'Connections' }),
+  ).toBeVisible();
   const connectionCard = page.getByTestId('map-connection-card');
   await expect(connectionCard.getByRole('link')).toHaveAttribute(
     'href',
@@ -145,7 +145,7 @@ test('Map Detail renders its canonical address, redirects stale slugs, and retur
   }
 });
 
-test('Map Detail shows all record sections at the project viewport and has no narrow overflow', async ({
+test('Map Detail renders direct sections and has no narrow overflow', async ({
   page,
 }) => {
   const publicId = mapPublicId({ sourceId: 'cw-launch:lantern-square' });
@@ -153,27 +153,71 @@ test('Map Detail shows all record sections at the project viewport and has no na
   await page.waitForLoadState('networkidle');
   await waitForMapDetailHydration(page);
 
-  const navigation = page.getByRole('navigation', {
-    name: 'Record sections',
-  });
   await expect(
-    navigation.getByRole('link', { name: /^Connections \(/u }),
+    page.getByRole('navigation', { name: 'Record sections' }),
+  ).toHaveCount(0);
+  await expect(
+    page.getByRole('heading', { name: 'Connections' }),
   ).toBeVisible();
   await expect(
-    navigation.getByRole('link', { name: 'Monsters (0)' }),
-  ).toBeVisible();
+    page.getByRole('heading', { name: 'Monsters on this map' }),
+  ).toHaveCount(0);
   await expect(
-    navigation.getByRole('link', { name: 'NPCs (8)' }),
+    page.getByRole('heading', { name: 'NPCs on this map' }),
   ).toBeVisible();
-  await expect(
-    page.getByRole('heading', { name: /^Connections \(/u }),
-  ).toBeVisible();
-  await expect(
-    page.getByRole('heading', { name: 'Monsters (0)' }),
-  ).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'NPCs (8)' })).toBeVisible();
 
   await page.setViewportSize({ width: 320, height: 844 });
+  const widths = await page.evaluate(() => ({
+    document: document.documentElement.scrollWidth,
+    viewport: document.documentElement.clientWidth,
+  }));
+  expect(widths.document).toBeLessThanOrEqual(widths.viewport);
+});
+
+test('Map Detail monster and NPC cards use two columns on phones without overflow at 320px', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  const practiceId = mapPublicId({ sourceId: 'cw-launch:practice-grove' });
+  await page.goto(`/maplestory/maps/practice-grove-${practiceId}`);
+  await page.waitForLoadState('networkidle');
+  await waitForMapDetailHydration(page);
+
+  const monsterCards = page.getByTestId('map-monster-card');
+  await expect(monsterCards).toHaveCount(4);
+  const monsterPositions = await monsterCards.evaluateAll((cards) =>
+    cards.map((card) => {
+      const bounds = card.getBoundingClientRect();
+      return { left: bounds.left, top: bounds.top };
+    }),
+  );
+  expect(monsterPositions[0]!.left).toBeLessThan(monsterPositions[1]!.left);
+  expect(
+    Math.abs(monsterPositions[0]!.top - monsterPositions[1]!.top),
+  ).toBeLessThanOrEqual(1);
+  expect(monsterPositions[2]!.top).toBeGreaterThan(monsterPositions[0]!.top);
+
+  const townId = mapPublicId({ sourceId: 'cw-launch:lantern-square' });
+  await page.goto(`/maplestory/maps/lantern-square-${townId}`);
+  await page.waitForLoadState('networkidle');
+  await waitForMapDetailHydration(page);
+  const npcCards = page.getByTestId('map-npc-card');
+  await expect(npcCards).toHaveCount(8);
+  const npcPositions = await npcCards.evaluateAll((cards) =>
+    cards.map((card) => {
+      const bounds = card.getBoundingClientRect();
+      return { left: bounds.left, top: bounds.top };
+    }),
+  );
+  expect(npcPositions[0]!.left).toBeLessThan(npcPositions[1]!.left);
+  expect(
+    Math.abs(npcPositions[0]!.top - npcPositions[1]!.top),
+  ).toBeLessThanOrEqual(1);
+  expect(npcPositions[2]!.top).toBeGreaterThan(npcPositions[0]!.top);
+
+  await page.setViewportSize({ width: 320, height: 844 });
+  await page.goto(`/maplestory/maps/practice-grove-${practiceId}`);
+  await page.waitForLoadState('networkidle');
   const widths = await page.evaluate(() => ({
     document: document.documentElement.scrollWidth,
     viewport: document.documentElement.clientWidth,
@@ -312,6 +356,64 @@ test('Map Detail sorts monsters by level, spawns and name', async ({
     'Twin Sprout',
     'Zero Yield Drone',
   ]);
+});
+
+test('monster card navigation stays in the header outside its spawn footer', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  const publicId = mapPublicId({ sourceId: 'cw-launch:practice-grove' });
+  await page.goto(`/maplestory/maps/practice-grove-${publicId}`);
+  await page.waitForLoadState('networkidle');
+
+  const card = page
+    .getByTestId('map-monster-card')
+    .filter({ hasText: 'Twin Sprout' });
+  const footer = card.locator('[class*="footer"]');
+  const spawnButton = card.getByRole('button', {
+    name: 'Locate 2 Twin Sprout spawns on map',
+  });
+  await expect(spawnButton).toBeVisible();
+  await footer.scrollIntoViewIfNeeded();
+  const blankPoint = await footer.evaluate((element) => {
+    const spawnButton = element.querySelector('button');
+    if (spawnButton === null) return null;
+    const bounds = element.getBoundingClientRect();
+    const spawnBounds = spawnButton.getBoundingClientRect();
+    const y = bounds.top + bounds.height / 2;
+    for (
+      let x = Math.ceil(spawnBounds.right + 1);
+      x < bounds.right - 1;
+      x += 1
+    ) {
+      const target = document.elementFromPoint(x, y);
+      if (
+        target !== null &&
+        (target === element || target === element.firstElementChild)
+      ) {
+        return {
+          x,
+          y,
+          insideFooter: element.contains(target),
+          insideLink: target.closest('a') !== null,
+          insideButton: target.closest('button') !== null,
+        };
+      }
+    }
+    return null;
+  });
+  expect(blankPoint).not.toBeNull();
+  if (blankPoint === null) throw new Error('Expected footer whitespace.');
+  expect(blankPoint.insideFooter).toBe(true);
+  expect(blankPoint.insideLink).toBe(false);
+  expect(blankPoint.insideButton).toBe(false);
+  await page.mouse.click(blankPoint.x, blankPoint.y);
+  await expect(page).toHaveURL(
+    `http://127.0.0.1:4173/maplestory/maps/practice-grove-${publicId}`,
+  );
+
+  await card.getByRole('link', { name: 'Twin Sprout' }).click();
+  await expect(page).toHaveURL(/\/maplestory\/monsters\/twin-sprout-/u);
 });
 
 test('Map Detail shows its stage and markers on desktop and mobile', async ({
@@ -1265,5 +1367,10 @@ test('Map Detail shows the stage message when a map has no image', async ({
   await expect(
     page.getByRole('complementary', { name: 'Map reference' }),
   ).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'Monsters' })).toBeVisible();
+  await expect(
+    page.getByRole('heading', { name: 'NPCs on this map' }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole('heading', { name: 'Monsters on this map' }),
+  ).toHaveCount(0);
 });

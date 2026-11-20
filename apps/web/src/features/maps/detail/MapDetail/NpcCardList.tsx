@@ -1,4 +1,4 @@
-import { Stack, Text } from '@mantine/core';
+import { Stack } from '@mantine/core';
 import type { ReactElement } from 'react';
 
 import { DetailCardList } from '@/features/detail';
@@ -13,7 +13,6 @@ export function NpcCardList({
 }): ReactElement {
   return (
     <Stack gap="md">
-      {npcs.notice === undefined ? null : <Text>{npcs.notice}</Text>}
       <DetailCardList
         items={npcs.npcs}
         getKey={(npc) => npc.key}

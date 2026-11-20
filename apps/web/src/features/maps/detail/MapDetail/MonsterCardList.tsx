@@ -41,30 +41,33 @@ export function MonsterCardList({
   );
   return (
     <Stack gap="md">
-      {monsters.notice === undefined ? null : <Text>{monsters.notice}</Text>}
-      {monsters.summary === undefined ? null : <Text>{monsters.summary}</Text>}
-      {hasSort ? (
-        <div className={classes['sort']}>
-          <Select
-            aria-label="Sort monsters"
-            value={sort}
-            data={monsterSortOptions.map(({ label, value }) => ({
-              label,
-              value,
-            }))}
-            onChange={(value) => {
-              if (value !== null) setSort(value);
-            }}
-          />
-        </div>
-      ) : null}
+      {monsters.summary === undefined && !hasSort ? null : (
+        <Group gap="sm" align="center" wrap="wrap">
+          {monsters.summary === undefined ? null : (
+            <Text>{monsters.summary}</Text>
+          )}
+          {hasSort ? (
+            <Select
+              aria-label="Sort monsters"
+              value={sort}
+              data={monsterSortOptions.map(({ label, value }) => ({
+                label,
+                value,
+              }))}
+              onChange={(value) => {
+                if (value !== null) setSort(value);
+              }}
+            />
+          ) : null}
+        </Group>
+      )}
       <DetailCardList
         items={sortedMonsters}
         getKey={(monster) => monster.key}
         density={MONSTER_RECORD_CARD_DENSITY}
         itemTestId="map-monster-card"
         renderItem={(monster) => (
-          <MonsterRecordCard monster={monster}>
+          <MonsterRecordCard monster={monster} linkScope="header">
             <Group gap="xs" wrap="wrap">
               {monster.canLocate ? (
                 <Tooltip
