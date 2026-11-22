@@ -258,8 +258,11 @@
   width: 100%;
 }
 
+/* Explore sizes the stage to the viewport instead of the inline frame bounds. */
 .stagePanel[data-expanded='true'] .expandedStage {
   height: clamp(220px, min(50vh, 600px), 600px);
+  min-height: 0;
+  max-height: none;
 }
 
 .mapStage {
