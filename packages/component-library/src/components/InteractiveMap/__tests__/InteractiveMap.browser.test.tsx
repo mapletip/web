@@ -489,7 +489,7 @@ async function mountSelectionHarness(options?: {
 
 describe('InteractiveMap pan and zoom', () => {
   it.each([
-    { shape: 'tall', imageWidth: 300, imageHeight: 900, stageHeight: 540 },
+    { shape: 'tall', imageWidth: 300, imageHeight: 900, stageHeight: 630 },
     { shape: 'wide', imageWidth: 1200, imageHeight: 200, stageHeight: 180 },
   ])(
     'bounds a $shape image and centers it on init and Fit',
@@ -670,7 +670,7 @@ describe('InteractiveMap pan and zoom', () => {
       '[role="group"][aria-label="Zoom test image"]',
     )!;
 
-    expect(stage.getBoundingClientRect().height).toBeCloseTo(844 * 0.6, 0);
+    expect(stage.getBoundingClientRect().height).toBeCloseTo(844 * 0.7, 0);
   });
 
   it('fills the tablet frame with a wide image and caps a tall one by the viewport', async () => {
@@ -691,7 +691,7 @@ describe('InteractiveMap pan and zoom', () => {
       '[role="group"][aria-label="Zoom test image"]',
     )!;
 
-    expect(tallStage.getBoundingClientRect().height).toBe(540);
+    expect(tallStage.getBoundingClientRect().height).toBe(630);
   });
 
   it('lets adjacent marker visuals receive pointer clicks and keyboard focus', async () => {
