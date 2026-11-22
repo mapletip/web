@@ -167,7 +167,7 @@ const visualCases: readonly InteractiveMapVisualCase[] = [
     storyId: 'components-interactivemap--gestures-when-zoomed',
     testId: 'interactive-map-gestures-zoomed',
     width: 720,
-    height: 400,
+    height: 600,
     element: page.getByTestId('interactive-map-gestures-zoomed'),
     imageAlt: 'Synthetic wide image',
     visible: [wideImage, ...wideMarkers],
