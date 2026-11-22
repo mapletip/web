@@ -492,11 +492,11 @@ async function mountSelectionHarness(options?: {
 
 describe('InteractiveMap pan and zoom', () => {
   it.each([
-    { shape: 'tall', imageWidth: 300, imageHeight: 900 },
-    { shape: 'wide', imageWidth: 1200, imageHeight: 200 },
+    { shape: 'tall', imageWidth: 300, imageHeight: 900, stageHeight: 540 },
+    { shape: 'wide', imageWidth: 1200, imageHeight: 200, stageHeight: 180 },
   ])(
     'bounds a $shape image and centers it on init and Fit',
-    async ({ imageWidth, imageHeight }) => {
+    async ({ imageWidth, imageHeight, stageHeight }) => {
       await commands.emulateMedia({ reducedMotion: 'no-preference' });
       await page.viewport(1440, 900);
       const onViewChange =
@@ -513,7 +513,7 @@ describe('InteractiveMap pan and zoom', () => {
       const stageRect = stage.getBoundingClientRect();
       const imageRect = stage.querySelector('img')!.getBoundingClientRect();
 
-      expect(stageRect.height).toBe(400);
+      expect(stageRect.height).toBe(stageHeight);
       expect(imageRect.left).toBeGreaterThanOrEqual(stageRect.left);
       expect(imageRect.right).toBeLessThanOrEqual(stageRect.right);
       expect(imageRect.top).toBeGreaterThanOrEqual(stageRect.top);
@@ -633,7 +633,21 @@ describe('InteractiveMap pan and zoom', () => {
     expect(imageRects[0]!.height).toBeCloseTo(imageRects[1]!.height, 0);
   });
 
-  it('keeps the phone frame bounded for a wide image', async () => {
+  it('fits the phone frame to an image that is wider than the frame bounds', async () => {
+    await page.viewport(390, 844);
+    const container = await mountInteractiveStage({ width: 390 });
+    const stage = container.querySelector<HTMLElement>(
+      '[role="group"][aria-label="Zoom test image"]',
+    )!;
+    const stageRect = stage.getBoundingClientRect();
+    const imageRect = stage.querySelector('img')!.getBoundingClientRect();
+
+    expect(stageRect.height).toBeCloseTo(195, 0);
+    expect(imageRect.top).toBeCloseTo(stageRect.top, 0);
+    expect(imageRect.bottom).toBeCloseTo(stageRect.bottom, 0);
+  });
+
+  it('keeps the phone frame tall enough for controls with a very wide image', async () => {
     await page.viewport(390, 844);
     const container = await mountInteractiveStage({
       width: 390,
@@ -644,18 +658,43 @@ describe('InteractiveMap pan and zoom', () => {
       '[role="group"][aria-label="Zoom test image"]',
     )!;
 
-    expect(stage.getBoundingClientRect().height).toBe(232);
+    expect(stage.getBoundingClientRect().height).toBe(180);
     expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(390);
   });
 
-  it('uses the tablet frame height at the tablet breakpoint', async () => {
-    await page.viewport(800, 900);
-    const container = await mountInteractiveStage({ width: 800 });
+  it('caps the phone frame height for a tall image by the viewport', async () => {
+    await page.viewport(390, 844);
+    const container = await mountInteractiveStage({
+      width: 390,
+      imageWidth: 300,
+      imageHeight: 900,
+    });
     const stage = container.querySelector<HTMLElement>(
       '[role="group"][aria-label="Zoom test image"]',
     )!;
 
-    expect(stage.getBoundingClientRect().height).toBe(360);
+    expect(stage.getBoundingClientRect().height).toBeCloseTo(844 * 0.6, 0);
+  });
+
+  it('fills the tablet frame with a wide image and caps a tall one by the viewport', async () => {
+    await page.viewport(800, 900);
+    const wide = await mountInteractiveStage({ width: 800 });
+    const wideStage = wide.querySelector<HTMLElement>(
+      '[role="group"][aria-label="Zoom test image"]',
+    )!;
+
+    expect(wideStage.getBoundingClientRect().height).toBe(400);
+
+    const tall = await mountInteractiveStage({
+      width: 800,
+      imageWidth: 300,
+      imageHeight: 900,
+    });
+    const tallStage = tall.querySelector<HTMLElement>(
+      '[role="group"][aria-label="Zoom test image"]',
+    )!;
+
+    expect(tallStage.getBoundingClientRect().height).toBe(540);
   });
 
   it('lets adjacent marker visuals receive pointer clicks and keyboard focus', async () => {

@@ -7,7 +7,12 @@
   box-sizing: border-box;
   position: relative;
   width: 100%;
-  height: 232px;
+  /* Follow the image's shape so it fills the frame. Only images taller than
+     60% of the viewport letterbox at the sides, and very wide ones keep room
+     for the overlay controls. */
+  aspect-ratio: var(--interactive-map-image-aspect-ratio);
+  min-height: 180px;
+  max-height: min(60vh, 560px);
   overflow: hidden;
   isolation: isolate;
   border-radius: var(--mantine-radius-md);
@@ -17,6 +22,7 @@
 
 .stage[data-unavailable='true'] {
   height: 160px;
+  min-height: 0;
 }
 
 .viewport {
@@ -207,18 +213,6 @@
   text-align: center;
   text-wrap: balance;
   color: var(--mapletip-color-muted);
-}
-
-@media (min-width: 48em) {
-  .stage {
-    height: 360px;
-  }
-}
-
-@media (min-width: 62em) {
-  .stage {
-    height: 400px;
-  }
 }
 
 @media (forced-colors: active) {

@@ -50,9 +50,17 @@ export interface FixtureRelease {
   };
   readonly builds: ReadonlyMap<string, FixtureBuildArtifacts>;
   readonly spriteIds: ReadonlyMap<string, string>;
-  readonly minimapIds: ReadonlySet<string>;
+  /** Minimap and stage content ids with the pixel size each one is drawn at. */
+  readonly minimapSizes: ReadonlyMap<string, FixtureImageSize>;
   readonly markIds: ReadonlySet<string>;
 }
+
+export interface FixtureImageSize {
+  readonly width: number;
+  readonly height: number;
+}
+
+const DEFAULT_MINIMAP_SIZE: FixtureImageSize = { width: 160, height: 96 };
 
 type RangeDescriptor = {
   readonly count: number;
@@ -732,7 +740,7 @@ interface BuildMapProductOptions {
   readonly monsters: ReadonlyMap<string, MonsterCatalogV2_5['records'][number]>;
   readonly key: (prefix: string, id: string) => Promise<string>;
   readonly put: (dir: string, value: unknown) => Promise<FileDescriptor>;
-  readonly minimapIds: Set<string>;
+  readonly minimapSizes: Map<string, FixtureImageSize>;
   readonly markIds: Set<string>;
 }
 
@@ -745,7 +753,7 @@ interface BuiltMapProduct {
 async function buildMapProduct(
   options: BuildMapProductOptions,
 ): Promise<BuiltMapProduct> {
-  const { build, scope, maps, monsters, key, put, minimapIds, markIds } =
+  const { build, scope, maps, monsters, key, put, minimapSizes, markIds } =
     options;
   const mapPages = [
     ...(await projectMapPages({ build, scope, maps, monsters, key })),
@@ -764,7 +772,8 @@ async function buildMapProduct(
   } satisfies MapPagePackV1_1);
   for (const page of mapPages) {
     if (page.stage.state === 'known') {
-      minimapIds.add(page.stage.value.contentId);
+      const { contentId, width, height } = page.stage.value;
+      minimapSizes.set(contentId, { width, height });
     }
     if (page.markImage.state === 'known') markIds.add(page.markImage.value);
   }
@@ -844,7 +853,7 @@ export async function buildRelease(fixtureWorld: {
   const files = new Map<string, Uint8Array>();
   const builds = new Map<string, FixtureBuildArtifacts>();
   const spriteIds = new Map<string, string>();
-  const minimapIds = new Set<string>();
+  const minimapSizes = new Map<string, FixtureImageSize>();
   const markIds = new Set<string>();
 
   async function put(dir: string, value: unknown): Promise<FileDescriptor> {
@@ -912,7 +921,7 @@ export async function buildRelease(fixtureWorld: {
       if (spriteId !== undefined) spriteIds.set(spriteId, monster.sprite);
       for (const location of monster.locations ?? []) {
         if (location.minimapContentId !== undefined) {
-          minimapIds.add(location.minimapContentId);
+          minimapSizes.set(location.minimapContentId, DEFAULT_MINIMAP_SIZE);
         }
       }
     }
@@ -1068,7 +1077,7 @@ export async function buildRelease(fixtureWorld: {
       ),
       key,
       put,
-      minimapIds,
+      minimapSizes,
       markIds,
     });
     const capabilities = [
@@ -1175,7 +1184,7 @@ export async function buildRelease(fixtureWorld: {
     pin: { format: 'mapletip.local-release-pin', releaseId, ...manifest },
     builds,
     spriteIds,
-    minimapIds,
+    minimapSizes,
     markIds,
   };
 }
