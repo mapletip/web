@@ -8,11 +8,11 @@
   position: relative;
   width: 100%;
   /* Follow the image's shape so it fills the frame. Only images taller than
-     60% of the viewport letterbox at the sides, and very wide ones keep room
+     70% of the viewport letterbox at the sides, and very wide ones keep room
      for the overlay controls. */
   aspect-ratio: var(--interactive-map-image-aspect-ratio);
   min-height: 180px;
-  max-height: min(60vh, 560px);
+  max-height: min(70vh, 640px);
   overflow: hidden;
   isolation: isolate;
   border-radius: var(--mantine-radius-md);
