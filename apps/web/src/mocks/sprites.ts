@@ -18,14 +18,11 @@ const spriteFills: Readonly<Record<SpriteCase, string>> = {
 
 /** Return an invented flat SVG for a fixture content id, or a 404 case. */
 export function spriteResponse(contentId: string): SpriteResponse {
-  const minimapSize = fixtureRelease.minimapSizes.get(contentId);
-  if (minimapSize !== undefined) {
-    // Draw at the published size, as a real release does, so the image's
-    // shape matches the width and height the page record declares.
+  if (fixtureRelease.minimapIds.has(contentId)) {
     return {
       status: 200,
       contentType: 'image/svg+xml',
-      body: `<svg xmlns="http://www.w3.org/2000/svg" width="${minimapSize.width}" height="${minimapSize.height}" viewBox="0 0 160 96" preserveAspectRatio="xMidYMid slice"><rect width="160" height="96" rx="6" fill="#253b3b"/><path d="M14 75 42 55l22 8 25-34 22 10 35-22" fill="none" stroke="#8cae9a" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/><circle cx="42" cy="55" r="5" fill="#dfb86a"/></svg>`,
+      body: '<svg xmlns="http://www.w3.org/2000/svg" width="160" height="96" viewBox="0 0 160 96"><rect width="160" height="96" rx="6" fill="#253b3b"/><path d="M14 75 42 55l22 8 25-34 22 10 35-22" fill="none" stroke="#8cae9a" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/><circle cx="42" cy="55" r="5" fill="#dfb86a"/></svg>',
     };
   }
   if (fixtureRelease.markIds.has(contentId)) {
