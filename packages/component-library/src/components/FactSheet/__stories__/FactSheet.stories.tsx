@@ -151,3 +151,18 @@ export const Narrow: Story = {
     </Stage>
   ),
 };
+
+export const SingleColumnRail: Story = {
+  render: () => (
+    <Stage>
+      <Box
+        data-testid="fact-sheet-single-column-rail"
+        w={240}
+        p="sm"
+        bg="var(--mapletip-color-canvas)"
+      >
+        <FactSheet facts={twelveFacts} columns={1} />
+      </Box>
+    </Stage>
+  ),
+};
