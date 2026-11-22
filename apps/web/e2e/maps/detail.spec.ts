@@ -12,6 +12,7 @@ interface RenderedStageView {
   readonly imageCenterX: number;
   readonly imageCenterY: number;
   readonly imageWidth: number;
+  readonly imageFitsStageOnAxis: boolean;
 }
 
 async function renderedStageView(
@@ -34,6 +35,9 @@ async function renderedStageView(
       ).toFixed(3),
     ),
     imageWidth: Math.round(imageBox.width),
+    imageFitsStageOnAxis:
+      Math.abs(stageBox.width - imageBox.width) <= 1 ||
+      Math.abs(stageBox.height - imageBox.height) <= 1,
   };
 }
 
@@ -864,14 +868,13 @@ test('a copied focused address opens fitted with only its selection restored', a
     )
     .toBe(true);
   await expect
-    .poll(async () => {
-      const stageBox = await copiedStage.boundingBox();
-      const imageBox = await copiedImage.boundingBox();
-      return stageBox === null || imageBox === null
-        ? null
-        : Math.round(stageBox.width - imageBox.width);
-    })
-    .toBe(0);
+    .poll(() => renderedStageView(copiedStage))
+    .toMatchObject({
+      scale: 1,
+      imageCenterX: 0.5,
+      imageCenterY: 0.5,
+      imageFitsStageOnAxis: true,
+    });
   await copiedPage.close();
 });
 

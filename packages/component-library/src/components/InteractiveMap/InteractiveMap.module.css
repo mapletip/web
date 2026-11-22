@@ -4,11 +4,24 @@
   --interactive-map-connector-color: #f08c46;
   --interactive-map-marker-size: clamp(18px, 5cqi, 44px);
 
+  box-sizing: border-box;
   position: relative;
   width: 100%;
+  /* Follow the image's shape so it fills the frame. Only images taller than
+     70% of the viewport letterbox at the sides, and very wide ones keep room
+     for the overlay controls. */
+  aspect-ratio: var(--interactive-map-image-aspect-ratio);
+  min-height: 180px;
+  max-height: min(70vh, 640px);
   overflow: hidden;
   isolation: isolate;
+  background: var(--mapletip-color-panel);
   container-type: size;
+}
+
+.stage[data-unavailable='true'] {
+  height: 160px;
+  min-height: 0;
 }
 
 .viewport {
@@ -71,8 +84,11 @@
 
 .markerContent {
   display: flex;
+  min-width: 16px;
+  min-height: 16px;
   align-items: center;
   justify-content: center;
+  pointer-events: auto;
 }
 
 .marker:has(.markerButton[data-selected='true']),
@@ -94,6 +110,7 @@
 .markerButton {
   position: relative;
   border: 0;
+  pointer-events: none;
   transform: translate(-50%, -50%);
   background: transparent;
   color: inherit;

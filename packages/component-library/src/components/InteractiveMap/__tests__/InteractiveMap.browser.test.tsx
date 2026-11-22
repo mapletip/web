@@ -178,7 +178,9 @@ describe('InteractiveMap image layout', () => {
     const stage = page
       .getByRole('group', { name: 'Image unavailable.' })
       .element();
-    expect(stage.style.aspectRatio).toBe('400 / 100');
+    expect(stage.style.aspectRatio).toBe('');
+    expect(stage).toHaveAttribute('data-unavailable', 'true');
+    expect(getComputedStyle(stage).height).toBe('160px');
     expect(
       stage.style.getPropertyValue('--interactive-map-image-aspect-ratio'),
     ).toBe('4');
@@ -302,6 +304,21 @@ function markerContent() {
   );
 }
 
+function smallMarkerDotContent() {
+  return (
+    <span
+      aria-hidden="true"
+      style={{
+        display: 'block',
+        width: 10,
+        height: 10,
+        borderRadius: '50%',
+        background: '#d44',
+      }}
+    />
+  );
+}
+
 async function mountInteractiveStage(options?: {
   readonly wheelZoom?: boolean;
   readonly belowContent?: ReactNode;
@@ -309,8 +326,11 @@ async function mountInteractiveStage(options?: {
   readonly zoomOutLabel?: string;
   readonly fitLabel?: string;
   readonly width?: number;
+  readonly imageWidth?: number;
+  readonly imageHeight?: number;
   readonly view?: InteractiveMapView;
   readonly onViewChange?: (view: InteractiveMapView | undefined) => void;
+  readonly onActivate?: (markerIds: readonly string[]) => void;
   readonly selectedIds?: readonly string[];
   readonly markers?: readonly InteractiveMapMarker[];
   readonly interactive?: boolean;
@@ -330,8 +350,8 @@ async function mountInteractiveStage(options?: {
         <InteractiveMap
           image={{
             src: image,
-            width: 400,
-            height: 200,
+            width: options?.imageWidth ?? 400,
+            height: options?.imageHeight ?? 200,
             alt: 'Zoom test image',
           }}
           markers={
@@ -353,6 +373,9 @@ async function mountInteractiveStage(options?: {
             ]
           }
           selectedIds={options?.selectedIds ?? ['west']}
+          {...(options?.onActivate === undefined
+            ? {}
+            : { onActivate: options.onActivate })}
           connectors={[{ id: 'route', from: 'west', to: 'east' }]}
           interactive={options?.interactive ?? true}
           wheelZoom={options?.wheelZoom ?? false}
@@ -370,6 +393,24 @@ async function mountInteractiveStage(options?: {
     </MantineProvider>,
   );
   return result.container;
+}
+
+function expectImageCenteredInStage(container: HTMLElement): void {
+  const stage = container.querySelector<HTMLElement>(
+    '[role="group"][aria-label="Zoom test image"]',
+  )!;
+  const imageElement = stage.querySelector<HTMLImageElement>('img')!;
+  const stageRect = stage.getBoundingClientRect();
+  const imageRect = imageElement.getBoundingClientRect();
+
+  expect(imageRect.left + imageRect.width / 2).toBeCloseTo(
+    stageRect.left + stageRect.width / 2,
+    0,
+  );
+  expect(imageRect.top + imageRect.height / 2).toBeCloseTo(
+    stageRect.top + stageRect.height / 2,
+    0,
+  );
 }
 
 function expectMarkerAtImagePixel(container: HTMLElement): void {
@@ -447,6 +488,257 @@ async function mountSelectionHarness(options?: {
 }
 
 describe('InteractiveMap pan and zoom', () => {
+  it.each([
+    { shape: 'tall', imageWidth: 300, imageHeight: 900, stageHeight: 630 },
+    { shape: 'wide', imageWidth: 1200, imageHeight: 200, stageHeight: 180 },
+  ])(
+    'bounds a $shape image and centers it on init and Fit',
+    async ({ imageWidth, imageHeight, stageHeight }) => {
+      await commands.emulateMedia({ reducedMotion: 'no-preference' });
+      await page.viewport(1440, 900);
+      const onViewChange =
+        vi.fn<(view: InteractiveMapView | undefined) => void>();
+      const container = await mountInteractiveStage({
+        width: 1000,
+        imageWidth,
+        imageHeight,
+        onViewChange,
+      });
+      const stage = container.querySelector<HTMLElement>(
+        '[role="group"][aria-label="Zoom test image"]',
+      )!;
+      const stageRect = stage.getBoundingClientRect();
+      const imageRect = stage.querySelector('img')!.getBoundingClientRect();
+
+      expect(stageRect.height).toBe(stageHeight);
+      expect(imageRect.left).toBeGreaterThanOrEqual(stageRect.left);
+      expect(imageRect.right).toBeLessThanOrEqual(stageRect.right);
+      expect(imageRect.top).toBeGreaterThanOrEqual(stageRect.top);
+      expect(imageRect.bottom).toBeLessThanOrEqual(stageRect.bottom);
+      expectImageCenteredInStage(container);
+
+      const nativeRequestAnimationFrame =
+        window.requestAnimationFrame.bind(window);
+      const nativeCancelAnimationFrame =
+        window.cancelAnimationFrame.bind(window);
+      const suspendedFrames = new Map<number, FrameRequestCallback>();
+      let nextFrameId = 0;
+
+      try {
+        await userEvent.click(page.getByRole('button', { name: 'Zoom in' }));
+        await new Promise<void>((resolve) =>
+          nativeRequestAnimationFrame(() => resolve()),
+        );
+        expect(zoomScale(container)).toBeGreaterThan(1);
+        expect(zoomScale(container)).toBeLessThan(Math.SQRT2);
+
+        window.requestAnimationFrame = (callback) => {
+          const id = ++nextFrameId;
+          suspendedFrames.set(id, callback);
+          return id;
+        };
+        window.cancelAnimationFrame = (id) => {
+          suspendedFrames.delete(id);
+        };
+        await new Promise<void>((resolve) =>
+          nativeRequestAnimationFrame(() => resolve()),
+        );
+        expect(zoomScale(container)).toBeGreaterThan(1);
+        expect(zoomScale(container)).toBeLessThan(Math.SQRT2);
+        const fitButton = container.querySelector<HTMLButtonElement>(
+          'button[aria-label="Fit"]',
+        );
+        if (fitButton === null) throw new Error('Fit control is missing');
+        fitButton.click();
+
+        await new Promise<void>((resolve) => window.setTimeout(resolve, 250));
+        for (const callback of suspendedFrames.values()) {
+          callback(performance.now());
+        }
+        suspendedFrames.clear();
+
+        await expect.poll(() => zoomScale(container)).toBe(1);
+        await expect
+          .poll(() => onViewChange.mock.calls.at(-1)?.[0])
+          .toBeUndefined();
+      } finally {
+        window.requestAnimationFrame = nativeRequestAnimationFrame;
+        window.cancelAnimationFrame = nativeCancelAnimationFrame;
+      }
+      expectImageCenteredInStage(container);
+    },
+  );
+
+  it('centers static and hydrated images the same way with letterboxing', async () => {
+    await page.viewport(1440, 900);
+    await render(
+      <MantineProvider
+        theme={theme}
+        cssVariablesResolver={cssVariablesResolver}
+        forceColorScheme="dark"
+      >
+        {[false, true].map((interactive) => (
+          <div
+            key={String(interactive)}
+            data-position-mode={interactive ? 'interactive' : 'static'}
+            style={{ width: 600 }}
+          >
+            <InteractiveMap
+              image={{
+                src: image,
+                width: 200,
+                height: 400,
+                alt: 'Letterboxed image',
+              }}
+              markers={[
+                {
+                  id: 'center',
+                  x: 100,
+                  y: 200,
+                  label: 'Image center',
+                  content: markerContent(),
+                },
+              ]}
+              interactive={interactive}
+              unavailableMessage="Image unavailable."
+            />
+          </div>
+        ))}
+      </MantineProvider>,
+    );
+
+    const imageRects = ['static', 'interactive'].map((mode) => {
+      const stage = document.querySelector<HTMLElement>(
+        `[data-position-mode="${mode}"] [role="group"]`,
+      )!;
+      const stageRect = stage.getBoundingClientRect();
+      const imageRect = stage.querySelector('img')!.getBoundingClientRect();
+
+      expect(imageRect.left + imageRect.width / 2).toBeCloseTo(
+        stageRect.left + stageRect.width / 2,
+        0,
+      );
+      expect(imageRect.top + imageRect.height / 2).toBeCloseTo(
+        stageRect.top + stageRect.height / 2,
+        0,
+      );
+
+      return imageRect;
+    });
+
+    expect(imageRects[0]!.width).toBeCloseTo(imageRects[1]!.width, 0);
+    expect(imageRects[0]!.height).toBeCloseTo(imageRects[1]!.height, 0);
+  });
+
+  it('fits the phone frame to an image that is wider than the frame bounds', async () => {
+    await page.viewport(390, 844);
+    const container = await mountInteractiveStage({ width: 390 });
+    const stage = container.querySelector<HTMLElement>(
+      '[role="group"][aria-label="Zoom test image"]',
+    )!;
+    const stageRect = stage.getBoundingClientRect();
+    const imageRect = stage.querySelector('img')!.getBoundingClientRect();
+
+    expect(stageRect.height).toBeCloseTo(195, 0);
+    expect(imageRect.top).toBeCloseTo(stageRect.top, 0);
+    expect(imageRect.bottom).toBeCloseTo(stageRect.bottom, 0);
+  });
+
+  it('keeps the phone frame tall enough for controls with a very wide image', async () => {
+    await page.viewport(390, 844);
+    const container = await mountInteractiveStage({
+      width: 390,
+      imageWidth: 1200,
+      imageHeight: 200,
+    });
+    const stage = container.querySelector<HTMLElement>(
+      '[role="group"][aria-label="Zoom test image"]',
+    )!;
+
+    expect(stage.getBoundingClientRect().height).toBe(180);
+    expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(390);
+  });
+
+  it('caps the phone frame height for a tall image by the viewport', async () => {
+    await page.viewport(390, 844);
+    const container = await mountInteractiveStage({
+      width: 390,
+      imageWidth: 300,
+      imageHeight: 900,
+    });
+    const stage = container.querySelector<HTMLElement>(
+      '[role="group"][aria-label="Zoom test image"]',
+    )!;
+
+    expect(stage.getBoundingClientRect().height).toBeCloseTo(844 * 0.7, 0);
+  });
+
+  it('fills the tablet frame with a wide image and caps a tall one by the viewport', async () => {
+    await page.viewport(800, 900);
+    const wide = await mountInteractiveStage({ width: 800 });
+    const wideStage = wide.querySelector<HTMLElement>(
+      '[role="group"][aria-label="Zoom test image"]',
+    )!;
+
+    expect(wideStage.getBoundingClientRect().height).toBe(400);
+
+    const tall = await mountInteractiveStage({
+      width: 800,
+      imageWidth: 300,
+      imageHeight: 900,
+    });
+    const tallStage = tall.querySelector<HTMLElement>(
+      '[role="group"][aria-label="Zoom test image"]',
+    )!;
+
+    expect(tallStage.getBoundingClientRect().height).toBe(630);
+  });
+
+  it('lets adjacent marker visuals receive pointer clicks and keyboard focus', async () => {
+    const onActivate = vi.fn<(markerIds: readonly string[]) => void>();
+    await mountInteractiveStage({
+      width: 400,
+      onActivate,
+      selectedIds: [],
+      markers: [
+        {
+          id: 'first',
+          x: 180,
+          y: 100,
+          label: 'First nearby point',
+          content: smallMarkerDotContent(),
+        },
+        {
+          id: 'second',
+          x: 216,
+          y: 100,
+          label: 'Second nearby point',
+          content: smallMarkerDotContent(),
+        },
+      ],
+    });
+    const first = page.getByRole('button', { name: 'First nearby point' });
+    const second = page.getByRole('button', { name: 'Second nearby point' });
+    const firstRect = first.element().getBoundingClientRect();
+    const secondRect = second.element().getBoundingClientRect();
+    const firstContentRect = first
+      .element()
+      .firstElementChild!.getBoundingClientRect();
+
+    expect(firstRect.width).toBe(44);
+    expect(firstContentRect.width).toBe(16);
+    expect(firstRect.right).toBeGreaterThan(secondRect.left);
+
+    await userEvent.tab();
+    await expect.element(first).toHaveFocus();
+    await userEvent.tab();
+    await expect.element(second).toHaveFocus();
+
+    await userEvent.click(first);
+    await userEvent.click(second);
+    expect(onActivate.mock.calls).toEqual([[['first']], [['second']]]);
+  });
+
   it('keeps marker centers on image pixels when the stage has a different aspect ratio', async () => {
     await commands.emulateMedia({ reducedMotion: 'reduce' });
     const container = await mountInteractiveStage();
@@ -970,11 +1262,11 @@ describe('InteractiveMap pan and zoom', () => {
     expect(onViewChange.mock.calls[0]?.[0]?.zoom).toBeGreaterThan(1);
   });
 
-  it('reports zoom-in, zoom-out and Fit once each', async () => {
+  it('reports the final view after zoom-in, zoom-out and Fit', async () => {
     await commands.emulateMedia({ reducedMotion: 'reduce' });
     const onViewChange =
       vi.fn<(view: InteractiveMapView | undefined) => void>();
-    await mountInteractiveStage({ onViewChange });
+    const container = await mountInteractiveStage({ onViewChange });
 
     await userEvent.click(page.getByRole('button', { name: 'Zoom in' }));
     await expect.poll(() => onViewChange.mock.calls.length).toBe(1);
@@ -984,8 +1276,11 @@ describe('InteractiveMap pan and zoom', () => {
     await expect.poll(() => onViewChange.mock.calls.length).toBe(2);
 
     await userEvent.click(page.getByRole('button', { name: 'Fit' }));
-    await expect.poll(() => onViewChange.mock.calls.length).toBe(3);
-    expect(onViewChange.mock.calls[2]?.[0]).toBeUndefined();
+    await expect
+      .poll(() => onViewChange.mock.calls.at(-1)?.[0])
+      .toBeUndefined();
+    await expect.poll(() => zoomScale(container)).toBeCloseTo(1);
+    expectImageCenteredInStage(container);
   });
 
   it('does not report a view after a plain click', async () => {
