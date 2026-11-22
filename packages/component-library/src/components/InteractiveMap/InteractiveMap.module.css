@@ -210,15 +210,11 @@
   color: var(--mapletip-color-muted);
 }
 
+/* Above phone widths, cap by the viewport so ordinary wide maps fill the frame
+   and only maps taller than the screen allows letterbox at the sides. */
 @media (min-width: 48em) {
   .stage {
-    max-height: 360px;
-  }
-}
-
-@media (min-width: 62em) {
-  .stage {
-    max-height: 400px;
+    max-height: min(60vh, 560px);
   }
 }
 

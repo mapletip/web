@@ -489,7 +489,7 @@ async function mountSelectionHarness(options?: {
 
 describe('InteractiveMap pan and zoom', () => {
   it.each([
-    { shape: 'tall', imageWidth: 300, imageHeight: 900, stageHeight: 400 },
+    { shape: 'tall', imageWidth: 300, imageHeight: 900, stageHeight: 540 },
     { shape: 'wide', imageWidth: 1200, imageHeight: 200, stageHeight: 180 },
   ])(
     'bounds a $shape image and centers it on init and Fit',
@@ -673,14 +673,25 @@ describe('InteractiveMap pan and zoom', () => {
     expect(stage.getBoundingClientRect().height).toBe(232);
   });
 
-  it('uses the tablet frame height at the tablet breakpoint', async () => {
+  it('fills the tablet frame with a wide image and caps a tall one by the viewport', async () => {
     await page.viewport(800, 900);
-    const container = await mountInteractiveStage({ width: 800 });
-    const stage = container.querySelector<HTMLElement>(
+    const wide = await mountInteractiveStage({ width: 800 });
+    const wideStage = wide.querySelector<HTMLElement>(
       '[role="group"][aria-label="Zoom test image"]',
     )!;
 
-    expect(stage.getBoundingClientRect().height).toBe(360);
+    expect(wideStage.getBoundingClientRect().height).toBe(400);
+
+    const tall = await mountInteractiveStage({
+      width: 800,
+      imageWidth: 300,
+      imageHeight: 900,
+    });
+    const tallStage = tall.querySelector<HTMLElement>(
+      '[role="group"][aria-label="Zoom test image"]',
+    )!;
+
+    expect(tallStage.getBoundingClientRect().height).toBe(540);
   });
 
   it('lets adjacent marker visuals receive pointer clicks and keyboard focus', async () => {
