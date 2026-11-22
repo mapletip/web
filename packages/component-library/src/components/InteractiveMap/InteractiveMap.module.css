@@ -7,7 +7,11 @@
   box-sizing: border-box;
   position: relative;
   width: 100%;
-  height: 232px;
+  /* Follow the image's shape within the frame bounds: tall images stop at the
+     max height, and very wide ones keep room for the overlay controls. */
+  aspect-ratio: var(--interactive-map-image-aspect-ratio);
+  min-height: 180px;
+  max-height: 232px;
   overflow: hidden;
   isolation: isolate;
   border-radius: var(--mantine-radius-md);
@@ -17,6 +21,7 @@
 
 .stage[data-unavailable='true'] {
   height: 160px;
+  min-height: 0;
 }
 
 .viewport {
@@ -207,13 +212,13 @@
 
 @media (min-width: 48em) {
   .stage {
-    height: 360px;
+    max-height: 360px;
   }
 }
 
 @media (min-width: 62em) {
   .stage {
-    height: 400px;
+    max-height: 400px;
   }
 }
 
