@@ -7,11 +7,12 @@
   box-sizing: border-box;
   position: relative;
   width: 100%;
-  /* Follow the image's shape within the frame bounds: tall images stop at the
-     max height, and very wide ones keep room for the overlay controls. */
+  /* Follow the image's shape so it fills the frame. Only images taller than
+     60% of the viewport letterbox at the sides, and very wide ones keep room
+     for the overlay controls. */
   aspect-ratio: var(--interactive-map-image-aspect-ratio);
   min-height: 180px;
-  max-height: 232px;
+  max-height: min(60vh, 560px);
   overflow: hidden;
   isolation: isolate;
   border-radius: var(--mantine-radius-md);
@@ -208,14 +209,6 @@
   text-align: center;
   text-wrap: balance;
   color: var(--mapletip-color-muted);
-}
-
-/* Above phone widths, cap by the viewport so ordinary wide maps fill the frame
-   and only maps taller than the screen allows letterbox at the sides. */
-@media (min-width: 48em) {
-  .stage {
-    max-height: min(60vh, 560px);
-  }
 }
 
 @media (forced-colors: active) {

@@ -659,7 +659,7 @@ describe('InteractiveMap pan and zoom', () => {
     expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(390);
   });
 
-  it('caps the phone frame height for a tall image', async () => {
+  it('caps the phone frame height for a tall image by the viewport', async () => {
     await page.viewport(390, 844);
     const container = await mountInteractiveStage({
       width: 390,
@@ -670,7 +670,7 @@ describe('InteractiveMap pan and zoom', () => {
       '[role="group"][aria-label="Zoom test image"]',
     )!;
 
-    expect(stage.getBoundingClientRect().height).toBe(232);
+    expect(stage.getBoundingClientRect().height).toBeCloseTo(844 * 0.6, 0);
   });
 
   it('fills the tablet frame with a wide image and caps a tall one by the viewport', async () => {
