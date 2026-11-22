@@ -15,7 +15,6 @@
   max-height: min(70vh, 640px);
   overflow: hidden;
   isolation: isolate;
-  border-radius: var(--mantine-radius-md);
   background: var(--mapletip-color-panel);
   container-type: size;
 }
