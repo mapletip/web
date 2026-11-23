@@ -7,6 +7,7 @@ export {
   type MapRecordCardView,
 } from './MapRecordCard';
 export { MonsterDot, type MonsterDotProps } from './MonsterDot';
+export { SpriteMarker, type SpriteMarkerProps } from './SpriteMarker';
 export {
   MAP_DETAIL_ROUTE,
   mapDetailLinkProps,

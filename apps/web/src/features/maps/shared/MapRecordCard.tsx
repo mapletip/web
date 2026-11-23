@@ -1,16 +1,18 @@
-import { HoverCard, Image, Text, useMantineTheme } from '@mantine/core';
+import { Image, Modal, Popover, Text, useMantineTheme } from '@mantine/core';
 import { useMediaQuery } from '@mantine/hooks';
 import {
   RecordCard,
   StaticMap,
   type InteractiveMapMarker,
 } from '@mapletip/component-library';
-import type { ReactElement } from 'react';
+import { useState, type ReactElement } from 'react';
 
 import { recordCardLinkRenderer } from '@/components/RouterLinks';
 
 import classes from './MapRecordCard.module.css';
+import { minimapSpriteSize } from './minimapSpriteSize';
 import { MonsterDot } from './MonsterDot';
+import { SpriteMarker } from './SpriteMarker';
 
 export const MAP_RECORD_CARD_DENSITY = { base: 1, sm: 2 } as const;
 
@@ -29,6 +31,11 @@ export interface MapRecordCardView {
   readonly name: string;
   readonly secondaryLine?: string;
   readonly minimapUrl?: string;
+  readonly minimapSprite?: {
+    readonly url: string;
+    readonly width: number;
+    readonly height: number;
+  };
   readonly minimapStage?: {
     readonly width: number;
     readonly height: number;
@@ -58,13 +65,15 @@ function renderFooterParts(
   );
 }
 
-/** Map-specific card with the optional minimap hover preview. */
+/** Map-specific card with an optional enlarged minimap. */
 export function MapRecordCard({ map }: MapRecordCardProps): ReactElement {
   const theme = useMantineTheme();
-  const canHoverMinimap = useMediaQuery(
-    `(min-width: ${theme.breakpoints.sm}) and (hover: hover) and (pointer: fine)`,
+  const isDesktop = useMediaQuery(
+    `(min-width: ${theme.breakpoints.sm})`,
     false,
   );
+  const [opened, setOpened] = useState(false);
+  const minimapSprite = map.minimapSprite;
   const stage = map.minimapStage;
   const stageImage =
     map.minimapUrl !== undefined && stage !== undefined
@@ -79,16 +88,58 @@ export function MapRecordCard({ map }: MapRecordCardProps): ReactElement {
     stageImage === undefined
       ? undefined
       : { ...stageImage, alt: `${map.name} minimap enlarged` };
-  const markers: readonly InteractiveMapMarker[] =
-    stageImage === undefined || stage === undefined
-      ? []
-      : stage.spawnPoints.map(({ x, y }, index) => ({
-          id: `${index}`,
-          x,
-          y,
-          label: 'Spawn point',
-          content: <MonsterDot />,
-        }));
+  const mapSpawnPoints = ({
+    useSprite,
+  }: {
+    readonly useSprite: boolean;
+  }): readonly InteractiveMapMarker[] => {
+    if (stageImage === undefined || stage === undefined) return [];
+
+    return stage.spawnPoints.map(({ x, y }, index): InteractiveMapMarker => {
+      const marker = {
+        id: `${index}`,
+        x,
+        y,
+        label: 'Spawn point',
+      };
+      if (useSprite && minimapSprite !== undefined) {
+        return {
+          ...marker,
+          size: minimapSpriteSize(minimapSprite),
+          anchor: 'bottom',
+          content: (
+            <SpriteMarker
+              spriteUrl={minimapSprite.url}
+              visual="monster-sprite"
+              className={classes['minimapSprite']}
+            />
+          ),
+        };
+      }
+
+      return { ...marker, content: <MonsterDot /> };
+    });
+  };
+  const markers = mapSpawnPoints({ useSprite: false });
+  const expandedMarkers = mapSpawnPoints({ useSprite: true });
+
+  const expandedMap =
+    expandedStageImage === undefined ? (
+      <Image
+        src={map.minimapUrl}
+        alt={`${map.name} minimap enlarged`}
+        className={classes['expandedMinimap']}
+      />
+    ) : (
+      <StaticMap
+        className={classes['expandedStage']}
+        image={expandedStageImage}
+        markers={expandedMarkers}
+        selectedIds={expandedMarkers.map(({ id }) => id)}
+        loading="lazy"
+        unavailableMessage="Minimap unavailable"
+      />
+    );
 
   let minimap: ReactElement | undefined;
   if (map.minimapUrl !== undefined) {
@@ -130,52 +181,60 @@ export function MapRecordCard({ map }: MapRecordCardProps): ReactElement {
     );
   }
 
-  const media =
-    minimap === undefined ||
-    !canHoverMinimap ||
-    map.minimapUrl === undefined ? (
-      minimap
-    ) : (
-      <HoverCard
-        openDelay={350}
-        closeDelay={120}
+  const trigger =
+    minimap === undefined || map.minimapUrl === undefined ? null : (
+      <button
+        type="button"
+        className={classes['minimapTrigger']}
+        aria-label={`Enlarge ${map.name} minimap`}
+        onClick={() => setOpened((value) => !value)}
+      >
+        {minimap}
+      </button>
+    );
+
+  let media: ReactElement | undefined;
+  if (trigger === null) {
+    media = minimap;
+  } else if (isDesktop) {
+    media = (
+      <Popover
+        opened={opened}
+        onChange={setOpened}
         position="top"
         offset={8}
         withinPortal
+        trapFocus
+        returnFocus
         shadow="lg"
-        role="tooltip"
       >
-        <HoverCard.Target>
-          <button
-            type="button"
-            className={classes['minimapTrigger']}
-            aria-label={`Enlarge ${map.name} minimap`}
-          >
-            {minimap}
-          </button>
-        </HoverCard.Target>
-        <HoverCard.Dropdown
+        <Popover.Target>{trigger}</Popover.Target>
+        <Popover.Dropdown
           className={classes['minimapPopover']}
-          aria-label={`${map.name} full-size minimap preview`}
+          aria-labelledby=""
+          aria-label={map.name}
         >
-          {expandedStageImage === undefined ? (
-            <Image
-              src={map.minimapUrl}
-              alt={`${map.name} minimap enlarged`}
-              className={classes['expandedMinimap']}
-            />
-          ) : (
-            <StaticMap
-              className={classes['expandedStage']}
-              image={expandedStageImage}
-              markers={markers}
-              loading="lazy"
-              unavailableMessage="Minimap unavailable"
-            />
-          )}
-        </HoverCard.Dropdown>
-      </HoverCard>
+          {expandedMap}
+        </Popover.Dropdown>
+      </Popover>
     );
+  } else {
+    media = (
+      <>
+        {trigger}
+        <Modal
+          opened={opened}
+          onClose={() => setOpened(false)}
+          title={map.name}
+          size="40rem"
+          classNames={{ body: classes['minimapModalBody'] }}
+          closeButtonProps={{ 'aria-label': 'Close enlarged minimap' }}
+        >
+          {expandedMap}
+        </Modal>
+      </>
+    );
+  }
 
   const destination = map.destination;
   return (

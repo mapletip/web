@@ -15,7 +15,7 @@ import type {
   FixtureMapPoint,
   FixtureMonster,
 } from './world';
-import { world } from './world';
+import { spriteDimensions, world } from './world';
 
 const encoder = new TextEncoder();
 const ZERO = '0'.repeat(64);
@@ -383,6 +383,10 @@ function projectMonsterPage(
         },
       };
     });
+  const spriteSize =
+    monster.sprite === 'unknown' || monster.sprite === 'absent'
+      ? undefined
+      : spriteDimensions[monster.sprite];
   locationEntries.sort(
     (left, right) =>
       right.placementCount - left.placementCount ||
@@ -400,7 +404,12 @@ function projectMonsterPage(
     publicId: catalogRecord.publicId,
     slug: catalogRecord.slug,
     name: catalogRecord.name,
-    sprite: { contentId: catalogRecord.sprite },
+    sprite: {
+      contentId: catalogRecord.sprite,
+      ...(spriteSize === undefined
+        ? {}
+        : { width: spriteSize[0], height: spriteSize[1] }),
+    },
     boss: catalogRecord.traits[0],
     undead: catalogRecord.traits[1],
     hpRecovery: catalogRecord.hpRecovery,

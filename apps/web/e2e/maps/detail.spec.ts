@@ -305,7 +305,7 @@ test('Connections search filters the town fixture by connected map name', async 
   ).toBeVisible();
 });
 
-test('connection card minimaps preview and their links open from the card and footer', async ({
+test('connection card minimaps enlarge on click and their links open from the card and footer', async ({
   page,
 }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
@@ -319,14 +319,13 @@ test('connection card minimaps preview and their links open from the card and fo
   const previewTrigger = card.getByRole('button', {
     name: 'Enlarge Lantern Square minimap',
   });
-  if (await previewTrigger.isVisible()) {
-    await previewTrigger.hover();
-    await expect(
-      page.getByRole('tooltip', {
-        name: 'Lantern Square full-size minimap preview',
-      }),
-    ).toBeVisible();
-  }
+  await previewTrigger.click();
+  const preview = page.getByRole('dialog', {
+    name: 'Lantern Square',
+  });
+  await expect(preview).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(preview).toBeHidden();
   const cardLink = card.getByRole('link').first();
   await expect(cardLink).toHaveAttribute(
     'href',

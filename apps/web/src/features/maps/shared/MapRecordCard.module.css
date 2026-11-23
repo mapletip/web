@@ -20,6 +20,11 @@
   cursor: zoom-in;
 }
 
+.minimapSprite {
+  width: 100%;
+  height: 100%;
+}
+
 .minimapWell > * {
   position: absolute;
   inset: 0;
@@ -62,18 +67,47 @@
   padding: 8px;
 }
 
-.minimapPopover .expandedStage {
-  width: min(40rem, 85vw);
+/* Fit the preview in a 40rem × 28rem box (smaller on short or narrow
+   screens) so tall maps do not fill the viewport. */
+.expandedStage {
+  --map-marker-min-size: 20px;
   min-height: 0;
-  max-height: 80vh;
+  max-height: none;
+}
+
+.minimapPopover .expandedStage {
+  width: min(
+    40rem,
+    85vw,
+    calc(min(28rem, 60vh) * var(--interactive-map-image-aspect-ratio))
+  );
+}
+
+.minimapModalBody {
+  display: flex;
+  justify-content: center;
+}
+
+.minimapModalBody .expandedStage {
+  width: min(
+    100%,
+    calc(min(28rem, 60vh) * var(--interactive-map-image-aspect-ratio))
+  );
+}
+
+.minimapModalBody .expandedMinimap {
+  width: auto;
+  max-width: 100%;
+  max-height: min(28rem, 60vh);
 }
 
 .minimapFrame .locationMinimap,
-.minimapPopover .expandedStage {
+.minimapPopover .expandedStage,
+.minimapModalBody .expandedStage {
   --monster-dot-size: clamp(3px, 10cqmin, 6px);
   --monster-dot-border: 0;
   --monster-dot-shadow:
-    0 0 0 1px rgb(0 0 0 / 70%),
+    0 0 0 1px var(--mapletip-color-map-border),
     0 0 4px
       color-mix(in srgb, var(--mapletip-color-map-monster) 60%, transparent);
 }

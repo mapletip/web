@@ -8,7 +8,7 @@ async function openBossesAndUndead(monsterPage: MonsterPage): Promise<void> {
   await monsterPage.filters.checkbox('Undead', /^Yes/u).click();
 }
 
-test('desktop Monster Detail shows an enlarged minimap on hover', async ({
+test('desktop Monster Detail opens an enlarged minimap on click', async ({
   page,
   monsterPage,
 }) => {
@@ -25,10 +25,10 @@ test('desktop Monster Detail shows an enlarged minimap on hover', async ({
     name: 'Enlarge Practice Map 01 minimap',
   });
   await expect(trigger).toBeVisible();
-  await trigger.hover();
+  await trigger.click();
 
-  const preview = page.getByRole('tooltip', {
-    name: 'Practice Map 01 full-size minimap preview',
+  const preview = page.getByRole('dialog', {
+    name: 'Practice Map 01',
   });
   await expect(preview).toBeVisible();
   await expect(
@@ -36,7 +36,37 @@ test('desktop Monster Detail shows an enlarged minimap on hover', async ({
   ).toBeVisible();
   await monsterPage.captureReady();
   await expect(preview).toHaveScreenshot(
-    'desktop-monster-detail-minimap-hover.png',
+    'desktop-monster-detail-minimap-enlarged.png',
+  );
+});
+
+test('mobile Monster Detail opens an enlarged minimap on click', async ({
+  page,
+  monsterPage,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  const publicId = monsterPublicId('crowned-warden');
+  const slug = monsterSlug('Crowned Warden', publicId);
+  await monsterPage.goto(`/maplestory/monsters/${slug}-${publicId}`);
+
+  await page
+    .getByRole('textbox', { name: 'Find a map' })
+    .first()
+    .fill('Practice Map 01');
+  const trigger = page.getByRole('button', {
+    name: 'Enlarge Practice Map 01 minimap',
+  });
+  await expect(trigger).toBeVisible();
+  await trigger.click();
+
+  const preview = page.getByRole('dialog', { name: 'Practice Map 01' });
+  await expect(preview).toBeVisible();
+  await expect(
+    preview.getByRole('img', { name: 'Practice Map 01 minimap enlarged' }),
+  ).toBeVisible();
+  await monsterPage.captureReady();
+  await expect(preview).toHaveScreenshot(
+    'mobile-monster-detail-minimap-enlarged.png',
   );
 });
 

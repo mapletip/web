@@ -1138,7 +1138,7 @@ describe('MapDetail information', () => {
     expect(screen.queryByTestId('map-connection-card')).not.toBeInTheDocument();
   });
 
-  it('opens a linked Connection card minimap preview on hover', async () => {
+  it('opens a linked Connection card minimap preview on click', async () => {
     const user = userEvent.setup();
     renderDetail({ mapId: 'lantern-square' });
 
@@ -1152,11 +1152,11 @@ describe('MapDetail information', () => {
       within(card).getByRole('link', { name: 'Practice Grove' }),
     ).toBeVisible();
 
-    await user.hover(trigger);
+    await user.click(trigger);
 
     expect(
-      await screen.findByRole('tooltip', {
-        name: 'Practice Grove full-size minimap preview',
+      await screen.findByRole('dialog', {
+        name: 'Practice Grove',
       }),
     ).toBeVisible();
   });

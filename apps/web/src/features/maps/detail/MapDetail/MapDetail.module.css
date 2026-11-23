@@ -208,12 +208,6 @@
   filter: hue-rotate(115deg) saturate(1.45);
 }
 
-.sprite {
-  display: block;
-  image-rendering: pixelated;
-  object-fit: contain;
-}
-
 .stageSprite {
   height: var(--interactive-map-marker-size);
   width: var(--interactive-map-marker-size);

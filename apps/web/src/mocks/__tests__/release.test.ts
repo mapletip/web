@@ -214,6 +214,11 @@ describe('fixture release', () => {
     }
     expect(page.contractVersion).toBe('1.2');
     expect(locations.contractVersion).toBe('1.3');
+    expect(page.sprite).toMatchObject({
+      contentId: { state: 'known' },
+      width: 40,
+      height: 40,
+    });
 
     const hunt = page.quests.entries.find(
       (quest) => quest.questKey === 'fixture:quest:warden-hunt',

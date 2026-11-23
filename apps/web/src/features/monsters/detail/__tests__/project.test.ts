@@ -566,6 +566,11 @@ describe('projectMonsterDetail', () => {
           name: 'High Meadow',
           secondaryLine: 'West Path',
           minimapUrl: `https://d0.mapletip.com/media/images/cc/${minimapId}.png`,
+          minimapSprite: {
+            url: `https://d0.mapletip.com/media/images/aa/${'a'.repeat(64)}.png`,
+            width: 32,
+            height: 48,
+          },
           footerParts: [{ value: '20', label: 'spawns' }],
           placementCount: 20,
         },
@@ -573,18 +578,33 @@ describe('projectMonsterDetail', () => {
           key: 'fixture:map:unnamed',
           name: 'Map name unavailable',
           secondaryLine: 'Harbor Road',
+          minimapSprite: {
+            url: `https://d0.mapletip.com/media/images/aa/${'a'.repeat(64)}.png`,
+            width: 32,
+            height: 48,
+          },
           footerParts: [{ value: '10', label: 'spawns' }],
           placementCount: 10,
         },
         {
           key: 'fixture:map:duplicate-a',
           name: 'Twin Glade',
+          minimapSprite: {
+            url: `https://d0.mapletip.com/media/images/aa/${'a'.repeat(64)}.png`,
+            width: 32,
+            height: 48,
+          },
           footerParts: [{ value: '5', label: 'spawns' }],
           placementCount: 5,
         },
         {
           key: 'fixture:map:duplicate-b',
           name: 'Twin Glade',
+          minimapSprite: {
+            url: `https://d0.mapletip.com/media/images/aa/${'a'.repeat(64)}.png`,
+            width: 32,
+            height: 48,
+          },
           footerParts: [{ value: '5', label: 'spawns' }],
           placementCount: 5,
         },
@@ -609,6 +629,11 @@ describe('projectMonsterDetail', () => {
       state: 'present',
       maps: [
         {
+          minimapSprite: {
+            url: `https://d0.mapletip.com/media/images/aa/${'a'.repeat(64)}.png`,
+            width: 32,
+            height: 48,
+          },
           minimapStage: {
             width: 900,
             height: 600,
@@ -624,6 +649,64 @@ describe('projectMonsterDetail', () => {
     const locations = view.locations;
     if (locations.state !== 'present') throw new Error('Expected locations.');
     expect(locations.maps[0]).not.toHaveProperty('packedPairs');
+  });
+
+  it('projects location sprites from the dimensioned mock page shape', () => {
+    const record = monsterPageWithPointLocations([
+      locationWithPoints({
+        mapKey: 'fixture:map:mock-sprite-shape',
+        placementCount: 1,
+        pointsState: 'known',
+        packedPairs: [100, 100],
+      }),
+    ]);
+    const mockPageRecord = {
+      ...record,
+      sprite: {
+        contentId: { state: 'known' as const, value: 'a'.repeat(64) },
+        width: 40,
+        height: 40,
+      },
+    };
+
+    const view = projectMonsterDetail(mockPageRecord, 'cw-launch');
+
+    expect(view.locations).toMatchObject({
+      state: 'present',
+      maps: [
+        {
+          minimapSprite: {
+            url: `https://d0.mapletip.com/media/images/aa/${'a'.repeat(64)}.png`,
+            width: 40,
+            height: 40,
+          },
+        },
+      ],
+    });
+  });
+
+  it('omits location sprites unless the URL and both dimensions are known', () => {
+    const record = monsterPageWithPointLocations([
+      locationWithPoints({
+        mapKey: 'fixture:map:sprite-availability',
+        placementCount: 1,
+        pointsState: 'known',
+        packedPairs: [100, 100],
+      }),
+    ]);
+    const incompleteSprites: readonly MonsterPageRecordV1_2['sprite'][] = [
+      { ...record.sprite, contentId: { state: 'unknown' } },
+      { ...record.sprite, width: 0 },
+      { ...record.sprite, height: 0 },
+    ];
+
+    for (const sprite of incompleteSprites) {
+      const view = projectMonsterDetail({ ...record, sprite }, 'cw-launch');
+      if (view.locations.state !== 'present') {
+        throw new Error('Expected locations.');
+      }
+      expect(view.locations.maps[0]).not.toHaveProperty('minimapSprite');
+    }
   });
 
   it('keeps partial points while preserving the complete spawn count', () => {
