@@ -42,6 +42,8 @@ export function InteractiveMarker({
   onActivate,
   onCloseDetails,
 }: InteractiveMarkerProps): ReactElement {
+  const marker = group[0]!;
+  const sized = marker.size !== undefined;
   const markerIds = group.map(({ id }) => id);
   const label =
     group.length === 1
@@ -66,6 +68,7 @@ export function InteractiveMarker({
       data-marker-id={markerIds.length === 1 ? markerIds[0] : undefined}
       data-marker-ids={markerIds.join(' ')}
       data-selected={selected ? 'true' : undefined}
+      data-sized={sized ? 'true' : undefined}
       aria-label={label}
       aria-pressed={selected}
       onClick={onActivate}
@@ -76,21 +79,41 @@ export function InteractiveMarker({
         }
       }}
     >
-      <span className={classes['markerContent']}>{markerContent}</span>
+      {sized ? null : (
+        <span className={classes['markerContent']}>{markerContent}</span>
+      )}
     </UnstyledButton>
   );
   const markerAnchor = (target: ReactNode): ReactElement => (
     <span
       className={classes['marker']}
       data-marker-position={markerIds[0]}
+      data-sized={sized ? 'true' : undefined}
       style={markerStyle({
-        x: group[0]!.x,
-        y: group[0]!.y,
+        x: marker.x,
+        y: marker.y,
         imageWidth: image.width,
         imageHeight: image.height,
+        size: marker.size,
+        anchor: marker.anchor,
+        scaleAwareMinimum: true,
       })}
     >
-      <KeepScale className={classes['markerTarget']}>{target}</KeepScale>
+      {sized ? (
+        <span
+          className={classes['markerVisual']}
+          data-marker-visual="true"
+          aria-hidden="true"
+        >
+          {markerContent}
+        </span>
+      ) : null}
+      <KeepScale
+        className={classes['markerTarget']}
+        data-sized={sized ? 'true' : undefined}
+      >
+        {target}
+      </KeepScale>
     </span>
   );
 

@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 
 import { StaticMap } from '@/components/StaticMap';
 import type { StaticMapProps } from '@/components/StaticMap';
+import { markerSprite } from '@/components/StaticMap/__stories__/markerSprite';
 
 const meta = {
   title: 'Components/Map/StaticMap',
@@ -16,6 +17,7 @@ const meta = {
 
 - \`image\`: optional image URL, intrinsic pixel dimensions, and accessible name. Omit it when no image is available.
 - \`markers\`: required host-rendered markers with stable ids and image-pixel coordinates. Markers at the same point are grouped.
+- A marker's optional \`size\` is expressed in image pixels; its content should fill that box. For sized markers, set \`anchor: 'bottom'\` to place the bottom-center on the point. The root CSS variable \`--map-marker-min-size\` optionally floors sized markers' width in screen pixels.
 - \`selectedIds\`: optional marker ids to highlight.
 - \`connectors\`: optional pairs of marker ids joined by decorative lines.
 - \`loading\`: optional native image loading behavior (\`eager\` or \`lazy\`).
@@ -170,6 +172,96 @@ export const CoincidentMarkers: Story = {
     ],
     connectors: [],
   },
+};
+
+export const SizedMarkers: Story = {
+  args: {
+    ...wideProps,
+    markers: [
+      {
+        id: 'west-sprite',
+        x: 120,
+        y: 235,
+        label: 'West sprite',
+        size: { width: 36, height: 48 },
+        anchor: 'bottom',
+        content: markerSprite({ label: 'A', color: '#a33a32' }),
+      },
+      {
+        id: 'center-sprite',
+        x: 300,
+        y: 210,
+        label: 'Center sprite',
+        size: { width: 42, height: 56 },
+        anchor: 'bottom',
+        content: markerSprite({ label: 'B', color: '#366c9a' }),
+      },
+      {
+        id: 'coincident-first',
+        x: 470,
+        y: 240,
+        label: 'First coincident sprite',
+        size: { width: 48, height: 48 },
+        anchor: 'bottom',
+        content: markerSprite({
+          label: 'C',
+          color: '#56824b',
+          width: '50%',
+        }),
+      },
+      {
+        id: 'coincident-second',
+        x: 470,
+        y: 240,
+        label: 'Second coincident sprite',
+        size: { width: 48, height: 48 },
+        anchor: 'bottom',
+        content: markerSprite({
+          label: 'D',
+          color: '#8a5a9d',
+          width: '50%',
+        }),
+      },
+    ],
+    connectors: [],
+  },
+  render: (args) => (
+    <div style={{ width: 680 }}>
+      <StaticMap {...args} />
+    </div>
+  ),
+};
+
+export const SizedMarkersSelected: Story = {
+  ...SizedMarkers,
+  args: { ...SizedMarkers.args, selectedIds: ['center-sprite'] },
+};
+
+export const SizedMarkersMinimum: Story = {
+  args: {
+    ...wideProps,
+    className: 'sizedMarkersMinimum',
+    markers: [
+      {
+        id: 'small-sprite',
+        x: 300,
+        y: 210,
+        label: 'Small sprite',
+        size: { width: 12, height: 18 },
+        anchor: 'bottom',
+        content: markerSprite({ label: 'A', color: '#a33a32' }),
+      },
+    ],
+    connectors: [],
+  },
+  render: (args) => (
+    <>
+      <style>{`.sizedMarkersMinimum { --map-marker-min-size: 14px; }`}</style>
+      <div style={{ width: 280 }}>
+        <StaticMap {...args} />
+      </div>
+    </>
+  ),
 };
 
 export const Unavailable: Story = {

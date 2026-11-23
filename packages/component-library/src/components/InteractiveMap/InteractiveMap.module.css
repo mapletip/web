@@ -20,11 +20,30 @@
   height: 0;
 }
 
+.marker[data-sized='true'] {
+  height: auto;
+}
+
 .markerTarget {
   position: absolute;
   left: 0;
   top: 0;
   transform-origin: left top;
+}
+
+.markerTarget[data-sized='true'] {
+  left: 50%;
+  top: 50%;
+  z-index: 1;
+}
+
+.markerVisual {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
 }
 
 .markerContent {
@@ -59,6 +78,10 @@
   outline: none;
 }
 
+.markerButton[data-sized='true'] {
+  pointer-events: auto;
+}
+
 .markerButton::before,
 .markerButton:focus-visible::after {
   position: absolute;
@@ -77,6 +100,29 @@
   height: calc(var(--interactive-map-marker-size) + 12px);
   border: 2px solid var(--interactive-map-ring-color);
   opacity: 0.8;
+}
+
+.markerButton[data-sized='true'][data-selected='true']::before {
+  content: none;
+}
+
+.marker[data-sized='true']:has(.markerButton[data-selected='true'])::before {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: calc(
+    var(--interactive-map-marker-ring-diameter) + 12px / var(--map-zoom, 1)
+  );
+  height: auto;
+  aspect-ratio: 1;
+  box-sizing: border-box;
+  border: calc(2px / var(--map-zoom, 1)) solid var(--interactive-map-ring-color);
+  border-radius: 50%;
+  background: transparent;
+  content: '';
+  opacity: 0.8;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
 }
 
 /* The marker draws its own round ring; drop the theme's square outline and gap band. */

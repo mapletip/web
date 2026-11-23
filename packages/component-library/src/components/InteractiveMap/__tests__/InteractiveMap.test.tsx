@@ -93,6 +93,73 @@ describe('InteractiveMap', () => {
     });
   });
 
+  it('renders sized visuals outside KeepScale and centers the target on them', () => {
+    const { container } = mount({
+      markers: [
+        {
+          id: 'sprite',
+          x: 100,
+          y: 50,
+          label: 'Sprite',
+          size: { width: 80, height: 40 },
+          anchor: 'bottom',
+          content: <span>Sprite content</span>,
+        },
+      ],
+    });
+    const marker = container.querySelector<HTMLElement>(
+      '[data-marker-position="sprite"]',
+    );
+    const visual = marker?.querySelector('[data-marker-visual="true"]');
+    const target = screen.getByRole('button', { name: 'Sprite' });
+    const keepScale = target.parentElement;
+
+    expect(marker).toHaveStyle({
+      left: '25%',
+      top: '25%',
+      width:
+        'max(20%, calc(var(--map-marker-min-size, 0px) / var(--map-zoom, 1)))',
+      aspectRatio: '80 / 40',
+      transform: 'translate(-50%, -100%)',
+    });
+    expect(marker).toHaveAttribute('data-sized', 'true');
+    expect(visual).toHaveTextContent('Sprite content');
+    expect(visual?.parentElement).toBe(marker);
+    expect(visual?.closest('button')).toBeNull();
+    expect(keepScale?.style.left).toBe('');
+    expect(keepScale?.style.top).toBe('');
+    expect(keepScale).toHaveAttribute('data-sized', 'true');
+    expect(target).toHaveAttribute('data-sized', 'true');
+    expect(target.style.width).toBe('');
+    expect(target.style.height).toBe('');
+    expect(target).not.toHaveTextContent('Sprite content');
+  });
+
+  it('keeps unsized marker content centered when anchor is supplied', () => {
+    const { container } = mount({
+      markers: [
+        {
+          id: 'bottom',
+          x: 100,
+          y: 50,
+          label: 'Bottom point',
+          anchor: 'bottom',
+          content: <span>Content</span>,
+        },
+      ],
+    });
+    const marker = container.querySelector<HTMLElement>(
+      '[data-marker-position="bottom"]',
+    );
+    const target = screen.getByRole('button', { name: 'Bottom point' });
+
+    expect(marker).not.toHaveAttribute('data-sized');
+    expect(marker?.querySelector('[data-marker-visual]')).toBeNull();
+    expect(marker?.style.cssText).toBe('left: 25%; top: 25%;');
+    expect(target).not.toHaveAttribute('data-anchor');
+    expect(target).toHaveTextContent('Content');
+  });
+
   it('draws decorative lines between the named marker coordinates', () => {
     const { container } = mount({
       markers: [

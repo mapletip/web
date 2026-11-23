@@ -83,6 +83,66 @@ describe('StaticMap', () => {
     expect(container.querySelector('svg line')).toHaveAttribute('y2', '150');
   });
 
+  it('renders sized markers at image scale with the supplied anchor', () => {
+    const { container } = mount({
+      markers: [
+        {
+          id: 'sprite',
+          x: 100,
+          y: 50,
+          label: 'Sprite',
+          size: { width: 80, height: 40 },
+          anchor: 'bottom',
+          content: <span>Sprite</span>,
+        },
+      ],
+    });
+    const marker = container.querySelector<HTMLElement>(
+      '[data-marker-position="sprite"]',
+    );
+
+    expect(marker).toHaveAttribute('data-sized', 'true');
+    expect(marker).toHaveStyle({
+      left: '25%',
+      top: '25%',
+      width: 'max(20%, var(--map-marker-min-size, 0px))',
+      aspectRatio: '80 / 40',
+      transform: 'translate(-50%, -100%)',
+    });
+  });
+
+  it('keeps unsized markers centered when anchor is supplied', () => {
+    const { container } = mount({
+      markers: [
+        {
+          id: 'centered',
+          x: 100,
+          y: 50,
+          label: 'Centered',
+          content: <span>Centered</span>,
+        },
+        {
+          id: 'bottom',
+          x: 300,
+          y: 150,
+          label: 'Bottom',
+          anchor: 'bottom',
+          content: <span>Bottom</span>,
+        },
+      ],
+    });
+    const centered = container.querySelector<HTMLElement>(
+      '[data-marker-position="centered"]',
+    );
+    const bottom = container.querySelector<HTMLElement>(
+      '[data-marker-position="bottom"]',
+    );
+
+    expect(centered).not.toHaveAttribute('data-sized');
+    expect(centered?.style.cssText).toBe('left: 25%; top: 25%;');
+    expect(bottom?.style.cssText).toBe('left: 75%; top: 75%;');
+  });
+
   it('groups coincident markers into one aria-hidden marker', () => {
     const { container } = mount({
       markers: [

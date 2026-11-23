@@ -7,6 +7,7 @@ import type {
   InteractiveMapProps,
   InteractiveMapView,
 } from '@/components/InteractiveMap';
+import { markerSprite } from '@/components/StaticMap/__stories__/markerSprite';
 
 const meta = {
   title: 'Components/Map/InteractiveMap',
@@ -20,7 +21,7 @@ const meta = {
 **Props**
 
 - \`image\`: optional image object with its source URL, intrinsic pixel width and height, and accessible name. Omit it when the image is unavailable.
-- \`markers\`: required list of host-rendered targets. Each has a stable id, image-pixel coordinates, accessible label, and content centered on its point. Interactive targets are 44×44px and centered on the same point.
+- \`markers\`: required list of host-rendered targets. Each has a stable id, image-pixel coordinates, accessible label, and content. Optional \`size\` uses image pixels and content should fill that box; when \`size\` is set, optional \`anchor: 'bottom'\` places the bottom-center on its point. The root CSS variable \`--map-marker-min-size\` optionally floors sized marker width in screen pixels. Sized marker targets stay at least 44×44px and centered on their visual.
 - \`connectors\`: optional id and endpoint pairs drawn between marker ids.
 - \`selectedIds\`: ids the host currently selects; defaults to none.
 - \`onActivate\`: receives all marker ids at an activated point.
@@ -175,10 +176,67 @@ const wideImageArgs: InteractiveMapProps = {
   unavailableMessage,
 };
 
+const sizedMarkerArgs: InteractiveMapProps = {
+  ...wideImageArgs,
+  markers: [
+    {
+      id: 'west-sprite',
+      x: 120,
+      y: 235,
+      label: 'West sprite',
+      size: { width: 36, height: 48 },
+      anchor: 'bottom',
+      content: markerSprite({ label: 'A', color: '#a33a32' }),
+    },
+    {
+      id: 'center-sprite',
+      x: 300,
+      y: 210,
+      label: 'Center sprite',
+      size: { width: 42, height: 56 },
+      anchor: 'bottom',
+      content: markerSprite({ label: 'B', color: '#366c9a' }),
+    },
+    {
+      id: 'east-sprite',
+      x: 480,
+      y: 235,
+      label: 'East sprite',
+      size: { width: 36, height: 48 },
+      anchor: 'bottom',
+      content: markerSprite({ label: 'C', color: '#56824b' }),
+    },
+  ],
+};
+
 export const WideImage: Story = {
   args: wideImageArgs,
   render: (args) =>
     frame({ width: 680, props: args, testId: 'interactive-map-wide-image' }),
+};
+
+export const SizedMarkers: Story = {
+  args: sizedMarkerArgs,
+  render: (args) =>
+    frame({ width: 680, props: args, testId: 'interactive-map-sized-markers' }),
+};
+
+export const SizedMarkersSelected: Story = {
+  ...SizedMarkers,
+  args: { ...sizedMarkerArgs, selectedIds: ['center-sprite'] },
+};
+
+export const SizedMarkersZoomed: Story = {
+  args: {
+    ...sizedMarkerArgs,
+    view: { zoom: 2.2, centerX: 300, centerY: 185 },
+  },
+  render: (args) =>
+    frame({
+      width: 680,
+      props: args,
+      testId: 'interactive-map-sized-markers-zoomed',
+    }),
 };
 
 export const NoneSelected: Story = {

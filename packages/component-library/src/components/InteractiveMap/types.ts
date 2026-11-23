@@ -25,8 +25,26 @@ export interface InteractiveMapMarker {
   readonly y: number;
   /** Accessible name for this marker. */
   readonly label: string;
-  /** Content rendered centered on the supplied point. */
+  /** Content rendered at the supplied point. */
   readonly content: ReactNode;
+  /**
+   * Marker dimensions in image pixels. When set, content is rendered inside a
+   * box at this size and is expected to fill it (for example, an image with
+   * width and height set to 100% and object-fit: contain). The map root's
+   * --map-marker-min-size custom property floors the rendered width in screen
+   * pixels; it defaults to 0px.
+   */
+  readonly size?: {
+    /** Width in image pixels. */
+    readonly width: number;
+    /** Height in image pixels. */
+    readonly height: number;
+  };
+  /**
+   * Applies only when `size` is set. Point on the marker placed at x and y;
+   * defaults to 'center', while 'bottom' places the bottom-center there.
+   */
+  readonly anchor?: 'center' | 'bottom';
 }
 
 /** A host-named pair of markers to join with a decorative line. */

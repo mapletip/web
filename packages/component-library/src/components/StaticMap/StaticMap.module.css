@@ -79,6 +79,11 @@
   z-index: 2;
 }
 
+.markerStatic[data-sized='true'] {
+  min-width: 0;
+  min-height: 0;
+}
+
 .markerStatic::before {
   position: absolute;
   top: 50%;
@@ -96,6 +101,12 @@
   height: calc(var(--interactive-map-marker-size) + 12px);
   border: 2px solid var(--interactive-map-ring-color);
   opacity: 0.8;
+}
+
+.markerStatic[data-sized='true'][data-selected='true']::before {
+  width: calc(var(--interactive-map-marker-ring-diameter) + 12px);
+  height: auto;
+  aspect-ratio: 1;
 }
 
 .unavailable {
