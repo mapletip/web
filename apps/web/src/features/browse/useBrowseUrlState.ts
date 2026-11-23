@@ -1,33 +1,33 @@
 import { useDebouncedCallback } from '@mantine/hooks';
 import type {
-  BrowseState,
   BrowseSortOption,
+  BrowseState,
   StateChangeDetails,
 } from '@mapletip/component-library';
 import { useCallback, useMemo, useState } from 'react';
 
-import {
-  browseStateToUrl,
-  urlToBrowseState,
-  type ItemBrowseSearch,
-} from '../search-params';
+import type { BrowseSearch, BrowseSearchDefinition } from './search-params';
 
 export interface OnSearchChangeOptions {
-  readonly search: ItemBrowseSearch;
+  readonly search: BrowseSearch;
   readonly replace: boolean;
 }
 
-export interface UseItemBrowseUrlStateOptions {
-  readonly search: ItemBrowseSearch;
+export interface UseBrowseUrlStateOptions {
+  readonly search: BrowseSearch;
   readonly onSearchChange: (
     options: OnSearchChangeOptions,
   ) => void | Promise<void>;
-  readonly contextKey: string;
-  readonly defaultHiddenColumns: readonly string[];
-  readonly sortOptions: readonly BrowseSortOption[];
+  /** The page's address definition from `defineBrowseSearch`. */
+  readonly address: BrowseSearchDefinition;
+  /** Sort options of the current context; defaults to the page's. */
+  readonly sortOptions?: readonly BrowseSortOption[] | undefined;
+  /** Table context whose column visibility is remembered separately. */
+  readonly contextKey?: string;
+  readonly defaultHiddenColumns?: readonly string[];
 }
 
-export interface UseItemBrowseUrlStateResult {
+export interface UseBrowseUrlStateResult {
   readonly browseState: BrowseState;
   readonly handleStateChange: (
     nextState: BrowseState,
@@ -36,18 +36,20 @@ export interface UseItemBrowseUrlStateResult {
 }
 
 const SEARCH_DEBOUNCE_MS = 150;
+const NO_HIDDEN_COLUMNS: readonly string[] = [];
 
 /** Keeps FacetedBrowser state synchronized with typed route search params. */
-export function useItemBrowseUrlState({
+export function useBrowseUrlState({
   search,
   onSearchChange,
-  contextKey,
-  defaultHiddenColumns,
+  address,
   sortOptions,
-}: UseItemBrowseUrlStateOptions): UseItemBrowseUrlStateResult {
+  contextKey = 'default',
+  defaultHiddenColumns = NO_HIDDEN_COLUMNS,
+}: UseBrowseUrlStateOptions): UseBrowseUrlStateResult {
   const urlState = useMemo(
-    () => urlToBrowseState({ search, sortOptions }),
-    [search, sortOptions],
+    () => address.urlToBrowseState({ search, sortOptions }),
+    [address, search, sortOptions],
   );
   const [localSearchState, setLocalSearchState] = useState(() => ({
     urlSearch: urlState.search,
@@ -64,7 +66,7 @@ export function useItemBrowseUrlState({
       : urlState.search;
 
   const emitDebouncedSearchChange = useDebouncedCallback(
-    (nextSearch: ItemBrowseSearch) => {
+    (nextSearch: BrowseSearch) => {
       void onSearchChange({ search: nextSearch, replace: true });
     },
     { delay: SEARCH_DEBOUNCE_MS },
@@ -82,7 +84,10 @@ export function useItemBrowseUrlState({
         [contextKey]: nextState.hiddenColumns,
       }));
       const searchChanged = nextState.search !== localSearch;
-      const nextSearch = browseStateToUrl({ state: nextState, sortOptions });
+      const nextSearch = address.browseStateToUrl({
+        state: nextState,
+        sortOptions,
+      });
 
       if (searchChanged) {
         setLocalSearchState({
@@ -100,6 +105,7 @@ export function useItemBrowseUrlState({
       });
     },
     [
+      address,
       contextKey,
       emitDebouncedSearchChange,
       localSearch,

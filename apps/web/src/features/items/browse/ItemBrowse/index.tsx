@@ -11,6 +11,10 @@ import { useCallback, useMemo, type ReactElement } from 'react';
 
 import { BrowsePageShell } from '@/components/BrowsePageShell';
 import { BUILDS, type BuildId } from '@/config/maplekit';
+import {
+  useBrowseUrlState,
+  type OnSearchChangeOptions,
+} from '@/features/browse/useBrowseUrlState';
 import { browseOverlayOptions } from '@/features/browse-overlay/browseOverlay';
 import { useRouteOverlay } from '@/features/route-overlay/useRouteOverlay';
 
@@ -34,14 +38,10 @@ import type { ItemCategorySelection } from '../routing';
 import {
   browseStateToUrl,
   ITEM_BROWSE_DEFAULT_STATE,
+  itemBrowseSearch,
   PAGE_SIZE_OPTIONS,
 } from '../search-params';
 import type { ItemBrowseSearch } from '../search-params';
-
-import {
-  useItemBrowseUrlState,
-  type OnSearchChangeOptions,
-} from './useItemBrowseUrlState';
 
 export interface ItemBrowseProps {
   readonly buildId: BuildId;
@@ -107,7 +107,8 @@ export function ItemBrowse({
   );
 
   const { browseState, handleStateChange: commitBrowseState } =
-    useItemBrowseUrlState({
+    useBrowseUrlState({
+      address: itemBrowseSearch,
       search,
       onSearchChange,
       contextKey,

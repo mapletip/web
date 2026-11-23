@@ -1,37 +1,41 @@
 import { act, render } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import { defineBrowseSearch, type BrowseSearch } from '../search-params';
 import {
-  itemBrowseSearchSchema,
-  type ItemBrowseSearch,
-} from '../../search-params';
-import { ITEM_SORT_OPTIONS } from '../../sort';
-import {
-  useItemBrowseUrlState,
+  useBrowseUrlState,
   type OnSearchChangeOptions,
-  type UseItemBrowseUrlStateResult,
-} from '../useItemBrowseUrlState';
+  type UseBrowseUrlStateResult,
+} from '../useBrowseUrlState';
 
-describe('useItemBrowseUrlState', () => {
+const NAME_SORTS = [
+  { label: 'Name (A–Z)', field: 'name', direction: 'asc' },
+  { label: 'Name (Z–A)', field: 'name', direction: 'desc' },
+] as const;
+const address = defineBrowseSearch({ sortOptions: NAME_SORTS });
+const browseSearchSchema = address.schema;
+
+describe('useBrowseUrlState', () => {
   function setup({
-    search = itemBrowseSearchSchema.parse({}),
+    search = browseSearchSchema.parse({}),
     onSearchChange = vi.fn(),
     contextKey = 'all',
     defaultHiddenColumns = [],
-    sortOptions = ITEM_SORT_OPTIONS,
+    sortOptions = NAME_SORTS,
   }: {
-    readonly search?: ItemBrowseSearch;
+    readonly search?: BrowseSearch;
     readonly onSearchChange?: (
       options: OnSearchChangeOptions,
     ) => void | Promise<void>;
     readonly contextKey?: string;
     readonly defaultHiddenColumns?: readonly string[];
-    readonly sortOptions?: typeof ITEM_SORT_OPTIONS;
+    readonly sortOptions?: typeof NAME_SORTS;
   } = {}) {
-    let latestResult: UseItemBrowseUrlStateResult | undefined;
+    let latestResult: UseBrowseUrlStateResult | undefined;
 
     function TestConsumer() {
-      latestResult = useItemBrowseUrlState({
+      latestResult = useBrowseUrlState({
+        address,
         search,
         onSearchChange,
         contextKey,
@@ -107,7 +111,7 @@ describe('useItemBrowseUrlState', () => {
   it('pushes facet changes with active options and resets the page', () => {
     const onSearchChange = vi.fn();
     const { getResult } = setup({
-      search: itemBrowseSearchSchema.parse({ page: 4 }),
+      search: browseSearchSchema.parse({ page: 4 }),
       onSearchChange,
     });
 
@@ -134,7 +138,7 @@ describe('useItemBrowseUrlState', () => {
   it('replaces clamp corrections', () => {
     const onSearchChange = vi.fn();
     const { getResult } = setup({
-      search: itemBrowseSearchSchema.parse({ page: 3 }),
+      search: browseSearchSchema.parse({ page: 3 }),
       onSearchChange,
     });
 
@@ -155,7 +159,7 @@ describe('useItemBrowseUrlState', () => {
     const commitPromise = Promise.resolve();
     const onSearchChange = vi.fn().mockReturnValue(commitPromise);
     const { getResult } = setup({
-      search: itemBrowseSearchSchema.parse({ page: 2 }),
+      search: browseSearchSchema.parse({ page: 2 }),
       onSearchChange,
     });
 
