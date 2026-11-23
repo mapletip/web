@@ -1,7 +1,11 @@
 .stage {
-  --interactive-map-ring-color: #ffeb3b;
-  --interactive-map-focus-halo-color: rgb(255 235 59 / 58%);
-  --interactive-map-connector-color: #f08c46;
+  --interactive-map-ring-color: var(--mapletip-color-map-selection);
+  --interactive-map-focus-halo-color: color-mix(
+    in srgb,
+    var(--mapletip-color-map-selection) 58%,
+    transparent
+  );
+  --interactive-map-connector-color: var(--mapletip-color-map-connector);
   --interactive-map-marker-size: clamp(18px, 5cqi, 44px);
 
   box-sizing: border-box;

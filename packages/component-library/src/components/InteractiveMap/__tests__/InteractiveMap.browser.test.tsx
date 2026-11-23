@@ -1,5 +1,9 @@
 import { MantineProvider } from '@mantine/core';
-import { cssVariablesResolver, theme } from '@mapletip/theme';
+import {
+  cssVariablesResolver,
+  mapleTwilightScheme,
+  theme,
+} from '@mapletip/theme';
 import { useState, type ReactNode } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { commands, page, userEvent } from 'vitest/browser';
@@ -14,6 +18,24 @@ import type {
 } from '@/components/InteractiveMap';
 
 const image = `data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="400" height="200"><rect width="400" height="200" fill="#789"/></svg>')}`;
+
+function resolveColor(color: string): string {
+  const probe = document.createElement('span');
+  probe.style.color = color;
+  document.body.append(probe);
+  const resolved = getComputedStyle(probe).color;
+  probe.remove();
+  return resolved;
+}
+
+function resolveBoxShadow(boxShadow: string): string {
+  const probe = document.createElement('span');
+  probe.style.boxShadow = boxShadow;
+  document.body.append(probe);
+  const resolved = getComputedStyle(probe).boxShadow;
+  probe.remove();
+  return resolved;
+}
 
 function expectCenterdRing(style: CSSStyleDeclaration, target: Element): void {
   const targetRect = target.getBoundingClientRect();
@@ -112,7 +134,9 @@ describe('InteractiveMap selected marker ring', () => {
       .element();
     const ring = getComputedStyle(target, '::before');
 
-    expect(ring.borderColor).toBe('rgb(255, 235, 59)');
+    expect(ring.borderColor).toBe(
+      resolveColor(mapleTwilightScheme.mapMarkers.selection),
+    );
     expect(ring.borderStyle).toBe('solid');
     expect(ring.borderWidth).toBe('2px');
     expect(ring.opacity).toBe('0.8');
@@ -130,12 +154,16 @@ describe('InteractiveMap selected marker ring', () => {
     await expect.element(target).toHaveFocus();
 
     const focusRing = getComputedStyle(target.element(), '::after');
-    expect(focusRing.borderColor).toBe('rgb(255, 235, 59)');
+    expect(focusRing.borderColor).toBe(
+      resolveColor(mapleTwilightScheme.mapMarkers.selection),
+    );
     expect(focusRing.borderStyle).toBe('solid');
     expect(focusRing.borderWidth).toBe('3px');
     expectCenterdRing(focusRing, target.element());
     expect(focusRing.boxShadow).toBe(
-      'rgba(255, 235, 59, 0.58) 0px 0px 0px 4px',
+      resolveBoxShadow(
+        `0 0 0 4px color-mix(in srgb, ${mapleTwilightScheme.mapMarkers.selection} 58%, transparent)`,
+      ),
     );
   });
 

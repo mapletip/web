@@ -297,6 +297,12 @@ function schemeVariables(scheme: SchemeColors): Record<string, string> {
     '--mapletip-color-status-info-bg': scheme.statuses.infoBg,
     '--mapletip-color-disabled-bg': scheme.disabled.bg,
     '--mapletip-color-disabled-fg': scheme.disabled.fg,
+    '--mapletip-color-map-selection': scheme.mapMarkers.selection,
+    '--mapletip-color-map-connector': scheme.mapMarkers.connector,
+    '--mapletip-color-map-warp-ring': scheme.mapMarkers.warpRing,
+    '--mapletip-color-map-monster': scheme.mapMarkers.monster,
+    '--mapletip-color-map-npc': scheme.mapMarkers.npc,
+    '--mapletip-color-map-border': scheme.mapMarkers.border,
     // Accent compatibility aliases
     '--mapletip-color-accent-forest': scheme.statuses.success,
     '--mapletip-color-accent-sky': scheme.statuses.info,

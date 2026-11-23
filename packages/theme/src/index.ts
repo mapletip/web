@@ -8,6 +8,7 @@ export {
 export type {
   CtaColors,
   DisabledColors,
+  MapMarkerColors,
   SchemeColors,
   StatusColors,
 } from './colors';

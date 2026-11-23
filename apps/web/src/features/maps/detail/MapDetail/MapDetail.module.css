@@ -1,9 +1,8 @@
 .markerPalette {
-  --map-detail-marker-warp-ring-color: #f08c46;
-  /* Production's marker colors; the theme's status colors are too pale in dark mode. */
-  --map-detail-marker-monster-color: #ffd166;
-  --map-detail-marker-npc-color: #20c997;
-  --map-detail-marker-border-color: #fff;
+  --map-detail-marker-warp-ring-color: var(--mapletip-color-map-warp-ring);
+  --map-detail-marker-monster-color: var(--mapletip-color-map-monster);
+  --map-detail-marker-npc-color: var(--mapletip-color-map-npc);
+  --map-detail-marker-border-color: var(--mapletip-color-map-border);
 }
 
 /* Map mark art has a frame in its outer 10%; crop it and scale back up, as production does. */
