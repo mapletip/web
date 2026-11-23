@@ -50,12 +50,34 @@
   cursor: pointer;
 }
 
-.linkedCard:hover .card {
+.linkedCard:not([data-record-card-link-scope='header']):hover .card {
   background: var(--mantine-color-default-hover);
   border-color: var(--mapletip-color-border);
 }
 
-.linkedCard:has(.link:focus-visible) .card {
+.linkedCard:not([data-record-card-link-scope='header']):has(.link:focus-visible)
+  .card {
+  outline: 2px solid var(--mapletip-color-focus);
+  outline-offset: 3px;
+}
+
+.headerLinkRegion {
+  position: relative;
+  min-width: 0;
+  border-radius: var(--mantine-radius-md);
+  transition:
+    box-shadow 120ms ease,
+    background-color 120ms ease;
+}
+
+.linkedCard[data-record-card-link-scope='header']:has(.link:hover)
+  .headerLinkRegion {
+  background: var(--mantine-color-default-hover);
+  box-shadow: inset 0 0 0 1px var(--mapletip-color-border-strong);
+}
+
+.linkedCard[data-record-card-link-scope='header']:has(.link:focus-visible)
+  .headerLinkRegion {
   outline: 2px solid var(--mapletip-color-focus);
   outline-offset: 3px;
 }
@@ -71,7 +93,7 @@
 }
 
 .title {
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
   color: var(--mapletip-color-ink);
   font-size: var(--mantine-font-size-md);
   line-height: var(--mantine-line-height-sm);
@@ -84,7 +106,7 @@
 }
 
 .secondary {
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
 }
 
 .media {
@@ -228,10 +250,22 @@
   .media {
     flex-basis: 6rem;
   }
+
+  .linkedCard .compactMediaAside {
+    padding-right: calc(var(--mantine-spacing-md) + var(--mantine-spacing-sm));
+  }
+
+  .compactMediaAside {
+    column-gap: var(--mantine-spacing-xs);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .card {
+    transition: none;
+  }
+
+  .headerLinkRegion {
     transition: none;
   }
 }
@@ -241,7 +275,15 @@
     border-color: CanvasText;
   }
 
-  .linkedCard:has(.link:focus-visible) .card {
+  .linkedCard:not([data-record-card-link-scope='header']):has(
+      .link:focus-visible
+    )
+    .card {
+    outline-color: Highlight;
+  }
+
+  .linkedCard[data-record-card-link-scope='header']:has(.link:focus-visible)
+    .headerLinkRegion {
     outline-color: Highlight;
   }
 }

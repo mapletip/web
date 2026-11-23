@@ -10,7 +10,7 @@ function mount(card: React.ReactNode) {
 
 describe('RecordCard', () => {
   it('links only the title and keeps the other card content outside the link', () => {
-    mount(
+    const { container } = mount(
       <RecordCard
         title="Practice Meadow"
         secondaryLine="West Practice Grounds"
@@ -22,6 +22,7 @@ describe('RecordCard', () => {
     );
 
     const link = screen.getByRole('link', { name: 'Practice Meadow' });
+    const card = container.querySelector('[data-record-card="true"]');
     expect(link).toHaveAttribute('href', '/synthetic/maps/practice-meadow');
     expect(link).toHaveAccessibleName('Practice Meadow');
     expect(link).not.toHaveAttribute('aria-label');
@@ -32,12 +33,45 @@ describe('RecordCard', () => {
     expect(screen.getByText('12 spawns')).toBeVisible();
     expect(link.querySelector('img')).toBeNull();
     expect(screen.getAllByRole('link')).toHaveLength(1);
+    expect(card).not.toHaveAttribute('data-record-card-link-scope');
+    expect(card?.children).toHaveLength(2);
+    expect(screen.getByText('12 spawns').parentElement).toBe(card);
     expect(
       screen
         .getByRole('heading', { name: 'Practice Meadow' })
         .closest('[data-record-card="true"]')
         ?.querySelector('img'),
     ).toHaveAttribute('alt', '');
+  });
+
+  it('puts the footer outside a header-scoped link region', () => {
+    const { container } = mount(
+      <RecordCard
+        title="Practice Meadow"
+        layout="mediaAside"
+        media={<img src="/synthetic-map.svg" alt="" />}
+        footer={<button>Locate</button>}
+        destination={{ href: '/synthetic/maps/practice-meadow' }}
+        linkScope="header"
+      />,
+    );
+
+    const card = container.querySelector('[data-record-card="true"]');
+    const header = card?.firstElementChild;
+    const linkedCard = card?.parentElement;
+    const footer = screen.getByRole('button', { name: 'Locate' }).parentElement;
+    const link = screen.getByRole('link', { name: 'Practice Meadow' });
+
+    expect(linkedCard).toHaveAttribute('data-record-card-link-scope', 'header');
+    expect(card).not.toHaveAttribute('data-record-card-link-scope');
+    expect(card).not.toHaveAttribute('data-record-card-layout');
+    expect(header).not.toBeNull();
+    expect(header).toHaveAttribute('data-record-card-layout', 'mediaAside');
+    expect(header).toHaveAttribute('data-record-card-has-media', 'true');
+    expect(header).toHaveAttribute('data-record-card-has-footer', 'false');
+    expect(header?.contains(link)).toBe(true);
+    expect(footer?.parentElement).toBe(card);
+    expect(header?.contains(footer ?? null)).toBe(false);
   });
 
   it('keeps a footer button outside the link and lets it handle its own click', () => {
