@@ -159,8 +159,10 @@ describe('MapDetail server rendering', () => {
       </RouterContextProvider>,
     );
 
+    expect(html).toContain('<section aria-labelledby="monsters">');
     expect(html).toContain('id="monsters"');
-    expect(html).toContain('Monsters');
+    expect(html).toContain('Monsters on this map');
+    expect(html).not.toContain('aria-label="Record sections"');
     expect(html).toContain('data-testid="map-monster-card"');
     expect(html).toContain('Plain Pebble');
     expect(html).toContain('alt="Practice Grove map"');
@@ -194,8 +196,9 @@ describe('MapDetail server rendering', () => {
       </RouterContextProvider>,
     );
 
+    expect(html).toContain('<section aria-labelledby="npcs">');
     expect(html).toContain('id="npcs"');
-    expect(html).toContain('NPCs');
+    expect(html).toContain('NPCs on this map');
     expect(html).toContain('data-testid="map-npc-card"');
     expect(html).toContain('Bellkeeper');
     expect(html).toContain('data-fallback="true"');
