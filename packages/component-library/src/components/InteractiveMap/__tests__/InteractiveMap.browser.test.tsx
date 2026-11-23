@@ -491,6 +491,84 @@ async function mountSelectionHarness(options?: {
 }
 
 describe('InteractiveMap pan and zoom', () => {
+  it('pans to the selected marker when a static stage becomes interactive', async () => {
+    await commands.emulateMedia({ reducedMotion: 'reduce' });
+    const savedView: InteractiveMapView = {
+      zoom: 2,
+      centerX: 80,
+      centerY: 100,
+    };
+
+    function Harness() {
+      const [interactive, setInteractive] = useState(false);
+      return (
+        <MantineProvider
+          theme={theme}
+          cssVariablesResolver={cssVariablesResolver}
+          forceColorScheme="dark"
+        >
+          <button type="button" onClick={() => setInteractive(true)}>
+            Enable map interactions
+          </button>
+          <div style={{ width: '400px' }}>
+            <InteractiveMap
+              image={{
+                src: image,
+                width: 400,
+                height: 200,
+                alt: 'Hydrated map image',
+              }}
+              markers={[
+                {
+                  id: 'west',
+                  x: 80,
+                  y: 100,
+                  label: 'West point',
+                  content: markerContent(),
+                },
+                {
+                  id: 'east',
+                  x: 320,
+                  y: 100,
+                  label: 'East point',
+                  content: markerContent(),
+                },
+              ]}
+              selectedIds={['east']}
+              interactive={interactive}
+              view={savedView}
+              unavailableMessage="Image unavailable."
+            />
+          </div>
+        </MantineProvider>
+      );
+    }
+
+    const container = (await render(<Harness />)).container;
+    expect(container.querySelector('.react-transform-wrapper')).toBeNull();
+
+    await userEvent.click(
+      page.getByRole('button', { name: 'Enable map interactions' }),
+    );
+
+    const viewport = container.querySelector<HTMLElement>(
+      '.react-transform-wrapper',
+    )!;
+    const east = page.getByRole('button', { name: 'East point' });
+    await expect
+      .poll(() => {
+        const viewportRect = viewport.getBoundingClientRect();
+        const eastRect = east.element().getBoundingClientRect();
+        return (
+          eastRect.left >= viewportRect.left &&
+          eastRect.right <= viewportRect.right &&
+          eastRect.top >= viewportRect.top &&
+          eastRect.bottom <= viewportRect.bottom
+        );
+      })
+      .toBe(true);
+  });
+
   it.each([
     { shape: 'tall', imageWidth: 300, imageHeight: 900, stageHeight: 630 },
     { shape: 'wide', imageWidth: 1200, imageHeight: 200, stageHeight: 180 },

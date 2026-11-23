@@ -1,13 +1,6 @@
-import {
-  CloseButton,
-  Image,
-  Popover,
-  Text,
-  UnstyledButton,
-} from '@mantine/core';
+import { Text } from '@mantine/core';
 import { useReducedMotion } from '@mantine/hooks';
 import {
-  Fragment,
   useCallback,
   useEffect,
   useMemo,
@@ -20,21 +13,19 @@ import {
   type ReactNode,
 } from 'react';
 import {
-  KeepScale,
   TransformComponent,
   TransformWrapper,
   type ReactZoomPanPinchRef,
 } from 'react-zoom-pan-pinch';
 
 import classes from '@/components/InteractiveMap/InteractiveMap.module.css';
+import { InteractiveMarker } from '@/components/InteractiveMap/InteractiveMarker';
 import { TransformControls } from '@/components/InteractiveMap/TransformControls';
 import {
   INTERACTIVE_MAP_MAX_ZOOM,
   INTERACTIVE_MAP_MIN_ZOOM,
 } from '@/components/InteractiveMap/types';
 import type {
-  InteractiveMapImage,
-  InteractiveMapMarker,
   InteractiveMapProps,
   InteractiveMapView,
 } from '@/components/InteractiveMap/types';
@@ -42,26 +33,18 @@ import {
   transformToView,
   viewToTransform,
 } from '@/components/InteractiveMap/view';
+import { groupMarkers } from '@/components/StaticMap/markerPlacement';
+import { MapPicture, StaticMap } from '@/components/StaticMap/StaticMap';
+import staticClasses from '@/components/StaticMap/StaticMap.module.css';
 
 const SELECTION_ANIMATION_MS = 260;
 const TRANSFORM_EPSILON = 0.01;
 const TRANSFORM_POSITION_EPSILON = 0.5;
 
-function markerStyle({
-  x,
-  y,
-  imageWidth,
-  imageHeight,
-}: {
-  readonly x: number;
-  readonly y: number;
-  readonly imageWidth: number;
-  readonly imageHeight: number;
-}): CSSProperties {
-  return {
-    left: `${(x / imageWidth) * 100}%`,
-    top: `${(y / imageHeight) * 100}%`,
-  };
+function getViewKey(view: InteractiveMapView | undefined): string {
+  return view === undefined
+    ? 'none'
+    : `${view.zoom}\u0000${view.centerX}\u0000${view.centerY}`;
 }
 
 interface TransformPosition {
@@ -99,139 +82,34 @@ function isFittedTransform(transform: ReactZoomPanPinchRef): boolean {
   );
 }
 
-interface InteractiveMarkerProps {
-  readonly group: readonly InteractiveMapMarker[];
-  readonly image: InteractiveMapImage;
-  readonly selected: boolean;
-  readonly targetKey: string;
-  readonly markerTargetRefs: MutableRefObject<Map<string, HTMLButtonElement>>;
-  readonly portalTarget: HTMLDivElement | null;
-  readonly details: ReactNode;
-  readonly hasDetailsRenderer: boolean;
-  readonly detailsOpen: boolean;
-  readonly onActivate: (event: MouseEvent<HTMLButtonElement>) => void;
-  readonly onCloseDetails: () => void;
-}
+/** One image with host-rendered markers placed at image pixel coordinates. */
+export function InteractiveMap(props: InteractiveMapProps): ReactElement {
+  const staticViewKeyRef = useRef<string | undefined>(undefined);
+  const viewKey = getViewKey(props.view);
 
-function InteractiveMarker({
-  group,
-  image,
-  selected,
-  targetKey,
-  markerTargetRefs,
-  portalTarget,
-  details,
-  hasDetailsRenderer,
-  detailsOpen,
-  onActivate,
-  onCloseDetails,
-}: InteractiveMarkerProps): ReactElement {
-  const markerIds = group.map(({ id }) => id);
-  const label =
-    group.length === 1
-      ? group[0]!.label
-      : `${group.map(({ label: markerLabel }) => markerLabel).join(', ')} (${group.length})`;
-  const markerContent = group.map(({ content, id }) => (
-    <Fragment key={id}>{content}</Fragment>
-  ));
-  const stageBoundary =
-    portalTarget === null ? true : { boundary: portalTarget };
-  const stageShiftBoundary =
-    portalTarget === null ? true : { boundary: portalTarget, crossAxis: true };
-  // Mantine handles Escape from the dropdown; mirror it on the trigger.
-  const markerButton = (
-    <UnstyledButton
-      type="button"
-      ref={(element) => {
-        if (element === null) markerTargetRefs.current.delete(targetKey);
-        else markerTargetRefs.current.set(targetKey, element);
-      }}
-      className={classes['markerButton']}
-      data-marker-id={markerIds.length === 1 ? markerIds[0] : undefined}
-      data-marker-ids={markerIds.join(' ')}
-      data-selected={selected ? 'true' : undefined}
-      aria-label={label}
-      aria-pressed={selected}
-      onClick={onActivate}
-      onKeyDown={(event) => {
-        if (event.key === 'Escape' && detailsOpen) {
-          event.preventDefault();
-          onCloseDetails();
-        }
-      }}
-    >
-      <span className={classes['markerContent']}>{markerContent}</span>
-    </UnstyledButton>
-  );
-  const markerAnchor = (target: ReactNode): ReactElement => (
-    <span
-      className={classes['marker']}
-      data-marker-position={markerIds[0]}
-      style={markerStyle({
-        x: group[0]!.x,
-        y: group[0]!.y,
-        imageWidth: image.width,
-        imageHeight: image.height,
-      })}
-    >
-      <KeepScale className={classes['markerTarget']}>{target}</KeepScale>
-    </span>
-  );
+  useEffect(() => {
+    if (props.interactive === false) staticViewKeyRef.current = viewKey;
+  }, [props.interactive, viewKey]);
 
-  if (!hasDetailsRenderer) return markerAnchor(markerButton);
-
-  return (
-    <Popover
-      opened={detailsOpen}
-      onChange={(opened) => {
-        if (!opened) onCloseDetails();
-      }}
-      position="bottom"
-      middlewares={{
-        flip: stageBoundary,
-        shift: stageShiftBoundary,
-        size: stageBoundary,
-      }}
-      preventPositionChangeWhenVisible={false}
-      floatingStrategy="absolute"
-      portalProps={portalTarget === null ? {} : { target: portalTarget }}
-      closeOnEscape
-      returnFocus
-    >
-      {markerAnchor(<Popover.Target>{markerButton}</Popover.Target>)}
-      <Popover.Dropdown className={classes['detailsDropdown']}>
-        <CloseButton
-          type="button"
-          className={classes['detailsClose']}
-          aria-label="Close details"
-          onClick={onCloseDetails}
-        />
-        <div className={classes['detailsContent']}>{details}</div>
-      </Popover.Dropdown>
-    </Popover>
-  );
-}
-
-function groupMarkers(
-  markers: readonly InteractiveMapMarker[],
-): InteractiveMapMarker[][] {
-  const groups = new Map<string, InteractiveMapMarker[]>();
-
-  for (const marker of markers) {
-    const key = `${marker.x},${marker.y}`;
-    let group = groups.get(key);
-    if (group === undefined) {
-      group = [];
-      groups.set(key, group);
-    }
-    group.push(marker);
+  if (props.interactive === false) {
+    return (
+      <StaticMap
+        className={props.className}
+        style={props.style}
+        image={props.image}
+        markers={props.markers}
+        selectedIds={props.selectedIds}
+        connectors={props.connectors}
+        unavailableMessage={props.unavailableMessage}
+      />
+    );
   }
 
-  return [...groups.values()];
+  return <InteractiveMapStage {...props} staticViewKeyRef={staticViewKeyRef} />;
 }
 
-/** One image with host-rendered markers placed at image pixel coordinates. */
-export function InteractiveMap({
+function InteractiveMapStage({
+  staticViewKeyRef,
   className,
   style,
   image,
@@ -239,7 +117,6 @@ export function InteractiveMap({
   connectors = [],
   selectedIds = [],
   onActivate,
-  interactive = true,
   gestures = 'always',
   wheelZoom = false,
   view,
@@ -250,13 +127,14 @@ export function InteractiveMap({
   fitLabel = 'Fit',
   renderDetails,
   unavailableMessage,
-}: InteractiveMapProps): ReactElement {
+}: InteractiveMapProps & {
+  readonly staticViewKeyRef: MutableRefObject<string | undefined>;
+}): ReactElement {
   const [portalTarget, setPortalTarget] = useState<HTMLDivElement | null>(null);
   const [isZoomedIn, setIsZoomedIn] = useState(false);
   const transformRef = useRef<ReactZoomPanPinchRef>(null);
   const markerTargetRefs = useRef(new Map<string, HTMLButtonElement>());
   const previousSelectionRef = useRef<{
-    readonly interactive: boolean;
     readonly key: string;
     readonly viewKey: string;
   } | null>(null);
@@ -276,18 +154,14 @@ export function InteractiveMap({
   const accessibleName = availableImage?.alt || unavailableMessage;
   const selectedIdSet = new Set(selectedIds);
   const selectedKey = [...selectedIds].sort().join('\u0000');
-  const viewKey =
-    view === undefined
-      ? 'none'
-      : `${view.zoom}\u0000${view.centerX}\u0000${view.centerY}`;
+  const viewKey = getViewKey(view);
   const markerGroups = useMemo(() => groupMarkers(markers), [markers]);
-  const markersById = new Map(markers.map((marker) => [marker.id, marker]));
   const stageStyle: CSSProperties & {
     readonly '--interactive-map-image-aspect-ratio': string;
   } = {
     ...style,
     '--interactive-map-image-aspect-ratio':
-      image === undefined ? '1' : `${image.width / image.height}`,
+      image === undefined ? '1' : String(image.width / image.height),
   };
   const closeDetails = () => setOpenDetails(null);
   const updateZoomedState = useCallback(
@@ -300,7 +174,7 @@ export function InteractiveMap({
   useEffect(() => {
     const previousViewKey = previousViewKeyRef.current;
     previousViewKeyRef.current = viewKey;
-    if (!interactive || availableImage === undefined) return;
+    if (availableImage === undefined) return;
 
     const transform = transformRef.current;
     const wrapper = transform?.instance.wrapperComponent;
@@ -338,7 +212,7 @@ export function InteractiveMap({
       nextTransform.scale,
       0,
     );
-  }, [availableImage, interactive, view, viewKey]);
+  }, [availableImage, view, viewKey]);
 
   const reportView = useCallback(
     (transform: ReactZoomPanPinchRef): void => {
@@ -364,19 +238,14 @@ export function InteractiveMap({
 
   useEffect(() => {
     const previous = previousSelectionRef.current;
-    previousSelectionRef.current = { interactive, key: selectedKey, viewKey };
-    if (previous === null) return;
+    previousSelectionRef.current = { key: selectedKey, viewKey };
+    const becameInteractive =
+      previous === null && staticViewKeyRef.current === viewKey;
+    if (previous === null && !becameInteractive) return;
 
-    const selectionChanged = previous.key !== selectedKey;
-    const viewChanged = previous.viewKey !== viewKey;
-    const becameInteractive = !previous.interactive && interactive;
-    if (
-      (!selectionChanged && !becameInteractive) ||
-      !interactive ||
-      viewChanged
-    ) {
-      return;
-    }
+    const selectionChanged = previous !== null && previous.key !== selectedKey;
+    const viewChanged = previous !== null && previous.viewKey !== viewKey;
+    if ((!selectionChanged && !becameInteractive) || viewChanged) return;
 
     const transform = transformRef.current;
     const viewport = transform?.instance.wrapperComponent;
@@ -413,11 +282,11 @@ export function InteractiveMap({
       })
       .then(() => reportView(transform));
   }, [
-    interactive,
     markerGroups,
     reducedMotion,
     reportView,
     selectedKey,
+    staticViewKeyRef,
     viewKey,
   ]);
 
@@ -428,121 +297,13 @@ export function InteractiveMap({
     void reset.then(() => reportView(transform));
   };
 
-  const imageBox =
-    availableImage === undefined ? null : (
-      <div className={classes['imageBox']}>
-        <Image
-          className={classes['image']}
-          src={availableImage.src}
-          alt={availableImage.alt}
-          width={availableImage.width}
-          height={availableImage.height}
-          fit="contain"
-          onError={() => setFailedSrc(availableImage.src)}
-        />
-        {connectors.length > 0 ? (
-          <svg
-            className={classes['connectors']}
-            viewBox={`0 0 ${availableImage.width} ${availableImage.height}`}
-            preserveAspectRatio="xMidYMid meet"
-            aria-hidden="true"
-            focusable="false"
-            pointerEvents="none"
-          >
-            {connectors.map(({ id, from, to }) => {
-              const start = markersById.get(from);
-              const end = markersById.get(to);
-              if (start === undefined || end === undefined) return null;
-
-              return (
-                <line
-                  key={id}
-                  className={classes['connector']}
-                  x1={start.x}
-                  y1={start.y}
-                  x2={end.x}
-                  y2={end.y}
-                />
-              );
-            })}
-          </svg>
-        ) : null}
-        {markerGroups.map((group) => {
-          const markerIds = group.map(({ id }) => id);
-          const targetKey = `${group[0]!.x},${group[0]!.y}`;
-          const selected = markerIds.some((id) => selectedIdSet.has(id));
-          const details =
-            interactive && openDetails?.targetKey === targetKey
-              ? openDetails.content
-              : undefined;
-          const hasDetails = details != null && details !== false;
-          const detailsOpen =
-            openDetails?.targetKey === targetKey && hasDetails;
-          const activate = (event: MouseEvent<HTMLButtonElement>) => {
-            event.currentTarget.focus();
-            onActivate?.(markerIds);
-            const activationDetails = renderDetails?.(markerIds);
-            setOpenDetails(
-              activationDetails != null && activationDetails !== false
-                ? { targetKey, content: activationDetails }
-                : null,
-            );
-          };
-
-          if (interactive) {
-            return (
-              <InteractiveMarker
-                key={markerIds[0]}
-                group={group}
-                image={availableImage}
-                selected={selected}
-                targetKey={targetKey}
-                markerTargetRefs={markerTargetRefs}
-                portalTarget={portalTarget}
-                details={details}
-                hasDetailsRenderer={renderDetails !== undefined}
-                detailsOpen={detailsOpen}
-                onActivate={activate}
-                onCloseDetails={closeDetails}
-              />
-            );
-          }
-
-          return (
-            <span
-              key={markerIds[0]}
-              className={classes['markerStatic']}
-              data-marker-position={markerIds[0]}
-              data-marker-id={markerIds.length === 1 ? markerIds[0] : undefined}
-              data-marker-ids={markerIds.join(' ')}
-              data-selected={selected ? 'true' : undefined}
-              style={markerStyle({
-                x: group[0]!.x,
-                y: group[0]!.y,
-                imageWidth: availableImage.width,
-                imageHeight: availableImage.height,
-              })}
-              aria-hidden="true"
-              inert
-            >
-              {group.map(({ content, id }) => (
-                <Fragment key={id}>{content}</Fragment>
-              ))}
-            </span>
-          );
-        })}
-      </div>
-    );
-
   let stageContent: ReactNode;
   if (availableImage === undefined) {
     stageContent = (
-      <Text className={classes['unavailable']} size="sm">
+      <Text className={staticClasses['unavailable']} size="sm">
         {unavailableMessage}
       </Text>
     );
-  } else if (!interactive) {
-    stageContent = <>{imageBox}</>;
   } else {
     stageContent = (
       <TransformWrapper
@@ -583,7 +344,7 @@ export function InteractiveMap({
         }}
       >
         <TransformComponent
-          wrapperClass={classes['viewport']!}
+          wrapperClass={`${classes['viewport']} ${gestures === 'zoomed' && !isZoomedIn ? classes['viewportGesturesOff'] : ''}`.trim()}
           contentClass={classes['transformedContent']!}
           wrapperStyle={{ width: '100%', height: '100%' }}
           contentStyle={{
@@ -593,7 +354,52 @@ export function InteractiveMap({
               'min(100cqh, calc(100cqw / var(--interactive-map-image-aspect-ratio)))',
           }}
         >
-          {imageBox}
+          <MapPicture
+            image={availableImage}
+            markers={markers}
+            connectors={connectors}
+            onImageError={() => setFailedSrc(availableImage.src)}
+          >
+            {markerGroups.map((group) => {
+              const markerIds = group.map(({ id }) => id);
+              const targetKey = `${group[0]!.x},${group[0]!.y}`;
+              const selected = markerIds.some((id) => selectedIdSet.has(id));
+              const details =
+                openDetails?.targetKey === targetKey
+                  ? openDetails.content
+                  : undefined;
+              const hasDetails = details != null && details !== false;
+              const detailsOpen =
+                openDetails?.targetKey === targetKey && hasDetails;
+              const activate = (event: MouseEvent<HTMLButtonElement>) => {
+                event.currentTarget.focus();
+                onActivate?.(markerIds);
+                const activationDetails = renderDetails?.(markerIds);
+                setOpenDetails(
+                  activationDetails != null && activationDetails !== false
+                    ? { targetKey, content: activationDetails }
+                    : null,
+                );
+              };
+
+              return (
+                <InteractiveMarker
+                  key={markerIds[0]}
+                  group={group}
+                  image={availableImage}
+                  selected={selected}
+                  targetKey={targetKey}
+                  markerTargetRefs={markerTargetRefs}
+                  portalTarget={portalTarget}
+                  details={details}
+                  hasDetailsRenderer={renderDetails !== undefined}
+                  detailsOpen={detailsOpen}
+                  onActivate={activate}
+                  onCloseDetails={closeDetails}
+                />
+              );
+            })}
+          </MapPicture>
         </TransformComponent>
         <TransformControls
           fitLabel={fitLabel}
@@ -612,14 +418,12 @@ export function InteractiveMap({
   return (
     <div
       ref={setPortalTarget}
-      className={`${classes['stage']} ${className ?? ''}`.trim()}
+      className={`${staticClasses['stage']} ${className ?? ''}`.trim()}
       role="group"
       aria-label={accessibleName}
       style={stageStyle}
       data-unavailable={availableImage === undefined ? 'true' : undefined}
-      data-gestures={
-        interactive && gestures === 'zoomed' && !isZoomedIn ? 'off' : undefined
-      }
+      data-gestures={gestures === 'zoomed' && !isZoomedIn ? 'off' : undefined}
     >
       {stageContent}
     </div>

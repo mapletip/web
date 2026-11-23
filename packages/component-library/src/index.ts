@@ -31,6 +31,8 @@ export type { EntityOptionProps } from '@/components/EntityOption';
 export { SpriteStage } from '@/components/SpriteStage';
 export type { SpriteStageProps } from '@/components/SpriteStage';
 export { InteractiveMap } from '@/components/InteractiveMap';
+export { StaticMap } from '@/components/StaticMap';
+export type { StaticMapProps } from '@/components/StaticMap';
 export type {
   InteractiveMapConnector,
   InteractiveMapImage,
