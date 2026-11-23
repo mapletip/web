@@ -2,6 +2,7 @@ import {
   Box,
   Divider,
   Group,
+  SimpleGrid,
   Stack,
   Text,
   TextInput,
@@ -485,20 +486,39 @@ export function FacetedBrowser<TRecord extends Record<string, unknown>>(
     );
   };
 
-  const cardResults =
-    props.presentation === 'comparison' || props.presentation === 'cards' ? (
+  const cardItems = browser.records.map((record) => (
+    <div role="listitem" key={String(record[idAccessor])}>
+      {renderBrowserCard(record)}
+    </div>
+  ));
+  const { cardColumns } = props;
+  let cardResults: ReactNode;
+  if (cardColumns !== undefined) {
+    cardResults = (
+      <SimpleGrid
+        cols={cardColumns}
+        spacing="sm"
+        verticalSpacing="sm"
+        role="list"
+        aria-label={`${recordNoun} cards`}
+      >
+        {cardItems}
+      </SimpleGrid>
+    );
+  } else if (
+    props.presentation === 'comparison' ||
+    props.presentation === 'cards'
+  ) {
+    cardResults = (
       <div
         className={classes['cards']}
         role="list"
         aria-label={`${recordNoun} cards`}
       >
-        {browser.records.map((record) => (
-          <div role="listitem" key={String(record[idAccessor])}>
-            {renderBrowserCard(record)}
-          </div>
-        ))}
+        {cardItems}
       </div>
-    ) : undefined;
+    );
+  }
   const customResults =
     props.presentation === 'custom'
       ? props.renderResults({ records: browser.records, state: canonicalState })
