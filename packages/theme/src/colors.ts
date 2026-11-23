@@ -44,6 +44,19 @@ export interface DisabledColors {
   readonly fg: string;
 }
 
+/**
+ * Production map marker colors. These stay separate from status colors because
+ * they identify map entities and retain their exact, higher-contrast production hues.
+ */
+export interface MapMarkerColors {
+  readonly selection: string;
+  readonly connector: string;
+  readonly warpRing: string;
+  readonly monster: string;
+  readonly npc: string;
+  readonly border: string;
+}
+
 /** Primary CTA Walnut Glow colors. */
 export interface CtaColors {
   readonly background: string;
@@ -78,6 +91,7 @@ export interface SchemeColors {
   readonly cta: CtaColors;
   readonly statuses: StatusColors;
   readonly disabled: DisabledColors;
+  readonly mapMarkers: MapMarkerColors;
 }
 
 /**
@@ -124,6 +138,14 @@ export const mapleTwilightScheme: SchemeColors = {
   disabled: {
     bg: '#313133',
     fg: '#B4B4B8',
+  },
+  mapMarkers: {
+    selection: '#FFEB3B',
+    connector: '#F08C46',
+    warpRing: '#F08C46',
+    monster: '#FFD166',
+    npc: '#20C997',
+    border: '#FFFFFF',
   },
 };
 

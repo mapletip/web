@@ -1,5 +1,9 @@
 import { MantineProvider } from '@mantine/core';
-import { cssVariablesResolver, theme } from '@mapletip/theme';
+import {
+  cssVariablesResolver,
+  mapleTwilightScheme,
+  theme,
+} from '@mapletip/theme';
 import { useState, type ReactNode } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { commands, page, userEvent } from 'vitest/browser';
@@ -14,6 +18,24 @@ import type {
 } from '@/components/InteractiveMap';
 
 const image = `data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="400" height="200"><rect width="400" height="200" fill="#789"/></svg>')}`;
+
+function resolveColor(color: string): string {
+  const probe = document.createElement('span');
+  probe.style.color = color;
+  document.body.append(probe);
+  const resolved = getComputedStyle(probe).color;
+  probe.remove();
+  return resolved;
+}
+
+function resolveBoxShadow(boxShadow: string): string {
+  const probe = document.createElement('span');
+  probe.style.boxShadow = boxShadow;
+  document.body.append(probe);
+  const resolved = getComputedStyle(probe).boxShadow;
+  probe.remove();
+  return resolved;
+}
 
 function expectCenterdRing(style: CSSStyleDeclaration, target: Element): void {
   const targetRect = target.getBoundingClientRect();
@@ -112,7 +134,9 @@ describe('InteractiveMap selected marker ring', () => {
       .element();
     const ring = getComputedStyle(target, '::before');
 
-    expect(ring.borderColor).toBe('rgb(255, 235, 59)');
+    expect(ring.borderColor).toBe(
+      resolveColor(mapleTwilightScheme.mapMarkers.selection),
+    );
     expect(ring.borderStyle).toBe('solid');
     expect(ring.borderWidth).toBe('2px');
     expect(ring.opacity).toBe('0.8');
@@ -130,12 +154,16 @@ describe('InteractiveMap selected marker ring', () => {
     await expect.element(target).toHaveFocus();
 
     const focusRing = getComputedStyle(target.element(), '::after');
-    expect(focusRing.borderColor).toBe('rgb(255, 235, 59)');
+    expect(focusRing.borderColor).toBe(
+      resolveColor(mapleTwilightScheme.mapMarkers.selection),
+    );
     expect(focusRing.borderStyle).toBe('solid');
     expect(focusRing.borderWidth).toBe('3px');
     expectCenterdRing(focusRing, target.element());
     expect(focusRing.boxShadow).toBe(
-      'rgba(255, 235, 59, 0.58) 0px 0px 0px 4px',
+      resolveBoxShadow(
+        `0 0 0 4px color-mix(in srgb, ${mapleTwilightScheme.mapMarkers.selection} 58%, transparent)`,
+      ),
     );
   });
 
@@ -491,6 +519,84 @@ async function mountSelectionHarness(options?: {
 }
 
 describe('InteractiveMap pan and zoom', () => {
+  it('pans to the selected marker when a static stage becomes interactive', async () => {
+    await commands.emulateMedia({ reducedMotion: 'reduce' });
+    const savedView: InteractiveMapView = {
+      zoom: 2,
+      centerX: 80,
+      centerY: 100,
+    };
+
+    function Harness() {
+      const [interactive, setInteractive] = useState(false);
+      return (
+        <MantineProvider
+          theme={theme}
+          cssVariablesResolver={cssVariablesResolver}
+          forceColorScheme="dark"
+        >
+          <button type="button" onClick={() => setInteractive(true)}>
+            Enable map interactions
+          </button>
+          <div style={{ width: '400px' }}>
+            <InteractiveMap
+              image={{
+                src: image,
+                width: 400,
+                height: 200,
+                alt: 'Hydrated map image',
+              }}
+              markers={[
+                {
+                  id: 'west',
+                  x: 80,
+                  y: 100,
+                  label: 'West point',
+                  content: markerContent(),
+                },
+                {
+                  id: 'east',
+                  x: 320,
+                  y: 100,
+                  label: 'East point',
+                  content: markerContent(),
+                },
+              ]}
+              selectedIds={['east']}
+              interactive={interactive}
+              view={savedView}
+              unavailableMessage="Image unavailable."
+            />
+          </div>
+        </MantineProvider>
+      );
+    }
+
+    const container = (await render(<Harness />)).container;
+    expect(container.querySelector('.react-transform-wrapper')).toBeNull();
+
+    await userEvent.click(
+      page.getByRole('button', { name: 'Enable map interactions' }),
+    );
+
+    const viewport = container.querySelector<HTMLElement>(
+      '.react-transform-wrapper',
+    )!;
+    const east = page.getByRole('button', { name: 'East point' });
+    await expect
+      .poll(() => {
+        const viewportRect = viewport.getBoundingClientRect();
+        const eastRect = east.element().getBoundingClientRect();
+        return (
+          eastRect.left >= viewportRect.left &&
+          eastRect.right <= viewportRect.right &&
+          eastRect.top >= viewportRect.top &&
+          eastRect.bottom <= viewportRect.bottom
+        );
+      })
+      .toBe(true);
+  });
+
   it.each([
     { shape: 'tall', imageWidth: 300, imageHeight: 900, stageHeight: 630 },
     { shape: 'wide', imageWidth: 1200, imageHeight: 200, stageHeight: 180 },

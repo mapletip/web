@@ -144,6 +144,14 @@ describe('MapleTip approved theme foundation', () => {
     expect(mapleTwilightScheme.cta.background).toBe('#3A2312');
     expect(mapleTwilightScheme.cta.foreground).toBe('#F0A456');
     expect(mapleTwilightScheme.cta.hover).toBe('#4E2F18');
+    expect(mapleTwilightScheme.mapMarkers).toEqual({
+      selection: '#FFEB3B',
+      connector: '#F08C46',
+      warpRing: '#F08C46',
+      monster: '#FFD166',
+      npc: '#20C997',
+      border: '#FFFFFF',
+    });
   });
 
   it('exposes the palettes, primary shade, and typography', () => {
@@ -216,6 +224,24 @@ describe('MapleTip approved theme foundation', () => {
     );
     expect(variables.dark?.['--mapletip-color-soft']).toBe(
       mapleTwilightScheme.soft,
+    );
+    expect(variables.dark?.['--mapletip-color-map-selection']).toBe(
+      mapleTwilightScheme.mapMarkers.selection,
+    );
+    expect(variables.dark?.['--mapletip-color-map-connector']).toBe(
+      mapleTwilightScheme.mapMarkers.connector,
+    );
+    expect(variables.dark?.['--mapletip-color-map-warp-ring']).toBe(
+      mapleTwilightScheme.mapMarkers.warpRing,
+    );
+    expect(variables.dark?.['--mapletip-color-map-monster']).toBe(
+      mapleTwilightScheme.mapMarkers.monster,
+    );
+    expect(variables.dark?.['--mapletip-color-map-npc']).toBe(
+      mapleTwilightScheme.mapMarkers.npc,
+    );
+    expect(variables.dark?.['--mapletip-color-map-border']).toBe(
+      mapleTwilightScheme.mapMarkers.border,
     );
   });
 
