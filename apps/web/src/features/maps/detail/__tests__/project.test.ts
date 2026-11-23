@@ -746,7 +746,12 @@ describe('projectMapDetail', () => {
             monster(source, {
               key: 'fixture:monster:delayed-minutes',
               name: { state: 'known', value: 'Delayed minutes' },
-              respawn: { kind: 'delayed', seconds: 120 },
+              respawn: { kind: 'delayed', seconds: 180 },
+            }),
+            monster(source, {
+              key: 'fixture:monster:delayed-hours-and-minutes',
+              name: { state: 'known', value: 'Delayed hours and minutes' },
+              respawn: { kind: 'delayed', seconds: 5400 },
             }),
             monster(source, {
               key: 'fixture:monster:delayed-seconds',
@@ -774,8 +779,9 @@ describe('projectMapDetail', () => {
     ).toEqual({
       Ordinary: undefined,
       None: 'No respawn',
-      'Delayed minutes': 'Respawns after 2 min',
-      'Delayed seconds': 'Respawns after 45 sec',
+      'Delayed minutes': '3m respawn',
+      'Delayed hours and minutes': '1h 30m respawn',
+      'Delayed seconds': '45s respawn',
       Mixed: 'Mixed respawn',
     });
   });

@@ -12,7 +12,13 @@ const cards = [
   { key: 'b', name: 'Birch', rank: 2 },
 ] as const;
 
-function ControlledList({ showSearch }: { readonly showSearch: boolean }) {
+function ControlledList({
+  showSearch,
+  equalHeightRows = false,
+}: {
+  readonly showSearch: boolean;
+  readonly equalHeightRows?: boolean;
+}) {
   const [query, setQuery] = useState('');
 
   return (
@@ -21,6 +27,7 @@ function ControlledList({ showSearch }: { readonly showSearch: boolean }) {
       getKey={(card) => card.key}
       renderItem={(card) => <span>{card.name}</span>}
       itemTestId="detail-card"
+      equalHeightRows={equalHeightRows}
       {...(showSearch
         ? {
             search: {
@@ -40,10 +47,13 @@ function ControlledList({ showSearch }: { readonly showSearch: boolean }) {
   );
 }
 
-function mount(showSearch: boolean) {
+function mount(showSearch: boolean, equalHeightRows = false) {
   return render(
     <MantineProvider>
-      <ControlledList showSearch={showSearch} />
+      <ControlledList
+        showSearch={showSearch}
+        equalHeightRows={equalHeightRows}
+      />
     </MantineProvider>,
   );
 }
@@ -80,5 +90,14 @@ describe('DetailCardList', () => {
         .map((card) => card.textContent),
     ).toEqual(['Birch']);
     expect(screen.getByText('1 of 3 cards')).toBeVisible();
+  });
+
+  it('marks equal-height rows for layouts that need aligned cards', () => {
+    mount(false, true);
+
+    expect(screen.getByRole('list')).toHaveAttribute(
+      'data-detail-card-equal-rows',
+      'true',
+    );
   });
 });

@@ -17,6 +17,7 @@ export function NpcCardList({
         items={npcs.npcs}
         getKey={(npc) => npc.key}
         density={NPC_RECORD_CARD_DENSITY}
+        equalHeightRows
         itemTestId="map-npc-card"
         renderItem={(npc) => <NpcRecordCard npc={npc} />}
       />

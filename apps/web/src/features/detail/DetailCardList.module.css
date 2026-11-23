@@ -13,6 +13,15 @@
   min-width: 0;
 }
 
+.list[data-detail-card-equal-rows='true'] {
+  grid-auto-rows: 1fr;
+}
+
+.list[data-detail-card-equal-rows='true'] > .item,
+.list[data-detail-card-equal-rows='true'] > .item > * {
+  height: 100%;
+}
+
 @media (max-width: 47.99em) {
   .item[data-mobile-hidden='true'] {
     display: none;
