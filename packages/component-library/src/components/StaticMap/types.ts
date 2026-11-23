@@ -20,6 +20,8 @@ export interface StaticMapProps {
   readonly selectedIds?: readonly string[] | undefined;
   /** Optional marker pairs joined by decorative lines in image pixel coordinates. */
   readonly connectors?: readonly InteractiveMapConnector[] | undefined;
+  /** Native image loading behavior. Omitted to keep the browser default. */
+  readonly loading?: 'eager' | 'lazy' | undefined;
   /** Host wording shown when the image is missing or fails to load. */
   readonly unavailableMessage: string;
 }

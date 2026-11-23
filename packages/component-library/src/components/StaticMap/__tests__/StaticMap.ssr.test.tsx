@@ -33,10 +33,12 @@ describe('StaticMap server rendering', () => {
             },
           ]}
           connectors={[{ id: 'quarter-edge', from: 'quarter', to: 'edge' }]}
+          loading="lazy"
           unavailableMessage="Image unavailable."
         />
       </MantineProvider>,
     );
+    const stage = html.match(/<div\b[^>]*role="group"[^>]*>/u)?.[0];
     const quarter = html.match(
       /<span\b[^>]*data-marker-position="quarter"[^>]*>/u,
     )?.[0];
@@ -44,6 +46,7 @@ describe('StaticMap server rendering', () => {
       /<span\b[^>]*data-marker-position="edge"[^>]*>/u,
     )?.[0];
 
+    expect(stage).toContain('--interactive-map-image-aspect-ratio:2');
     expect(quarter).toContain('left:25%');
     expect(quarter).toContain('top:25%');
     expect(edge).toContain('left:100%');

@@ -18,6 +18,7 @@ const meta = {
 - \`markers\`: required host-rendered markers with stable ids and image-pixel coordinates. Markers at the same point are grouped.
 - \`selectedIds\`: optional marker ids to highlight.
 - \`connectors\`: optional pairs of marker ids joined by decorative lines.
+- \`loading\`: optional native image loading behavior (\`eager\` or \`lazy\`).
 - \`className\` and \`style\`: applied to the stage root so a host can fit it.
 - \`unavailableMessage\`: required message shown when no image is available or its request fails.`,
       },
@@ -94,7 +95,7 @@ const wideProps: StaticMapProps = {
 };
 
 export const Wide: Story = {
-  args: wideProps,
+  args: { ...wideProps, loading: 'lazy' },
   render: (args) => (
     <div style={{ width: 680 }}>
       <StaticMap {...args} />
