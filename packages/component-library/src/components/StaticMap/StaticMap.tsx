@@ -114,7 +114,10 @@ function StaticMarkers({
               y: target.y,
               imageWidth: image.width,
               imageHeight: image.height,
+              size: target.size,
+              anchor: target.anchor,
             })}
+            data-sized={target.size === undefined ? undefined : 'true'}
             aria-hidden="true"
             inert
           >

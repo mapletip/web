@@ -13,6 +13,7 @@ const dark = composeStories(stories);
 
 interface StaticMapVisualCase extends VisualCase {
   readonly imageAlt?: string;
+  readonly selectedIds?: readonly string[];
 }
 
 const visualCases: readonly StaticMapVisualCase[] = [
@@ -57,6 +58,37 @@ const visualCases: readonly StaticMapVisualCase[] = [
     visible: [page.getByRole('img', { name: 'Synthetic wide image' })],
   },
   {
+    name: 'static-map-sized-markers-dark',
+    story: dark.SizedMarkers,
+    storyId: 'components-map-staticmap--sized-markers',
+    width: 720,
+    height: 600,
+    element: page.getByRole('group', { name: 'Synthetic wide image' }),
+    imageAlt: 'Synthetic wide image',
+    visible: [page.getByRole('img', { name: 'Synthetic wide image' })],
+  },
+  {
+    name: 'static-map-sized-markers-selected-dark',
+    story: dark.SizedMarkersSelected,
+    storyId: 'components-map-staticmap--sized-markers-selected',
+    width: 720,
+    height: 600,
+    element: page.getByRole('group', { name: 'Synthetic wide image' }),
+    imageAlt: 'Synthetic wide image',
+    selectedIds: ['center-sprite'],
+    visible: [page.getByRole('img', { name: 'Synthetic wide image' })],
+  },
+  {
+    name: 'static-map-sized-markers-minimum-dark',
+    story: dark.SizedMarkersMinimum,
+    storyId: 'components-map-staticmap--sized-markers-minimum',
+    width: 320,
+    height: 400,
+    element: page.getByRole('group', { name: 'Synthetic wide image' }),
+    imageAlt: 'Synthetic wide image',
+    visible: [page.getByRole('img', { name: 'Synthetic wide image' })],
+  },
+  {
     name: 'static-map-unavailable-dark',
     story: dark.Unavailable,
     storyId: 'components-map-staticmap--unavailable',
@@ -95,6 +127,14 @@ describe.each(visualCases)('$name', (visualCase) => {
     expect(
       visualCase.imageAlt === undefined || (image?.naturalWidth ?? 0) > 0,
     ).toBe(true);
+
+    for (const markerId of visualCase.selectedIds ?? []) {
+      expect(
+        document.querySelector(
+          `[data-marker-id="${markerId}"][data-selected="true"]`,
+        ),
+      ).not.toBeNull();
+    }
 
     await expectApprovedScreenshot(visualCase);
   });

@@ -165,7 +165,11 @@ function InteractiveMapStage({
   };
   const closeDetails = () => setOpenDetails(null);
   const updateZoomedState = useCallback(
-    (_transform: ReactZoomPanPinchRef, state: { readonly scale: number }) => {
+    (transform: ReactZoomPanPinchRef, state: { readonly scale: number }) => {
+      transform.instance.contentComponent?.style.setProperty(
+        '--map-zoom',
+        String(state.scale),
+      );
       setIsZoomedIn(state.scale > 1 + TRANSFORM_EPSILON);
     },
     [],

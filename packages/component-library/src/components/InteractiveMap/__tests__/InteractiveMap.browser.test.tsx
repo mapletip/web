@@ -16,6 +16,7 @@ import type {
   InteractiveMapMarker,
   InteractiveMapView,
 } from '@/components/InteractiveMap';
+import { StaticMap } from '@/components/StaticMap';
 
 const image = `data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="400" height="200"><rect width="400" height="200" fill="#789"/></svg>')}`;
 
@@ -179,6 +180,239 @@ describe('InteractiveMap selected marker ring', () => {
     expect(style.borderStyle).toBe('solid');
     expect(style.borderWidth).toBe('2px');
     expect(style.borderColor).not.toBe('rgba(0, 0, 0, 0)');
+  });
+});
+
+describe('InteractiveMap sized markers', () => {
+  it('centers the StaticMap ring on the sized visual and surrounds its larger side', async () => {
+    await render(
+      <MantineProvider
+        theme={theme}
+        cssVariablesResolver={cssVariablesResolver}
+        forceColorScheme="dark"
+      >
+        <div style={{ width: 400 }}>
+          <StaticMap
+            image={{ src: image, width: 400, height: 200, alt: 'Static test' }}
+            markers={[
+              {
+                id: 'static-sized',
+                x: 100,
+                y: 100,
+                label: 'Static sprite',
+                size: { width: 40, height: 80 },
+                anchor: 'bottom',
+                content: (
+                  <span
+                    aria-hidden="true"
+                    style={{ width: '100%', height: '100%' }}
+                  />
+                ),
+              },
+            ]}
+            selectedIds={['static-sized']}
+            unavailableMessage="Image unavailable."
+          />
+        </div>
+      </MantineProvider>,
+    );
+
+    const marker = page
+      .getByRole('group', { name: 'Static test' })
+      .element()
+      .querySelector<HTMLElement>('[data-marker-position="static-sized"]')!;
+    const markerRect = marker.getBoundingClientRect();
+    const ring = getComputedStyle(marker, '::before');
+
+    expect(marker).toHaveAttribute('data-selected', 'true');
+    expectCenterdRing(ring, marker);
+    expect(
+      Math.abs(
+        Number.parseFloat(ring.width) -
+          Math.max(markerRect.width, markerRect.height) -
+          12,
+      ),
+    ).toBeLessThanOrEqual(1);
+  });
+
+  it('writes the current zoom to transformed content and keeps the target centered', async () => {
+    await commands.emulateMedia({ reducedMotion: 'reduce' });
+    const container = await mountInteractiveStage({
+      markers: [
+        {
+          id: 'sized',
+          x: 100,
+          y: 50,
+          label: 'Sized point',
+          size: { width: 80, height: 40 },
+          anchor: 'bottom',
+          content: (
+            <span
+              aria-hidden="true"
+              style={{ width: '100%', height: '100%' }}
+            />
+          ),
+        },
+      ],
+    });
+    const content = container.querySelector<HTMLElement>(
+      '.react-transform-component',
+    )!;
+    const marker = container.querySelector<HTMLElement>(
+      '[data-marker-position="sized"]',
+    )!;
+    const visual = marker.querySelector<HTMLElement>(
+      '[data-marker-visual="true"]',
+    )!;
+    const initialVisualRect = visual.getBoundingClientRect();
+    const imageRect = container.querySelector('img')!.getBoundingClientRect();
+
+    expect(initialVisualRect.width).toBeGreaterThan(0);
+    expect(initialVisualRect.height).toBeGreaterThan(0);
+    expect(
+      Math.abs(initialVisualRect.width - (80 / 400) * imageRect.width),
+    ).toBeLessThanOrEqual(1);
+    expect(
+      Math.abs(initialVisualRect.height - (40 / 200) * imageRect.height),
+    ).toBeLessThanOrEqual(1);
+    expect(initialVisualRect.width / initialVisualRect.height).toBeCloseTo(
+      2,
+      2,
+    );
+
+    await userEvent.click(page.getByRole('button', { name: 'Zoom in' }));
+    await expect
+      .poll(() => Number(content.style.getPropertyValue('--map-zoom')))
+      .toBeCloseTo(Math.SQRT2);
+
+    const target = page.getByRole('button', { name: 'Sized point' }).element();
+    const visualRect = visual.getBoundingClientRect();
+    const targetRect = target.getBoundingClientRect();
+
+    expect(visualRect.width).toBeCloseTo(
+      initialVisualRect.width * Math.SQRT2,
+      0,
+    );
+    expect(visualRect.height).toBeCloseTo(
+      initialVisualRect.height * Math.SQRT2,
+      0,
+    );
+    expect(visualRect.width / visualRect.height).toBeCloseTo(2, 2);
+    expect(targetRect.width).toBeCloseTo(44, 0);
+    expect(targetRect.height).toBeCloseTo(44, 0);
+    expect(targetRect.left + targetRect.width / 2).toBeCloseTo(
+      visualRect.left + visualRect.width / 2,
+      0,
+    );
+    expect(targetRect.top + targetRect.height / 2).toBeCloseTo(
+      visualRect.top + visualRect.height / 2,
+      0,
+    );
+  });
+
+  it('keeps the selected ring gap and border screen-sized through zoom', async () => {
+    await commands.emulateMedia({ reducedMotion: 'reduce' });
+    const container = await mountInteractiveStage({
+      selectedIds: ['sized'],
+      markers: [
+        {
+          id: 'sized',
+          x: 100,
+          y: 50,
+          label: 'Sized point',
+          size: { width: 80, height: 40 },
+          anchor: 'bottom',
+          content: (
+            <span
+              aria-hidden="true"
+              style={{ width: '100%', height: '100%' }}
+            />
+          ),
+        },
+      ],
+    });
+    const marker = container.querySelector<HTMLElement>(
+      '[data-marker-position="sized"]',
+    )!;
+    const content = container.querySelector<HTMLElement>(
+      '.react-transform-component',
+    )!;
+    const initialMarkerRect = marker.getBoundingClientRect();
+    const initialRing = getComputedStyle(marker, '::before');
+    const initialRingDiameter = Number.parseFloat(initialRing.width);
+    const initialZoom = Number(content.style.getPropertyValue('--map-zoom'));
+
+    expect(marker).not.toHaveAttribute('data-selected');
+    expect(marker.querySelector('button')).toHaveAttribute(
+      'data-selected',
+      'true',
+    );
+    expectCenterdRing(initialRing, marker);
+    expect(
+      Math.abs(
+        initialRingDiameter * initialZoom -
+          Math.max(initialMarkerRect.width, initialMarkerRect.height) -
+          12,
+      ),
+    ).toBeLessThanOrEqual(1);
+
+    await userEvent.click(page.getByRole('button', { name: 'Zoom in' }));
+    await expect
+      .poll(() => Number(content.style.getPropertyValue('--map-zoom')))
+      .toBeCloseTo(Math.SQRT2);
+    await userEvent.click(page.getByRole('button', { name: 'Zoom in' }));
+    await expect
+      .poll(() => Number(content.style.getPropertyValue('--map-zoom')))
+      .toBeCloseTo(2, 0);
+
+    const zoomedRing = getComputedStyle(marker, '::before');
+    const zoomedRingDiameter = Number.parseFloat(zoomedRing.width);
+    const zoomedMarkerRect = marker.getBoundingClientRect();
+    const zoomedScale = Number(content.style.getPropertyValue('--map-zoom'));
+
+    expect(
+      Math.abs(
+        zoomedRingDiameter * zoomedScale -
+          Math.max(zoomedMarkerRect.width, zoomedMarkerRect.height) -
+          12,
+      ),
+    ).toBeLessThanOrEqual(1);
+    expect(
+      Number.parseFloat(zoomedRing.borderTopWidth) * zoomedScale,
+    ).toBeCloseTo(2, 1);
+  });
+
+  it('keeps a tiny marker above the minimum width at fit', async () => {
+    const container = await mountInteractiveStage({
+      markers: [
+        {
+          id: 'tiny',
+          x: 100,
+          y: 50,
+          label: 'Tiny point',
+          size: { width: 4, height: 2 },
+          content: (
+            <span
+              aria-hidden="true"
+              style={{ width: '100%', height: '100%' }}
+            />
+          ),
+        },
+      ],
+    });
+    const stage = container.querySelector<HTMLElement>(
+      '[role="group"][aria-label="Zoom test image"]',
+    )!;
+    stage.style.setProperty('--map-marker-min-size', '24px');
+
+    const visual = container.querySelector<HTMLElement>(
+      '[data-marker-visual="true"]',
+    )!;
+    const visualRect = visual.getBoundingClientRect();
+
+    expect(visualRect.width).toBeGreaterThanOrEqual(24);
+    expect(visualRect.height).toBeCloseTo(12, 0);
+    expect(visualRect.width / visualRect.height).toBeCloseTo(2, 2);
   });
 });
 
