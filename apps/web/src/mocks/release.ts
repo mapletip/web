@@ -1,4 +1,11 @@
-import type { MapPagePackV1_1, MapPageRecordV1_1 } from '@mapletip/data/maps';
+import type {
+  MapBrowseRosterV1,
+  MapBrowseRowV1,
+  MapBrowseV1,
+  MapGeographyModel,
+  MapPagePackV1_1,
+  MapPageRecordV1_1,
+} from '@mapletip/data/maps';
 import type {
   MonsterCatalogV2_5,
   MonsterDropBrowseV1,
@@ -512,15 +519,13 @@ function mapPoints(
   };
 }
 
-async function projectMapPages(options: {
+async function resolveFixtureMaps(options: {
   readonly build: FixtureBuild;
-  readonly scope: MapPageRecordV1_1['scope'];
   readonly maps: readonly FixtureMap[];
-  readonly monsters: ReadonlyMap<string, MonsterCatalogV2_5['records'][number]>;
   readonly key: (prefix: string, id: string) => Promise<string>;
-}): Promise<readonly MapPageRecordV1_1[]> {
-  const { build, scope, maps, monsters, key } = options;
-  const resolved = await Promise.all(
+}): Promise<readonly ResolvedFixtureMap[]> {
+  const { build, maps, key } = options;
+  return Promise.all(
     maps.map(async (fixture): Promise<ResolvedFixtureMap> => {
       const publicId = mapPublicId({
         sourceId: `${build.buildId}:${fixture.id}`,
@@ -555,6 +560,16 @@ async function projectMapPages(options: {
       };
     }),
   );
+}
+
+async function projectMapPages(options: {
+  readonly build: FixtureBuild;
+  readonly scope: MapPageRecordV1_1['scope'];
+  readonly resolved: readonly ResolvedFixtureMap[];
+  readonly monsters: ReadonlyMap<string, MonsterCatalogV2_5['records'][number]>;
+  readonly key: (prefix: string, id: string) => Promise<string>;
+}): Promise<readonly MapPageRecordV1_1[]> {
+  const { build, scope, resolved, monsters, key } = options;
   const mapsBySourceId = new Map(resolved.map((map) => [map.fixture.id, map]));
   const positionsPublished = (map: FixtureMap): boolean =>
     map.stage !== undefined && map.positionsPublished !== false;
@@ -734,6 +749,222 @@ async function projectMapPages(options: {
   );
 }
 
+interface MapBrowseArtifacts {
+  readonly rows: MapBrowseV1;
+  readonly roster: MapBrowseRosterV1;
+  readonly geography: MapGeographyModel;
+}
+
+function absentFact(coverageKey: string): {
+  readonly state: 'absent';
+  readonly coverageKey: string;
+} {
+  return { state: 'absent', coverageKey };
+}
+
+function countFact(count: number): MapBrowseRowV1['monsterCount'] {
+  return known(count);
+}
+
+/** Group fixture geography into the model's regions, areas and collections. */
+function projectGeography(
+  maps: readonly FixtureMap[],
+): Pick<MapGeographyModel, 'regions' | 'collections'> {
+  const regions = new Map<
+    string,
+    {
+      label: string;
+      mapCount: number;
+      areas: Map<string, { label: string; mapCount: number }>;
+    }
+  >();
+  const collections = new Map<string, { label: string; mapCount: number }>();
+  for (const { geography } of maps) {
+    if (geography?.regionKey !== undefined) {
+      const region = regions.get(geography.regionKey) ?? {
+        label: geography.regionLabel ?? geography.regionKey,
+        mapCount: 0,
+        areas: new Map<string, { label: string; mapCount: number }>(),
+      };
+      region.mapCount += 1;
+      if (geography.areaKey !== undefined) {
+        const area = region.areas.get(geography.areaKey) ?? {
+          label: geography.areaLabel ?? geography.areaKey,
+          mapCount: 0,
+        };
+        area.mapCount += 1;
+        region.areas.set(geography.areaKey, area);
+      }
+      regions.set(geography.regionKey, region);
+    } else if (geography?.collectionKey !== undefined) {
+      const collection = collections.get(geography.collectionKey) ?? {
+        label: geography.collectionLabel ?? geography.collectionKey,
+        mapCount: 0,
+      };
+      collection.mapCount += 1;
+      collections.set(geography.collectionKey, collection);
+    }
+  }
+  return {
+    regions: [...regions].map(([key, region]) => ({
+      key,
+      label: region.label,
+      mapCount: region.mapCount,
+      areas: [...region.areas].map(([areaKey, area]) => ({
+        key: areaKey,
+        ...area,
+      })),
+    })),
+    collections: [...collections].map(([key, collection]) => ({
+      key,
+      ...collection,
+    })),
+  };
+}
+
+/** Map browse rows, population roster and geography for one fixture build. */
+async function projectMapBrowse(options: {
+  readonly build: FixtureBuild;
+  readonly scope: MapPageRecordV1_1['scope'];
+  readonly resolved: readonly ResolvedFixtureMap[];
+  readonly monsters: ReadonlyMap<string, MonsterCatalogV2_5['records'][number]>;
+  readonly key: (prefix: string, id: string) => Promise<string>;
+}): Promise<MapBrowseArtifacts> {
+  const { build, scope, resolved, monsters, key } = options;
+  const rosterMonsters: MapBrowseRosterV1['monsters'] = [];
+  const monsterIndex = new Map<string, number>();
+  const rosterNpcs: MapBrowseRosterV1['npcs'] = [];
+  const records: MapBrowseRosterV1['records'] = {};
+
+  const ordered = [...resolved].sort((left, right) =>
+    left.key.localeCompare(right.key),
+  );
+  for (const map of ordered) {
+    const fixture = map.fixture;
+    const entries = fixture.monsters.map((placement) => {
+      const record = monsters.get(placement.monsterId);
+      if (record === undefined) {
+        throw new Error(
+          `Fixture Map "${fixture.id}" references unknown Monster "${placement.monsterId}".`,
+        );
+      }
+      let index = monsterIndex.get(record.key);
+      if (index === undefined) {
+        index = rosterMonsters.length;
+        monsterIndex.set(record.key, index);
+        rosterMonsters.push({
+          key: record.key,
+          name: record.name,
+          level: record.stats[0] ?? { state: 'unknown' },
+          sprite: record.sprite,
+        });
+      }
+      return { monster: index, spawnPointCount: placement.points.length };
+    });
+    const npcEntries = await Promise.all(
+      fixture.npcs.map(
+        async (npc): Promise<MapBrowseRosterV1['npcs'][number]> => ({
+          key: await key('npc', `${build.buildId}:${fixture.id}:${npc.id}`),
+          name: known(npc.name),
+          sprite:
+            npc.sprite === undefined
+              ? { state: 'unknown' }
+              : known(
+                  await sha256Hex(
+                    encoder.encode(`fixture:sprite:${npc.sprite}`),
+                  ),
+                ),
+        }),
+      ),
+    );
+    const npcs = npcEntries.map((entry) => rosterNpcs.push(entry) - 1);
+    records[map.key] = { monsters: entries, npcs };
+  }
+
+  const rows = ordered.map((map): MapBrowseRowV1 => {
+    const fixture = map.fixture;
+    const coverage = `fixture:map:${fixture.id}`;
+    const geography = fixture.geography;
+    return {
+      key: map.key,
+      publicId: map.publicId,
+      slug: map.slug,
+      name:
+        fixture.name === undefined ? { state: 'unknown' } : known(fixture.name),
+      streetName:
+        fixture.streetName === undefined
+          ? { state: 'unknown' }
+          : known(fixture.streetName),
+      geography:
+        geography === undefined
+          ? { provenance: 'none' }
+          : {
+              ...geography,
+              provenance:
+                fixture.placement === undefined
+                  ? 'source-map-mark'
+                  : 'reviewed-overlay',
+              status: 'verified',
+            },
+      activity:
+        fixture.activity === undefined
+          ? absentFact(`${coverage}:activity`)
+          : known(fixture.activity),
+      minimap:
+        map.stage === undefined
+          ? absentFact(`${coverage}:minimap`)
+          : known(map.stage.contentId),
+      monsterCount: countFact(fixture.monsters.length),
+      spawnPointCount: countFact(
+        fixture.monsters.reduce(
+          (total, placement) => total + placement.points.length,
+          0,
+        ),
+      ),
+      npcCount: countFact(fixture.npcs.length),
+    };
+  });
+
+  return {
+    rows: {
+      format: 'mapletip.map-browse',
+      contractVersion: '1.0',
+      scope,
+      records: rows,
+    },
+    roster: {
+      format: 'mapletip.map-browse-roster',
+      contractVersion: '1.0',
+      scope,
+      monsters: rosterMonsters,
+      npcs: rosterNpcs,
+      records,
+    },
+    geography: {
+      format: 'mapletip.map-geography',
+      contractVersion: '1.0',
+      scope,
+      ...projectGeography(ordered.map(({ fixture }) => fixture)),
+      placements: ordered.flatMap(({ fixture, key: mapKey }) =>
+        fixture.placement === undefined
+          ? []
+          : [
+              {
+                mapKey,
+                classification: fixture.placement.classification,
+                activity: fixture.activity ?? null,
+                rationale: 'Synthetic fixture review.',
+                reviewId: `fixture:${fixture.id}`,
+                reviewedStreetName: fixture.streetName ?? '',
+                sourceMapId: fixture.id,
+                status: 'verified' as const,
+              },
+            ],
+      ),
+    },
+  };
+}
+
 interface BuildMapProductOptions {
   readonly build: FixtureBuild;
   readonly scope: MapPageRecordV1_1['scope'];
@@ -756,8 +987,9 @@ async function buildMapProduct(
 ): Promise<BuiltMapProduct> {
   const { build, scope, maps, monsters, key, put, minimapIds, markIds } =
     options;
+  const resolved = await resolveFixtureMaps({ build, maps, key });
   const mapPages = [
-    ...(await projectMapPages({ build, scope, maps, monsters, key })),
+    ...(await projectMapPages({ build, scope, resolved, monsters, key })),
   ].sort((left, right) => left.publicId.localeCompare(right.publicId));
   const mapPagePackRange: RangeDescriptor = {
     count: mapPages.length,
@@ -794,8 +1026,22 @@ async function buildMapProduct(
     firstKey: '',
     lastKey: '',
   };
+  const browse = await projectMapBrowse({
+    build,
+    scope,
+    resolved,
+    monsters,
+    key,
+  });
+  const rows = await put('v2/maps/browse', browse.rows);
+  const roster = await put('v2/maps/browse-rosters', browse.roster);
+  const geography = await put('v2/maps/geography', browse.geography);
+  const rowKeys = browse.rows.records.map((row) => row.key);
+  const rosterKeys = Object.keys(browse.roster.records);
   const mapCapabilities = [
     'evidence-pages-v2',
+    'map-browse-v1',
+    'map-geography-v1',
     'map-page-v1',
     'maps-v1',
     'wire-2.0',
@@ -825,6 +1071,21 @@ async function buildMapProduct(
     pagePacks: [{ ...pagePack, ...mapPagePackRange }],
     relationshipPacks: [],
     totalEntityCount: mapPages.length,
+    geography,
+    mapBrowse: {
+      rows: {
+        ...rows,
+        count: rowKeys.length,
+        firstKey: rowKeys[0] ?? '',
+        lastKey: rowKeys.at(-1) ?? '',
+      },
+      roster: {
+        ...roster,
+        count: rosterKeys.length,
+        firstKey: rosterKeys[0] ?? '',
+        lastKey: rosterKeys.at(-1) ?? '',
+      },
+    },
   });
   return {
     pagePack,
