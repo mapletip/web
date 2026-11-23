@@ -24,7 +24,7 @@ export {
   type MonsterStatDefinition,
   type UnknownFactState,
 } from './monster-data';
-export { resolveMonsterSpriteUrl } from './sprite';
+export { positiveSpriteDimension, resolveMonsterSpriteUrl } from './sprite';
 export {
   MONSTER_RECORD_CARD_DENSITY,
   MonsterRecordCard,

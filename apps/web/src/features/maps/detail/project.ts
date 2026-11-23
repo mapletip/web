@@ -12,9 +12,11 @@ import {
   projectMapRecordDestination,
   type MapRecordCardView,
 } from '@/features/maps/shared';
+import { minimapSpriteSize } from '@/features/maps/shared/minimapSpriteSize';
 import {
   formatMonsterNumber,
   monsterDetailLinkProps,
+  positiveSpriteDimension,
   projectMonsterRecordCard,
   projectMonsterRespawnLabel,
   type MonsterRecordCardView,
@@ -97,6 +99,8 @@ export interface MapDetailStageMarker {
   readonly focusKey: string;
   readonly label: string;
   readonly spriteUrl?: string;
+  readonly size?: { readonly width: number; readonly height: number };
+  readonly anchor?: 'center' | 'bottom';
 }
 
 export interface MapDetailStageView {
@@ -120,6 +124,10 @@ export interface MapDetailConnectionView extends MapRecordCardView {
 
 export interface MapDetailMonsterView extends MonsterRecordCardView {
   readonly focusKey: string;
+  readonly spriteSize?: {
+    readonly width: number;
+    readonly height: number;
+  };
   readonly placementCount: number;
   readonly spawnCountLabel: string;
   readonly canLocate: boolean;
@@ -438,6 +446,8 @@ function projectMonsters({
     .map((monster) => {
       const card = projectMonsterRecordCard(monster, { buildId });
       const respawnLabel = projectMonsterRespawnLabel(monster.respawn);
+      const spriteWidth = positiveSpriteDimension(monster.sprite.width);
+      const spriteHeight = positiveSpriteDimension(monster.sprite.height);
       const canLocate =
         record.stage.state === 'known' &&
         (record.monsters.state === 'known' ||
@@ -448,6 +458,11 @@ function projectMonsters({
       const view: MapDetailMonsterView = {
         ...card,
         focusKey: `monster-${monster.focusToken}`,
+        ...(card.spriteUrl === undefined ||
+        spriteWidth === undefined ||
+        spriteHeight === undefined
+          ? {}
+          : { spriteSize: { width: spriteWidth, height: spriteHeight } }),
         placementCount: monster.placementCount,
         spawnCountLabel: `${formatMonsterNumber(monster.placementCount)} ${monster.placementCount === 1 ? 'spawn' : 'spawns'}`,
         canLocate,
@@ -699,6 +714,7 @@ function projectPointMarkers({
   name,
   positions,
   spriteUrl,
+  spriteSize,
 }: {
   readonly kind: MapDetailStageMarkerKind;
   readonly entityKey: string;
@@ -706,6 +722,7 @@ function projectPointMarkers({
   readonly name: string;
   readonly positions: MapDetailPositionCollection;
   readonly spriteUrl?: string;
+  readonly spriteSize?: { readonly width: number; readonly height: number };
 }): MapDetailStageMarker[] {
   if (positions.state !== 'known' && positions.state !== 'partial') return [];
 
@@ -719,6 +736,12 @@ function projectPointMarkers({
     focusKey,
     label: `${name}, ${stageMarkerKindLabels[kind]}, ${index + 1} of ${count}`,
     ...(spriteUrl === undefined ? {} : { spriteUrl }),
+    ...(kind !== 'monster' || spriteSize === undefined
+      ? {}
+      : {
+          size: minimapSpriteSize(spriteSize),
+          anchor: 'bottom' as const,
+        }),
   }));
 }
 
@@ -778,6 +801,10 @@ function projectStage({
           readonly name: string;
           readonly focusKey: string;
           readonly spriteUrl?: string;
+          readonly spriteSize?: {
+            readonly width: number;
+            readonly height: number;
+          };
         }
       | undefined;
   }[] = [
@@ -794,6 +821,9 @@ function projectStage({
               ...(monster.spriteUrl === undefined
                 ? {}
                 : { spriteUrl: monster.spriteUrl }),
+              ...(monster.spriteSize === undefined
+                ? {}
+                : { spriteSize: monster.spriteSize }),
             };
       },
     },
@@ -856,6 +886,9 @@ function projectStage({
           ...(description.spriteUrl === undefined
             ? {}
             : { spriteUrl: description.spriteUrl }),
+          ...(description.spriteSize === undefined
+            ? {}
+            : { spriteSize: description.spriteSize }),
         }),
       );
     }

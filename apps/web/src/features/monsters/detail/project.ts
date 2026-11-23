@@ -27,6 +27,7 @@ import {
   getMonsterNonKnownLabel,
   MONSTER_STAT_BY_ID,
   MONSTER_STAT_DEFINITIONS,
+  positiveSpriteDimension,
   resolveMonsterSpriteUrl,
   UNNAMED_MONSTER_LABEL,
 } from '../shared';
@@ -238,14 +239,6 @@ function projectElements(
       },
     ];
   });
-}
-
-function positiveDimension(
-  value: number | null | undefined,
-): number | undefined {
-  return typeof value === 'number' && Number.isFinite(value) && value > 0
-    ? value
-    : undefined;
 }
 
 function projectQuest(
@@ -491,8 +484,8 @@ export function projectMonsterDetail(
     record.sprite.contentId.state === 'known'
       ? resolveMonsterSpriteUrl(record.sprite.contentId.value)
       : undefined;
-  const spriteWidth = positiveDimension(record.sprite.width);
-  const spriteHeight = positiveDimension(record.sprite.height);
+  const spriteWidth = positiveSpriteDimension(record.sprite.width);
+  const spriteHeight = positiveSpriteDimension(record.sprite.height);
   const minimapSprite =
     spriteUrl === undefined ||
     spriteWidth === undefined ||

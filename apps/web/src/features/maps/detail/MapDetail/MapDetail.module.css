@@ -213,6 +213,11 @@
   width: var(--interactive-map-marker-size);
 }
 
+.sizedStageSprite {
+  height: 100%;
+  width: 100%;
+}
+
 .detailSprite {
   height: 24px;
   width: 24px;
@@ -242,6 +247,8 @@
 }
 
 .stagePanel {
+  --map-marker-min-size: 20px;
+
   min-width: 0;
   width: 100%;
 }
