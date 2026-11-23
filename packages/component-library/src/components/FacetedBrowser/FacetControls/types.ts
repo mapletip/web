@@ -85,6 +85,9 @@ export interface FacetDefinition<TRecord extends Record<string, unknown>> {
    * readable equal-population buckets from the field's values (finite,
    * non-negative numbers, rounded to `decimalPlaces` (default 0). It is also
    * the facet's filtering semantics. Omit for bare min/max inputs.
+   *
+   * A range matches a record when any of its values is in range. Bucket counts
+   * count values, so buckets suit fields with one value per record.
    */
   readonly buckets?: readonly FacetRangeBucket[] | 'quantile';
   /** Specialized controls receive the current canonical or draft value and setter. */

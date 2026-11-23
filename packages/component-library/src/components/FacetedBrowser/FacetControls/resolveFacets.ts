@@ -4,6 +4,7 @@ import type {
   FacetDefinition,
   FacetOption,
 } from '@/components/FacetedBrowser/FacetControls/types';
+import { numericValues } from '@/components/FacetedBrowser/hooks/filterTypes';
 import type {
   QueryFieldDefinition,
   ResolvedField,
@@ -120,10 +121,9 @@ function resolveFacet<TRecord extends Record<string, unknown>>({
   readonly field: ResolvedField<TRecord>;
 }): FacetDefinition<TRecord> | undefined {
   if (facet.kind === 'range') {
-    const values = records.flatMap((record) => {
-      const value = field.accessorFn(record);
-      return typeof value === 'number' ? [value] : [];
-    });
+    const values = records.flatMap((record) =>
+      numericValues(field.accessorFn(record)),
+    );
     const distinctValues = new Set(
       values.filter((value) => Number.isFinite(value)),
     );
