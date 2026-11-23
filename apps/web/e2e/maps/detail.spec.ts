@@ -1079,6 +1079,9 @@ test('Map Detail legend chips select entities and ring their markers at desktop 
 
   const stage = page.getByRole('group', { name: 'Practice Grove map' });
   const legend = page.getByRole('region', { name: 'Scrollable map legend' });
+  await expect(
+    page.getByRole('tablist', { name: 'Map legend kinds' }),
+  ).toHaveCount(0);
   const chip = legend.getByRole('checkbox', { name: 'Twin Sprout, Monster' });
   const label = legend.getByText('Twin Sprout', { exact: true });
   await expect(chip).not.toBeChecked();
@@ -1252,4 +1255,15 @@ test('Map Detail shows the stage message when a map has no image', async ({
     }),
   ).toBeVisible();
   await expect(page.getByText("Map image isn't available.")).toBeVisible();
+  await expect(
+    page.getByRole('combobox', { name: 'Find on this map' }),
+  ).toHaveCount(0);
+  await expect(page.getByRole('group', { name: 'Map legend' })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Explore map' })).toHaveCount(
+    0,
+  );
+  await expect(
+    page.getByRole('complementary', { name: 'Map reference' }),
+  ).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Monsters' })).toBeVisible();
 });
