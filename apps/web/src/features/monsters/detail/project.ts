@@ -308,9 +308,11 @@ function projectMonsterSummonedBy(
 function projectMonsterLocations({
   record,
   buildId,
+  minimapSprite,
 }: {
   readonly record: StaticMonsterPageRecord;
   readonly buildId: BuildId;
+  readonly minimapSprite?: MapRecordCardView['minimapSprite'];
 }): MonsterDetailLocationsView {
   const locations = record.locations;
   if (locations.summary.state === 'absent') {
@@ -350,6 +352,7 @@ function projectMonsterLocations({
       name: nonBlank(name) ?? 'Map name unavailable',
       ...(street === undefined ? {} : { secondaryLine: street }),
       ...(minimapUrl === undefined ? {} : { minimapUrl }),
+      ...(minimapSprite === undefined ? {} : { minimapSprite }),
       ...(minimapStage === undefined ? {} : { minimapStage }),
       ...(destination === undefined ? {} : { destination }),
       footerParts: [
@@ -490,6 +493,12 @@ export function projectMonsterDetail(
       : undefined;
   const spriteWidth = positiveDimension(record.sprite.width);
   const spriteHeight = positiveDimension(record.sprite.height);
+  const minimapSprite =
+    spriteUrl === undefined ||
+    spriteWidth === undefined ||
+    spriteHeight === undefined
+      ? undefined
+      : { url: spriteUrl, width: spriteWidth, height: spriteHeight };
 
   return {
     publicId: record.publicId,
@@ -506,7 +515,11 @@ export function projectMonsterDetail(
     ...(record.undead.state === 'known' ? { undead: record.undead.value } : {}),
     elements: projectElements(record),
     stats: MONSTER_STAT_DEFINITIONS.map(({ id }) => projectStat(record, id)),
-    locations: projectMonsterLocations({ record, buildId }),
+    locations: projectMonsterLocations({
+      record,
+      buildId,
+      ...(minimapSprite === undefined ? {} : { minimapSprite }),
+    }),
     drops: projectMonsterDrops(record),
     quests: projectMonsterQuests(record),
     summonedBy: projectMonsterSummonedBy(record),

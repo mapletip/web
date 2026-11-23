@@ -1,0 +1,5 @@
+.sprite {
+  display: block;
+  image-rendering: pixelated;
+  object-fit: contain;
+}

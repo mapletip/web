@@ -549,7 +549,7 @@ test('Monster Detail opens every location in a drawer from its responsive cap', 
   ).toBeVisible();
 });
 
-test('Monster Detail location minimaps show published spawn dots inline and in the preview', async ({
+test('Monster Detail location minimaps show dots inline and sprites in enlarged maps', async ({
   page,
   monsterPage,
   expectedArtifactRequests,
@@ -594,19 +594,26 @@ test('Monster Detail location minimaps show published spawn dots inline and in t
     '11 spawns',
   );
 
-  if (testInfo.project.name !== 'mobile') {
-    const trigger = firstMap.getByRole('button', {
-      name: 'Enlarge Practice Map 01 minimap',
-    });
-    await trigger.hover();
-    const preview = page.locator(
-      '[aria-label="Practice Map 01 full-size minimap preview"]',
-    );
-    await expect(preview).toBeVisible();
-    await expect(preview.locator('[data-marker-position]')).toHaveCount(
-      expectedKnownPoints,
-    );
+  const trigger = firstMap.getByRole('button', {
+    name: 'Enlarge Practice Map 01 minimap',
+  });
+  const isMobile = testInfo.project.name === 'mobile';
+  if (isMobile) await trigger.tap();
+  else await trigger.click();
+  const preview = page.getByRole('dialog', { name: 'Practice Map 01' });
+  await expect(preview).toBeVisible();
+  await expect(preview.locator('[data-marker-position]')).toHaveCount(
+    expectedKnownPoints,
+  );
+  await expect(
+    preview.locator('[data-marker-visual="monster-sprite"]'),
+  ).toHaveCount(expectedKnownPoints);
+  if (isMobile) {
+    await preview.getByRole('button', { name: 'Close enlarged minimap' }).tap();
+  } else {
+    await page.keyboard.press('Escape');
   }
+  await expect(preview).toBeHidden();
 
   await page.getByRole('button', { name: 'View all 12 maps' }).click();
   const drawer = page.getByRole('dialog', { name: /^All maps/u });

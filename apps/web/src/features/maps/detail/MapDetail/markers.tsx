@@ -2,6 +2,7 @@ import type { ReactElement } from 'react';
 
 import portalImage from '@/assets/maplestory/maps/minimap-portal.png?no-inline';
 import { MonsterDot } from '@/features/maps/shared/MonsterDot';
+import { SpriteMarker } from '@/features/maps/shared/SpriteMarker';
 
 import type { MapDetailEntityView, MapDetailStageMarker } from '../project';
 
@@ -35,25 +36,6 @@ export function WarpMarker(): ReactElement {
   );
 }
 
-function SpriteMarker({
-  spriteUrl,
-  inDetails = false,
-  visual,
-}: {
-  readonly spriteUrl: string;
-  readonly inDetails?: boolean;
-  readonly visual: 'monster-sprite' | 'npc-sprite';
-}): ReactElement {
-  return (
-    <img
-      className={`${classes['sprite']} ${inDetails ? classes['detailSprite'] : classes['stageSprite']}`}
-      src={spriteUrl}
-      alt=""
-      data-marker-visual={visual}
-    />
-  );
-}
-
 export function MonsterMarker({
   spriteUrl,
   inDetails = false,
@@ -68,8 +50,8 @@ export function MonsterMarker({
   return (
     <SpriteMarker
       spriteUrl={spriteUrl}
-      inDetails={inDetails}
       visual="monster-sprite"
+      className={inDetails ? classes['detailSprite'] : classes['stageSprite']}
     />
   );
 }
@@ -85,8 +67,8 @@ export function NpcMarker({
     return (
       <SpriteMarker
         spriteUrl={spriteUrl}
-        inDetails={inDetails}
         visual="npc-sprite"
+        className={inDetails ? classes['detailSprite'] : classes['stageSprite']}
       />
     );
   }
