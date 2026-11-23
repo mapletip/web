@@ -32,6 +32,17 @@ function mount(props: Partial<StaticMapProps> = {}) {
 }
 
 describe('StaticMap', () => {
+  it('passes native image loading through and omits it by default', () => {
+    const defaultMap = mount();
+
+    expect(screen.getByRole('img')).not.toHaveAttribute('loading');
+    defaultMap.unmount();
+
+    mount({ loading: 'lazy' });
+
+    expect(screen.getByRole('img')).toHaveAttribute('loading', 'lazy');
+  });
+
   it('renders the image, marker positions and connector lines', () => {
     const { container } = mount({
       markers: [

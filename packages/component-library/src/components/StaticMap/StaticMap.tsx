@@ -23,6 +23,7 @@ interface MapPictureProps {
   readonly image: InteractiveMapImage;
   readonly markers: readonly InteractiveMapMarker[];
   readonly connectors: readonly InteractiveMapConnector[];
+  readonly loading?: 'eager' | 'lazy' | undefined;
   readonly onImageError: () => void;
   readonly children: ReactNode;
 }
@@ -32,6 +33,7 @@ export function MapPicture({
   image,
   markers,
   connectors,
+  loading,
   onImageError,
   children,
 }: MapPictureProps): ReactElement {
@@ -46,6 +48,7 @@ export function MapPicture({
         width={image.width}
         height={image.height}
         fit="contain"
+        loading={loading}
         onError={onImageError}
       />
       {connectors.length > 0 ? (
@@ -133,6 +136,7 @@ export function StaticMap({
   markers,
   selectedIds = [],
   connectors = [],
+  loading,
   unavailableMessage,
 }: StaticMapProps): ReactElement {
   const [failedSrc, setFailedSrc] = useState<string | null>(null);
@@ -165,6 +169,7 @@ export function StaticMap({
           image={availableImage}
           markers={markers}
           connectors={connectors}
+          loading={loading}
           onImageError={() => setFailedSrc(availableImage.src)}
         >
           <StaticMarkers
