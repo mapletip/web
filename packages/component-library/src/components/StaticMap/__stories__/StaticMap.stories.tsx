@@ -4,7 +4,7 @@ import { StaticMap } from '@/components/StaticMap';
 import type { StaticMapProps } from '@/components/StaticMap';
 
 const meta = {
-  title: 'Components/StaticMap',
+  title: 'Components/Map/StaticMap',
   component: StaticMap,
   parameters: {
     layout: 'centered',

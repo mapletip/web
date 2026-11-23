@@ -19,7 +19,7 @@ const visualCases: readonly StaticMapVisualCase[] = [
   {
     name: 'static-map-wide-dark',
     story: dark.Wide,
-    storyId: 'components-staticmap--wide',
+    storyId: 'components-map-staticmap--wide',
     width: 720,
     height: 600,
     element: page.getByRole('group', { name: 'Synthetic wide image' }),
@@ -29,7 +29,7 @@ const visualCases: readonly StaticMapVisualCase[] = [
   {
     name: 'static-map-tall-dark',
     story: dark.Tall,
-    storyId: 'components-staticmap--tall',
+    storyId: 'components-map-staticmap--tall',
     width: 320,
     height: 520,
     element: page.getByRole('group', { name: 'Synthetic tall image' }),
@@ -39,7 +39,7 @@ const visualCases: readonly StaticMapVisualCase[] = [
   {
     name: 'static-map-tiny-dark',
     story: dark.Tiny,
-    storyId: 'components-staticmap--tiny',
+    storyId: 'components-map-staticmap--tiny',
     width: 360,
     height: 400,
     element: page.getByRole('group', { name: 'Synthetic tiny image' }),
@@ -49,7 +49,7 @@ const visualCases: readonly StaticMapVisualCase[] = [
   {
     name: 'static-map-coincident-markers-dark',
     story: dark.CoincidentMarkers,
-    storyId: 'components-staticmap--coincident-markers',
+    storyId: 'components-map-staticmap--coincident-markers',
     width: 720,
     height: 600,
     element: page.getByRole('group', { name: 'Synthetic wide image' }),
@@ -59,7 +59,7 @@ const visualCases: readonly StaticMapVisualCase[] = [
   {
     name: 'static-map-unavailable-dark',
     story: dark.Unavailable,
-    storyId: 'components-staticmap--unavailable',
+    storyId: 'components-map-staticmap--unavailable',
     width: 720,
     height: 560,
     element: page.getByRole('group', { name: 'Image unavailable.' }),

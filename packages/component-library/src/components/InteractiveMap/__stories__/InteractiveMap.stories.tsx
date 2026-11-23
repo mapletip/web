@@ -9,7 +9,7 @@ import type {
 } from '@/components/InteractiveMap';
 
 const meta = {
-  title: 'Components/InteractiveMap',
+  title: 'Components/Map/InteractiveMap',
   component: InteractiveMap,
   parameters: {
     layout: 'centered',
