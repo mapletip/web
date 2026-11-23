@@ -1,6 +1,7 @@
 import { mapMinimapUrl } from '@mapletip/data/maps';
 import {
   hasMonsterPageLocationPoints,
+  monsterLocationPointPairs,
   type StaticMonsterPageRecord,
 } from '@mapletip/data/monsters';
 
@@ -328,6 +329,7 @@ function projectMonsterLocations({
     streetName,
     placementCount,
     minimapContentId,
+    minimapStage,
     destination,
   }: {
     readonly key: string;
@@ -335,6 +337,7 @@ function projectMonsterLocations({
     readonly streetName: string | null | undefined;
     readonly placementCount: number;
     readonly minimapContentId: string | undefined;
+    readonly minimapStage?: MapRecordCardView['minimapStage'];
     readonly destination: MapRecordCardDestination | undefined;
   }): MonsterDetailLocationMapView => {
     const street = nonBlank(streetName);
@@ -347,6 +350,7 @@ function projectMonsterLocations({
       name: nonBlank(name) ?? 'Map name unavailable',
       ...(street === undefined ? {} : { secondaryLine: street }),
       ...(minimapUrl === undefined ? {} : { minimapUrl }),
+      ...(minimapStage === undefined ? {} : { minimapStage }),
       ...(destination === undefined ? {} : { destination }),
       footerParts: [
         {
@@ -370,6 +374,18 @@ function projectMonsterLocations({
             entry.stage.state === 'known'
               ? entry.stage.value.contentId
               : undefined,
+          ...(entry.stage.state === 'known'
+            ? {
+                minimapStage: {
+                  width: entry.stage.value.width,
+                  height: entry.stage.value.height,
+                  spawnPoints:
+                    entry.points.state === 'absent'
+                      ? []
+                      : monsterLocationPointPairs(entry.points.packedPairs),
+                },
+              }
+            : {}),
         }),
       )
     : record.locations.entries.map((entry) =>

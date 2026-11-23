@@ -12,12 +12,10 @@ import {
   requireBuildId,
   resolveBuildIdParam,
 } from '@/features/detail';
-import {
-  loadMapDetail,
-  MapDetail,
-  mapDetailMetadata,
-  mapDetailSearchSchema,
-} from '@/features/maps/detail';
+import { mapDetailSearchSchema } from '@/features/maps/detail/focus';
+import { loadMapDetail } from '@/features/maps/detail/load';
+import { MapDetail } from '@/features/maps/detail/MapDetail';
+import { mapDetailMetadata } from '@/features/maps/detail/metadata';
 import { MAP_DETAIL_ROUTE } from '@/features/maps/shared';
 
 export const Route = createFileRoute('/maplestory/{-$buildId}/maps/$slugId')({

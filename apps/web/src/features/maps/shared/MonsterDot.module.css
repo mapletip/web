@@ -1,0 +1,10 @@
+.dot {
+  box-sizing: border-box;
+  display: block;
+  width: var(--monster-dot-size, 10px);
+  height: var(--monster-dot-size, 10px);
+  border: var(--monster-dot-border, 1px solid var(--mapletip-color-map-border));
+  border-radius: 50%;
+  background: var(--monster-dot-color, var(--mapletip-color-map-monster));
+  box-shadow: var(--monster-dot-shadow, none);
+}

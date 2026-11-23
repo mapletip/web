@@ -14,6 +14,8 @@ import { monsterPageFixture } from './monsterPageFixture';
 
 type MonsterPageDrop = MonsterPageRecordV1['drops']['entries'][number];
 type MonsterPageLocation = MonsterPageRecordV1['locations']['entries'][number];
+type MonsterPageLocationWithPoints =
+  MonsterPageRecordV1_2['locations']['entries'][number];
 type MonsterPageQuest = MonsterPageRecordV1['quests']['entries'][number];
 
 function pageDrop(
@@ -84,6 +86,60 @@ function addressableMonsterPageFixture(): MonsterPageRecordV1_2 {
       ],
     },
   } as unknown as MonsterPageRecordV1_2;
+}
+
+function locationWithPoints({
+  mapKey,
+  placementCount,
+  packedPairs,
+  pointsState,
+  stageKnown = true,
+}: {
+  readonly mapKey: string;
+  readonly placementCount: number;
+  readonly packedPairs: number[];
+  readonly pointsState: 'known' | 'partial' | 'absent';
+  readonly stageKnown?: boolean;
+}): MonsterPageLocationWithPoints {
+  return {
+    mapKey,
+    mapSourceId: mapKey,
+    mapName: { state: 'known', value: 'Practice Meadow' },
+    publicId: '22kodknn',
+    slug: 'practice-meadow',
+    placementCount,
+    stage: stageKnown
+      ? {
+          state: 'known',
+          value: {
+            contentId: 'a'.repeat(64),
+            width: 900,
+            height: 600,
+          },
+        }
+      : { state: 'absent', coverageKey: `${mapKey}:stage` },
+    points: { state: pointsState, packedPairs },
+  };
+}
+
+function monsterPageWithPointLocations(
+  entries: readonly MonsterPageLocationWithPoints[],
+): MonsterPageRecordV1_2 {
+  const fixture = addressableMonsterPageFixture();
+  return {
+    ...fixture,
+    locations: {
+      summary: {
+        state: 'known',
+        mapCount: entries.length,
+        placementCount: entries.reduce(
+          (total, entry) => total + entry.placementCount,
+          0,
+        ),
+      },
+      entries: [...entries],
+    },
+  };
 }
 
 describe('projectMonsterDetail', () => {
@@ -534,6 +590,102 @@ describe('projectMonsterDetail', () => {
         },
       ],
     });
+  });
+
+  it('projects known location stage size and spawn points in source order', () => {
+    const view = projectMonsterDetail(
+      monsterPageWithPointLocations([
+        locationWithPoints({
+          mapKey: 'fixture:map:known',
+          placementCount: 3,
+          pointsState: 'known',
+          packedPairs: [122, 125, 130, 125, 144, 180],
+        }),
+      ]),
+      'cw-launch',
+    );
+
+    expect(view.locations).toMatchObject({
+      state: 'present',
+      maps: [
+        {
+          minimapStage: {
+            width: 900,
+            height: 600,
+            spawnPoints: [
+              { x: 122, y: 125 },
+              { x: 130, y: 125 },
+              { x: 144, y: 180 },
+            ],
+          },
+        },
+      ],
+    });
+    const locations = view.locations;
+    if (locations.state !== 'present') throw new Error('Expected locations.');
+    expect(locations.maps[0]).not.toHaveProperty('packedPairs');
+  });
+
+  it('keeps partial points while preserving the complete spawn count', () => {
+    const view = projectMonsterDetail(
+      monsterPageWithPointLocations([
+        locationWithPoints({
+          mapKey: 'fixture:map:partial',
+          placementCount: 17,
+          pointsState: 'partial',
+          packedPairs: Array.from({ length: 16 }, (_, index) => [
+            index * 10,
+            index * 5,
+          ]).flat(),
+        }),
+      ]),
+      'cw-launch',
+    );
+
+    expect(view.locations).toMatchObject({
+      state: 'present',
+      maps: [
+        {
+          placementCount: 17,
+          footerParts: [{ value: '17', label: 'spawns' }],
+        },
+      ],
+    });
+    const locations = view.locations;
+    if (locations.state !== 'present') throw new Error('Expected locations.');
+    expect(locations.maps[0]?.minimapStage?.spawnPoints).toHaveLength(16);
+  });
+
+  it('projects absent points as an empty list and omits the stage when no image exists', () => {
+    const view = projectMonsterDetail(
+      monsterPageWithPointLocations([
+        locationWithPoints({
+          mapKey: 'fixture:map:empty',
+          placementCount: 2,
+          pointsState: 'absent',
+          packedPairs: [],
+        }),
+        locationWithPoints({
+          mapKey: 'fixture:map:no-stage',
+          placementCount: 1,
+          pointsState: 'absent',
+          packedPairs: [],
+          stageKnown: false,
+        }),
+      ]),
+      'cw-launch',
+    );
+
+    const locations = view.locations;
+    if (locations.state !== 'present') throw new Error('Expected locations.');
+    expect(locations.maps[0]?.minimapStage).toEqual({
+      width: 900,
+      height: 600,
+      spawnPoints: [],
+    });
+    expect(locations.maps[0]?.placementCount).toBe(2);
+    expect(locations.maps[1]).not.toHaveProperty('minimapStage');
+    expect(locations.maps[1]).not.toHaveProperty('minimapUrl');
   });
 
   it('excludes region labels from the location tagline and uses singular spawn wording', () => {

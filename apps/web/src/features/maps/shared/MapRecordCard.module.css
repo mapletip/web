@@ -28,6 +28,28 @@
   max-height: 100%;
 }
 
+/* Production's card minimap: 110px tall, as wide as the image's shape allows
+   up to the media column, right-aligned on its own dark surface. */
+.minimapFrame {
+  display: flex;
+  justify-content: flex-end;
+  width: 100%;
+  min-width: 0;
+}
+
+.minimapFrame .locationMinimap {
+  width: min(100%, calc(110px * var(--interactive-map-image-aspect-ratio)));
+  min-height: 0;
+  max-height: none;
+  border-radius: var(--mantine-radius-xs);
+  background: var(--mapletip-color-canvas);
+}
+
+.minimapFrame .locationMinimap[data-unavailable='true'] {
+  width: 100%;
+  height: 110px;
+}
+
 .minimapUnavailable {
   display: grid;
   place-items: center;
@@ -38,6 +60,22 @@
 .minimapPopover {
   max-width: calc(85vw + 16px);
   padding: 8px;
+}
+
+.minimapPopover .expandedStage {
+  width: min(40rem, 85vw);
+  min-height: 0;
+  max-height: 80vh;
+}
+
+.minimapFrame .locationMinimap,
+.minimapPopover .expandedStage {
+  --monster-dot-size: clamp(3px, 10cqmin, 6px);
+  --monster-dot-border: 0;
+  --monster-dot-shadow:
+    0 0 0 1px rgb(0 0 0 / 70%),
+    0 0 4px
+      color-mix(in srgb, var(--mapletip-color-map-monster) 60%, transparent);
 }
 
 .expandedMinimap {

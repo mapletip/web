@@ -1,6 +1,7 @@
 import type { ReactElement } from 'react';
 
 import portalImage from '@/assets/maplestory/maps/minimap-portal.png?no-inline';
+import { MonsterDot } from '@/features/maps/shared/MonsterDot';
 
 import type { MapDetailEntityView, MapDetailStageMarker } from '../project';
 
@@ -61,13 +62,7 @@ export function MonsterMarker({
   readonly inDetails?: boolean;
 }): ReactElement {
   if (spriteUrl === undefined) {
-    return (
-      <span
-        className={`${classes['markerPalette']} ${classes['monsterDot']}`}
-        aria-hidden="true"
-        data-marker-visual="monster-dot"
-      />
-    );
+    return <MonsterDot className={classes['markerPalette']} />;
   }
 
   return (

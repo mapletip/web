@@ -376,10 +376,13 @@ const cwMonsters: readonly FixtureMonster[] = [
         ...(index < 2
           ? {
               minimapContentId: String(index + 1).repeat(64),
-              points: Array.from({ length: placementCount }, (_, point) => ({
-                x: 120 + point * 35,
-                y: 240 + (point % 3) * 45,
-              })),
+              points: Array.from(
+                { length: index === 1 ? placementCount - 1 : placementCount },
+                (_, point) => ({
+                  x: 120 + point * 35,
+                  y: 240 + (point % 3) * 45,
+                }),
+              ),
             }
           : {}),
       };
