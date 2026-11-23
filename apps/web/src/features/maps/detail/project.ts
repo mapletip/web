@@ -614,7 +614,7 @@ function projectOnThisMap({
   readonly npcs: MapDetailNpcsView;
   readonly hasMonsterPositions: boolean;
 }): readonly MapDetailOnThisMapRowView[] {
-  return [
+  const rows = [
     projectOnThisMapToggleRow({
       key: 'connections',
       label: 'Connections',
@@ -659,6 +659,11 @@ function projectOnThisMap({
       plural: 'NPCs',
     }),
   ];
+  // A kind known to be empty has no row, as its section has no heading.
+  return rows.filter(
+    ({ count, state }) =>
+      count !== 0 || state === 'unknown' || state === 'partial',
+  );
 }
 
 function projectNpcs(record: StaticMapPageRecord): MapDetailNpcsView {

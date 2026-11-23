@@ -412,7 +412,7 @@ describe('projectMapDetail', () => {
     expect(view.subtitle).toBeUndefined();
   });
 
-  it('projects empty Connections while retaining the zero count for the rail', () => {
+  it('projects empty Connections and omits their rail row', () => {
     const record = mapPageRecordFixture({ mapId: 'practice-grove' });
 
     const knownEmpty = projectMapDetail({
@@ -426,18 +426,10 @@ describe('projectMapDetail', () => {
 
     expect(knownEmpty.connections).toMatchObject({ count: 0, maps: [] });
     expect(absent.connections).toMatchObject({ count: 0, maps: [] });
-    expect(knownEmpty.onThisMap[0]).toMatchObject({
-      key: 'connections',
-      count: 0,
-      state: 'known',
-      focus: 'connections',
-    });
-    expect(absent.onThisMap[0]).toMatchObject({
-      key: 'connections',
-      count: 0,
-      state: 'absent',
-      focus: 'connections',
-    });
+    expect(knownEmpty.onThisMap.map(({ key }) => key)).not.toContain(
+      'connections',
+    );
+    expect(absent.onThisMap.map(({ key }) => key)).not.toContain('connections');
   });
 
   it('projects On this map counts and states from the map sections', () => {
@@ -454,7 +446,10 @@ describe('projectMapDetail', () => {
       throw new Error('Expected fixture records for each On this map section.');
     }
 
-    const known = projectMapDetail({ record, buildId: 'cw-launch' });
+    const known = projectMapDetail({
+      record: { ...record, npcs: town.npcs },
+      buildId: 'cw-launch',
+    });
     expect(known.onThisMap.map(({ key }) => key)).toEqual([
       'connections',
       'monsters',
@@ -1156,5 +1151,22 @@ describe('projectMapDetail', () => {
     expect(
       withoutMonsterPositions.onThisMap.find(({ key }) => key === 'spawns'),
     ).toMatchObject({ focus: 'monsters', disabled: true });
+  });
+
+  it('omits On this map rows for kinds known to be empty but keeps unknown and partial ones', () => {
+    const record = mapPageRecordFixture({ mapId: 'lantern-square' });
+    const keys = (monstersState: 'known' | 'absent' | 'unknown' | 'partial') =>
+      projectMapDetail({
+        record: {
+          ...record,
+          monsters: { ...record.monsters, state: monstersState, items: [] },
+        },
+        buildId: 'cw-launch',
+      }).onThisMap.map(({ key }) => key);
+
+    expect(keys('known')).not.toContain('monsters');
+    expect(keys('absent')).not.toContain('monsters');
+    expect(keys('unknown')).toContain('monsters');
+    expect(keys('partial')).toContain('monsters');
   });
 });

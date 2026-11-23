@@ -41,7 +41,7 @@ describe('NpcRecordCard', () => {
     expect(projectNpcRecordCard(npc)).not.toHaveProperty('spriteUrl');
   });
 
-  it('projects known, partial and unknown quest counts with production wording', () => {
+  it('projects known, partial and unknown quest counts with production wording and omits zero', () => {
     const npc = mapPageRecordFixture({ mapId: 'lantern-square' }).npcs.items[0];
     if (npc === undefined) throw new Error('Expected a fixture NPC.');
 
@@ -63,6 +63,12 @@ describe('NpcRecordCard', () => {
         questCount: { state: 'known', count: 3 },
       }).questCountLabel,
     ).toBe('3 quests');
+    expect(
+      projectNpcRecordCard({
+        ...npc,
+        questCount: { state: 'known', count: 0 },
+      }),
+    ).not.toHaveProperty('questCountLabel');
     expect(
       projectNpcRecordCard({
         ...npc,

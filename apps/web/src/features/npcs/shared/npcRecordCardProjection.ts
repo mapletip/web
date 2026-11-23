@@ -23,7 +23,9 @@ export function projectNpcRecordCard(
       : undefined;
   const questCount = 'questCount' in record ? record.questCount : undefined;
   const questCountLabel =
-    questCount === undefined || questCount.state === 'unknown'
+    questCount === undefined ||
+    questCount.state === 'unknown' ||
+    questCount.count === 0
       ? undefined
       : `${questCount.count.toLocaleString('en-US')}${questCount.state === 'partial' ? '+' : ''} ${questCount.state === 'known' && questCount.count === 1 ? 'quest' : 'quests'}`;
 
