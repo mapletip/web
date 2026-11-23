@@ -364,7 +364,7 @@ describe('MapDetail information', () => {
     ).toBeGreaterThan(0);
   });
 
-  it('toggles a whole kind from On this map and disables empty kinds', async () => {
+  it('toggles a whole kind from On this map and omits empty kinds', async () => {
     const view = projectMapDetail({
       record: mapPageRecordFixture({ mapId: 'lantern-square' }),
       buildId: 'cw-launch',
@@ -377,12 +377,10 @@ describe('MapDetail information', () => {
     const npcs = within(rail).getByRole('button', {
       name: /Highlight NPCs on map/u,
     });
-    const monsters = within(rail).getByRole('button', {
-      name: /Highlight Monsters on map/u,
-    });
 
-    expect(monsters).toBeDisabled();
-    expect(monsters).toHaveAttribute('aria-pressed', 'false');
+    expect(
+      within(rail).queryByRole('button', { name: /Highlight Monsters/u }),
+    ).not.toBeInTheDocument();
     expect(within(rail).queryByText('Spawns')).not.toBeInTheDocument();
 
     await user.click(npcs);

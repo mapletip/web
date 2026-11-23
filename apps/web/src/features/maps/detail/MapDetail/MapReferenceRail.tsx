@@ -94,15 +94,17 @@ export function MapReferenceRail({
   focus,
   onThisMap,
   onToggle,
-}: MapReferenceRailProps): ReactElement {
-  const groups: MapReferenceGroup[] = [
-    {
+}: MapReferenceRailProps): ReactElement | null {
+  const groups: MapReferenceGroup[] = [];
+
+  if (onThisMap.length > 0) {
+    groups.push({
       key: 'on-this-map',
       content: (
         <OnThisMapRail rows={onThisMap} focus={focus} onToggle={onToggle} />
       ),
-    },
-  ];
+    });
+  }
 
   if (activity !== undefined) {
     groups.push({
@@ -151,6 +153,8 @@ export function MapReferenceRail({
       ),
     });
   }
+
+  if (groups.length === 0) return null;
 
   return (
     <Paper
