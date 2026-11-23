@@ -31,7 +31,7 @@ const visualCases: readonly InteractiveMapVisualCase[] = [
   {
     name: 'interactive-map-wide-image-dark',
     story: dark.WideImage,
-    storyId: 'components-interactivemap--wide-image',
+    storyId: 'components-map-interactivemap--wide-image',
     testId: 'interactive-map-wide-image',
     width: 720,
     height: 600,
@@ -42,7 +42,7 @@ const visualCases: readonly InteractiveMapVisualCase[] = [
   {
     name: 'interactive-map-tall-image-dark',
     story: dark.TallImage,
-    storyId: 'components-interactivemap--tall-image',
+    storyId: 'components-map-interactivemap--tall-image',
     testId: 'interactive-map-tall-image',
     width: 320,
     height: 520,
@@ -56,7 +56,7 @@ const visualCases: readonly InteractiveMapVisualCase[] = [
   {
     name: 'interactive-map-tiny-image-dark',
     story: dark.TinyImage,
-    storyId: 'components-interactivemap--tiny-image',
+    storyId: 'components-map-interactivemap--tiny-image',
     testId: 'interactive-map-tiny-image',
     width: 360,
     height: 400,
@@ -70,7 +70,7 @@ const visualCases: readonly InteractiveMapVisualCase[] = [
   {
     name: 'interactive-map-unavailable-dark',
     story: dark.Unavailable,
-    storyId: 'components-interactivemap--unavailable',
+    storyId: 'components-map-interactivemap--unavailable',
     testId: 'interactive-map-unavailable',
     width: 720,
     height: 560,
@@ -80,7 +80,7 @@ const visualCases: readonly InteractiveMapVisualCase[] = [
   {
     name: 'interactive-map-none-selected-dark',
     story: dark.NoneSelected,
-    storyId: 'components-interactivemap--none-selected',
+    storyId: 'components-map-interactivemap--none-selected',
     testId: 'interactive-map-none-selected',
     width: 720,
     height: 600,
@@ -91,7 +91,7 @@ const visualCases: readonly InteractiveMapVisualCase[] = [
   {
     name: 'interactive-map-one-selected-dark',
     story: dark.OneSelected,
-    storyId: 'components-interactivemap--one-selected',
+    storyId: 'components-map-interactivemap--one-selected',
     testId: 'interactive-map-one-selected',
     width: 720,
     height: 600,
@@ -103,7 +103,7 @@ const visualCases: readonly InteractiveMapVisualCase[] = [
   {
     name: 'interactive-map-many-selected-dark',
     story: dark.ManySelected,
-    storyId: 'components-interactivemap--many-selected',
+    storyId: 'components-map-interactivemap--many-selected',
     testId: 'interactive-map-many-selected',
     width: 720,
     height: 600,
@@ -115,7 +115,7 @@ const visualCases: readonly InteractiveMapVisualCase[] = [
   {
     name: 'interactive-map-coincident-markers-dark',
     story: dark.CoincidentMarkers,
-    storyId: 'components-interactivemap--coincident-markers',
+    storyId: 'components-map-interactivemap--coincident-markers',
     testId: 'interactive-map-coincident-markers',
     width: 720,
     height: 600,
@@ -131,7 +131,7 @@ const visualCases: readonly InteractiveMapVisualCase[] = [
   {
     name: 'interactive-map-dense-markers-dark',
     story: dark.DenseMarkers,
-    storyId: 'components-interactivemap--dense-markers',
+    storyId: 'components-map-interactivemap--dense-markers',
     testId: 'interactive-map-dense-markers',
     width: 720,
     height: 600,
@@ -146,7 +146,7 @@ const visualCases: readonly InteractiveMapVisualCase[] = [
   {
     name: 'interactive-map-static-dark',
     story: dark.Static,
-    storyId: 'components-interactivemap--static',
+    storyId: 'components-map-interactivemap--static',
     testId: 'interactive-map-static',
     width: 720,
     height: 600,
@@ -164,7 +164,7 @@ const visualCases: readonly InteractiveMapVisualCase[] = [
   {
     name: 'interactive-map-gestures-zoomed-dark',
     story: dark.GesturesWhenZoomed,
-    storyId: 'components-interactivemap--gestures-when-zoomed',
+    storyId: 'components-map-interactivemap--gestures-when-zoomed',
     testId: 'interactive-map-gestures-zoomed',
     width: 720,
     height: 600,
@@ -175,7 +175,7 @@ const visualCases: readonly InteractiveMapVisualCase[] = [
   {
     name: 'interactive-map-details-at-center-dark',
     story: dark.DetailsAtCenter,
-    storyId: 'components-interactivemap--details-at-center',
+    storyId: 'components-map-interactivemap--details-at-center',
     testId: 'interactive-map-details-center',
     width: 720,
     height: 600,
@@ -193,7 +193,7 @@ const visualCases: readonly InteractiveMapVisualCase[] = [
   {
     name: 'interactive-map-details-near-edge-dark',
     story: dark.DetailsNearEachEdge,
-    storyId: 'components-interactivemap--details-near-each-edge',
+    storyId: 'components-map-interactivemap--details-near-each-edge',
     testId: 'interactive-map-details-near-edge',
     width: 720,
     height: 600,
@@ -216,7 +216,7 @@ const visualCases: readonly InteractiveMapVisualCase[] = [
   {
     name: 'interactive-map-connected-pairs-dark',
     story: dark.ConnectedPairs,
-    storyId: 'components-interactivemap--connected-pairs',
+    storyId: 'components-map-interactivemap--connected-pairs',
     testId: 'interactive-map-connected-pairs',
     width: 720,
     height: 600,
@@ -228,7 +228,7 @@ const visualCases: readonly InteractiveMapVisualCase[] = [
   {
     name: 'interactive-map-zoomed-lines-selection-dark',
     story: dark.ZoomedWithLinesAndSelection,
-    storyId: 'components-interactivemap--zoomed-with-lines-and-selection',
+    storyId: 'components-map-interactivemap--zoomed-with-lines-and-selection',
     testId: 'interactive-map-zoomed-lines-selection',
     width: 720,
     height: 600,
@@ -248,7 +248,7 @@ const visualCases: readonly InteractiveMapVisualCase[] = [
   {
     name: 'interactive-map-saved-restored-view-dark',
     story: dark.SavedAndRestoredView,
-    storyId: 'components-interactivemap--saved-and-restored-view',
+    storyId: 'components-map-interactivemap--saved-and-restored-view',
     testId: 'interactive-map-saved-restored',
     width: 720,
     height: 600,
