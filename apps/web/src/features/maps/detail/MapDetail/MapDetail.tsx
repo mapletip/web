@@ -151,7 +151,7 @@ export function MapDetail({
   onFocusChange,
 }: MapDetailProps): ReactElement {
   const theme = useMantineTheme();
-  const interactive = useMediaQuery(
+  const isDesktop = useMediaQuery(
     `(min-width: ${theme.breakpoints.md})`,
     false,
   );
@@ -293,7 +293,8 @@ export function MapDetail({
                 hasStageImage={hasStageImage}
                 focus={focus}
                 selectedIds={selectedIds}
-                interactive={interactive}
+                interactive={hydrated}
+                gestures={isDesktop ? 'always' : 'zoomed'}
                 stageView={stageView}
                 onViewChange={(nextView) =>
                   writeHistoryState({ stageView: nextView })
@@ -398,6 +399,7 @@ export function MapDetail({
           focus={focus}
           selectedIds={selectedIds}
           interactive
+          gestures="always"
           wheelZoom
           expanded
           stageView={stageView}

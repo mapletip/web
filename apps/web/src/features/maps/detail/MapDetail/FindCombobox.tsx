@@ -38,14 +38,14 @@ export function FindCombobox({
       <ActionIcon
         aria-label={mobileFindOpen ? 'Close map search' : 'Search map'}
         className={classes['findToggle']}
-        size="input-sm"
-        variant="white"
+        size="md"
+        variant="default"
         onClick={() => setMobileFindOpen((current) => !current)}
       >
         {mobileFindOpen ? (
-          <X size={18} aria-hidden="true" />
+          <X size={16} aria-hidden="true" />
         ) : (
-          <MagnifyingGlass size={18} aria-hidden="true" />
+          <MagnifyingGlass size={16} aria-hidden="true" />
         )}
       </ActionIcon>
       <div className={classes['findField']}>
@@ -81,7 +81,8 @@ export function FindCombobox({
                 if (findText.trim() !== '') combobox.openDropdown();
               }}
               placeholder="Monster, NPC, or map"
-              leftSection={<MagnifyingGlass size={18} aria-hidden="true" />}
+              size="xs"
+              leftSection={<MagnifyingGlass size={16} aria-hidden="true" />}
               leftSectionPointerEvents="none"
             />
           </Combobox.Target>

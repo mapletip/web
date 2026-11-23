@@ -162,6 +162,17 @@ const visualCases: readonly InteractiveMapVisualCase[] = [
     ],
   },
   {
+    name: 'interactive-map-gestures-zoomed-dark',
+    story: dark.GesturesWhenZoomed,
+    storyId: 'components-interactivemap--gestures-when-zoomed',
+    testId: 'interactive-map-gestures-zoomed',
+    width: 720,
+    height: 600,
+    element: page.getByTestId('interactive-map-gestures-zoomed'),
+    imageAlt: 'Synthetic wide image',
+    visible: [wideImage, ...wideMarkers],
+  },
+  {
     name: 'interactive-map-details-at-center-dark',
     story: dark.DetailsAtCenter,
     storyId: 'components-interactivemap--details-at-center',

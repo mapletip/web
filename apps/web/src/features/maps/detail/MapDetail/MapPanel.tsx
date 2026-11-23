@@ -1,4 +1,7 @@
-import type { InteractiveMapView } from '@mapletip/component-library';
+import type {
+  InteractiveMapProps,
+  InteractiveMapView,
+} from '@mapletip/component-library';
 import type { ReactElement, ReactNode } from 'react';
 
 import type { MapDetailFocus } from '../focus';
@@ -15,6 +18,7 @@ export function MapPanel({
   focus,
   selectedIds,
   interactive,
+  gestures,
   wheelZoom = false,
   expanded = false,
   stageView,
@@ -30,6 +34,7 @@ export function MapPanel({
   readonly focus: MapDetailFocus | undefined;
   readonly selectedIds: readonly string[];
   readonly interactive: boolean;
+  readonly gestures: NonNullable<InteractiveMapProps['gestures']>;
   readonly wheelZoom?: boolean;
   readonly expanded?: boolean;
   readonly stageView?: InteractiveMapView | undefined;
@@ -51,6 +56,7 @@ export function MapPanel({
           stage={view.stage}
           className={expanded ? classes['expandedStage'] : undefined}
           interactive={interactive}
+          gestures={gestures}
           wheelZoom={wheelZoom}
           view={stageView}
           onViewChange={onViewChange}

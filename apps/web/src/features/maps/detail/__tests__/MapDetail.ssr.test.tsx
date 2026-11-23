@@ -166,10 +166,17 @@ describe('MapDetail server rendering', () => {
     expect(html).toContain('data-testid="map-monster-card"');
     expect(html).toContain('Plain Pebble');
     expect(html).toContain('alt="Practice Grove map"');
+    expect(html).not.toContain('aria-label="Map controls"');
+    expect(html).not.toContain('aria-label="Zoom in"');
+    expect(html).not.toContain('data-gestures="off"');
     expect(html).toContain(`src="${portalImage}"`);
     expect(html).toMatch(
-      /<[a-z]+(?=[^>]*data-marker-ids="[^"]+")(?=[^>]*style="[^"]*left:26\.[0-9]+%;top:65%[^"]*")[^>]*>/u,
+      /<span(?=[^>]*data-marker-position="[^"]+")(?=[^>]*style="[^"]*left:26\.[0-9]+%;top:65%[^"]*")[^>]*>/u,
     );
+    expect(html).toMatch(
+      /<span(?=[^>]*data-marker-ids="[^"]+")(?=[^>]*aria-hidden="true")(?=[^>]*inert)[^>]*>/u,
+    );
+    expect(html).not.toMatch(/<button(?=[^>]*data-marker-ids="[^"]+")/u);
     expect(html).toContain(
       `href="/maplestory/monsters/plain-pebble-${record.monsters.items[0]?.publicId}"`,
     );
