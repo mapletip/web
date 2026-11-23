@@ -506,7 +506,7 @@ describe('MapDetail information', () => {
     expect(
       screen
         .getByRole('group', { name: 'Practice Grove map' })
-        .querySelectorAll('[data-selected="true"]'),
+        .querySelectorAll('[data-marker-id][data-selected="true"]'),
     ).toHaveLength(1);
 
     await user.click(legend.getByText(monster.name, { exact: true }));
@@ -515,7 +515,7 @@ describe('MapDetail information', () => {
     expect(
       screen
         .getByRole('group', { name: 'Practice Grove map' })
-        .querySelectorAll('[data-selected="true"]'),
+        .querySelectorAll('[data-marker-id][data-selected="true"]'),
     ).toHaveLength(0);
   });
 
@@ -569,7 +569,7 @@ describe('MapDetail information', () => {
     expect(
       screen
         .getByRole('group', { name: 'Practice Grove map' })
-        .querySelectorAll('[data-selected="true"]'),
+        .querySelectorAll('[data-marker-id][data-selected="true"]'),
     ).toHaveLength(2);
   });
 

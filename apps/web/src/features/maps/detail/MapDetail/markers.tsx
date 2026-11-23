@@ -39,19 +39,26 @@ export function WarpMarker(): ReactElement {
 export function MonsterMarker({
   spriteUrl,
   inDetails = false,
+  sized = false,
 }: {
   readonly spriteUrl?: string | undefined;
   readonly inDetails?: boolean;
+  readonly sized?: boolean;
 }): ReactElement {
   if (spriteUrl === undefined) {
     return <MonsterDot className={classes['markerPalette']} />;
   }
 
+  const defaultClassName = inDetails
+    ? classes['detailSprite']
+    : classes['stageSprite'];
   return (
     <SpriteMarker
       spriteUrl={spriteUrl}
       visual="monster-sprite"
-      className={inDetails ? classes['detailSprite'] : classes['stageSprite']}
+      className={
+        sized && !inDetails ? classes['sizedStageSprite'] : defaultClassName
+      }
     />
   );
 }
@@ -86,14 +93,22 @@ function markerVisual({
   kind,
   spriteUrl,
   inDetails,
+  sized,
 }: {
   readonly kind: MapDetailEntityView['kind'];
   readonly spriteUrl?: string | undefined;
   readonly inDetails: boolean;
+  readonly sized?: boolean;
 }): ReactElement {
   switch (kind) {
     case 'monster':
-      return <MonsterMarker spriteUrl={spriteUrl} inDetails={inDetails} />;
+      return (
+        <MonsterMarker
+          spriteUrl={spriteUrl}
+          inDetails={inDetails}
+          sized={sized ?? false}
+        />
+      );
     case 'npc':
       return <NpcMarker spriteUrl={spriteUrl} inDetails={inDetails} />;
     case 'connection':
@@ -112,6 +127,7 @@ export function MarkerContent({
     kind: marker.kind,
     spriteUrl: marker.spriteUrl,
     inDetails: false,
+    sized: marker.size !== undefined,
   });
 }
 

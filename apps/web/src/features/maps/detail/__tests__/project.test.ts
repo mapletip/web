@@ -1,4 +1,5 @@
 import { mapMarkUrl, mapNpcSpriteUrl } from '@mapletip/data/maps';
+import { monsterSpriteUrl } from '@mapletip/data/monsters';
 import { describe, expect, it } from 'vitest';
 
 import { MAPLEKIT_RELEASE } from '@/config/maplekit';
@@ -101,14 +102,15 @@ describe('projectMapDetail', () => {
     const view = projectMapDetail({ record, buildId: 'cw-launch' });
     const expectedUrl = mapNpcSpriteUrl(MAPLEKIT_RELEASE.baseUrl, contentId);
     const projectedNpc = view.npcs.npcs[0];
+    const stageNpc = view.stage.markers.find(({ kind }) => kind === 'npc');
 
     expect(projectedNpc?.spriteUrl).toBe(expectedUrl);
     expect(view.entities.find(({ kind }) => kind === 'npc')?.spriteUrl).toBe(
       expectedUrl,
     );
-    expect(
-      view.stage.markers.find(({ kind }) => kind === 'npc')?.spriteUrl,
-    ).toBe(expectedUrl);
+    expect(stageNpc?.spriteUrl).toBe(expectedUrl);
+    expect(stageNpc).not.toHaveProperty('size');
+    expect(stageNpc).not.toHaveProperty('anchor');
   });
 
   it('omits NPC sprites when the sprite fact is unknown', () => {
@@ -131,6 +133,123 @@ describe('projectMapDetail', () => {
     expect(
       view.stage.markers.find(({ kind }) => kind === 'npc')?.spriteUrl,
     ).toBeUndefined();
+  });
+
+  it('sizes Monster stage sprites from known positive sprite dimensions', () => {
+    const source = mapPageRecordFixture({ mapId: 'practice-grove' });
+    const monster = source.monsters.items[0];
+    if (monster === undefined) throw new Error('Expected a fixture Monster.');
+    const contentId = 'c'.repeat(64);
+    const record = {
+      ...source,
+      monsters: {
+        ...source.monsters,
+        items: [
+          {
+            ...monster,
+            sprite: {
+              contentId: { state: 'known' as const, value: contentId },
+              width: 42,
+              height: 64,
+            },
+          },
+        ],
+      },
+    };
+    const view = projectMapDetail({ record, buildId: 'cw-launch' });
+    const marker = view.stage.markers.find(({ kind }) => kind === 'monster');
+
+    expect(marker).toMatchObject({
+      spriteUrl: monsterSpriteUrl(MAPLEKIT_RELEASE.baseUrl, contentId),
+      size: { width: 2.625, height: 4 },
+      anchor: 'bottom',
+    });
+    expect(view.monsters.monsters[0]?.spriteSize).toEqual({
+      width: 42,
+      height: 64,
+    });
+    expect(marker).not.toHaveProperty('spriteWidth');
+    expect(marker).not.toHaveProperty('spriteHeight');
+  });
+
+  it('omits Monster stage sizing when the sprite or dimensions are unknown', () => {
+    const source = mapPageRecordFixture({ mapId: 'practice-grove' });
+    const monster = source.monsters.items[0];
+    if (monster === undefined) throw new Error('Expected a fixture Monster.');
+    const contentId = 'd'.repeat(64);
+    const invalidDimensions = projectMapDetail({
+      record: {
+        ...source,
+        monsters: {
+          ...source.monsters,
+          items: [
+            {
+              ...monster,
+              sprite: {
+                contentId: { state: 'known' as const, value: contentId },
+                width: 0,
+                height: 64,
+              },
+            },
+          ],
+        },
+      },
+      buildId: 'cw-launch',
+    }).stage.markers.find(({ kind }) => kind === 'monster');
+    const missingDimensionsContentId = 'e'.repeat(64);
+    const missingDimensions = projectMapDetail({
+      record: {
+        ...source,
+        monsters: {
+          ...source.monsters,
+          items: [
+            {
+              ...monster,
+              sprite: {
+                contentId: {
+                  state: 'known' as const,
+                  value: missingDimensionsContentId,
+                },
+              },
+            },
+          ],
+        },
+      },
+      buildId: 'cw-launch',
+    }).stage.markers.find(({ kind }) => kind === 'monster');
+    const unknownSprite = projectMapDetail({
+      record: {
+        ...source,
+        monsters: {
+          ...source.monsters,
+          items: [
+            {
+              ...monster,
+              sprite: {
+                contentId: { state: 'unknown' as const },
+                width: 42,
+                height: 64,
+              },
+            },
+          ],
+        },
+      },
+      buildId: 'cw-launch',
+    }).stage.markers.find(({ kind }) => kind === 'monster');
+
+    expect(missingDimensions?.spriteUrl).toBe(
+      monsterSpriteUrl(MAPLEKIT_RELEASE.baseUrl, missingDimensionsContentId),
+    );
+
+    for (const marker of [
+      invalidDimensions,
+      missingDimensions,
+      unknownSprite,
+    ]) {
+      expect(marker).toBeDefined();
+      expect(marker).not.toHaveProperty('size');
+      expect(marker).not.toHaveProperty('anchor');
+    }
   });
 
   it('projects stage markers with stable labels and pairs the ends of each warp', () => {
