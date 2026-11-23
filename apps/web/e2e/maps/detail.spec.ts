@@ -981,6 +981,93 @@ test('On this map selects every town NPC and restores the selection after reload
   await expectNpcMarkersRinged();
 });
 
+test('Map Detail uses a compact desktop rail and places the description below the map legend', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  const publicId = mapPublicId({ sourceId: 'cw-launch:lantern-square' });
+  await page.goto(`/maplestory/maps/lantern-square-${publicId}`);
+  await page.waitForLoadState('networkidle');
+
+  const reference = page.getByRole('complementary', { name: 'Map reference' });
+  const measurements = await reference.evaluate((rail) => {
+    const hero = rail.parentElement;
+    const stageColumn = hero?.firstElementChild;
+    const railRect = rail.getBoundingClientRect();
+    const stageRect = stageColumn?.getBoundingClientRect();
+    const columns =
+      hero === null
+        ? []
+        : getComputedStyle(hero)
+            .gridTemplateColumns.split(' ')
+            .map((column) => Number.parseFloat(column));
+    return {
+      railWidth: railRect.width,
+      railX: railRect.x,
+      stageRight: stageRect?.right ?? 0,
+      columns,
+    };
+  });
+  expect(measurements.columns).toHaveLength(2);
+  expect(measurements.columns[1]).toBeCloseTo(240, 0);
+  expect(measurements.railWidth).toBeCloseTo(240, 0);
+  expect(measurements.railX).toBeGreaterThan(measurements.stageRight);
+
+  const legend = page.getByRole('region', { name: 'Scrollable map legend' });
+  const description = page.getByText(
+    'A gathering place beneath paper lanterns.',
+  );
+  const legendBox = await legend.boundingBox();
+  const descriptionBox = await description.boundingBox();
+  expect(legendBox).not.toBeNull();
+  expect(descriptionBox).not.toBeNull();
+  expect(descriptionBox!.y).toBeGreaterThanOrEqual(
+    legendBox!.y + legendBox!.height,
+  );
+});
+
+test('Monsters and Spawns rows share monster marker selection', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  const publicId = mapPublicId({ sourceId: 'cw-launch:practice-grove' });
+  await page.goto(`/maplestory/maps/practice-grove-${publicId}`);
+  await page.waitForLoadState('networkidle');
+  await waitForMapDetailHydration(page);
+
+  const summary = page.getByRole('region', { name: 'On this map' });
+  const monsters = summary.getByRole('button', {
+    name: /Highlight Monsters on map/u,
+  });
+  const spawns = summary.getByRole('button', {
+    name: /Highlight monster spawns on map/u,
+  });
+  const monsterMarkers = page
+    .getByRole('group', { name: 'Practice Grove map' })
+    .locator('[data-marker-ids*="monster:"]');
+
+  await spawns.click();
+  await expect(page).toHaveURL(/focus=monsters/u);
+  await expect(monsters).toHaveAttribute('aria-pressed', 'true');
+  await expect(spawns).toHaveAttribute('aria-pressed', 'true');
+  await expect
+    .poll(async () =>
+      monsterMarkers.evaluateAll(
+        (markers) =>
+          markers.length > 0 &&
+          markers.every(
+            (marker) => marker.getAttribute('data-selected') === 'true',
+          ),
+      ),
+    )
+    .toBe(true);
+
+  await monsters.click();
+  await expect(page).not.toHaveURL(/focus=monsters/u);
+  await expect(monsters).toHaveAttribute('aria-pressed', 'false');
+  await expect(spawns).toHaveAttribute('aria-pressed', 'false');
+});
+
 test('Map Detail legend chips select entities and ring their markers at desktop and mobile widths', async ({
   page,
 }, testInfo) => {

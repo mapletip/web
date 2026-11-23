@@ -343,6 +343,42 @@ describe('MapDetail information', () => {
     expect(onFocusChange).toHaveBeenLastCalledWith(undefined);
   });
 
+  it('toggles every monster marker from either the Monsters or Spawns row', async () => {
+    const view = projectMapDetail({
+      record: mapPageRecordFixture({ mapId: 'practice-grove' }),
+      buildId: 'cw-launch',
+    });
+    const user = userEvent.setup();
+    const { container } = renderControlledMapView({ view });
+    const rail = screen.getByRole('region', { name: 'On this map' });
+    const monsters = within(rail).getByRole('button', {
+      name: /Highlight Monsters on map/u,
+    });
+    const spawns = within(rail).getByRole('button', {
+      name: /Highlight monster spawns on map/u,
+    });
+    const monsterMarkers = container.querySelectorAll(
+      '[data-marker-ids*="monster:"]',
+    );
+
+    expect(monsterMarkers.length).toBeGreaterThan(0);
+    expect(monsters).toHaveAttribute('aria-pressed', 'false');
+    expect(spawns).toHaveAttribute('aria-pressed', 'false');
+
+    await user.click(spawns);
+    expect(monsters).toHaveAttribute('aria-pressed', 'true');
+    expect(spawns).toHaveAttribute('aria-pressed', 'true');
+    expect(
+      [...monsterMarkers].every(
+        (marker) => marker.getAttribute('data-selected') === 'true',
+      ),
+    ).toBe(true);
+
+    await user.click(monsters);
+    expect(monsters).toHaveAttribute('aria-pressed', 'false');
+    expect(spawns).toHaveAttribute('aria-pressed', 'false');
+  });
+
   it('shows partial counts with plus signs and unresolved counts as question marks', () => {
     const record = mapPageRecordFixture({ mapId: 'practice-grove' });
     const town = mapPageRecordFixture({ mapId: 'lantern-square' });
@@ -729,7 +765,20 @@ describe('MapDetail information', () => {
   });
 
   it('omits activity, description, and an empty Map information block', () => {
-    renderDetail({ mapId: 'practice-grove', withoutInformation: true });
+    const record = mapPageRecordFixture({ mapId: 'practice-grove' });
+    const view = projectMapDetail({
+      record: {
+        ...record,
+        activity: { state: 'unknown' },
+        description: { state: 'absent', coverageKey: 'description' },
+        information: {
+          ...record.information,
+          returnMap: { state: 'unknown' },
+        },
+      },
+      buildId: 'cw-launch',
+    });
+    renderMapView({ view });
 
     expect(
       screen.getByRole('heading', { level: 1, name: 'Practice Grove' }),
@@ -741,6 +790,38 @@ describe('MapDetail information', () => {
     expect(
       screen.queryByRole('heading', { level: 2, name: 'Map information' }),
     ).not.toBeInTheDocument();
+    expect(
+      within(screen.getByRole('complementary', { name: 'Map reference' }))
+        .getAllByRole('heading', { level: 2 })
+        .map((heading) => heading.textContent),
+    ).toEqual(['On this map']);
+  });
+
+  it('keeps the reference card when its optional groups are empty', () => {
+    const record = mapPageRecordFixture({ mapId: 'practice-grove' });
+    const view = projectMapDetail({
+      record: {
+        ...record,
+        activity: { state: 'unknown' },
+        description: { state: 'absent', coverageKey: 'description' },
+        information: {
+          ...record.information,
+          returnMap: { state: 'unknown' },
+        },
+      },
+      buildId: 'cw-launch',
+    });
+    renderMapView({ view: { ...view, facts: [] } });
+
+    const reference = screen.getByRole('complementary', {
+      name: 'Map reference',
+    });
+    expect(
+      within(reference)
+        .getAllByRole('heading', { level: 2 })
+        .map((heading) => heading.textContent),
+    ).toEqual(['On this map']);
+    expect(within(reference).queryByRole('separator')).not.toBeInTheDocument();
   });
 
   it('shows the Map mark beside its name when its URL is available', () => {
@@ -767,13 +848,30 @@ describe('MapDetail information', () => {
   });
 
   it('shows activity, description, and known map information', () => {
-    renderDetail({ mapId: 'lantern-square' });
+    const record = mapPageRecordFixture({ mapId: 'lantern-square' });
+    const view = projectMapDetail({ record, buildId: 'cw-launch' });
+    renderMapView({ view });
 
-    expect(screen.getByText('Part of Market')).toBeVisible();
+    expect(screen.getByText('Market', { selector: 'strong' })).toBeVisible();
+    const description = screen.getByText(
+      'A gathering place beneath paper lanterns.',
+    );
+    expect(description).toBeVisible();
+
+    const reference = screen.getByRole('complementary', {
+      name: 'Map reference',
+    });
     expect(
-      screen.getByText('A gathering place beneath paper lanterns.'),
-    ).toBeVisible();
-
+      within(reference)
+        .getAllByRole('heading', { level: 2 })
+        .map((heading) => heading.textContent),
+    ).toEqual(['On this map', 'Related activity', 'Map information']);
+    expect(within(reference).getAllByRole('separator')).toHaveLength(2);
+    for (const heading of within(reference).getAllByRole('heading', {
+      level: 2,
+    })) {
+      expect(heading).toHaveAttribute('id');
+    }
     const information = screen.getByRole('region', {
       name: 'Map information',
     });
@@ -786,7 +884,31 @@ describe('MapDetail information', () => {
       'href',
       expect.stringMatching(/^\/maplestory\/maps\/practice-grove-/u),
     );
+    const factSheet =
+      information.querySelector<HTMLElement>('[data-columns="1"]');
+    expect(factSheet).toBeInTheDocument();
+    const icons = information.querySelectorAll<SVGSVGElement>(
+      '[data-map-fact-icon]',
+    );
+    expect(
+      [...icons].map((icon) => icon.getAttribute('data-map-fact-icon')),
+    ).toEqual(view.facts.map(({ id }) => id));
+    for (const icon of icons) {
+      expect(icon).toHaveAttribute('width', '16');
+      expect(icon).toHaveAttribute('aria-hidden', 'true');
+    }
+    expect(
+      information.querySelector('[data-map-fact-link-icon="returnMap"]'),
+    ).toHaveAttribute('aria-hidden', 'true');
     expect(within(information).queryByText('Flying')).not.toBeInTheDocument();
+
+    const stageColumn = description.closest('[class*="stageColumn"]');
+    expect(stageColumn).not.toBeNull();
+    expect(
+      screen
+        .getByRole('group', { name: 'Lantern Square map' })
+        .closest('[class*="stageColumn"]'),
+    ).toBe(stageColumn);
   });
 
   it('omits known empty Connections while retaining the Monsters section', () => {

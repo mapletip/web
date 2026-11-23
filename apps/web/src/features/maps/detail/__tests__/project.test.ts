@@ -961,6 +961,17 @@ describe('projectMapDetail', () => {
       'Swimming',
       'Flying',
     ]);
+    expect(view.facts.map(({ id }) => id)).toEqual([
+      'music',
+      'returnMap',
+      'forcedReturnMap',
+      'timeLimit',
+      'levelLimit',
+      'hpDrain',
+      'hpDrainProtection',
+      'swimming',
+      'flying',
+    ]);
     expect(view.facts.map(({ value }) => value)).toEqual([
       'Floral Life',
       'Lantern Square',
@@ -1015,6 +1026,7 @@ describe('projectMapDetail', () => {
 
     expect(view.facts).toEqual([
       {
+        id: 'returnMap',
         label: 'Return map',
         value: UNNAMED_MAP_LABEL,
         explanation:
@@ -1072,6 +1084,7 @@ describe('projectMapDetail', () => {
 
     expect(view.facts).toEqual([
       {
+        id: 'timeLimit',
         label: 'Time limit',
         value,
         explanation:
@@ -1096,5 +1109,46 @@ describe('projectMapDetail', () => {
     });
 
     expect(view.facts.map(({ label }) => label)).toEqual(['Swimming']);
+    expect(view.facts.map(({ id }) => id)).toEqual(['swimming']);
+  });
+
+  it('projects Spawns as the Monsters toggle and disables both without positions', () => {
+    const record = mapPageRecordFixture({ mapId: 'practice-grove' });
+    const projected = projectMapDetail({ record, buildId: 'cw-launch' });
+    const monstersRow = projected.onThisMap.find(
+      ({ key }) => key === 'monsters',
+    );
+    const spawnsRow = projected.onThisMap.find(({ key }) => key === 'spawns');
+    expect(monstersRow).toMatchObject({ focus: 'monsters', disabled: false });
+    expect(spawnsRow).toMatchObject({
+      key: 'spawns',
+      label: 'Spawns',
+      focus: 'monsters',
+      disabled: false,
+    });
+    expect(spawnsRow?.accessibleName).toContain(
+      'Highlight monster spawns on map',
+    );
+
+    const withoutMonsterPositions = projectMapDetail({
+      record: {
+        ...record,
+        monsters: {
+          ...record.monsters,
+          items: record.monsters.items.map((monster) => ({
+            ...monster,
+            points: { state: 'unknown' as const, items: [] },
+          })),
+        },
+      },
+      buildId: 'cw-launch',
+    });
+
+    expect(
+      withoutMonsterPositions.onThisMap.find(({ key }) => key === 'monsters'),
+    ).toMatchObject({ disabled: true });
+    expect(
+      withoutMonsterPositions.onThisMap.find(({ key }) => key === 'spawns'),
+    ).toMatchObject({ focus: 'monsters', disabled: true });
   });
 });
