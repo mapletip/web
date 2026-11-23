@@ -146,6 +146,7 @@ export function LocationCardList({
         getKey={(map) => map.key}
         density={MAP_RECORD_CARD_DENSITY}
         itemTestId="monster-location-card"
+        equalHeightRows
         {...(drawer ? {} : { mobileItemLimit: MOBILE_CAP })}
         renderItem={(map) => <MapRecordCard map={map} />}
       />

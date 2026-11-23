@@ -224,7 +224,6 @@
   width: 24px;
 }
 
-.monsterDot,
 .npcDot {
   background: var(--map-detail-marker-monster-color);
   border: 1px solid var(--map-detail-marker-border-color);
@@ -232,10 +231,6 @@
   display: block;
   height: 10px;
   width: 10px;
-}
-
-.monsterDot {
-  border-radius: 50%;
 }
 
 .npcDot {

@@ -6,6 +6,7 @@ export {
   type MapRecordCardProps,
   type MapRecordCardView,
 } from './MapRecordCard';
+export { MonsterDot, type MonsterDotProps } from './MonsterDot';
 export {
   MAP_DETAIL_ROUTE,
   mapDetailLinkProps,

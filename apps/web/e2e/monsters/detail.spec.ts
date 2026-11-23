@@ -5,6 +5,7 @@ import {
   monsterPublicId,
   monsterSlug,
 } from '../../src/mocks/release';
+import { world } from '../../src/mocks/world';
 
 import { expect, test } from './fixtures';
 
@@ -48,8 +49,10 @@ async function minimapBackgrounds(
   return minimap.evaluate((element) => {
     const card = element.closest('[data-record-card="true"]');
     if (card === null) throw new Error('Minimap is outside its map card.');
+    // Location minimaps paint their surface on the StaticMap stage.
+    const surface = element.querySelector('[role="group"]') ?? element;
     return {
-      well: getComputedStyle(element).backgroundColor,
+      well: getComputedStyle(surface).backgroundColor,
       card: getComputedStyle(card).backgroundColor,
     };
   });
@@ -64,6 +67,29 @@ function expectMonsterPageArtifacts(expected: RegExp[]): void {
     // Linked location cards preload their map on intent (router defaultPreload).
     /^\/v2\/maps\/page-packs\/[a-f0-9]{64}\.json$/u,
   );
+}
+
+function fixtureSpawnPointCount({
+  buildId,
+  monsterId,
+  mapKey,
+}: {
+  readonly buildId: DetailCase['buildId'];
+  readonly monsterId: string;
+  readonly mapKey: string;
+}): number {
+  const build = world.builds.find((candidate) => candidate.buildId === buildId);
+  const monster = build?.monsters.find(
+    (candidate) => candidate.id === monsterId,
+  );
+  const location = monster?.locations?.find(
+    (candidate) => candidate.mapKey === mapKey,
+  );
+  if (location?.points === undefined) {
+    throw new Error(`No mock spawn points for ${monsterId} on ${mapKey}.`);
+  }
+
+  return location.points.length;
 }
 
 test('detail pages server-render metadata, hydrate without whole-build artifacts, and redirect stale slugs', async ({
@@ -521,6 +547,74 @@ test('Monster Detail opens every location in a drawer from its responsive cap', 
   await expect(
     inlineCards.first().getByRole('heading', { name: 'Practice Map 01' }),
   ).toBeVisible();
+});
+
+test('Monster Detail location minimaps show published spawn dots inline and in the preview', async ({
+  page,
+  monsterPage,
+  expectedArtifactRequests,
+}, testInfo) => {
+  const item: DetailCase = {
+    buildId: 'cw-launch',
+    prefix: '/maplestory',
+    sourceId: 'crowned-warden',
+    name: 'Crowned Warden',
+    buildLabel: 'Classic World',
+  };
+  expectMonsterPageArtifacts(expectedArtifactRequests);
+  await monsterPage.goto(canonicalPath(item));
+  await page.waitForLoadState('networkidle');
+
+  const firstMap = page
+    .getByTestId('monster-location-card')
+    .filter({ hasText: 'Practice Map 01' });
+  const expectedKnownPoints = fixtureSpawnPointCount({
+    buildId: 'cw-launch',
+    monsterId: 'crowned-warden',
+    mapKey: 'fixture:map:01',
+  });
+  const firstMinimap = firstMap.locator('[data-map-minimap="true"]');
+  await expect(firstMinimap.locator('[data-marker-position]')).toHaveCount(
+    expectedKnownPoints,
+  );
+  await expect(firstMinimap.locator('img')).toHaveAttribute('loading', 'lazy');
+
+  const partialMap = page
+    .getByTestId('monster-location-card')
+    .filter({ hasText: 'Practice Map 02' });
+  const expectedPartialPoints = fixtureSpawnPointCount({
+    buildId: 'cw-launch',
+    monsterId: 'crowned-warden',
+    mapKey: 'fixture:map:02',
+  });
+  await expect(
+    partialMap.locator('[data-map-minimap="true"] [data-marker-position]'),
+  ).toHaveCount(expectedPartialPoints);
+  await expect(partialMap.getByTestId('map-card-footer')).toHaveText(
+    '11 spawns',
+  );
+
+  if (testInfo.project.name !== 'mobile') {
+    const trigger = firstMap.getByRole('button', {
+      name: 'Enlarge Practice Map 01 minimap',
+    });
+    await trigger.hover();
+    const preview = page.locator(
+      '[aria-label="Practice Map 01 full-size minimap preview"]',
+    );
+    await expect(preview).toBeVisible();
+    await expect(preview.locator('[data-marker-position]')).toHaveCount(
+      expectedKnownPoints,
+    );
+  }
+
+  await page.getByRole('button', { name: 'View all 12 maps' }).click();
+  const drawer = page.getByRole('dialog', { name: /^All maps/u });
+  await expect(drawer).toBeVisible();
+  const lazyMinimapImages = drawer.locator(
+    '[data-map-minimap="true"] img[loading="lazy"]',
+  );
+  await expect(lazyMinimapImages).toHaveCount(2);
 });
 
 test('Monster Detail location cards open their Map Detail page', async ({
