@@ -52,3 +52,28 @@ describe('defineBrowseSearch', () => {
     expect(state.sort).toEqual({ field: 'level', direction: 'asc' });
   });
 });
+
+describe('isDefaultSearch', () => {
+  const address = defineBrowseSearch({ sortOptions: LEVEL_SORTS });
+
+  it('is true only for the default view', () => {
+    expect(address.isDefaultSearch(address.schema.parse({}))).toBe(true);
+    expect(address.isDefaultSearch(address.schema.parse({ q: '  ' }))).toBe(
+      true,
+    );
+    expect(address.isDefaultSearch(address.schema.parse({ monster: [] }))).toBe(
+      true,
+    );
+    for (const search of [
+      { q: 'snail' },
+      { page: 2 },
+      { pageSize: 25 },
+      { sort: 'name-asc' },
+      { monster: ['a'] },
+      { level: {} },
+      { has: false },
+    ]) {
+      expect(address.isDefaultSearch(address.schema.parse(search))).toBe(false);
+    }
+  });
+});
