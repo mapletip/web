@@ -84,6 +84,13 @@ export interface UseFacetedBrowserOptions<
   readonly defaultPage?: number | undefined;
   readonly defaultSort?: SortIntent | undefined;
   readonly defaultFilters?: Record<string, FacetFilterValue> | undefined;
+  /**
+   * Filters applied to every query, including counts and drafts, that are not
+   * part of browse state: no chip, no reset, never emitted. Used for the
+   * current navigation node.
+   */
+  readonly scopeFilters?:
+    Readonly<Record<string, FacetFilterValue>> | undefined;
   /** Resolved facets used to validate controlled and initial filters. */
   readonly facets?: readonly FacetDefinition<TRecord>[] | undefined;
   readonly defaultHiddenColumns?: readonly string[] | undefined;
@@ -204,6 +211,7 @@ export function useFacetedBrowser<TRecord extends Record<string, unknown>>({
   defaultPage = 1,
   defaultSort,
   defaultFilters = EMPTY_FILTERS,
+  scopeFilters = EMPTY_FILTERS,
   facets,
   defaultHiddenColumns = EMPTY_HIDDEN_COLUMNS,
   search,
@@ -392,8 +400,8 @@ export function useFacetedBrowser<TRecord extends Record<string, unknown>>({
   }, [fieldMap, searchFieldIds]);
 
   const columnFilters = useMemo(
-    () => toColumnFilters(filtersState),
-    [filtersState],
+    () => toColumnFilters({ ...filtersState, ...scopeFilters }),
+    [filtersState, scopeFilters],
   );
 
   const effectiveSorting = useMemo<SortingState>(() => {
@@ -831,7 +839,7 @@ export function useFacetedBrowser<TRecord extends Record<string, unknown>>({
         globalFilterFn,
         getRowId: (row) => String(row[idAccessor]),
         state: {
-          columnFilters: toColumnFilters(draftFilters),
+          columnFilters: toColumnFilters({ ...draftFilters, ...scopeFilters }),
           globalFilter: canonicalState.search,
         },
       });
@@ -860,6 +868,7 @@ export function useFacetedBrowser<TRecord extends Record<string, unknown>>({
       canonicalState.search,
       idAccessor,
       globalFilterFn,
+      scopeFilters,
     ],
   );
 
