@@ -6,6 +6,7 @@ import type { FacetFilterValue } from '@/components/FacetedBrowser/hooks/filterT
 import { BooleanControl } from './BooleanControl';
 import { FacetContainer } from './FacetContainer';
 import { OptionList } from './OptionList';
+import { PickerControl } from './PickerControl';
 import { RangeBucketControl } from './RangeBucketControl';
 import { RangeControl } from './RangeControl';
 import type {
@@ -55,6 +56,19 @@ export function FacetControl<TRecord extends Record<string, unknown>>({
     if (facet.icon === undefined) return <div>{control}</div>;
 
     return <FacetContainer label={labelContent}>{control}</FacetContainer>;
+  }
+
+  if (facet.kind === 'multi-select' && facet.picker !== undefined) {
+    return (
+      <PickerControl
+        label={facet.label}
+        labelContent={labelContent}
+        options={facet.options ?? []}
+        picker={facet.picker}
+        value={value}
+        onChange={onChange}
+      />
+    );
   }
 
   if (facet.kind === 'multi-select') {

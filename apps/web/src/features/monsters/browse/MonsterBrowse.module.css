@@ -32,36 +32,3 @@ a.identityName:focus-visible {
   text-decoration: underline;
   text-underline-offset: 0.15em;
 }
-
-.dropItemPillContent {
-  display: flex;
-  min-width: 0;
-  align-items: center;
-  gap: var(--mantine-spacing-xs);
-  overflow: hidden;
-}
-
-.dropItemPill {
-  flex: 0 1 auto;
-  min-width: 0;
-  max-width: 100%;
-}
-
-.dropItemPillLabel {
-  flex: 1 1 auto;
-  min-width: 0;
-  overflow: hidden;
-}
-
-.dropItemPillContent img {
-  flex: 0 0 auto;
-  image-rendering: pixelated;
-}
-
-.dropItemPillText {
-  flex: 1 1 auto;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}

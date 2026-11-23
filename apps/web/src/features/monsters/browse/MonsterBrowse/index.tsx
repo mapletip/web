@@ -1,9 +1,5 @@
-import { Button, MultiSelect, Pill, Text, Title } from '@mantine/core';
-import {
-  FacetedBrowser,
-  EntityOption,
-  Thumbnail,
-} from '@mapletip/component-library';
+import { Button, Title } from '@mantine/core';
+import { FacetedBrowser, Thumbnail } from '@mapletip/component-library';
 import type {
   BrowseState,
   DrawerOpenedChangeDetails,
@@ -203,81 +199,18 @@ function dropItemFacet(
   options: readonly MonsterDropItemOption[],
   definition: FacetDefinition<MonsterBrowseRow>,
 ): FacetDefinition<MonsterBrowseRow> {
-  const facetOptions = options.map(({ value, label, iconUrl }) => ({
-    value,
-    label,
-    ...(iconUrl === undefined
-      ? {}
-      : { icon: <Thumbnail src={iconUrl} size={16} alt="" /> }),
-  }));
-  const iconUrls = new Map(
-    options.map(({ value, iconUrl }) => [value, iconUrl] as const),
-  );
-
   return {
     ...definition,
-    options: facetOptions,
-    renderControl: ({ value, onChange }) => {
-      const selected = Array.isArray(value)
-        ? value.filter((entry): entry is string => typeof entry === 'string')
-        : [];
-      if (options.length === 0) {
-        return <Text size="sm">No resolved item keys are available.</Text>;
-      }
-      return (
-        <MultiSelect
-          aria-label="Drops"
-          data={options}
-          value={selected}
-          onChange={(next) => onChange(next.length === 0 ? undefined : next)}
-          comboboxProps={{ withinPortal: false }}
-          searchable
-          clearable
-          hidePickedOptions
-          maxDropdownHeight={300}
-          nothingFoundMessage="No dropped items match"
-          placeholder="Search dropped items"
-          renderOption={({ option }) => {
-            const iconUrl = iconUrls.get(option.value);
-            return (
-              <EntityOption
-                icon={
-                  iconUrl === undefined ? undefined : (
-                    <Thumbnail src={iconUrl} size={24} alt="" />
-                  )
-                }
-                label={option.label}
-              />
-            );
-          }}
-          renderPill={({ option, onRemove, disabled }) => {
-            const iconUrl =
-              typeof option.value === 'string'
-                ? iconUrls.get(option.value)
-                : undefined;
-            return (
-              <Pill
-                className={classes['dropItemPill']}
-                classNames={{ label: classes['dropItemPillLabel'] }}
-                withRemoveButton={!disabled && onRemove !== undefined}
-                title={option.label}
-                {...(onRemove === undefined ? {} : { onRemove })}
-                {...(disabled === undefined ? {} : { disabled })}
-              >
-                <span className={classes['dropItemPillContent']}>
-                  {iconUrl === undefined ? null : (
-                    <Thumbnail src={iconUrl} size={16} alt="" />
-                  )}
-                  <span className={classes['dropItemPillText']}>
-                    {option.label}
-                  </span>
-                </span>
-              </Pill>
-            );
-          }}
-          size="sm"
-        />
-      );
+    options: options.map(({ value, label, iconUrl }) => ({
+      value,
+      label,
+      ...(iconUrl === undefined
+        ? {}
+        : { icon: <Thumbnail src={iconUrl} size={16} alt="" /> }),
+    })),
+    picker: {
+      placeholder: 'Search dropped items',
+      nothingFound: 'No dropped items match',
     },
   };
 }

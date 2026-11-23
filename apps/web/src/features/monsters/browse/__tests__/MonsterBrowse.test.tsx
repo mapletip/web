@@ -523,7 +523,7 @@ describe('MonsterBrowse', () => {
     ).toBeInTheDocument();
     expect(
       document.querySelector(
-        `[class*="dropItemPillContent"] img[src="${redPotionIcon}"]`,
+        `[class*="pillContent"] img[src="${redPotionIcon}"]`,
       ),
     ).toBeInTheDocument();
     expect(

@@ -85,6 +85,7 @@ function BrowserExample({
   onStateChange,
   fillHeight = true,
   groupedCategories = false,
+  regionPicker = false,
   navigation,
   sortOptions,
   renderPageLink,
@@ -94,6 +95,7 @@ function BrowserExample({
   readonly onStateChange?: (nextState: BrowseState) => void;
   readonly fillHeight?: boolean;
   readonly groupedCategories?: boolean;
+  readonly regionPicker?: boolean;
   readonly navigation?: FacetedBrowserNavigation;
   readonly sortOptions?: readonly BrowseSortOption[];
   readonly renderPageLink?: PageLinkRenderer;
@@ -149,7 +151,22 @@ function BrowserExample({
         field: 'region',
         label: 'Region',
         kind: 'multi-select',
-        options: demoRegionFacetOptions,
+        ...(regionPicker
+          ? {
+              options: demoRegionFacetOptions.map(
+                ({ value, label, count }) => ({
+                  value,
+                  label,
+                  icon: <Sparkle size={16} />,
+                  description: `${count} records`,
+                }),
+              ),
+              picker: {
+                placeholder: 'Search regions',
+                nothingFound: 'No regions match',
+              },
+            }
+          : { options: demoRegionFacetOptions }),
       },
       {
         id: 'image-availability',
@@ -158,7 +175,7 @@ function BrowserExample({
         kind: 'boolean',
       },
     ],
-    [groupedCategories],
+    [groupedCategories, regionPicker],
   );
   const [drawerOpened, setDrawerOpened] = useState(variant === 'drawerOpen');
   const defaultState: BrowseState = {
@@ -239,6 +256,38 @@ export const Active: Story = {
       }}
     />
   ),
+};
+
+export const PickerFacet: Story = {
+  name: 'Searchable picker facet',
+  render: () => <BrowserExample regionPicker />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const picker = canvas.getByRole('combobox', { name: 'Region' });
+    await userEvent.type(picker, 'north');
+    const listbox = await screen.findByRole('listbox');
+    await expect(
+      within(listbox)
+        .getAllByRole('option')
+        .map((option) => option.textContent),
+    ).toEqual(
+      demoRegionFacetOptions
+        .filter(({ label }) => label.toLowerCase().includes('north'))
+        .map(({ label, count }) => `${label}${count} records`),
+    );
+    await userEvent.click(
+      within(listbox).getByRole('option', { name: /^North\b/u }),
+    );
+    await waitFor(() => expect(canvas.getByTitle('North')).toBeInTheDocument());
+    // Settle on the closed picker: axe reports the open list's scroll region,
+    // which is scrolled through the input's aria-activedescendant.
+    await userEvent.click(
+      canvas.getByRole('heading', { name: 'Browse records' }),
+    );
+    await waitFor(() =>
+      expect(screen.queryByRole('listbox')).not.toBeInTheDocument(),
+    );
+  },
 };
 
 export const KeyboardFocus: Story = {

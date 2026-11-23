@@ -23,6 +23,7 @@ export type {
   FacetControlContext,
   FacetDefinition,
   FacetOption,
+  FacetPicker,
   FacetRangeBucket,
 } from '@/components/FacetedBrowser/FacetControls/types';
 export { useFacetedBrowser } from '@/components/FacetedBrowser/hooks/useFacetedBrowser';
