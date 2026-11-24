@@ -5,31 +5,37 @@ import {
 } from '@/features/browse/metadata';
 import type { BrowseSearch } from '@/features/browse/search-params';
 
+import type { MapLocationNode } from './location';
 import { mapBrowseSearch } from './search-params';
 
 export interface MapPageMetadataOptions {
   readonly buildId: BuildId;
-  /** Current location's label; omitted on All maps. */
-  readonly locationLabel?: string | undefined;
+  readonly location: MapLocationNode;
   readonly path: string;
   readonly search?: BrowseSearch | undefined;
 }
 
 export function mapPageMetadata({
   buildId,
-  locationLabel,
+  location,
   path,
   search,
 }: MapPageMetadataOptions): BrowsePageMetadata {
   const buildLabel = BUILDS[buildId].label;
   return browsePageMetadata({
     buildId,
-    topic: locationLabel === undefined ? 'Maps' : `${locationLabel} Maps`,
+    // Collection labels already name their maps, such as "Event maps".
+    topic: {
+      all: 'Maps',
+      region: `${location.label} Maps`,
+      area: `${location.label} Maps`,
+      collection: location.label,
+    }[location.kind],
     path,
     description:
-      locationLabel === undefined
+      location.kind === 'all'
         ? `Browse ${buildLabel} maps in MapleStory by place, monster and NPC.`
-        : `Browse ${buildLabel} maps in ${locationLabel}, MapleStory, by monster and NPC.`,
+        : `Browse ${buildLabel} ${location.kind === 'collection' ? location.label : `maps in ${location.label}`} in MapleStory by monster and NPC.`,
     isDefaultView:
       search === undefined || mapBrowseSearch.isDefaultSearch(search),
   });

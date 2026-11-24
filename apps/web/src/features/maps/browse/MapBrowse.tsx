@@ -1,11 +1,12 @@
 import { Title } from '@mantine/core';
-import { FacetedBrowser } from '@mapletip/component-library';
+import { DrillDownNav, FacetedBrowser } from '@mapletip/component-library';
 import type {
   BrowseState,
   DrawerOpenedChangeDetails,
+  FacetedBrowserNavigation,
   StateChangeDetails,
 } from '@mapletip/component-library';
-import { Link } from '@tanstack/react-router';
+import { Link, useRouter } from '@tanstack/react-router';
 import { useCallback, useMemo, type ReactElement } from 'react';
 
 import { BrowsePageShell } from '@/components/BrowsePageShell';
@@ -26,7 +27,14 @@ import {
   MAP_SEARCH_FIELDS,
   MAP_SORT_OPTIONS,
 } from './facets';
+import {
+  mapLocationTree,
+  type MapLocationNode,
+  type MapLocationParams,
+} from './location';
+import { LocationLink, mapLocationLinkOptions } from './LocationLink';
 import { MapBrowseCard } from './MapBrowseCard';
+import { mapPageMetadata } from './metadata';
 import type { MapBrowseData } from './project';
 import { mapBrowseRecords } from './records';
 import { mapBrowseSearch } from './search-params';
@@ -35,7 +43,8 @@ export interface MapBrowseProps {
   readonly buildId: BuildId;
   /** Absent when the release carries no Map Browse for the build. */
   readonly data: MapBrowseData | undefined;
-  readonly heading: string;
+  /** The location page being shown; All maps on the index page. */
+  readonly location: MapLocationNode;
   readonly search: BrowseSearch;
   readonly onSearchChange: (
     options: OnSearchChangeOptions,
@@ -50,10 +59,12 @@ const CARD_COLUMNS = { base: 1, md: 2 } as const;
 export function MapBrowse({
   buildId,
   data,
-  heading,
+  location,
   search,
   onSearchChange,
 }: MapBrowseProps): ReactElement {
+  const router = useRouter();
+  const { heading } = mapPageMetadata({ buildId, location, path: '' });
   const records = useMemo(
     () => (data === undefined ? [] : mapBrowseRecords(data)),
     [data],
@@ -92,10 +103,95 @@ export function MapBrowse({
     [browseOverlay, commitBrowseState],
   );
 
+  // Choosing a location keeps the search and filters and returns to page one.
+  const locationSearch = mapBrowseSearch.browseStateToUrl({
+    state: browseState,
+    includePage: false,
+  });
+  const locationParams = useMemo(() => {
+    if (data === undefined) return new Map<string, MapLocationParams>();
+    const entries: [string, MapLocationParams][] = [];
+    const visit = (node: ReturnType<typeof mapLocationTree>) => {
+      entries.push([node.id, node.meta ?? {}]);
+      node.children?.forEach(visit);
+    };
+    visit(mapLocationTree({ geography: data.geography, buildId }));
+    return new Map(entries);
+  }, [buildId, data]);
+
+  const applyLocation = useCallback(
+    (id: string, options: { readonly replace: true }) => {
+      void router.navigate({
+        ...mapLocationLinkOptions({
+          buildId,
+          params: locationParams.get(id) ?? {},
+          search: locationSearch,
+        }),
+        replace: options.replace,
+      });
+    },
+    [buildId, locationParams, locationSearch, router],
+  );
+
+  const navigation: FacetedBrowserNavigation | undefined =
+    data === undefined
+      ? undefined
+      : {
+          label: 'Locations',
+          currentLabel: location.label,
+          currentId: location.id,
+          field: 'locationKeys',
+          apply: applyLocation,
+          opened: browseOverlay.overlay?.type === 'navigation',
+          onOpenedChange: (opened, reason) => {
+            if (opened) {
+              browseOverlay.open({ type: 'navigation' });
+              return;
+            }
+            if (reason === 'dismiss') browseOverlay.dismiss('navigation');
+          },
+          render: (context) => {
+            const root = mapLocationTree({
+              geography: data.geography,
+              buildId,
+              counts: context.counts,
+            });
+            if (context.mode === 'drawer') {
+              return (
+                <DrillDownNav
+                  root={root}
+                  currentId={context.selectedId}
+                  label="Locations"
+                  onSelect={context.onSelect}
+                />
+              );
+            }
+            return (
+              <DrillDownNav
+                root={root}
+                currentId={location.id}
+                label="Locations"
+                renderLink={(node, props) => (
+                  <LocationLink
+                    buildId={buildId}
+                    params={node.meta ?? {}}
+                    search={locationSearch}
+                    props={props}
+                  />
+                )}
+                {...(context.onNavigate
+                  ? { onNavigate: context.onNavigate }
+                  : {})}
+              />
+            );
+          },
+        };
+
   return (
     <BrowsePageShell>
       <FacetedBrowser
         title={<Title order={1}>{heading}</Title>}
+        {...(navigation === undefined ? {} : { navigation })}
         records={records}
         idAccessor="publicId"
         queryFields={MAP_QUERY_FIELDS}
