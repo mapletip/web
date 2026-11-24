@@ -32,6 +32,8 @@ export interface MapBrowseCardContext {
   readonly levels: boolean;
   /** The maps are sorted by spawn points. */
   readonly spawns: boolean;
+  readonly entryLevel: boolean;
+  readonly levelCap: boolean;
 }
 
 export const PLAIN_CARD_CONTEXT: MapBrowseCardContext = {
@@ -39,6 +41,8 @@ export const PLAIN_CARD_CONTEXT: MapBrowseCardContext = {
   npcs: new Set(),
   levels: false,
   spawns: false,
+  entryLevel: false,
+  levelCap: false,
 };
 
 export interface MapBrowseCardProps {
@@ -127,17 +131,26 @@ function spawnPart(record: MapBrowseRecord): MapRecordCardFooterPart[] {
   ];
 }
 
-/** At most one kind of figure: the one the active filter or sort is about. */
+/** Show figures only for facts the current filters or sort ask for. */
 function footerParts(
   record: MapBrowseRecord,
   context: MapBrowseCardContext,
 ): MapRecordCardFooterPart[] {
+  let parts: MapRecordCardFooterPart[] = [];
   if (context.monsters.size > 0 || context.npcs.size > 0) {
-    return inhabitantParts(record, context);
+    parts = inhabitantParts(record, context);
+  } else if (context.levels) {
+    parts = levelPart(record);
+  } else if (context.spawns) {
+    parts = spawnPart(record);
   }
-  if (context.levels) return levelPart(record);
-  if (context.spawns) return spawnPart(record);
-  return [];
+  if (context.entryLevel && record.entryLevel !== undefined) {
+    parts.push({ value: `Entry Lv. ${record.entryLevel}`, label: '' });
+  }
+  if (context.levelCap && record.levelCap !== undefined) {
+    parts.push({ value: `Lv. cap ${record.levelCap}`, label: '' });
+  }
+  return parts;
 }
 
 /** Project one record to the shared map card. */

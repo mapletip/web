@@ -108,6 +108,8 @@ export function MapBrowse({
   const selectedMonsters = browseState.filters['monster'];
   const selectedNpcs = browseState.filters['npc'];
   const levelFilter = browseState.filters['level'];
+  const entryLevelFilter = browseState.filters['entryLevel'];
+  const levelCapFilter = browseState.filters['levelCap'];
   const sortField = browseState.sort?.field;
   // The card shows a figure only when the filter or sort is about it.
   const cardContext = useMemo((): MapBrowseCardContext => {
@@ -126,8 +128,18 @@ export function MapBrowse({
         sortField === 'lowestMonsterLevel' ||
         sortField === 'highestMonsterLevel',
       spawns: sortField === 'spawnPointCount',
+      entryLevel: entryLevelFilter !== undefined,
+      levelCap: levelCapFilter !== undefined,
     };
-  }, [data, selectedMonsters, selectedNpcs, levelFilter, sortField]);
+  }, [
+    data,
+    selectedMonsters,
+    selectedNpcs,
+    levelFilter,
+    sortField,
+    entryLevelFilter,
+    levelCapFilter,
+  ]);
 
   // Choosing a location keeps the search and filters and returns to page one.
   const locationSearch = mapBrowseSearch.browseStateToUrl({

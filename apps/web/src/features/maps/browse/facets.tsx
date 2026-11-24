@@ -81,6 +81,8 @@ export const MAP_QUERY_FIELDS: readonly QueryFieldDefinition<MapBrowseRecord>[] 
     { id: 'monster', accessor: 'monster', sortable: false },
     { id: 'npc', accessor: 'npc', sortable: false },
     { id: 'level', accessor: 'level', sortable: false },
+    { id: 'entryLevel', accessor: 'entryLevel', sortable: false },
+    { id: 'levelCap', accessor: 'levelCap', sortable: false },
     { id: 'activityType', accessor: 'activityType', sortable: false },
     { id: 'hasMonsters', accessor: 'hasMonsters', sortable: false },
     { id: 'hasNpcs', accessor: 'hasNpcs', sortable: false },
@@ -176,6 +178,20 @@ export function mapFacets(
       // Preset ranges from the build's own levels, as on Monster Browse.
       buckets: 'quantile',
       ...facetIcon(Medal),
+    },
+    {
+      id: 'entry-level',
+      field: 'entryLevel',
+      label: 'Entry level',
+      kind: 'range',
+      buckets: 'quantile',
+    },
+    {
+      id: 'level-cap',
+      field: 'levelCap',
+      label: 'Level cap',
+      kind: 'range',
+      buckets: 'quantile',
     },
     {
       id: 'activity-type',
