@@ -115,12 +115,12 @@ export function mapFacets(
   data: MapBrowseData,
 ): readonly FacetDefinition<MapBrowseRecord>[] {
   const monsterOptions = data.monsters
-    .flatMap(({ key, name, level, spriteId }): FacetOption[] =>
-      name === undefined
+    .flatMap(({ publicId, name, level, spriteId }): FacetOption[] =>
+      publicId === undefined || name === undefined
         ? []
         : [
             {
-              value: key,
+              value: publicId,
               label: name,
               ...(level === undefined ? {} : { description: `Lv. ${level}` }),
               ...icon(resolveMonsterSpriteUrl(spriteId)),

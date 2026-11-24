@@ -25,7 +25,7 @@ export const UNNAMED_MAP = 'Unnamed map';
  * the map is listed or ordered.
  */
 export interface MapBrowseCardContext {
-  /** Monster and NPC keys an active filter selected. */
+  /** Monster public IDs and NPC keys an active filter selected. */
   readonly monsters: ReadonlySet<string>;
   readonly npcs: ReadonlySet<string>;
   /** A monster level filter or sort is active. */
@@ -79,7 +79,10 @@ function inhabitantParts(
     url === undefined ? {} : { iconUrl: url };
   return [
     ...record.monsters
-      .filter(({ entry }) => context.monsters.has(entry.key))
+      .filter(
+        ({ entry }) =>
+          entry.publicId !== undefined && context.monsters.has(entry.publicId),
+      )
       .map(({ entry, spawnPointCount = 0 }) => ({
         entity: {
           name: entry.name ?? 'Unnamed monster',

@@ -153,13 +153,13 @@ describe('mapBrowseCardView', () => {
       monsters: [
         {
           entry: {
-            key: 'm1',
+            publicId: 'm1',
             name: 'Thorncap',
             spriteId: 'a'.repeat(64),
           },
           spawnPointCount: 15,
         },
-        { entry: { key: 'm2', name: 'Ashcap' }, spawnPointCount: 11 },
+        { entry: { publicId: 'm2', name: 'Ashcap' }, spawnPointCount: 11 },
       ],
       npcs: [{ entry: { key: 'n1', name: 'Way Keeper' } }],
     };

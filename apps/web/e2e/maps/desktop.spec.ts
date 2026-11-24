@@ -1,6 +1,6 @@
 import type { Page } from '@playwright/test';
 
-import { mapPublicId } from '../../src/mocks/release';
+import { mapPublicId, monsterPublicId } from '../../src/mocks/release';
 import { expect, test } from '../fixtures';
 
 import { gotoHydrated, pick, summary } from './browse';
@@ -167,6 +167,9 @@ test('monster picker, level range and activity filter the maps', async ({
     text: 'wide',
     option: /Wide Banner/u,
   });
+  await expect
+    .poll(() => new URL(page.url()).searchParams.get('monster'))
+    .toBe(JSON.stringify([monsterPublicId('wide-banner')]));
   await expect(cardTitles(page)).toHaveText(['Lantern Rehearsal <Stage 1>']);
   await expect(cards(page).getByTestId('map-card-footer')).toHaveText(
     /^3×\s*Wide Banner$/u,
