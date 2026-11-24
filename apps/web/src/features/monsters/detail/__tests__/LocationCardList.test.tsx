@@ -53,7 +53,7 @@ function StatefulLocations({
   return (
     <LocationCardList
       locations={locations}
-      monsterName="Practice Snail"
+      monsterName="Practice Shellback"
       monsterSpriteUrl="/synthetic-monster.png"
       drawerOpened={drawerOpened}
       onDrawerOpen={() => setDrawerOpened(true)}

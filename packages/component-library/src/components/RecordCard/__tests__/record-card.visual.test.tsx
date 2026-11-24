@@ -76,8 +76,8 @@ const cases: readonly VisualCase[] = [
     width: 320,
     height: 240,
     visible: [
-      page.getByRole('link', { name: 'Blue Slime', exact: true }),
-      page.getByRole('link', { name: 'Red Slime', exact: true }),
+      page.getByRole('link', { name: 'Blue Gloop', exact: true }),
+      page.getByRole('link', { name: 'Red Gloop', exact: true }),
     ],
   },
 ];

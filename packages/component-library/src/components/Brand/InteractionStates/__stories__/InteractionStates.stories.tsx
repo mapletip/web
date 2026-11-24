@@ -42,7 +42,7 @@ export const ControlStates: Story = {
         <TextInput label="Search records" placeholder="Name or ID" />
         <NativeSelect
           label="Region"
-          data={['All regions', 'Victoria Island', 'Ossyria']}
+          data={['All regions', 'Western Isle', 'Northreach']}
         />
       </Group>
 
@@ -68,7 +68,7 @@ export const ControlStates: Story = {
               boxShadow: 'inset 3px 0 0 var(--mapletip-color-selection-edge)',
             }}
           >
-            <Table.Td>Crimson Balrog</Table.Td>
+            <Table.Td>Crimson Emberlord</Table.Td>
             <Table.Td>100</Table.Td>
             <Table.Td>Selected</Table.Td>
           </Table.Tr>

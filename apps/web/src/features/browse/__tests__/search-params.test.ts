@@ -65,7 +65,7 @@ describe('isDefaultSearch', () => {
       true,
     );
     for (const search of [
-      { q: 'snail' },
+      { q: 'shellback' },
       { page: 2 },
       { pageSize: 25 },
       { sort: 'name-asc' },

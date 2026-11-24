@@ -128,10 +128,22 @@ function record({
 const projectedRows = projectMonsterBrowseRows(
   fixtureCatalog({
     records: [
-      record({ key: '001', name: 'Sentinel Snail', level: 5, hp: 30, exp: 1 }),
-      record({ key: '002', name: 'Sentinel Slime', level: 12, hp: 45, exp: 2 }),
-      record({ key: '003', name: 'Red Snail', level: 25, hp: 68, exp: 8 }),
-      record({ key: '004', name: 'Blue Snail', level: 40, hp: 100, exp: 20 }),
+      record({
+        key: '001',
+        name: 'Sentinel Shellback',
+        level: 5,
+        hp: 30,
+        exp: 1,
+      }),
+      record({ key: '002', name: 'Sentinel Gloop', level: 12, hp: 45, exp: 2 }),
+      record({ key: '003', name: 'Red Shellback', level: 25, hp: 68, exp: 8 }),
+      record({
+        key: '004',
+        name: 'Blue Shellback',
+        level: 40,
+        hp: 100,
+        exp: 20,
+      }),
     ],
   }),
   emptyDropBrowseFixture(),
@@ -204,10 +216,13 @@ describe('MonsterBrowse', () => {
           <MantineProvider>{defaultNameCell}</MantineProvider>
         </RouterContextProvider>,
       ),
-    ).toContain('href="/maplestory/monsters/sentinel-snail-00000001"');
+    ).toContain('href="/maplestory/monsters/sentinel-shellback-00000001"');
     expect(
-      within(cards()).getByRole('link', { name: 'Sentinel Snail' }),
-    ).toHaveAttribute('href', '/maplestory/monsters/sentinel-snail-00000001');
+      within(cards()).getByRole('link', { name: 'Sentinel Shellback' }),
+    ).toHaveAttribute(
+      'href',
+      '/maplestory/monsters/sentinel-shellback-00000001',
+    );
 
     unmount();
     mountBrowse({ buildId: 'gms-v83' });
@@ -220,12 +235,16 @@ describe('MonsterBrowse', () => {
           <MantineProvider>{gmsNameCell}</MantineProvider>
         </RouterContextProvider>,
       ),
-    ).toContain('href="/maplestory/gms-v83/monsters/sentinel-snail-00000001"');
+    ).toContain(
+      'href="/maplestory/gms-v83/monsters/sentinel-shellback-00000001"',
+    );
     expect(
-      within(cards('GMS v83')).getByRole('link', { name: 'Sentinel Snail' }),
+      within(cards('GMS v83')).getByRole('link', {
+        name: 'Sentinel Shellback',
+      }),
     ).toHaveAttribute(
       'href',
-      '/maplestory/gms-v83/monsters/sentinel-snail-00000001',
+      '/maplestory/gms-v83/monsters/sentinel-shellback-00000001',
     );
   });
 
@@ -388,7 +407,7 @@ describe('MonsterBrowse', () => {
     expect(card).not.toHaveTextContent('Native:');
     expect(card).not.toHaveTextContent('Historical:');
     const expandButton = within(card).getByRole('button', {
-      name: 'Sentinel Snail, 1 drop. Show drops.',
+      name: 'Sentinel Shellback, 1 drop. Show drops.',
     });
     expect(expandButton).toHaveAttribute('aria-haspopup', 'dialog');
     expect(expandButton).toHaveAttribute('aria-expanded', 'false');
@@ -397,7 +416,7 @@ describe('MonsterBrowse', () => {
     expect(expandButton).toHaveAttribute('aria-expanded', 'true');
 
     const drawer = await screen.findByRole('dialog', {
-      name: /Sentinel Snail/u,
+      name: /Sentinel Shellback/u,
     });
     expect(drawer).toHaveTextContent('Drops (1)');
     expect(drawer).toHaveTextContent('Unresolved item reference');
@@ -406,7 +425,7 @@ describe('MonsterBrowse', () => {
 
     await user.click(
       within(drawer).getByRole('button', {
-        name: 'Close details for Sentinel Snail',
+        name: 'Close details for Sentinel Shellback',
       }),
     );
     await waitFor(() =>
@@ -437,12 +456,12 @@ describe('MonsterBrowse', () => {
     mountBrowse({ browseRows: [row] });
 
     const trigger = within(cards()).getByRole('button', {
-      name: 'Sentinel Snail, 1 drop. Show drops.',
+      name: 'Sentinel Shellback, 1 drop. Show drops.',
     });
     await user.click(trigger);
     expect(trigger).toHaveAttribute('aria-expanded', 'true');
     const drawer = await screen.findByRole('dialog', {
-      name: /Sentinel Snail/u,
+      name: /Sentinel Shellback/u,
     });
 
     const statusButton = within(drawer).getByRole('button', {
@@ -471,7 +490,8 @@ describe('MonsterBrowse', () => {
 
   it('filters monsters by a stable dropped item key through the shared facet', async () => {
     const user = userEvent.setup();
-    const redPotionIcon = 'https://d0.mapletip.com/item-icons/red-potion.png';
+    const redPotionIcon =
+      'https://d0.mapletip.com/item-icons/crimson-tonic.png';
     const browseRows = rows.map((row, index) => {
       const itemKey = index === 0 ? 'fixture:item:red' : 'fixture:item:blue';
       return {
@@ -487,10 +507,10 @@ describe('MonsterBrowse', () => {
       dropItemOptions: [
         {
           value: 'fixture:item:red',
-          label: 'Red Potion',
+          label: 'Crimson Tonic',
           iconUrl: redPotionIcon,
         },
-        { value: 'fixture:item:blue', label: 'Blue Potion' },
+        { value: 'fixture:item:blue', label: 'Azure Tonic' },
       ],
     });
 
@@ -505,18 +525,18 @@ describe('MonsterBrowse', () => {
 
     const input = screen.getByRole('combobox', { name: 'Drops' });
     await user.click(input);
-    await user.type(input, 'Red Potion');
+    await user.type(input, 'Crimson Tonic');
     // The shared searchable control owns option rendering; the selected value
     // still commits through FacetedBrowser's canonical filter state.
     const option = [...document.querySelectorAll('[role="option"]')].find(
-      (candidate) => candidate.textContent?.trim() === 'Red Potion',
+      (candidate) => candidate.textContent?.trim() === 'Crimson Tonic',
     );
     expect(option).toBeDefined();
     fireEvent.click(option!);
 
     await waitFor(() => expect(summaryText()).toBe('1 Monster'));
     const activeDropChip = screen.getByRole('button', {
-      name: 'Remove Drops: Red Potion',
+      name: 'Remove Drops: Crimson Tonic',
     });
     expect(
       activeDropChip.querySelector(`img[src="${redPotionIcon}"]`),
@@ -527,10 +547,10 @@ describe('MonsterBrowse', () => {
       ),
     ).toBeInTheDocument();
     expect(
-      within(cards()).getByRole('heading', { name: 'Sentinel Snail' }),
+      within(cards()).getByRole('heading', { name: 'Sentinel Shellback' }),
     ).toBeInTheDocument();
     expect(
-      within(cards()).queryByText('Sentinel Slime'),
+      within(cards()).queryByText('Sentinel Gloop'),
     ).not.toBeInTheDocument();
   });
 
@@ -538,15 +558,15 @@ describe('MonsterBrowse', () => {
     const user = userEvent.setup();
     mountBrowse();
 
-    await user.type(screen.getByRole('textbox', { name: /^Search/u }), 'slime');
+    await user.type(screen.getByRole('textbox', { name: /^Search/u }), 'gloop');
     await waitFor(() => expect(summaryText()).toBe('1 Monster'));
     expect(
-      within(cards()).getByRole('heading', { name: 'Sentinel Slime' }),
+      within(cards()).getByRole('heading', { name: 'Sentinel Gloop' }),
     ).toBeInTheDocument();
     // EXP comes from the EXP slot (4); base MP remains desktop-only. Recovery
     // values are absent from this legacy fixture. The ratio is 2 / 45 × 100.
     const slimeCard = within(cards())
-      .getByRole('heading', { name: 'Sentinel Slime' })
+      .getByRole('heading', { name: 'Sentinel Gloop' })
       .closest('article')!;
     const facts = [...slimeCard.querySelectorAll('dd')].map((node) =>
       node.textContent?.trim(),
@@ -555,21 +575,23 @@ describe('MonsterBrowse', () => {
     expect(facts).toContain('4.44');
     expect(facts).not.toContain(String(FIXTURE_MP));
     expect(
-      within(cards()).queryByText('Sentinel Snail'),
+      within(cards()).queryByText('Sentinel Shellback'),
     ).not.toBeInTheDocument();
 
     await user.clear(screen.getByRole('textbox', { name: /^Search/u }));
     await user.click(screen.getByRole('checkbox', { name: /^5 \(/u }));
     await waitFor(() => expect(summaryText()).toBe('1 Monster'));
     expect(
-      within(cards()).getByRole('heading', { name: 'Sentinel Snail' }),
+      within(cards()).getByRole('heading', { name: 'Sentinel Shellback' }),
     ).toBeInTheDocument();
-    expect(within(cards()).queryByText('Red Snail')).not.toBeInTheDocument();
+    expect(
+      within(cards()).queryByText('Red Shellback'),
+    ).not.toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: 'Clear filters' }));
     await waitFor(() => expect(summaryText()).toBe('4 Monsters'));
     expect(
-      within(cards()).getByRole('heading', { name: 'Red Snail' }),
+      within(cards()).getByRole('heading', { name: 'Red Shellback' }),
     ).toBeInTheDocument();
   });
 });

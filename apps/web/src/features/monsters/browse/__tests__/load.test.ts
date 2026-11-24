@@ -24,7 +24,7 @@ function catalogFixture() {
     records: [
       {
         key: 'fixture:monster:001',
-        name: { state: 'known', value: 'Sentinel Snail' },
+        name: { state: 'known', value: 'Sentinel Shellback' },
         sprite: { state: 'unknown' },
         stats: Array.from({ length: 12 }, () => ({ state: 'known', value: 1 })),
         traits: Array.from({ length: 9 }, () => ({ state: 'unknown' })),
@@ -45,8 +45,8 @@ function dropBrowseFixture(): MonsterDropBrowseV1 {
     scope: { build_id: 'cw-launch', family_id: 'classic-world' },
     items: [
       {
-        itemRef: { state: 'resolved', key: 'fixture:item:red-potion' },
-        itemName: { state: 'known', value: 'Red Potion' },
+        itemRef: { state: 'resolved', key: 'fixture:item:crimson-tonic' },
+        itemName: { state: 'known', value: 'Crimson Tonic' },
         itemClass: { state: 'known', value: 'etc' },
         category: { kind: 'item-class', value: 'etc' },
       },
@@ -85,10 +85,12 @@ describe('loadMonsterBrowse', () => {
     expect(loadDropBrowse).toHaveBeenCalledWith({ signal: controller.signal });
     expect(browse.rows).toHaveLength(1);
     expect(browse.dropItemOptions).toEqual([
-      { value: 'fixture:item:red-potion', label: 'Red Potion' },
+      { value: 'fixture:item:crimson-tonic', label: 'Crimson Tonic' },
     ]);
-    expect(browse.rows[0]?.drops.entries[0]?.itemName).toBe('Red Potion');
-    expect(browse.rows[0]?.drops.itemKeys).toEqual(['fixture:item:red-potion']);
+    expect(browse.rows[0]?.drops.entries[0]?.itemName).toBe('Crimson Tonic');
+    expect(browse.rows[0]?.drops.itemKeys).toEqual([
+      'fixture:item:crimson-tonic',
+    ]);
   });
 
   it('sanitizes SDK drop artifact errors before the router can serialize them', async () => {

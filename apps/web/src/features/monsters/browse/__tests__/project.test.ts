@@ -46,7 +46,7 @@ function projectRows(
 function sentinelRecord(input: Pick<FixtureRecordInput, 'sprite'> = {}) {
   return fixtureRecord({
     key: 'fixture:monster:001',
-    name: knownFact('Sentinel Snail'),
+    name: knownFact('Sentinel Shellback'),
     stats: [
       knownFact(101), // level
       knownFact(102), // hp
@@ -128,7 +128,7 @@ describe('projectMonsterBrowseRows contract-2.2 tuple mapping', () => {
     const row = firstRow(rows);
 
     expect(row.key).toBe('fixture:monster:001');
-    expect(row.name).toBe('Sentinel Snail');
+    expect(row.name).toBe('Sentinel Shellback');
     // The build is known by the route that loaded the catalog; repeating it on
     // every row would only enlarge the serialized projection.
     expect(row).not.toHaveProperty('buildId');

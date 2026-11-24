@@ -13,13 +13,13 @@ import { PickerControl } from '@/components/FacetedBrowser/FacetControls/PickerC
 
 const options = [
   {
-    value: 'snail',
-    label: 'Snail',
+    value: 'shellback',
+    label: 'Shellback',
     description: 'Lv. 1',
-    icon: <span data-testid="icon-snail" />,
+    icon: <span data-testid="icon-shellback" />,
   },
-  { value: 'blue-snail', label: 'Blue Snail', description: 'Lv. 2' },
-  { value: 'stump', label: 'Stump', description: 'Lv. 4' },
+  { value: 'blue-shellback', label: 'Blue Shellback', description: 'Lv. 2' },
+  { value: 'rootling', label: 'Rootling', description: 'Lv. 4' },
 ];
 const picker = {
   placeholder: 'Search monsters',
@@ -47,37 +47,37 @@ describe('PickerControl', () => {
   it('lists only options matching the typed text, with secondary lines', async () => {
     const { input } = renderPicker();
 
-    await userEvent.type(input, 'snail');
+    await userEvent.type(input, 'shellback');
 
     const listbox = screen.getByRole('listbox', { hidden: true });
     expect(
       within(listbox)
         .getAllByRole('option', { hidden: true })
         .map((option) => option.textContent),
-    ).toEqual(['SnailLv. 1', 'Blue SnailLv. 2']);
-    expect(within(listbox).getByTestId('icon-snail')).toBeInTheDocument();
+    ).toEqual(['ShellbackLv. 1', 'Blue ShellbackLv. 2']);
+    expect(within(listbox).getByTestId('icon-shellback')).toBeInTheDocument();
   });
 
   it('states the domain wording when nothing matches', async () => {
     const { input } = renderPicker();
 
-    await userEvent.type(input, 'balrog');
+    await userEvent.type(input, 'emberlord');
 
     expect(screen.getByText('No monsters match')).toBeInTheDocument();
   });
 
   it('adds to existing selections and clears to no filter', async () => {
-    const { input, onChange } = renderPicker(['snail']);
+    const { input, onChange } = renderPicker(['shellback']);
 
-    await userEvent.type(input, 'stump');
+    await userEvent.type(input, 'rootling');
     await userEvent.click(
-      screen.getByRole('option', { name: /Stump/u, hidden: true }),
+      screen.getByRole('option', { name: /Rootling/u, hidden: true }),
     );
-    expect(onChange).toHaveBeenLastCalledWith(['snail', 'stump']);
+    expect(onChange).toHaveBeenLastCalledWith(['shellback', 'rootling']);
   });
 
   it('reports no filter when the last selection is removed', async () => {
-    const { input, onChange } = renderPicker(['snail']);
+    const { input, onChange } = renderPicker(['shellback']);
 
     await userEvent.click(input);
     await userEvent.keyboard('{Backspace}');
@@ -85,9 +85,9 @@ describe('PickerControl', () => {
   });
 
   it('ignores selected values that are not options', () => {
-    renderPicker(['snail', 'not-in-build']);
+    renderPicker(['shellback', 'not-in-build']);
 
-    expect(screen.getByTitle('Snail')).toBeInTheDocument();
+    expect(screen.getByTitle('Shellback')).toBeInTheDocument();
     expect(screen.queryByText('not-in-build')).not.toBeInTheDocument();
   });
 });
@@ -98,9 +98,9 @@ interface Row extends Record<string, unknown> {
 }
 
 const rows: readonly Row[] = [
-  { id: 'a', monsters: ['snail'] },
-  { id: 'b', monsters: ['blue-snail'] },
-  { id: 'c', monsters: ['stump'] },
+  { id: 'a', monsters: ['shellback'] },
+  { id: 'b', monsters: ['blue-shellback'] },
+  { id: 'c', monsters: ['rootling'] },
 ];
 const queryFields: readonly QueryFieldDefinition<Row>[] = [
   { id: 'monsters', accessor: 'monsters', sortable: false },
@@ -147,10 +147,10 @@ describe('picker facet in FacetedBrowser', () => {
 
     await userEvent.type(
       within(dialog).getByRole('combobox', { name: 'Monster' }),
-      'stump',
+      'rootling',
     );
     await userEvent.click(
-      within(dialog).getByRole('option', { name: /Stump/u, hidden: true }),
+      within(dialog).getByRole('option', { name: /Rootling/u, hidden: true }),
     );
     expect(onStateChange).not.toHaveBeenCalled();
 
@@ -158,7 +158,7 @@ describe('picker facet in FacetedBrowser', () => {
       within(dialog).getByRole('button', { name: /Apply|Show/u }),
     );
     expect(onStateChange).toHaveBeenCalledWith(
-      expect.objectContaining({ filters: { monsters: ['stump'] } }),
+      expect.objectContaining({ filters: { monsters: ['rootling'] } }),
       expect.objectContaining({ reason: 'apply' }),
     );
   });

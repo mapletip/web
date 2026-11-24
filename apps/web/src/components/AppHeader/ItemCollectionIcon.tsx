@@ -5,11 +5,8 @@ import { MAPLEKIT_RELEASE } from '@/config/maplekit';
 import classes from './ItemCollectionIcon.module.css';
 
 /**
- * Iconic items representing the four non-equipment inventory tabs:
- * 1. Top-left:     Roger's Apple (Use)
- * 2. Top-right:    Orange Mushroom Cap (ETC)
- * 3. Bottom-left:  The Green Relaxer (Set-up)
- * 4. Bottom-right: Gachapon Ticket (Cash)
+ * One item icon for each of the four non-equipment inventory tabs, by content
+ * id: Use (top left), ETC (top right), Set-up (bottom left), Cash (bottom right).
  */
 export const ALL_ITEMS_COLLECTION_ICONS = [
   {

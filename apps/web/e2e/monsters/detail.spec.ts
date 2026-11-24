@@ -182,17 +182,17 @@ test('detail not-found addresses return 404 with noindex and a browse link', asy
 }) => {
   const cases = [
     {
-      path: '/maplestory/monsters/snail',
+      path: '/maplestory/monsters/shellback',
       browseLabel: 'Browse Classic World Monsters',
       browsePath: '/maplestory/monsters',
     },
     {
-      path: '/maplestory/monsters/snail-00000000',
+      path: '/maplestory/monsters/shellback-00000000',
       browseLabel: 'Browse Classic World Monsters',
       browsePath: '/maplestory/monsters',
     },
     {
-      path: '/maplestory/gms-v83/monsters/snail-00000000',
+      path: '/maplestory/gms-v83/monsters/shellback-00000000',
       browseLabel: 'Browse GMS v83 Monsters',
       browsePath: '/maplestory/gms-v83/monsters',
     },

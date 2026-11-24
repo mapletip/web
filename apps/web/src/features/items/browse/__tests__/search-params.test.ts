@@ -13,7 +13,7 @@ describe('Items Browse search params', () => {
   it('validates the four general keys and well-formed facet values', () => {
     expect(
       itemBrowseSearchSchema.parse({
-        q: 'red potion',
+        q: 'crimson tonic',
         page: '3',
         pageSize: '75',
         sort: 'name-desc',
@@ -23,7 +23,7 @@ describe('Items Browse search params', () => {
         ignored: 'scalar facet value',
       }),
     ).toStrictEqual({
-      q: 'red potion',
+      q: 'crimson tonic',
       page: 3,
       pageSize: 75,
       sort: 'name-desc',

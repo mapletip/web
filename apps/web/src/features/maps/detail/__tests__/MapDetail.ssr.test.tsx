@@ -71,7 +71,7 @@ describe('MapDetail server rendering', () => {
     expect(html).toContain('Map information');
     expect(html).toContain('data-columns="1"');
     expect(html).toContain('data-map-fact-icon="music"');
-    expect(html).toContain('Floral Life');
+    expect(html).toContain('Lantern Waltz');
     expect(html).toContain('10 min');
     expect(html).toContain('Swimming');
     expect(html).not.toContain('Flying');

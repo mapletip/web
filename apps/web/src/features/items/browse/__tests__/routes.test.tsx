@@ -15,7 +15,7 @@ import {
 import { renderToString } from 'react-dom/server';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import useIcon from '@/assets/maplestory/navigation/items-use-red-potion.png?no-inline';
+import useIcon from '@/assets/maplestory/navigation/items-use.png?no-inline';
 import { MAPLEKIT_RELEASE } from '@/config/maplekit';
 import { routeTree } from '@/routeTree.gen';
 

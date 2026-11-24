@@ -645,22 +645,22 @@ describe('projectMapDetail', () => {
           items: [
             connection(record, {
               name: 'Hunting Field X',
-              slug: 'hunting-ground-x',
+              slug: 'hunting-field-x',
               publicId: 'a0000004',
             }),
             connection(record, {
               name: 'Hunting Field 10',
-              slug: 'hunting-ground-10',
+              slug: 'hunting-field-10',
               publicId: 'a0000003',
             }),
             connection(record, {
               name: 'Hunting Field II',
-              slug: 'hunting-ground-ii',
+              slug: 'hunting-field-ii',
               publicId: 'a0000002',
             }),
             connection(record, {
               name: 'Hunting Field 2',
-              slug: 'hunting-ground-2',
+              slug: 'hunting-field-2',
               publicId: 'a0000001',
             }),
           ],
@@ -682,7 +682,7 @@ describe('projectMapDetail', () => {
       'Hunting Field X',
     ]);
     expect(connections.maps[0]?.destination).toEqual({
-      href: '/maplestory/gms-v83/maps/hunting-ground-2-a0000001',
+      href: '/maplestory/gms-v83/maps/hunting-field-2-a0000001',
     });
   });
 
@@ -1061,7 +1061,7 @@ describe('projectMapDetail', () => {
       record: {
         ...record,
         information: {
-          music: { state: 'known', value: 'Floral Life' },
+          music: { state: 'known', value: 'Lantern Waltz' },
           returnMap,
           forcedReturnMap: { state: 'known', value: returnMap.value },
           timeLimitSeconds: { state: 'known', value: 600 },
@@ -1098,7 +1098,7 @@ describe('projectMapDetail', () => {
       'flying',
     ]);
     expect(view.facts.map(({ value }) => value)).toEqual([
-      'Floral Life',
+      'Lantern Waltz',
       'Lantern Square',
       'Lantern Square',
       '10 min',

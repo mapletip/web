@@ -71,7 +71,7 @@ function knownStats(base: number) {
 const fixtureRecords = [
   fixtureRecord({
     key: 'fixture:monster:001',
-    name: knownFact('Sentinel Snail'),
+    name: knownFact('Sentinel Shellback'),
     stats: [...knownStats(0)],
     traits: [
       knownFact(false),
@@ -88,7 +88,7 @@ const fixtureRecords = [
   }),
   fixtureRecord({
     key: 'fixture:monster:002',
-    name: knownFact('Sentinel Slime'),
+    name: knownFact('Sentinel Gloop'),
     stats: [
       knownFact(20),
       UNKNOWN_FACT,
@@ -117,7 +117,7 @@ const fixtureRecords = [
   }),
   fixtureRecord({
     key: 'fixture:monster:003',
-    name: knownFact('Sentinel Mushroom'),
+    name: knownFact('Sentinel Cap'),
     stats: [...knownStats(40)],
     traits: [
       knownFact(true),
@@ -162,9 +162,9 @@ describe('MonsterBrowse server rendering', () => {
     expect(html).toContain('3 Monsters');
     expect(html).not.toContain('1–3 of');
     expect(html).not.toContain('verified release');
-    expect(html).toContain('Sentinel Snail');
-    expect(html).toContain('Sentinel Slime');
-    expect(html).toContain('Sentinel Mushroom');
+    expect(html).toContain('Sentinel Shellback');
+    expect(html).toContain('Sentinel Gloop');
+    expect(html).toContain('Sentinel Cap');
     const spriteUrl = `https://d0.mapletip.com/media/images/bb/${KNOWN_SPRITE_ID}.png`;
     expect(html.split(`src="${spriteUrl}"`).length - 1).toBe(2);
     expect(html).toContain('data-fallback="true"');

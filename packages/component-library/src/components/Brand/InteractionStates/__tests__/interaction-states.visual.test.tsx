@@ -88,7 +88,7 @@ const visualCases: readonly VisualCase[] = [
     width: 900,
     height: 720,
     element: page.getByRole('row', {
-      name: /Crimson Balrog/,
+      name: /Crimson Emberlord/,
       selected: true,
     }),
   },

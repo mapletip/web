@@ -919,7 +919,7 @@ describe('MapDetail information', () => {
     const information = screen.getByRole('region', {
       name: 'Map information',
     });
-    expect(within(information).getByText('Floral Life')).toBeVisible();
+    expect(within(information).getByText('Lantern Waltz')).toBeVisible();
     expect(within(information).getByText('10 min')).toBeVisible();
     expect(within(information).getByText('Allowed')).toBeVisible();
     expect(

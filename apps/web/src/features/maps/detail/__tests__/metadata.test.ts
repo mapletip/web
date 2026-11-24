@@ -37,7 +37,7 @@ describe('Map Detail breadcrumbs', () => {
   it('keeps a distinct area in the trail and JSON-LD', () => {
     const view = {
       name: 'Meadowbrook Hunting Field II',
-      canonicalPath: '/maplestory/maps/meadowbrook-hunting-ground-ii-00000000',
+      canonicalPath: '/maplestory/maps/meadowbrook-hunting-field-ii-00000000',
       regionLabel: 'Western Isle',
       areaLabel: 'Meadowbrook',
     };
@@ -70,7 +70,7 @@ describe('Map Detail breadcrumbs', () => {
   it('links the region and area to their Map Browse location pages', () => {
     const view = {
       name: 'Meadowbrook Hunting Field II',
-      canonicalPath: '/maplestory/maps/meadowbrook-hunting-ground-ii-00000000',
+      canonicalPath: '/maplestory/maps/meadowbrook-hunting-field-ii-00000000',
       regionLabel: 'Western Isle',
       areaLabel: 'Meadowbrook',
       regionPath: '/maplestory/maps/in/western-isle',
@@ -88,7 +88,7 @@ describe('Map Detail breadcrumbs', () => {
       ['Meadowbrook', '/maplestory/maps/in/western-isle/meadowbrook'],
       [
         'Meadowbrook Hunting Field II',
-        '/maplestory/maps/meadowbrook-hunting-ground-ii-00000000',
+        '/maplestory/maps/meadowbrook-hunting-field-ii-00000000',
       ],
     ]);
   });

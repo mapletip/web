@@ -189,16 +189,16 @@ describe('RecordCard stretched link in the browser', () => {
         >
           <RecordCard
             layout="compactMediaAside"
-            title="Blue Slime"
+            title="Blue Gloop"
             media={<div style={{ width: 32, height: 32 }} />}
-            destination={{ href: '#blue-slime' }}
+            destination={{ href: '#blue-gloop' }}
             linkScope="header"
           />
           <RecordCard
             layout="compactMediaAside"
-            title="Red Slime"
+            title="Red Gloop"
             media={<div style={{ width: 32, height: 32 }} />}
-            destination={{ href: '#red-slime' }}
+            destination={{ href: '#red-gloop' }}
             linkScope="header"
           />
         </div>
@@ -208,10 +208,10 @@ describe('RecordCard stretched link in the browser', () => {
     await page.viewport(320, 240);
     const grid = page.getByTestId('compact-card-grid').element();
     const firstCard = page
-      .getByRole('link', { name: 'Blue Slime' })
+      .getByRole('link', { name: 'Blue Gloop' })
       .element()
       .closest('[data-record-card="true"]');
-    const titleLink = page.getByRole('link', { name: 'Blue Slime' }).element();
+    const titleLink = page.getByRole('link', { name: 'Blue Gloop' }).element();
 
     expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(320);
     expect(grid.getBoundingClientRect().width).toBe(320);
@@ -236,7 +236,7 @@ describe('RecordCard stretched link in the browser', () => {
           <div style={{ width }}>
             <RecordCard
               layout="compactMediaAside"
-              title="Slime"
+              title="Gloop"
               media={
                 <div
                   data-testid="compact-card-media"
@@ -249,7 +249,7 @@ describe('RecordCard stretched link in the browser', () => {
                   <span>3m respawn</span>
                 </div>
               }
-              destination={{ href: '#slime' }}
+              destination={{ href: '#gloop' }}
               linkScope={linkScope}
             />
           </div>
@@ -258,10 +258,10 @@ describe('RecordCard stretched link in the browser', () => {
 
       await page.viewport(width, 220);
       const card = page
-        .getByRole('heading', { name: 'Slime' })
+        .getByRole('heading', { name: 'Gloop' })
         .element()
         .closest('[data-record-card="true"]');
-      const title = page.getByRole('heading', { name: 'Slime' }).element();
+      const title = page.getByRole('heading', { name: 'Gloop' }).element();
       const media = page
         .getByTestId('compact-card-media')
         .element().parentElement;

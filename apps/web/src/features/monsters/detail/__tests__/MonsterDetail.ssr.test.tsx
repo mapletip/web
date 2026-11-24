@@ -31,8 +31,8 @@ describe('MonsterDetail server rendering', () => {
     const view = projectMonsterDetail(
       monsterPageFixture({
         publicId: '36z2h01p',
-        slug: 'sentinel-snail',
-        name: { state: 'known', value: 'Sentinel Snail' },
+        slug: 'sentinel-shellback',
+        name: { state: 'known', value: 'Sentinel Shellback' },
         stats: {
           ...monsterPageFixture().stats,
           hp: { state: 'known', value: 23_000_000 },
@@ -78,7 +78,7 @@ describe('MonsterDetail server rendering', () => {
     mockedLoadMonsterDetail.mockResolvedValue({ status: 'found', view });
 
     const history = createMemoryHistory({
-      initialEntries: ['/maplestory/monsters/sentinel-snail-36z2h01p'],
+      initialEntries: ['/maplestory/monsters/sentinel-shellback-36z2h01p'],
     });
     const router = createRouter({ routeTree, history });
     await router.load();
@@ -92,7 +92,7 @@ describe('MonsterDetail server rendering', () => {
       </RouterContextProvider>,
     );
 
-    expect(html).toContain('Sentinel Snail');
+    expect(html).toContain('Sentinel Shellback');
     expect(html).toContain('23,000,000');
     expect(html).toContain('href="#drops"');
     expect(html).toContain('href="#quests"');
@@ -118,12 +118,12 @@ describe('MonsterDetail server rendering', () => {
     expect(html).toContain('href="/"');
     expect(html).toContain('href="/maplestory/monsters"');
     expect(html).toContain(
-      `<link rel="canonical" href="${SITE_ORIGIN}/maplestory/monsters/sentinel-snail-36z2h01p"/>`,
+      `<link rel="canonical" href="${SITE_ORIGIN}/maplestory/monsters/sentinel-shellback-36z2h01p"/>`,
     );
     expect(html).toContain('application/ld+json');
     expect(html).toContain('BreadcrumbList');
     expect(html).toContain(
-      'Sentinel Snail – MapleStory Classic World Monster – MapleTip',
+      'Sentinel Shellback – MapleStory Classic World Monster – MapleTip',
     );
   });
 });

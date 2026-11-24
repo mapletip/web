@@ -65,7 +65,7 @@ const linkedValue: VisualCase = {
   element: page.getByTestId('fact-sheet-linked-value'),
   visible: [
     page.getByText('Return map'),
-    page.getByRole('link', { name: 'Ellinia', exact: true }),
+    page.getByRole('link', { name: 'Grovehold', exact: true }),
   ],
 };
 

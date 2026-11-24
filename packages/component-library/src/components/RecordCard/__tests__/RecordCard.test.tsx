@@ -77,18 +77,18 @@ describe('RecordCard', () => {
   it('keeps compact header links and their footer in the compact card layout', () => {
     mount(
       <RecordCard
-        title="Blue Slime"
+        title="Blue Gloop"
         layout="compactMediaAside"
         secondaryLine="Lv 12"
-        media={<img src="/blue-slime.png" alt="" />}
+        media={<img src="/blue-gloop.png" alt="" />}
         footer={<span>3m respawn</span>}
-        destination={{ href: '/synthetic/monsters/blue-slime' }}
+        destination={{ href: '/synthetic/monsters/blue-gloop' }}
         linkScope="header"
       />,
     );
 
     const card = screen
-      .getByRole('link', { name: 'Blue Slime' })
+      .getByRole('link', { name: 'Blue Gloop' })
       .closest('[data-record-card="true"]');
     const header = card?.firstElementChild;
     const footer = screen.getByText('3m respawn').parentElement;

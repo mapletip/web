@@ -8,7 +8,7 @@ function makeBaseRow(overrides: Partial<ItemBrowseRow> = {}): ItemBrowseRow {
     key: 'item:fixture:1',
     sourceId: '02000000',
     itemClass: 'consume',
-    name: { state: 'known', value: 'Red Potion' },
+    name: { state: 'known', value: 'Crimson Tonic' },
     icon: { state: 'known', value: 'a'.repeat(64) },
     ...overrides,
   };
@@ -98,13 +98,13 @@ describe('projectItemBrowseRows', () => {
         key: dragonPetA,
         sourceId: '5000020',
         itemClass: 'pet',
-        name: { state: 'known', value: 'Baby Dragon' },
+        name: { state: 'known', value: 'Hatchling Wyrm' },
       }),
       makeBaseRow({
         key: dragonPetB,
         sourceId: '5000021',
         itemClass: 'pet',
-        name: { state: 'known', value: 'Baby Dragon' },
+        name: { state: 'known', value: 'Hatchling Wyrm' },
       }),
       makeBaseRow({
         key: unnamedPetA,
@@ -142,8 +142,8 @@ describe('projectItemBrowseRows', () => {
 
     // Two distinct pets sharing the same name stay separate; unnamed pets keep no invented name
     expect(food?.petTargets).toEqual([
-      { sourceId: '5000020', name: 'Baby Dragon' },
-      { sourceId: '5000021', name: 'Baby Dragon' },
+      { sourceId: '5000020', name: 'Hatchling Wyrm' },
+      { sourceId: '5000021', name: 'Hatchling Wyrm' },
       { sourceId: '5000098' },
       { sourceId: '5000099' },
     ]);
@@ -176,11 +176,11 @@ describe('projectItemBrowseRows', () => {
     expect('questFlag' in (undefinedRow ?? {})).toBe(false);
   });
 
-  it('projects Elixir-style percent-only rows with no flat hp or mp', () => {
+  it('projects Restorative-style percent-only rows with no flat hp or mp', () => {
     const [row] = projectItemBrowseRows([
       makeBaseRow({
         sourceId: '02000004',
-        name: { state: 'known', value: 'Elixir' },
+        name: { state: 'known', value: 'Restorative' },
         recovery: {
           hpPercent: 50,
           mpPercent: 50,

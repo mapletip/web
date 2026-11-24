@@ -51,7 +51,7 @@ export const TypeScale: Story = {
             {typographyTheme.headings.sizes.h2.lineHeight}
           </Table.Td>
           <Table.Td>
-            <Title order={2}>Crimson Balrog</Title>
+            <Title order={2}>Crimson Emberlord</Title>
           </Table.Td>
         </Table.Tr>
         <Table.Tr>
@@ -94,7 +94,7 @@ export const TypeScale: Story = {
           </Table.Td>
           <Table.Td>
             <Text size="md">
-              Spawns periodically during the voyage to Orbis.
+              Spawns periodically during the voyage to Skyhold.
             </Text>
           </Table.Td>
         </Table.Tr>

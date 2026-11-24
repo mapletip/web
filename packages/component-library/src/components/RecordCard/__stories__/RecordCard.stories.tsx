@@ -110,7 +110,7 @@ export const HeaderScopedCardWithFooterButton: Story = {
 };
 
 export const CompactTwoColumnNarrow: Story = {
-  args: { title: 'Blue Slime', linkScope: 'header' },
+  args: { title: 'Blue Gloop', linkScope: 'header' },
   render: () => (
     <Box w={320} maw="100%" p="md" bg="var(--mapletip-color-canvas)">
       <div
@@ -122,19 +122,19 @@ export const CompactTwoColumnNarrow: Story = {
       >
         <RecordCard
           layout="compactMediaAside"
-          title="Blue Slime"
+          title="Blue Gloop"
           secondaryLine="Lv 12"
           media={<Box w={48} h={48} bg="var(--mapletip-color-border-subtle)" />}
           footer={<Text size="sm">6 spawns</Text>}
-          destination={{ href: '/synthetic/monsters/blue-slime' }}
+          destination={{ href: '/synthetic/monsters/blue-gloop' }}
         />
         <RecordCard
           layout="compactMediaAside"
-          title="Red Slime"
+          title="Red Gloop"
           secondaryLine="Lv 13"
           media={<Box w={48} h={48} bg="var(--mapletip-color-border-subtle)" />}
           footer={<Text size="sm">4 spawns · 3m respawn</Text>}
-          destination={{ href: '/synthetic/monsters/red-slime' }}
+          destination={{ href: '/synthetic/monsters/red-gloop' }}
           linkScope="header"
         />
       </div>

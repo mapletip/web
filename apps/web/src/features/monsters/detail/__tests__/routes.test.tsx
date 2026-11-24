@@ -56,15 +56,15 @@ describe('Monster Browse & Detail route integration', () => {
     const view = projectMonsterDetail(
       monsterPageFixture({
         publicId: 'jp565851',
-        slug: 'pianus',
-        name: { state: 'known', value: 'Pianus' },
+        slug: 'deepmaw',
+        name: { state: 'known', value: 'Deepmaw' },
       }),
       'gms-v83',
     );
     mockedLoadMonsterDetail.mockResolvedValue({ status: 'found', view });
 
     const history = createMemoryHistory({
-      initialEntries: ['/maplestory/gms-v83/monsters/pianus-jp565851'],
+      initialEntries: ['/maplestory/gms-v83/monsters/deepmaw-jp565851'],
     });
     const router = createRouter({ routeTree, history });
     await router.load();
@@ -87,7 +87,7 @@ describe('Monster Browse & Detail route integration', () => {
     const headLinks = detailMatch?.links ?? [];
     expect(headLinks).toContainEqual({
       rel: 'canonical',
-      href: `${SITE_ORIGIN}/maplestory/gms-v83/monsters/pianus-jp565851`,
+      href: `${SITE_ORIGIN}/maplestory/gms-v83/monsters/deepmaw-jp565851`,
     });
     expect(headScripts).toHaveLength(1);
     expect(headScripts[0]?.children).toContain('BreadcrumbList');
@@ -97,8 +97,8 @@ describe('Monster Browse & Detail route integration', () => {
     const view = projectMonsterDetail(
       monsterPageFixture({
         publicId: '36z2h01p',
-        slug: 'sentinel-snail',
-        name: { state: 'known', value: 'Sentinel Snail' },
+        slug: 'sentinel-shellback',
+        name: { state: 'known', value: 'Sentinel Shellback' },
       }),
       'cw-launch',
     );
@@ -111,18 +111,18 @@ describe('Monster Browse & Detail route integration', () => {
     await router.load();
 
     expect(history.location.pathname).toBe(
-      '/maplestory/monsters/sentinel-snail-36z2h01p',
+      '/maplestory/monsters/sentinel-shellback-36z2h01p',
     );
   });
 
   const invalidAddresses = [
     '/maplestory/cw-launch/monsters',
     '/maplestory/unknown-build/monsters',
-    '/maplestory/cw-launch/monsters/snail-36z2h01p',
-    '/maplestory/unknown-build/monsters/snail-36z2h01p',
-    '/maplestory/monsters/snail',
-    '/maplestory/monsters/snail-short',
-    '/maplestory/monsters/Snail-36z2h01p',
+    '/maplestory/cw-launch/monsters/shellback-36z2h01p',
+    '/maplestory/unknown-build/monsters/shellback-36z2h01p',
+    '/maplestory/monsters/shellback',
+    '/maplestory/monsters/shellback-short',
+    '/maplestory/monsters/Shellback-36z2h01p',
   ];
 
   for (const url of invalidAddresses) {
@@ -144,7 +144,7 @@ describe('Monster Browse & Detail route integration', () => {
 
   it('renders RecordNotFound linking back to browse for malformed $slugId without loading data', async () => {
     const history = createMemoryHistory({
-      initialEntries: ['/maplestory/monsters/snail'],
+      initialEntries: ['/maplestory/monsters/shellback'],
     });
     const router = createRouter({ routeTree, history });
 

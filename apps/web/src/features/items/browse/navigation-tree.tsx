@@ -5,10 +5,10 @@ import type { DrillDownNode } from '@mapletip/component-library';
 import { itemIconUrl } from '@mapletip/data/items';
 import type { ComponentProps, ReactElement } from 'react';
 
-import cashIcon from '@/assets/maplestory/navigation/items-cash-pet-brown-puppy.png?no-inline';
-import etcIcon from '@/assets/maplestory/navigation/items-etc-snail-shell.png?no-inline';
-import setupIcon from '@/assets/maplestory/navigation/items-setup-blue-chair.png?no-inline';
-import useIcon from '@/assets/maplestory/navigation/items-use-red-potion.png?no-inline';
+import cashIcon from '@/assets/maplestory/navigation/items-cash.png?no-inline';
+import etcIcon from '@/assets/maplestory/navigation/items-etc.png?no-inline';
+import setupIcon from '@/assets/maplestory/navigation/items-setup.png?no-inline';
+import useIcon from '@/assets/maplestory/navigation/items-use.png?no-inline';
 import { MAPLEKIT_RELEASE, type BuildId } from '@/config/maplekit';
 
 import { assignChild, getCategoryCounts } from './assignment';

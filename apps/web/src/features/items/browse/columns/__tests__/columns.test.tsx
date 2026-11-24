@@ -140,14 +140,14 @@ describe('Items Browse columns', () => {
       sourceId: '02120000',
       itemClass: 'consume',
       petTargets: [
-        { sourceId: '5000020', name: 'Baby Dragon' },
+        { sourceId: '5000020', name: 'Hatchling Wyrm' },
         { sourceId: '5000098' },
       ],
       unresolvedPetTargets: ['5000046'],
     };
 
     expect(COLUMNS.petTargets.value(row, coverage)).toBe(
-      'Baby Dragon\nUnnamed pet\nUnresolved pet',
+      'Hatchling Wyrm\nUnnamed pet\nUnresolved pet',
     );
   });
 
