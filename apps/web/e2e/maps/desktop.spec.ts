@@ -146,7 +146,7 @@ test('the location rail drills down and keeps search and filters', async ({
   await expect(
     page.getByRole('heading', {
       level: 1,
-      name: 'MapleStory Classic World Lantern Hills Maps',
+      name: 'Lantern Hills Maps',
     }),
   ).toBeVisible();
   await expect(summary(page)).toHaveText('3 Maps');
