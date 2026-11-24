@@ -1,4 +1,8 @@
-import { mapMinimapUrl, mapNpcSpriteUrl } from '@mapletip/data/maps';
+import {
+  mapMarkUrl,
+  mapMinimapUrl,
+  mapNpcSpriteUrl,
+} from '@mapletip/data/maps';
 import type { ReactElement } from 'react';
 
 import { MAPLEKIT_RELEASE, type BuildId } from '@/config/maplekit';
@@ -144,6 +148,9 @@ export function mapBrowseCardView({
   return {
     key: record.publicId,
     name: record.name ?? UNNAMED_MAP,
+    ...(record.markId === undefined
+      ? {}
+      : { markUrl: mapMarkUrl(MAPLEKIT_RELEASE.baseUrl, record.markId) }),
     ...(secondaryLine === undefined ? {} : { secondaryLine }),
     ...(record.minimapId === undefined
       ? { minimapUnavailableLabel: 'Minimap unavailable' }

@@ -199,8 +199,19 @@ describe('fixture release', () => {
     );
     expect(lanternHills?.mapCount).toBe(6);
     expect(lanternHills?.areas).toEqual([
-      { key: 'area:lantern-hills/lamplight', label: 'Lamplight', mapCount: 3 },
+      {
+        key: 'area:lantern-hills/lamplight',
+        label: 'Lamplight',
+        mapCount: 3,
+        // Geography 1.1: every fixture area has a published mark image.
+        mark: {
+          state: 'known',
+          value: expect.stringMatching(/^[a-f0-9]{64}$/u) as unknown,
+        },
+      },
     ]);
+    expect(browse.rows.contractVersion).toBe('1.1');
+    expect(browse.roster.contractVersion).toBe('1.1');
     expect(browse.geography.collections).toEqual([
       { key: 'collection:event', label: 'Event maps', mapCount: 1 },
     ]);

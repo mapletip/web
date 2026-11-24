@@ -3,10 +3,13 @@
  * collections, resolved from the build's geography.
  */
 import type { DrillDownNode } from '@mapletip/component-library';
+import { mapMarkUrl } from '@mapletip/data/maps';
+import { createElement } from 'react';
 
-import type { BuildId } from '@/config/maplekit';
+import { MAPLEKIT_RELEASE, type BuildId } from '@/config/maplekit';
 import {
   locationSlug,
+  MapMark,
   mapLocationPath,
   type MapLocationParams,
 } from '@/features/maps/shared';
@@ -20,7 +23,11 @@ export interface MapLocationNode {
   readonly kind: 'all' | 'region' | 'area' | 'collection';
   readonly label: string;
   readonly params: MapLocationParams;
+  /** The area's in-game map mark; regions and collections have none. */
+  readonly markUrl?: string;
 }
+
+const RAIL_MARK_SIZE = 20;
 
 export const ALL_MAPS_LOCATION: MapLocationNode = {
   id: ALL_MAPS,
@@ -34,7 +41,15 @@ function node(
   location: MapBrowseLocation,
   params: MapLocationParams,
 ): MapLocationNode {
-  return { id: location.key, kind, label: location.label, params };
+  return {
+    id: location.key,
+    kind,
+    label: location.label,
+    params,
+    ...(location.markId === undefined
+      ? {}
+      : { markUrl: mapMarkUrl(MAPLEKIT_RELEASE.baseUrl, location.markId) }),
+  };
 }
 
 /**
@@ -91,6 +106,14 @@ export function mapLocationTree({
     label: location.label,
     href: mapLocationPath({ buildId, params: location.params }),
     meta: location.params,
+    ...(location.markUrl === undefined
+      ? {}
+      : {
+          icon: createElement(MapMark, {
+            src: location.markUrl,
+            size: RAIL_MARK_SIZE,
+          }),
+        }),
     ...(counts === undefined ? {} : { count: counts.get(location.id) ?? 0 }),
     ...(children === undefined ? {} : { children }),
   });

@@ -1,4 +1,4 @@
-import type { MapPageRecordV1_1 } from '@mapletip/data/maps';
+import type { MapPageRecordV1_2, MapRestrictionV1 } from '@mapletip/data/maps';
 import type { MonsterPageRecordV1_2 } from '@mapletip/data/monsters';
 
 /**
@@ -83,14 +83,14 @@ export interface FixtureMapPoint {
 export interface FixtureMapMonster {
   readonly monsterId: string;
   readonly points: readonly FixtureMapPoint[];
-  readonly respawn?: MapPageRecordV1_1['monsters']['items'][number]['respawn'];
+  readonly respawn?: MapPageRecordV1_2['monsters']['items'][number]['respawn'];
 }
 
 export interface FixtureMapNpc {
   readonly id: string;
   readonly name: string;
   readonly points: readonly FixtureMapPoint[];
-  readonly questCount?: MapPageRecordV1_1['npcs']['items'][number]['questCount'];
+  readonly questCount?: MapPageRecordV1_2['npcs']['items'][number]['questCount'];
   /** Served like a monster sprite of the same case; unknown when omitted. */
   readonly sprite?: SpriteCase;
 }
@@ -128,12 +128,31 @@ export interface FixtureMap {
     readonly contentId?: string;
   };
   readonly positionsPublished?: boolean;
-  readonly information?: Partial<MapPageRecordV1_1['information']>;
+  readonly information?: Partial<MapPageRecordV1_2['information']>;
   readonly monsters: readonly FixtureMapMonster[];
   readonly npcs: readonly FixtureMapNpc[];
   readonly connections: readonly FixtureMapConnection[];
   readonly returnMapId: string;
   readonly warps?: readonly FixtureMapWarp[];
+  /** The map has no published mark (Map page and browse row agree). */
+  readonly noMark?: true;
+  /** Map browse 1.1 player facts; each is `absent` when omitted. */
+  readonly player?: FixtureMapPlayerFacts;
+}
+
+export interface FixtureMapPlayerFacts {
+  readonly entryLevel?: number;
+  readonly levelCap?: number;
+  readonly hpDrain?: {
+    readonly amount: number;
+    readonly protectionItem?: { readonly key: string; readonly name: string };
+  };
+  readonly underwater?: boolean;
+  readonly timeLimitSeconds?: number;
+  readonly partyOnly?: true;
+  /** Reviewed town; `unknown` for every other map, as MapleKit publishes. */
+  readonly town?: true;
+  readonly restrictions?: readonly MapRestrictionV1[];
 }
 
 export interface FixtureBuild {

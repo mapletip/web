@@ -1,4 +1,4 @@
-import { Title } from '@mantine/core';
+import { Group, Title } from '@mantine/core';
 import { DrillDownNav, FacetedBrowser } from '@mapletip/component-library';
 import type {
   BrowseState,
@@ -20,7 +20,7 @@ import {
   type OnSearchChangeOptions,
 } from '@/features/browse/useBrowseUrlState';
 import { browseOverlayOptions } from '@/features/browse-overlay/browseOverlay';
-import type { MapLocationParams } from '@/features/maps/shared';
+import { MapMark, type MapLocationParams } from '@/features/maps/shared';
 import { useRouteOverlay } from '@/features/route-overlay/useRouteOverlay';
 
 import {
@@ -211,7 +211,16 @@ export function MapBrowse({
   return (
     <BrowsePageShell fillViewport={false}>
       <FacetedBrowser
-        title={<Title order={1}>{heading}</Title>}
+        title={
+          location.markUrl === undefined ? (
+            <Title order={1}>{heading}</Title>
+          ) : (
+            <Group gap="sm" align="center" wrap="nowrap">
+              <MapMark src={location.markUrl} size={40} />
+              <Title order={1}>{heading}</Title>
+            </Group>
+          )
+        }
         {...(navigation === undefined ? {} : { navigation })}
         records={records}
         idAccessor="publicId"

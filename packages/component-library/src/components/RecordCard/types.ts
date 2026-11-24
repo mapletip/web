@@ -20,7 +20,7 @@ export type RecordCardLinkRenderer = (
 
 export interface RecordCardProps {
   /** Main record label shown as the card heading. */
-  readonly title: string;
+  readonly title: ReactNode;
   /** Place media beside the text with the footer aligned below the text. */
   readonly layout?: 'default' | 'mediaAside' | 'compactMediaAside';
   /**

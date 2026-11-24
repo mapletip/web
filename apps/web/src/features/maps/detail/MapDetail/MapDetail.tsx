@@ -13,7 +13,6 @@ import { useMediaQuery } from '@mantine/hooks';
 import {
   INTERACTIVE_MAP_MAX_ZOOM,
   INTERACTIVE_MAP_MIN_ZOOM,
-  Thumbnail,
   type InteractiveMapView,
 } from '@mapletip/component-library';
 import { ArrowsOut } from '@phosphor-icons/react';
@@ -24,7 +23,7 @@ import { z } from 'zod';
 import { DetailPageShell } from '@/components/DetailPageShell';
 import { AnchorLink } from '@/components/RouterLinks';
 import { DetailBreadcrumbs } from '@/features/detail';
-import { MAP_DETAIL_ROUTE } from '@/features/maps/shared';
+import { MAP_DETAIL_ROUTE, MapMark } from '@/features/maps/shared';
 import { MONSTER_DETAIL_ROUTE } from '@/features/monsters/shared';
 import { useRouteOverlay } from '@/features/route-overlay/useRouteOverlay';
 
@@ -275,9 +274,7 @@ export function MapDetail({
             <Title order={1}>{view.name}</Title>
           ) : (
             <Group gap="sm" align="center" wrap="nowrap">
-              <span className={classes['mapMark']}>
-                <Thumbnail src={view.markUrl} size={40} alt="" />
-              </span>
+              <MapMark src={view.markUrl} size={40} />
               <Title order={1}>{view.name}</Title>
             </Group>
           )}

@@ -1,0 +1,6 @@
+.mark {
+  display: inline-flex;
+  flex: 0 0 auto;
+  clip-path: inset(10%);
+  transform: scale(1.25);
+}

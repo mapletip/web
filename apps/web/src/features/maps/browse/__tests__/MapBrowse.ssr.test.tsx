@@ -20,9 +20,10 @@ vi.mock('../load', () => ({ loadMapBrowse: vi.fn() }));
 const mockedLoad = vi.mocked(loadMapBrowse);
 
 function cardNames(html: string): readonly (string | undefined)[] {
-  return [...html.matchAll(/<h3[^>]*>(?:<a[^>]*>)?([^<]+)</gu)].map((match) =>
+  return [...html.matchAll(/<h3[^>]*>(.*?)<\/h3>/gu)].map((match) =>
     match[1]
-      ?.replaceAll('&lt;', '<')
+      ?.replaceAll(/<[^>]+>/gu, '')
+      .replaceAll('&lt;', '<')
       .replaceAll('&gt;', '>')
       .replaceAll('&amp;', '&'),
   );

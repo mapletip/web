@@ -6,13 +6,6 @@
 }
 
 /* Map mark art has a frame in its outer 10%; crop it and scale back up, as production does. */
-.mapMark {
-  display: inline-flex;
-  flex: 0 0 auto;
-  clip-path: inset(10%);
-  transform: scale(1.25);
-}
-
 .hero {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
