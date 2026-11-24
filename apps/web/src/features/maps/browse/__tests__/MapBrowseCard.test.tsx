@@ -102,7 +102,7 @@ describe('mapBrowseCardView', () => {
       highlight: { monsters: new Set(['m1']), npcs: new Set(['n1']) },
     });
 
-    expect(card.highlightLine).toBe('Thorncap (12 spawn points) · Guide');
+    expect(card.highlightLine).toBe('Thorncap (12 spawn points) · Way Keeper');
   });
 
   it('links to Map Detail in the same build and marks a missing minimap', () => {
