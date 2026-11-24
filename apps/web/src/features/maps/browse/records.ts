@@ -43,8 +43,9 @@ export interface MapBrowseRecord extends Record<string, unknown> {
   readonly level: readonly number[];
   readonly lowestMonsterLevel?: number;
   readonly highestMonsterLevel?: number;
-  readonly hasMonsters: boolean;
-  readonly hasNpcs: boolean;
+  /** Unknown when the count is not published, so neither Yes nor No matches. */
+  readonly hasMonsters?: boolean;
+  readonly hasNpcs?: boolean;
 }
 
 function locationLabels(
@@ -110,8 +111,10 @@ function record({
           lowestMonsterLevel: Math.min(...levels),
           highestMonsterLevel: Math.max(...levels),
         }),
-    hasMonsters: (row.monsterCount ?? 0) > 0,
-    hasNpcs: (row.npcCount ?? 0) > 0,
+    ...(row.monsterCount === undefined
+      ? {}
+      : { hasMonsters: row.monsterCount > 0 }),
+    ...(row.npcCount === undefined ? {} : { hasNpcs: row.npcCount > 0 }),
   };
 }
 
