@@ -133,3 +133,7 @@
   color: var(--mapletip-color-ink);
   font-size: 1.05rem;
 }
+
+.line {
+  display: block;
+}

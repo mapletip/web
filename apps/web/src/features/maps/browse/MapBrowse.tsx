@@ -43,6 +43,8 @@ export interface MapBrowseProps {
 }
 
 const SUMMARY_NOUN = { one: 'Map', other: 'Maps' } as const;
+/** Two columns from Mantine's `md` breakpoint (992px). */
+const CARD_COLUMNS = { base: 1, md: 2 } as const;
 
 /** Map Browse: every map of one build as cards, with address state. */
 export function MapBrowse({
@@ -105,6 +107,7 @@ export function MapBrowse({
         summaryNoun={SUMMARY_NOUN}
         pageSizeOptions={PAGE_SIZE_OPTIONS}
         presentation="cards"
+        cardColumns={CARD_COLUMNS}
         renderCard={(record) => (
           <MapBrowseCard record={record} buildId={buildId} />
         )}

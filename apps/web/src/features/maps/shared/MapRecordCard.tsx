@@ -30,6 +30,10 @@ export interface MapRecordCardView {
   readonly key: string;
   readonly name: string;
   readonly secondaryLine?: string;
+  /** Muted line under the secondary line, such as a reviewed activity. */
+  readonly activityLine?: string;
+  /** Emphasized footer line, such as the inhabitants a filter selected. */
+  readonly highlightLine?: string;
   readonly minimapUrl?: string;
   readonly minimapSprite?: {
     readonly url: string;
@@ -58,7 +62,8 @@ function renderFooterParts(
       {parts.map((part, index) => (
         <span key={`${part.value}:${part.label}`}>
           {index === 0 ? null : ' · '}
-          <strong>{part.value}</strong> {part.label}
+          <strong>{part.value}</strong>
+          {part.label === '' ? null : ` ${part.label}`}
         </span>
       ))}
     </span>
@@ -237,17 +242,41 @@ export function MapRecordCard({ map }: MapRecordCardProps): ReactElement {
   }
 
   const destination = map.destination;
+  const secondaryLine =
+    map.activityLine === undefined ? (
+      map.secondaryLine
+    ) : (
+      <>
+        {map.secondaryLine === undefined ? null : (
+          <span className={classes['line']}>{map.secondaryLine}</span>
+        )}
+        <span className={classes['line']} data-testid="map-card-activity">
+          {map.activityLine}
+        </span>
+      </>
+    );
+  const footerParts =
+    map.footerParts.length === 0
+      ? undefined
+      : renderFooterParts(map.footerParts);
+  const footer =
+    map.highlightLine === undefined ? (
+      footerParts
+    ) : (
+      <>
+        <Text size="sm" fw={600} data-testid="map-card-highlight">
+          {map.highlightLine}
+        </Text>
+        {footerParts}
+      </>
+    );
   return (
     <RecordCard
       layout="mediaAside"
       title={map.name}
-      secondaryLine={map.secondaryLine}
+      secondaryLine={secondaryLine}
       media={media}
-      footer={
-        map.footerParts.length === 0
-          ? undefined
-          : renderFooterParts(map.footerParts)
-      }
+      footer={footer}
       {...(destination === undefined
         ? {}
         : {

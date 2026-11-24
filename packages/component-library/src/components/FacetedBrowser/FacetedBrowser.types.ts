@@ -1,3 +1,4 @@
+import type { StyleProp } from '@mantine/core';
 import type { ReactNode } from 'react';
 
 import type { FacetDefinition } from '@/components/FacetedBrowser/FacetControls/types';
@@ -247,6 +248,7 @@ type PresentationProps<TRecord extends Record<string, unknown>> =
   | {
       readonly presentation: 'comparison';
       readonly columns: readonly TableColumn<TRecord>[];
+      readonly cardColumns?: never;
       readonly identityField: keyof TRecord & string;
       readonly renderCard: (
         record: TRecord,
@@ -270,6 +272,8 @@ type PresentationProps<TRecord extends Record<string, unknown>> =
   | {
       readonly presentation: 'cards';
       readonly renderCard: (record: TRecord) => ReactNode;
+      /** Responsive card columns, such as `{ base: 1, md: 2 }`; one column by default. */
+      readonly cardColumns?: StyleProp<number>;
       readonly columns?: never;
       readonly identityField?: never;
     }
@@ -282,6 +286,7 @@ type PresentationProps<TRecord extends Record<string, unknown>> =
       readonly columns?: never;
       readonly identityField?: never;
       readonly renderCard?: never;
+      readonly cardColumns?: never;
     };
 
 export type FacetedBrowserProps<TRecord extends Record<string, unknown>> =
