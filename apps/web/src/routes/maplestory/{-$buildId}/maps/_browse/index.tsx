@@ -9,9 +9,9 @@ import {
   ALL_MAPS_LOCATION,
   MapBrowse,
   mapBrowseSearch,
-  mapLocationPath,
   mapPageMetadata,
 } from '@/features/maps/browse';
+import { mapLocationPath } from '@/features/maps/shared';
 
 const browseRouteApi = getRouteApi('/maplestory/{-$buildId}/maps/_browse');
 

@@ -9,10 +9,10 @@ import { requireBuildId } from '@/features/detail';
 import {
   MapBrowse,
   mapBrowseSearch,
-  mapLocationPath,
   mapPageMetadata,
   resolveMapLocation,
 } from '@/features/maps/browse';
+import { mapLocationPath } from '@/features/maps/shared';
 
 const browseRouteApi = getRouteApi('/maplestory/{-$buildId}/maps/_browse');
 

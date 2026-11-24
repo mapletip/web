@@ -17,3 +17,11 @@ export {
   projectMapRecordDestination,
   type ProjectMapRecordDestinationOptions,
 } from './mapRecordDestination';
+export {
+  locationSlug,
+  MAP_LOCATION_ROUTE,
+  mapLocationParams,
+  mapLocationPath,
+  MAPS_ROUTE,
+  type MapLocationParams,
+} from './locationRoutes';

@@ -5,12 +5,11 @@ import type { ReactElement } from 'react';
 import type { BuildId } from '@/config/maplekit';
 import type { BrowseSearch } from '@/features/browse/search-params';
 import { canonicalBuildParam } from '@/features/detail';
-
 import {
   MAP_LOCATION_ROUTE,
   MAPS_ROUTE,
   type MapLocationParams,
-} from './location';
+} from '@/features/maps/shared';
 
 /** Typed router options for a location page in a build. */
 export function mapLocationLinkOptions({

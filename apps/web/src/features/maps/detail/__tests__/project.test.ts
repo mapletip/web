@@ -500,7 +500,7 @@ describe('projectMapDetail', () => {
     expect(
       projectNpcs({
         state: 'partial',
-        items: [npc(template, { key: 'npc-known', name: 'Guide' })],
+        items: [npc(template, { key: 'npc-known', name: 'Way Keeper' })],
       }),
     ).toMatchObject({
       count: 1,
@@ -644,22 +644,22 @@ describe('projectMapDetail', () => {
           state: 'known',
           items: [
             connection(record, {
-              name: 'Hunting Ground X',
+              name: 'Hunting Field X',
               slug: 'hunting-ground-x',
               publicId: 'a0000004',
             }),
             connection(record, {
-              name: 'Hunting Ground 10',
+              name: 'Hunting Field 10',
               slug: 'hunting-ground-10',
               publicId: 'a0000003',
             }),
             connection(record, {
-              name: 'Hunting Ground II',
+              name: 'Hunting Field II',
               slug: 'hunting-ground-ii',
               publicId: 'a0000002',
             }),
             connection(record, {
-              name: 'Hunting Ground 2',
+              name: 'Hunting Field 2',
               slug: 'hunting-ground-2',
               publicId: 'a0000001',
             }),
@@ -676,10 +676,10 @@ describe('projectMapDetail', () => {
     expect(connections.state).toBe('known');
     expect(connections.count).toBe(4);
     expect(connections.maps.map(({ name }) => name)).toEqual([
-      'Hunting Ground 2',
-      'Hunting Ground 10',
-      'Hunting Ground II',
-      'Hunting Ground X',
+      'Hunting Field 2',
+      'Hunting Field 10',
+      'Hunting Field II',
+      'Hunting Field X',
     ]);
     expect(connections.maps[0]?.destination).toEqual({
       href: '/maplestory/gms-v83/maps/hunting-ground-2-a0000001',
@@ -1004,6 +1004,7 @@ describe('projectMapDetail', () => {
 
     expect(view.regionLabel).toBeUndefined();
     expect(view.areaLabel).toBeUndefined();
+    expect(view.regionPath).toBeUndefined();
   });
 
   it('projects region and area labels for a placed map', () => {
@@ -1016,15 +1017,19 @@ describe('projectMapDetail', () => {
         ...record,
         geography: {
           ...record.geography,
-          areaKey: 'fixture:market',
+          areaKey: 'area:lantern-hills/lantern-market',
           areaLabel: 'Lantern Market',
         },
       },
-      buildId: 'cw-launch',
+      buildId: 'gms-v83',
     });
 
     expect(view.regionLabel).toBe('Lantern Hills');
     expect(view.areaLabel).toBe('Lantern Market');
+    expect(view.regionPath).toBe('/maplestory/gms-v83/maps/in/lantern-hills');
+    expect(view.areaPath).toBe(
+      '/maplestory/gms-v83/maps/in/lantern-hills/lantern-market',
+    );
   });
 
   it('projects known activity and non-blank description without placeholders', () => {
