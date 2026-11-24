@@ -113,8 +113,13 @@ export function MapBrowse({
   const cardContext = useMemo((): MapBrowseCardContext => {
     const keys = (value: unknown) =>
       new Set(Array.isArray(value) ? (value as readonly string[]) : []);
+    const monsterIds = keys(selectedMonsters);
     return {
-      monsters: keys(selectedMonsters),
+      monsters: new Set(
+        (data?.monsters ?? []).flatMap(({ publicId }) =>
+          publicId !== undefined && monsterIds.has(publicId) ? [publicId] : [],
+        ),
+      ),
       npcs: keys(selectedNpcs),
       levels:
         levelFilter !== undefined ||
@@ -122,7 +127,7 @@ export function MapBrowse({
         sortField === 'highestMonsterLevel',
       spawns: sortField === 'spawnPointCount',
     };
-  }, [selectedMonsters, selectedNpcs, levelFilter, sortField]);
+  }, [data, selectedMonsters, selectedNpcs, levelFilter, sortField]);
 
   // Choosing a location keeps the search and filters and returns to page one.
   const locationSearch = mapBrowseSearch.browseStateToUrl({

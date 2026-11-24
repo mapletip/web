@@ -162,12 +162,11 @@ describe('projectMapBrowse', () => {
     });
     expect(data.monsters).toEqual([
       {
-        key: 'monster-a',
         name: 'Pebble Crawler',
         level: 1,
         spriteId: 'a'.repeat(64),
       },
-      { key: 'monster-b' },
+      {},
     ]);
     expect(data.npcs).toEqual([{ key: 'npc-a', name: 'Way Keeper' }]);
   });

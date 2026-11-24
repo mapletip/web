@@ -4,11 +4,7 @@
  * plus the location list. Nothing here derives game data; it only joins the
  * published rows, roster and geography by key.
  */
-import type {
-  MapBrowse,
-  MapBrowseRosterMonsterV1,
-  MapBrowseRosterNpcV1,
-} from '@mapletip/data/maps';
+import type { MapBrowse, MapBrowseRosterNpcV1 } from '@mapletip/data/maps';
 
 type Fact<T> =
   | { readonly state: 'known'; readonly value: T }
@@ -29,7 +25,7 @@ export type MapActivityType =
   (typeof MAP_ACTIVITY_TYPES)[keyof typeof MAP_ACTIVITY_TYPES];
 
 export interface MapBrowseMonster {
-  readonly key: string;
+  readonly publicId?: string;
   readonly name?: string;
   readonly level?: number;
   readonly spriteId?: string;
@@ -116,9 +112,11 @@ function activityTypeOf(classification: string): MapActivityType | undefined {
     : undefined;
 }
 
-function projectMonster(monster: MapBrowseRosterMonsterV1): MapBrowseMonster {
+function projectMonster(
+  monster: MapBrowse['roster']['monsters'][number],
+): MapBrowseMonster {
   return defined({
-    key: monster.key,
+    publicId: 'publicId' in monster ? monster.publicId : undefined,
     name: knownValue(monster.name),
     level: knownValue(monster.level),
     spriteId: knownValue(monster.sprite),

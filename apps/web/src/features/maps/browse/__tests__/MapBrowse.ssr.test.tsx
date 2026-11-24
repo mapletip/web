@@ -83,8 +83,8 @@ function param(value: unknown): string {
 
 describe('Map Browse server rendering', () => {
   let data: MapBrowseData;
-  const monsterKey = (name: string) =>
-    data.monsters.find((monster) => monster.name === name)?.key;
+  const monsterId = (name: string) =>
+    data.monsters.find((monster) => monster.name === name)?.publicId;
   const npcKey = (name: string) =>
     data.npcs.find((npc) => npc.name === name)?.key;
 
@@ -282,7 +282,7 @@ describe('Map Browse server rendering', () => {
 
   it('filters by one monster and names it on each card', async () => {
     const { html } = await renderPath(
-      `/maplestory/maps?monster=${param([monsterKey('Wide Banner')])}`,
+      `/maplestory/maps?monster=${param([monsterId('Wide Banner')])}`,
     );
 
     expect(cardNames(html)).toEqual(['Lantern Rehearsal <Stage 1>']);
@@ -292,8 +292,8 @@ describe('Map Browse server rendering', () => {
   it('filters by several monsters as any of them', async () => {
     const { html } = await renderPath(
       `/maplestory/maps?monster=${param([
-        monsterKey('Wide Banner'),
-        monsterKey(
+        monsterId('Wide Banner'),
+        monsterId(
           'Extraordinarily Long Named Fixture Creature Of The Far Northern Reaches',
         ),
       ])}`,
@@ -303,6 +303,16 @@ describe('Map Browse server rendering', () => {
       'Lamplight Meadow',
       'Lantern Rehearsal <Stage 1>',
     ]);
+  });
+
+  it('ignores a stale monster key while applying the other view settings', async () => {
+    const staleKey = 'monster:' + '0'.repeat(64);
+    const { html } = await renderPath(
+      `/maplestory/maps?monster=${param([staleKey])}&sort=lowestMonsterLevel-asc`,
+    );
+
+    expect(cardNames(html)).toContain('Lantern Square');
+    expect(footerText(html)[0]).toMatch(/^Lv\. \d+(–\d+)? monsters$/u);
   });
 
   it('filters by NPC', async () => {

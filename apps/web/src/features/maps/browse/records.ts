@@ -104,7 +104,9 @@ function record({
     ],
     monsters,
     npcs,
-    monster: monsters.map(({ entry }) => entry.key),
+    monster: monsters.flatMap(({ entry }) =>
+      entry.publicId === undefined ? [] : [entry.publicId],
+    ),
     npc: npcs.map(({ entry }) => entry.key),
     level: levels,
     ...(levels.length === 0
