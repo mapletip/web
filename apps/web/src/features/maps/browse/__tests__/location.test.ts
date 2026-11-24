@@ -83,12 +83,17 @@ describe('mapLocationTree', () => {
     expect(tree.children?.map(({ label, count }) => [label, count])).toEqual([
       ['Starter Isle', 0],
       ['Western Isle', 5],
-      ['Event maps', 0],
+      ['Other collections', 0],
     ]);
     expect(tree.children?.[1]?.children?.[0]).toMatchObject({
       label: 'Meadowbrook',
       href: '/maplestory/gms-v83/maps/in/western-isle/meadowbrook',
       meta: { location: 'western-isle', area: 'meadowbrook' },
+    });
+    expect(tree.children?.[2]?.children?.[0]).toMatchObject({
+      label: 'Event maps',
+      href: '/maplestory/gms-v83/maps/in/event',
+      count: 0,
     });
     expect(tree.children?.some((node) => node.icon !== undefined)).toBe(false);
   });

@@ -28,6 +28,7 @@ export interface MapLocationNode {
 }
 
 const RAIL_MARK_SIZE = 20;
+export const OTHER_COLLECTIONS_ID = 'other-collections';
 
 export const ALL_MAPS_LOCATION: MapLocationNode = {
   id: ALL_MAPS,
@@ -86,7 +87,7 @@ export function resolveMapLocation({
 
 /**
  * The location rail: All maps, then regions in model order with their areas,
- * then collections. Each node's `meta` is its route params; `count` is
+ * then the Other collections group. Each location node's `meta` is its route params; `count` is
  * filled from filter-aware navigation counts.
  */
 export function mapLocationTree({
@@ -118,6 +119,28 @@ export function mapLocationTree({
     ...(children === undefined ? {} : { children }),
   });
 
+  const collections = geography.collections.map((collection) =>
+    treeNode(
+      node('collection', collection, {
+        location: locationSlug(collection.key),
+      }),
+    ),
+  );
+  const collectionGroup = {
+    id: OTHER_COLLECTIONS_ID,
+    label: 'Other collections',
+    href: mapLocationPath({ buildId, params: {} }),
+    children: collections,
+    ...(counts === undefined
+      ? {}
+      : {
+          count: collections.reduce(
+            (sum, child) => sum + (child.count ?? 0),
+            0,
+          ),
+        }),
+  };
+
   return treeNode(ALL_MAPS_LOCATION, [
     ...geography.regions.map((region) => {
       const location = locationSlug(region.key);
@@ -130,12 +153,6 @@ export function mapLocationTree({
         ),
       );
     }),
-    ...geography.collections.map((collection) =>
-      treeNode(
-        node('collection', collection, {
-          location: locationSlug(collection.key),
-        }),
-      ),
-    ),
+    ...(collections.length === 0 ? [] : [collectionGroup]),
   ]);
 }

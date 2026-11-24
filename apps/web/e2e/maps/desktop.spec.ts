@@ -126,9 +126,18 @@ test('the location rail drills down and keeps search and filters', async ({
   page,
 }) => {
   await gotoHydrated(page, `${MAPS}?q=lamp`);
+  const collections = rail(page).getByRole('button', {
+    name: /Other collections/u,
+  });
+  await expect(
+    rail(page).getByRole('link', { name: /Event maps/u }),
+  ).toHaveCount(0);
+  await collections.click();
+  await expect(page).toHaveURL(`${MAPS}?q=lamp`);
   await expect(
     rail(page).getByRole('link', { name: /Event maps/u }),
   ).toContainText('0');
+  await rail(page).getByRole('link', { name: 'All maps' }).click();
 
   await rail(page)
     .getByRole('link', { name: /^Lantern Hills/u })
