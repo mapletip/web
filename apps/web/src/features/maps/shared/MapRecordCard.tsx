@@ -1,4 +1,11 @@
-import { Image, Modal, Popover, Text, useMantineTheme } from '@mantine/core';
+import {
+  Group,
+  Image,
+  Modal,
+  Popover,
+  Text,
+  useMantineTheme,
+} from '@mantine/core';
 import { useMediaQuery } from '@mantine/hooks';
 import {
   EntityChip,
@@ -10,6 +17,7 @@ import { useState, type ReactElement } from 'react';
 
 import { recordCardLinkRenderer } from '@/components/RouterLinks';
 
+import { MapMark } from './MapMark';
 import classes from './MapRecordCard.module.css';
 import { minimapSpriteSize } from './minimapSpriteSize';
 import { MonsterDot } from './MonsterDot';
@@ -52,6 +60,7 @@ export interface MapRecordCardDestination {
 export interface MapRecordCardView {
   readonly key: string;
   readonly name: string;
+  readonly markUrl?: string;
   readonly secondaryLine?: string;
   readonly minimapUrl?: string;
   readonly minimapSprite?: {
@@ -308,7 +317,16 @@ export function MapRecordCard({ map }: MapRecordCardProps): ReactElement {
   return (
     <RecordCard
       layout="mediaAside"
-      title={map.name}
+      title={
+        map.markUrl === undefined ? (
+          map.name
+        ) : (
+          <Group component="span" gap="xs" wrap="nowrap" align="center">
+            <MapMark src={map.markUrl} size={20} />
+            <span>{map.name}</span>
+          </Group>
+        )
+      }
       {...(map.secondaryLine === undefined
         ? {}
         : { secondaryLine: map.secondaryLine })}

@@ -8,7 +8,6 @@ import type {
   MapBrowse,
   MapBrowseRosterMonsterV1,
   MapBrowseRosterNpcV1,
-  MapBrowseRowV1,
 } from '@mapletip/data/maps';
 
 type Fact<T> =
@@ -46,6 +45,8 @@ export interface MapBrowseLocation {
   readonly key: string;
   readonly label: string;
   readonly mapCount: number;
+  /** The area's map mark content id; regions and collections have none. */
+  readonly markId?: string;
 }
 
 export interface MapBrowseRegion extends MapBrowseLocation {
@@ -69,6 +70,8 @@ export interface MapBrowseRow {
   readonly activity?: string;
   readonly activityType?: MapActivityType;
   readonly minimapId?: string;
+  /** The map's mark content id (Map browse 1.1). */
+  readonly markId?: string;
   readonly monsterCount?: number;
   readonly spawnPointCount?: number;
   readonly npcCount?: number;
@@ -134,7 +137,7 @@ function projectRow({
   activityTypes,
   roster,
 }: {
-  readonly row: MapBrowseRowV1;
+  readonly row: MapBrowse['rows']['records'][number];
   readonly activityTypes: ReadonlyMap<string, MapActivityType>;
   readonly roster: MapBrowse['roster']['records'][string];
 }): MapBrowseRow {
@@ -150,6 +153,7 @@ function projectRow({
     activity: knownValue(row.activity),
     activityType: activityTypes.get(row.key),
     minimapId: knownValue(row.minimap),
+    markId: 'markImage' in row ? knownValue(row.markImage) : undefined,
     monsterCount: knownValue(row.monsterCount),
     spawnPointCount: knownValue(row.spawnPointCount),
     npcCount: knownValue(row.npcCount),
@@ -187,7 +191,13 @@ export function projectMapBrowse(browse: MapBrowse): MapBrowseData {
     geography: {
       regions: browse.geography.regions.map((region) => ({
         ...location(region),
-        areas: region.areas.map(location),
+        areas: region.areas.map((area) =>
+          defined({
+            ...location(area),
+            // Geography 1.1 gives every area a mark fact.
+            markId: 'mark' in area ? knownValue(area.mark) : undefined,
+          }),
+        ),
       })),
       collections: browse.geography.collections.map(location),
     },

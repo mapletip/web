@@ -792,14 +792,22 @@ function absentFact(coverageKey: string): {
   return { state: 'absent', coverageKey };
 }
 
-function countFact(count: number): MapBrowseRowV1['monsterCount'] {
+function countFact(count: number): MapBrowseRowV1_1['monsterCount'] {
   return known(count);
 }
 
+type GeographyRegion = MapGeographyModelV1_1['regions'][number];
+
+/** Regions, areas and collections before each area's mark is resolved. */
+interface UnmarkedGeography {
+  readonly regions: readonly (Omit<GeographyRegion, 'areas'> & {
+    readonly areas: readonly Omit<GeographyRegion['areas'][number], 'mark'>[];
+  })[];
+  readonly collections: MapGeographyModelV1_1['collections'];
+}
+
 /** Group fixture geography into the model's regions, areas and collections. */
-function projectGeography(
-  maps: readonly FixtureMap[],
-): Pick<MapGeographyModelV1_1, 'regions' | 'collections'> {
+function projectGeography(maps: readonly FixtureMap[]): UnmarkedGeography {
   const regions = new Map<
     string,
     {
@@ -856,10 +864,10 @@ function projectGeography(
 /** Every fixture area has a published mark image, keyed by build and area. */
 async function withAreaMarks(
   build: FixtureBuild,
-  geography: Pick<MapGeographyModelV1_1, 'regions' | 'collections'>,
+  geography: UnmarkedGeography,
 ): Promise<Pick<MapGeographyModelV1_1, 'regions' | 'collections'>> {
   return {
-    ...geography,
+    collections: geography.collections,
     regions: await Promise.all(
       geography.regions.map(async (region) => ({
         ...region,
@@ -947,9 +955,7 @@ async function projectMapBrowse(options: {
     const geography = fixture.geography;
     const player = fixture.player ?? {};
     const fact = <T>(name: string, value: T | undefined) =>
-      value === undefined
-        ? absentFact(`${coverage}:${name}`)
-        : known(value);
+      value === undefined ? absentFact(`${coverage}:${name}`) : known(value);
     return {
       key: map.key,
       publicId: map.publicId,
@@ -1001,7 +1007,12 @@ async function projectMapBrowse(options: {
       partyOnly: fact('party-only', player.partyOnly),
       town:
         player.town === undefined ? { state: 'unknown' } : known(player.town),
-      restrictions: fact('restrictions', player.restrictions),
+      restrictions: fact(
+        'restrictions',
+        player.restrictions === undefined
+          ? undefined
+          : [...player.restrictions],
+      ),
     };
   });
 

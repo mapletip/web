@@ -8,6 +8,7 @@ export {
   type MapRecordCardProps,
   type MapRecordCardView,
 } from './MapRecordCard';
+export { MapMark, type MapMarkProps } from './MapMark';
 export { MonsterDot, type MonsterDotProps } from './MonsterDot';
 export { SpriteMarker, type SpriteMarkerProps } from './SpriteMarker';
 export {
