@@ -95,7 +95,12 @@ describe('projectMapDetail', () => {
       npcs: {
         ...source.npcs,
         items: [
-          { ...npc, sprite: { state: 'known' as const, value: contentId } },
+          {
+            ...npc,
+            sprite: {
+              contentId: { state: 'known' as const, value: contentId },
+            },
+          },
         ],
       },
     };
@@ -121,7 +126,9 @@ describe('projectMapDetail', () => {
       ...source,
       npcs: {
         ...source.npcs,
-        items: [{ ...npc, sprite: { state: 'unknown' as const } }],
+        items: [
+          { ...npc, sprite: { contentId: { state: 'unknown' as const } } },
+        ],
       },
     };
     const view = projectMapDetail({ record, buildId: 'cw-launch' });
@@ -170,6 +177,51 @@ describe('projectMapDetail', () => {
     });
     expect(marker).not.toHaveProperty('spriteWidth');
     expect(marker).not.toHaveProperty('spriteHeight');
+  });
+
+  it("sizes Monster stage sprites by each stage's published scale", () => {
+    const source = mapPageRecordFixture({ mapId: 'practice-grove' });
+    const monster = source.monsters.items[0];
+    if (monster === undefined || source.stage.state !== 'known') {
+      throw new Error('Expected a fixture Monster on a known stage.');
+    }
+    const { contentId, width, height } = source.stage.value;
+    const stageWithoutScale = { contentId, width, height };
+    const withScale = (scale: number | undefined) => {
+      return {
+        ...source,
+        stage: {
+          state: 'known' as const,
+          value:
+            scale === undefined
+              ? stageWithoutScale
+              : { ...stageWithoutScale, scale },
+        },
+        monsters: {
+          ...source.monsters,
+          items: [
+            {
+              ...monster,
+              sprite: {
+                contentId: { state: 'known' as const, value: 'c'.repeat(64) },
+                width: 64,
+                height: 48,
+              },
+            },
+          ],
+        },
+      };
+    };
+    const marker = (scale: number | undefined) =>
+      projectMapDetail({
+        record: withScale(scale) as typeof source,
+        buildId: 'cw-launch',
+      }).stage.markers.find(({ kind }) => kind === 'monster');
+
+    expect(marker(0.125)).toMatchObject({ size: { width: 8, height: 6 } });
+    // Without a published scale the monster is a dot, never a guessed size.
+    expect(marker(undefined)).not.toHaveProperty('size');
+    expect(marker(undefined)).not.toHaveProperty('spriteUrl');
   });
 
   it('omits Monster stage sizing when the sprite or dimensions are unknown', () => {

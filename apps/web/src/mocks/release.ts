@@ -3,15 +3,15 @@ import type {
   MapBrowseRowV1,
   MapBrowseV1,
   MapGeographyModel,
-  MapPagePackV1_1,
-  MapPageRecordV1_1,
+  MapPagePackV1_2,
+  MapPageRecordV1_2,
 } from '@mapletip/data/maps';
 import type {
   MonsterCatalogV2_5,
   MonsterDropBrowseV1,
-  MonsterLocationBrowseV1_3,
-  MonsterPagePackV1_2,
-  MonsterPageRecordV1_2,
+  MonsterLocationBrowseV1_4,
+  MonsterPagePackV1_3,
+  MonsterPageRecordV1_3,
 } from '@mapletip/data/monsters';
 
 import type {
@@ -24,6 +24,11 @@ import type {
 } from './world';
 import { spriteDimensions, world } from './world';
 
+/**
+ * Stage pixels per game pixel on every fixture stage: a minimap scale of 4,
+ * MapleKit's known answer (64 game px -> 4 stage px).
+ */
+const FIXTURE_STAGE_SCALE = 0.0625;
 const encoder = new TextEncoder();
 const ZERO = '0'.repeat(64);
 const FNV1A_64_OFFSET = 14695981039346656037n;
@@ -299,15 +304,15 @@ function projectMonster(
 }
 
 function projectMonsterPage(
-  scope: MonsterPageRecordV1_2['scope'],
+  scope: MonsterPageRecordV1_3['scope'],
   catalogRecord: MonsterCatalogV2_5['records'][number],
-  entries: MonsterPageRecordV1_2['drops']['entries'],
+  entries: MonsterPageRecordV1_3['drops']['entries'],
   monster: FixtureMonster,
   itemById: ReadonlyMap<
     string,
     { readonly item: FixtureBuild['items'][number]; readonly key: string }
   >,
-): MonsterPageRecordV1_2 {
+): MonsterPageRecordV1_3 {
   const [
     level,
     hp,
@@ -330,11 +335,11 @@ function projectMonsterPage(
     (total, location) => total + location.placementCount,
     0,
   );
-  const locationEntries: MonsterPageRecordV1_2['locations']['entries'] =
+  const locationEntries: MonsterPageRecordV1_3['locations']['entries'] =
     locationFixtures.map((location: FixtureLocation) => {
       const points = location.points ?? [];
       const hasStage = location.minimapContentId !== undefined;
-      let pointsState: MonsterPageRecordV1_2['locations']['entries'][number]['points']['state'];
+      let pointsState: MonsterPageRecordV1_3['locations']['entries'][number]['points']['state'];
       if (!hasStage) {
         pointsState = 'absent';
       } else if (points.length === location.placementCount) {
@@ -379,6 +384,7 @@ function projectMonsterPage(
                 contentId: location.minimapContentId,
                 width: 900,
                 height: 600,
+                scale: FIXTURE_STAGE_SCALE,
               },
             }
           : {
@@ -406,7 +412,7 @@ function projectMonsterPage(
 
   return {
     format: 'mapletip.monster-page',
-    contractVersion: '1.2',
+    contractVersion: '1.3',
     scope,
     key: catalogRecord.key,
     publicId: catalogRecord.publicId,
@@ -481,21 +487,21 @@ type ResolvedFixtureMap = {
   readonly publicId: string;
   readonly slug: string;
   readonly markImage: Extract<
-    MapPageRecordV1_1['markImage'],
+    MapPageRecordV1_2['markImage'],
     { readonly state: 'known' }
   >;
   readonly stage?: Extract<
-    MapPageRecordV1_1['stage'],
+    MapPageRecordV1_2['stage'],
     { readonly state: 'known' }
   >['value'];
 };
 
 type MapReference = Extract<
-  MapPageRecordV1_1['information']['returnMap'],
+  MapPageRecordV1_2['information']['returnMap'],
   { readonly state: 'known' }
 >['value'];
 
-function mapNameFact(name: string | undefined): MapPageRecordV1_1['name'] {
+function mapNameFact(name: string | undefined): MapPageRecordV1_2['name'] {
   return name === undefined ? { state: 'unknown' } : known(name);
 }
 
@@ -512,7 +518,7 @@ function mapReference(map: ResolvedFixtureMap): MapReference {
 function mapPoints(
   points: readonly FixtureMapPoint[],
   positionsPublished: boolean,
-): MapPageRecordV1_1['connections']['items'][number]['points'] {
+): MapPageRecordV1_2['connections']['items'][number]['points'] {
   if (!positionsPublished) return { state: 'unknown', items: [] };
   return {
     state: points.length === 0 ? 'absent' : 'known',
@@ -556,6 +562,7 @@ async function resolveFixtureMaps(options: {
                   )),
                 width: fixture.stage.width,
                 height: fixture.stage.height,
+                scale: FIXTURE_STAGE_SCALE,
               },
             }),
       };
@@ -565,18 +572,18 @@ async function resolveFixtureMaps(options: {
 
 async function projectMapPages(options: {
   readonly build: FixtureBuild;
-  readonly scope: MapPageRecordV1_1['scope'];
+  readonly scope: MapPageRecordV1_2['scope'];
   readonly resolved: readonly ResolvedFixtureMap[];
   readonly monsters: ReadonlyMap<string, MonsterCatalogV2_5['records'][number]>;
   readonly key: (prefix: string, id: string) => Promise<string>;
-}): Promise<readonly MapPageRecordV1_1[]> {
+}): Promise<readonly MapPageRecordV1_2[]> {
   const { build, scope, resolved, monsters, key } = options;
   const mapsBySourceId = new Map(resolved.map((map) => [map.fixture.id, map]));
   const positionsPublished = (map: FixtureMap): boolean =>
     map.stage !== undefined && map.positionsPublished !== false;
 
   return Promise.all(
-    resolved.map(async (map): Promise<MapPageRecordV1_1> => {
+    resolved.map(async (map): Promise<MapPageRecordV1_2> => {
       const fixture = map.fixture;
       const returnTarget = mapsBySourceId.get(fixture.returnMapId);
       if (returnTarget === undefined) {
@@ -618,7 +625,7 @@ async function projectMapPages(options: {
           focusToken: fixturePublicId(
             `map-focus:${fixture.id}:monster:${placement.monsterId}`,
           ),
-        } satisfies MapPageRecordV1_1['monsters']['items'][number];
+        } satisfies MapPageRecordV1_2['monsters']['items'][number];
       });
       const mapNpcs = await Promise.all(
         fixture.npcs.map(
@@ -626,20 +633,22 @@ async function projectMapPages(options: {
             ({
               key: await key('npc', `${build.buildId}:${fixture.id}:${npc.id}`),
               name: known(npc.name),
-              sprite:
-                npc.sprite === undefined
-                  ? { state: 'unknown' as const }
-                  : known(
-                      await sha256Hex(
-                        encoder.encode(`fixture:sprite:${npc.sprite}`),
+              sprite: {
+                contentId:
+                  npc.sprite === undefined
+                    ? { state: 'unknown' as const }
+                    : known(
+                        await sha256Hex(
+                          encoder.encode(`fixture:sprite:${npc.sprite}`),
+                        ),
                       ),
-                    ),
+              },
               questCount: npc.questCount ?? { state: 'known', count: 0 },
               points: mapPoints(npc.points, published),
               focusToken: fixturePublicId(
                 `map-focus:${fixture.id}:npc:${npc.id}`,
               ),
-            }) satisfies MapPageRecordV1_1['npcs']['items'][number],
+            }) satisfies MapPageRecordV1_2['npcs']['items'][number],
         ),
       );
       const connections = fixture.connections.map((connection) => {
@@ -668,12 +677,12 @@ async function projectMapPages(options: {
           focusToken: fixturePublicId(
             `map-focus:${fixture.id}:connection:${connection.mapId}`,
           ),
-        } satisfies MapPageRecordV1_1['connections']['items'][number];
+        } satisfies MapPageRecordV1_2['connections']['items'][number];
       });
 
       return {
         format: 'mapletip.map-page',
-        contractVersion: '1.1',
+        contractVersion: '1.2',
         scope,
         key: map.key,
         publicId: map.publicId,
@@ -745,7 +754,7 @@ async function projectMapPages(options: {
             ),
           })),
         },
-      } satisfies MapPageRecordV1_1;
+      } satisfies MapPageRecordV1_2;
     }),
   );
 }
@@ -826,7 +835,7 @@ function projectGeography(
 /** Map browse rows, population roster and geography for one fixture build. */
 async function projectMapBrowse(options: {
   readonly build: FixtureBuild;
-  readonly scope: MapPageRecordV1_1['scope'];
+  readonly scope: MapPageRecordV1_2['scope'];
   readonly resolved: readonly ResolvedFixtureMap[];
   readonly monsters: ReadonlyMap<string, MonsterCatalogV2_5['records'][number]>;
   readonly key: (prefix: string, id: string) => Promise<string>;
@@ -968,7 +977,7 @@ async function projectMapBrowse(options: {
 
 interface BuildMapProductOptions {
   readonly build: FixtureBuild;
-  readonly scope: MapPageRecordV1_1['scope'];
+  readonly scope: MapPageRecordV1_2['scope'];
   readonly maps: readonly FixtureMap[];
   readonly monsters: ReadonlyMap<string, MonsterCatalogV2_5['records'][number]>;
   readonly key: (prefix: string, id: string) => Promise<string>;
@@ -1000,11 +1009,11 @@ async function buildMapProduct(
   };
   const pagePack = await put('v2/maps/page-packs', {
     format: 'mapletip.map-page-pack',
-    contractVersion: '1.1',
+    contractVersion: '1.2',
     recordKind: 'map-page',
     scope,
     records: Object.fromEntries(mapPages.map((page) => [page.publicId, page])),
-  } satisfies MapPagePackV1_1);
+  } satisfies MapPagePackV1_2);
   for (const page of mapPages) {
     if (page.stage.state === 'known') {
       minimapIds.add(page.stage.value.contentId);
@@ -1232,7 +1241,7 @@ export async function buildRelease(fixtureWorld: {
     const pageRecords = projectedMonsters
       .map(({ monster, record }) => {
         const drops = build.drops[monster.id] ?? [];
-        const entries: MonsterPageRecordV1_2['drops']['entries'] = drops.map(
+        const entries: MonsterPageRecordV1_3['drops']['entries'] = drops.map(
           (drop) => {
             const target = itemById.get(drop.itemId);
             if (target === undefined) {
@@ -1272,14 +1281,14 @@ export async function buildRelease(fixtureWorld: {
     };
     const pagePack = await put('v2/monsters/page-packs', {
       format: 'mapletip.monster-page-pack',
-      contractVersion: '1.2',
+      contractVersion: '1.3',
       recordKind: 'monster-page',
       scope,
       records: Object.fromEntries(
         pageRecords.map((record) => [record.publicId, record]),
       ),
-    } satisfies MonsterPagePackV1_2);
-    const locationBrowseRecords: MonsterLocationBrowseV1_3['records'] =
+    } satisfies MonsterPagePackV1_3);
+    const locationBrowseRecords: MonsterLocationBrowseV1_4['records'] =
       Object.fromEntries(
         pageRecords
           .filter((record) => record.locations.entries.length > 0)
@@ -1288,10 +1297,10 @@ export async function buildRelease(fixtureWorld: {
     const locationBrowseKeys = Object.keys(locationBrowseRecords).sort();
     const locationBrowse = await put('v2/browse', {
       format: 'mapletip.monster-location-browse',
-      contractVersion: '1.3',
+      contractVersion: '1.4',
       scope,
       records: locationBrowseRecords,
-    } satisfies MonsterLocationBrowseV1_3);
+    } satisfies MonsterLocationBrowseV1_4);
     const locationBrowseRange: RangeDescriptor = {
       count: locationBrowseKeys.length,
       firstKey: locationBrowseKeys[0] ?? '',

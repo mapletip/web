@@ -720,6 +720,7 @@ function projectPointMarkers({
   positions,
   spriteUrl,
   spriteSize,
+  stageScale,
 }: {
   readonly kind: MapDetailStageMarkerKind;
   readonly entityKey: string;
@@ -728,6 +729,8 @@ function projectPointMarkers({
   readonly positions: MapDetailPositionCollection;
   readonly spriteUrl?: string;
   readonly spriteSize?: { readonly width: number; readonly height: number };
+  /** Stage pixels per game pixel; without it, monsters are drawn as dots. */
+  readonly stageScale?: number;
 }): MapDetailStageMarker[] {
   if (positions.state !== 'known' && positions.state !== 'partial') return [];
 
@@ -740,11 +743,16 @@ function projectPointMarkers({
     entityKey,
     focusKey,
     label: `${name}, ${stageMarkerKindLabels[kind]}, ${index + 1} of ${count}`,
-    ...(spriteUrl === undefined ? {} : { spriteUrl }),
-    ...(kind !== 'monster' || spriteSize === undefined
+    ...(spriteUrl === undefined ||
+    (kind === 'monster' && stageScale === undefined)
+      ? {}
+      : { spriteUrl }),
+    ...(kind !== 'monster' ||
+    spriteSize === undefined ||
+    stageScale === undefined
       ? {}
       : {
-          size: minimapSpriteSize(spriteSize),
+          size: minimapSpriteSize({ ...spriteSize, scale: stageScale }),
           anchor: 'bottom' as const,
         }),
   }));
@@ -778,6 +786,11 @@ function projectStage({
   readonly npcs: MapDetailNpcsView;
   readonly warps: readonly MapDetailWarpView[];
 }): MapDetailStageView {
+  // Map page 1.2 publishes the stage's scale; earlier revisions do not.
+  const stageScale =
+    record.stage.state === 'known' && 'scale' in record.stage.value
+      ? record.stage.value.scale
+      : undefined;
   const image =
     record.stage.state === 'known'
       ? {
@@ -894,6 +907,7 @@ function projectStage({
           ...(description.spriteSize === undefined
             ? {}
             : { spriteSize: description.spriteSize }),
+          ...(stageScale === undefined ? {} : { stageScale }),
         }),
       );
     }

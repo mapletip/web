@@ -62,6 +62,8 @@ export interface MapRecordCardView {
   readonly minimapStage?: {
     readonly width: number;
     readonly height: number;
+    /** Stage pixels per game pixel; without it, spawns are drawn as dots. */
+    readonly scale?: number;
     readonly spawnPoints: readonly { readonly x: number; readonly y: number }[];
   };
   readonly minimapUnavailableLabel?: string;
@@ -158,10 +160,14 @@ export function MapRecordCard({ map }: MapRecordCardProps): ReactElement {
         y,
         label: 'Spawn point',
       };
-      if (useSprite && minimapSprite !== undefined) {
+      if (
+        useSprite &&
+        minimapSprite !== undefined &&
+        stage.scale !== undefined
+      ) {
         return {
           ...marker,
-          size: minimapSpriteSize(minimapSprite),
+          size: minimapSpriteSize({ ...minimapSprite, scale: stage.scale }),
           anchor: 'bottom',
           content: (
             <SpriteMarker

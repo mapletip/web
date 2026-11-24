@@ -375,6 +375,9 @@ function projectMonsterLocations({
                 minimapStage: {
                   width: entry.stage.value.width,
                   height: entry.stage.value.height,
+                  ...('scale' in entry.stage.value
+                    ? { scale: entry.stage.value.scale }
+                    : {}),
                   spawnPoints:
                     entry.points.state === 'absent'
                       ? []
