@@ -19,6 +19,7 @@ import { Route as MaplestoryChar123BuildIdChar125MonstersIndexRouteImport } from
 import { Route as MaplestoryChar123BuildIdChar125MonstersSlugIdRouteImport } from './routes/maplestory/{-$buildId}/monsters/$slugId'
 import { Route as MaplestoryChar123BuildIdChar125ItemsChar123ScopeChar125Char123ChildChar125RouteImport } from './routes/maplestory/{-$buildId}/items/{-$scope}/{-$child}'
 import { Route as MaplestoryChar123BuildIdChar125MapsBrowseIndexRouteImport } from './routes/maplestory/{-$buildId}/maps/_browse/index'
+import { Route as MaplestoryChar123BuildIdChar125MapsBrowseInLocationChar123AreaChar125RouteImport } from './routes/maplestory/{-$buildId}/maps/_browse/in/$location/{-$area}'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -79,6 +80,14 @@ const MaplestoryChar123BuildIdChar125MapsBrowseIndexRoute =
     path: '/',
     getParentRoute: () => MaplestoryChar123BuildIdChar125MapsBrowseRoute,
   } as any)
+const MaplestoryChar123BuildIdChar125MapsBrowseInLocationChar123AreaChar125Route =
+  MaplestoryChar123BuildIdChar125MapsBrowseInLocationChar123AreaChar125RouteImport.update(
+    {
+      id: '/in/$location/{-$area}',
+      path: '/in/$location/{-$area}',
+      getParentRoute: () => MaplestoryChar123BuildIdChar125MapsBrowseRoute,
+    } as any,
+  )
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -91,6 +100,7 @@ export interface FileRoutesByFullPath {
   '/maplestory/{-$buildId}/monsters/': typeof MaplestoryChar123BuildIdChar125MonstersIndexRoute
   '/maplestory/{-$buildId}/items/{-$scope}/{-$child}': typeof MaplestoryChar123BuildIdChar125ItemsChar123ScopeChar125Char123ChildChar125Route
   '/maplestory/{-$buildId}/maps/': typeof MaplestoryChar123BuildIdChar125MapsBrowseIndexRoute
+  '/maplestory/{-$buildId}/maps/in/$location/{-$area}': typeof MaplestoryChar123BuildIdChar125MapsBrowseInLocationChar123AreaChar125Route
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -102,6 +112,7 @@ export interface FileRoutesByTo {
   '/maplestory/{-$buildId}/monsters': typeof MaplestoryChar123BuildIdChar125MonstersIndexRoute
   '/maplestory/{-$buildId}/items/{-$scope}/{-$child}': typeof MaplestoryChar123BuildIdChar125ItemsChar123ScopeChar125Char123ChildChar125Route
   '/maplestory/{-$buildId}/maps': typeof MaplestoryChar123BuildIdChar125MapsBrowseIndexRoute
+  '/maplestory/{-$buildId}/maps/in/$location/{-$area}': typeof MaplestoryChar123BuildIdChar125MapsBrowseInLocationChar123AreaChar125Route
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -115,6 +126,7 @@ export interface FileRoutesById {
   '/maplestory/{-$buildId}/monsters/': typeof MaplestoryChar123BuildIdChar125MonstersIndexRoute
   '/maplestory/{-$buildId}/items/{-$scope}/{-$child}': typeof MaplestoryChar123BuildIdChar125ItemsChar123ScopeChar125Char123ChildChar125Route
   '/maplestory/{-$buildId}/maps/_browse/': typeof MaplestoryChar123BuildIdChar125MapsBrowseIndexRoute
+  '/maplestory/{-$buildId}/maps/_browse/in/$location/{-$area}': typeof MaplestoryChar123BuildIdChar125MapsBrowseInLocationChar123AreaChar125Route
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -129,6 +141,7 @@ export interface FileRouteTypes {
     | '/maplestory/{-$buildId}/monsters/'
     | '/maplestory/{-$buildId}/items/{-$scope}/{-$child}'
     | '/maplestory/{-$buildId}/maps/'
+    | '/maplestory/{-$buildId}/maps/in/$location/{-$area}'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -140,6 +153,7 @@ export interface FileRouteTypes {
     | '/maplestory/{-$buildId}/monsters'
     | '/maplestory/{-$buildId}/items/{-$scope}/{-$child}'
     | '/maplestory/{-$buildId}/maps'
+    | '/maplestory/{-$buildId}/maps/in/$location/{-$area}'
   id:
     | '__root__'
     | '/'
@@ -152,6 +166,7 @@ export interface FileRouteTypes {
     | '/maplestory/{-$buildId}/monsters/'
     | '/maplestory/{-$buildId}/items/{-$scope}/{-$child}'
     | '/maplestory/{-$buildId}/maps/_browse/'
+    | '/maplestory/{-$buildId}/maps/_browse/in/$location/{-$area}'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -237,6 +252,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MaplestoryChar123BuildIdChar125MapsBrowseIndexRouteImport
       parentRoute: typeof MaplestoryChar123BuildIdChar125MapsBrowseRoute
     }
+    '/maplestory/{-$buildId}/maps/_browse/in/$location/{-$area}': {
+      id: '/maplestory/{-$buildId}/maps/_browse/in/$location/{-$area}'
+      path: '/in/$location/{-$area}'
+      fullPath: '/maplestory/{-$buildId}/maps/in/$location/{-$area}'
+      preLoaderRoute: typeof MaplestoryChar123BuildIdChar125MapsBrowseInLocationChar123AreaChar125RouteImport
+      parentRoute: typeof MaplestoryChar123BuildIdChar125MapsBrowseRoute
+    }
   }
 }
 
@@ -257,12 +279,15 @@ const MaplestoryChar123BuildIdChar125ItemsRouteWithChildren =
 
 interface MaplestoryChar123BuildIdChar125MapsBrowseRouteChildren {
   MaplestoryChar123BuildIdChar125MapsBrowseIndexRoute: typeof MaplestoryChar123BuildIdChar125MapsBrowseIndexRoute
+  MaplestoryChar123BuildIdChar125MapsBrowseInLocationChar123AreaChar125Route: typeof MaplestoryChar123BuildIdChar125MapsBrowseInLocationChar123AreaChar125Route
 }
 
 const MaplestoryChar123BuildIdChar125MapsBrowseRouteChildren: MaplestoryChar123BuildIdChar125MapsBrowseRouteChildren =
   {
     MaplestoryChar123BuildIdChar125MapsBrowseIndexRoute:
       MaplestoryChar123BuildIdChar125MapsBrowseIndexRoute,
+    MaplestoryChar123BuildIdChar125MapsBrowseInLocationChar123AreaChar125Route:
+      MaplestoryChar123BuildIdChar125MapsBrowseInLocationChar123AreaChar125Route,
   }
 
 const MaplestoryChar123BuildIdChar125MapsBrowseRouteWithChildren =

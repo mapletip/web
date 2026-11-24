@@ -41,13 +41,19 @@ async function renderPath(path: string) {
   return { router, html };
 }
 
-function headMeta(
-  router: Awaited<ReturnType<typeof renderPath>>['router'],
-): readonly unknown[] {
-  return (
-    router.state.matches.find(
-      (match) => match.routeId === '/maplestory/{-$buildId}/maps/_browse/',
-    )?.meta ?? []
+type TestRouter = Awaited<ReturnType<typeof renderPath>>['router'];
+
+function leafMatch(router: TestRouter) {
+  return router.state.matches.at(-1);
+}
+
+function headMeta(router: TestRouter): readonly unknown[] {
+  return leafMatch(router)?.meta ?? [];
+}
+
+function canonical(router: TestRouter): unknown {
+  return leafMatch(router)?.links?.find(
+    (link) => (link as { rel?: string }).rel === 'canonical',
   );
 }
 
@@ -151,6 +157,82 @@ describe('Map Browse server rendering', () => {
     );
 
     expect(cardNames(html)[0]).toBe('Brass Walk');
+  });
+
+  it('lists a region including its area-less maps', async () => {
+    const { html, router } = await renderPath(
+      '/maplestory/maps/in/lantern-hills',
+    );
+
+    expect(html).toContain('MapleStory Classic World Lantern Hills Maps');
+    expect(cardNames(html)).toEqual([
+      'Lamplight Meadow',
+      'Lantern Rehearsal <Stage 1>',
+      'Lantern Square',
+      'Practice Grove',
+      'Synthetic Monster Yard',
+      'Unnamed map',
+    ]);
+    expect(canonical(router)).toEqual({
+      rel: 'canonical',
+      href: 'https://mapletip.com/maplestory/maps/in/lantern-hills',
+    });
+  });
+
+  it('lists an area with its own title and indexes it', async () => {
+    const { html, router } = await renderPath(
+      '/maplestory/maps/in/lantern-hills/lamplight',
+    );
+
+    expect(cardNames(html)).toEqual([
+      'Lamplight Meadow',
+      'Lantern Rehearsal <Stage 1>',
+      'Unnamed map',
+    ]);
+    expect(headMeta(router)).toContainEqual({
+      title: 'MapleStory Classic World Lamplight Maps – MapleTip',
+    });
+    expect(headMeta(router)).toContainEqual({
+      name: 'robots',
+      content: 'index,follow',
+    });
+  });
+
+  it('lists a collection under its label', async () => {
+    const { html } = await renderPath('/maplestory/maps/in/event');
+
+    expect(html).toContain('MapleStory Classic World Event maps');
+    expect(cardNames(html)).toEqual(['Festival Booth']);
+  });
+
+  it('keeps a filtered location page out of the index with the page as canonical', async () => {
+    const { router } = await renderPath(
+      '/maplestory/maps/in/lantern-hills/lamplight?q=meadow',
+    );
+
+    expect(headMeta(router)).toContainEqual({
+      name: 'robots',
+      content: 'noindex,follow',
+    });
+    expect(canonical(router)).toEqual({
+      rel: 'canonical',
+      href: 'https://mapletip.com/maplestory/maps/in/lantern-hills/lamplight',
+    });
+  });
+
+  it.each([
+    '/maplestory/maps/in/not-a-place',
+    '/maplestory/maps/in/event/lamplight',
+  ])('returns not found for %s', async (path) => {
+    const { router } = await renderPath(path);
+
+    expect(
+      router.state.matches.some(
+        (match) =>
+          match.status === 'notFound' ||
+          Boolean((match as { _notFound?: boolean })._notFound),
+      ),
+    ).toBe(true);
   });
 
   it('states that map data is unavailable for a build without it', async () => {
