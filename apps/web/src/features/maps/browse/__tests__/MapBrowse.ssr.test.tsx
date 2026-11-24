@@ -359,6 +359,42 @@ describe('Map Browse server rendering', () => {
     expect(footerText(cap.html)).toEqual(['Lv. cap 25']);
   });
 
+  it('matches any selected map feature and only shows relevant figures', async () => {
+    const path = '/maplestory/maps';
+    const town = await renderPath(
+      `${path}?features=${param(['town', 'boss'])}`,
+    );
+    const bosses = await renderPath(`${path}?features=${param(['boss'])}`);
+    expect(cardNames(bosses.html)).toContain('Synthetic Monster Yard');
+    expect(cardNames(bosses.html)).not.toContain('Lantern Square');
+    expect(cardNames(town.html)).toEqual([
+      'Lantern Square',
+      ...cardNames(bosses.html),
+    ]);
+    expect(footerText(town.html)).toEqual([]);
+    const timed = await renderPath(`${path}?features=${param(['time-limit'])}`);
+    expect(cardNames(timed.html)).toEqual(['Lantern Square']);
+    expect(footerText(timed.html)).toEqual(['10 min limit']);
+
+    data = await mapBrowseFixture('gms-v83');
+    mockedLoad.mockResolvedValue({ status: 'available', data });
+    const alternate = '/maplestory/gms-v83/maps';
+    const drain = await renderPath(
+      `${alternate}?features=${param(['hp-drain'])}`,
+    );
+    expect(cardNames(drain.html)).toEqual(['Lamplight Meadow']);
+    expect(footerText(drain.html)).toEqual(['Float Ring 25 HP drain']);
+
+    const rule = await renderPath(
+      `${alternate}?features=${param(['underwater', 'party-only'])}`,
+    );
+    expect(cardNames(rule.html)).toEqual([
+      'Lamplight Meadow',
+      'Lantern Rehearsal <Stage 1>',
+    ]);
+    expect(footerText(rule.html)).toEqual([]);
+  });
+
   it('filters by activity type and by maps with NPCs', async () => {
     const partyQuests = await renderPath(
       `/maplestory/maps?activityType=${param(['Party quest'])}`,

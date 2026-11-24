@@ -90,3 +90,15 @@ test('mobile Map Browse cards', async ({ page }) => {
   await browseReady(page);
   await expect(page).toHaveScreenshot('mobile-map-browse.png');
 });
+
+test('mobile Map Browse filtered by HP drain', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 950 });
+  await page.goto(
+    `/maplestory/gms-v83/maps?features=${encodeURIComponent('["hp-drain"]')}`,
+  );
+  await browseReady(page);
+  await expect(page.getByTestId('map-card-footer')).toContainText(
+    '25 HP drain',
+  );
+  await expect(page).toHaveScreenshot('mobile-map-browse-hp-drain.png');
+});

@@ -323,7 +323,7 @@ test('connection card minimaps enlarge on click and their links open from the ca
   const preview = page.getByRole('dialog', {
     name: 'Lantern Square',
   });
-  await expect(preview).toBeVisible();
+  await expect(preview).toBeFocused();
   await page.keyboard.press('Escape');
   await expect(preview).toBeHidden();
   const cardLink = card.getByRole('link').first();

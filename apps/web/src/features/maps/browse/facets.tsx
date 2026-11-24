@@ -19,7 +19,7 @@ import { MAPLEKIT_RELEASE } from '@/config/maplekit';
 import { resolveMonsterSpriteUrl } from '@/features/monsters/shared';
 
 import { MAP_ACTIVITY_TYPES, type MapBrowseData } from './project';
-import type { MapBrowseRecord } from './records';
+import { MAP_FEATURE_LABELS, type MapBrowseRecord } from './records';
 
 const OPTION_ICON_SIZE = 20;
 const FACET_ICON_SIZE = 16;
@@ -83,6 +83,7 @@ export const MAP_QUERY_FIELDS: readonly QueryFieldDefinition<MapBrowseRecord>[] 
     { id: 'level', accessor: 'level', sortable: false },
     { id: 'entryLevel', accessor: 'entryLevel', sortable: false },
     { id: 'levelCap', accessor: 'levelCap', sortable: false },
+    { id: 'features', accessor: 'features', sortable: false },
     { id: 'activityType', accessor: 'activityType', sortable: false },
     { id: 'hasMonsters', accessor: 'hasMonsters', sortable: false },
     { id: 'hasNpcs', accessor: 'hasNpcs', sortable: false },
@@ -192,6 +193,16 @@ export function mapFacets(
       label: 'Level cap',
       kind: 'range',
       buckets: 'quantile',
+    },
+    {
+      id: 'map-features',
+      field: 'features',
+      label: 'Map features',
+      kind: 'multi-select',
+      options: Object.entries(MAP_FEATURE_LABELS).map(([value, label]) => ({
+        value,
+        label,
+      })),
     },
     {
       id: 'activity-type',

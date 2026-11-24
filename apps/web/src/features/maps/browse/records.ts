@@ -14,6 +14,17 @@ import type {
 /** Navigation node id of the root location, shared by every record. */
 export const ALL_MAPS = 'all';
 
+export const MAP_FEATURE_LABELS = {
+  town: 'Town',
+  boss: 'Has a boss',
+  'hp-drain': 'HP drain',
+  underwater: 'Underwater',
+  'party-only': 'Party only',
+  'time-limit': 'Time limit',
+} as const;
+
+type MapFeature = keyof typeof MAP_FEATURE_LABELS;
+
 export interface MapBrowseInhabitant<TEntry> {
   readonly entry: TEntry;
   readonly spawnPointCount?: number;
@@ -36,6 +47,12 @@ export interface MapBrowseRecord extends Record<string, unknown> {
   readonly music?: string;
   readonly entryLevel?: number;
   readonly levelCap?: number;
+  readonly town?: true;
+  readonly hpDrain?: number;
+  readonly hpDrainProtectionItem?: string;
+  readonly underwater?: true;
+  readonly partyOnly?: true;
+  readonly timeLimitSeconds?: number;
   readonly monsterCount?: number;
   readonly spawnPointCount?: number;
   readonly npcCount?: number;
@@ -45,6 +62,7 @@ export interface MapBrowseRecord extends Record<string, unknown> {
   readonly monster: readonly string[];
   readonly npc: readonly string[];
   readonly level: readonly number[];
+  readonly features: readonly MapFeature[];
   readonly lowestMonsterLevel?: number;
   readonly highestMonsterLevel?: number;
   /** Unknown when the count is not published, so neither Yes nor No matches. */
@@ -111,6 +129,14 @@ function record({
     ),
     npc: npcs.map(({ entry }) => entry.key),
     level: levels,
+    features: [
+      ...(row.town ? ['town' as const] : []),
+      ...(monsters.some(({ entry }) => entry.boss) ? ['boss' as const] : []),
+      ...(row.hpDrain !== undefined ? ['hp-drain' as const] : []),
+      ...(row.underwater ? ['underwater' as const] : []),
+      ...(row.partyOnly ? ['party-only' as const] : []),
+      ...(row.timeLimitSeconds !== undefined ? ['time-limit' as const] : []),
+    ],
     ...(levels.length === 0
       ? {}
       : {

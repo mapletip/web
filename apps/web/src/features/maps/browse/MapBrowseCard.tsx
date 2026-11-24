@@ -34,6 +34,7 @@ export interface MapBrowseCardContext {
   readonly spawns: boolean;
   readonly entryLevel: boolean;
   readonly levelCap: boolean;
+  readonly features: ReadonlySet<string>;
 }
 
 export const PLAIN_CARD_CONTEXT: MapBrowseCardContext = {
@@ -43,6 +44,7 @@ export const PLAIN_CARD_CONTEXT: MapBrowseCardContext = {
   spawns: false,
   entryLevel: false,
   levelCap: false,
+  features: new Set(),
 };
 
 export interface MapBrowseCardProps {
@@ -131,6 +133,30 @@ function spawnPart(record: MapBrowseRecord): MapRecordCardFooterPart[] {
   ];
 }
 
+const TIME_LIMIT_MINUTES = new Intl.NumberFormat('en-US', {
+  maximumFractionDigits: 2,
+});
+
+function featureParts(
+  record: MapBrowseRecord,
+  selected: ReadonlySet<string>,
+): MapRecordCardFooterPart[] {
+  const parts: MapRecordCardFooterPart[] = [];
+  if (selected.has('hp-drain') && record.hpDrain !== undefined) {
+    parts.push({ value: `${record.hpDrain} HP`, label: 'drain' });
+    if (record.hpDrainProtectionItem !== undefined) {
+      parts.push({ entity: { name: record.hpDrainProtectionItem } });
+    }
+  }
+  if (selected.has('time-limit') && record.timeLimitSeconds !== undefined) {
+    parts.push({
+      value: `${TIME_LIMIT_MINUTES.format(record.timeLimitSeconds / 60)} min`,
+      label: 'limit',
+    });
+  }
+  return parts;
+}
+
 /** Show figures only for facts the current filters or sort ask for. */
 function footerParts(
   record: MapBrowseRecord,
@@ -150,7 +176,7 @@ function footerParts(
   if (context.levelCap && record.levelCap !== undefined) {
     parts.push({ value: `Lv. cap ${record.levelCap}`, label: '' });
   }
-  return parts;
+  return [...parts, ...featureParts(record, context.features)];
 }
 
 /** Project one record to the shared map card. */

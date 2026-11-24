@@ -31,6 +31,7 @@ function record(
     monster: [],
     npc: [],
     level: [],
+    features: [],
     hasMonsters: false,
     hasNpcs: false,
     ...overrides,

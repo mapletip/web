@@ -110,6 +110,7 @@ export function MapBrowse({
   const levelFilter = browseState.filters['level'];
   const entryLevelFilter = browseState.filters['entryLevel'];
   const levelCapFilter = browseState.filters['levelCap'];
+  const selectedFeatures = browseState.filters['features'];
   const sortField = browseState.sort?.field;
   // The card shows a figure only when the filter or sort is about it.
   const cardContext = useMemo((): MapBrowseCardContext => {
@@ -130,6 +131,7 @@ export function MapBrowse({
       spawns: sortField === 'spawnPointCount',
       entryLevel: entryLevelFilter !== undefined,
       levelCap: levelCapFilter !== undefined,
+      features: keys(selectedFeatures),
     };
   }, [
     data,
@@ -139,6 +141,7 @@ export function MapBrowse({
     sortField,
     entryLevelFilter,
     levelCapFilter,
+    selectedFeatures,
   ]);
 
   // Choosing a location keeps the search and filters and returns to page one.
