@@ -25,6 +25,19 @@ export function isInvalidNumericRange(value: unknown): boolean {
   );
 }
 
+/**
+ * The numbers a record holds for a range field: its value, or each value of a
+ * multi-valued field. A range matches a record when any of them is in range,
+ * so a record without numbers never matches an active range.
+ */
+export function numericValues(value: unknown): readonly number[] {
+  const values = Array.isArray(value) ? (value as readonly unknown[]) : [value];
+  return values.filter(
+    (entry): entry is number =>
+      typeof entry === 'number' && !Number.isNaN(entry),
+  );
+}
+
 export type FacetFilterValue =
   | string
   | number

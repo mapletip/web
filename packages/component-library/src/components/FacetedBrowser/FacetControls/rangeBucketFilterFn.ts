@@ -1,6 +1,7 @@
 import {
   isInvalidNumericRange,
   isNumericRangeFilter,
+  numericValues,
 } from '@/components/FacetedBrowser/hooks/filterTypes';
 import type { FieldFilterFn } from '@/components/FacetedBrowser/hooks/querySemantics';
 
@@ -39,7 +40,7 @@ function roundToDecimalPlaces(value: number, decimalPlaces: number): number {
  * drift. Bucket IDs are opaque lookup keys, never parsed back into bounds
  * (negative stats make IDs like `-20-5` ambiguous). Non-numeric row values never
  * match a numeric filter or bucket, so an `unknown` fact cannot satisfy a range
- * query.
+ * query. A multi-valued field matches when any of its values does.
  */
 export function createRangeBucketFilterFn<
   TRecord extends Record<string, unknown>,
@@ -51,30 +52,30 @@ export function createRangeBucketFilterFn<
   return (row, columnId, filterValue) => {
     if (filterValue === undefined || filterValue === null) return true;
 
-    const dataValue = row.getValue(columnId);
+    const values = numericValues(row.getValue(columnId)).filter((value) =>
+      Number.isFinite(value),
+    );
 
     if (Array.isArray(filterValue)) {
       if (filterValue.length === 0) return true;
-      if (typeof dataValue !== 'number' || !Number.isFinite(dataValue)) {
-        return false;
-      }
       return filterValue.some((bucketId) => {
         if (typeof bucketId !== 'string') return false;
         const bucket = bucketsById.get(bucketId);
-        return bucket !== undefined && bucketContains(bucket, dataValue);
+        return (
+          bucket !== undefined &&
+          values.some((value) => bucketContains(bucket, value))
+        );
       });
     }
 
     if (!isNumericRangeFilter(filterValue)) return false;
     if (isInvalidNumericRange(filterValue)) return false;
-    if (typeof dataValue !== 'number' || !Number.isFinite(dataValue)) {
-      return false;
-    }
 
     const { min, max } = filterValue;
-    return (
-      (min === undefined || dataValue >= min) &&
-      (max === undefined || dataValue <= max)
+    return values.some(
+      (value) =>
+        (min === undefined || value >= min) &&
+        (max === undefined || value <= max),
     );
   };
 }

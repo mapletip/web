@@ -14,6 +14,7 @@ import type { TableColumn } from '@/components/Table';
 import {
   isInvalidNumericRange,
   isNumericRangeFilter,
+  numericValues,
   type NumericRangeFilter,
 } from './filterTypes';
 import { facetedBrowserFeatures } from './tableFeatures';
@@ -137,13 +138,13 @@ export const defaultFacetFilterFn = constructFilterFn({
     if (typeof filterValue === 'object') {
       if (!isNumericRangeFilter(filterValue)) return false;
       if (isInvalidNumericRange(filterValue)) return false;
-      if (typeof dataValue !== 'number' || Number.isNaN(dataValue))
-        return false;
       const range: NumericRangeFilter = filterValue;
-      return compareWithBuiltIn(filterFn_betweenInclusive, dataValue, [
-        range.min,
-        range.max,
-      ]);
+      return numericValues(dataValue).some((value) =>
+        compareWithBuiltIn(filterFn_betweenInclusive, value, [
+          range.min,
+          range.max,
+        ]),
+      );
     }
 
     // Scalar categorical filters are exact; substring semantics belong to the
