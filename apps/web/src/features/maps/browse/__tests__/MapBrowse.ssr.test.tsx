@@ -146,6 +146,7 @@ describe('Map Browse server rendering', () => {
     ['a street name', 'lamplight hall', ['Unnamed map']],
     ['an activity', 'lantern relay', ['Lantern Rehearsal <Stage 1>']],
     ['a collection', 'event maps', ['Festival Booth']],
+    ['a music title', 'lantern waltz', ['Lantern Square']],
     [
       'an area',
       'lamplight',
