@@ -34,10 +34,10 @@ describe('maplekit configuration', () => {
     expect(MAPLEKIT_RELEASE.pin).toMatchObject({
       format: 'mapletip.local-release-pin',
       releaseId:
-        'release-f90a66cfb1896383e7fc1f3d96c65cd7b84e56800ddfb1a84e673f68db0ef2ff',
-      path: 'v1/releases/3aec7d9c95071cd292e315643bc33375c61d3b894aba3ee9b057d12bf925cb73.json',
+        'release-df9d9eb093a48600160f1883070483414bf2391ac32f2023f1fc575a59dc302c',
+      path: 'v1/releases/66da0268b3bc08a1745b7a8721a269acd6de4ab547cbc1bb73e70b882deec5c4.json',
       sha256:
-        '3aec7d9c95071cd292e315643bc33375c61d3b894aba3ee9b057d12bf925cb73',
+        '66da0268b3bc08a1745b7a8721a269acd6de4ab547cbc1bb73e70b882deec5c4',
       byteLength: 916,
     });
   });

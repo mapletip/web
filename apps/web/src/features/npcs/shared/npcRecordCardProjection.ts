@@ -17,9 +17,12 @@ export type MapPageNpcRecord = StaticMapPageRecord['npcs']['items'][number];
 export function projectNpcRecordCard(
   record: MapPageNpcRecord,
 ): NpcRecordCardView {
+  // Map page 1.2 wraps the content id with the sprite's dimensions.
+  const sprite =
+    'contentId' in record.sprite ? record.sprite.contentId : record.sprite;
   const spriteUrl =
-    record.sprite.state === 'known'
-      ? mapNpcSpriteUrl(MAPLEKIT_RELEASE.baseUrl, record.sprite.value)
+    sprite.state === 'known'
+      ? mapNpcSpriteUrl(MAPLEKIT_RELEASE.baseUrl, sprite.value)
       : undefined;
   const questCount = 'questCount' in record ? record.questCount : undefined;
   const questCountLabel =
