@@ -18,6 +18,15 @@ vi.mock('../load', () => ({ loadMapBrowse: vi.fn() }));
 
 const mockedLoad = vi.mocked(loadMapBrowse);
 
+function cardNames(html: string): readonly (string | undefined)[] {
+  return [...html.matchAll(/<h3[^>]*>(?:<a[^>]*>)?([^<]+)</gu)].map((match) =>
+    match[1]
+      ?.replaceAll('&lt;', '<')
+      .replaceAll('&gt;', '>')
+      .replaceAll('&amp;', '&'),
+  );
+}
+
 async function renderPath(path: string) {
   const router = createRouter({
     routeTree,
@@ -53,9 +62,7 @@ describe('Map Browse server rendering', () => {
     const { router, html } = await renderPath('/maplestory/maps');
 
     expect(html).toContain('MapleStory Classic World Maps');
-    const names = [...html.matchAll(/<h3[^>]*>(?:<a[^>]*>)?([^<]+)</gu)].map(
-      (match) => match[1],
-    );
+    const names = cardNames(html);
     expect(names.slice(0, 3)).toEqual([
       'Brass Walk',
       'Cloud Arch',
@@ -97,6 +104,54 @@ describe('Map Browse server rendering', () => {
       expect(mockedLoad).not.toHaveBeenCalled();
     },
   );
+
+  it.each([
+    ['a map name', 'meadow', ['Lamplight Meadow']],
+    ['a street name', 'lamplight hall', ['Unnamed map']],
+    ['an activity', 'lantern relay', ['Lantern Rehearsal <Stage 1>']],
+    ['a collection', 'event maps', ['Festival Booth']],
+    [
+      'an area',
+      'lamplight',
+      ['Lamplight Meadow', 'Lantern Rehearsal <Stage 1>', 'Unnamed map'],
+    ],
+    ['an NPC', 'festival host', ['Festival Booth']],
+    [
+      'a monster',
+      'twin sprout',
+      ['Lamplight Meadow', 'Practice Grove', 'Synthetic Monster Yard'],
+    ],
+  ])('searches by %s', async (_kind, query, expected) => {
+    const { html } = await renderPath(
+      `/maplestory/maps?q=${encodeURIComponent(query)}`,
+    );
+
+    expect(cardNames(html)).toEqual(expected);
+  });
+
+  it('orders by lowest monster level with maps without monsters last', async () => {
+    const { html } = await renderPath(
+      '/maplestory/maps?sort=lowestMonsterLevel-asc&pageSize=100',
+    );
+    const names = cardNames(html);
+
+    expect([...names.slice(0, 3)].sort()).toEqual([
+      'Practice Grove',
+      'Stillwater Stage',
+      'Synthetic Monster Yard',
+    ]);
+    expect(names.indexOf('Brass Walk')).toBeGreaterThan(
+      names.indexOf('Lantern Rehearsal <Stage 1>'),
+    );
+  });
+
+  it('ignores invalid address values', async () => {
+    const { html } = await renderPath(
+      '/maplestory/maps?sort=bogus-asc&monster=not-in-build',
+    );
+
+    expect(cardNames(html)[0]).toBe('Brass Walk');
+  });
 
   it('states that map data is unavailable for a build without it', async () => {
     mockedLoad.mockResolvedValue({ status: 'unavailable' });
