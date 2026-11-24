@@ -8,7 +8,7 @@
 import { openRelease } from '@mapletip/data/release';
 
 import { MAPLEKIT_RELEASE, type BuildId } from '@/config/maplekit';
-import { isAbortError, sanitizeLoadError } from '@/features/detail/load-error';
+import { withLoadBoundary } from '@/features/detail/load-error';
 
 import {
   projectMonsterBrowseRows,
@@ -25,43 +25,37 @@ export interface MonsterBrowseData {
 export const MONSTER_BROWSE_UNAVAILABLE_MESSAGE =
   'Monster data could not be loaded.';
 
-export function sanitizeMonsterBrowseError(error: unknown): unknown {
-  return sanitizeLoadError(error, MONSTER_BROWSE_UNAVAILABLE_MESSAGE);
-}
-
-export async function loadMonsterBrowse(
+export function loadMonsterBrowse(
   buildId: BuildId,
   signal?: AbortSignal,
 ): Promise<MonsterBrowseData> {
-  try {
-    const release = await openRelease({
-      baseUrl: MAPLEKIT_RELEASE.baseUrl,
-      pin: MAPLEKIT_RELEASE.pin,
-      ...(signal === undefined ? {} : { signal }),
-    });
-    const monsterProduct = await release.openBuild(buildId);
-    const operation = signal === undefined ? {} : { signal };
-    const [catalog, dropBrowse] = await Promise.all([
-      monsterProduct.loadCatalog(operation),
-      monsterProduct.loadDropBrowse(operation),
-    ]);
+  return withLoadBoundary({
+    failureMessage: MONSTER_BROWSE_UNAVAILABLE_MESSAGE,
+    logMessage: 'Monster Browse data load failed.',
+    load: async () => {
+      const release = await openRelease({
+        baseUrl: MAPLEKIT_RELEASE.baseUrl,
+        pin: MAPLEKIT_RELEASE.pin,
+        ...(signal === undefined ? {} : { signal }),
+      });
+      const monsterProduct = await release.openBuild(buildId);
+      const operation = signal === undefined ? {} : { signal };
+      const [catalog, dropBrowse] = await Promise.all([
+        monsterProduct.loadCatalog(operation),
+        monsterProduct.loadDropBrowse(operation),
+      ]);
 
-    return {
-      rows: projectMonsterBrowseRows(
-        catalog,
-        dropBrowse,
-        MAPLEKIT_RELEASE.baseUrl,
-      ),
-      dropItemOptions: projectMonsterDropItemOptions(
-        dropBrowse,
-        MAPLEKIT_RELEASE.baseUrl,
-      ),
-    };
-  } catch (error) {
-    if (isAbortError(error)) throw error;
-    if (import.meta.env.SSR) {
-      console.error('Monster Browse data load failed.', error);
-    }
-    throw sanitizeMonsterBrowseError(error);
-  }
+      return {
+        rows: projectMonsterBrowseRows(
+          catalog,
+          dropBrowse,
+          MAPLEKIT_RELEASE.baseUrl,
+        ),
+        dropItemOptions: projectMonsterDropItemOptions(
+          dropBrowse,
+          MAPLEKIT_RELEASE.baseUrl,
+        ),
+      };
+    },
+  });
 }

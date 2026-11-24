@@ -13,3 +13,33 @@ export function sanitizeLoadError(
 ): unknown {
   return isAbortError(error) ? error : new Error(fallbackMessage);
 }
+
+export interface LoadBoundaryOptions<T> {
+  /** The SDK read and its projection. */
+  readonly load: () => Promise<T>;
+  /** Player-safe message of the error that replaces any failure. */
+  readonly failureMessage: string;
+  /** Server log line written with the original failure. */
+  readonly logMessage: string;
+}
+
+/**
+ * Run a route loader's read behind the load boundary: aborts propagate as
+ * aborts, other failures are logged on the server and replaced by a generic
+ * error, so SDK diagnostics never reach the client.
+ */
+export async function withLoadBoundary<T>({
+  load,
+  failureMessage,
+  logMessage,
+}: LoadBoundaryOptions<T>): Promise<T> {
+  try {
+    return await load();
+  } catch (error) {
+    if (isAbortError(error)) throw error;
+    if (import.meta.env.SSR) {
+      console.error(logMessage, error);
+    }
+    throw sanitizeLoadError(error, failureMessage);
+  }
+}
