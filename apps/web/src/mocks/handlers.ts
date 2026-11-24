@@ -34,6 +34,8 @@ export const handlers = [
 
 const cwCatalogPath = fixtureRelease.builds.get('cw-launch')?.catalog.path;
 const cwPagePackPath = fixtureRelease.builds.get('cw-launch')?.pagePack.path;
+const cwMapBrowseRowsPath =
+  fixtureRelease.builds.get('cw-launch')?.mapBrowseRows.path;
 const gmsProductPath =
   fixtureRelease.builds.get('gms-v83')?.productManifest.path;
 
@@ -57,6 +59,7 @@ function corruptFileHandler(path: string | undefined) {
 export const failingOriginHandlers = [
   ...corruptFileHandler(cwCatalogPath),
   ...corruptFileHandler(cwPagePackPath),
+  ...corruptFileHandler(cwMapBrowseRowsPath),
   ...(gmsProductPath === undefined
     ? []
     : [

@@ -47,3 +47,36 @@ test('mobile Map Detail page', async ({ page }) => {
   await captureReady(page);
   await expect(page).toHaveScreenshot('mobile-map-detail.png');
 });
+
+async function browseReady(page: Page): Promise<void> {
+  await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
+  await page.evaluate(async () => {
+    await document.fonts.ready;
+  });
+  await page.waitForFunction(() =>
+    [...document.images].every((image) => image.complete),
+  );
+}
+
+test('desktop Map Browse area page', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 1100 });
+  await page.goto('/maplestory/maps/in/lantern-hills/lamplight');
+  await browseReady(page);
+  await expect(page).toHaveScreenshot('desktop-map-browse-area.png');
+});
+
+test('desktop Map Browse filtered by a level range', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 1100 });
+  await page.goto(
+    `/maplestory/maps?level=${encodeURIComponent('{"min":3,"max":5}')}`,
+  );
+  await browseReady(page);
+  await expect(page).toHaveScreenshot('desktop-map-browse-filtered.png');
+});
+
+test('mobile Map Browse cards', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 1600 });
+  await page.goto('/maplestory/maps');
+  await browseReady(page);
+  await expect(page).toHaveScreenshot('mobile-map-browse.png');
+});
