@@ -44,13 +44,16 @@ function canonicalPath(item: DetailCase): string {
 }
 
 async function minimapBackgrounds(
-  minimap: Locator,
+  locationCard: Locator,
 ): Promise<{ readonly well: string; readonly card: string }> {
-  return minimap.evaluate((element) => {
-    const card = element.closest('[data-record-card="true"]');
-    if (card === null) throw new Error('Minimap is outside its map card.');
+  return locationCard.evaluate((element) => {
+    const card = element.querySelector('[data-record-card="true"]');
+    const minimap = card?.querySelector('[data-map-minimap="true"]');
+    if (card == null || minimap == null) {
+      throw new Error('Location card has no minimap.');
+    }
     // Location minimaps paint their surface on the StaticMap stage.
-    const surface = element.querySelector('[role="group"]') ?? element;
+    const surface = minimap.querySelector('[role="group"]') ?? minimap;
     return {
       well: getComputedStyle(surface).backgroundColor,
       card: getComputedStyle(card).backgroundColor,
@@ -419,9 +422,10 @@ test('Monster Detail opens every location in a drawer from its responsive cap', 
   });
   await expect(locationsHeading).toBeVisible();
   await monsterPage.captureReady();
-  const previewMinimapColors = await minimapBackgrounds(
-    page.getByRole('main').locator('[data-map-minimap="true"]').first(),
-  );
+  const inlineCards = page
+    .getByRole('main')
+    .getByTestId('monster-location-card');
+  const previewMinimapColors = await minimapBackgrounds(inlineCards.first());
   expect(previewMinimapColors.well).not.toBe(previewMinimapColors.card);
   await expect(page).toHaveScreenshot(
     `${testInfo.project.name}-monster-detail-locations.png`,
@@ -432,9 +436,6 @@ test('Monster Detail opens every location in a drawer from its responsive cap', 
     .getByRole('link', { name: 'Locations (12)' });
   await expect(locationNavigation).toHaveAttribute('href', '#locations');
 
-  const inlineCards = page
-    .getByRole('main')
-    .getByTestId('monster-location-card');
   const initialCap = testInfo.project.name === 'mobile' ? 5 : 10;
   await expect(inlineCards.filter({ visible: true })).toHaveCount(initialCap);
 
@@ -521,9 +522,7 @@ test('Monster Detail opens every location in a drawer from its responsive cap', 
     bottom: true,
   });
 
-  const minimapColors = await minimapBackgrounds(
-    drawer.locator('[data-map-minimap="true"]').first(),
-  );
+  const minimapColors = await minimapBackgrounds(drawerCards.first());
   expect(minimapColors.well).not.toBe(minimapColors.card);
 
   await expect(
