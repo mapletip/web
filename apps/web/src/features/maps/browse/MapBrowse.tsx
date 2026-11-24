@@ -20,6 +20,7 @@ import {
   type OnSearchChangeOptions,
 } from '@/features/browse/useBrowseUrlState';
 import { browseOverlayOptions } from '@/features/browse-overlay/browseOverlay';
+import type { MapLocationParams } from '@/features/maps/shared';
 import { useRouteOverlay } from '@/features/route-overlay/useRouteOverlay';
 
 import {
@@ -28,11 +29,7 @@ import {
   MAP_SEARCH_FIELDS,
   MAP_SORT_OPTIONS,
 } from './facets';
-import {
-  mapLocationTree,
-  type MapLocationNode,
-  type MapLocationParams,
-} from './location';
+import { mapLocationTree, type MapLocationNode } from './location';
 import { LocationLink, mapLocationLinkOptions } from './LocationLink';
 import { MapBrowseCard, type MapBrowseHighlight } from './MapBrowseCard';
 import { mapPageMetadata } from './metadata';

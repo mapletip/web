@@ -11,6 +11,8 @@ import {
   mapDetailLinkProps,
   projectMapRecordDestination,
   type MapRecordCardView,
+  mapLocationParams,
+  mapLocationPath,
 } from '@/features/maps/shared';
 import { minimapSpriteSize } from '@/features/maps/shared/minimapSpriteSize';
 import {
@@ -39,6 +41,9 @@ export interface MapDetailView {
   readonly subtitle?: string;
   readonly regionLabel?: string;
   readonly areaLabel?: string;
+  /** Map Browse location pages of the region and area. */
+  readonly regionPath?: string;
+  readonly areaPath?: string;
   readonly canonicalPath: string;
   readonly activity?: string;
   readonly description?: string;
@@ -941,6 +946,19 @@ export function projectMapDetail({
   const geography = record.geography;
   const regionLabel = nonBlank(geography?.regionLabel);
   const areaLabel = nonBlank(geography?.areaLabel);
+  const regionKey = geography?.regionKey ?? undefined;
+  const areaKey = geography?.areaKey ?? undefined;
+  const regionPath =
+    regionKey === undefined
+      ? undefined
+      : mapLocationPath({ buildId, params: mapLocationParams({ regionKey }) });
+  const areaPath =
+    regionKey === undefined || areaKey === undefined
+      ? undefined
+      : mapLocationPath({
+          buildId,
+          params: mapLocationParams({ regionKey, areaKey }),
+        });
   const activity =
     record.activity.state === 'known'
       ? nonBlank(record.activity.value)
@@ -1032,6 +1050,8 @@ export function projectMapDetail({
       : {}),
     ...(regionLabel === undefined ? {} : { regionLabel }),
     ...(areaLabel === undefined ? {} : { areaLabel }),
+    ...(regionPath === undefined ? {} : { regionPath }),
+    ...(areaPath === undefined ? {} : { areaPath }),
     ...(activity === undefined ? {} : { activity }),
     ...(description === undefined ? {} : { description }),
     stage,

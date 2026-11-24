@@ -1,11 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
-import {
-  locationSlug,
-  mapLocationPath,
-  mapLocationTree,
-  resolveMapLocation,
-} from '../location';
+import { locationSlug, mapLocationPath } from '@/features/maps/shared';
+
+import { mapLocationTree, resolveMapLocation } from '../location';
 import type { MapBrowseGeography } from '../project';
 
 const geography: MapBrowseGeography = {

@@ -4,7 +4,6 @@
  */
 export {
   ALL_MAPS_LOCATION,
-  mapLocationPath,
   resolveMapLocation,
   type MapLocationNode,
 } from './location';

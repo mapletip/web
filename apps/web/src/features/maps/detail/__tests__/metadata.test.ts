@@ -5,10 +5,10 @@ import { mapDetailBreadcrumbs, mapDetailMetadata } from '../metadata';
 describe('Map Detail breadcrumbs', () => {
   it('omits an area matching the map name from the trail and JSON-LD', () => {
     const view = {
-      name: 'Henesys',
-      canonicalPath: '/maplestory/maps/henesys-00000000',
-      regionLabel: 'Victoria Island',
-      areaLabel: '  hENESys  ',
+      name: 'Meadowbrook',
+      canonicalPath: '/maplestory/maps/meadowbrook-00000000',
+      regionLabel: 'Western Isle',
+      areaLabel: '  mEADOWbrook  ',
     };
     const breadcrumbs = mapDetailBreadcrumbs({ view, buildId: 'cw-launch' });
     const head = mapDetailMetadata({ view, buildId: 'cw-launch' });
@@ -23,23 +23,23 @@ describe('Map Detail breadcrumbs', () => {
     expect(breadcrumbs.map(({ label }) => label)).toEqual([
       'Home',
       'Maps',
-      'Victoria Island',
-      'Henesys',
+      'Western Isle',
+      'Meadowbrook',
     ]);
     expect(jsonLd.itemListElement.map(({ name }) => name)).toEqual([
       'Home',
       'Maps',
-      'Victoria Island',
-      'Henesys',
+      'Western Isle',
+      'Meadowbrook',
     ]);
   });
 
   it('keeps a distinct area in the trail and JSON-LD', () => {
     const view = {
-      name: 'Henesys Hunting Ground II',
-      canonicalPath: '/maplestory/maps/henesys-hunting-ground-ii-00000000',
-      regionLabel: 'Victoria Island',
-      areaLabel: 'Henesys',
+      name: 'Meadowbrook Hunting Field II',
+      canonicalPath: '/maplestory/maps/meadowbrook-hunting-ground-ii-00000000',
+      regionLabel: 'Western Isle',
+      areaLabel: 'Meadowbrook',
     };
     const breadcrumbs = mapDetailBreadcrumbs({ view, buildId: 'cw-launch' });
     const head = mapDetailMetadata({ view, buildId: 'cw-launch' });
@@ -54,16 +54,42 @@ describe('Map Detail breadcrumbs', () => {
     expect(breadcrumbs.map(({ label }) => label)).toEqual([
       'Home',
       'Maps',
-      'Victoria Island',
-      'Henesys',
-      'Henesys Hunting Ground II',
+      'Western Isle',
+      'Meadowbrook',
+      'Meadowbrook Hunting Field II',
     ]);
     expect(jsonLd.itemListElement.map(({ name }) => name)).toEqual([
       'Home',
       'Maps',
-      'Victoria Island',
-      'Henesys',
-      'Henesys Hunting Ground II',
+      'Western Isle',
+      'Meadowbrook',
+      'Meadowbrook Hunting Field II',
+    ]);
+  });
+
+  it('links the region and area to their Map Browse location pages', () => {
+    const view = {
+      name: 'Meadowbrook Hunting Field II',
+      canonicalPath: '/maplestory/maps/meadowbrook-hunting-ground-ii-00000000',
+      regionLabel: 'Western Isle',
+      areaLabel: 'Meadowbrook',
+      regionPath: '/maplestory/maps/in/western-isle',
+      areaPath: '/maplestory/maps/in/western-isle/meadowbrook',
+    };
+
+    expect(
+      mapDetailBreadcrumbs({ view, buildId: 'cw-launch' }).map(
+        ({ label, path }) => [label, path],
+      ),
+    ).toEqual([
+      ['Home', '/'],
+      ['Maps', '/maplestory/maps'],
+      ['Western Isle', '/maplestory/maps/in/western-isle'],
+      ['Meadowbrook', '/maplestory/maps/in/western-isle/meadowbrook'],
+      [
+        'Meadowbrook Hunting Field II',
+        '/maplestory/maps/meadowbrook-hunting-ground-ii-00000000',
+      ],
     ]);
   });
 });

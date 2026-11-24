@@ -11,10 +11,25 @@ import type { MapDetailView } from './project';
 export interface MapDetailMetadataOptions {
   readonly view: Pick<
     MapDetailView,
-    'name' | 'canonicalPath' | 'regionLabel' | 'areaLabel'
+    | 'name'
+    | 'canonicalPath'
+    | 'regionLabel'
+    | 'areaLabel'
+    | 'regionPath'
+    | 'areaPath'
   >;
   readonly buildId: BuildId;
   readonly noIndex?: boolean;
+}
+
+function crumb({
+  label,
+  path,
+}: {
+  readonly label: string;
+  readonly path: string | undefined;
+}): DetailBreadcrumb {
+  return path === undefined ? { label } : { label, path };
 }
 
 /** Shared breadcrumb trail for Map Detail metadata and page content. */
@@ -29,10 +44,12 @@ export function mapDetailBreadcrumbs({
   return [
     { label: 'Home', path: '/', linkProps: { to: '/' } },
     { label: 'Maps', path: buildCollectionPath('maps', buildId) },
-    ...(view.regionLabel === undefined ? [] : [{ label: view.regionLabel }]),
+    ...(view.regionLabel === undefined
+      ? []
+      : [crumb({ label: view.regionLabel, path: view.regionPath })]),
     ...(view.areaLabel === undefined || areaMatchesMap
       ? []
-      : [{ label: view.areaLabel }]),
+      : [crumb({ label: view.areaLabel, path: view.areaPath })]),
     { label: view.name, path: view.canonicalPath },
   ];
 }

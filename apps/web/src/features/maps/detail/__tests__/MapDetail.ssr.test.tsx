@@ -35,7 +35,7 @@ describe('MapDetail server rendering', () => {
       ...source,
       geography: {
         ...source.geography,
-        areaKey: 'fixture:market',
+        areaKey: 'area:lantern-hills/lantern-market',
         areaLabel: 'Lantern Market',
       },
     };
@@ -105,8 +105,14 @@ describe('MapDetail server rendering', () => {
       'Lantern Market',
       'Lantern Square',
     ]);
-    expect(jsonLd.itemListElement[2]).not.toHaveProperty('item');
-    expect(jsonLd.itemListElement[3]).not.toHaveProperty('item');
+    expect(jsonLd.itemListElement[2]).toHaveProperty(
+      'item',
+      'https://mapletip.com/maplestory/maps/in/lantern-hills',
+    );
+    expect(jsonLd.itemListElement[3]).toHaveProperty(
+      'item',
+      'https://mapletip.com/maplestory/maps/in/lantern-hills/lantern-market',
+    );
   });
 
   it('marks a focused address noindex and keeps focus off the canonical link', async () => {

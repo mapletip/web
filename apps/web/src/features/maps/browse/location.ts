@@ -1,27 +1,18 @@
 /**
  * Locations of Map Browse: All maps, regions with their areas, and
- * collections, resolved from the build's geography. A location's address
- * slug is the last segment of its published key
- * (`region:western-isle` → `western-isle`, `area:western-isle/meadowbrook`
- * → `meadowbrook`, `collection:event` → `event`).
+ * collections, resolved from the build's geography.
  */
 import type { DrillDownNode } from '@mapletip/component-library';
 
 import type { BuildId } from '@/config/maplekit';
-import { buildCollectionPath } from '@/features/detail';
+import {
+  locationSlug,
+  mapLocationPath,
+  type MapLocationParams,
+} from '@/features/maps/shared';
 
 import type { MapBrowseGeography, MapBrowseLocation } from './project';
 import { ALL_MAPS } from './records';
-
-export const MAPS_ROUTE = '/maplestory/{-$buildId}/maps' as const;
-export const MAP_LOCATION_ROUTE =
-  '/maplestory/{-$buildId}/maps/in/$location/{-$area}' as const;
-
-/** Route params of a location page; none for All maps. */
-export interface MapLocationParams {
-  readonly location?: string;
-  readonly area?: string;
-}
 
 export interface MapLocationNode {
   /** Navigation node id: the geography key, or "all". */
@@ -37,10 +28,6 @@ export const ALL_MAPS_LOCATION: MapLocationNode = {
   label: 'All maps',
   params: {},
 };
-
-export function locationSlug(key: string): string {
-  return key.slice(key.search(/[^:/]*$/u));
-}
 
 function node(
   kind: MapLocationNode['kind'],
@@ -128,19 +115,4 @@ export function mapLocationTree({
       ),
     ),
   ]);
-}
-
-/** Site path of a location page in a build. */
-export function mapLocationPath({
-  buildId,
-  params,
-}: {
-  readonly buildId: BuildId;
-  readonly params: MapLocationParams;
-}): string {
-  const maps = buildCollectionPath('maps', buildId);
-  if (params.location === undefined) return maps;
-  return params.area === undefined
-    ? `${maps}/in/${params.location}`
-    : `${maps}/in/${params.location}/${params.area}`;
 }
