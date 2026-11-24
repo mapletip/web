@@ -14,6 +14,8 @@
 .linkedCard {
   position: relative;
   min-width: 0;
+  /* Pass a stretched grid cell's height on, so cards in a row match. */
+  height: 100%;
 }
 
 .chevron {

@@ -7,6 +7,13 @@ import type {
   QueryFieldDefinition,
 } from '@mapletip/component-library';
 import { mapNpcSpriteUrl } from '@mapletip/data/maps';
+import {
+  Flag,
+  Ghost,
+  Medal,
+  UsersThree,
+  type Icon as PhosphorIcon,
+} from '@phosphor-icons/react';
 
 import { MAPLEKIT_RELEASE } from '@/config/maplekit';
 import { resolveMonsterSpriteUrl } from '@/features/monsters/shared';
@@ -15,6 +22,22 @@ import { MAP_ACTIVITY_TYPES, type MapBrowseData } from './project';
 import type { MapBrowseRecord } from './records';
 
 const OPTION_ICON_SIZE = 20;
+const FACET_ICON_SIZE = 16;
+
+/** The icons Map Detail and the card stats use for the same facts. */
+function facetIcon(
+  Icon: PhosphorIcon,
+): Pick<FacetDefinition<MapBrowseRecord>, 'icon'> {
+  return {
+    icon: (
+      <Icon
+        size={FACET_ICON_SIZE}
+        color="var(--mantine-color-dimmed)"
+        aria-hidden="true"
+      />
+    ),
+  };
+}
 
 export const MAP_SORT_OPTIONS = [
   { label: 'Name (A–Z)', field: 'name', direction: 'asc' },
@@ -127,6 +150,7 @@ export function mapFacets(
       field: 'monster',
       label: 'Monster',
       kind: 'multi-select',
+      ...facetIcon(Ghost),
       options: monsterOptions,
       picker: {
         placeholder: 'Search monsters',
@@ -138,15 +162,25 @@ export function mapFacets(
       field: 'npc',
       label: 'NPC',
       kind: 'multi-select',
+      ...facetIcon(UsersThree),
       options: npcOptions,
       picker: { placeholder: 'Search NPCs', nothingFound: 'No NPCs match' },
     },
-    { id: 'level', field: 'level', label: 'Monster level', kind: 'range' },
+    {
+      id: 'level',
+      field: 'level',
+      label: 'Monster level',
+      kind: 'range',
+      // Preset ranges from the build's own levels, as on Monster Browse.
+      buckets: 'quantile',
+      ...facetIcon(Medal),
+    },
     {
       id: 'activity-type',
       field: 'activityType',
       label: 'Activity',
       kind: 'multi-select',
+      ...facetIcon(Flag),
       options: Object.values(MAP_ACTIVITY_TYPES).map((type) => ({
         value: type,
         label: type,
@@ -157,7 +191,14 @@ export function mapFacets(
       field: 'hasMonsters',
       label: 'Has monsters',
       kind: 'boolean',
+      ...facetIcon(Ghost),
     },
-    { id: 'has-npcs', field: 'hasNpcs', label: 'Has NPCs', kind: 'boolean' },
+    {
+      id: 'has-npcs',
+      field: 'hasNpcs',
+      label: 'Has NPCs',
+      kind: 'boolean',
+      ...facetIcon(UsersThree),
+    },
   ];
 }
