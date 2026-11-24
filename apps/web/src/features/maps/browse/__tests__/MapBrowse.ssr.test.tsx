@@ -97,7 +97,7 @@ describe('Map Browse server rendering', () => {
   it('renders the first page of map names A to Z with indexable metadata', async () => {
     const { router, html } = await renderPath('/maplestory/maps');
 
-    expect(html).toContain('MapleStory Classic World Maps');
+    expect(html).toMatch(/<h1[^>]*>MapleStory Classic World Maps<\/h1>/u);
     const names = cardNames(html);
     expect(names.slice(0, 3)).toEqual([
       'Brass Walk',
@@ -195,7 +195,7 @@ describe('Map Browse server rendering', () => {
       '/maplestory/maps/in/lantern-hills',
     );
 
-    expect(html).toContain('MapleStory Classic World Lantern Hills Maps');
+    expect(html).toMatch(/<h1[^>]*>Lantern Hills Maps<\/h1>/u);
     expect(cardNames(html)).toEqual([
       'Lamplight Meadow',
       'Lantern Rehearsal <Stage 1>',
@@ -232,7 +232,7 @@ describe('Map Browse server rendering', () => {
   it('lists a collection under its label', async () => {
     const { html } = await renderPath('/maplestory/maps/in/event');
 
-    expect(html).toContain('MapleStory Classic World Event maps');
+    expect(html).toMatch(/<h1[^>]*>Event maps<\/h1>/u);
     expect(cardNames(html)).toEqual(['Festival Booth']);
   });
 

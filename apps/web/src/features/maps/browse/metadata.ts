@@ -22,15 +22,15 @@ export function mapPageMetadata({
   search,
 }: MapPageMetadataOptions): BrowsePageMetadata {
   const buildLabel = BUILDS[buildId].label;
-  return browsePageMetadata({
+  const topic = {
+    all: 'Maps',
+    region: `${location.label} Maps`,
+    area: `${location.label} Maps`,
+    collection: location.label,
+  }[location.kind];
+  const metadata = browsePageMetadata({
     buildId,
-    // Collection labels already name their maps, such as "Event maps".
-    topic: {
-      all: 'Maps',
-      region: `${location.label} Maps`,
-      area: `${location.label} Maps`,
-      collection: location.label,
-    }[location.kind],
+    topic,
     path,
     description:
       location.kind === 'all'
@@ -39,4 +39,8 @@ export function mapPageMetadata({
     isDefaultView:
       search === undefined || mapBrowseSearch.isDefaultSearch(search),
   });
+  return {
+    ...metadata,
+    heading: location.kind === 'all' ? metadata.heading : topic,
+  };
 }

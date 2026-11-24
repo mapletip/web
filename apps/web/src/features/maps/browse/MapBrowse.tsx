@@ -1,5 +1,5 @@
 import { Group, Title } from '@mantine/core';
-import { DrillDownNav, FacetedBrowser } from '@mapletip/component-library';
+import { FacetedBrowser } from '@mapletip/component-library';
 import type {
   BrowseState,
   DrawerOpenedChangeDetails,
@@ -30,8 +30,9 @@ import {
   MAP_SORT_OPTIONS,
 } from './facets';
 import { mapLocationTree, type MapLocationNode } from './location';
-import { LocationLink, mapLocationLinkOptions } from './LocationLink';
+import { mapLocationLinkOptions } from './LocationLink';
 import { MapBrowseCard, type MapBrowseCardContext } from './MapBrowseCard';
+import { MapLocationNavigation } from './MapLocationNavigation';
 import { mapPageMetadata } from './metadata';
 import type { MapBrowseData } from './project';
 import { mapBrowseRecords } from './records';
@@ -153,7 +154,7 @@ export function MapBrowse({
     if (data === undefined) return new Map<string, MapLocationParams>();
     const entries: [string, MapLocationParams][] = [];
     const visit = (node: ReturnType<typeof mapLocationTree>) => {
-      entries.push([node.id, node.meta ?? {}]);
+      if (node.meta !== undefined) entries.push([node.id, node.meta]);
       node.children?.forEach(visit);
     };
     visit(mapLocationTree({ geography: data.geography, buildId }));
@@ -197,32 +198,16 @@ export function MapBrowse({
               buildId,
               counts: context.counts,
             });
-            if (context.mode === 'drawer') {
-              return (
-                <DrillDownNav
-                  root={root}
-                  currentId={context.selectedId}
-                  label="Locations"
-                  onSelect={context.onSelect}
-                />
-              );
-            }
             return (
-              <DrillDownNav
+              <MapLocationNavigation
+                key={
+                  context.mode === 'drawer' ? context.selectedId : location.id
+                }
                 root={root}
                 currentId={location.id}
-                label="Locations"
-                renderLink={(node, props) => (
-                  <LocationLink
-                    buildId={buildId}
-                    params={node.meta ?? {}}
-                    search={locationSearch}
-                    props={props}
-                  />
-                )}
-                {...(context.onNavigate
-                  ? { onNavigate: context.onNavigate }
-                  : {})}
+                context={context}
+                buildId={buildId}
+                search={locationSearch}
               />
             );
           },
