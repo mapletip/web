@@ -192,6 +192,49 @@ test('monster picker, level range and activity filter the maps', async ({
   await expect(cardTitles(page)).toHaveText(['Lantern Rehearsal <Stage 1>']);
 });
 
+test('entry level and level cap add figures to filtered cards', async ({
+  page,
+}) => {
+  const alternate = '/maplestory/gms-v83/maps';
+  await gotoHydrated(page, alternate);
+  const alternateCards = page.getByRole('list', { name: /maps cards/u });
+  const entries = page.getByRole('group', { name: 'Entry level', exact: true });
+  await entries.getByRole('checkbox', { name: /^30/u }).check();
+  await expect(alternateCards.getByRole('heading', { level: 3 })).toHaveText([
+    'Lantern Rehearsal <Stage 1>',
+  ]);
+  await expect(alternateCards.getByTestId('map-card-footer')).toHaveText(
+    'Entry Lv. 30',
+  );
+
+  await gotoHydrated(page, alternate);
+  const caps = page.getByRole('group', { name: 'Level cap', exact: true });
+  await caps.getByRole('checkbox', { name: /^25/u }).check();
+  await expect(alternateCards.getByRole('heading', { level: 3 })).toHaveText([
+    'Lamplight Meadow',
+  ]);
+  await expect(alternateCards.getByTestId('map-card-footer')).toHaveText(
+    'Lv. cap 25',
+  );
+});
+
+test('map features show a figure only for the selected fact', async ({
+  page,
+}) => {
+  await gotoHydrated(page, MAPS);
+  const features = page.getByRole('group', {
+    name: 'Map features',
+    exact: true,
+  });
+  await features.getByRole('checkbox', { name: /^Town/u }).check();
+  await expect(cardTitles(page)).toHaveText(['Lantern Square']);
+  await expect(cards(page).getByTestId('map-card-footer')).toHaveCount(0);
+  await features.getByRole('checkbox', { name: /^Time limit/u }).check();
+  await expect(cards(page).getByTestId('map-card-footer')).toHaveText(
+    '10 min limit',
+  );
+});
+
 test('no matches offers to clear the search and filters', async ({ page }) => {
   await gotoHydrated(page, `${MAPS}?q=no-such-map`);
   await expect(

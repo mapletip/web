@@ -26,6 +26,7 @@ export type MapActivityType =
 
 export interface MapBrowseMonster {
   readonly publicId?: string;
+  readonly boss?: true;
   readonly name?: string;
   readonly level?: number;
   readonly spriteId?: string;
@@ -71,6 +72,12 @@ export interface MapBrowseRow {
   readonly music?: string;
   readonly entryLevel?: number;
   readonly levelCap?: number;
+  readonly town?: true;
+  readonly hpDrain?: number;
+  readonly hpDrainProtectionItem?: string;
+  readonly underwater?: true;
+  readonly partyOnly?: true;
+  readonly timeLimitSeconds?: number;
   readonly monsterCount?: number;
   readonly spawnPointCount?: number;
   readonly npcCount?: number;
@@ -119,6 +126,10 @@ function projectMonster(
 ): MapBrowseMonster {
   return defined({
     publicId: 'publicId' in monster ? monster.publicId : undefined,
+    boss:
+      'boss' in monster && knownValue(monster.boss) === true
+        ? (true as const)
+        : undefined,
     name: knownValue(monster.name),
     level: knownValue(monster.level),
     spriteId: knownValue(monster.sprite),
@@ -158,6 +169,25 @@ function projectRow({
     music: 'music' in row ? knownValue(row.music) : undefined,
     entryLevel: 'entryLevel' in row ? knownValue(row.entryLevel) : undefined,
     levelCap: 'levelCap' in row ? knownValue(row.levelCap) : undefined,
+    town:
+      'town' in row && knownValue(row.town) === true
+        ? (true as const)
+        : undefined,
+    hpDrain: 'hpDrain' in row ? knownValue(row.hpDrain) : undefined,
+    hpDrainProtectionItem:
+      'hpDrainProtectionItem' in row
+        ? knownValue(row.hpDrainProtectionItem)?.name
+        : undefined,
+    underwater:
+      'underwater' in row && knownValue(row.underwater) === true
+        ? (true as const)
+        : undefined,
+    partyOnly:
+      'partyOnly' in row && knownValue(row.partyOnly) === true
+        ? (true as const)
+        : undefined,
+    timeLimitSeconds:
+      'timeLimitSeconds' in row ? knownValue(row.timeLimitSeconds) : undefined,
     monsterCount: knownValue(row.monsterCount),
     spawnPointCount: knownValue(row.spawnPointCount),
     npcCount: knownValue(row.npcCount),

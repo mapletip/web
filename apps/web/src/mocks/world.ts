@@ -763,6 +763,7 @@ export const fixtureMaps: readonly FixtureMap[] = [
     streetName: 'Lantern Hills',
     activity: 'Market',
     description: 'A gathering place beneath paper lanterns.',
+    player: { town: true, timeLimitSeconds: 600 },
     information: {
       music: { state: 'known', value: 'Lantern Waltz' },
       timeLimitSeconds: { state: 'known', value: 600 },
@@ -1029,10 +1030,27 @@ export const world: { readonly builds: readonly FixtureBuild[] } = {
       maps: fixtureMaps.map((map): FixtureMap => {
         const alternate = { ...map, monsters: [] };
         if (map.id === 'lantern-rehearsal') {
-          return { ...alternate, player: { entryLevel: 30, levelCap: 50 } };
+          return {
+            ...alternate,
+            player: { entryLevel: 30, levelCap: 50, partyOnly: true },
+          };
         }
         if (map.id === 'lamplight-meadow') {
-          return { ...alternate, player: { entryLevel: 15, levelCap: 25 } };
+          return {
+            ...alternate,
+            player: {
+              entryLevel: 15,
+              levelCap: 25,
+              underwater: true,
+              hpDrain: {
+                amount: 25,
+                protectionItem: {
+                  key: 'fixture:float-ring',
+                  name: 'Float Ring',
+                },
+              },
+            },
+          };
         }
         return alternate;
       }),
