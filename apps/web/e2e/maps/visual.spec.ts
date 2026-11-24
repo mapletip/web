@@ -54,7 +54,17 @@ async function browseReady(page: Page): Promise<void> {
     await document.fonts.ready;
   });
   await page.waitForFunction(() =>
-    [...document.images].every((image) => image.complete),
+    [...document.images]
+      .filter((image) => {
+        const bounds = image.getBoundingClientRect();
+        return (
+          bounds.width > 0 &&
+          bounds.height > 0 &&
+          bounds.top < window.innerHeight &&
+          bounds.bottom > 0
+        );
+      })
+      .every((image) => image.complete),
   );
 }
 
