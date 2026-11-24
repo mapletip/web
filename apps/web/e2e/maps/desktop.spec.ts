@@ -192,6 +192,39 @@ test('monster picker, level range and activity filter the maps', async ({
   await expect(cardTitles(page)).toHaveText(['Lantern Rehearsal <Stage 1>']);
 });
 
+test('area and card marks preserve card height', async ({ page }) => {
+  await gotoHydrated(page, '/maplestory/gms-v83/maps/in/lantern-hills');
+  const area = rail(page).getByRole('link', { name: /^Lamplight/u });
+  await expect(area.locator('img')).toBeVisible();
+  await area.click();
+  await expect(
+    rail(page).getByRole('link', { name: 'Lantern Hills' }),
+  ).toBeVisible();
+  const headingMark = page
+    .getByRole('heading', { level: 1 })
+    .locator('..')
+    .locator('img');
+  await expect(headingMark).toBeVisible();
+
+  const mark = page.getByRole('heading', { name: 'Lamplight Meadow' });
+  const noMark = page.getByRole('heading', {
+    name: 'Lantern Rehearsal <Stage 1>',
+  });
+  await expect(mark.locator('img')).toBeVisible();
+  await expect(noMark.locator('img')).toHaveCount(0);
+  const heights = await Promise.all(
+    [mark, noMark].map((title) =>
+      title.evaluate(
+        (node) =>
+          node.closest('[data-record-card-layout]')?.getBoundingClientRect()
+            .height,
+      ),
+    ),
+  );
+  expect(heights[0]).toBeGreaterThan(0);
+  expect(heights[0]).toBe(heights[1]);
+});
+
 test('entry level and level cap add figures to filtered cards', async ({
   page,
 }) => {

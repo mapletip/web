@@ -1032,6 +1032,7 @@ export const world: { readonly builds: readonly FixtureBuild[] } = {
         if (map.id === 'lantern-rehearsal') {
           return {
             ...alternate,
+            noMark: true,
             player: { entryLevel: 30, levelCap: 50, partyOnly: true },
           };
         }
