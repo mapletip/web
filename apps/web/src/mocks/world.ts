@@ -1026,7 +1026,16 @@ export const world: { readonly builds: readonly FixtureBuild[] } = {
           category: { kind: 'item-class', value: 'consume' },
         },
       ],
-      maps: fixtureMaps.map((map) => ({ ...map, monsters: [] })),
+      maps: fixtureMaps.map((map): FixtureMap => {
+        const alternate = { ...map, monsters: [] };
+        if (map.id === 'lantern-rehearsal') {
+          return { ...alternate, player: { entryLevel: 30, levelCap: 50 } };
+        }
+        if (map.id === 'lamplight-meadow') {
+          return { ...alternate, player: { entryLevel: 15, levelCap: 25 } };
+        }
+        return alternate;
+      }),
       drops: {
         'native-alpha': [
           { itemId: 'native-flake', assertionKind: 'native' },

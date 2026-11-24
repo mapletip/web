@@ -335,6 +335,30 @@ describe('Map Browse server rendering', () => {
     ]);
   });
 
+  it('shows level limits only on builds with facts and cards under those filters', async () => {
+    const defaultView = await renderPath('/maplestory/maps');
+    expect(defaultView.html).not.toContain('Entry level');
+    expect(defaultView.html).not.toContain('Level cap');
+
+    data = await mapBrowseFixture('gms-v83');
+    mockedLoad.mockResolvedValue({ status: 'available', data });
+    const path = '/maplestory/gms-v83/maps';
+    const unfiltered = await renderPath(path);
+    expect(unfiltered.html).toContain('Entry level');
+    expect(unfiltered.html).toContain('Level cap');
+    expect(footerText(unfiltered.html)).toEqual([]);
+
+    const entry = await renderPath(
+      `${path}?entryLevel=${param({ min: 30, max: 50 })}`,
+    );
+    expect(cardNames(entry.html)).toEqual(['Lantern Rehearsal <Stage 1>']);
+    expect(footerText(entry.html)).toEqual(['Entry Lv. 30']);
+
+    const cap = await renderPath(`${path}?levelCap=${param({ max: 25 })}`);
+    expect(cardNames(cap.html)).toEqual(['Lamplight Meadow']);
+    expect(footerText(cap.html)).toEqual(['Lv. cap 25']);
+  });
+
   it('filters by activity type and by maps with NPCs', async () => {
     const partyQuests = await renderPath(
       `/maplestory/maps?activityType=${param(['Party quest'])}`,

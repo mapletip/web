@@ -69,6 +69,8 @@ export interface MapBrowseRow {
   /** The map's mark content id (Map browse 1.1). */
   readonly markId?: string;
   readonly music?: string;
+  readonly entryLevel?: number;
+  readonly levelCap?: number;
   readonly monsterCount?: number;
   readonly spawnPointCount?: number;
   readonly npcCount?: number;
@@ -154,6 +156,8 @@ function projectRow({
     minimapId: knownValue(row.minimap),
     markId: 'markImage' in row ? knownValue(row.markImage) : undefined,
     music: 'music' in row ? knownValue(row.music) : undefined,
+    entryLevel: 'entryLevel' in row ? knownValue(row.entryLevel) : undefined,
+    levelCap: 'levelCap' in row ? knownValue(row.levelCap) : undefined,
     monsterCount: knownValue(row.monsterCount),
     spawnPointCount: knownValue(row.spawnPointCount),
     npcCount: knownValue(row.npcCount),
