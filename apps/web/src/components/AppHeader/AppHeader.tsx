@@ -5,14 +5,14 @@ import { Link } from '@tanstack/react-router';
 // `?no-inline` keeps these out of the JS bundle: they are all under Vite's 4 KB
 // inline threshold and would otherwise ship as base64. Importing them lets the
 // bundler resolve and content-hash each one, so a missing file fails the build.
-import allEquipment from '@/assets/maplestory/navigation/equipment-all-maple-shield.png?no-inline';
-import armorAccessories from '@/assets/maplestory/navigation/equipment-armor-zakum-helmet.png?no-inline';
-import otherEquipment from '@/assets/maplestory/navigation/equipment-other-hog.png?no-inline';
-import weapons from '@/assets/maplestory/navigation/equipment-weapons-maple-sword.png?no-inline';
-import cashItems from '@/assets/maplestory/navigation/items-cash-pet-brown-puppy.png?no-inline';
-import etcItems from '@/assets/maplestory/navigation/items-etc-snail-shell.png?no-inline';
-import setupItems from '@/assets/maplestory/navigation/items-setup-blue-chair.png?no-inline';
-import useItems from '@/assets/maplestory/navigation/items-use-red-potion.png?no-inline';
+import allEquipment from '@/assets/maplestory/navigation/equipment-all.png?no-inline';
+import armorAccessories from '@/assets/maplestory/navigation/equipment-armor.png?no-inline';
+import otherEquipment from '@/assets/maplestory/navigation/equipment-other.png?no-inline';
+import weapons from '@/assets/maplestory/navigation/equipment-weapons.png?no-inline';
+import cashItems from '@/assets/maplestory/navigation/items-cash.png?no-inline';
+import etcItems from '@/assets/maplestory/navigation/items-etc.png?no-inline';
+import setupItems from '@/assets/maplestory/navigation/items-setup.png?no-inline';
+import useItems from '@/assets/maplestory/navigation/items-use.png?no-inline';
 
 import classes from './AppHeader.module.css';
 import { ItemCollectionIcon } from './ItemCollectionIcon';

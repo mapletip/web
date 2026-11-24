@@ -11,7 +11,7 @@ export const cashScope = {
       label: 'Pets',
       matches: (row) => row.itemClass === 'pet',
       iconContentIds: [
-        '7cb4e8cd5e402cc35d7bd6d51dafb1800670816463425b50525f091accdde43e', // Pink Bunny
+        '7cb4e8cd5e402cc35d7bd6d51dafb1800670816463425b50525f091accdde43e',
       ],
     },
     {
@@ -20,7 +20,7 @@ export const cashScope = {
       label: 'Cash Items',
       matches: (row) => row.itemClass === 'cash',
       iconContentIds: [
-        'e92811536cb6820a65eafaea2452b94161951361e5ed35b16035f0207d8939f0', // Super Megaphone
+        'e92811536cb6820a65eafaea2452b94161951361e5ed35b16035f0207d8939f0',
       ],
     },
   ],
