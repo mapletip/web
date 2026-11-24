@@ -642,6 +642,13 @@ async function projectMapPages(options: {
                           encoder.encode(`fixture:sprite:${npc.sprite}`),
                         ),
                       ),
+                // Dimensions are published exactly when the sprite is known.
+                ...(npc.sprite === undefined
+                  ? {}
+                  : {
+                      width: spriteDimensions[npc.sprite][0],
+                      height: spriteDimensions[npc.sprite][1],
+                    }),
               },
               questCount: npc.questCount ?? { state: 'known', count: 0 },
               points: mapPoints(npc.points, published),

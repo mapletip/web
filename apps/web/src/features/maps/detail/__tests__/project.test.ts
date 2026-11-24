@@ -118,6 +118,46 @@ describe('projectMapDetail', () => {
     expect(stageNpc).not.toHaveProperty('anchor');
   });
 
+  it('sizes NPC stage sprites from their published dimensions and the stage scale', () => {
+    const source = mapPageRecordFixture({ mapId: 'lantern-square' });
+    const npc = source.npcs.items[0];
+    if (npc === undefined) throw new Error('Expected a fixture NPC.');
+    const contentId = 'e'.repeat(64);
+    const withSprite = (
+      dimensions: { width: number; height: number } | Record<string, never>,
+    ) => ({
+      ...source,
+      npcs: {
+        ...source.npcs,
+        items: [
+          {
+            ...npc,
+            sprite: {
+              contentId: { state: 'known' as const, value: contentId },
+              ...dimensions,
+            },
+          },
+        ],
+      },
+    });
+    const stageNpc = (record: typeof source) =>
+      projectMapDetail({ record, buildId: 'cw-launch' }).stage.markers.find(
+        ({ kind }) => kind === 'npc',
+      );
+
+    // Fixture stages publish MapleKit's known-answer scale, 0.0625.
+    expect(stageNpc(withSprite({ width: 64, height: 96 }))).toMatchObject({
+      spriteUrl: mapNpcSpriteUrl(MAPLEKIT_RELEASE.baseUrl, contentId),
+      size: { width: 4, height: 6 },
+      anchor: 'bottom',
+    });
+    const unsized = stageNpc(withSprite({}));
+    expect(unsized?.spriteUrl).toBe(
+      mapNpcSpriteUrl(MAPLEKIT_RELEASE.baseUrl, contentId),
+    );
+    expect(unsized).not.toHaveProperty('size');
+  });
+
   it('omits NPC sprites when the sprite fact is unknown', () => {
     const source = mapPageRecordFixture({ mapId: 'lantern-square' });
     const npc = source.npcs.items[0];

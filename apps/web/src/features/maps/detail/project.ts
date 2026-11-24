@@ -152,6 +152,8 @@ export interface MapDetailMonstersView {
 export interface MapDetailNpcView extends NpcRecordCardView {
   readonly key: string;
   readonly focusKey: string;
+  /** The NPC sprite's game-pixel size, when Map page 1.2 publishes it. */
+  readonly spriteSize?: { readonly width: number; readonly height: number };
 }
 
 export interface MapDetailNpcsView {
@@ -688,11 +690,24 @@ function projectOnThisMap({
 
 function projectNpcs(record: StaticMapPageRecord): MapDetailNpcsView {
   const npcs = record.npcs.items
-    .map((npc) => ({
-      key: npc.key,
-      focusKey: `npc-${npc.focusToken}`,
-      ...projectNpcRecordCard(npc),
-    }))
+    .map((npc): MapDetailNpcView => {
+      const width =
+        'width' in npc.sprite
+          ? positiveSpriteDimension(npc.sprite.width)
+          : undefined;
+      const height =
+        'height' in npc.sprite
+          ? positiveSpriteDimension(npc.sprite.height)
+          : undefined;
+      return {
+        key: npc.key,
+        focusKey: `npc-${npc.focusToken}`,
+        ...projectNpcRecordCard(npc),
+        ...(width === undefined || height === undefined
+          ? {}
+          : { spriteSize: { width, height } }),
+      };
+    })
     .sort((left, right) => nameCollator.compare(left.name, right.name));
   const noRecordedNpcs =
     npcs.length === 0 &&
@@ -747,7 +762,8 @@ function projectPointMarkers({
     (kind === 'monster' && stageScale === undefined)
       ? {}
       : { spriteUrl }),
-    ...(kind !== 'monster' ||
+    ...((kind !== 'monster' && kind !== 'npc') ||
+    spriteUrl === undefined ||
     spriteSize === undefined ||
     stageScale === undefined
       ? {}
@@ -858,6 +874,9 @@ function projectStage({
               ...(npc.spriteUrl === undefined
                 ? {}
                 : { spriteUrl: npc.spriteUrl }),
+              ...(npc.spriteSize === undefined
+                ? {}
+                : { spriteSize: npc.spriteSize }),
             };
       },
     },
