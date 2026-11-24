@@ -1,16 +1,16 @@
 import { describe, expect, it } from 'vitest';
 
-import {
-  MINIMAP_SCALE_ESTIMATE,
-  minimapSpriteSize,
-} from '../minimapSpriteSize';
+import { minimapSpriteSize } from '../minimapSpriteSize';
 
 describe('minimapSpriteSize', () => {
-  it('estimates minimap pixels from game-pixel dimensions', () => {
-    expect(MINIMAP_SCALE_ESTIMATE).toBe(1 / 16);
-    expect(minimapSpriteSize({ width: 62, height: 51 })).toEqual({
-      width: 3.875,
-      height: 3.1875,
+  it('multiplies a game-pixel size by the stage scale', () => {
+    // MapleKit's known answer: minimap scale 4 publishes 0.0625.
+    expect(minimapSpriteSize({ width: 64, height: 48, scale: 0.0625 })).toEqual(
+      { width: 4, height: 3 },
+    );
+    expect(minimapSpriteSize({ width: 64, height: 48, scale: 0.125 })).toEqual({
+      width: 8,
+      height: 6,
     });
   });
 });

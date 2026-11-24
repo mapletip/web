@@ -35,7 +35,7 @@ describe('NpcRecordCard', () => {
   it('keeps unknown NPC sprites unset', () => {
     const npc = mapPageRecordFixture({
       mapId: 'lantern-square',
-    }).npcs.items.find(({ sprite }) => sprite.state !== 'known');
+    }).npcs.items.find(({ sprite }) => sprite.contentId.state !== 'known');
     if (npc === undefined) throw new Error('Expected an NPC without a sprite.');
 
     expect(projectNpcRecordCard(npc)).not.toHaveProperty('spriteUrl');

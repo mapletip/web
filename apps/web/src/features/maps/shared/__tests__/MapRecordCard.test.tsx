@@ -48,6 +48,7 @@ function mapView({
           minimapStage: {
             width: 100,
             height: 200,
+            scale: 0.0625,
             spawnPoints: [
               { x: 25, y: 40 },
               { x: 75, y: 160 },

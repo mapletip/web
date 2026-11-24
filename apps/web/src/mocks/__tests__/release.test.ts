@@ -127,9 +127,14 @@ describe('fixture release', () => {
     expect(new Set(occupiedPoints).size).toBeLessThan(occupiedPoints.length);
 
     const town = pageFor('lantern-square');
-    if (town.contractVersion !== '1.1') {
-      throw new Error('Expected Map page revision 1.1 for Lantern Square.');
+    if (town.contractVersion !== '1.2') {
+      throw new Error('Expected Map page revision 1.2 for Lantern Square.');
     }
+    // Revision 1.2 publishes the stage scale: 0.0625 on every fixture stage.
+    expect(town.stage).toMatchObject({
+      state: 'known',
+      value: { scale: 0.0625 },
+    });
     expect(town.monsters.items).toHaveLength(0);
     expect(town.npcs.items.length).toBeGreaterThanOrEqual(8);
     expect(town.connections.items.length).toBeGreaterThanOrEqual(7);
@@ -267,16 +272,16 @@ describe('fixture release', () => {
       getMonsterLocationBrowse(options),
     ]);
     if (
-      page.contractVersion !== '1.2' ||
-      eventMonster.contractVersion !== '1.2' ||
-      locations.contractVersion !== '1.3'
+      page.contractVersion !== '1.3' ||
+      eventMonster.contractVersion !== '1.3' ||
+      locations.contractVersion !== '1.4'
     ) {
       throw new Error(
         'Expected the current Monster page and location revisions.',
       );
     }
-    expect(page.contractVersion).toBe('1.2');
-    expect(locations.contractVersion).toBe('1.3');
+    expect(page.contractVersion).toBe('1.3');
+    expect(locations.contractVersion).toBe('1.4');
     expect(page.sprite).toMatchObject({
       contentId: { state: 'known' },
       width: 40,
