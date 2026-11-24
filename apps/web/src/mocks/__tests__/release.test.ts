@@ -12,6 +12,7 @@ import {
 import { openRelease } from '@mapletip/data/release';
 import { describe, expect, it } from 'vitest';
 
+import { fileFetch } from '../fileFetch';
 import {
   buildRelease,
   fixtureRelease,
@@ -19,21 +20,6 @@ import {
   monsterPublicId,
 } from '../release';
 import { fixtureMaps, world } from '../world';
-
-function fileFetch(files: ReadonlyMap<string, Uint8Array>): typeof fetch {
-  return (input) => {
-    const url = input instanceof Request ? input.url : String(input);
-    const path = new URL(url).pathname.slice(1);
-    const bytes = files.get(path);
-    return Promise.resolve(
-      bytes === undefined
-        ? new Response(null, { status: 404 })
-        : new Response(new Uint8Array(bytes).buffer, {
-            headers: { 'content-type': 'application/json' },
-          }),
-    );
-  };
-}
 
 describe('fixture release', () => {
   it('opens both builds through the real SDK with all verification enabled', async () => {
