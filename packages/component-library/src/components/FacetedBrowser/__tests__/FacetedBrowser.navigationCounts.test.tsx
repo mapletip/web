@@ -21,26 +21,26 @@ interface Place extends Record<string, unknown> {
 const records: readonly Place[] = [
   {
     id: '1',
-    name: 'Henesys Field',
-    nodes: ['all', 'victoria', 'henesys'],
+    name: 'Meadow Field',
+    nodes: ['all', 'west', 'meadow'],
     kind: 'field',
   },
   {
     id: '2',
-    name: 'Henesys Town',
-    nodes: ['all', 'victoria', 'henesys'],
+    name: 'Meadow Town',
+    nodes: ['all', 'west', 'meadow'],
     kind: 'town',
   },
   {
     id: '3',
-    name: 'Ellinia Field',
-    nodes: ['all', 'victoria', 'ellinia'],
+    name: 'Grove Field',
+    nodes: ['all', 'west', 'grove'],
     kind: 'field',
   },
-  { id: '4', name: 'Orbis Field', nodes: ['all', 'ossyria'], kind: 'field' },
-  { id: '5', name: 'Orbis Town', nodes: ['all', 'ossyria'], kind: 'town' },
+  { id: '4', name: 'Harbor Field', nodes: ['all', 'east'], kind: 'field' },
+  { id: '5', name: 'Harbor Town', nodes: ['all', 'east'], kind: 'town' },
 ];
-const NODE_IDS = ['all', 'victoria', 'henesys', 'ellinia', 'ossyria'];
+const NODE_IDS = ['all', 'west', 'meadow', 'grove', 'east'];
 
 const queryFields: readonly QueryFieldDefinition<Place>[] = [
   'name',
@@ -128,19 +128,19 @@ describe('navigation field', () => {
 
     expect(navCounts()).toEqual([
       'all 5',
-      'victoria 3',
-      'henesys 2',
-      'ellinia 1',
-      'ossyria 2',
+      'west 3',
+      'meadow 2',
+      'grove 1',
+      'east 2',
     ]);
     expect(cardIds()).toEqual(['1', '2', '3', '4', '5']);
   });
 
   it('lists only the current node and keeps sibling counts', () => {
-    renderBrowser({ currentId: 'victoria' });
+    renderBrowser({ currentId: 'west' });
 
     expect(cardIds()).toEqual(['1', '2', '3']);
-    expect(navCounts()).toContain('ossyria 2');
+    expect(navCounts()).toContain('east 2');
   });
 
   it('counts follow search and committed filters', () => {
@@ -148,32 +148,32 @@ describe('navigation field', () => {
 
     expect(navCounts()).toEqual([
       'all 3',
-      'victoria 2',
-      'henesys 1',
-      'ellinia 1',
-      'ossyria 1',
+      'west 2',
+      'meadow 1',
+      'grove 1',
+      'east 1',
     ]);
   });
 
   it('agrees with the result count after choosing a node', () => {
     renderBrowser({ state: { filters: { kind: ['town'] } } });
-    const henesys = navCounts().find((entry) => entry.startsWith('henesys'));
+    const meadow = navCounts().find((entry) => entry.startsWith('meadow'));
 
     renderBrowser({
-      currentId: 'henesys',
+      currentId: 'meadow',
       state: { filters: { kind: ['town'] } },
     });
 
-    expect(`henesys ${cardIds().length}`).toBe(henesys);
+    expect(`meadow ${cardIds().length}`).toBe(meadow);
   });
 
   it('shows an empty node as zero and its page as empty', () => {
     renderBrowser({
-      currentId: 'ellinia',
+      currentId: 'grove',
       state: { filters: { kind: ['town'] } },
     });
 
-    expect(navCounts()).toContain('ellinia 0');
+    expect(navCounts()).toContain('grove 0');
     expect(cardIds()).toEqual([]);
   });
 
@@ -189,7 +189,7 @@ describe('navigation field', () => {
   });
 
   it('never puts the node into browse state', async () => {
-    const { onStateChange } = renderBrowser({ currentId: 'victoria' });
+    const { onStateChange } = renderBrowser({ currentId: 'west' });
 
     await userEvent.click(
       screen.getAllByRole('checkbox', { name: /town/u })[0]!,
