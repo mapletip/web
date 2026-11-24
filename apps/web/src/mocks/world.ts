@@ -110,12 +110,16 @@ export interface FixtureMap {
   readonly name?: string;
   readonly streetName?: string;
   readonly activity?: string;
+  /** Reviewed geography placement; its classification types the activity. */
+  readonly placement?: { readonly classification: string };
   readonly description?: string;
   readonly geography?: {
     readonly regionKey?: string;
     readonly regionLabel?: string;
     readonly areaKey?: string;
     readonly areaLabel?: string;
+    readonly collectionKey?: string;
+    readonly collectionLabel?: string;
   };
   readonly stage?: {
     readonly assetId: string;
@@ -635,7 +639,7 @@ const fixtureMapTargets: readonly Omit<
     name: 'Practice Grove',
     streetName: 'Lantern Hills',
     geography: {
-      regionKey: 'fixture:lantern-hills',
+      regionKey: 'region:lantern-hills',
       regionLabel: 'Lantern Hills',
     },
     stage: { assetId: 'practice-grove', width: 900, height: 600 },
@@ -725,6 +729,14 @@ const fixtureMapTargets: readonly Omit<
 
 const townMapId = 'lantern-square';
 
+/** Synthetic area for Map Browse location fixtures. */
+const LAMPLIGHT = {
+  regionKey: 'region:lantern-hills',
+  regionLabel: 'Lantern Hills',
+  areaKey: 'area:lantern-hills/lamplight',
+  areaLabel: 'Lamplight',
+} as const;
+
 export const fixtureMaps: readonly FixtureMap[] = [
   {
     id: townMapId,
@@ -739,7 +751,7 @@ export const fixtureMaps: readonly FixtureMap[] = [
       flying: { state: 'known', value: false },
     },
     geography: {
-      regionKey: 'fixture:lantern-hills',
+      regionKey: 'region:lantern-hills',
       regionLabel: 'Lantern Hills',
     },
     stage: { assetId: 'lantern-square', width: 1100, height: 700 },
@@ -782,7 +794,7 @@ export const fixtureMaps: readonly FixtureMap[] = [
     name: 'Synthetic Monster Yard',
     streetName: 'Lantern Hills',
     geography: {
-      regionKey: 'fixture:lantern-hills',
+      regionKey: 'region:lantern-hills',
       regionLabel: 'Lantern Hills',
     },
     stage: { assetId: 'synthetic-monster-yard', width: 900, height: 600 },
@@ -843,6 +855,84 @@ export const fixtureMaps: readonly FixtureMap[] = [
     connections: [{ mapId: townMapId, points: [{ x: 430, y: 270 }] }],
     returnMapId: townMapId,
   },
+  ...(
+    [
+      {
+        id: 'lamplight-meadow',
+        name: 'Lamplight Meadow',
+        streetName: 'Lantern Hills',
+        geography: LAMPLIGHT,
+        stage: { assetId: 'lamplight-meadow', width: 900, height: 600 },
+        monsters: [
+          {
+            monsterId: 'twin-sprout-b',
+            points: [
+              { x: 200, y: 390 },
+              { x: 420, y: 390 },
+            ],
+          },
+          { monsterId: 'long-named-fixture', points: [{ x: 640, y: 390 }] },
+        ],
+        npcs: [
+          {
+            id: 'meadow-keeper',
+            name: 'Meadow Keeper',
+            points: [{ x: 120, y: 390 }],
+          },
+        ],
+      },
+      {
+        id: 'lantern-rehearsal',
+        name: 'Lantern Rehearsal <Stage 1>',
+        streetName: 'Back Lane',
+        activity: 'Lantern Relay',
+        placement: { classification: 'party-quest' },
+        geography: LAMPLIGHT,
+        stage: { assetId: 'lantern-rehearsal', width: 900, height: 600 },
+        monsters: [
+          {
+            monsterId: 'wide-banner',
+            points: [
+              { x: 300, y: 390 },
+              { x: 500, y: 390 },
+              { x: 700, y: 390 },
+            ],
+          },
+        ],
+        npcs: [],
+      },
+      {
+        id: 'lamplight-hall',
+        streetName: 'Lamplight Hall',
+        geography: LAMPLIGHT,
+        stage: { assetId: 'lamplight-hall', width: 900, height: 600 },
+        monsters: [],
+        npcs: [],
+      },
+      {
+        id: 'festival-booth',
+        name: 'Festival Booth',
+        streetName: 'Festival Grounds',
+        geography: {
+          collectionKey: 'collection:event',
+          collectionLabel: 'Event maps',
+        },
+        stage: { assetId: 'festival-booth', width: 900, height: 600 },
+        monsters: [],
+        npcs: [
+          {
+            id: 'festival-host',
+            name: 'Festival Host',
+            points: [{ x: 450, y: 390 }],
+          },
+        ],
+      },
+    ] satisfies readonly Omit<FixtureMap, 'connections' | 'returnMapId'>[]
+  ).map((map): FixtureMap => ({
+    ...map,
+    connections: [{ mapId: townMapId, points: [{ x: 430, y: 270 }] }],
+    returnMapId: townMapId,
+  })),
 ];
 
 export const world: { readonly builds: readonly FixtureBuild[] } = {

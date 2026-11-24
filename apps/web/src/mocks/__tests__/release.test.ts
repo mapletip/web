@@ -1,5 +1,9 @@
 import { MissingRecordError } from '@mapletip/data';
-import { getMapPage, type StaticMapPageRecord } from '@mapletip/data/maps';
+import {
+  getMapBrowse,
+  getMapPage,
+  type StaticMapPageRecord,
+} from '@mapletip/data/maps';
 import {
   getMonsterLocationBrowse,
   getMonsterPage,
@@ -183,6 +187,79 @@ describe('fixture release', () => {
         fetch: fileFetch(fixtureRelease.files),
       }),
     ).rejects.toBeInstanceOf(MissingRecordError);
+  });
+
+  it('serves Map Browse rows, roster and geography through the real SDK', async () => {
+    const browse = await getMapBrowse({
+      baseUrl: 'https://d0.mapletip.com/',
+      pin: fixtureRelease.pin,
+      buildId: 'cw-launch',
+      fetch: fileFetch(fixtureRelease.files),
+    });
+
+    const names = browse.rows.records.flatMap((row) =>
+      row.name.state === 'known' ? [row.name.value] : [],
+    );
+    expect(names).toEqual(
+      expect.arrayContaining(fixtureMaps.flatMap(({ name }) => name ?? [])),
+    );
+    const lanternHills = browse.geography.regions.find(
+      ({ key }) => key === 'region:lantern-hills',
+    );
+    expect(lanternHills?.mapCount).toBe(6);
+    expect(lanternHills?.areas).toEqual([
+      { key: 'area:lantern-hills/lamplight', label: 'Lamplight', mapCount: 3 },
+    ]);
+    expect(browse.geography.collections).toEqual([
+      { key: 'collection:event', label: 'Event maps', mapCount: 1 },
+    ]);
+
+    const byName = (name: string) =>
+      browse.rows.records.find(
+        (row) => row.name.state === 'known' && row.name.value === name,
+      );
+    const rehearsal = byName('Lantern Rehearsal <Stage 1>');
+    expect(rehearsal?.activity).toEqual({
+      state: 'known',
+      value: 'Lantern Relay',
+    });
+    expect(
+      browse.geography.placements.find(
+        (placement) => placement.mapKey === rehearsal?.key,
+      )?.classification,
+    ).toBe('party-quest');
+
+    const unplaced = byName('Brass Walk');
+    expect(unplaced?.geography).toEqual({ provenance: 'none' });
+    expect(browse.roster.records[unplaced?.key ?? '']?.npcs).toHaveLength(1);
+
+    const unnamed = browse.rows.records.find(
+      (row) =>
+        row.streetName.state === 'known' &&
+        row.streetName.value === 'Lamplight Hall',
+    );
+    expect(unnamed?.name.state).toBe('unknown');
+    expect(byName('Quiet Gallery')?.minimap.state).toBe('absent');
+
+    const meadow = byName('Lamplight Meadow');
+    const meadowRoster = browse.roster.records[meadow?.key ?? ''];
+    expect(meadow?.spawnPointCount).toEqual({ state: 'known', value: 3 });
+    expect(
+      meadowRoster?.monsters.map(({ monster, spawnPointCount }) => [
+        browse.roster.monsters[monster]?.name,
+        spawnPointCount,
+      ]),
+    ).toEqual([
+      [{ state: 'known', value: 'Twin Sprout' }, 2],
+      [
+        {
+          state: 'known',
+          value:
+            'Extraordinarily Long Named Fixture Creature Of The Far Northern Reaches',
+        },
+        1,
+      ],
+    ]);
   });
 
   it('serves matching Monster location and Map page identities from v1.3 fixtures', async () => {
