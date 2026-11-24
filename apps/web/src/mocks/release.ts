@@ -44,6 +44,7 @@ export interface FixtureBuildArtifacts {
   readonly locationBrowse: FileDescriptor;
   readonly mapProductManifest: FileDescriptor;
   readonly mapPagePack: FileDescriptor;
+  readonly mapBrowseRows: FileDescriptor;
 }
 
 export interface FixtureRelease {
@@ -978,6 +979,7 @@ interface BuildMapProductOptions {
 
 interface BuiltMapProduct {
   readonly pagePack: FileDescriptor;
+  readonly browseRows: FileDescriptor;
   readonly productManifest: FileDescriptor;
   readonly productDescriptor: Record<string, unknown>;
 }
@@ -1089,6 +1091,7 @@ async function buildMapProduct(
   });
   return {
     pagePack,
+    browseRows: rows,
     productManifest,
     productDescriptor: {
       productId: mapProductId,
@@ -1408,6 +1411,7 @@ export async function buildRelease(fixtureWorld: {
       pagePack,
       mapProductManifest: mapsArtifacts.productManifest,
       mapPagePack: mapsArtifacts.pagePack,
+      mapBrowseRows: mapsArtifacts.browseRows,
     });
   }
 
