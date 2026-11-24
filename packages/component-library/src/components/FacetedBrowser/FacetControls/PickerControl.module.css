@@ -1,0 +1,37 @@
+.pill {
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.pillLabel {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.pillContent {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: var(--mantine-spacing-xs);
+  overflow: hidden;
+}
+
+.pillIcon {
+  display: inline-flex;
+  flex: 0 0 auto;
+}
+
+/* Game icons are pixel art. */
+.pillIcon img {
+  image-rendering: pixelated;
+}
+
+.pillText {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

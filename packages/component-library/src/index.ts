@@ -94,6 +94,7 @@ export type {
   FacetDefinition,
   FacetFilterValue,
   FacetOption,
+  FacetPicker,
   FacetRangeBucket,
   FacetedBrowserNavigation,
   FacetedBrowserNavigationDrawerMeta,

@@ -7,8 +7,10 @@ export type FacetSurface = 'rail' | 'drawer';
 export interface FacetOption {
   readonly value: string;
   readonly label: string;
-  /** Optional decorative item icon shown on its active-filter chip. */
+  /** Optional decorative icon shown on its active-filter chip and picker row. */
   readonly icon?: ReactNode;
+  /** Optional secondary line shown under the label in a picker row. */
+  readonly description?: string;
   /** The host must keep each group's options contiguous; headings follow option order. */
   readonly group?: string;
 }
@@ -36,6 +38,13 @@ export interface FacetControlContext<TRecord extends Record<string, unknown>> {
   readonly surface: FacetSurface;
 }
 
+/** Domain wording for a searchable picker. */
+export interface FacetPicker {
+  readonly placeholder: string;
+  /** Shown when no option matches the typed text. */
+  readonly nothingFound: string;
+}
+
 export interface FacetDefinition<TRecord extends Record<string, unknown>> {
   /** Unique UI identifier used by quick facets. */
   readonly id: string;
@@ -48,6 +57,11 @@ export interface FacetDefinition<TRecord extends Record<string, unknown>> {
   readonly kind: 'multi-select' | 'range' | 'boolean';
   /** Optional labels and ordering for categorical values; values remain strings. */
   readonly options?: readonly FacetOption[];
+  /**
+   * Presents a `multi-select` facet as a searchable picker instead of a
+   * checkbox list; suited to long option lists such as monsters or items.
+   */
+  readonly picker?: FacetPicker;
   /**
    * Formats labels for options derived from record values when `options` is
    * omitted. The default label is the raw value.
