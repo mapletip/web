@@ -126,6 +126,11 @@ function BrowserExample({
       { id: 'region', accessor: 'region', sortable: false },
       { id: 'status', accessor: 'status', sortable: false },
       {
+        id: 'regionNodes',
+        accessor: (record: DemoRecord) => ['all', record.region],
+        sortable: false,
+      },
+      {
         id: 'hasImage',
         accessor: (record: DemoRecord) => record.image !== null,
         sortable: false,
@@ -638,6 +643,64 @@ export const RailNavigationSlot: Story = {
       }}
     />
   ),
+};
+
+function regionTree(
+  counts: ReadonlyMap<string, number> | undefined,
+): DrillDownNode {
+  return {
+    id: 'all',
+    label: 'All regions',
+    href: '#all',
+    count: counts?.get('all') ?? 0,
+    children: demoRegionFacetOptions.map(({ value, label }) => ({
+      id: value,
+      label,
+      href: `#${value}`,
+      count: counts?.get(value) ?? 0,
+    })),
+  };
+}
+
+export const FilterAwareNavigationCounts: Story = {
+  name: 'Rail navigation with filter-aware counts',
+  render: () => (
+    <BrowserExample
+      state={{
+        search: 'Record 01',
+        filters: {},
+        sort: { field: 'value1', direction: 'desc' },
+        page: 1,
+        pageSize: 50,
+        hiddenColumns: [],
+      }}
+      navigation={{
+        label: 'Regions',
+        currentLabel: 'All regions',
+        currentId: 'all',
+        field: 'regionNodes',
+        apply: () => {},
+        render: (context) => (
+          <DrillDownNav
+            root={regionTree(context.counts)}
+            currentId={context.mode === 'drawer' ? context.selectedId : 'all'}
+            label="Regions"
+            {...(context.mode === 'drawer'
+              ? { onSelect: context.onSelect }
+              : {})}
+          />
+        ),
+      }}
+    />
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const matching = demoRecords.filter(({ name }) =>
+      name.toLowerCase().includes('record 01'),
+    ).length;
+    const nav = canvas.getByRole('navigation', { name: 'Regions' });
+    await expect(nav).toHaveTextContent(`All regions${matching}`);
+  },
 };
 
 function DrawerNavigationExample() {

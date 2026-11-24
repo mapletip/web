@@ -25,22 +25,34 @@ export interface FacetedBrowserNavigationDrawerMeta {
   readonly isLeaf: boolean;
 }
 
+/** Present when the navigation declares a `field`. */
+interface FacetedBrowserNavigationCounts {
+  /**
+   * Records under each node that match the active search and committed
+   * filters; a node with no match is absent (zero).
+   */
+  readonly counts?: ReadonlyMap<string, number> | undefined;
+}
+
 export type FacetedBrowserNavigationRenderContext =
-  | {
-      readonly mode: 'rail';
-      readonly onNavigate?: (() => void) | undefined;
-      readonly selectedId?: never;
-      readonly onSelect?: never;
-    }
-  | {
-      readonly mode: 'drawer';
-      readonly selectedId: string;
-      readonly onSelect: (
-        node: FacetedBrowserNavigationDrawerNode,
-        meta: FacetedBrowserNavigationDrawerMeta,
-      ) => void;
-      readonly onNavigate?: never;
-    };
+  FacetedBrowserNavigationCounts &
+    (
+      | {
+          readonly mode: 'rail';
+          readonly onNavigate?: (() => void) | undefined;
+          readonly selectedId?: never;
+          readonly onSelect?: never;
+        }
+      | {
+          readonly mode: 'drawer';
+          readonly selectedId: string;
+          readonly onSelect: (
+            node: FacetedBrowserNavigationDrawerNode,
+            meta: FacetedBrowserNavigationDrawerMeta,
+          ) => void;
+          readonly onNavigate?: never;
+        }
+    );
 
 export type NavigationOpenedChangeReason = 'open' | 'dismiss' | 'navigate';
 
@@ -52,7 +64,14 @@ interface FacetedBrowserNavigationCommon {
    */
   readonly currentIcon?: ReactNode;
   readonly currentId: string;
+  /** Defaults to the current node's count when `field` is set. */
   readonly currentCount?: number | undefined;
+  /**
+   * Registered query field whose values are each record's navigation node
+   * ids. When set, the host passes every record; FacetedBrowser lists only the
+   * current node's records and gives `render` filter-aware node `counts`.
+   */
+  readonly field?: string | undefined;
   readonly apply: (id: string, options: { readonly replace: true }) => void;
   readonly render: (
     context: FacetedBrowserNavigationRenderContext,

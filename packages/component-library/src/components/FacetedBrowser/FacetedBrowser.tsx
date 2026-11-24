@@ -189,8 +189,18 @@ export function FacetedBrowser<TRecord extends Record<string, unknown>>(
   const facets = resolved.facets;
   const resolvedQueryFields = resolved.queryFields;
 
+  const navigationField = navigation?.field;
+  const navigationCurrentId = navigation?.currentId;
+  const scopeFilters = useMemo(
+    () =>
+      navigationField === undefined || navigationCurrentId === undefined
+        ? undefined
+        : { [navigationField]: [navigationCurrentId] },
+    [navigationField, navigationCurrentId],
+  );
   const browser = useFacetedBrowser({
     records,
+    ...(scopeFilters ? { scopeFilters } : {}),
     ...(columns.length > 0 ? { columns } : {}),
     ...(resolvedQueryFields.length > 0
       ? { queryFields: resolvedQueryFields }
@@ -203,6 +213,17 @@ export function FacetedBrowser<TRecord extends Record<string, unknown>>(
     onBrowseStateChange: changeBrowseState,
   });
   const canonicalState = browser.canonicalState;
+  // The facet engine counts a field's values under every filter except that
+  // field's own, which here is the current node: per-node contextual counts.
+  const navigationCounts =
+    navigationField === undefined
+      ? undefined
+      : browser.getFacetValues(navigationField);
+  const navigationCurrentCount =
+    navigation?.currentCount ??
+    (navigationCounts === undefined || navigationCurrentId === undefined
+      ? undefined
+      : (navigationCounts.get(navigationCurrentId) ?? 0));
 
   const comparisonRowExpansionContent = comparisonProps?.rowExpansionContent;
   const comparisonRecordDetailsTitle = comparisonProps?.recordDetailsTitle;
@@ -538,7 +559,11 @@ export function FacetedBrowser<TRecord extends Record<string, unknown>>(
     navigation || facets.length > 0 ? (
       <Stack gap="md">
         {navigation
-          ? navigation.render({ mode: 'rail', onNavigate: undefined })
+          ? navigation.render({
+              mode: 'rail',
+              onNavigate: undefined,
+              counts: navigationCounts,
+            })
           : null}
         {facets.length > 0 ? (
           <>
@@ -772,7 +797,7 @@ export function FacetedBrowser<TRecord extends Record<string, unknown>>(
           opened={navDrawerOpened}
           title={navigation.label}
           currentId={navigation.currentId}
-          currentCount={navigation.currentCount}
+          currentCount={navigationCurrentCount}
           onClose={closeNavDrawer}
           onApply={navigation.apply}
         >
@@ -781,6 +806,7 @@ export function FacetedBrowser<TRecord extends Record<string, unknown>>(
               mode: 'drawer',
               selectedId,
               onSelect,
+              counts: navigationCounts,
             })
           }
         </NavigationDrawer>
