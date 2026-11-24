@@ -1224,31 +1224,31 @@ describe('useFacetedBrowser', () => {
       const mapRecords: readonly MapWorkspaceRecord[] = [
         {
           mapId: '1000',
-          mapName: 'Henesys Hunting Ground',
-          region: 'Victoria',
+          mapName: 'Meadowbrook Hunting Field',
+          region: 'Western',
           mobCount: 24,
-          connectedTowns: ['Henesys'],
+          connectedTowns: ['Meadowbrook'],
         },
         {
           mapId: '1010',
-          mapName: 'Ellinia Forest Path',
-          region: 'Victoria',
+          mapName: 'Grovehold Forest Path',
+          region: 'Western',
           mobCount: 15,
-          connectedTowns: ['Ellinia', 'Henesys'],
+          connectedTowns: ['Grovehold', 'Meadowbrook'],
         },
         {
           mapId: '2000',
-          mapName: 'Orbis Cloud Park',
-          region: 'Ossyria',
+          mapName: 'Skyhold Cloud Park',
+          region: 'Northreach',
           mobCount: 30,
-          connectedTowns: ['Orbis'],
+          connectedTowns: ['Skyhold'],
         },
         {
           mapId: '2010',
-          mapName: 'El Nath Ice Valley',
-          region: 'Ossyria',
+          mapName: 'Frostfall Frost Hollow',
+          region: 'Northreach',
           mobCount: 18,
-          connectedTowns: ['El Nath', 'Orbis'],
+          connectedTowns: ['Frostfall', 'Skyhold'],
         },
       ];
 
@@ -1287,31 +1287,31 @@ describe('useFacetedBrowser', () => {
             <div data-testid="card-results">
               {browser.records.map((r) => r.mapName).join(',')}
             </div>
-            <div data-testid="facet-victoria">
-              {browser.getFacetCount('region', 'Victoria')}
+            <div data-testid="facet-western">
+              {browser.getFacetCount('region', 'Western')}
             </div>
-            <div data-testid="facet-ossyria">
-              {browser.getFacetCount('region', 'Ossyria')}
+            <div data-testid="facet-northreach">
+              {browser.getFacetCount('region', 'Northreach')}
             </div>
-            <div data-testid="facet-henesys">
-              {browser.getFacetCount('connectedTowns', 'Henesys')}
+            <div data-testid="facet-meadowbrook">
+              {browser.getFacetCount('connectedTowns', 'Meadowbrook')}
             </div>
-            <div data-testid="facet-orbis">
-              {browser.getFacetCount('connectedTowns', 'Orbis')}
+            <div data-testid="facet-skyhold">
+              {browser.getFacetCount('connectedTowns', 'Skyhold')}
             </div>
             <button
               type="button"
-              onClick={() => browser.setFilter('region', ['Victoria'])}
+              onClick={() => browser.setFilter('region', ['Western'])}
             >
-              Filter Victoria
+              Filter Western
             </button>
             <button
               type="button"
               onClick={() =>
-                browser.setFilter('connectedTowns', ['Henesys', 'Orbis'])
+                browser.setFilter('connectedTowns', ['Meadowbrook', 'Skyhold'])
               }
             >
-              Filter Henesys Or Orbis
+              Filter Meadowbrook Or Skyhold
             </button>
             <button
               type="button"
@@ -1329,37 +1329,37 @@ describe('useFacetedBrowser', () => {
       }
 
       render(<MapCardBrowserHarness />);
-      // Initial mobCount desc: Orbis Cloud Park (30), Henesys Hunting Ground (24) on page 1
+      // Initial mobCount desc: Skyhold Cloud Park (30), Meadowbrook Hunting Field (24) on page 1
       expect(text('card-results')).toBe(
-        'Orbis Cloud Park,Henesys Hunting Ground',
+        'Skyhold Cloud Park,Meadowbrook Hunting Field',
       );
       expect(text('card-total-matches')).toBe('4');
-      expect(text('facet-victoria')).toBe('2');
-      expect(text('facet-ossyria')).toBe('2');
-      expect(text('facet-henesys')).toBe('2'); // Henesys HG + Ellinia Path
-      expect(text('facet-orbis')).toBe('2'); // Orbis Cloud + El Nath Ice
+      expect(text('facet-western')).toBe('2');
+      expect(text('facet-northreach')).toBe('2');
+      expect(text('facet-meadowbrook')).toBe('2'); // Meadowbrook HG + Grovehold Path
+      expect(text('facet-skyhold')).toBe('2'); // Skyhold Cloud + Frostfall Ice
 
-      // Filter Victoria
+      // Filter Western
       await userEvent.click(
-        screen.getByRole('button', { name: 'Filter Victoria' }),
+        screen.getByRole('button', { name: 'Filter Western' }),
       );
       expect(text('card-total-matches')).toBe('2');
       expect(text('card-results')).toBe(
-        'Henesys Hunting Ground,Ellinia Forest Path',
+        'Meadowbrook Hunting Field,Grovehold Forest Path',
       );
 
-      // Contextual faceting: region's own counts exclude region filter, but connectedTowns reflects Victoria records
-      expect(text('facet-victoria')).toBe('2');
-      expect(text('facet-ossyria')).toBe('2');
-      expect(text('facet-henesys')).toBe('2');
-      expect(text('facet-orbis')).toBe('0'); // 0 Victoria maps connect to Orbis
+      // Contextual faceting: region's own counts exclude region filter, but connectedTowns reflects Western records
+      expect(text('facet-western')).toBe('2');
+      expect(text('facet-northreach')).toBe('2');
+      expect(text('facet-meadowbrook')).toBe('2');
+      expect(text('facet-skyhold')).toBe('0'); // 0 Western maps connect to Skyhold
 
       // Sort mob count asc
       await userEvent.click(
         screen.getByRole('button', { name: 'Sort Mob Count Asc' }),
       );
       expect(text('card-results')).toBe(
-        'Ellinia Forest Path,Henesys Hunting Ground',
+        'Grovehold Forest Path,Meadowbrook Hunting Field',
       );
     });
   });
@@ -1376,31 +1376,31 @@ describe('useFacetedBrowser', () => {
     const monsterRecords: readonly MonsterRecord[] = [
       {
         id: 'm1',
-        name: 'Fire Boar',
+        name: 'Ember Hog',
         category: 'Normal',
         elements: ['fire'],
-        dropSources: ['Perion', 'Perion'], // duplicate for distinct-record test
+        dropSources: ['Ridgeholm', 'Ridgeholm'], // duplicate for distinct-record test
       },
       {
         id: 'm2',
-        name: 'Crimson Balrog',
+        name: 'Crimson Emberlord',
         category: 'Boss',
         elements: ['fire', 'poison'],
-        dropSources: ['Ship', 'Ellinia'],
+        dropSources: ['Ship', 'Grovehold'],
       },
       {
         id: 'm3',
-        name: 'Ice Drake',
+        name: 'Frost Wyrm',
         category: 'Elite',
         elements: ['ice', 'lightning'],
         dropSources: ['Dungeon'],
       },
       {
         id: 'm4',
-        name: 'Zakum',
+        name: 'Stonewarden',
         category: 'Boss',
         elements: ['fire', 'poison', 'ice'],
-        dropSources: ['El Nath'],
+        dropSources: ['Frostfall'],
       },
     ];
 
@@ -1446,8 +1446,8 @@ describe('useFacetedBrowser', () => {
           <div data-testid="count-unknown-col">
             {browser.getFacetCount('nonExistentField', 'value')}
           </div>
-          <div data-testid="count-drop-perion">
-            {browser.getFacetCount('dropSources', 'Perion')}
+          <div data-testid="count-drop-ridgeholm">
+            {browser.getFacetCount('dropSources', 'Ridgeholm')}
           </div>
           <button
             type="button"
@@ -1487,20 +1487,20 @@ describe('useFacetedBrowser', () => {
 
     it('uses getUniqueValues so a multi-valued record contributes to each distinct facet count', () => {
       render(<MultiValueHarness />);
-      // fire: m1 (Fire Boar), m2 (Crimson Balrog), m4 (Zakum) = 3
+      // fire: m1 (Ember Hog), m2 (Crimson Emberlord), m4 (Stonewarden) = 3
       expect(text('count-fire')).toBe('3');
-      // poison: m2 (Crimson Balrog), m4 (Zakum) = 2
+      // poison: m2 (Crimson Emberlord), m4 (Stonewarden) = 2
       expect(text('count-poison')).toBe('2');
-      // ice: m3 (Ice Drake), m4 (Zakum) = 2
+      // ice: m3 (Frost Wyrm), m4 (Stonewarden) = 2
       expect(text('count-ice')).toBe('2');
-      // lightning: m3 (Ice Drake) = 1
+      // lightning: m3 (Frost Wyrm) = 1
       expect(text('count-lightning')).toBe('1');
     });
 
     it('enforces distinct-record semantics so duplicate values in a single record do not double count', () => {
       render(<MultiValueHarness />);
-      // m1 has dropSources: ['Perion', 'Perion'] -> should count as 1 distinct record
-      expect(text('count-drop-perion')).toBe('1');
+      // m1 has dropSources: ['Ridgeholm', 'Ridgeholm'] -> should count as 1 distinct record
+      expect(text('count-drop-ridgeholm')).toBe('1');
     });
 
     it('distinguishes known zero from unknown facet values', () => {
@@ -1520,12 +1520,12 @@ describe('useFacetedBrowser', () => {
       );
       expect(text('mv-matches')).toBe('4');
 
-      // AND across facets: Boss AND poison matches m2 (Crimson Balrog) and m4 (Zakum)
+      // AND across facets: Boss AND poison matches m2 (Crimson Emberlord) and m4 (Stonewarden)
       await userEvent.click(
         screen.getByRole('button', { name: 'Filter Boss And Poison' }),
       );
       expect(text('mv-matches')).toBe('2');
-      expect(text('mv-records')).toBe('Crimson Balrog,Zakum');
+      expect(text('mv-records')).toBe('Crimson Emberlord,Stonewarden');
     });
 
     it('provides contextual facet counts excluding the current facet own filter while respecting other facets', async () => {
@@ -1535,7 +1535,7 @@ describe('useFacetedBrowser', () => {
       await userEvent.click(
         screen.getByRole('button', { name: 'Filter Boss' }),
       );
-      expect(text('mv-matches')).toBe('2'); // Crimson Balrog and Zakum
+      expect(text('mv-matches')).toBe('2'); // Crimson Emberlord and Stonewarden
 
       // Among Bosses: fire=2, poison=2, ice=1, lightning=0 (known zero in this context)
       expect(text('count-fire')).toBe('2');
@@ -1836,8 +1836,8 @@ describe('useFacetedBrowser', () => {
         readonly name: string;
       }
       const records: readonly ItemRecord[] = [
-        { id: '02000060', name: 'Scroll for Helmet for DEF 10%' },
-        { id: '02000061', name: 'Scroll for Gloves for ATT 60%' },
+        { id: '02000060', name: 'Charm for Helmet for DEF 10%' },
+        { id: '02000061', name: 'Charm for Gloves for ATT 60%' },
         { id: '60', name: 'Other Scroll' },
       ];
 
@@ -1884,11 +1884,11 @@ describe('useFacetedBrowser', () => {
 
       render(<SearchSemanticsHarness />);
       expect(text('matching-names')).toBe(
-        'Other Scroll,Scroll for Helmet for DEF 10%,Scroll for Gloves for ATT 60%',
+        'Other Scroll,Charm for Helmet for DEF 10%,Charm for Gloves for ATT 60%',
       );
 
       // Search for "60":
-      // - name contains "60" -> "Scroll for Gloves for ATT 60%" matches
+      // - name contains "60" -> "Charm for Gloves for ATT 60%" matches
       // - id: "02000060" does NOT match "60" because numeric ID 2000060 !== 60
       // - id: "60" matches "60" because numeric ID 60 === 60
       await userEvent.type(
@@ -1896,7 +1896,7 @@ describe('useFacetedBrowser', () => {
         '60',
       );
       expect(text('matching-names')).toBe(
-        'Other Scroll,Scroll for Gloves for ATT 60%',
+        'Other Scroll,Charm for Gloves for ATT 60%',
       );
 
       // Draft evaluation reflects the custom searchMatch comparator
@@ -1911,7 +1911,7 @@ describe('useFacetedBrowser', () => {
         screen.getByRole('textbox', { name: 'Search' }),
         '02000060',
       );
-      expect(text('matching-names')).toBe('Scroll for Helmet for DEF 10%');
+      expect(text('matching-names')).toBe('Charm for Helmet for DEF 10%');
 
       await userEvent.click(
         screen.getByRole('button', { name: 'Evaluate Draft' }),

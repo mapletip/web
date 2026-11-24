@@ -60,7 +60,7 @@ describe('MonsterDetail hero', () => {
     });
 
     expect(
-      screen.getByRole('heading', { level: 1, name: 'Sentinel Snail' }),
+      screen.getByRole('heading', { level: 1, name: 'Sentinel Shellback' }),
     ).toBeInTheDocument();
     expect(screen.getByText('Boss')).toBeInTheDocument();
     expect(screen.getByText('Undead')).toBeInTheDocument();

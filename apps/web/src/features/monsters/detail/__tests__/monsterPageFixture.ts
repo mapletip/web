@@ -11,8 +11,8 @@ export function monsterPageFixture(
     scope: { build_id: 'cw-launch', family_id: 'classic-world' },
     key: 'fixture:monster:001',
     publicId: '36z2h01p',
-    slug: 'sentinel-snail',
-    name: { state: 'known', value: 'Sentinel Snail' },
+    slug: 'sentinel-shellback',
+    name: { state: 'known', value: 'Sentinel Shellback' },
     sprite: {
       contentId: { state: 'known', value: 'a'.repeat(64) },
       width: 32,

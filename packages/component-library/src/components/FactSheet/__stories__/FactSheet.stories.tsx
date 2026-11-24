@@ -127,7 +127,7 @@ export const LinkedValue: Story = {
           facts={[
             {
               label: 'Return map',
-              value: <a href="/maplestory/maps/ellinia">Ellinia</a>,
+              value: <a href="/maplestory/maps/grovehold">Grovehold</a>,
             },
           ]}
         />

@@ -25,8 +25,8 @@ function knownRow(): MonsterBrowseRow {
   return {
     key: 'fixture:monster:001',
     publicId: '00000001',
-    slug: 'sentinel-snail',
-    name: 'Sentinel Snail',
+    slug: 'sentinel-shellback',
+    name: 'Sentinel Shellback',
     sprite: 'c'.repeat(64),
     level: 5,
     hp: 30,
@@ -131,7 +131,7 @@ describe('MonsterBrowseCard', () => {
       'HP Recovery',
     ]);
     expect(
-      screen.getByRole('heading', { name: 'Sentinel Snail' }),
+      screen.getByRole('heading', { name: 'Sentinel Shellback' }),
     ).toBeVisible();
     expect(screen.getByText('Lv. 5')).toBeVisible();
     expect(
@@ -211,8 +211,11 @@ describe('MonsterBrowseCard', () => {
     const list = screen.getAllByRole('definition')[0]?.closest('dl');
     expect(list).toHaveAttribute('aria-label', 'Training facts');
     expect(
-      screen.getByRole('link', { name: 'Sentinel Snail' }),
-    ).toHaveAttribute('href', '/maplestory/monsters/sentinel-snail-00000001');
+      screen.getByRole('link', { name: 'Sentinel Shellback' }),
+    ).toHaveAttribute(
+      'href',
+      '/maplestory/monsters/sentinel-shellback-00000001',
+    );
   });
 
   it('exposes a details trigger that opens the shared drawer', async () => {
@@ -235,7 +238,7 @@ describe('MonsterBrowseCard', () => {
     renderCard(row, onShowDrops);
 
     const trigger = screen.getByRole('button', {
-      name: 'Sentinel Snail, 1 drop. Show drops.',
+      name: 'Sentinel Shellback, 1 drop. Show drops.',
     });
     expect(trigger).toHaveTextContent('1');
     expect(trigger).toHaveAttribute('data-variant', 'default');
@@ -253,7 +256,7 @@ describe('MonsterBrowseCard', () => {
     renderCard(knownRow(), vi.fn(), true);
 
     const trigger = screen.getByRole('button', {
-      name: 'Sentinel Snail, 0. Show drops.',
+      name: 'Sentinel Shellback, 0. Show drops.',
     });
     expect(trigger).toHaveAttribute('aria-expanded', 'true');
     expect(trigger).toHaveAttribute('data-variant', 'light');
@@ -391,7 +394,7 @@ describe('MonsterBrowseCard', () => {
         entries: [
           {
             itemRefState: 'resolved',
-            itemName: 'Red Potion',
+            itemName: 'Crimson Tonic',
             assertionKind: 'native',
           },
         ],
@@ -404,7 +407,7 @@ describe('MonsterBrowseCard', () => {
     );
 
     const statusButton = screen.getByRole('button', {
-      name: 'Show confirmed drop details for Red Potion',
+      name: 'Show confirmed drop details for Crimson Tonic',
     });
     await user.click(statusButton);
     expect(statusButton).toHaveAttribute('aria-expanded', 'true');

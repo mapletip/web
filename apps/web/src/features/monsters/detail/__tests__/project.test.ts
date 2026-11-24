@@ -147,18 +147,18 @@ describe('projectMonsterDetail', () => {
     const view = projectMonsterDetail(
       monsterPageFixture({
         publicId: '36z2h01p',
-        slug: 'sentinel-snail',
-        name: { state: 'known', value: 'Sentinel Snail' },
+        slug: 'sentinel-shellback',
+        name: { state: 'known', value: 'Sentinel Shellback' },
       }),
       'cw-launch',
     );
 
     expect(view).toMatchObject({
       publicId: '36z2h01p',
-      slug: 'sentinel-snail',
-      name: 'Sentinel Snail',
+      slug: 'sentinel-shellback',
+      name: 'Sentinel Shellback',
       buildId: 'cw-launch',
-      canonicalPath: '/maplestory/monsters/sentinel-snail-36z2h01p',
+      canonicalPath: '/maplestory/monsters/sentinel-shellback-36z2h01p',
       spriteUrl: `https://d0.mapletip.com/media/images/aa/${'a'.repeat(64)}.png`,
       spriteWidth: 32,
       spriteHeight: 48,
@@ -183,8 +183,8 @@ describe('projectMonsterDetail', () => {
     const view = projectMonsterDetail(
       monsterPageFixture({
         publicId: 'jp565851',
-        slug: 'pianus',
-        name: { state: 'known', value: 'Pianus' },
+        slug: 'deepmaw',
+        name: { state: 'known', value: 'Deepmaw' },
         scope: { build_id: 'gms-v83', family_id: 'gms' },
       }),
       'gms-v83',
@@ -192,7 +192,7 @@ describe('projectMonsterDetail', () => {
 
     expect(view.buildId).toBe('gms-v83');
     expect(view.canonicalPath).toBe(
-      '/maplestory/gms-v83/monsters/pianus-jp565851',
+      '/maplestory/gms-v83/monsters/deepmaw-jp565851',
     );
   });
 

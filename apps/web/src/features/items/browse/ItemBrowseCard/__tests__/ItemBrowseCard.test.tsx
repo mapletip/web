@@ -29,7 +29,7 @@ describe('ItemBrowseCard', () => {
     };
     const row: ItemRow = {
       sourceId: '02040001',
-      name: 'Scroll for Helmet for DEF 100%',
+      name: 'Charm for Helmet for DEF 100%',
       itemClass: 'consume',
       targetLabel: 'hat',
       stats: { weaponDefense: 1 },
@@ -50,7 +50,7 @@ describe('ItemBrowseCard', () => {
 
     // Identity
     expect(screen.getByRole('heading', { level: 2 })).toHaveTextContent(
-      'Scroll for Helmet for DEF 100%',
+      'Charm for Helmet for DEF 100%',
     );
     expect(screen.queryByText('02040001')).not.toBeInTheDocument();
 
@@ -73,7 +73,7 @@ describe('ItemBrowseCard', () => {
     // Potion with only HP, no MP or percents
     const potionRow: ItemRow = {
       sourceId: '02000000',
-      name: 'Red Potion',
+      name: 'Crimson Tonic',
       itemClass: 'consume',
       hp: 100,
     };
@@ -106,7 +106,7 @@ describe('ItemBrowseCard', () => {
   it('renders nothing extra when a card has no recorded facts', () => {
     const rowWithoutFacts: ItemRow = {
       sourceId: '04000000',
-      name: 'Plain Snail Shell',
+      name: 'Plain Shellback Shell',
       itemClass: 'etc',
     };
 
@@ -117,7 +117,7 @@ describe('ItemBrowseCard', () => {
     );
 
     expect(screen.getByRole('heading', { level: 2 })).toHaveTextContent(
-      'Plain Snail Shell',
+      'Plain Shellback Shell',
     );
     expect(screen.queryByText('04000000')).not.toBeInTheDocument();
     expect(screen.queryByRole('definition')).not.toBeInTheDocument();

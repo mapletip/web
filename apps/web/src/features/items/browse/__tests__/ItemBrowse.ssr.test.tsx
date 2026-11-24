@@ -20,7 +20,7 @@ const { fixtureRows, cwCoverage, gmsCoverage } = vi.hoisted(() => {
   const rows: readonly ItemRow[] = [
     {
       sourceId: '02000000',
-      name: 'Red Potion',
+      name: 'Crimson Tonic',
       itemClass: 'consume',
       types: ['potion'],
       functions: ['recovery'],
@@ -28,7 +28,7 @@ const { fixtureRows, cwCoverage, gmsCoverage } = vi.hoisted(() => {
     },
     {
       sourceId: '02040000',
-      name: 'Scroll for Helmet DEF 100%',
+      name: 'Charm for Helmet DEF 100%',
       itemClass: 'consume',
       types: ['upgrade-scroll'],
       targetLabel: 'hat',
@@ -39,14 +39,14 @@ const { fixtureRows, cwCoverage, gmsCoverage } = vi.hoisted(() => {
     },
     {
       sourceId: '02070000',
-      name: 'Subi Throwing-Stars',
+      name: 'Ironleaf Throwing-Stars',
       itemClass: 'consume',
       types: ['throwing-star'],
       attack: 15,
     },
     {
       sourceId: '04000000',
-      name: 'Snail Shell',
+      name: 'Shellback Shell',
       itemClass: 'etc',
       neededForQuestCount: 1,
       usedInRecipeCount: 1,
@@ -61,7 +61,7 @@ const { fixtureRows, cwCoverage, gmsCoverage } = vi.hoisted(() => {
     },
     {
       sourceId: '05000000',
-      name: 'Brown Puppy',
+      name: 'Tan Pup',
       itemClass: 'pet',
       cashShopListingCount: 1,
       closeness: 1,

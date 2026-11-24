@@ -19,7 +19,7 @@ const { fixtureRows, fixtureCoverage } = vi.hoisted(() => {
   const rows: readonly ItemRow[] = [
     {
       sourceId: '02000000',
-      name: 'Red Potion',
+      name: 'Crimson Tonic',
       itemClass: 'consume',
       types: ['potion'],
       functions: ['recovery'],
@@ -27,7 +27,7 @@ const { fixtureRows, fixtureCoverage } = vi.hoisted(() => {
     },
     {
       sourceId: '02070000',
-      name: 'Subi Throwing-Stars',
+      name: 'Ironleaf Throwing-Stars',
       itemClass: 'consume',
       types: ['throwing-star'],
       attack: 1,
@@ -42,7 +42,7 @@ const { fixtureRows, fixtureCoverage } = vi.hoisted(() => {
     },
     {
       sourceId: '02040001',
-      name: 'Scroll for Helmet DEF 60%',
+      name: 'Charm for Helmet DEF 60%',
       itemClass: 'consume',
       types: ['upgrade-scroll'],
       targetLabel: 'hat',
@@ -54,7 +54,7 @@ const { fixtureRows, fixtureCoverage } = vi.hoisted(() => {
     },
     {
       sourceId: '02040002',
-      name: 'Scroll for Shoes Jump 100%',
+      name: 'Charm for Shoes Jump 100%',
       itemClass: 'consume',
       types: ['upgrade-scroll'],
       targetLabel: 'shoes',
@@ -64,7 +64,7 @@ const { fixtureRows, fixtureCoverage } = vi.hoisted(() => {
     },
     {
       sourceId: '04000000',
-      name: 'Snail Shell',
+      name: 'Shellback Shell',
       itemClass: 'etc',
     },
     {
@@ -178,7 +178,7 @@ describe('Items Browse router state', () => {
       </MantineProvider>,
     );
 
-    expect(screen.getByText('Red Potion')).toBeInTheDocument();
+    expect(screen.getByText('Crimson Tonic')).toBeInTheDocument();
     expect(screen.getByText('Potion 2000000')).toBeInTheDocument();
     expect(screen.getByRole('table')).not.toHaveTextContent('02000000');
   });
@@ -197,7 +197,7 @@ describe('Items Browse router state', () => {
     );
 
     expect(screen.getByText('Potion 2000000')).toBeInTheDocument();
-    expect(screen.queryByText('Red Potion')).not.toBeInTheDocument();
+    expect(screen.queryByText('Crimson Tonic')).not.toBeInTheDocument();
     expect(screen.getByRole('table')).not.toHaveTextContent('02000000');
   });
 
@@ -271,14 +271,14 @@ describe('Items Browse router state', () => {
     const search = screen.getByRole('textbox', {
       name: 'Search Classic World items',
     });
-    await user.type(search, 'Red Potion');
+    await user.type(search, 'Crimson Tonic');
     await waitFor(() => {
       expect(
         new URL(
           router.state.location.href,
           'http://localhost',
         ).searchParams.get('q'),
-      ).toBe('Red Potion');
+      ).toBe('Crimson Tonic');
     });
     expect(replace).toHaveBeenCalled();
 
@@ -408,7 +408,7 @@ describe('Items Browse router state', () => {
 
     expect(screen.getByRole('checkbox', { name: /^100–299/ })).toBeChecked();
     expect(screen.getByText('Potion 2000000')).toBeInTheDocument();
-    expect(screen.queryByText('Red Potion')).not.toBeInTheDocument();
+    expect(screen.queryByText('Crimson Tonic')).not.toBeInTheDocument();
     expect(router.state.matches.at(-1)?.search).toMatchObject({
       hp: ['100-299'],
     });
@@ -425,7 +425,7 @@ describe('Items Browse router state', () => {
     expect(
       within(noUseFacet).getByRole('checkbox', { name: /^Yes \(/u }),
     ).toBeChecked();
-    expect(screen.getByText('Snail Shell')).toBeInTheDocument();
+    expect(screen.getByText('Shellback Shell')).toBeInTheDocument();
     expect(screen.queryByText('Quest Material')).not.toBeInTheDocument();
     expect(router.state.matches.at(-1)?.search).toMatchObject({
       noRecordedQuestOrRecipeUse: true,

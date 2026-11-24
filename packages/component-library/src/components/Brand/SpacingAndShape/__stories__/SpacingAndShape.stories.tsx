@@ -197,7 +197,7 @@ function FoundationScaleExample() {
           </Table.Thead>
           <Table.Tbody>
             <Table.Tr style={{ height: '48px' }}>
-              <Table.Td>Crimson Balrog</Table.Td>
+              <Table.Td>Crimson Emberlord</Table.Td>
               <Table.Td>100</Table.Td>
               <Table.Td>3,500</Table.Td>
             </Table.Tr>

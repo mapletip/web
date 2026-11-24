@@ -42,7 +42,7 @@ describe('QuestRecordCard', () => {
             repeatable: true,
             event: true,
             startNpc: {
-              name: 'Shanks',
+              name: 'Brannock',
               spriteUrl: mapNpcSpriteUrl(
                 MAPLEKIT_RELEASE.baseUrl,
                 'd'.repeat(64),
@@ -64,7 +64,7 @@ describe('QuestRecordCard', () => {
     expect(screen.getByText('Lv. 2+')).toBeVisible();
     expect(screen.getByText('Repeatable')).toBeVisible();
     expect(screen.getByText('Event')).toBeVisible();
-    expect(screen.getByText('Start: Shanks · Beginner')).toBeVisible();
+    expect(screen.getByText('Start: Brannock · Beginner')).toBeVisible();
     expect(container.querySelector('img')).toHaveAttribute(
       'src',
       mapNpcSpriteUrl(MAPLEKIT_RELEASE.baseUrl, 'd'.repeat(64)),
@@ -97,7 +97,7 @@ describe('QuestRecordCard', () => {
         startNpc: {
           state: 'known',
           value: {
-            name: { state: 'known', value: 'Shanks' },
+            name: { state: 'known', value: 'Brannock' },
             sprite: { state: 'known', value: spriteId },
           },
         },
@@ -118,7 +118,7 @@ describe('QuestRecordCard', () => {
     );
 
     expect(known.startNpc).toEqual({
-      name: 'Shanks',
+      name: 'Brannock',
       spriteUrl: mapNpcSpriteUrl(MAPLEKIT_RELEASE.baseUrl, spriteId),
     });
     expect(known.event).toBe(true);

@@ -31,8 +31,8 @@ describe('loadMonsterDetail', () => {
     getMonsterPage.mockResolvedValue(
       monsterPageFixture({
         publicId: 'jp565851',
-        slug: 'pianus',
-        name: { state: 'known', value: 'Pianus' },
+        slug: 'deepmaw',
+        name: { state: 'known', value: 'Deepmaw' },
       }),
     );
 
@@ -54,8 +54,8 @@ describe('loadMonsterDetail', () => {
       view: projectMonsterDetail(
         monsterPageFixture({
           publicId: 'jp565851',
-          slug: 'pianus',
-          name: { state: 'known', value: 'Pianus' },
+          slug: 'deepmaw',
+          name: { state: 'known', value: 'Deepmaw' },
         }),
         'gms-v83',
       ),

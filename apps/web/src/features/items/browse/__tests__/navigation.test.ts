@@ -11,14 +11,14 @@ describe('navigation', () => {
   const dummyRows: readonly ItemRow[] = [
     {
       sourceId: '02000000',
-      name: 'Red Potion',
+      name: 'Crimson Tonic',
       itemClass: 'consume',
       types: ['potion'],
       functions: ['recovery'],
     },
     {
       sourceId: '02070000',
-      name: 'Subi Throwing-Stars',
+      name: 'Ironleaf Throwing-Stars',
       itemClass: 'consume',
       types: ['throwing-star'],
     },
@@ -29,7 +29,7 @@ describe('navigation', () => {
     },
     {
       sourceId: '04000000',
-      name: 'Snail Shell',
+      name: 'Shellback Shell',
       itemClass: 'etc',
     },
     {
@@ -40,7 +40,7 @@ describe('navigation', () => {
     },
     {
       sourceId: '5000000',
-      name: 'Brown Puppy',
+      name: 'Tan Pup',
       itemClass: 'pet',
     },
   ];
@@ -320,7 +320,7 @@ describe('navigation', () => {
         '5aae760b2488feb48104655227f9faf80f84691197b940ab44775f8f2a0c3965',
       );
 
-      // When both first (Elixir) and second (Power Elixir) preferences are present,
+      // When both first (Restorative) and second (Power Restorative) preferences are present,
       // first preference wins
       const bothPresent: readonly ItemRow[] = [
         ...powerElixirOnly,

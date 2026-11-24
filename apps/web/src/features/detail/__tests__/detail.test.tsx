@@ -52,12 +52,12 @@ async function renderWithRouter(ui: ReactElement) {
 
 describe('detail address helpers', () => {
   it('parses valid {slug}-{publicId} addresses including hyphenated slugs', () => {
-    expect(parseRecordAddress('snail-36z2h01p')).toEqual({
-      slug: 'snail',
+    expect(parseRecordAddress('shellback-36z2h01p')).toEqual({
+      slug: 'shellback',
       publicId: '36z2h01p',
     });
-    expect(parseRecordAddress('jr-balrog-0a1b2c3d')).toEqual({
-      slug: 'jr-balrog',
+    expect(parseRecordAddress('jr-emberlord-0a1b2c3d')).toEqual({
+      slug: 'jr-emberlord',
       publicId: '0a1b2c3d',
     });
     expect(parseRecordAddress('a-b-c-12345678')).toEqual({
@@ -69,17 +69,17 @@ describe('detail address helpers', () => {
   it('rejects malformed record addresses', () => {
     const malformed = [
       '',
-      'snail',
+      'shellback',
       '36z2h01p',
       '-36z2h01p',
-      'snail--36z2h01p',
-      'snail-36z2h01',
-      'snail-36z2h01pa',
-      'snail-36Z2H01P',
-      'Snail-36z2h01p',
+      'shellback--36z2h01p',
+      'shellback-36z2h01',
+      'shellback-36z2h01pa',
+      'shellback-36Z2H01P',
+      'Shellback-36z2h01p',
       'snail_36z2h01p',
-      'snail-36z2h01p/',
-      'snail-36z2h01!',
+      'shellback-36z2h01p/',
+      'shellback-36z2h01!',
     ];
 
     for (const value of malformed) {
@@ -88,8 +88,8 @@ describe('detail address helpers', () => {
   });
 
   it('formats record addresses', () => {
-    expect(formatRecordAddress('jr-balrog', '0a1b2c3d')).toBe(
-      'jr-balrog-0a1b2c3d',
+    expect(formatRecordAddress('jr-emberlord', '0a1b2c3d')).toBe(
+      'jr-emberlord-0a1b2c3d',
     );
   });
 
@@ -113,48 +113,51 @@ describe('detail address helpers', () => {
       '/maplestory/gms-v83/monsters',
     );
 
-    expect(buildRecordDetailPath('monsters', 'snail', '36z2h01p')).toBe(
-      '/maplestory/monsters/snail-36z2h01p',
+    expect(buildRecordDetailPath('monsters', 'shellback', '36z2h01p')).toBe(
+      '/maplestory/monsters/shellback-36z2h01p',
     );
     expect(
-      buildRecordDetailPath('monsters', 'snail', '36z2h01p', 'cw-launch'),
-    ).toBe('/maplestory/monsters/snail-36z2h01p');
+      buildRecordDetailPath('monsters', 'shellback', '36z2h01p', 'cw-launch'),
+    ).toBe('/maplestory/monsters/shellback-36z2h01p');
     expect(
-      buildRecordDetailPath('monsters', 'pianus', 'jp565851', 'gms-v83'),
-    ).toBe('/maplestory/gms-v83/monsters/pianus-jp565851');
+      buildRecordDetailPath('monsters', 'deepmaw', 'jp565851', 'gms-v83'),
+    ).toBe('/maplestory/gms-v83/monsters/deepmaw-jp565851');
   });
 });
 
 describe('buildDetailHead', () => {
   it('builds meta, og tags, canonical link, and omits robots/scripts by default', () => {
     const head = buildDetailHead({
-      title: 'Snail – MapleStory Classic World Monsters – MapleTip',
-      description: 'Stats, locations and drops for Snail.',
-      canonicalPath: '/maplestory/monsters/snail-36z2h01p',
+      title: 'Shellback – MapleStory Classic World Monsters – MapleTip',
+      description: 'Stats, locations and drops for Shellback.',
+      canonicalPath: '/maplestory/monsters/shellback-36z2h01p',
       ogType: 'website',
     });
 
     expect(head.meta).toEqual([
-      { title: 'Snail – MapleStory Classic World Monsters – MapleTip' },
-      { name: 'description', content: 'Stats, locations and drops for Snail.' },
+      { title: 'Shellback – MapleStory Classic World Monsters – MapleTip' },
+      {
+        name: 'description',
+        content: 'Stats, locations and drops for Shellback.',
+      },
       {
         property: 'og:title',
-        content: 'Snail – MapleStory Classic World Monsters – MapleTip',
+        content: 'Shellback – MapleStory Classic World Monsters – MapleTip',
       },
       {
         property: 'og:description',
-        content: 'Stats, locations and drops for Snail.',
+        content: 'Stats, locations and drops for Shellback.',
       },
       { property: 'og:type', content: 'website' },
       {
         property: 'og:url',
-        content: `${SITE_ORIGIN}/maplestory/monsters/snail-36z2h01p`,
+        content: `${SITE_ORIGIN}/maplestory/monsters/shellback-36z2h01p`,
       },
     ]);
     expect(head.links).toEqual([
       {
         rel: 'canonical',
-        href: `${SITE_ORIGIN}/maplestory/monsters/snail-36z2h01p`,
+        href: `${SITE_ORIGIN}/maplestory/monsters/shellback-36z2h01p`,
       },
     ]);
     expect(head.scripts).toEqual([]);
@@ -177,14 +180,14 @@ describe('buildDetailHead', () => {
 
   it('includes Schema.org BreadcrumbList JSON-LD when breadcrumbs are provided', () => {
     const head = buildDetailHead({
-      title: 'Snail',
-      description: 'Snail details.',
-      canonicalPath: '/maplestory/monsters/snail-36z2h01p',
+      title: 'Shellback',
+      description: 'Shellback details.',
+      canonicalPath: '/maplestory/monsters/shellback-36z2h01p',
       ogType: 'website',
       breadcrumbs: [
         { label: 'Home', path: '/' },
         { label: 'Monsters', path: '/maplestory/monsters' },
-        { label: 'Snail', path: '/maplestory/monsters/snail-36z2h01p' },
+        { label: 'Shellback', path: '/maplestory/monsters/shellback-36z2h01p' },
       ],
     });
 
@@ -210,8 +213,8 @@ describe('buildDetailHead', () => {
         {
           '@type': 'ListItem',
           position: 3,
-          name: 'Snail',
-          item: `${SITE_ORIGIN}/maplestory/monsters/snail-36z2h01p`,
+          name: 'Shellback',
+          item: `${SITE_ORIGIN}/maplestory/monsters/shellback-36z2h01p`,
         },
       ],
     });
@@ -225,7 +228,10 @@ describe('DetailBreadcrumbs', () => {
         items={[
           { label: 'Home', path: '/' },
           { label: 'Monsters', path: '/maplestory/monsters' },
-          { label: 'Snail', path: '/maplestory/monsters/snail-36z2h01p' },
+          {
+            label: 'Shellback',
+            path: '/maplestory/monsters/shellback-36z2h01p',
+          },
         ]}
       />,
     );
@@ -242,10 +248,10 @@ describe('DetailBreadcrumbs', () => {
       '/maplestory/monsters',
     );
 
-    const current = screen.getByText('Snail');
+    const current = screen.getByText('Shellback');
     expect(current).toHaveAttribute('aria-current', 'page');
     expect(
-      screen.queryByRole('link', { name: 'Snail' }),
+      screen.queryByRole('link', { name: 'Shellback' }),
     ).not.toBeInTheDocument();
   });
 
@@ -254,7 +260,10 @@ describe('DetailBreadcrumbs', () => {
       <DetailBreadcrumbs
         items={[
           { label: 'Home', path: '/', linkProps: { to: '/' } },
-          { label: 'Snail', path: '/maplestory/monsters/snail-36z2h01p' },
+          {
+            label: 'Shellback',
+            path: '/maplestory/monsters/shellback-36z2h01p',
+          },
         ]}
       />,
     );
@@ -263,7 +272,10 @@ describe('DetailBreadcrumbs', () => {
       'href',
       '/',
     );
-    expect(screen.getByText('Snail')).toHaveAttribute('aria-current', 'page');
+    expect(screen.getByText('Shellback')).toHaveAttribute(
+      'aria-current',
+      'page',
+    );
   });
 
   it('renders breadcrumbs without a destination as plain text', () => {
@@ -272,10 +284,10 @@ describe('DetailBreadcrumbs', () => {
         items={[
           { label: 'Home', path: '/' },
           { label: 'Maps', path: '/maplestory/maps' },
-          { label: 'Victoria Island' },
-          { label: 'Henesys' },
+          { label: 'Western Isle' },
+          { label: 'Meadowbrook' },
           {
-            label: 'Henesys Hunting Ground I',
+            label: 'Meadowbrook Hunting Field I',
             path: '/maplestory/maps/map-id',
           },
         ]}
@@ -283,13 +295,13 @@ describe('DetailBreadcrumbs', () => {
     );
 
     expect(
-      screen.queryByRole('link', { name: 'Victoria Island' }),
+      screen.queryByRole('link', { name: 'Western Isle' }),
     ).not.toBeInTheDocument();
     expect(
-      screen.queryByRole('link', { name: 'Henesys' }),
+      screen.queryByRole('link', { name: 'Meadowbrook' }),
     ).not.toBeInTheDocument();
-    expect(screen.getByText('Victoria Island')).not.toHaveAttribute('href');
-    expect(screen.getByText('Henesys')).not.toHaveAttribute('href');
+    expect(screen.getByText('Western Isle')).not.toHaveAttribute('href');
+    expect(screen.getByText('Meadowbrook')).not.toHaveAttribute('href');
   });
 });
 

@@ -23,7 +23,7 @@ function record(
 ): MapBrowseRecord {
   return {
     publicId: 'abcd1234',
-    slug: 'meadowbrook-hunting-ground',
+    slug: 'meadowbrook-hunting-field',
     ...(unnamed ? {} : { name: 'Meadowbrook Hunting Field' }),
     locationKeys: ['all'],
     monsters: [],
@@ -185,7 +185,7 @@ describe('mapBrowseCardView', () => {
     });
 
     expect(card.destination).toEqual({
-      href: '/maplestory/gms-v83/maps/meadowbrook-hunting-ground-abcd1234',
+      href: '/maplestory/gms-v83/maps/meadowbrook-hunting-field-abcd1234',
     });
     expect(card.minimapUnavailableLabel).toBe('Minimap unavailable');
     expect(card.minimapPreview).toBe(false);

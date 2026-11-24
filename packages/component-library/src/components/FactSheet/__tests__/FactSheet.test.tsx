@@ -88,15 +88,15 @@ describe('FactSheet', () => {
       facts: [
         {
           label: 'Return map',
-          value: <a href="/maplestory/maps/ellinia">Ellinia</a>,
+          value: <a href="/maplestory/maps/grovehold">Grovehold</a>,
         },
       ],
     });
 
     const definition = screen.getByRole('definition');
     expect(
-      within(definition).getByRole('link', { name: 'Ellinia' }),
-    ).toHaveAttribute('href', '/maplestory/maps/ellinia');
+      within(definition).getByRole('link', { name: 'Grovehold' }),
+    ).toHaveAttribute('href', '/maplestory/maps/grovehold');
   });
 
   it('shows a known zero rather than treating it as missing', () => {

@@ -745,7 +745,7 @@ export const fixtureMaps: readonly FixtureMap[] = [
     activity: 'Market',
     description: 'A gathering place beneath paper lanterns.',
     information: {
-      music: { state: 'known', value: 'Floral Life' },
+      music: { state: 'known', value: 'Lantern Waltz' },
       timeLimitSeconds: { state: 'known', value: 600 },
       swimming: { state: 'known', value: true },
       flying: { state: 'known', value: false },
