@@ -19,6 +19,8 @@ export const MAP_RECORD_CARD_DENSITY = { base: 1, sm: 2 } as const;
 export interface MapRecordCardFooterPart {
   readonly value: string;
   readonly label: string;
+  /** Sprite between the value and the label; `alt` is empty when the label names it. */
+  readonly sprite?: { readonly url: string; readonly alt: string };
 }
 
 export interface MapRecordCardDestination {
@@ -30,10 +32,6 @@ export interface MapRecordCardView {
   readonly key: string;
   readonly name: string;
   readonly secondaryLine?: string;
-  /** Muted line under the secondary line, such as a reviewed activity. */
-  readonly activityLine?: string;
-  /** Emphasized footer line, such as the inhabitants a filter selected. */
-  readonly highlightLine?: string;
   readonly minimapUrl?: string;
   readonly minimapSprite?: {
     readonly url: string;
@@ -60,9 +58,17 @@ function renderFooterParts(
   return (
     <span className={classes['spawnCount']} data-testid="map-card-footer">
       {parts.map((part, index) => (
-        <span key={`${part.value}:${part.label}`}>
+        <span
+          key={`${part.value}:${part.label}`}
+          className={classes['footerPart']}
+        >
           {index === 0 ? null : ' · '}
-          <strong>{part.value}</strong>
+          {part.value === '' ? null : <strong>{part.value}</strong>}
+          {part.sprite === undefined ? null : (
+            <span className={classes['footerIcon']}>
+              <img src={part.sprite.url} alt={part.sprite.alt} loading="lazy" />
+            </span>
+          )}
           {part.label === '' ? null : ` ${part.label}`}
         </span>
       ))}
@@ -242,39 +248,17 @@ export function MapRecordCard({ map }: MapRecordCardProps): ReactElement {
   }
 
   const destination = map.destination;
-  const secondaryLine =
-    map.activityLine === undefined ? (
-      map.secondaryLine
-    ) : (
-      <>
-        {map.secondaryLine === undefined ? null : (
-          <span className={classes['line']}>{map.secondaryLine}</span>
-        )}
-        <span className={classes['line']} data-testid="map-card-activity">
-          {map.activityLine}
-        </span>
-      </>
-    );
-  const footerParts =
+  const footer =
     map.footerParts.length === 0
       ? undefined
       : renderFooterParts(map.footerParts);
-  const footer =
-    map.highlightLine === undefined ? (
-      footerParts
-    ) : (
-      <>
-        <Text size="sm" fw={600} data-testid="map-card-highlight">
-          {map.highlightLine}
-        </Text>
-        {footerParts}
-      </>
-    );
   return (
     <RecordCard
       layout="mediaAside"
       title={map.name}
-      secondaryLine={secondaryLine}
+      {...(map.secondaryLine === undefined
+        ? {}
+        : { secondaryLine: map.secondaryLine })}
       media={media}
       footer={footer}
       {...(destination === undefined

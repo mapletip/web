@@ -215,7 +215,7 @@ describe('MonsterDetail hero', () => {
     expect(screen.getByText('Forest Edge')).toBeVisible();
     const spawnCount = screen.getByTestId('map-card-footer');
     expect(spawnCount).toBeVisible();
-    expect(spawnCount).toHaveTextContent('1 spawn');
+    expect(spawnCount).toHaveTextContent('1×');
   });
 
   it('keeps Quests after Drops and omits an empty Summoned by section and link', () => {

@@ -28,6 +28,23 @@ function cardNames(html: string): readonly (string | undefined)[] {
   );
 }
 
+/** Each card footer's text, with markup and the sprite images dropped. */
+function footerText(html: string): readonly string[] {
+  return [
+    ...html.matchAll(
+      /data-testid="map-card-footer"[^>]*>(.*?)<\/span><\/div>/gu,
+    ),
+  ].map((match) =>
+    (match[1] ?? '')
+      .replaceAll(/<[^>]+>/gu, '')
+      .replaceAll('&lt;', '<')
+      .replaceAll('&gt;', '>')
+      .replaceAll('&amp;', '&')
+      .replaceAll(/\s+/gu, ' ')
+      .trim(),
+  );
+}
+
 async function renderPath(path: string) {
   const router = createRouter({
     routeTree,
@@ -246,13 +263,27 @@ describe('Map Browse server rendering', () => {
     ).toBe(true);
   });
 
+  it('shows no card figures without a filter or sort that asks for them', async () => {
+    const { html } = await renderPath('/maplestory/maps');
+
+    expect(footerText(html)).toEqual([]);
+  });
+
+  it('shows the level range when sorted by monster level', async () => {
+    const { html } = await renderPath(
+      '/maplestory/maps?sort=lowestMonsterLevel-asc',
+    );
+
+    expect(footerText(html)[0]).toMatch(/^Lv\. \d+(–\d+)? monsters$/u);
+  });
+
   it('filters by one monster and names it on each card', async () => {
     const { html } = await renderPath(
       `/maplestory/maps?monster=${param([monsterKey('Wide Banner')])}`,
     );
 
     expect(cardNames(html)).toEqual(['Lantern Rehearsal <Stage 1>']);
-    expect(html).toContain('Wide Banner (3 spawn points)');
+    expect(footerText(html)).toEqual(['3× Wide Banner']);
   });
 
   it('filters by several monsters as any of them', async () => {
@@ -277,7 +308,7 @@ describe('Map Browse server rendering', () => {
     );
 
     expect(cardNames(html)).toEqual(['Festival Booth']);
-    expect(html).toContain('data-testid="map-card-highlight"');
+    expect(footerText(html)).toEqual(['Festival Host']);
   });
 
   it('filters by monster level and leaves out maps without monsters', async () => {

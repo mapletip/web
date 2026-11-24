@@ -48,9 +48,8 @@ test('Map Browse is server rendered and cards open Map Detail', async ({
     hasText: 'Lamplight Meadow',
   });
   await expect(meadow).toContainText('Lantern Hills · Lamplight');
-  await expect(meadow).toContainText(
-    'Lv. 3–10 · 2 monsters · 3 spawn points · 1 NPC',
-  );
+  // Sorted by name with no filter, a card carries no figures.
+  await expect(meadow.getByTestId('map-card-footer')).toHaveCount(0);
   await expect(
     cards(page)
       .getByRole('listitem')
@@ -78,16 +77,19 @@ test('each sort orders the maps', async ({ page }) => {
 
   const firstCard = cards(page).getByRole('listitem').first();
   const lastCard = cards(page).getByRole('listitem').last();
+  const footer = (card: typeof firstCard) =>
+    card.getByTestId('map-card-footer');
   await choose('Monster level: high to low');
-  await expect(firstCard).toContainText('Lv. 17');
-  await expect(lastCard).not.toContainText('Lv.');
+  await expect(footer(firstCard)).toHaveText(/^Lv\. (\d+–)?17 monsters$/u);
+  await expect(footer(lastCard)).toHaveCount(0);
 
   await choose('Monster level: low to high');
-  await expect(firstCard).toContainText(/Lv\. 1\b/u);
-  await expect(lastCard).not.toContainText('Lv.');
+  await expect(footer(firstCard)).toHaveText(/^Lv\. 1(–\d+)? monsters$/u);
+  await expect(footer(lastCard)).toHaveCount(0);
 
   await choose('Most spawn points');
   await expect(cardTitles(page).first()).toHaveText('Synthetic Monster Yard');
+  await expect(footer(firstCard)).toHaveText(/^\d+ spawns$/u);
 
   await choose('Name (A–Z)');
   await expect(page).toHaveURL(`${MAPS}?pageSize=100`);
@@ -166,7 +168,9 @@ test('monster picker, level range and activity filter the maps', async ({
     option: /Wide Banner/u,
   });
   await expect(cardTitles(page)).toHaveText(['Lantern Rehearsal <Stage 1>']);
-  await expect(cards(page)).toContainText('Wide Banner (3 spawn points)');
+  await expect(cards(page).getByTestId('map-card-footer')).toHaveText(
+    '3× Wide Banner',
+  );
 
   await gotoHydrated(
     page,

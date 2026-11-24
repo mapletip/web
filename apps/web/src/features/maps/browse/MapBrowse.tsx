@@ -31,7 +31,7 @@ import {
 } from './facets';
 import { mapLocationTree, type MapLocationNode } from './location';
 import { LocationLink, mapLocationLinkOptions } from './LocationLink';
-import { MapBrowseCard, type MapBrowseHighlight } from './MapBrowseCard';
+import { MapBrowseCard, type MapBrowseCardContext } from './MapBrowseCard';
 import { mapPageMetadata } from './metadata';
 import type { MapBrowseData } from './project';
 import { mapBrowseRecords } from './records';
@@ -107,15 +107,22 @@ export function MapBrowse({
 
   const selectedMonsters = browseState.filters['monster'];
   const selectedNpcs = browseState.filters['npc'];
-  const highlight = useMemo((): MapBrowseHighlight | undefined => {
+  const levelFilter = browseState.filters['level'];
+  const sortField = browseState.sort?.field;
+  // The card shows a figure only when the filter or sort is about it.
+  const cardContext = useMemo((): MapBrowseCardContext => {
     const keys = (value: unknown) =>
       new Set(Array.isArray(value) ? (value as readonly string[]) : []);
-    const monsters = keys(selectedMonsters);
-    const npcs = keys(selectedNpcs);
-    return monsters.size === 0 && npcs.size === 0
-      ? undefined
-      : { monsters, npcs };
-  }, [selectedMonsters, selectedNpcs]);
+    return {
+      monsters: keys(selectedMonsters),
+      npcs: keys(selectedNpcs),
+      levels:
+        levelFilter !== undefined ||
+        sortField === 'lowestMonsterLevel' ||
+        sortField === 'highestMonsterLevel',
+      spawns: sortField === 'spawnPointCount',
+    };
+  }, [selectedMonsters, selectedNpcs, levelFilter, sortField]);
 
   // Choosing a location keeps the search and filters and returns to page one.
   const locationSearch = mapBrowseSearch.browseStateToUrl({
@@ -212,7 +219,6 @@ export function MapBrowse({
         searchFields={MAP_SEARCH_FIELDS}
         facets={facets}
         sortOptions={MAP_SORT_OPTIONS}
-        showFilterHeading={false}
         recordNoun={`${BUILDS[buildId].label} maps`}
         summaryMode="total"
         summaryNoun={SUMMARY_NOUN}
@@ -223,7 +229,8 @@ export function MapBrowse({
           <MapBrowseCard
             record={record}
             buildId={buildId}
-            highlight={highlight}
+            location={location}
+            context={cardContext}
           />
         )}
         {...(data === undefined

@@ -301,10 +301,15 @@ function projectMonsterSummonedBy(
 function projectMonsterLocations({
   record,
   buildId,
+  monsterName,
+  spriteUrl,
   minimapSprite,
 }: {
   readonly record: StaticMonsterPageRecord;
   readonly buildId: BuildId;
+  /** Names the sprite in each card's "15× [sprite]" count. */
+  readonly monsterName: string;
+  readonly spriteUrl?: string;
   readonly minimapSprite?: MapRecordCardView['minimapSprite'];
 }): MonsterDetailLocationsView {
   const locations = record.locations;
@@ -350,8 +355,10 @@ function projectMonsterLocations({
       ...(destination === undefined ? {} : { destination }),
       footerParts: [
         {
-          value: formatMonsterNumber(placementCount),
-          label: placementCount === 1 ? 'spawn' : 'spawns',
+          value: `${formatMonsterNumber(placementCount)}×`,
+          ...(spriteUrl === undefined
+            ? { label: monsterName }
+            : { label: '', sprite: { url: spriteUrl, alt: monsterName } }),
         },
       ],
       placementCount,
@@ -511,6 +518,8 @@ export function projectMonsterDetail(
     locations: projectMonsterLocations({
       record,
       buildId,
+      monsterName: name,
+      ...(spriteUrl === undefined ? {} : { spriteUrl }),
       ...(minimapSprite === undefined ? {} : { minimapSprite }),
     }),
     drops: projectMonsterDrops(record),
