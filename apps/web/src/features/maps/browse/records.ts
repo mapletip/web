@@ -33,6 +33,7 @@ export interface MapBrowseRecord extends Record<string, unknown> {
   readonly activityType?: MapActivityType;
   readonly minimapId?: string;
   readonly markId?: string;
+  readonly music?: string;
   readonly monsterCount?: number;
   readonly spawnPointCount?: number;
   readonly npcCount?: number;
