@@ -477,7 +477,7 @@ test('Monster Detail opens every location in a drawer from its responsive cap', 
     drawer.getByRole('heading', { name: 'Practice Map 01' }),
   ).toBeVisible();
   await expect(
-    drawer.getByTestId('map-card-footer').filter({ hasText: /^1×$/u }),
+    drawer.getByTestId('map-card-footer').filter({ hasText: /^1 spawn$/u }),
   ).toBeVisible();
   await expect(
     drawer.getByRole('img', { name: 'Practice Map 01 minimap' }),
@@ -590,7 +590,9 @@ test('Monster Detail location minimaps show dots inline and sprites in enlarged 
   await expect(
     partialMap.locator('[data-map-minimap="true"] [data-marker-position]'),
   ).toHaveCount(expectedPartialPoints);
-  await expect(partialMap.getByTestId('map-card-footer')).toHaveText('11×');
+  await expect(partialMap.getByTestId('map-card-footer')).toHaveText(
+    '11 spawns',
+  );
 
   const trigger = firstMap.getByRole('button', {
     name: 'Enlarge Practice Map 01 minimap',

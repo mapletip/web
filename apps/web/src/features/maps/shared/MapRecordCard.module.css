@@ -136,23 +136,26 @@
   font-size: 1.05rem;
 }
 
-/* A sprite sized to the footer text, kept on the line as one unit with it. */
-.footerIcon {
+/* Chips wrap as whole units; the text figures follow them on the line. */
+.footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+/* "15× [chip]": the count leads its chip and wraps with it as one unit. */
+.countedChip {
   display: inline-flex;
   align-items: center;
-  height: 1.25em;
-  margin-left: 0.3em;
-  vertical-align: -0.3em;
+  gap: 6px;
+  max-width: 100%;
+  min-width: 0;
 }
 
-.footerIcon img {
-  width: auto;
-  max-width: 1.75em;
-  height: 100%;
-  object-fit: contain;
-}
-
-/* A part wraps to the next line as a whole, never between its count and name. */
-.footerPart {
-  white-space: nowrap;
+.chipCount {
+  flex-shrink: 0;
+  color: var(--mapletip-color-ink);
+  font-size: 1.05rem;
+  font-variant-numeric: tabular-nums;
 }

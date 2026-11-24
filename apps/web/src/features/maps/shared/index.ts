@@ -2,6 +2,8 @@ export {
   MAP_RECORD_CARD_DENSITY,
   MapRecordCard,
   type MapRecordCardDestination,
+  type MapRecordCardFooterEntity,
+  type MapRecordCardFooterFigure,
   type MapRecordCardFooterPart,
   type MapRecordCardProps,
   type MapRecordCardView,

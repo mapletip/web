@@ -67,34 +67,33 @@ function locationLine(
   return parts.length === 0 ? undefined : parts.join(' · ');
 }
 
-function sprite(
-  url: string | undefined,
-): Pick<MapRecordCardFooterPart, 'sprite'> {
-  return url === undefined ? {} : { sprite: { url, alt: '' } };
-}
-
 function inhabitantParts(
   record: MapBrowseRecord,
   context: MapBrowseCardContext,
 ): MapRecordCardFooterPart[] {
+  const iconUrl = (url: string | undefined) =>
+    url === undefined ? {} : { iconUrl: url };
   return [
     ...record.monsters
       .filter(({ entry }) => context.monsters.has(entry.key))
       .map(({ entry, spawnPointCount = 0 }) => ({
-        value: `${spawnPointCount.toLocaleString('en-US')}×`,
-        label: entry.name ?? 'Unnamed monster',
-        ...sprite(resolveMonsterSpriteUrl(entry.spriteId)),
+        entity: {
+          name: entry.name ?? 'Unnamed monster',
+          count: spawnPointCount,
+          ...iconUrl(resolveMonsterSpriteUrl(entry.spriteId)),
+        },
       })),
     ...record.npcs
       .filter(({ entry }) => context.npcs.has(entry.key))
       .map(({ entry }) => ({
-        value: '',
-        label: entry.name ?? 'Unnamed NPC',
-        ...sprite(
-          entry.spriteId === undefined
-            ? undefined
-            : mapNpcSpriteUrl(MAPLEKIT_RELEASE.baseUrl, entry.spriteId),
-        ),
+        entity: {
+          name: entry.name ?? 'Unnamed NPC',
+          ...iconUrl(
+            entry.spriteId === undefined
+              ? undefined
+              : mapNpcSpriteUrl(MAPLEKIT_RELEASE.baseUrl, entry.spriteId),
+          ),
+        },
       })),
   ];
 }
@@ -151,6 +150,8 @@ export function mapBrowseCardView({
       : {
           minimapUrl: mapMinimapUrl(MAPLEKIT_RELEASE.baseUrl, record.minimapId),
         }),
+    // The whole card opens Map Detail, whose stage is the larger view.
+    minimapPreview: false,
     footerParts: footerParts(record, context),
     destination: projectMapRecordDestination({
       slug: record.slug,

@@ -55,10 +55,16 @@ const footer = (
   view(overrides, location, {
     ...PLAIN_CARD_CONTEXT,
     ...context,
-  }).footerParts.map(({ value, label, sprite }) =>
-    [value, sprite === undefined ? '' : '[sprite]', label]
-      .filter((part) => part !== '')
-      .join(' '),
+  }).footerParts.map((part) =>
+    'entity' in part
+      ? [
+          part.entity.count === undefined ? '' : `${part.entity.count}×`,
+          part.entity.iconUrl === undefined ? '' : '[sprite]',
+          part.entity.name,
+        ]
+          .filter((text) => text !== '')
+          .join(' ')
+      : `${part.value} ${part.label}`,
   );
 
 describe('mapBrowseCardView', () => {
@@ -140,7 +146,7 @@ describe('mapBrowseCardView', () => {
     expect(footer({ spawnPointCount: 0 }, { spawns: true })).toEqual([]);
   });
 
-  it('counts each filtered monster with its sprite and names filtered NPCs', () => {
+  it('shows each filtered monster and NPC as a chip, monsters with their count', () => {
     const inhabited = {
       lowestMonsterLevel: 22,
       highestMonsterLevel: 24,
@@ -165,9 +171,9 @@ describe('mapBrowseCardView', () => {
         levels: true,
       }),
     ).toEqual(['15× [sprite] Thorncap', '11× Ashcap', 'Way Keeper']);
-    expect(footer(inhabited, { monsters: new Set(['m1']) })[0]).toBe(
+    expect(footer(inhabited, { monsters: new Set(['m1']) })).toEqual([
       '15× [sprite] Thorncap',
-    );
+    ]);
   });
 
   it('links to Map Detail in the same build and marks a missing minimap', () => {
@@ -182,5 +188,6 @@ describe('mapBrowseCardView', () => {
       href: '/maplestory/gms-v83/maps/meadowbrook-hunting-ground-abcd1234',
     });
     expect(card.minimapUnavailableLabel).toBe('Minimap unavailable');
+    expect(card.minimapPreview).toBe(false);
   });
 });

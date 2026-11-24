@@ -107,6 +107,21 @@ describe('MapRecordCard', () => {
     ).toHaveLength(2);
   });
 
+  it('leaves the minimap to the card link when its preview is off', () => {
+    renderCard({
+      ...mapView({ withDestination: true }),
+      minimapPreview: false,
+    });
+
+    expect(
+      screen.queryByRole('button', { name: /Enlarge .* minimap/u }),
+    ).toBeNull();
+    expect(document.querySelector('[data-map-minimap="true"]')).not.toBeNull();
+    expect(
+      screen.getByRole('link', { name: 'Practice Meadow' }),
+    ).toHaveAttribute('href', '/practice-meadow');
+  });
+
   it('shows no media well when the map has no minimap', () => {
     renderCard(mapView({ withoutMinimap: true }));
 

@@ -169,7 +169,7 @@ test('monster picker, level range and activity filter the maps', async ({
   });
   await expect(cardTitles(page)).toHaveText(['Lantern Rehearsal <Stage 1>']);
   await expect(cards(page).getByTestId('map-card-footer')).toHaveText(
-    '3× Wide Banner',
+    /^3×\s*Wide Banner$/u,
   );
 
   await gotoHydrated(

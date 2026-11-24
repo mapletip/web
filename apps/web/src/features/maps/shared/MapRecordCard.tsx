@@ -1,6 +1,7 @@
 import { Image, Modal, Popover, Text, useMantineTheme } from '@mantine/core';
 import { useMediaQuery } from '@mantine/hooks';
 import {
+  EntityChip,
   RecordCard,
   StaticMap,
   type InteractiveMapMarker,
@@ -16,11 +17,31 @@ import { SpriteMarker } from './SpriteMarker';
 
 export const MAP_RECORD_CARD_DENSITY = { base: 1, sm: 2 } as const;
 
-export interface MapRecordCardFooterPart {
+/** A figure in the footer's text line, such as "2 monsters". */
+export interface MapRecordCardFooterFigure {
   readonly value: string;
   readonly label: string;
-  /** Sprite between the value and the label; `alt` is empty when the label names it. */
-  readonly sprite?: { readonly url: string; readonly alt: string };
+}
+
+/** A monster or NPC on the map, shown as a chip with an optional count. */
+export interface MapRecordCardFooterEntity {
+  readonly entity: {
+    readonly name: string;
+    readonly iconUrl?: string;
+    /** Spawn points it has on the map, shown before the chip as "15×". */
+    readonly count?: number;
+  };
+}
+
+export type MapRecordCardFooterPart =
+  MapRecordCardFooterFigure | MapRecordCardFooterEntity;
+
+const CHIP_ICON_SIZE = 20;
+
+function isEntity(
+  part: MapRecordCardFooterPart,
+): part is MapRecordCardFooterEntity {
+  return 'entity' in part;
 }
 
 export interface MapRecordCardDestination {
@@ -44,6 +65,11 @@ export interface MapRecordCardView {
     readonly spawnPoints: readonly { readonly x: number; readonly y: number }[];
   };
   readonly minimapUnavailableLabel?: string;
+  /**
+   * Whether clicking the minimap opens a larger view (default). When false
+   * the minimap is part of the card's link, like the rest of the card.
+   */
+  readonly minimapPreview?: boolean;
   readonly footerParts: readonly MapRecordCardFooterPart[];
   readonly destination?: MapRecordCardDestination;
 }
@@ -55,23 +81,42 @@ export interface MapRecordCardProps {
 function renderFooterParts(
   parts: readonly MapRecordCardFooterPart[],
 ): ReactElement {
+  const entities = parts.filter(isEntity);
+  const figures = parts.filter(
+    (part): part is MapRecordCardFooterFigure => !isEntity(part),
+  );
   return (
-    <span className={classes['spawnCount']} data-testid="map-card-footer">
-      {parts.map((part, index) => (
-        <span
-          key={`${part.value}:${part.label}`}
-          className={classes['footerPart']}
-        >
-          {index === 0 ? null : ' · '}
-          {part.value === '' ? null : <strong>{part.value}</strong>}
-          {part.sprite === undefined ? null : (
-            <span className={classes['footerIcon']}>
-              <img src={part.sprite.url} alt={part.sprite.alt} loading="lazy" />
+    <span className={classes['footer']} data-testid="map-card-footer">
+      {entities.map(({ entity }) => {
+        const chip = (
+          <EntityChip
+            name={entity.name}
+            iconSrc={entity.iconUrl}
+            iconSize={CHIP_ICON_SIZE}
+          />
+        );
+        return entity.count === undefined ? (
+          <span key={entity.name}>{chip}</span>
+        ) : (
+          <span key={entity.name} className={classes['countedChip']}>
+            <strong className={classes['chipCount']}>
+              {entity.count.toLocaleString('en-US')}×
+            </strong>
+            {chip}
+          </span>
+        );
+      })}
+      {figures.length === 0 ? null : (
+        <span className={classes['spawnCount']}>
+          {figures.map((part, index) => (
+            <span key={`${part.value}:${part.label}`}>
+              {index === 0 ? null : ' · '}
+              <strong>{part.value}</strong>
+              {part.label === '' ? null : ` ${part.label}`}
             </span>
-          )}
-          {part.label === '' ? null : ` ${part.label}`}
+          ))}
         </span>
-      ))}
+      )}
     </span>
   );
 }
@@ -193,7 +238,9 @@ export function MapRecordCard({ map }: MapRecordCardProps): ReactElement {
   }
 
   const trigger =
-    minimap === undefined || map.minimapUrl === undefined ? null : (
+    minimap === undefined ||
+    map.minimapUrl === undefined ||
+    map.minimapPreview === false ? null : (
       <button
         type="button"
         className={classes['minimapTrigger']}

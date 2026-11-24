@@ -36,7 +36,8 @@ function footerText(html: string): readonly string[] {
     ),
   ].map((match) =>
     (match[1] ?? '')
-      .replaceAll(/<[^>]+>/gu, '')
+      .replaceAll(/<!--.*?-->/gu, '')
+      .replaceAll(/<[^>]+>/gu, ' ')
       .replaceAll('&lt;', '<')
       .replaceAll('&gt;', '>')
       .replaceAll('&amp;', '&')

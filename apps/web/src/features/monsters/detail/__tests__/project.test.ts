@@ -142,12 +142,6 @@ function monsterPageWithPointLocations(
   };
 }
 
-/** The location count's sprite: its address and alt text come from the fixture. */
-const ANY_SPRITE: unknown = {
-  url: expect.any(String) as unknown,
-  alt: expect.any(String) as unknown,
-};
-
 describe('projectMonsterDetail', () => {
   it('projects identity fields and unprefixed canonical path for default build', () => {
     const view = projectMonsterDetail(
@@ -577,13 +571,7 @@ describe('projectMonsterDetail', () => {
             width: 32,
             height: 48,
           },
-          footerParts: [
-            {
-              value: '20×',
-              label: '',
-              sprite: ANY_SPRITE,
-            },
-          ],
+          footerParts: [{ value: '20', label: 'spawns' }],
           placementCount: 20,
         },
         {
@@ -595,13 +583,7 @@ describe('projectMonsterDetail', () => {
             width: 32,
             height: 48,
           },
-          footerParts: [
-            {
-              value: '10×',
-              label: '',
-              sprite: ANY_SPRITE,
-            },
-          ],
+          footerParts: [{ value: '10', label: 'spawns' }],
           placementCount: 10,
         },
         {
@@ -612,13 +594,7 @@ describe('projectMonsterDetail', () => {
             width: 32,
             height: 48,
           },
-          footerParts: [
-            {
-              value: '5×',
-              label: '',
-              sprite: ANY_SPRITE,
-            },
-          ],
+          footerParts: [{ value: '5', label: 'spawns' }],
           placementCount: 5,
         },
         {
@@ -629,13 +605,7 @@ describe('projectMonsterDetail', () => {
             width: 32,
             height: 48,
           },
-          footerParts: [
-            {
-              value: '5×',
-              label: '',
-              sprite: ANY_SPRITE,
-            },
-          ],
+          footerParts: [{ value: '5', label: 'spawns' }],
           placementCount: 5,
         },
       ],
@@ -760,13 +730,7 @@ describe('projectMonsterDetail', () => {
       maps: [
         {
           placementCount: 17,
-          footerParts: [
-            {
-              value: '17×',
-              label: '',
-              sprite: ANY_SPRITE,
-            },
-          ],
+          footerParts: [{ value: '17', label: 'spawns' }],
         },
       ],
     });
@@ -839,13 +803,7 @@ describe('projectMonsterDetail', () => {
         {
           name: 'Quiet Clearing',
           secondaryLine: 'Forest Edge',
-          footerParts: [
-            {
-              value: '1×',
-              label: '',
-              sprite: ANY_SPRITE,
-            },
-          ],
+          footerParts: [{ value: '1', label: 'spawn' }],
           placementCount: 1,
         },
       ],
