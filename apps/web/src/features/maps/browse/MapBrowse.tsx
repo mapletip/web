@@ -23,6 +23,7 @@ import { browseOverlayOptions } from '@/features/browse-overlay/browseOverlay';
 import { useRouteOverlay } from '@/features/route-overlay/useRouteOverlay';
 
 import {
+  mapFacets,
   MAP_QUERY_FIELDS,
   MAP_SEARCH_FIELDS,
   MAP_SORT_OPTIONS,
@@ -33,7 +34,7 @@ import {
   type MapLocationParams,
 } from './location';
 import { LocationLink, mapLocationLinkOptions } from './LocationLink';
-import { MapBrowseCard } from './MapBrowseCard';
+import { MapBrowseCard, type MapBrowseHighlight } from './MapBrowseCard';
 import { mapPageMetadata } from './metadata';
 import type { MapBrowseData } from './project';
 import { mapBrowseRecords } from './records';
@@ -69,6 +70,10 @@ export function MapBrowse({
     () => (data === undefined ? [] : mapBrowseRecords(data)),
     [data],
   );
+  const facets = useMemo(
+    () => (data === undefined ? [] : mapFacets(data)),
+    [data],
+  );
   const browseOverlay = useRouteOverlay(browseOverlayOptions);
 
   const onFilterDrawerOpenedChange = useCallback(
@@ -102,6 +107,18 @@ export function MapBrowse({
     },
     [browseOverlay, commitBrowseState],
   );
+
+  const selectedMonsters = browseState.filters['monster'];
+  const selectedNpcs = browseState.filters['npc'];
+  const highlight = useMemo((): MapBrowseHighlight | undefined => {
+    const keys = (value: unknown) =>
+      new Set(Array.isArray(value) ? (value as readonly string[]) : []);
+    const monsters = keys(selectedMonsters);
+    const npcs = keys(selectedNpcs);
+    return monsters.size === 0 && npcs.size === 0
+      ? undefined
+      : { monsters, npcs };
+  }, [selectedMonsters, selectedNpcs]);
 
   // Choosing a location keeps the search and filters and returns to page one.
   const locationSearch = mapBrowseSearch.browseStateToUrl({
@@ -188,7 +205,7 @@ export function MapBrowse({
         };
 
   return (
-    <BrowsePageShell>
+    <BrowsePageShell fillViewport={false}>
       <FacetedBrowser
         title={<Title order={1}>{heading}</Title>}
         {...(navigation === undefined ? {} : { navigation })}
@@ -196,6 +213,7 @@ export function MapBrowse({
         idAccessor="publicId"
         queryFields={MAP_QUERY_FIELDS}
         searchFields={MAP_SEARCH_FIELDS}
+        facets={facets}
         sortOptions={MAP_SORT_OPTIONS}
         showFilterHeading={false}
         recordNoun={`${BUILDS[buildId].label} maps`}
@@ -205,7 +223,11 @@ export function MapBrowse({
         presentation="cards"
         cardColumns={CARD_COLUMNS}
         renderCard={(record) => (
-          <MapBrowseCard record={record} buildId={buildId} />
+          <MapBrowseCard
+            record={record}
+            buildId={buildId}
+            highlight={highlight}
+          />
         )}
         {...(data === undefined
           ? { unavailable: 'Map data is unavailable for this build.' }

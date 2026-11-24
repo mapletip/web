@@ -11,6 +11,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { routeTree } from '@/routeTree.gen';
 
 import { loadMapBrowse } from '../load';
+import type { MapBrowseData } from '../project';
 
 import { mapBrowseFixture } from './mapBrowseFixture';
 
@@ -57,10 +58,20 @@ function canonical(router: TestRouter): unknown {
   );
 }
 
+function param(value: unknown): string {
+  return encodeURIComponent(JSON.stringify(value));
+}
+
 describe('Map Browse server rendering', () => {
+  let data: MapBrowseData;
+  const monsterKey = (name: string) =>
+    data.monsters.find((monster) => monster.name === name)?.key;
+  const npcKey = (name: string) =>
+    data.npcs.find((npc) => npc.name === name)?.key;
+
   beforeEach(async () => {
     vi.clearAllMocks();
-    const data = await mapBrowseFixture();
+    data = await mapBrowseFixture();
     mockedLoad.mockResolvedValue({ status: 'available', data });
   });
 
@@ -233,6 +244,87 @@ describe('Map Browse server rendering', () => {
           Boolean((match as { _notFound?: boolean })._notFound),
       ),
     ).toBe(true);
+  });
+
+  it('filters by one monster and names it on each card', async () => {
+    const { html } = await renderPath(
+      `/maplestory/maps?monster=${param([monsterKey('Wide Banner')])}`,
+    );
+
+    expect(cardNames(html)).toEqual(['Lantern Rehearsal <Stage 1>']);
+    expect(html).toContain('Wide Banner (3 spawn points)');
+  });
+
+  it('filters by several monsters as any of them', async () => {
+    const { html } = await renderPath(
+      `/maplestory/maps?monster=${param([
+        monsterKey('Wide Banner'),
+        monsterKey(
+          'Extraordinarily Long Named Fixture Creature Of The Far Northern Reaches',
+        ),
+      ])}`,
+    );
+
+    expect(cardNames(html)).toEqual([
+      'Lamplight Meadow',
+      'Lantern Rehearsal <Stage 1>',
+    ]);
+  });
+
+  it('filters by NPC', async () => {
+    const { html } = await renderPath(
+      `/maplestory/maps?npc=${param([npcKey('Festival Host')])}`,
+    );
+
+    expect(cardNames(html)).toEqual(['Festival Booth']);
+    expect(html).toContain('data-testid="map-card-highlight"');
+  });
+
+  it('filters by monster level and leaves out maps without monsters', async () => {
+    const { html } = await renderPath(
+      `/maplestory/maps?level=${param({ min: 3, max: 5 })}`,
+    );
+
+    expect(cardNames(html)).toEqual([
+      'Lamplight Meadow',
+      'Synthetic Monster Yard',
+    ]);
+  });
+
+  it('filters by activity type and by maps with NPCs', async () => {
+    const partyQuests = await renderPath(
+      `/maplestory/maps?activityType=${param(['Party quest'])}`,
+    );
+    expect(cardNames(partyQuests.html)).toEqual([
+      'Lantern Rehearsal <Stage 1>',
+    ]);
+
+    const withNpcs = await renderPath('/maplestory/maps?hasNpcs=true');
+    expect(cardNames(withNpcs.html)).toEqual([
+      'Brass Walk',
+      'Festival Booth',
+      'Lamplight Meadow',
+      'Lantern Square',
+      'Quiet Gallery',
+    ]);
+  });
+
+  it('hides the activity filter for a build without reviewed activities', async () => {
+    mockedLoad.mockResolvedValue({
+      status: 'available',
+      data: {
+        ...data,
+        rows: data.rows.map((row) => {
+          const { activityType, ...unreviewed } = row;
+          return activityType === undefined ? row : unreviewed;
+        }),
+      },
+    });
+
+    const { html } = await renderPath('/maplestory/maps');
+
+    expect(html).toContain('Has NPCs');
+    expect(html).not.toContain('Party quest');
   });
 
   it('states that map data is unavailable for a build without it', async () => {
