@@ -175,12 +175,27 @@ export function defineBrowseSearch({
     };
   }
 
+  /** Whether an address shows the page's default view: no search, no facet, defaults. */
+  function isDefaultSearch(search: BrowseSearch): boolean {
+    const { q, page, pageSize, sort, ...filters } = search;
+    return (
+      q.trim() === '' &&
+      page === defaultSearch.page &&
+      pageSize === defaultSearch.pageSize &&
+      sort === defaultSearch.sort &&
+      Object.values(filters).every(
+        (value) => Array.isArray(value) && value.length === 0,
+      )
+    );
+  }
+
   return {
     schema: searchSchemaFor(defaultSearch.sort),
     defaultSearch,
     defaultState,
     urlToBrowseState,
     browseStateToUrl,
+    isDefaultSearch,
   };
 }
 
