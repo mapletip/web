@@ -1,4 +1,8 @@
-import { monsterPublicId, monsterSlug } from '../../src/mocks/release';
+import {
+  fixtureRelease,
+  monsterPublicId,
+  monsterSlug,
+} from '../../src/mocks/release';
 
 import { test, expect } from './fixtures';
 import type { MonsterPage } from './page/monster-page';
@@ -183,6 +187,51 @@ test('mobile drops drawer opens over the active boss filter', async ({
   await monsterPage.captureReady();
   await expect(page).toHaveScreenshot('mobile-drops-drawer.png');
 });
+
+for (const { layout, width, height, sort } of [
+  { layout: 'desktop', width: 1366, height: 900, sort: 'Spawns' },
+  { layout: 'mobile', width: 320, height: 760, sort: 'Map name' },
+]) {
+  test(`${layout} Monster Browse Locations drawer`, async ({
+    page,
+    monsterPage,
+    expectedArtifactRequests,
+  }) => {
+    const { locationBrowse } = fixtureRelease.builds.get('cw-launch')!;
+    expectedArtifactRequests.push(
+      /^\/v1\/(releases|build-indexes)\//u,
+      /^\/v2\/products\//u,
+      new RegExp(`^/${locationBrowse.path.replace('.', '[.]')}$`, 'u'),
+    );
+    await page.setViewportSize({ width, height });
+    await page.addInitScript(() => localStorage.clear());
+    await monsterPage.goto();
+    await monsterPage.results.search.fill('Crowned Warden');
+    await page
+      .getByRole('button', {
+        name: 'Show locations for Crowned Warden, 12 maps',
+      })
+      .click();
+
+    const drawer = page.getByRole('dialog', {
+      name: 'Crowned Warden Locations',
+    });
+    const order = drawer.getByRole('radiogroup', { name: 'Order locations' });
+    if (sort === 'Map name') {
+      await order.getByText(sort, { exact: true }).click();
+    }
+    await expect(order.getByRole('radio', { name: sort })).toBeChecked();
+    await expect(
+      drawer.getByRole('textbox', { name: 'Find a map' }),
+    ).toBeVisible();
+    await expect(
+      drawer.getByRole('img', { name: 'Practice Map 01 minimap' }),
+    ).toBeInViewport();
+    await page.mouse.move(0, 0);
+    await monsterPage.captureReady();
+    await expect(page).toHaveScreenshot(`${layout}-locations-drawer.png`);
+  });
+}
 
 test('generic unavailable page has no server diagnostics', async ({
   page,
