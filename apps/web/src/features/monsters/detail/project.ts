@@ -7,6 +7,7 @@ import {
   type ItemRecordChipView,
 } from '@/features/items/shared';
 import type { MapRecordCardView } from '@/features/maps/shared';
+import { mapMonsterFocusByPublicId } from '@/features/maps/shared/mapRecordDestination';
 import {
   projectQuestRecordCard,
   type QuestRecordCardView,
@@ -294,7 +295,14 @@ function projectMonsterLocations({
     locations.entries,
     buildId,
     minimapSprite,
-  );
+  ).map((map) => {
+    if (map.destination === undefined) return map;
+    const focus = mapMonsterFocusByPublicId(record.publicId);
+    return {
+      ...map,
+      destination: { href: `${map.destination.href}?focus=${focus}` },
+    };
+  });
 
   return { state: 'present', count: locations.summary.mapCount, maps };
 }

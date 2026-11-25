@@ -208,7 +208,7 @@ describe('projectMonsterDetail', () => {
     expect(linkedMaps.maps[0]).toMatchObject({
       name: 'Addressed Meadow',
       destination: {
-        href: '/maplestory/gms-v83/maps/addressed-meadow-22kodknn',
+        href: '/maplestory/gms-v83/maps/addressed-meadow-22kodknn?focus=monster-id-36z2h01p',
       },
     });
 

@@ -456,7 +456,10 @@ test('Monster Detail opens every location in a drawer from its responsive cap', 
   const firstLocationMapPath = `/maplestory/maps/practice-map-01-${mapPublicId({ sourceId: 'cw-launch:fixture:map:01' })}`;
   await expect(
     drawerCards.filter({ hasText: 'Practice Map 01' }).getByRole('link'),
-  ).toHaveAttribute('href', firstLocationMapPath);
+  ).toHaveAttribute(
+    'href',
+    `${firstLocationMapPath}?focus=monster-id-${monsterPublicId('crowned-warden')}`,
+  );
   await expect(inlineCards.filter({ visible: true })).toHaveCount(initialCap);
 
   const searchIds = await page
@@ -596,23 +599,21 @@ test('Monster Detail location minimaps show dots inline and sprites in enlarged 
   const trigger = firstMap.getByRole('button', {
     name: 'Enlarge Practice Map 01 minimap',
   });
-  const isMobile = testInfo.project.name === 'mobile';
-  if (isMobile) await trigger.tap();
-  else await trigger.click();
-  const preview = page.getByRole('dialog', { name: 'Practice Map 01' });
-  await expect(preview).toBeVisible();
-  await expect(preview.locator('[data-marker-position]')).toHaveCount(
-    expectedKnownPoints,
-  );
-  await expect(
-    preview.locator('[data-marker-visual="monster-sprite"]'),
-  ).toHaveCount(expectedKnownPoints);
-  if (isMobile) {
-    await preview.getByRole('button', { name: 'Close enlarged minimap' }).tap();
+  if (testInfo.project.name === 'mobile') {
+    await expect(trigger).toHaveCount(0);
   } else {
+    await trigger.click();
+    const preview = page.getByRole('dialog', { name: 'Practice Map 01' });
+    await expect(preview).toBeVisible();
+    await expect(preview.locator('[data-marker-position]')).toHaveCount(
+      expectedKnownPoints,
+    );
+    await expect(
+      preview.locator('[data-marker-visual="monster-sprite"]'),
+    ).toHaveCount(expectedKnownPoints);
     await page.keyboard.press('Escape');
+    await expect(preview).toBeHidden();
   }
-  await expect(preview).toBeHidden();
 
   await page.getByRole('button', { name: 'View all 12 maps' }).click();
   const drawer = page.getByRole('dialog', { name: /^All maps/u });
@@ -623,11 +624,11 @@ test('Monster Detail location minimaps show dots inline and sprites in enlarged 
   await expect(lazyMinimapImages).toHaveCount(2);
 });
 
-test('Monster Detail location cards open their Map Detail page', async ({
+test('Monster Detail location cards open Map Detail focused on that monster', async ({
   page,
   monsterPage,
   expectedArtifactRequests,
-}) => {
+}, testInfo) => {
   const item: DetailCase = {
     buildId: 'cw-launch',
     prefix: '/maplestory',
@@ -637,18 +638,50 @@ test('Monster Detail location cards open their Map Detail page', async ({
   };
   expectMonsterPageArtifacts(expectedArtifactRequests);
   await monsterPage.goto(canonicalPath(item));
+  await page.waitForLoadState('networkidle');
 
   const mapPath = `/maplestory/maps/practice-map-01-${mapPublicId({ sourceId: 'cw-launch:fixture:map:01' })}`;
   const locationCard = page
     .getByTestId('monster-location-card')
     .filter({ hasText: 'Practice Map 01' });
-  await expect(locationCard.getByRole('link')).toHaveAttribute('href', mapPath);
-  await locationCard.getByRole('link').click();
+  await expect(locationCard.getByRole('link')).toHaveAttribute(
+    'href',
+    `${mapPath}?focus=monster-id-${monsterPublicId(item.sourceId)}`,
+  );
+  if (testInfo.project.name === 'mobile') {
+    const minimap = locationCard.locator('[data-map-minimap="true"]');
+    const { x, y } = await minimap.evaluate((element) => {
+      element.scrollIntoView({ block: 'center', behavior: 'instant' });
+      const bounds = element.getBoundingClientRect();
+      return {
+        x: bounds.x + bounds.width / 2,
+        y: bounds.y + bounds.height / 2,
+      };
+    });
+    await page.touchscreen.tap(x, y);
+  } else {
+    await locationCard.getByRole('link').click();
+  }
 
-  await expect(page).toHaveURL(`http://127.0.0.1:4173${mapPath}`);
+  await expect(page).toHaveURL(
+    (url) =>
+      url.pathname === mapPath &&
+      /^monster-[a-z0-9]{8}$/u.test(url.searchParams.get('focus') ?? ''),
+  );
   await expect(
     page.getByRole('heading', { level: 1, name: 'Practice Map 01' }),
   ).toBeVisible();
+  await expect(
+    page
+      .getByRole('group', { name: 'Practice Map 01 map' })
+      .locator('[data-selected="true"]'),
+  ).toHaveCount(
+    fixtureSpawnPointCount({
+      buildId: item.buildId,
+      monsterId: item.sourceId,
+      mapKey: 'fixture:map:01',
+    }),
+  );
 });
 
 test('Locations Drawer follows Back and Forward and leaves the page on the next Back', async ({

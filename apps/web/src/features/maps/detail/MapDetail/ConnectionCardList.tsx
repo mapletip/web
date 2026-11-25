@@ -12,11 +12,13 @@ import {
 
 export interface ConnectionCardListProps {
   readonly connections: MapDetailConnectionsView;
+  readonly showMinimapPreview: boolean;
 }
 
 /** Display the projected connection state and its map cards. */
 export function ConnectionCardList({
   connections,
+  showMinimapPreview,
 }: ConnectionCardListProps): ReactElement {
   const [query, setQuery] = useState('');
   const hasSearch = connections.maps.length >= 7;
@@ -26,7 +28,9 @@ export function ConnectionCardList({
         items={connections.maps}
         getKey={(map) => map.key}
         density={MAP_RECORD_CARD_DENSITY}
-        renderItem={(map) => <MapRecordCard map={map} />}
+        renderItem={(map) => (
+          <MapRecordCard map={{ ...map, minimapPreview: showMinimapPreview }} />
+        )}
         itemTestId="map-connection-card"
         {...(hasSearch
           ? {
