@@ -43,10 +43,14 @@ test('server render and hydration expose the verified Monster fixture', async ({
     await expect(patchy.getByText('Unavailable')).toBeVisible();
 
     await expect(
-      monsterPage.results.row(/Zero Yield Drone/u).getByText('0', {
+      monsterPage.results.row(/Zero Yield Drone/u).getByRole('cell', {
+        name: '0',
         exact: true,
       }),
-    ).toHaveCount(3);
+    ).toHaveCount(2);
+    await expect(
+      monsterPage.drops.tableButton('Zero Yield Drone', 0),
+    ).toHaveText('0');
     await expect(
       monsterPage.results.row(/Hollow Husk/u).getByText('-', {
         exact: true,
@@ -321,8 +325,8 @@ test('desktop Locations open a searchable side drawer and preserve the compariso
   await monsterPage.goto();
   expect(artifactRequests).toEqual([]);
   await expect(
-    monsterPage.results.row(/Plain Pebble/u).getByText('No recorded maps'),
-  ).toBeVisible();
+    monsterPage.results.row(/Plain Pebble/u).getByTitle('0 recorded maps'),
+  ).toContainText('0');
 
   const row = monsterPage.results.row(/Crowned Warden/u);
   const trigger = row.getByRole('button', {

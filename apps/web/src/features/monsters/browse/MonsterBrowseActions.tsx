@@ -1,4 +1,4 @@
-import { Button, Group, Text } from '@mantine/core';
+import { Button, Group, Text, VisuallyHidden } from '@mantine/core';
 import { MapPin } from '@phosphor-icons/react';
 import type { ReactElement } from 'react';
 
@@ -75,6 +75,31 @@ export function MonsterBrowseActions({
   }
 
   const dropCount = record.drops.entries.length.toLocaleString('en-US');
+  let locationAction: ReactElement;
+  if (locationCount > 0) {
+    locationAction = action(
+      'locations',
+      <MapPin size={14} aria-hidden="true" />,
+      `Show locations for ${record.name}, ${known ? locationCountLabel : 'partial list'}`,
+      known ? `Locations (${locationCountLabel})` : 'Locations (partial list)',
+      known ? formattedCount : 'Partial',
+    );
+  } else if (locations.state === 'unresolved') {
+    locationAction = (
+      <Text component="span" size="xs" c="dimmed">
+        Locations unavailable
+      </Text>
+    );
+  } else {
+    locationAction = (
+      <Group component="span" gap={4} px={4} c="dimmed" title="0 recorded maps">
+        <MapPin size={14} aria-hidden="true" />
+        <Text component="span" size="xs">
+          0<VisuallyHidden component="span"> recorded maps</VisuallyHidden>
+        </Text>
+      </Group>
+    );
+  }
   return (
     <Group component="span" gap={4}>
       {action(
@@ -87,23 +112,7 @@ export function MonsterBrowseActions({
         `${dropCount} Drops`,
         dropCount,
       )}
-      {locationCount > 0 ? (
-        action(
-          'locations',
-          <MapPin size={14} aria-hidden="true" />,
-          `Show locations for ${record.name}, ${known ? locationCountLabel : 'partial list'}`,
-          known
-            ? `Locations (${locationCountLabel})`
-            : 'Locations (partial list)',
-          known ? formattedCount : 'Partial',
-        )
-      ) : (
-        <Text component="span" size="xs" c="dimmed">
-          {locations.state === 'unresolved'
-            ? 'Locations unavailable'
-            : 'No recorded maps'}
-        </Text>
-      )}
+      {locationAction}
     </Group>
   );
 }

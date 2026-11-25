@@ -388,7 +388,7 @@ test('Monster Browse cards with a long name fit a 320px viewport', async ({
   const card = monsterPage.results.card(name);
   await expect(card.getByRole('heading', { name })).toBeVisible();
   await expect(card.getByRole('button', { name: /Show drops/u })).toBeVisible();
-  await expect(card.getByText('No recorded maps')).toBeVisible();
+  await expect(card.getByTitle('0 recorded maps')).toContainText('0');
   expect(
     await card.evaluate((element) => element.scrollWidth),
   ).toBeLessThanOrEqual((await card.boundingBox())!.width + 1);
