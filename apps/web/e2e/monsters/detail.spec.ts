@@ -624,7 +624,7 @@ test('Monster Detail location minimaps show dots inline and sprites in enlarged 
   await expect(lazyMinimapImages).toHaveCount(2);
 });
 
-test('Monster Detail location cards open Map Detail focused on that monster', async ({
+test('Monster Detail location cards open Map Detail at the top with the monster focused', async ({
   page,
   monsterPage,
   expectedArtifactRequests,
@@ -641,33 +641,35 @@ test('Monster Detail location cards open Map Detail focused on that monster', as
   await page.waitForLoadState('networkidle');
 
   const mapPath = `/maplestory/maps/practice-map-01-${mapPublicId({ sourceId: 'cw-launch:fixture:map:01' })}`;
+  const focusedMapPath = `${mapPath}?focus=monster-id-${monsterPublicId(item.sourceId)}`;
   const locationCard = page
     .getByTestId('monster-location-card')
     .filter({ hasText: 'Practice Map 01' });
-  await expect(locationCard.getByRole('link')).toHaveAttribute(
-    'href',
-    `${mapPath}?focus=monster-id-${monsterPublicId(item.sourceId)}`,
-  );
+  const link = locationCard.getByRole('link');
+  await expect(link).toHaveAttribute('href', focusedMapPath);
+  const target =
+    testInfo.project.name === 'mobile'
+      ? locationCard.locator('[data-map-minimap="true"]')
+      : link;
+  const { x, y, sourceScroll } = await target.evaluate(async (element) => {
+    element.scrollIntoView({ block: 'center', behavior: 'instant' });
+    await new Promise<void>((resolve) =>
+      requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+    );
+    const bounds = element.getBoundingClientRect();
+    return {
+      x: bounds.x + bounds.width / 2,
+      y: bounds.y + bounds.height / 2,
+      sourceScroll: window.scrollY,
+    };
+  });
+  expect(sourceScroll).toBeGreaterThan(100);
   if (testInfo.project.name === 'mobile') {
-    const minimap = locationCard.locator('[data-map-minimap="true"]');
-    const { x, y } = await minimap.evaluate((element) => {
-      element.scrollIntoView({ block: 'center', behavior: 'instant' });
-      const bounds = element.getBoundingClientRect();
-      return {
-        x: bounds.x + bounds.width / 2,
-        y: bounds.y + bounds.height / 2,
-      };
-    });
     await page.touchscreen.tap(x, y);
   } else {
-    await locationCard.getByRole('link').click();
+    await link.click();
   }
 
-  await expect(page).toHaveURL(
-    (url) =>
-      url.pathname === mapPath &&
-      /^monster-[a-z0-9]{8}$/u.test(url.searchParams.get('focus') ?? ''),
-  );
   await expect(
     page.getByRole('heading', { level: 1, name: 'Practice Map 01' }),
   ).toBeVisible();
@@ -682,6 +684,14 @@ test('Monster Detail location cards open Map Detail focused on that monster', as
       mapKey: 'fixture:map:01',
     }),
   );
+  await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(0);
+  await expect(page).toHaveURL(focusedMapPath);
+
+  await page.goBack();
+  await expect(page).toHaveURL(canonicalPath(item));
+  await expect
+    .poll(() => page.evaluate(() => window.scrollY))
+    .toBe(sourceScroll);
 });
 
 test('Locations Drawer follows Back and Forward and leaves the page on the next Back', async ({
