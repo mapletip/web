@@ -1,3 +1,5 @@
+import { fixtureRelease, mapPublicId } from '../../src/mocks/release';
+
 import { test, expect } from './fixtures';
 
 test('mobile cards, quick filters and the drops drawer work together', async ({
@@ -275,4 +277,122 @@ test('overlay-only transitions preserve scroll position', async ({
   expect(Math.abs(dismissScrollY - recordedScrollY)).toBeLessThanOrEqual(15);
 
   expect(artifactRequests).toEqual([]);
+});
+
+test('mobile Locations restore via history and follow normal same-build links', async ({
+  page,
+  monsterPage,
+  artifactRequests,
+  expectedArtifactRequests,
+}) => {
+  const files = fixtureRelease.builds.get('gms-v83')!;
+  expectedArtifactRequests.push(
+    /^\/v1\/(releases|build-indexes)\//u,
+    /^\/v2\/products\//u,
+    new RegExp(`^/${files.locationBrowse.path.replace('.', '[.]')}$`, 'u'),
+  );
+  await page.setViewportSize({ width: 320, height: 760 });
+  await monsterPage.goto('/maplestory/gms-v83/monsters');
+  expect(artifactRequests).toEqual([]);
+  await expect(
+    monsterPage.results.card('Native Beta').getByText('Locations unavailable'),
+  ).toBeVisible();
+
+  const trigger = monsterPage.results
+    .card('Native Alpha')
+    .getByRole('button', { name: /locations for Native Alpha/u });
+  const drawer = page.getByRole('dialog', { name: 'Native Alpha Locations' });
+  const close = drawer.getByRole('button', {
+    name: 'Close details for Native Alpha',
+  });
+  await trigger.click();
+  await expect(close).toBeFocused();
+  const bounds = (await drawer.boundingBox())!;
+  const viewportHeight = page.viewportSize()!.height;
+  expect(bounds.height).toBeCloseTo(viewportHeight * 0.8, 0);
+  expect(bounds.y + bounds.height).toBeCloseTo(viewportHeight, 0);
+  await expect(trigger).toHaveAttribute('aria-expanded', 'true');
+  const link = drawer.getByRole('link', { name: 'Practice Map 01' });
+  const mapPath = `/maplestory/gms-v83/maps/practice-map-01-${mapPublicId({ sourceId: 'gms-v83:fixture:map:01' })}`;
+  await expect(link).toHaveAttribute('href', mapPath);
+  const firstOpenRequests = [...artifactRequests];
+
+  await page.goBack();
+  await expect(drawer).toHaveCount(0);
+  await expect(trigger).toBeFocused();
+  await page.goForward();
+  await expect(link).toBeVisible();
+  expect(artifactRequests).toEqual(firstOpenRequests);
+
+  await page.keyboard.press('Escape');
+  await expect(drawer).toHaveCount(0);
+  await expect(trigger).toBeFocused();
+
+  const partial = monsterPage.results
+    .card('Native Gamma')
+    .getByRole('button', { name: /locations for Native Gamma, partial list/u });
+  await expect(partial).toHaveText('Partial');
+  await partial.click();
+  const partialDrawer = page.getByRole('dialog', {
+    name: 'Native Gamma Locations',
+  });
+  await expect(
+    partialDrawer.getByText(/Location data is incomplete/u),
+  ).toBeVisible();
+  await expect(partialDrawer.getByText('Map name unavailable')).toBeVisible();
+  await expect(partialDrawer.getByText('2 spawns')).toBeVisible();
+  const partialCards = partialDrawer.getByTestId(
+    'monster-browse-location-card',
+  );
+  await expect(partialCards).toHaveCount(4);
+  const search = partialDrawer.getByRole('textbox', { name: 'Find a map' });
+  await search.fill('WESTERN');
+  await expect(partialCards).toHaveCount(3);
+  await expect(partialCards.first()).toContainText('Practice Map 05');
+  const sort = partialDrawer.getByRole('radiogroup', {
+    name: 'Order locations',
+  });
+  await sort.getByText('Map name', { exact: true }).click();
+  await expect(partialCards.first()).toContainText('Practice Map 03');
+  await expect(search).toHaveValue('WESTERN');
+  await sort.getByText('Spawns', { exact: true }).click();
+  await expect(partialCards.first()).toContainText('Practice Map 05');
+  await search.clear();
+  await expect(partialCards).toHaveCount(4);
+  await page.keyboard.press('Escape');
+  await expect(partialDrawer).toHaveCount(0);
+
+  expect(artifactRequests).toEqual(firstOpenRequests);
+  expect(
+    firstOpenRequests.filter((path) => path.startsWith('/v2/browse/')),
+  ).toEqual([`/${files.locationBrowse.path}`]);
+
+  expectedArtifactRequests.push(/^\/v2\/maps\/page-packs\//u);
+  await trigger.click();
+  await link.click();
+  await expect(page).toHaveURL(mapPath);
+  await expect(
+    page.getByRole('heading', { level: 1, name: 'Practice Map 01' }),
+  ).toBeVisible();
+});
+
+test('Monster Browse cards with a long name fit a 320px viewport', async ({
+  page,
+  monsterPage,
+}) => {
+  await page.setViewportSize({ width: 320, height: 760 });
+  await monsterPage.goto();
+  const name =
+    'Extraordinarily Long Named Fixture Creature Of The Far Northern Reaches';
+  await monsterPage.results.search.fill(name);
+  const card = monsterPage.results.card(name);
+  await expect(card.getByRole('heading', { name })).toBeVisible();
+  await expect(card.getByRole('button', { name: /Show drops/u })).toBeVisible();
+  await expect(card.getByTitle('0 recorded maps')).toContainText('0');
+  expect(
+    await card.evaluate((element) => element.scrollWidth),
+  ).toBeLessThanOrEqual((await card.boundingBox())!.width + 1);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(
+    320,
+  );
 });

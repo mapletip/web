@@ -227,6 +227,8 @@ export function FacetedBrowser<TRecord extends Record<string, unknown>>(
       : (navigationCounts.get(navigationCurrentId) ?? 0));
 
   const comparisonRowExpansionContent = comparisonProps?.rowExpansionContent;
+  const comparisonRecordDetailsContent =
+    comparisonProps?.recordDetailsContent ?? comparisonRowExpansionContent;
   const comparisonRecordDetailsTitle = comparisonProps?.recordDetailsTitle;
   const recordDetailsSelection = comparisonProps?.recordDetails;
   const [internalSelectedDetailsRecordId, setInternalSelectedDetailsRecordId] =
@@ -258,7 +260,7 @@ export function FacetedBrowser<TRecord extends Record<string, unknown>>(
   // The drawer is open exactly while the selected identity is on the current
   // page. No effect, no second expansion engine and nothing in browse state.
   const selectedDetailsRecord =
-    comparisonRowExpansionContent !== undefined &&
+    comparisonRecordDetailsContent !== undefined &&
     selectedDetailsRecordId !== undefined &&
     selectedDetailsRecordId !== null
       ? browser.records.find(
@@ -477,7 +479,7 @@ export function FacetedBrowser<TRecord extends Record<string, unknown>>(
 
     return props.renderCard(
       record,
-      comparisonRowExpansionContent === undefined
+      comparisonRecordDetailsContent === undefined
         ? {}
         : {
             openDetails: () => openRecordDetails(record),
@@ -734,9 +736,11 @@ export function FacetedBrowser<TRecord extends Record<string, unknown>>(
           />
         }
       />
-      {comparisonRowExpansionContent !== undefined ? (
+      {comparisonRecordDetailsContent !== undefined ? (
         <RecordDetailsDrawer
           opened={detailsOpen}
+          sideOnDesktop={comparisonProps?.recordDetailsSideOnDesktop === true}
+          bottomSize={comparisonProps?.recordDetailsBottomSize}
           title={selectedDetailsTitle}
           closeLabel={
             selectedDetailsLabel === undefined
@@ -747,7 +751,7 @@ export function FacetedBrowser<TRecord extends Record<string, unknown>>(
         >
           {selectedDetailsRecord === undefined
             ? null
-            : comparisonRowExpansionContent(selectedDetailsRecord, {
+            : comparisonRecordDetailsContent(selectedDetailsRecord, {
                 onClose: closeRecordDetails,
                 surface: 'drawer',
               })}

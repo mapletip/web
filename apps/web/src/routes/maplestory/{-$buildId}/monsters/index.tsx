@@ -46,5 +46,5 @@ function MonsterBrowsePage() {
   const buildId = resolveMonsterBrowseBuildId(rawBuildId);
   const browse = Route.useLoaderData();
 
-  return <MonsterBrowse buildId={buildId} {...browse} />;
+  return <MonsterBrowse key={buildId} buildId={buildId} {...browse} />;
 }

@@ -988,6 +988,14 @@ export const world: { readonly builds: readonly FixtureBuild[] } = {
           exp: known(5),
           boss: known(false),
           undead: known(false),
+          locations: [
+            {
+              mapKey: 'fixture:map:01',
+              name: 'Practice Map 01',
+              streetName: 'Western Practice Grounds',
+              placementCount: 3,
+            },
+          ],
           sprite: 'exact',
         },
         {
@@ -999,6 +1007,7 @@ export const world: { readonly builds: readonly FixtureBuild[] } = {
           exp: known(7),
           boss: known(false),
           undead: known(false),
+          locationsState: 'unresolved',
           sprite: 'exact',
         },
         {
@@ -1010,6 +1019,19 @@ export const world: { readonly builds: readonly FixtureBuild[] } = {
           exp: known(9),
           boss: known(false),
           undead: known(false),
+          locationsState: 'unresolved',
+          locations: [
+            {
+              mapKey: 'fixture:map:02',
+              placementCount: 2,
+            },
+            ...['03', '04', '05'].map((number) => ({
+              mapKey: `fixture:map:${number}`,
+              name: `Practice Map ${number}`,
+              streetName: 'Western Practice Grounds',
+              placementCount: number === '05' ? 3 : 1,
+            })),
+          ],
           sprite: 'exact',
         },
       ],

@@ -1,16 +1,3 @@
-.triggerSection {
-  margin-inline-end: 4px;
-}
-
-.triggerSection svg {
-  display: block;
-}
-
-.triggerLabel {
-  font-size: var(--mantine-font-size-xs);
-  line-height: 1;
-}
-
 .panel {
   display: grid;
   gap: 12px;

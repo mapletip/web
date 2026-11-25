@@ -1,4 +1,4 @@
-import type { StyleProp } from '@mantine/core';
+import type { DrawerProps, StyleProp } from '@mantine/core';
 import type { ReactNode } from 'react';
 
 import type { FacetDefinition } from '@/components/FacetedBrowser/FacetControls/types';
@@ -97,7 +97,7 @@ export type FacetedBrowserNavigation = FacetedBrowserNavigationCommon &
 
 /**
  * Context for a comparison-mode card. Both fields exist only when the host
- * supplies `rowExpansionContent`, so a card without details keeps its plain
+ * supplies record details content, so a card without details keeps its plain
  * one-argument renderer.
  */
 export interface RecordCardContext {
@@ -107,9 +107,8 @@ export interface RecordCardContext {
 }
 
 /**
- * Host content is rendered inline through DataTable on desktop and in the
- * shared details drawer on mobile. `surface` lets the host vary heading and
- * close chrome without introducing a second content callback.
+ * Shared content context for inline table expansion and the record drawer.
+ * `surface` identifies the surrounding controls and heading.
  */
 export interface RecordDetailsContentContext {
   readonly onClose: () => void;
@@ -119,7 +118,7 @@ export interface RecordDetailsContentContext {
 export type RecordDetailsChangeReason = 'open' | 'dismiss' | 'invalidate';
 
 /**
- * Optional host-controlled mobile record-details selection. The identity is
+ * Optional host-controlled record-details drawer selection. The identity is
  * normalized to a string so it can round-trip through route location state.
  */
 export interface RecordDetailsSelection {
@@ -265,8 +264,17 @@ type PresentationProps<TRecord extends Record<string, unknown>> =
       ) => ReactNode;
       /** Drawer heading. Defaults to the record's `identityField` value. */
       readonly recordDetailsTitle?: (record: TRecord) => ReactNode;
-      /** Optional host-controlled mobile selection; desktop expansion is unchanged. */
+      /** Optional host-controlled drawer selection. */
       readonly recordDetails?: RecordDetailsSelection;
+      /** Drawer content when it differs from the inline expansion. */
+      readonly recordDetailsContent?: (
+        record: TRecord,
+        context: RecordDetailsContentContext,
+      ) => ReactNode;
+      /** Use a side drawer at the table breakpoint. Defaults to a bottom sheet. */
+      readonly recordDetailsSideOnDesktop?: boolean;
+      /** Size of the record details bottom sheet. */
+      readonly recordDetailsBottomSize?: DrawerProps['size'];
       readonly rowExpansionControl?: RowExpansionControl<TRecord>;
     }
   | {

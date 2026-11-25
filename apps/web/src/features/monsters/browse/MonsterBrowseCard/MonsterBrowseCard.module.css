@@ -31,7 +31,7 @@
 
 .identity {
   display: flex;
-  flex: 1;
+  flex: 1 1 10rem;
   align-items: center;
   gap: var(--mantine-spacing-xs);
   min-width: 0;
