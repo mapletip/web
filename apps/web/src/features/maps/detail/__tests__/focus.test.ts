@@ -8,6 +8,7 @@ import {
   mapDetailEntitiesForMarkers,
   mapDetailFocusMarkerIds,
   mapDetailSearchSchema,
+  normalizeMapDetailFocusValue,
   parseMapDetailFocus,
   resolveMapDetailFocus,
   selectMapDetailEntity,
@@ -300,6 +301,27 @@ describe('Map Detail focus', () => {
     expect(focus).toEqual({ keys: [key] });
     expect(parseMapDetailFocus({ value: 'monster-!@#$%^&*' })).toBeUndefined();
     expect(mapDetailSearchSchema.parse({ focus: [] }).focus).toBe('');
+  });
+
+  it('preserves a resolved public monster reference and clears an unknown one', () => {
+    const view = practiceGrove();
+    const monster = view.monsters.monsters[0]!;
+    const value = `monster-id-${monster.publicId}`;
+    const focus = resolveMapDetailFocus({
+      focus: parseMapDetailFocus({ value }),
+      view,
+    });
+    expect(focus).toEqual({ keys: [monster.focusKey] });
+    expect(normalizeMapDetailFocusValue({ value, focus })).toBe(value);
+
+    const unknown = 'monster-id-00000000';
+    const unresolved = resolveMapDetailFocus({
+      focus: parseMapDetailFocus({ value: unknown }),
+      view,
+    });
+    expect(
+      normalizeMapDetailFocusValue({ value: unknown, focus: unresolved }),
+    ).toBeUndefined();
   });
 
   it('drops an unknown map entity but keeps a known key', () => {

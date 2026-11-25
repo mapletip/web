@@ -33,6 +33,7 @@ import {
   formatMapDetailFocus,
   mapDetailEntitiesForMarkers,
   mapDetailFocusMarkerIds,
+  normalizeMapDetailFocusValue,
   parseMapDetailFocus,
   resolveMapDetailFocus,
   selectMapDetailEntity,
@@ -192,7 +193,10 @@ export function MapDetail({
   const exploreOpened = exploreOverlayState !== undefined;
   const parsedFocus = parseMapDetailFocus({ value: focusValue });
   const focus = resolveMapDetailFocus({ focus: parsedFocus, view });
-  const canonicalFocus = formatMapDetailFocus({ focus });
+  const normalizedFocusValue = normalizeMapDetailFocusValue({
+    value: focusValue,
+    focus,
+  });
   const selectedIds = mapDetailFocusMarkerIds({
     focus,
     markers: view.stage.markers,
@@ -240,8 +244,10 @@ export function MapDetail({
   };
 
   useEffect(() => {
-    if (focusValue !== canonicalFocus) void onFocusChange?.(canonicalFocus);
-  }, [canonicalFocus, focusValue, onFocusChange]);
+    if (focusValue !== normalizedFocusValue) {
+      void onFocusChange?.(normalizedFocusValue);
+    }
+  }, [focusValue, normalizedFocusValue, onFocusChange]);
 
   const writeFocus = (nextFocus: MapDetailFocus | undefined) => {
     const resolvedFocus = resolveMapDetailFocus({ focus: nextFocus, view });

@@ -127,6 +127,24 @@ export function formatMapDetailFocus({
   return 'kind' in focus ? focus.kind : focus.keys.join(',');
 }
 
+/** A resolved public monster reference works as a shareable focus URL. */
+export function normalizeMapDetailFocusValue({
+  value,
+  focus,
+}: {
+  readonly value: string | undefined;
+  readonly focus: MapDetailFocus | undefined;
+}): string | undefined {
+  if (
+    focus !== undefined &&
+    value?.startsWith('monster-id-') &&
+    !value.includes(',')
+  ) {
+    return value;
+  }
+  return formatMapDetailFocus({ focus });
+}
+
 /** Resolve a selection to the stage markers that should show their rings. */
 export function mapDetailFocusMarkerIds({
   focus,
