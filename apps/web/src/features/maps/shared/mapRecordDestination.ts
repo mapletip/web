@@ -17,3 +17,8 @@ export function projectMapRecordDestination({
 }: ProjectMapRecordDestinationOptions): MapRecordCardDestination {
   return { href: buildRecordDetailPath('maps', slug, publicId, buildId) };
 }
+
+/** Refer to a monster before the destination map's own focus token is known. */
+export function mapMonsterFocusByPublicId(publicId: string): string {
+  return `monster-id-${publicId}`;
+}

@@ -128,6 +128,7 @@ export interface MapDetailConnectionView extends MapRecordCardView {
 }
 
 export interface MapDetailMonsterView extends MonsterRecordCardView {
+  readonly publicId: string;
   readonly focusKey: string;
   readonly spriteSize?: {
     readonly width: number;
@@ -464,6 +465,7 @@ function projectMonsters({
         monster.points.items.length > 0;
       const view: MapDetailMonsterView = {
         ...card,
+        publicId: monster.publicId,
         focusKey: `monster-${monster.focusToken}`,
         ...(card.spriteUrl === undefined ||
         spriteWidth === undefined ||

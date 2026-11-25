@@ -154,7 +154,7 @@ export function MapDetail({
     `(min-width: ${theme.breakpoints.md})`,
     false,
   );
-  const exploreFullScreen = !useMediaQuery(
+  const isCompactViewport = !useMediaQuery(
     `(min-width: ${theme.breakpoints.sm})`,
     false,
   );
@@ -351,7 +351,10 @@ export function MapDetail({
             notice={view.connections.notice}
             itemCount={view.connections.maps.length}
           >
-            <ConnectionCardList connections={view.connections} />
+            <ConnectionCardList
+              connections={view.connections}
+              showMinimapPreview={!isCompactViewport}
+            />
           </MapDetailSection>
           <MapDetailSection
             id="monsters"
@@ -384,7 +387,7 @@ export function MapDetail({
           content: classes['exploreModalContent'],
         }}
         closeButtonProps={{ 'aria-label': 'Close map' }}
-        fullScreen={exploreFullScreen}
+        fullScreen={isCompactViewport}
         onClose={closeExplore}
         opened={exploreOpened && hasStageImage}
         size={1120}

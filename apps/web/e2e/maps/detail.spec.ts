@@ -366,6 +366,35 @@ test('connection card minimaps enlarge on click and their links open from the ca
   ).toBeVisible();
 });
 
+test('mobile connection card minimaps open the connected Map Detail', async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== 'mobile', 'Requires a touch viewport');
+  const publicId = mapPublicId({ sourceId: 'cw-launch:practice-grove' });
+  await page.goto(`/maplestory/maps/practice-grove-${publicId}`);
+  await waitForMapDetailHydration(page);
+
+  const card = page.getByTestId('map-connection-card').first();
+  await expect(
+    card.getByRole('button', { name: /Enlarge .* minimap/u }),
+  ).toHaveCount(0);
+  const minimap = card.getByRole('img', { name: 'Lantern Square minimap' });
+  await minimap.scrollIntoViewIfNeeded();
+  const bounds = (await minimap.boundingBox())!;
+  await page.touchscreen.tap(
+    bounds.x + bounds.width / 2,
+    bounds.y + bounds.height / 2,
+  );
+
+  const connectedId = mapPublicId({ sourceId: 'cw-launch:lantern-square' });
+  await expect(page).toHaveURL(
+    `/maplestory/maps/lantern-square-${connectedId}`,
+  );
+  await expect(
+    page.getByRole('heading', { level: 1, name: 'Lantern Square' }),
+  ).toBeVisible();
+});
+
 test('Map Detail sorts monsters by level, spawns and name', async ({
   page,
 }) => {

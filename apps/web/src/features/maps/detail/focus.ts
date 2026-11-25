@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+import { mapMonsterFocusByPublicId } from '@/features/maps/shared/mapRecordDestination';
+
 import type {
   MapDetailOnThisMapRowView,
   MapDetailStageMarker,
@@ -24,7 +26,8 @@ export type MapDetailFocusKind = keyof typeof MAP_DETAIL_FOCUS_KIND;
 export type MapDetailFocus =
   { readonly kind: MapDetailFocusKind } | { readonly keys: readonly string[] };
 
-const ENTITY_KEY_PATTERN = /^(monster|npc|connection|warp)-[a-z0-9]{8}$/u;
+const ENTITY_KEY_PATTERN =
+  /^(monster(?:-id)?|npc|connection|warp)-[a-z0-9]{8}$/u;
 
 /** Parse a whole-kind value or the well-formed parts of an entity list. */
 export function parseMapDetailFocus({
@@ -71,6 +74,11 @@ export function resolveMapDetailFocus({
   }
 
   const selected = new Set(focus.keys);
+  for (const monster of view.monsters.monsters) {
+    if (selected.has(mapMonsterFocusByPublicId(monster.publicId))) {
+      selected.add(monster.focusKey);
+    }
+  }
   const keys = view.entities
     .filter(({ focusKey }) => selected.has(focusKey))
     .map(({ focusKey }) => focusKey);

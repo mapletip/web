@@ -120,7 +120,9 @@ export function LocationCardList({
         itemTestId="monster-location-card"
         equalHeightRows
         {...(drawer ? {} : { mobileItemLimit: MOBILE_CAP })}
-        renderItem={(map) => <MapRecordCard map={map} />}
+        renderItem={(map) => (
+          <MapRecordCard map={{ ...map, minimapPreview: desktopDrawer }} />
+        )}
       />
     );
   }
