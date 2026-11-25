@@ -203,6 +203,14 @@ export function MapDetail({
     readonly stageView?: InteractiveMapView | undefined;
     readonly findText?: string | undefined;
   }) => {
+    const currentEntry = router.history.location;
+    // A stage animation can finish after navigation has committed another entry.
+    if (
+      currentEntry.pathname !== view.canonicalPath ||
+      currentEntry.state.__TSR_index !== historyIndex
+    ) {
+      return;
+    }
     void router.navigate({
       to: '.',
       search: true,

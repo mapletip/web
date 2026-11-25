@@ -853,6 +853,73 @@ test('desktop Map Detail zoom controls enlarge the stage and Fit restores it', a
     .toBeCloseTo(fitted!.width, 0);
 });
 
+test('leaving Map Detail during a stage animation resets scroll and Back restores the map position', async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: 'no-preference' });
+  const publicId = mapPublicId({ sourceId: 'cw-launch:practice-grove' });
+  const mapPath = `/maplestory/maps/practice-grove-${publicId}`;
+  await page.goto(mapPath);
+  await waitForMapDetailHydration(page);
+
+  const stage = page.getByRole('group', { name: 'Practice Grove map' });
+  await stage.getByRole('button', { name: 'Zoom in' }).click();
+  await expect.poll(() => renderedStageScale(stage)).toBeGreaterThan(1.3);
+  await page.waitForFunction(() => {
+    const state = history.state as { mapDetailStageView?: unknown } | null;
+    return state?.mapDetailStageView !== undefined;
+  });
+  await page.evaluate(() => {
+    const fetch = window.fetch.bind(window);
+    window.fetch = async (input, init) => {
+      const url = input instanceof Request ? input.url : String(input);
+      if (
+        new URL(url, location.href).pathname.startsWith(
+          '/v2/monsters/page-packs/',
+        )
+      ) {
+        await new Promise((resolve) => window.setTimeout(resolve, 500));
+      }
+      return fetch(input, init);
+    };
+  });
+
+  const link = page
+    .getByTestId('map-monster-card')
+    .getByRole('link', { name: 'Crowned Warden' });
+  await link.scrollIntoViewIfNeeded();
+  // Let the scroll event reach the router before leaving this history entry.
+  await page.evaluate(
+    () =>
+      new Promise<void>((resolve) =>
+        requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+      ),
+  );
+  const mapScroll = await page.evaluate(() => window.scrollY);
+  expect(mapScroll).toBeGreaterThan(100);
+
+  await link.evaluate((anchor) => {
+    // Start Fit and open the link in the same turn, before the animation settles.
+    const fit = document.querySelector<HTMLButtonElement>(
+      'button[aria-label="Fit map"]',
+    );
+    if (fit === null || !(anchor instanceof HTMLAnchorElement)) {
+      throw new Error('Expected a map fit control and a monster link.');
+    }
+    fit.click();
+    anchor.click();
+  });
+
+  await expect(
+    page.getByRole('heading', { level: 1, name: 'Crowned Warden' }),
+  ).toBeVisible();
+  await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(0);
+
+  await page.goBack();
+  await expect(page).toHaveURL(mapPath);
+  await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(mapScroll);
+});
+
 test('Explore close button and Escape keep the stage view and find text', async ({
   page,
 }) => {
