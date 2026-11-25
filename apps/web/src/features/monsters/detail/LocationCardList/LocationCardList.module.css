@@ -9,13 +9,6 @@
   gap: var(--mantine-spacing-md);
 }
 
-.sort {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--mantine-spacing-sm);
-}
-
 .drawerTitle {
   min-width: 0;
 }

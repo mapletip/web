@@ -1,18 +1,16 @@
 import { Group, Stack, Text } from '@mantine/core';
 import type { ReactElement } from 'react';
 
-import { MonsterSprite } from '../../MonsterSprite';
-import type { MonsterBrowseRow } from '../../project';
+import type { MonsterBrowseRelation } from './MonsterBrowseActions';
+import { MonsterSprite } from './MonsterSprite';
+import type { MonsterBrowseRow } from './project';
 
-/**
- * Drawer heading for a monster's drops: the identity the card already shows,
- * so the shared drawer names the selected record without domain copy in the
- * component library.
- */
-export function MonsterDropTitle({
+export function MonsterBrowseDrawerTitle({
   record,
+  relation = 'drops',
 }: {
   readonly record: MonsterBrowseRow;
+  readonly relation?: MonsterBrowseRelation;
 }): ReactElement {
   const levelLabel =
     record.level === undefined ? 'Level unknown' : `Level ${record.level}`;
@@ -23,7 +21,7 @@ export function MonsterDropTitle({
       <Stack gap={0}>
         <Text fw={600}>{record.name}</Text>
         <Text size="xs" c="dimmed">
-          {levelLabel}
+          {relation === 'locations' ? 'Locations' : levelLabel}
         </Text>
       </Stack>
     </Group>

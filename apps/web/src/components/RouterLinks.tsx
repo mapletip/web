@@ -14,11 +14,18 @@ const AnchorLinkBase = (props: AnchorLinkBaseProps) => (
 export const AnchorLink = createLink(AnchorLinkBase);
 
 /** Adapt a record card's canonical href to the host router link. */
-export const recordCardLinkRenderer: RecordCardLinkRenderer = (
-  destination,
-  props,
-) => (
-  <AnchorLink to={destination.href} className={props.className}>
-    {props.children}
-  </AnchorLink>
-);
+function createRecordCardLinkRenderer(preload?: false): RecordCardLinkRenderer {
+  return (destination, props) => (
+    <AnchorLink
+      to={destination.href}
+      className={props.className}
+      {...(preload === undefined ? {} : { preload })}
+    >
+      {props.children}
+    </AnchorLink>
+  );
+}
+
+export const recordCardLinkRenderer = createRecordCardLinkRenderer();
+export const recordCardLinkRendererWithoutPreload =
+  createRecordCardLinkRenderer(false);

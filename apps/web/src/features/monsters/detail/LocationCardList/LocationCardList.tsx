@@ -3,7 +3,6 @@ import {
   Button,
   Drawer,
   Group,
-  SegmentedControl,
   Stack,
   Text,
   TextInput,
@@ -17,6 +16,11 @@ import type { ReactElement } from 'react';
 import { DetailCardList } from '@/features/detail';
 import { MAP_RECORD_CARD_DENSITY, MapRecordCard } from '@/features/maps/shared';
 
+import {
+  compareMonsterLocations,
+  type MonsterLocationSort,
+} from '../../shared/location-cards';
+import { MonsterLocationSortControl } from '../../shared/MonsterLocationSortControl';
 import type { MonsterDetailLocationsView } from '../project';
 
 import classes from './LocationCardList.module.css';
@@ -29,8 +33,6 @@ export interface LocationCardListProps {
   readonly onDrawerOpen: () => void;
   readonly onDrawerClose: () => void;
 }
-
-type LocationSort = 'spawns' | 'name';
 
 function drawerTitle(
   monsterName: string,
@@ -67,7 +69,7 @@ export function LocationCardList({
 }: LocationCardListProps): ReactElement {
   const locationsId = useId();
   const [query, setQuery] = useState('');
-  const [sort, setSort] = useState<LocationSort>('spawns');
+  const [sort, setSort] = useState<MonsterLocationSort>('spawns');
   const desktopDrawer = useMediaQuery('(min-width: 48em)', false);
 
   if (locations.state === 'no-locations') {
@@ -80,24 +82,7 @@ export function LocationCardList({
   const normalizedQuery = query.trim().toLocaleLowerCase('en');
   const maps = locations.maps
     .filter((map) => map.name.toLocaleLowerCase('en').includes(normalizedQuery))
-    .slice()
-    .sort((left, right) => {
-      if (sort === 'name') {
-        return (
-          left.name.localeCompare(right.name, 'en', {
-            sensitivity: 'base',
-            numeric: true,
-          }) ||
-          right.placementCount - left.placementCount ||
-          left.key.localeCompare(right.key)
-        );
-      }
-      return (
-        right.placementCount - left.placementCount ||
-        left.name.localeCompare(right.name, 'en', { sensitivity: 'base' }) ||
-        left.key.localeCompare(right.key)
-      );
-    });
+    .sort((left, right) => compareMonsterLocations(left, right, sort));
   const previewMaps = maps.slice(0, DESKTOP_CAP);
 
   const showControls = locations.maps.length > 3;
@@ -121,20 +106,7 @@ export function LocationCardList({
           value={query}
           onChange={(event) => setQuery(event.currentTarget.value)}
         />
-        <div className={classes['sort']}>
-          <Text size="sm" fw={500} component="span">
-            Order by
-          </Text>
-          <SegmentedControl
-            aria-label="Order locations"
-            value={sort}
-            onChange={(value) => setSort(value)}
-            data={[
-              { label: 'Spawns', value: 'spawns' },
-              { label: 'Map name', value: 'name' },
-            ]}
-          />
-        </div>
+        <MonsterLocationSortControl value={sort} onChange={setSort} />
       </div>
     );
   }

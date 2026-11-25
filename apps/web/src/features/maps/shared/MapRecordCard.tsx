@@ -15,7 +15,10 @@ import {
 } from '@mapletip/component-library';
 import { useState, type ReactElement } from 'react';
 
-import { recordCardLinkRenderer } from '@/components/RouterLinks';
+import {
+  recordCardLinkRendererWithoutPreload,
+  recordCardLinkRenderer,
+} from '@/components/RouterLinks';
 
 import { MapMark } from './MapMark';
 import classes from './MapRecordCard.module.css';
@@ -87,6 +90,7 @@ export interface MapRecordCardView {
 
 export interface MapRecordCardProps {
   readonly map: MapRecordCardView;
+  readonly preloadLink?: boolean;
 }
 
 function renderFooterParts(
@@ -133,7 +137,10 @@ function renderFooterParts(
 }
 
 /** Map-specific card with an optional enlarged minimap. */
-export function MapRecordCard({ map }: MapRecordCardProps): ReactElement {
+export function MapRecordCard({
+  map,
+  preloadLink = true,
+}: MapRecordCardProps): ReactElement {
   const theme = useMantineTheme();
   const isDesktop = useMediaQuery(
     `(min-width: ${theme.breakpoints.sm})`,
@@ -151,10 +158,6 @@ export function MapRecordCard({ map }: MapRecordCardProps): ReactElement {
           alt: `${map.name} minimap`,
         }
       : undefined;
-  const expandedStageImage =
-    stageImage === undefined
-      ? undefined
-      : { ...stageImage, alt: `${map.name} minimap enlarged` };
   const mapSpawnPoints = ({
     useSprite,
   }: {
@@ -192,25 +195,29 @@ export function MapRecordCard({ map }: MapRecordCardProps): ReactElement {
     });
   };
   const markers = mapSpawnPoints({ useSprite: false });
-  const expandedMarkers = mapSpawnPoints({ useSprite: true });
+  function renderExpandedMinimap(): ReactElement {
+    if (stageImage === undefined) {
+      return (
+        <Image
+          src={map.minimapUrl}
+          alt={`${map.name} minimap enlarged`}
+          className={classes['expandedMinimap']}
+        />
+      );
+    }
 
-  const expandedMap =
-    expandedStageImage === undefined ? (
-      <Image
-        src={map.minimapUrl}
-        alt={`${map.name} minimap enlarged`}
-        className={classes['expandedMinimap']}
-      />
-    ) : (
+    const expandedMarkers = mapSpawnPoints({ useSprite: true });
+    return (
       <StaticMap
         className={classes['expandedStage']}
-        image={expandedStageImage}
+        image={{ ...stageImage, alt: `${map.name} minimap enlarged` }}
         markers={expandedMarkers}
         selectedIds={expandedMarkers.map(({ id }) => id)}
         loading="lazy"
         unavailableMessage="Minimap unavailable"
       />
     );
+  }
 
   let minimap: ReactElement | undefined;
   if (map.minimapUrl !== undefined) {
@@ -287,7 +294,7 @@ export function MapRecordCard({ map }: MapRecordCardProps): ReactElement {
           aria-labelledby=""
           aria-label={map.name}
         >
-          {expandedMap}
+          {renderExpandedMinimap()}
         </Popover.Dropdown>
       </Popover>
     );
@@ -303,7 +310,7 @@ export function MapRecordCard({ map }: MapRecordCardProps): ReactElement {
           classNames={{ body: classes['minimapModalBody'] }}
           closeButtonProps={{ 'aria-label': 'Close enlarged minimap' }}
         >
-          {expandedMap}
+          {renderExpandedMinimap()}
         </Modal>
       </>
     );
@@ -336,7 +343,9 @@ export function MapRecordCard({ map }: MapRecordCardProps): ReactElement {
         ? {}
         : {
             destination: { href: destination.href },
-            renderLink: recordCardLinkRenderer,
+            renderLink: preloadLink
+              ? recordCardLinkRenderer
+              : recordCardLinkRendererWithoutPreload,
           })}
     />
   );

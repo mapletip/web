@@ -44,6 +44,7 @@ function knownRow(): MonsterBrowseRow {
     pushed: 11,
     speed: -65,
     factStates: {},
+    locations: { state: 'absent' },
     drops: {
       entries: [],
       itemKeys: [],
@@ -63,6 +64,7 @@ function unknownRow(): MonsterBrowseRow {
       mpRecovery: 'absent',
       expPer100Hp: 'unknown',
     },
+    locations: { state: 'absent' },
     drops: {
       entries: [],
       itemKeys: [],
@@ -104,8 +106,8 @@ function renderCard(
         <MonsterBrowseCard
           record={record}
           buildId={DEFAULT_BUILD_ID}
-          onShowDrops={onShowDrops}
-          isDetailsOpen={isDetailsOpen}
+          onActivate={onShowDrops}
+          activeRelation={isDetailsOpen ? 'drops' : undefined}
         />
       </MantineProvider>
     </RouterContextProvider>,

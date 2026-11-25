@@ -1,26 +1,16 @@
-import { mapMinimapUrl } from '@mapletip/data/maps';
-import {
-  hasMonsterPageLocationPoints,
-  monsterLocationPointPairs,
-  type StaticMonsterPageRecord,
-} from '@mapletip/data/monsters';
+import type { StaticMonsterPageRecord } from '@mapletip/data/monsters';
 
-import { MAPLEKIT_RELEASE, type BuildId } from '@/config/maplekit';
+import type { BuildId } from '@/config/maplekit';
 import { buildRecordDetailPath } from '@/features/detail';
 import {
   projectItemRecordChip,
   type ItemRecordChipView,
 } from '@/features/items/shared';
-import {
-  projectMapRecordDestination,
-  type MapRecordCardDestination,
-  type MapRecordCardView,
-} from '@/features/maps/shared';
+import type { MapRecordCardView } from '@/features/maps/shared';
 import {
   projectQuestRecordCard,
   type QuestRecordCardView,
 } from '@/features/quests/shared';
-import { nonBlank } from '@/util/nonBlank';
 
 import {
   formatMonsterNumber,
@@ -41,6 +31,12 @@ import {
   getMonsterDropCategoryLabel,
   MONSTER_DROP_CATEGORIES,
 } from '../shared/drop-categories';
+import {
+  projectMonsterLocationCards,
+  type MonsterLocationMapView,
+} from '../shared/location-cards';
+
+export type { MonsterLocationMapView as MonsterDetailLocationMapView } from '../shared/location-cards';
 
 export interface MonsterDetailStatView {
   readonly id: MonsterDetailStatId;
@@ -66,30 +62,6 @@ export interface MonsterDetailDropGroupView {
   readonly label: string;
   readonly count: number;
   readonly entries: readonly MonsterDetailDropEntryView[];
-}
-
-export interface MonsterDetailLocationMapView extends MapRecordCardView {
-  /** Stable Map product key; names are not unique. */
-  readonly placementCount: number;
-}
-
-type MonsterPageLocationEntry =
-  StaticMonsterPageRecord['locations']['entries'][number];
-
-function projectMonsterLocationDestination({
-  entry,
-  buildId,
-}: {
-  readonly entry: MonsterPageLocationEntry;
-  readonly buildId: BuildId;
-}): MapRecordCardDestination | undefined {
-  if (!('publicId' in entry) || !('slug' in entry)) return undefined;
-
-  return projectMapRecordDestination({
-    publicId: entry.publicId,
-    slug: entry.slug,
-    buildId,
-  });
 }
 
 export interface MonsterDetailQuestEntryView extends QuestRecordCardView {
@@ -123,7 +95,7 @@ export type MonsterDetailLocationsView =
   | {
       readonly state: 'present';
       readonly count: number;
-      readonly maps: readonly MonsterDetailLocationMapView[];
+      readonly maps: readonly MonsterLocationMapView[];
     }
   | { readonly state: 'no-locations'; readonly count: 0 }
   | { readonly state: 'unavailable'; readonly count: 'unknown' };
@@ -318,91 +290,10 @@ function projectMonsterLocations({
     return { state: 'no-locations', count: 0 };
   }
 
-  const mapCard = ({
-    key,
-    name,
-    streetName,
-    placementCount,
-    minimapContentId,
-    minimapStage,
-    destination,
-  }: {
-    readonly key: string;
-    readonly name: string | undefined;
-    readonly streetName: string | null | undefined;
-    readonly placementCount: number;
-    readonly minimapContentId: string | undefined;
-    readonly minimapStage?: MapRecordCardView['minimapStage'];
-    readonly destination: MapRecordCardDestination | undefined;
-  }): MonsterDetailLocationMapView => {
-    const street = nonBlank(streetName);
-    const minimapUrl =
-      minimapContentId === undefined
-        ? undefined
-        : mapMinimapUrl(MAPLEKIT_RELEASE.baseUrl, minimapContentId);
-    return {
-      key,
-      name: nonBlank(name) ?? 'Map name unavailable',
-      ...(street === undefined ? {} : { secondaryLine: street }),
-      ...(minimapUrl === undefined ? {} : { minimapUrl }),
-      ...(minimapSprite === undefined ? {} : { minimapSprite }),
-      ...(minimapStage === undefined ? {} : { minimapStage }),
-      ...(destination === undefined ? {} : { destination }),
-      footerParts: [
-        {
-          value: formatMonsterNumber(placementCount),
-          label: placementCount === 1 ? 'spawn' : 'spawns',
-        },
-      ],
-      placementCount,
-    };
-  };
-  const maps = hasMonsterPageLocationPoints(record)
-    ? record.locations.entries.map((entry) =>
-        mapCard({
-          key: entry.mapKey,
-          name:
-            entry.mapName.state === 'known' ? entry.mapName.value : undefined,
-          streetName: entry.streetName,
-          placementCount: entry.placementCount,
-          destination: projectMonsterLocationDestination({ entry, buildId }),
-          minimapContentId:
-            entry.stage.state === 'known'
-              ? entry.stage.value.contentId
-              : undefined,
-          ...(entry.stage.state === 'known'
-            ? {
-                minimapStage: {
-                  width: entry.stage.value.width,
-                  height: entry.stage.value.height,
-                  ...('scale' in entry.stage.value
-                    ? { scale: entry.stage.value.scale }
-                    : {}),
-                  spawnPoints:
-                    entry.points.state === 'absent'
-                      ? []
-                      : monsterLocationPointPairs(entry.points.packedPairs),
-                },
-              }
-            : {}),
-        }),
-      )
-    : record.locations.entries.map((entry) =>
-        mapCard({
-          key: entry.mapKey,
-          name: entry.name.state === 'known' ? entry.name.value : undefined,
-          streetName: entry.streetName,
-          placementCount: entry.placementCount,
-          destination: projectMonsterLocationDestination({ entry, buildId }),
-          minimapContentId:
-            entry.minimap.state === 'known' ? entry.minimap.value : undefined,
-        }),
-      );
-  maps.sort(
-    (left, right) =>
-      right.placementCount - left.placementCount ||
-      left.name.localeCompare(right.name, 'en', { sensitivity: 'base' }) ||
-      left.key.localeCompare(right.key),
+  const maps = projectMonsterLocationCards(
+    locations.entries,
+    buildId,
+    minimapSprite,
   );
 
   return { state: 'present', count: locations.summary.mapCount, maps };

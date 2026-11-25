@@ -32,3 +32,16 @@ a.identityName:focus-visible {
   text-decoration: underline;
   text-underline-offset: 0.15em;
 }
+
+.triggerSection {
+  margin-inline-end: 4px;
+}
+
+.triggerSection svg {
+  display: block;
+}
+
+.triggerLabel {
+  font-size: var(--mantine-font-size-xs);
+  line-height: 1;
+}

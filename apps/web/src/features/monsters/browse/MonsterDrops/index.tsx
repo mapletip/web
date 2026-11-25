@@ -4,4 +4,3 @@ export {
   MonsterDropListing,
   type MonsterDropSurface,
 } from './MonsterDropListing';
-export { MonsterDropTitle } from './MonsterDropTitle';

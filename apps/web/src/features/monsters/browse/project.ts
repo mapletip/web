@@ -54,6 +54,8 @@ export interface MonsterDropFacts {
   readonly itemKeys: readonly string[];
 }
 
+export type MonsterLocationSummary = MonsterCatalogRecord['locations'];
+
 export interface MonsterBrowseRow extends Record<string, unknown> {
   /** SDK stable public key — the record identity, never the display name. */
   readonly key: string;
@@ -94,6 +96,7 @@ export interface MonsterBrowseRow extends Record<string, unknown> {
   readonly undead?: boolean;
   readonly bodyAttack?: boolean;
   readonly drops: MonsterDropFacts;
+  readonly locations: MonsterLocationSummary;
   /**
    * Canonical state for every projected fact whose state is NOT `known`.
    * A missing key means `known`. This is what keeps `unknown`, `absent` and
@@ -252,6 +255,7 @@ function projectRecord(
       : {}),
     name: name ?? UNNAMED_MONSTER_LABEL,
     factStates,
+    locations: record.locations,
     drops: {
       entries: dropEntries,
       itemKeys: Array.from(

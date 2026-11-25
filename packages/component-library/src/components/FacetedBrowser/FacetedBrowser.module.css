@@ -114,10 +114,7 @@
   min-height: 36px;
 }
 
-/*
- * Record-details drawer defaults. A bottom sheet keeps the fixed header and lets
- * only the domain body scroll, whether the content is a short list or long prose.
- */
+/* Keep the drawer header fixed while the record details scroll. */
 .detailsDrawerContent {
   display: flex;
   flex-direction: column;

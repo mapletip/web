@@ -304,8 +304,26 @@ function projectMonster(
           }
         : {}),
     },
-    locations: { state: 'absent' },
+    locations: projectMonsterLocationSummary(monster),
   };
+}
+
+function projectMonsterLocationSummary(
+  monster: FixtureMonster,
+): MonsterCatalogV2_5['records'][number]['locations'] {
+  const maps = monster.locations ?? [];
+  const state =
+    monster.locationsState ?? (maps.length > 0 ? 'known' : 'absent');
+  return state === 'absent'
+    ? { state }
+    : {
+        state,
+        mapCount: maps.length,
+        placementCount: maps.reduce(
+          (count, map) => count + map.placementCount,
+          0,
+        ),
+      };
 }
 
 function projectMonsterPage(
@@ -333,13 +351,6 @@ function projectMonsterPage(
     speed,
   ] = catalogRecord.stats;
   const locationFixtures = monster.locations ?? [];
-  const locationsState =
-    monster.locationsState ??
-    (locationFixtures.length === 0 ? 'absent' : 'known');
-  const locationPlacementCount = locationFixtures.reduce(
-    (total, location) => total + location.placementCount,
-    0,
-  );
   const locationEntries: MonsterPageRecordV1_3['locations']['entries'] =
     locationFixtures.map((location: FixtureLocation) => {
       const points = location.points ?? [];
@@ -453,14 +464,7 @@ function projectMonsterPage(
       entries,
     },
     locations: {
-      summary:
-        locationsState === 'absent'
-          ? { state: 'absent' }
-          : {
-              state: locationsState,
-              mapCount: locationEntries.length,
-              placementCount: locationPlacementCount,
-            },
+      summary: catalogRecord.locations,
       entries: locationEntries,
     },
     quests: monster.quests ?? { state: 'absent', entries: [] },

@@ -1,4 +1,4 @@
-import { Button, Group } from '@mantine/core';
+import { Group } from '@mantine/core';
 import type { ReactElement } from 'react';
 
 import { AnchorLink } from '@/components/RouterLinks';
@@ -11,8 +11,10 @@ import {
   renderMonsterBrowseFactIcon,
   type MonsterBrowseCardStatFact,
 } from '../monster-browse-fact-config';
-import { dropListingActionLabel } from '../MonsterDrops';
-import dropClasses from '../MonsterDrops/MonsterDrops.module.css';
+import {
+  MonsterBrowseActions,
+  type MonsterBrowseRelation,
+} from '../MonsterBrowseActions';
 import { MonsterSprite } from '../MonsterSprite';
 import { formatMonsterFact, type MonsterBrowseRow } from '../project';
 
@@ -24,19 +26,19 @@ const combatFacts = getMonsterBrowseCardFacts('combat');
 export function MonsterBrowseCard({
   record,
   buildId,
-  onShowDrops,
-  isDetailsOpen,
+  onActivate,
+  activeRelation,
 }: {
   readonly record: MonsterBrowseRow;
   readonly buildId: BuildId;
   /** Supplied by FacetedBrowser only when the host exposes record details. */
-  readonly onShowDrops?: (() => void) | undefined;
-  readonly isDetailsOpen?: boolean | undefined;
+  readonly onActivate?: ((relation: MonsterBrowseRelation) => void) | undefined;
+  readonly activeRelation?: MonsterBrowseRelation | undefined;
 }): ReactElement {
   const detailLinkProps = monsterDetailLinkProps(record, buildId);
   return (
     <article className={classes['card']}>
-      <Group gap="xs" wrap="nowrap" align="flex-start">
+      <Group gap="xs" align="flex-start" justify="space-between">
         <div className={classes['identity']}>
           <MonsterSprite sprite={record.sprite} />
           <div className={classes['title']}>
@@ -56,29 +58,12 @@ export function MonsterBrowseCard({
             </span>
           </div>
         </div>
-        {onShowDrops === undefined ? null : (
-          <Button
-            type="button"
-            variant={isDetailsOpen === true ? 'light' : 'default'}
-            size="compact-sm"
-            radius="sm"
-            px={4}
-            leftSection={renderMonsterBrowseFactIcon(
-              MONSTER_BROWSE_FACT_CONFIG.dropsItem,
-              { surface: 'card' },
-            )}
-            classNames={{
-              section: dropClasses['triggerSection'],
-              label: dropClasses['triggerLabel'],
-            }}
-            aria-haspopup="dialog"
-            aria-expanded={isDetailsOpen === true}
-            aria-label={dropListingActionLabel(record, false)}
-            title={`${record.drops.entries.length.toLocaleString('en-US')} Drops`}
-            onClick={onShowDrops}
-          >
-            {record.drops.entries.length.toLocaleString('en-US')}
-          </Button>
+        {onActivate === undefined ? null : (
+          <MonsterBrowseActions
+            record={record}
+            activeRelation={activeRelation}
+            onActivate={onActivate}
+          />
         )}
       </Group>
       <div className={classes['stats']}>

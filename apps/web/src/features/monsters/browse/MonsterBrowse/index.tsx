@@ -1,11 +1,10 @@
-import { Button, Title } from '@mantine/core';
+import { Title } from '@mantine/core';
 import { FacetedBrowser, Thumbnail } from '@mapletip/component-library';
 import type {
   BrowseState,
   DrawerOpenedChangeDetails,
   FacetDefinition,
   QueryFieldDefinition,
-  RowExpansionControlContext,
   StateChangeDetails,
   TableColumn,
 } from '@mapletip/component-library';
@@ -22,19 +21,20 @@ import {
 import type { MonsterDetailStatId } from '@/features/monsters/shared';
 import { useRouteOverlay } from '@/features/route-overlay/useRouteOverlay';
 
+import { createMonsterLocationReader } from '../locations';
 import {
   getMonsterBrowseFacetDefinition,
   MONSTER_BROWSE_FACT_CONFIG,
-  renderMonsterBrowseFactIcon,
 } from '../monster-browse-fact-config';
 import classes from '../MonsterBrowse.module.css';
-import { MonsterBrowseCard } from '../MonsterBrowseCard';
 import {
-  dropListingActionLabel,
-  MonsterDropListing,
-  MonsterDropTitle,
-} from '../MonsterDrops';
-import dropClasses from '../MonsterDrops/MonsterDrops.module.css';
+  MonsterBrowseActions,
+  type MonsterBrowseRelation,
+} from '../MonsterBrowseActions';
+import { MonsterBrowseCard } from '../MonsterBrowseCard';
+import { MonsterBrowseDrawerTitle } from '../MonsterBrowseDrawerTitle';
+import { MonsterDropListing } from '../MonsterDrops';
+import { MonsterLocationListing } from '../MonsterLocationListing';
 import { MONSTER_SPRITE_SIZE, MonsterSprite } from '../MonsterSprite';
 import {
   formatMonsterFact,
@@ -153,48 +153,6 @@ export function createMonsterBrowseColumns(
 const SUMMARY_NOUN = { one: 'Monster', other: 'Monsters' } as const;
 const MONSTER_NAME_INDENT = `calc(${MONSTER_SPRITE_SIZE}px + var(--mantine-spacing-xs))`;
 
-function dropExpansionControl({
-  record,
-  expanded,
-  controlsId,
-  onToggle,
-}: RowExpansionControlContext<MonsterBrowseRow>): ReactElement {
-  const label = dropListingActionLabel(record, expanded);
-  return (
-    <Button
-      type="button"
-      variant={expanded ? 'light' : 'default'}
-      size="compact-sm"
-      radius="sm"
-      px={4}
-      leftSection={renderMonsterBrowseFactIcon(
-        MONSTER_BROWSE_FACT_CONFIG.dropsItem,
-      )}
-      classNames={{
-        section: dropClasses['triggerSection'],
-        label: dropClasses['triggerLabel'],
-      }}
-      aria-expanded={expanded}
-      aria-controls={controlsId}
-      aria-label={label}
-      title={`${record.drops.entries.length.toLocaleString('en-US')} Drops`}
-      style={{ marginInlineStart: MONSTER_NAME_INDENT }}
-      onKeyDown={(event) => {
-        if (!expanded || event.key !== 'Escape') return;
-        event.preventDefault();
-        event.stopPropagation();
-        onToggle();
-      }}
-      onClick={(event) => {
-        event.stopPropagation();
-        onToggle();
-      }}
-    >
-      {record.drops.entries.length.toLocaleString('en-US')}
-    </Button>
-  );
-}
-
 function dropItemFacet(
   options: readonly MonsterDropItemOption[],
   definition: FacetDefinition<MonsterBrowseRow>,
@@ -233,10 +191,22 @@ export function MonsterBrowse({
   const [browseState, setBrowseState] = useState<BrowseState>(defaultState);
   const browseOverlay = useRouteOverlay(browseOverlayOptions);
   const filterDrawerOpened = browseOverlay.overlay?.type === 'filters';
-  const selectedRecordId =
+  const [locationReader] = useState(() => createMonsterLocationReader(buildId));
+  const details =
     browseOverlay.overlay?.type === 'record-details'
-      ? browseOverlay.overlay.recordId
-      : null;
+      ? browseOverlay.overlay
+      : undefined;
+  const drawerRelation = details?.relation ?? 'drops';
+  function openDetails(
+    record: MonsterBrowseRow,
+    relation: MonsterBrowseRelation,
+  ) {
+    browseOverlay.open({
+      type: 'record-details',
+      recordId: record.key,
+      ...(relation === 'locations' ? { relation } : {}),
+    });
+  }
   const onFilterDrawerOpenedChange = useCallback(
     (opened: boolean, details?: DrawerOpenedChangeDetails) => {
       if (opened) {
@@ -310,43 +280,77 @@ export function MonsterBrowse({
         // scroll region is the page's vertical scroll region on desktop.
         fillHeight
         tableStorageKey={`mapletip:web:monsters:${buildId}:v1`}
-        renderCard={(record, { openDetails, isDetailsOpen }) => (
+        renderCard={(record, { isDetailsOpen }) => (
           <MonsterBrowseCard
             record={record}
             buildId={buildId}
-            onShowDrops={openDetails}
-            isDetailsOpen={isDetailsOpen}
+            onActivate={(relation) => openDetails(record, relation)}
+            activeRelation={isDetailsOpen === true ? drawerRelation : undefined}
           />
         )}
-        rowExpansionContent={(record, { onClose, surface }) => (
+        rowExpansionContent={(record, { onClose }) => (
           <MonsterDropListing
             record={record}
             buildId={buildId}
             onClose={onClose}
-            surface={surface}
           />
         )}
-        recordDetailsTitle={(record) => <MonsterDropTitle record={record} />}
+        recordDetailsContent={(record, { onClose, surface }) =>
+          drawerRelation === 'locations' ? (
+            <MonsterLocationListing
+              key={record.key}
+              record={record}
+              buildId={buildId}
+              reader={locationReader}
+            />
+          ) : (
+            <MonsterDropListing
+              record={record}
+              buildId={buildId}
+              onClose={onClose}
+              surface={surface}
+            />
+          )
+        }
+        recordDetailsSideOnDesktop
+        recordDetailsBottomSize={
+          drawerRelation === 'locations' ? '80dvh' : undefined
+        }
+        recordDetailsTitle={(record) => (
+          <MonsterBrowseDrawerTitle record={record} relation={drawerRelation} />
+        )}
         recordDetails={{
-          selectedId: selectedRecordId,
-          onSelectedIdChange: (selectedId, reason) => {
+          selectedId: details?.recordId ?? null,
+          onSelectedIdChange: (_selectedId, reason) => {
             if (reason === 'invalidate') {
               void browseOverlay.invalidate('record-details');
-              return;
-            }
-            if (reason === 'dismiss') {
+            } else if (reason === 'dismiss') {
               browseOverlay.dismiss('record-details');
-              return;
-            }
-            if (selectedId !== null) {
-              browseOverlay.open({
-                type: 'record-details',
-                recordId: selectedId,
-              });
             }
           },
         }}
-        rowExpansionControl={(context) => dropExpansionControl(context)}
+        rowExpansionControl={({ record, controlsId, expanded, onToggle }) => (
+          <div style={{ paddingInlineStart: MONSTER_NAME_INDENT }}>
+            <MonsterBrowseActions
+              record={record}
+              activeRelation={
+                details?.recordId === record.key &&
+                drawerRelation === 'locations'
+                  ? 'locations'
+                  : undefined
+              }
+              controlsId={controlsId}
+              inlineDropsExpanded={expanded}
+              onActivate={(relation) => {
+                if (relation === 'drops') {
+                  onToggle();
+                } else {
+                  openDetails(record, relation);
+                }
+              }}
+            />
+          </div>
+        )}
         state={browseState}
         onStateChange={onStateChange}
         drawerOpened={filterDrawerOpened}
