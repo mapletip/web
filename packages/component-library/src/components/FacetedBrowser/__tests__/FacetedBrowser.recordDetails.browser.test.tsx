@@ -10,16 +10,24 @@ import { demoRecords, makeDemoColumns } from '@/fixtures/records';
 
 const records = demoRecords.slice(0, 2);
 
-function Browser() {
+function Browser({
+  presentation,
+}: {
+  readonly presentation: 'comparison' | 'cards';
+}) {
   return (
     <MantineProvider>
       <FacetedBrowser
         title={<h1>Records</h1>}
         records={records}
         idAccessor="id"
-        identityField="name"
-        columns={makeDemoColumns()}
-        presentation="comparison"
+        {...(presentation === 'comparison'
+          ? {
+              presentation: 'comparison' as const,
+              identityField: 'name' as const,
+              columns: makeDemoColumns(),
+            }
+          : { presentation: 'cards' as const })}
         renderCard={(record, { openDetails, isDetailsOpen }) => (
           <Button
             type="button"
@@ -32,7 +40,7 @@ function Browser() {
           </Button>
         )}
         recordDetailsTitle={(record: DemoRecord) => `Details: ${record.name}`}
-        rowExpansionContent={(record, { surface }) => (
+        recordDetailsContent={(record, { surface }) => (
           <p>{`${surface}: content for ${record.name}`}</p>
         )}
         defaultState={{
@@ -48,57 +56,69 @@ function Browser() {
   );
 }
 
-describe('FacetedBrowser record details in a real browser', () => {
-  it('opens one drawer from a card, returns focus on Escape, and switches records', async () => {
-    const first = records[0]!;
-    const second = records[1]!;
-    await page.viewport(991, 800);
-    await render(<Browser />);
+describe.each(['comparison', 'cards'] as const)(
+  'FacetedBrowser %s record details in a real browser',
+  (presentation) => {
+    it('opens one drawer from a card, returns focus on Escape, and switches records', async () => {
+      const first = records[0]!;
+      const second = records[1]!;
+      await page.viewport(991, 800);
+      await render(<Browser presentation={presentation} />);
 
-    const firstTrigger = page.getByRole('button', {
-      name: `Details for ${first.name}`,
+      const firstTrigger = page.getByRole('button', {
+        name: `Details for ${first.name}`,
+      });
+      await userEvent.click(firstTrigger);
+
+      const firstDrawer = page.getByRole('dialog', {
+        name: `Details: ${first.name}`,
+      });
+      await expect.element(firstDrawer).toBeVisible();
+      await expect
+        .element(page.getByText(`drawer: content for ${first.name}`))
+        .toBeVisible();
+      await expect
+        .element(firstTrigger)
+        .toHaveAttribute('aria-expanded', 'true');
+      await expect
+        .element(firstTrigger)
+        .toHaveAttribute('data-variant', 'light');
+
+      await userEvent.keyboard('{Escape}');
+      await expect.element(firstDrawer).not.toBeInTheDocument();
+      await expect.element(firstTrigger).toHaveFocus();
+      await expect
+        .element(firstTrigger)
+        .toHaveAttribute('aria-expanded', 'false');
+
+      await userEvent.click(
+        page.getByRole('button', { name: `Details for ${second.name}` }),
+      );
+      const secondDrawer = page.getByRole('dialog', {
+        name: `Details: ${second.name}`,
+      });
+      await expect.element(secondDrawer).toBeVisible();
+      await expect
+        .element(page.getByText(`drawer: content for ${second.name}`))
+        .toBeVisible();
+      await expect
+        .element(page.getByText(`drawer: content for ${first.name}`))
+        .not.toBeInTheDocument();
+      await expect
+        .element(
+          page.getByRole('button', { name: `Details for ${second.name}` }),
+        )
+        .toHaveAttribute('aria-expanded', 'true');
+
+      await userEvent.click(
+        page.getByRole('button', {
+          name:
+            presentation === 'cards'
+              ? 'Close details'
+              : `Close details for ${second.name}`,
+        }),
+      );
+      await expect.element(secondDrawer).not.toBeInTheDocument();
     });
-    await userEvent.click(firstTrigger);
-
-    const firstDrawer = page.getByRole('dialog', {
-      name: `Details: ${first.name}`,
-    });
-    await expect.element(firstDrawer).toBeVisible();
-    await expect
-      .element(page.getByText(`drawer: content for ${first.name}`))
-      .toBeVisible();
-    await expect.element(firstTrigger).toHaveAttribute('aria-expanded', 'true');
-    await expect.element(firstTrigger).toHaveAttribute('data-variant', 'light');
-
-    await userEvent.keyboard('{Escape}');
-    await expect.element(firstDrawer).not.toBeInTheDocument();
-    await expect.element(firstTrigger).toHaveFocus();
-    await expect
-      .element(firstTrigger)
-      .toHaveAttribute('aria-expanded', 'false');
-
-    await userEvent.click(
-      page.getByRole('button', { name: `Details for ${second.name}` }),
-    );
-    const secondDrawer = page.getByRole('dialog', {
-      name: `Details: ${second.name}`,
-    });
-    await expect.element(secondDrawer).toBeVisible();
-    await expect
-      .element(page.getByText(`drawer: content for ${second.name}`))
-      .toBeVisible();
-    await expect
-      .element(page.getByText(`drawer: content for ${first.name}`))
-      .not.toBeInTheDocument();
-    await expect
-      .element(page.getByRole('button', { name: `Details for ${second.name}` }))
-      .toHaveAttribute('aria-expanded', 'true');
-
-    await userEvent.click(
-      page.getByRole('button', {
-        name: `Close details for ${second.name}`,
-      }),
-    );
-    await expect.element(secondDrawer).not.toBeInTheDocument();
-  });
-});
+  },
+);

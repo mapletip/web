@@ -25,46 +25,53 @@ describe('FacetedBrowser server rendering', () => {
     expect(html).toContain('Record 099');
   });
 
-  it('renders details-enabled comparison markup with the drawer closed', () => {
-    const html = renderToString(
-      <MantineProvider theme={theme} forceColorScheme="dark">
-        <FacetedBrowser
-          title={<h1>Details browser</h1>}
-          records={demoRecords.slice(0, 4)}
-          idAccessor="id"
-          identityField="name"
-          columns={makeDemoColumns()}
-          presentation="comparison"
-          renderCard={(record, { openDetails }) => (
-            <button
-              type="button"
-              aria-haspopup={openDetails === undefined ? undefined : 'dialog'}
-              onClick={openDetails}
-            >
-              {record.name}
-            </button>
-          )}
-          rowExpansionContent={(record) => (
-            <p>{`Inline details for ${record.name}`}</p>
-          )}
-          recordDetailsTitle={(record) => `Details: ${record.name}`}
-          defaultState={{
-            search: '',
-            filters: {},
-            sort: { field: 'value1', direction: 'desc' },
-            page: 1,
-            pageSize: 25,
-            hiddenColumns: [],
-          }}
-        />
-      </MantineProvider>,
-    );
+  it.each(['comparison', 'cards'] as const)(
+    'renders details-enabled %s markup with the drawer closed',
+    (presentation) => {
+      const html = renderToString(
+        <MantineProvider theme={theme} forceColorScheme="dark">
+          <FacetedBrowser
+            title={<h1>Details browser</h1>}
+            records={demoRecords.slice(0, 4)}
+            idAccessor="id"
+            {...(presentation === 'comparison'
+              ? {
+                  presentation: 'comparison' as const,
+                  identityField: 'name' as const,
+                  columns: makeDemoColumns(),
+                }
+              : { presentation: 'cards' as const })}
+            renderCard={(record, { openDetails }) => (
+              <button
+                type="button"
+                aria-haspopup={openDetails === undefined ? undefined : 'dialog'}
+                onClick={openDetails}
+              >
+                {record.name}
+              </button>
+            )}
+            recordDetailsContent={(record) => (
+              <p>{`Inline details for ${record.name}`}</p>
+            )}
+            recordDetailsTitle={(record) => `Details: ${record.name}`}
+            defaultState={{
+              search: '',
+              filters: {},
+              sort: { field: 'value1', direction: 'desc' },
+              page: 1,
+              pageSize: 25,
+              hiddenColumns: [],
+            }}
+          />
+        </MantineProvider>,
+      );
 
-    expect(html).toContain('Details browser');
-    expect(html).toContain('Record 001');
-    expect(html).not.toContain('Inline details for');
-    expect(html).not.toContain('role="dialog"');
-  });
+      expect(html).toContain('Details browser');
+      expect(html).toContain('Record 001');
+      expect(html).not.toContain('Inline details for');
+      expect(html).not.toContain('role="dialog"');
+    },
+  );
 
   it('renders an integrated card-only browser without dummy columns in Node', () => {
     const html = renderToString(
