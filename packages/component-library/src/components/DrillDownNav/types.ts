@@ -43,6 +43,8 @@ export interface DrillDownNavProps<TMeta = undefined> {
    * @default false
    */
   readonly hideEmpty?: boolean | undefined;
+  /** List a leaf's siblings in parent order, including the current node. @default false */
+  readonly showSiblings?: boolean | undefined;
   readonly renderLink?: DrillDownLinkRenderer<TMeta> | undefined;
   readonly onNavigate?: (() => void) | undefined;
   /**

@@ -6,7 +6,8 @@ import {
   TShirt,
 } from '@phosphor-icons/react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { expect, within } from 'storybook/test';
+import { useState } from 'react';
+import { expect, userEvent, within } from 'storybook/test';
 
 import { DrillDownNav } from '../DrillDownNav';
 import type { DrillDownNode } from '../types';
@@ -121,6 +122,7 @@ const meta: Meta<typeof DrillDownNav> = {
   argTypes: {
     currentId: { control: 'text' },
     hideEmpty: { control: 'boolean' },
+    showSiblings: { control: 'boolean' },
   },
 };
 
@@ -178,6 +180,73 @@ export const LeafCurrent: Story = {
     await expect(
       canvas.getByRole('link', { name: 'Electronics' }).querySelector('svg'),
     ).toBeInTheDocument();
+  },
+};
+
+export const LeafWithSiblings: Story = {
+  name: 'Leaf with siblings (links)',
+  args: {
+    root: catalogTree,
+    currentId: 'electronics/laptops',
+    label: 'Store catalog',
+    showSiblings: true,
+  },
+  decorators: [
+    (Story) => (
+      <div style={{ width: 240 }}>
+        <Story />
+      </div>
+    ),
+  ],
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const links = canvas.getAllByRole('link');
+    await expect(links.map((link) => link.getAttribute('href'))).toEqual([
+      '#all',
+      '#electronics',
+      '#laptops',
+      '#phones',
+      '#clearance',
+    ]);
+    await expect(getAriaCurrent(canvasElement)).toHaveLength(1);
+    await expect(canvas.getByRole('link', { name: /Laptops/ })).toHaveAttribute(
+      'aria-current',
+      'page',
+    );
+  },
+};
+
+function SiblingButtonsExample() {
+  const [currentId, setCurrentId] = useState('electronics/laptops');
+  return (
+    <DrillDownNav
+      root={catalogTree}
+      currentId={currentId}
+      label="Store catalog"
+      showSiblings
+      onSelect={(node) => setCurrentId(node.id)}
+    />
+  );
+}
+
+export const LeafWithSiblingsButtons: Story = {
+  name: 'Leaf with siblings (buttons)',
+  render: () => <SiblingButtonsExample />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.queryByRole('link')).not.toBeInTheDocument();
+    await expect(
+      canvas.getByRole('button', { name: /Laptops/ }),
+    ).toHaveAttribute('aria-current', 'true');
+    await userEvent.click(canvas.getByRole('button', { name: /Phones/ }));
+    await expect(
+      canvas.getByRole('button', { name: /Phones/ }),
+    ).toHaveAttribute('aria-current', 'true');
+    await expect(
+      canvas
+        .getAllByRole('button')
+        .filter((button) => button.hasAttribute('aria-current')),
+    ).toHaveLength(1);
   },
 };
 

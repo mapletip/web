@@ -123,6 +123,109 @@ describe('resolveDrillDownPath', () => {
     expect(result.ancestors.map((a) => a.id)).toEqual(['all', 'clothing']);
     expect(result.current.id).toBe('clothing/pants');
     expect(result.children).toEqual([]);
+    expect(result.siblings).toEqual([]);
+  });
+
+  it('lists a leaf among siblings in parent order when enabled', () => {
+    const result = resolveDrillDownPath({
+      root: catalogTree,
+      currentId: 'clothing/pants',
+      showSiblings: true,
+    });
+    expect(result.ancestors.map((node) => node.id)).toEqual([
+      'all',
+      'clothing',
+    ]);
+    expect(result.children).toEqual([]);
+    expect(result.siblings.map((node) => node.id)).toEqual([
+      'clothing/shirts',
+      'clothing/pants',
+      'clothing/empty',
+    ]);
+  });
+
+  it('keeps a current branch and a root leaf in their usual shape', () => {
+    const branch = resolveDrillDownPath({
+      root: catalogTree,
+      currentId: 'clothing',
+      showSiblings: true,
+    });
+    expect(branch.siblings).toEqual([]);
+    expect(branch.children.map((node) => node.id)).toEqual([
+      'clothing/shirts',
+      'clothing/pants',
+      'clothing/empty',
+    ]);
+
+    const rootLeaf: DrillDownNode = {
+      id: 'only',
+      label: 'Only',
+      href: '/only',
+    };
+    const rootResult = resolveDrillDownPath({
+      root: rootLeaf,
+      currentId: 'only',
+      showSiblings: true,
+    });
+    expect(rootResult.ancestors).toEqual([]);
+    expect(rootResult.children).toEqual([]);
+    expect(rootResult.siblings).toEqual([]);
+  });
+
+  it('hides empty siblings but keeps an empty current node', () => {
+    const result = resolveDrillDownPath({
+      root: catalogTree,
+      currentId: 'clothing/empty',
+      hideEmpty: true,
+      showSiblings: true,
+    });
+    expect(result.siblings.map((node) => node.id)).toEqual([
+      'clothing/shirts',
+      'clothing/pants',
+      'clothing/empty',
+    ]);
+
+    const other = resolveDrillDownPath({
+      root: catalogTree,
+      currentId: 'clothing/pants',
+      hideEmpty: true,
+      showSiblings: true,
+    });
+    expect(other.siblings.map((node) => node.id)).toEqual([
+      'clothing/shirts',
+      'clothing/pants',
+    ]);
+  });
+
+  it('treats a branch with only hidden children as a leaf', () => {
+    const root: DrillDownNode = {
+      id: 'root',
+      label: 'Root',
+      href: '/root',
+      children: [
+        { id: 'first', label: 'First', href: '/first', count: 2 },
+        {
+          id: 'current',
+          label: 'Current',
+          href: '/current',
+          count: 0,
+          children: [
+            { id: 'hidden', label: 'Hidden', href: '/hidden', count: 0 },
+          ],
+        },
+      ],
+    };
+    const result = resolveDrillDownPath({
+      root,
+      currentId: 'current',
+      hideEmpty: true,
+      showSiblings: true,
+    });
+    expect(result.children).toEqual([]);
+    expect(result.siblings.map((node) => node.id)).toEqual([
+      'first',
+      'current',
+    ]);
   });
 
   it('treats root as current when currentId is unknown', () => {
@@ -198,6 +301,57 @@ describe('resolveDrillDownPath', () => {
 });
 
 describe('DrillDownNav component', () => {
+  it('renders a leaf among sibling links with one current marker', () => {
+    render(
+      <DrillDownNav
+        root={catalogTree}
+        currentId="clothing/pants"
+        label="Product categories"
+        showSiblings
+      />,
+    );
+
+    const links = screen.getAllByRole('link');
+    expect(links.map((link) => link.getAttribute('href'))).toEqual([
+      '/products',
+      '/products/clothing',
+      '/products/clothing/shirts',
+      '/products/clothing/pants',
+      '/products/clothing/empty',
+    ]);
+    expect(links.filter((link) => link.getAttribute('aria-current'))).toEqual([
+      screen.getByRole('link', { name: /Pants/ }),
+    ]);
+    expect(screen.getByRole('link', { name: 'Clothing' })).not.toHaveAttribute(
+      'aria-current',
+    );
+  });
+
+  it('renders an empty current leaf with nonempty siblings in button mode', () => {
+    const onSelect = vi.fn();
+    render(
+      <DrillDownNav
+        root={catalogTree}
+        currentId="clothing/empty"
+        label="Product categories"
+        showSiblings
+        hideEmpty
+        onSelect={onSelect}
+      />,
+    );
+
+    expect(screen.queryByRole('link')).not.toBeInTheDocument();
+    const buttons = screen.getAllByRole('button');
+    expect(buttons).toHaveLength(5);
+    expect(
+      buttons.filter((button) => button.hasAttribute('aria-current')),
+    ).toEqual([screen.getByRole('button', { name: /Empty Category/ })]);
+    fireEvent.click(screen.getByRole('button', { name: /Pants/ }));
+    expect(onSelect).toHaveBeenCalledWith(
+      expect.objectContaining({ id: 'clothing/pants' }),
+      { isLeaf: true },
+    );
+  });
   it('renders Shape 1 (Current = root): All Products* and direct children without back rows', () => {
     render(
       <DrillDownNav

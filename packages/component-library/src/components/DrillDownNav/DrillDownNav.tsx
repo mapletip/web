@@ -9,7 +9,8 @@ import type {
   DrillDownSelectHandler,
 } from './types';
 
-type RowKind = 'ancestor' | 'current' | 'child';
+/** `currentChild` is the current node listed among its siblings. */
+type RowKind = 'ancestor' | 'current' | 'child' | 'currentChild';
 
 interface IsLeafNodeOptions<TMeta> {
   readonly node: DrillDownNode<TMeta>;
@@ -87,6 +88,9 @@ function getRowKindClass(kind: RowKind): string {
   if (kind === 'current') {
     return classes['currentRow'] ?? '';
   }
+  if (kind === 'currentChild') {
+    return `${classes['childRow'] ?? ''} ${classes['currentRow'] ?? ''}`;
+  }
   return classes['childRow'] ?? '';
 }
 
@@ -105,7 +109,7 @@ function renderLinkItem<TMeta>({
   onNavigate,
   renderLink,
 }: RenderLinkItemOptions<TMeta>): ReactNode {
-  const isCurrent = kind === 'current';
+  const isCurrent = kind === 'current' || kind === 'currentChild';
   const rowContent = renderRowContent({ node, kind, reserveIconSlot });
   const kindClass = getRowKindClass(kind);
   const className = `${classes['row']} ${kindClass}`.trim();
@@ -149,7 +153,7 @@ function renderButtonItem<TMeta>({
   hideEmpty,
   onSelect,
 }: RenderButtonItemOptions<TMeta>): ReactNode {
-  const isCurrent = kind === 'current';
+  const isCurrent = kind === 'current' || kind === 'currentChild';
   const rowContent = renderRowContent({ node, kind, reserveIconSlot });
   const kindClass = getRowKindClass(kind);
   const className = `${classes['row']} ${kindClass}`.trim();
@@ -172,17 +176,20 @@ export function DrillDownNav<TMeta = undefined>({
   currentId,
   label,
   hideEmpty = false,
+  showSiblings = false,
   renderLink,
   onNavigate,
   onSelect,
 }: DrillDownNavProps<TMeta>): ReactElement {
-  const { ancestors, current, children } = resolveDrillDownPath({
+  const { ancestors, current, children, siblings } = resolveDrillDownPath({
     root,
     currentId,
     hideEmpty,
+    showSiblings,
   });
 
-  const childrenHaveIcon = children.some((node) => Boolean(node.icon));
+  const listedNodes = siblings.length > 0 ? siblings : children;
+  const listedHaveIcon = listedNodes.some((node) => Boolean(node.icon));
 
   interface RenderItemOptions {
     readonly node: DrillDownNode<TMeta>;
@@ -221,19 +228,21 @@ export function DrillDownNav<TMeta = undefined>({
             })}
           </li>
         ))}
-        <li key={current.id} className={classes['item']}>
-          {renderItem({
-            node: current,
-            kind: 'current',
-            reserveIconSlot: false,
-          })}
-        </li>
-        {children.map((node) => (
+        {siblings.length === 0 && (
+          <li key={current.id} className={classes['item']}>
+            {renderItem({
+              node: current,
+              kind: 'current',
+              reserveIconSlot: false,
+            })}
+          </li>
+        )}
+        {listedNodes.map((node) => (
           <li key={node.id} className={classes['item']}>
             {renderItem({
               node,
-              kind: 'child',
-              reserveIconSlot: childrenHaveIcon,
+              kind: node.id === current.id ? 'currentChild' : 'child',
+              reserveIconSlot: listedHaveIcon,
             })}
           </li>
         ))}

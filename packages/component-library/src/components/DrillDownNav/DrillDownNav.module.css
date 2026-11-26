@@ -108,7 +108,7 @@
   color: var(--mapletip-color-muted);
 }
 
-.childRow:hover {
+.childRow:not(.currentRow):hover {
   color: var(--mapletip-color-ink);
 }
 
