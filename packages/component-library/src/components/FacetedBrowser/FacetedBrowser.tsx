@@ -769,6 +769,7 @@ export function FacetedBrowser<TRecord extends Record<string, unknown>>(
           opened={detailsOpen}
           sideOnDesktop={props.recordDetailsSideOnDesktop === true}
           bottomSize={props.recordDetailsBottomSize}
+          sideSize={props.recordDetailsSideSize}
           title={selectedDetailsTitle}
           closeLabel={
             selectedDetailsLabel === undefined

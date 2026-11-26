@@ -126,3 +126,47 @@ test('Items category does not scroll horizontally at 320px', async ({
   }));
   expect(widths.document).toBeLessThanOrEqual(widths.viewport);
 });
+
+test('Items card opens and closes the item drawer with focus return and stable address', async ({
+  page,
+}) => {
+  const path = '/maplestory/items/use/potions-and-food?q=Sample';
+  const items = new ItemsPage(page);
+  await items.goto(path);
+
+  const cardButton = items.itemAction('Sample Draught');
+  await expect(cardButton).toHaveAttribute('aria-haspopup', 'dialog');
+  await expect(cardButton).toHaveAttribute('aria-expanded', 'false');
+
+  await cardButton.click();
+  const drawer = page.getByRole('dialog', { name: 'Sample Draught' });
+  await expect(drawer).toBeVisible();
+  await expect(cardButton).toHaveAttribute('aria-expanded', 'true');
+  await expect(drawer).toContainText('Potions & Food');
+  await expect(drawer).toContainText('Restores 150 HP');
+  await expect(drawer).toContainText('Restores 80 MP');
+  await expect(drawer).toContainText('Sells for 1,200 mesos');
+  await expect(page).toHaveURL(path);
+
+  await page.keyboard.press('Escape');
+  await expect(drawer).toBeHidden();
+  await expect(cardButton).toHaveAttribute('aria-expanded', 'false');
+  await expect(cardButton).toBeFocused();
+  await expect(page).toHaveURL(path);
+
+  await cardButton.click();
+  await expect(drawer).toBeVisible();
+  await drawer.getByRole('button', { name: 'Close details' }).click();
+  await expect(drawer).toBeHidden();
+  await expect(cardButton).toHaveAttribute('aria-expanded', 'false');
+  await expect(cardButton).toBeFocused();
+  await expect(page).toHaveURL(path);
+
+  await cardButton.click();
+  await expect(drawer).toBeVisible();
+  await page.goBack();
+  await expect(drawer).toBeHidden();
+  await expect(cardButton).toHaveAttribute('aria-expanded', 'false');
+  await expect(cardButton).toBeFocused();
+  await expect(page).toHaveURL(path);
+});

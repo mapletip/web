@@ -5,6 +5,7 @@ import type {
 
 import type { BuildId } from '@/config/maplekit';
 import { buildRecordDetailPath } from '@/features/detail';
+import { classifyDrop, type DropSource } from '@/features/drops';
 import {
   projectItemRecordChip,
   type ItemRecordChipView,
@@ -35,7 +36,6 @@ import {
   getMonsterDropCategoryLabel,
   MONSTER_DROP_CATEGORIES,
 } from '../shared/drop-categories';
-import { classifyDrop, type DropSource } from '../shared/drop-sources';
 import {
   projectMonsterLocationCards,
   type MonsterLocationMapView,

@@ -18,13 +18,14 @@ import type {
   StaticMonsterCatalog,
 } from '@mapletip/data/monsters';
 
-import { UNNAMED_MONSTER_LABEL } from '../shared';
-import type { MonsterFactId, UnknownFactState } from '../shared';
 import {
   classifyDrop,
   resolveBrowseDropEvidence,
   type DropSource,
-} from '../shared/drop-sources';
+} from '@/features/drops';
+
+import { UNNAMED_MONSTER_LABEL } from '../shared';
+import type { MonsterFactId, UnknownFactState } from '../shared';
 
 export { formatMonsterFact, UNNAMED_MONSTER_LABEL } from '../shared';
 export type { MonsterFactId, UnknownFactState } from '../shared';

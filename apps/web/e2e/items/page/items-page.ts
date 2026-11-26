@@ -14,6 +14,10 @@ export class ItemsPage {
     return this.page.getByRole('heading', { name, exact: true });
   }
 
+  itemAction(name: string): Locator {
+    return this.page.getByRole('button', { name, exact: true });
+  }
+
   get summary(): Locator {
     return this.page.getByText(/^\d+ Items?$/u).first();
   }

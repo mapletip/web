@@ -38,4 +38,4 @@ export {
 
 export { DropCertaintyDisclosure } from './DropCertaintyDisclosure';
 export { DropCertaintyLegend } from './DropCertaintyLegend';
-export type { DropSource } from './drop-sources';
+export type { DropSource } from '@/features/drops';
