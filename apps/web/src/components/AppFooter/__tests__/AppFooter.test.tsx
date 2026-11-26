@@ -24,7 +24,7 @@ const expectedNavigation = [
   ['Use Items', '/maplestory/items/use'],
   ['ETC Items', '/maplestory/items/etc'],
   ['Set-up Items', '/maplestory/items/setup'],
-  ['Cash Items & Pets', '/maplestory/items/cash'],
+  ['Pets & Cash', '/maplestory/items/cash'],
   ['Privacy Policy', '/privacy'],
 ] as const;
 

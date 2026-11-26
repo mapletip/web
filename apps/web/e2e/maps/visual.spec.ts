@@ -1,6 +1,7 @@
 import type { Page } from '@playwright/test';
 
 import { mapPublicId } from '../../src/mocks/release';
+import { browseReady } from '../browse-ready';
 import { expect, test } from '../fixtures';
 
 async function captureReady(page: Page): Promise<void> {
@@ -47,26 +48,6 @@ test('mobile Map Detail page', async ({ page }) => {
   await captureReady(page);
   await expect(page).toHaveScreenshot('mobile-map-detail.png');
 });
-
-async function browseReady(page: Page): Promise<void> {
-  await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
-  await page.evaluate(async () => {
-    await document.fonts.ready;
-  });
-  await page.waitForFunction(() =>
-    [...document.images]
-      .filter((image) => {
-        const bounds = image.getBoundingClientRect();
-        return (
-          bounds.width > 0 &&
-          bounds.height > 0 &&
-          bounds.top < window.innerHeight &&
-          bounds.bottom > 0
-        );
-      })
-      .every((image) => image.complete),
-  );
-}
 
 test('desktop Map Browse area page', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 1100 });

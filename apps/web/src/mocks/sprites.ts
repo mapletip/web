@@ -1,4 +1,4 @@
-import { ITEM_SCOPES } from '../features/items/browse/categories';
+import { ITEM_KINDS } from '../features/items/kinds';
 
 import { fixtureRelease } from './release';
 import { spriteDimensions, type SpriteCase } from './world';
@@ -18,10 +18,9 @@ const spriteFills: Readonly<Record<SpriteCase, string>> = {
   missing: '#758b55',
 };
 
-// These are today's hard-coded Items category icons; remove this when the category tree is rebuilt.
 const fixedItemIconIds = new Set(
-  Object.values(ITEM_SCOPES).flatMap(({ children }) =>
-    children.flatMap((child) => child.iconContentIds ?? []),
+  ITEM_KINDS.flatMap((kind) =>
+    'iconContentId' in kind ? kind.iconContentId : [],
   ),
 );
 

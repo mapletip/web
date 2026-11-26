@@ -1,31 +1,30 @@
 import type { Locator, Page } from '@playwright/test';
 
-/** Accessible locators and journeys for Items Browse. */
+import { browseReady } from '../../browse-ready';
+
+/** Accessible locators for the Items category frame. */
 export class ItemsPage {
   constructor(readonly page: Page) {}
 
-  heading(name?: string): Locator {
-    return name === undefined
-      ? this.page.getByRole('heading', { level: 1 })
-      : this.page.getByRole('heading', { name, exact: true });
+  heading(): Locator {
+    return this.page.getByRole('heading', { level: 1 });
   }
 
   item(name: string): Locator {
-    return this.page
-      .getByRole('heading', { name, exact: true })
-      .or(this.page.getByRole('cell', { name, exact: true }));
+    return this.page.getByRole('heading', { name, exact: true });
   }
 
   get summary(): Locator {
     return this.page.getByText(/^\d+ Items?$/u).first();
   }
 
-  async goto(path = '/maplestory/items'): Promise<void> {
-    await this.page.goto(path);
-    await this.ready();
+  get rail(): Locator {
+    return this.page.getByRole('navigation', { name: 'Item categories' });
   }
 
-  async ready(): Promise<void> {
+  async goto(path: string): Promise<void> {
+    await this.page.goto(path);
+    await browseReady(this.page);
     await this.page.waitForFunction(() => {
       const main = document.querySelector('main');
       return (
@@ -33,41 +32,5 @@ export class ItemsPage {
         Object.keys(main).some((key) => key.startsWith('__reactProps'))
       );
     });
-  }
-
-  async filterBy({
-    facet,
-    option,
-  }: {
-    readonly facet: string;
-    readonly option: string;
-  }): Promise<void> {
-    const main = this.page.getByRole('main');
-    const optionCheckbox = () =>
-      main.getByRole('group', { name: facet }).getByRole('checkbox', {
-        name: new RegExp(`^${option}(?:\\s|$)`, 'u'),
-      });
-
-    if (await optionCheckbox().isVisible()) {
-      await optionCheckbox().click();
-      return;
-    }
-
-    const quickFilters = main.getByRole('region', { name: 'Quick filters' });
-    await quickFilters
-      .getByRole('button', { name: /Open all filters/u })
-      .click();
-    const dialog = this.page.getByRole('dialog', { name: 'Filters' });
-    await dialog
-      .getByRole('group', { name: facet })
-      .getByRole('checkbox', {
-        name: new RegExp(`^${option}(?:\\s|$)`, 'u'),
-      })
-      .click();
-    await dialog
-      .getByRole('button', {
-        name: /^Show \d+ Classic World items$/u,
-      })
-      .click();
   }
 }

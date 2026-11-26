@@ -81,6 +81,17 @@ describe('AppHeader', () => {
     expect(useImg).toBeDefined();
     expect(useImg?.getAttribute('width')).toBe('22');
     expect(useImg?.getAttribute('height')).toBe('22');
+
+    expect(
+      document.querySelector('a[href="/maplestory/items/etc"]'),
+    ).not.toBeNull();
+    expect(
+      document.querySelector('a[href="/maplestory/items/setup"]'),
+    ).not.toBeNull();
+    const cashLink = document.querySelector<HTMLAnchorElement>(
+      'a[href="/maplestory/items/cash"]',
+    );
+    expect(cashLink?.textContent).toContain('Pets & Cash');
   });
 
   it('renders All Items collection icon in the mobile navigation drawer', async () => {

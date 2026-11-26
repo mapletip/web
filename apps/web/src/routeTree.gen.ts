@@ -12,13 +12,18 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as ApiHealthzRouteImport } from './routes/api/healthz'
-import { Route as MaplestoryChar123BuildIdChar125ItemsRouteImport } from './routes/maplestory/{-$buildId}/items'
+import { Route as MaplestoryChar123BuildIdChar125ItemsBrowseRouteImport } from './routes/maplestory/{-$buildId}/items/_browse'
 import { Route as MaplestoryChar123BuildIdChar125MapsSlugIdRouteImport } from './routes/maplestory/{-$buildId}/maps/$slugId'
 import { Route as MaplestoryChar123BuildIdChar125MapsBrowseRouteImport } from './routes/maplestory/{-$buildId}/maps/_browse'
 import { Route as MaplestoryChar123BuildIdChar125MonstersIndexRouteImport } from './routes/maplestory/{-$buildId}/monsters/index'
 import { Route as MaplestoryChar123BuildIdChar125MonstersSlugIdRouteImport } from './routes/maplestory/{-$buildId}/monsters/$slugId'
-import { Route as MaplestoryChar123BuildIdChar125ItemsChar123ScopeChar125Char123ChildChar125RouteImport } from './routes/maplestory/{-$buildId}/items/{-$scope}/{-$child}'
+import { Route as MaplestoryChar123BuildIdChar125ItemsBrowseIndexRouteImport } from './routes/maplestory/{-$buildId}/items/_browse/index'
+import { Route as MaplestoryChar123BuildIdChar125ItemsBrowseAllRouteImport } from './routes/maplestory/{-$buildId}/items/_browse/all'
 import { Route as MaplestoryChar123BuildIdChar125MapsBrowseIndexRouteImport } from './routes/maplestory/{-$buildId}/maps/_browse/index'
+import { Route as MaplestoryChar123BuildIdChar125ItemsBrowseCashChar123KindChar125RouteImport } from './routes/maplestory/{-$buildId}/items/_browse/cash/{-$kind}'
+import { Route as MaplestoryChar123BuildIdChar125ItemsBrowseEtcChar123KindChar125RouteImport } from './routes/maplestory/{-$buildId}/items/_browse/etc/{-$kind}'
+import { Route as MaplestoryChar123BuildIdChar125ItemsBrowseSetupChar123KindChar125RouteImport } from './routes/maplestory/{-$buildId}/items/_browse/setup/{-$kind}'
+import { Route as MaplestoryChar123BuildIdChar125ItemsBrowseUseChar123KindChar125RouteImport } from './routes/maplestory/{-$buildId}/items/_browse/use/{-$kind}'
 import { Route as MaplestoryChar123BuildIdChar125MapsBrowseInLocationChar123AreaChar125RouteImport } from './routes/maplestory/{-$buildId}/maps/_browse/in/$location/{-$area}'
 
 const IndexRoute = IndexRouteImport.update({
@@ -36,9 +41,9 @@ const ApiHealthzRoute = ApiHealthzRouteImport.update({
   path: '/api/healthz',
   getParentRoute: () => rootRouteImport,
 } as any)
-const MaplestoryChar123BuildIdChar125ItemsRoute =
-  MaplestoryChar123BuildIdChar125ItemsRouteImport.update({
-    id: '/maplestory/{-$buildId}/items',
+const MaplestoryChar123BuildIdChar125ItemsBrowseRoute =
+  MaplestoryChar123BuildIdChar125ItemsBrowseRouteImport.update({
+    id: '/maplestory/{-$buildId}/items/_browse',
     path: '/maplestory/{-$buildId}/items',
     getParentRoute: () => rootRouteImport,
   } as any)
@@ -66,20 +71,56 @@ const MaplestoryChar123BuildIdChar125MonstersSlugIdRoute =
     path: '/maplestory/{-$buildId}/monsters/$slugId',
     getParentRoute: () => rootRouteImport,
   } as any)
-const MaplestoryChar123BuildIdChar125ItemsChar123ScopeChar125Char123ChildChar125Route =
-  MaplestoryChar123BuildIdChar125ItemsChar123ScopeChar125Char123ChildChar125RouteImport.update(
-    {
-      id: '/{-$scope}/{-$child}',
-      path: '/{-$scope}/{-$child}',
-      getParentRoute: () => MaplestoryChar123BuildIdChar125ItemsRoute,
-    } as any,
-  )
+const MaplestoryChar123BuildIdChar125ItemsBrowseIndexRoute =
+  MaplestoryChar123BuildIdChar125ItemsBrowseIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => MaplestoryChar123BuildIdChar125ItemsBrowseRoute,
+  } as any)
+const MaplestoryChar123BuildIdChar125ItemsBrowseAllRoute =
+  MaplestoryChar123BuildIdChar125ItemsBrowseAllRouteImport.update({
+    id: '/all',
+    path: '/all',
+    getParentRoute: () => MaplestoryChar123BuildIdChar125ItemsBrowseRoute,
+  } as any)
 const MaplestoryChar123BuildIdChar125MapsBrowseIndexRoute =
   MaplestoryChar123BuildIdChar125MapsBrowseIndexRouteImport.update({
     id: '/',
     path: '/',
     getParentRoute: () => MaplestoryChar123BuildIdChar125MapsBrowseRoute,
   } as any)
+const MaplestoryChar123BuildIdChar125ItemsBrowseCashChar123KindChar125Route =
+  MaplestoryChar123BuildIdChar125ItemsBrowseCashChar123KindChar125RouteImport.update(
+    {
+      id: '/cash/{-$kind}',
+      path: '/cash/{-$kind}',
+      getParentRoute: () => MaplestoryChar123BuildIdChar125ItemsBrowseRoute,
+    } as any,
+  )
+const MaplestoryChar123BuildIdChar125ItemsBrowseEtcChar123KindChar125Route =
+  MaplestoryChar123BuildIdChar125ItemsBrowseEtcChar123KindChar125RouteImport.update(
+    {
+      id: '/etc/{-$kind}',
+      path: '/etc/{-$kind}',
+      getParentRoute: () => MaplestoryChar123BuildIdChar125ItemsBrowseRoute,
+    } as any,
+  )
+const MaplestoryChar123BuildIdChar125ItemsBrowseSetupChar123KindChar125Route =
+  MaplestoryChar123BuildIdChar125ItemsBrowseSetupChar123KindChar125RouteImport.update(
+    {
+      id: '/setup/{-$kind}',
+      path: '/setup/{-$kind}',
+      getParentRoute: () => MaplestoryChar123BuildIdChar125ItemsBrowseRoute,
+    } as any,
+  )
+const MaplestoryChar123BuildIdChar125ItemsBrowseUseChar123KindChar125Route =
+  MaplestoryChar123BuildIdChar125ItemsBrowseUseChar123KindChar125RouteImport.update(
+    {
+      id: '/use/{-$kind}',
+      path: '/use/{-$kind}',
+      getParentRoute: () => MaplestoryChar123BuildIdChar125ItemsBrowseRoute,
+    } as any,
+  )
 const MaplestoryChar123BuildIdChar125MapsBrowseInLocationChar123AreaChar125Route =
   MaplestoryChar123BuildIdChar125MapsBrowseInLocationChar123AreaChar125RouteImport.update(
     {
@@ -93,25 +134,34 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/privacy': typeof PrivacyRoute
   '/api/healthz': typeof ApiHealthzRoute
-  '/maplestory/{-$buildId}/items': typeof MaplestoryChar123BuildIdChar125ItemsRouteWithChildren
+  '/maplestory/{-$buildId}/items': typeof MaplestoryChar123BuildIdChar125ItemsBrowseRouteWithChildren
   '/maplestory/{-$buildId}/maps/$slugId': typeof MaplestoryChar123BuildIdChar125MapsSlugIdRoute
   '/maplestory/{-$buildId}/maps': typeof MaplestoryChar123BuildIdChar125MapsBrowseRouteWithChildren
   '/maplestory/{-$buildId}/monsters/$slugId': typeof MaplestoryChar123BuildIdChar125MonstersSlugIdRoute
   '/maplestory/{-$buildId}/monsters/': typeof MaplestoryChar123BuildIdChar125MonstersIndexRoute
-  '/maplestory/{-$buildId}/items/{-$scope}/{-$child}': typeof MaplestoryChar123BuildIdChar125ItemsChar123ScopeChar125Char123ChildChar125Route
+  '/maplestory/{-$buildId}/items/all': typeof MaplestoryChar123BuildIdChar125ItemsBrowseAllRoute
+  '/maplestory/{-$buildId}/items/': typeof MaplestoryChar123BuildIdChar125ItemsBrowseIndexRoute
   '/maplestory/{-$buildId}/maps/': typeof MaplestoryChar123BuildIdChar125MapsBrowseIndexRoute
+  '/maplestory/{-$buildId}/items/cash/{-$kind}': typeof MaplestoryChar123BuildIdChar125ItemsBrowseCashChar123KindChar125Route
+  '/maplestory/{-$buildId}/items/etc/{-$kind}': typeof MaplestoryChar123BuildIdChar125ItemsBrowseEtcChar123KindChar125Route
+  '/maplestory/{-$buildId}/items/setup/{-$kind}': typeof MaplestoryChar123BuildIdChar125ItemsBrowseSetupChar123KindChar125Route
+  '/maplestory/{-$buildId}/items/use/{-$kind}': typeof MaplestoryChar123BuildIdChar125ItemsBrowseUseChar123KindChar125Route
   '/maplestory/{-$buildId}/maps/in/$location/{-$area}': typeof MaplestoryChar123BuildIdChar125MapsBrowseInLocationChar123AreaChar125Route
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/privacy': typeof PrivacyRoute
   '/api/healthz': typeof ApiHealthzRoute
-  '/maplestory/{-$buildId}/items': typeof MaplestoryChar123BuildIdChar125ItemsRouteWithChildren
   '/maplestory/{-$buildId}/maps/$slugId': typeof MaplestoryChar123BuildIdChar125MapsSlugIdRoute
   '/maplestory/{-$buildId}/monsters/$slugId': typeof MaplestoryChar123BuildIdChar125MonstersSlugIdRoute
   '/maplestory/{-$buildId}/monsters': typeof MaplestoryChar123BuildIdChar125MonstersIndexRoute
-  '/maplestory/{-$buildId}/items/{-$scope}/{-$child}': typeof MaplestoryChar123BuildIdChar125ItemsChar123ScopeChar125Char123ChildChar125Route
+  '/maplestory/{-$buildId}/items/all': typeof MaplestoryChar123BuildIdChar125ItemsBrowseAllRoute
+  '/maplestory/{-$buildId}/items': typeof MaplestoryChar123BuildIdChar125ItemsBrowseIndexRoute
   '/maplestory/{-$buildId}/maps': typeof MaplestoryChar123BuildIdChar125MapsBrowseIndexRoute
+  '/maplestory/{-$buildId}/items/cash/{-$kind}': typeof MaplestoryChar123BuildIdChar125ItemsBrowseCashChar123KindChar125Route
+  '/maplestory/{-$buildId}/items/etc/{-$kind}': typeof MaplestoryChar123BuildIdChar125ItemsBrowseEtcChar123KindChar125Route
+  '/maplestory/{-$buildId}/items/setup/{-$kind}': typeof MaplestoryChar123BuildIdChar125ItemsBrowseSetupChar123KindChar125Route
+  '/maplestory/{-$buildId}/items/use/{-$kind}': typeof MaplestoryChar123BuildIdChar125ItemsBrowseUseChar123KindChar125Route
   '/maplestory/{-$buildId}/maps/in/$location/{-$area}': typeof MaplestoryChar123BuildIdChar125MapsBrowseInLocationChar123AreaChar125Route
 }
 export interface FileRoutesById {
@@ -119,13 +169,18 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/privacy': typeof PrivacyRoute
   '/api/healthz': typeof ApiHealthzRoute
-  '/maplestory/{-$buildId}/items': typeof MaplestoryChar123BuildIdChar125ItemsRouteWithChildren
+  '/maplestory/{-$buildId}/items/_browse': typeof MaplestoryChar123BuildIdChar125ItemsBrowseRouteWithChildren
   '/maplestory/{-$buildId}/maps/$slugId': typeof MaplestoryChar123BuildIdChar125MapsSlugIdRoute
   '/maplestory/{-$buildId}/maps/_browse': typeof MaplestoryChar123BuildIdChar125MapsBrowseRouteWithChildren
   '/maplestory/{-$buildId}/monsters/$slugId': typeof MaplestoryChar123BuildIdChar125MonstersSlugIdRoute
   '/maplestory/{-$buildId}/monsters/': typeof MaplestoryChar123BuildIdChar125MonstersIndexRoute
-  '/maplestory/{-$buildId}/items/{-$scope}/{-$child}': typeof MaplestoryChar123BuildIdChar125ItemsChar123ScopeChar125Char123ChildChar125Route
+  '/maplestory/{-$buildId}/items/_browse/all': typeof MaplestoryChar123BuildIdChar125ItemsBrowseAllRoute
+  '/maplestory/{-$buildId}/items/_browse/': typeof MaplestoryChar123BuildIdChar125ItemsBrowseIndexRoute
   '/maplestory/{-$buildId}/maps/_browse/': typeof MaplestoryChar123BuildIdChar125MapsBrowseIndexRoute
+  '/maplestory/{-$buildId}/items/_browse/cash/{-$kind}': typeof MaplestoryChar123BuildIdChar125ItemsBrowseCashChar123KindChar125Route
+  '/maplestory/{-$buildId}/items/_browse/etc/{-$kind}': typeof MaplestoryChar123BuildIdChar125ItemsBrowseEtcChar123KindChar125Route
+  '/maplestory/{-$buildId}/items/_browse/setup/{-$kind}': typeof MaplestoryChar123BuildIdChar125ItemsBrowseSetupChar123KindChar125Route
+  '/maplestory/{-$buildId}/items/_browse/use/{-$kind}': typeof MaplestoryChar123BuildIdChar125ItemsBrowseUseChar123KindChar125Route
   '/maplestory/{-$buildId}/maps/_browse/in/$location/{-$area}': typeof MaplestoryChar123BuildIdChar125MapsBrowseInLocationChar123AreaChar125Route
 }
 export interface FileRouteTypes {
@@ -139,33 +194,47 @@ export interface FileRouteTypes {
     | '/maplestory/{-$buildId}/maps'
     | '/maplestory/{-$buildId}/monsters/$slugId'
     | '/maplestory/{-$buildId}/monsters/'
-    | '/maplestory/{-$buildId}/items/{-$scope}/{-$child}'
+    | '/maplestory/{-$buildId}/items/all'
+    | '/maplestory/{-$buildId}/items/'
     | '/maplestory/{-$buildId}/maps/'
+    | '/maplestory/{-$buildId}/items/cash/{-$kind}'
+    | '/maplestory/{-$buildId}/items/etc/{-$kind}'
+    | '/maplestory/{-$buildId}/items/setup/{-$kind}'
+    | '/maplestory/{-$buildId}/items/use/{-$kind}'
     | '/maplestory/{-$buildId}/maps/in/$location/{-$area}'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/privacy'
     | '/api/healthz'
-    | '/maplestory/{-$buildId}/items'
     | '/maplestory/{-$buildId}/maps/$slugId'
     | '/maplestory/{-$buildId}/monsters/$slugId'
     | '/maplestory/{-$buildId}/monsters'
-    | '/maplestory/{-$buildId}/items/{-$scope}/{-$child}'
+    | '/maplestory/{-$buildId}/items/all'
+    | '/maplestory/{-$buildId}/items'
     | '/maplestory/{-$buildId}/maps'
+    | '/maplestory/{-$buildId}/items/cash/{-$kind}'
+    | '/maplestory/{-$buildId}/items/etc/{-$kind}'
+    | '/maplestory/{-$buildId}/items/setup/{-$kind}'
+    | '/maplestory/{-$buildId}/items/use/{-$kind}'
     | '/maplestory/{-$buildId}/maps/in/$location/{-$area}'
   id:
     | '__root__'
     | '/'
     | '/privacy'
     | '/api/healthz'
-    | '/maplestory/{-$buildId}/items'
+    | '/maplestory/{-$buildId}/items/_browse'
     | '/maplestory/{-$buildId}/maps/$slugId'
     | '/maplestory/{-$buildId}/maps/_browse'
     | '/maplestory/{-$buildId}/monsters/$slugId'
     | '/maplestory/{-$buildId}/monsters/'
-    | '/maplestory/{-$buildId}/items/{-$scope}/{-$child}'
+    | '/maplestory/{-$buildId}/items/_browse/all'
+    | '/maplestory/{-$buildId}/items/_browse/'
     | '/maplestory/{-$buildId}/maps/_browse/'
+    | '/maplestory/{-$buildId}/items/_browse/cash/{-$kind}'
+    | '/maplestory/{-$buildId}/items/_browse/etc/{-$kind}'
+    | '/maplestory/{-$buildId}/items/_browse/setup/{-$kind}'
+    | '/maplestory/{-$buildId}/items/_browse/use/{-$kind}'
     | '/maplestory/{-$buildId}/maps/_browse/in/$location/{-$area}'
   fileRoutesById: FileRoutesById
 }
@@ -173,7 +242,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   PrivacyRoute: typeof PrivacyRoute
   ApiHealthzRoute: typeof ApiHealthzRoute
-  MaplestoryChar123BuildIdChar125ItemsRoute: typeof MaplestoryChar123BuildIdChar125ItemsRouteWithChildren
+  MaplestoryChar123BuildIdChar125ItemsBrowseRoute: typeof MaplestoryChar123BuildIdChar125ItemsBrowseRouteWithChildren
   MaplestoryChar123BuildIdChar125MapsSlugIdRoute: typeof MaplestoryChar123BuildIdChar125MapsSlugIdRoute
   MaplestoryChar123BuildIdChar125MapsBrowseRoute: typeof MaplestoryChar123BuildIdChar125MapsBrowseRouteWithChildren
   MaplestoryChar123BuildIdChar125MonstersSlugIdRoute: typeof MaplestoryChar123BuildIdChar125MonstersSlugIdRoute
@@ -203,11 +272,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiHealthzRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/maplestory/{-$buildId}/items': {
-      id: '/maplestory/{-$buildId}/items'
+    '/maplestory/{-$buildId}/items/_browse': {
+      id: '/maplestory/{-$buildId}/items/_browse'
       path: '/maplestory/{-$buildId}/items'
       fullPath: '/maplestory/{-$buildId}/items'
-      preLoaderRoute: typeof MaplestoryChar123BuildIdChar125ItemsRouteImport
+      preLoaderRoute: typeof MaplestoryChar123BuildIdChar125ItemsBrowseRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/maplestory/{-$buildId}/maps/$slugId': {
@@ -238,12 +307,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MaplestoryChar123BuildIdChar125MonstersSlugIdRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/maplestory/{-$buildId}/items/{-$scope}/{-$child}': {
-      id: '/maplestory/{-$buildId}/items/{-$scope}/{-$child}'
-      path: '/{-$scope}/{-$child}'
-      fullPath: '/maplestory/{-$buildId}/items/{-$scope}/{-$child}'
-      preLoaderRoute: typeof MaplestoryChar123BuildIdChar125ItemsChar123ScopeChar125Char123ChildChar125RouteImport
-      parentRoute: typeof MaplestoryChar123BuildIdChar125ItemsRoute
+    '/maplestory/{-$buildId}/items/_browse/': {
+      id: '/maplestory/{-$buildId}/items/_browse/'
+      path: '/'
+      fullPath: '/maplestory/{-$buildId}/items/'
+      preLoaderRoute: typeof MaplestoryChar123BuildIdChar125ItemsBrowseIndexRouteImport
+      parentRoute: typeof MaplestoryChar123BuildIdChar125ItemsBrowseRoute
+    }
+    '/maplestory/{-$buildId}/items/_browse/all': {
+      id: '/maplestory/{-$buildId}/items/_browse/all'
+      path: '/all'
+      fullPath: '/maplestory/{-$buildId}/items/all'
+      preLoaderRoute: typeof MaplestoryChar123BuildIdChar125ItemsBrowseAllRouteImport
+      parentRoute: typeof MaplestoryChar123BuildIdChar125ItemsBrowseRoute
     }
     '/maplestory/{-$buildId}/maps/_browse/': {
       id: '/maplestory/{-$buildId}/maps/_browse/'
@@ -251,6 +327,34 @@ declare module '@tanstack/react-router' {
       fullPath: '/maplestory/{-$buildId}/maps/'
       preLoaderRoute: typeof MaplestoryChar123BuildIdChar125MapsBrowseIndexRouteImport
       parentRoute: typeof MaplestoryChar123BuildIdChar125MapsBrowseRoute
+    }
+    '/maplestory/{-$buildId}/items/_browse/cash/{-$kind}': {
+      id: '/maplestory/{-$buildId}/items/_browse/cash/{-$kind}'
+      path: '/cash/{-$kind}'
+      fullPath: '/maplestory/{-$buildId}/items/cash/{-$kind}'
+      preLoaderRoute: typeof MaplestoryChar123BuildIdChar125ItemsBrowseCashChar123KindChar125RouteImport
+      parentRoute: typeof MaplestoryChar123BuildIdChar125ItemsBrowseRoute
+    }
+    '/maplestory/{-$buildId}/items/_browse/etc/{-$kind}': {
+      id: '/maplestory/{-$buildId}/items/_browse/etc/{-$kind}'
+      path: '/etc/{-$kind}'
+      fullPath: '/maplestory/{-$buildId}/items/etc/{-$kind}'
+      preLoaderRoute: typeof MaplestoryChar123BuildIdChar125ItemsBrowseEtcChar123KindChar125RouteImport
+      parentRoute: typeof MaplestoryChar123BuildIdChar125ItemsBrowseRoute
+    }
+    '/maplestory/{-$buildId}/items/_browse/setup/{-$kind}': {
+      id: '/maplestory/{-$buildId}/items/_browse/setup/{-$kind}'
+      path: '/setup/{-$kind}'
+      fullPath: '/maplestory/{-$buildId}/items/setup/{-$kind}'
+      preLoaderRoute: typeof MaplestoryChar123BuildIdChar125ItemsBrowseSetupChar123KindChar125RouteImport
+      parentRoute: typeof MaplestoryChar123BuildIdChar125ItemsBrowseRoute
+    }
+    '/maplestory/{-$buildId}/items/_browse/use/{-$kind}': {
+      id: '/maplestory/{-$buildId}/items/_browse/use/{-$kind}'
+      path: '/use/{-$kind}'
+      fullPath: '/maplestory/{-$buildId}/items/use/{-$kind}'
+      preLoaderRoute: typeof MaplestoryChar123BuildIdChar125ItemsBrowseUseChar123KindChar125RouteImport
+      parentRoute: typeof MaplestoryChar123BuildIdChar125ItemsBrowseRoute
     }
     '/maplestory/{-$buildId}/maps/_browse/in/$location/{-$area}': {
       id: '/maplestory/{-$buildId}/maps/_browse/in/$location/{-$area}'
@@ -262,19 +366,34 @@ declare module '@tanstack/react-router' {
   }
 }
 
-interface MaplestoryChar123BuildIdChar125ItemsRouteChildren {
-  MaplestoryChar123BuildIdChar125ItemsChar123ScopeChar125Char123ChildChar125Route: typeof MaplestoryChar123BuildIdChar125ItemsChar123ScopeChar125Char123ChildChar125Route
+interface MaplestoryChar123BuildIdChar125ItemsBrowseRouteChildren {
+  MaplestoryChar123BuildIdChar125ItemsBrowseAllRoute: typeof MaplestoryChar123BuildIdChar125ItemsBrowseAllRoute
+  MaplestoryChar123BuildIdChar125ItemsBrowseIndexRoute: typeof MaplestoryChar123BuildIdChar125ItemsBrowseIndexRoute
+  MaplestoryChar123BuildIdChar125ItemsBrowseCashChar123KindChar125Route: typeof MaplestoryChar123BuildIdChar125ItemsBrowseCashChar123KindChar125Route
+  MaplestoryChar123BuildIdChar125ItemsBrowseEtcChar123KindChar125Route: typeof MaplestoryChar123BuildIdChar125ItemsBrowseEtcChar123KindChar125Route
+  MaplestoryChar123BuildIdChar125ItemsBrowseSetupChar123KindChar125Route: typeof MaplestoryChar123BuildIdChar125ItemsBrowseSetupChar123KindChar125Route
+  MaplestoryChar123BuildIdChar125ItemsBrowseUseChar123KindChar125Route: typeof MaplestoryChar123BuildIdChar125ItemsBrowseUseChar123KindChar125Route
 }
 
-const MaplestoryChar123BuildIdChar125ItemsRouteChildren: MaplestoryChar123BuildIdChar125ItemsRouteChildren =
+const MaplestoryChar123BuildIdChar125ItemsBrowseRouteChildren: MaplestoryChar123BuildIdChar125ItemsBrowseRouteChildren =
   {
-    MaplestoryChar123BuildIdChar125ItemsChar123ScopeChar125Char123ChildChar125Route:
-      MaplestoryChar123BuildIdChar125ItemsChar123ScopeChar125Char123ChildChar125Route,
+    MaplestoryChar123BuildIdChar125ItemsBrowseAllRoute:
+      MaplestoryChar123BuildIdChar125ItemsBrowseAllRoute,
+    MaplestoryChar123BuildIdChar125ItemsBrowseIndexRoute:
+      MaplestoryChar123BuildIdChar125ItemsBrowseIndexRoute,
+    MaplestoryChar123BuildIdChar125ItemsBrowseCashChar123KindChar125Route:
+      MaplestoryChar123BuildIdChar125ItemsBrowseCashChar123KindChar125Route,
+    MaplestoryChar123BuildIdChar125ItemsBrowseEtcChar123KindChar125Route:
+      MaplestoryChar123BuildIdChar125ItemsBrowseEtcChar123KindChar125Route,
+    MaplestoryChar123BuildIdChar125ItemsBrowseSetupChar123KindChar125Route:
+      MaplestoryChar123BuildIdChar125ItemsBrowseSetupChar123KindChar125Route,
+    MaplestoryChar123BuildIdChar125ItemsBrowseUseChar123KindChar125Route:
+      MaplestoryChar123BuildIdChar125ItemsBrowseUseChar123KindChar125Route,
   }
 
-const MaplestoryChar123BuildIdChar125ItemsRouteWithChildren =
-  MaplestoryChar123BuildIdChar125ItemsRoute._addFileChildren(
-    MaplestoryChar123BuildIdChar125ItemsRouteChildren,
+const MaplestoryChar123BuildIdChar125ItemsBrowseRouteWithChildren =
+  MaplestoryChar123BuildIdChar125ItemsBrowseRoute._addFileChildren(
+    MaplestoryChar123BuildIdChar125ItemsBrowseRouteChildren,
   )
 
 interface MaplestoryChar123BuildIdChar125MapsBrowseRouteChildren {
@@ -299,8 +418,8 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   PrivacyRoute: PrivacyRoute,
   ApiHealthzRoute: ApiHealthzRoute,
-  MaplestoryChar123BuildIdChar125ItemsRoute:
-    MaplestoryChar123BuildIdChar125ItemsRouteWithChildren,
+  MaplestoryChar123BuildIdChar125ItemsBrowseRoute:
+    MaplestoryChar123BuildIdChar125ItemsBrowseRouteWithChildren,
   MaplestoryChar123BuildIdChar125MapsSlugIdRoute:
     MaplestoryChar123BuildIdChar125MapsSlugIdRoute,
   MaplestoryChar123BuildIdChar125MapsBrowseRoute:
