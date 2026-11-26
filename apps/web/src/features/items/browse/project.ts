@@ -31,6 +31,7 @@ interface ItemPetTarget {
 }
 
 export type ItemRow = {
+  readonly key: string;
   readonly sourceId: string;
   readonly itemClass: ItemBrowseClass;
   readonly name?: string;
@@ -152,6 +153,7 @@ export function projectItemBrowseRows(
     const name = extractKnownFact(record.name);
     if (name === undefined) return [];
     const row: WritableItemRow = {
+      key: record.key,
       sourceId: record.sourceId,
       itemClass: record.itemClass,
       name,

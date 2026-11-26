@@ -1,8 +1,9 @@
+import { fixtureRelease } from '../../src/mocks/release';
 import { browseReady } from '../browse-ready';
 import { expect, test } from '../fixtures';
 
 const CATEGORY = '/maplestory/items/use/scrolls';
-const POTIONS = '/maplestory/items/use/potions-and-food';
+const ORES = '/maplestory/items/etc/ores-and-gems';
 
 test('desktop Items category', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 1100 });
@@ -50,26 +51,57 @@ test('desktop Items unavailable', async ({ page }) => {
 
 test('desktop Items drawer', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 1100 });
-  await page.goto(POTIONS);
+  await page.goto(ORES);
   await browseReady(page);
-  await page
-    .getByRole('button', { name: 'Sample Draught', exact: true })
-    .click();
-  await expect(
-    page.getByRole('dialog', { name: 'Sample Draught' }),
-  ).toBeVisible();
+  await page.getByRole('button', { name: 'Woven Thread', exact: true }).click();
+  const drawer = page.getByRole('dialog', { name: 'Woven Thread' });
+  await expect(drawer).toBeVisible();
+  await expect(drawer).toContainText('Thread Trial');
+  await expect(drawer).toContainText('Paper Kite');
+  await expect(drawer).toContainText('Crowned Warden');
   await expect(page).toHaveScreenshot('desktop-items-drawer.png');
 });
 
 test('mobile Items drawer', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 950 });
-  await page.goto(POTIONS);
+  await page.goto(ORES);
   await browseReady(page);
-  await page
-    .getByRole('button', { name: 'Sample Draught', exact: true })
-    .click();
-  await expect(
-    page.getByRole('dialog', { name: 'Sample Draught' }),
-  ).toBeVisible();
+  await page.getByRole('button', { name: 'Woven Thread', exact: true }).click();
+  const drawer = page.getByRole('dialog', { name: 'Woven Thread' });
+  await expect(drawer).toBeVisible();
+  await expect(drawer).toContainText('Thread Trial');
+  await expect(drawer).toContainText('Paper Kite');
+  await expect(drawer).toContainText('Crowned Warden');
   await expect(page).toHaveScreenshot('mobile-items-drawer.png');
+});
+
+test('desktop Items drawer failed', async ({ page }) => {
+  const neededQuestPath = `/${fixtureRelease.builds.get('cw-launch')!.itemRelatedEntityBrowse['needed-for-quest']!.path}`;
+  await page.setViewportSize({ width: 1440, height: 1100 });
+  await page.goto(ORES);
+  await browseReady(page);
+  await page.evaluate((path) => {
+    const originalFetch = window.fetch.bind(window);
+    window.fetch = async (input, init) => {
+      const url = input instanceof Request ? input.url : String(input);
+      if (new URL(url).pathname === path) {
+        const response = await originalFetch(input, init);
+        const bytes = new Uint8Array(await response.arrayBuffer());
+        bytes[0] = (bytes[0] ?? 0) ^ 1;
+        return new Response(bytes, {
+          status: response.status,
+          headers: { 'content-type': 'application/json' },
+        });
+      }
+      return originalFetch(input, init);
+    };
+  }, neededQuestPath);
+  await page.getByRole('button', { name: 'Woven Thread', exact: true }).click();
+  const drawer = page.getByRole('dialog', { name: 'Woven Thread' });
+  await expect(drawer).toBeVisible();
+  await expect(drawer.getByRole('alert')).toHaveText(
+    'Quests, recipes and monsters could not be loaded.',
+  );
+  await expect(drawer.getByRole('button', { name: 'Try again' })).toBeVisible();
+  await expect(page).toHaveScreenshot('desktop-items-drawer-failed.png');
 });

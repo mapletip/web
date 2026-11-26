@@ -90,10 +90,14 @@ export function resolveBrowseDropEvidence({
   pack,
   evidence,
 }: {
-  readonly pack: StaticMonsterDropBrowseV1_2;
-  readonly evidence: NonNullable<
-    StaticMonsterDropBrowseV1_2['records'][string]
-  >['entries'][number]['evidence'][number];
+  readonly pack: Pick<
+    StaticMonsterDropBrowseV1_2,
+    'evidenceKinds' | 'evidenceSources'
+  >;
+  readonly evidence: {
+    readonly source: number;
+    readonly startSeconds?: number | null | undefined;
+  };
 }): DropEvidence {
   const source = pack.evidenceSources[evidence.source];
   if (source === undefined) {

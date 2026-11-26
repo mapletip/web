@@ -249,6 +249,7 @@ describe('projectItemBrowseRows', () => {
         'buff',
         'icon',
         'itemClass',
+        'key',
         'kind',
         'kindPath',
         'level',
