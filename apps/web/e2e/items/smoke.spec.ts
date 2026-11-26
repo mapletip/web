@@ -335,3 +335,84 @@ test('/items/all rail group counts follow search and filters and match after cho
     `${useCount} ${useCount === 1 ? 'Item' : 'Items'}`,
   );
 });
+
+test('Items landing search suggestions and Crafting ingredients lookup', async ({
+  page,
+}) => {
+  const items = new ItemsPage(page);
+  await items.goto('/maplestory/items');
+
+  const dataRequests: string[] = [];
+  const onRequest = (req: { resourceType(): string; url(): string }) => {
+    if (req.resourceType() !== 'image') dataRequests.push(req.url());
+  };
+  page.on('request', onRequest);
+
+  const search = page.getByRole('combobox', {
+    name: 'Search Classic World items',
+  });
+  await search.fill('Pebble');
+
+  const options = page.getByRole('option');
+  await expect(options).toHaveCount(7);
+  await expect(
+    page.getByRole('option', { name: 'See all results' }),
+  ).toBeVisible();
+  expect(dataRequests).toEqual([]);
+
+  // No suggestions when nothing matches, and Enter submits to /items/all.
+  await search.fill('no-such-item-xyz');
+  await expect(options).toHaveCount(0);
+  expect(dataRequests).toEqual([]);
+  page.off('request', onRequest);
+
+  await search.press('Enter');
+  await expect(page).toHaveURL('/maplestory/items/all?q=no-such-item-xyz');
+  await expect(items.summary).toHaveText('0 Items');
+
+  // Pointer choice opens the item's category page searched by its name.
+  await items.goto('/maplestory/items');
+  await search.fill('Only Given');
+  await page.getByRole('option', { name: /Only Given Pebble/u }).click();
+  await expect(page).toHaveURL(
+    /\/maplestory\/items\/etc\/other-etc\?q=Only(\+|%20)Given(\+|%20)Pebble$/u,
+  );
+  await expect(items.item('Only Given Pebble')).toBeVisible();
+
+  // Keyboard choice opens the item's category page searched by its name.
+  await items.goto('/maplestory/items');
+  await search.fill('Sample Draught');
+  await expect(
+    page.getByRole('option', { name: /Sample Draught/u }),
+  ).toBeVisible();
+  await search.press('ArrowDown');
+  await search.press('Enter');
+  await expect(page).toHaveURL(
+    /\/maplestory\/items\/use\/potions-and-food\?q=Sample(\+|%20)Draught$/u,
+  );
+  await expect(items.item('Sample Draught')).toBeVisible();
+
+  // "See all results" opens /items/all with the query.
+  await items.goto('/maplestory/items');
+  await search.fill('Sample');
+  await page.getByRole('option', { name: 'See all results' }).click();
+  await expect(page).toHaveURL('/maplestory/items/all?q=Sample');
+  await expect(items.item('Sample Draught')).toBeVisible();
+
+  // Crafting ingredients lookup opens /items/all?usedInRecipes=true with matching count.
+  await items.goto('/maplestory/items');
+  const craftingLink = page.getByRole('link', {
+    name: /^Crafting ingredients\s+\d+$/u,
+  });
+  await expect(craftingLink).toBeVisible();
+  const craftingText = (await craftingLink.textContent()) ?? '';
+  const craftingCount = Number(craftingText.match(/(\d+)$/u)?.[1]);
+  expect(craftingCount).toBeGreaterThan(0);
+
+  await craftingLink.click();
+  await expect(page).toHaveURL('/maplestory/items/all?usedInRecipes=true');
+  await expect(items.summary).toHaveText(
+    `${craftingCount} ${craftingCount === 1 ? 'Item' : 'Items'}`,
+  );
+  await expect(items.item('Woven Thread')).toBeVisible();
+});

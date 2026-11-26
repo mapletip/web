@@ -1,11 +1,19 @@
-import { Paper, SimpleGrid, Stack, Title } from '@mantine/core';
-import { Thumbnail } from '@mapletip/component-library';
-import { itemIconUrl } from '@mapletip/data/items';
-import { Link } from '@tanstack/react-router';
-import { useMemo, type ReactElement } from 'react';
+import {
+  Autocomplete,
+  Paper,
+  SimpleGrid,
+  Stack,
+  Title,
+  type RenderAutocompleteOption,
+} from '@mantine/core';
+import { EntityOption, Thumbnail } from '@mapletip/component-library';
+import { itemIconUrl, type ItemBrowseCoverage } from '@mapletip/data/items';
+import { MagnifyingGlass } from '@phosphor-icons/react';
+import { Link, useNavigate } from '@tanstack/react-router';
+import { useMemo, useState, type FormEvent, type ReactElement } from 'react';
 
 import { BrowsePageShell } from '@/components/BrowsePageShell';
-import { MAPLEKIT_RELEASE, type BuildId } from '@/config/maplekit';
+import { BUILDS, MAPLEKIT_RELEASE, type BuildId } from '@/config/maplekit';
 import { canonicalBuildParam, DetailBreadcrumbs } from '@/features/detail';
 
 import {
@@ -19,10 +27,12 @@ import { ITEM_KINDS } from '../kinds';
 import type { ItemKind } from '../kinds/types';
 
 import classes from './ItemsLandingPage.module.css';
+import { matchItemSuggestions } from './suggestions';
 
 interface ItemsLandingPageProps {
   readonly buildId: BuildId;
   readonly rows: readonly CategorizedItemRow[];
+  readonly coverage: ItemBrowseCoverage;
 }
 
 interface DirectoryCategory {
@@ -36,6 +46,10 @@ interface DirectoryPanel {
   readonly categories: readonly DirectoryCategory[];
 }
 
+const SEE_ALL_RESULTS_VALUE = '__see_all_results__';
+const KINDS_BY_ID: ReadonlyMap<string, ItemKind> = new Map(
+  ITEM_KINDS.map((kind) => [kind.id, kind]),
+);
 const numberFormat = new Intl.NumberFormat('en-US');
 
 function buildDirectoryPanels({
@@ -64,14 +78,105 @@ function buildDirectoryPanels({
   });
 }
 
-/** Four-panel category directory for the Items landing page. */
+/** Search bar, four-panel category directory, and quick lookups for the Items landing page. */
 export function ItemsLandingPage({
   buildId,
   rows,
+  coverage,
 }: ItemsLandingPageProps): ReactElement {
+  const navigate = useNavigate();
   const { heading } = itemPageMetadata({ buildId, all: false });
   const buildParam = canonicalBuildParam(buildId);
+  const [query, setQuery] = useState('');
+
   const panels = useMemo(() => buildDirectoryPanels({ rows }), [rows]);
+  const suggestions = useMemo(
+    () => matchItemSuggestions({ rows, query }),
+    [rows, query],
+  );
+  const suggestionsById = useMemo(
+    () => new Map(suggestions.map((row) => [row.sourceId, row])),
+    [suggestions],
+  );
+  const autocompleteData = useMemo(() => {
+    if (suggestions.length === 0) return [];
+    return [
+      ...suggestions.map((row) => ({
+        value: row.sourceId,
+        label: row.name ?? '',
+      })),
+      { value: SEE_ALL_RESULTS_VALUE, label: query.trim() },
+    ];
+  }, [query, suggestions]);
+
+  const showCraftingLookup =
+    coverage.relationships['used-in-recipe'] !== 'unsupported';
+  const craftingCount = useMemo(
+    () =>
+      showCraftingLookup
+        ? rows.filter((row) => (row.usedInRecipeCount ?? 0) > 0).length
+        : 0,
+    [rows, showCraftingLookup],
+  );
+
+  function navigateToAllResults(searchQuery: string): void {
+    void navigate({
+      to: '/maplestory/{-$buildId}/items/all',
+      params: { buildId: buildParam },
+      search: { ...itemBrowseSearch.defaultSearch, q: searchQuery },
+    });
+  }
+
+  function handleSearchSubmit(event: FormEvent<HTMLFormElement>): void {
+    event.preventDefault();
+    navigateToAllResults(query.trim());
+  }
+
+  function handleOptionSubmit(value: string): void {
+    if (value === SEE_ALL_RESULTS_VALUE) {
+      navigateToAllResults(query.trim());
+      return;
+    }
+    const row = suggestionsById.get(value);
+    const kind = row === undefined ? undefined : KINDS_BY_ID.get(row.kind);
+    if (row?.name === undefined || kind === undefined) return;
+    void navigate({
+      to: ITEM_GROUP_ROUTES[kind.group],
+      params: { buildId: buildParam, kind: kind.slug },
+      search: { ...itemBrowseSearch.defaultSearch, q: row.name },
+    });
+  }
+
+  const renderSuggestionOption: RenderAutocompleteOption = ({ option }) => {
+    if (option.value === SEE_ALL_RESULTS_VALUE) {
+      return (
+        <div className={classes['seeAllOption']}>
+          <EntityOption
+            icon={<MagnifyingGlass size={16} aria-hidden="true" />}
+            label="See all results"
+          />
+        </div>
+      );
+    }
+    const row = suggestionsById.get(option.value);
+    const kind = row === undefined ? undefined : KINDS_BY_ID.get(row.kind);
+    return (
+      <EntityOption
+        icon={
+          <Thumbnail
+            src={
+              row?.icon === undefined
+                ? undefined
+                : itemIconUrl(MAPLEKIT_RELEASE.baseUrl, row.icon)
+            }
+            size={24}
+          />
+        }
+        label={row?.name ?? option.value}
+        {...(kind === undefined ? {} : { description: kind.label })}
+      />
+    );
+  };
 
   return (
     <BrowsePageShell fillViewport={false}>
@@ -85,6 +190,35 @@ export function ItemsLandingPage({
           />
           <Title order={1}>{heading}</Title>
         </Stack>
+        <form
+          role="search"
+          onSubmit={handleSearchSubmit}
+          className={classes['searchForm']}
+        >
+          <Autocomplete
+            aria-label={`Search ${BUILDS[buildId].label} items`}
+            placeholder="Search items by name"
+            leftSection={<MagnifyingGlass size={16} aria-hidden="true" />}
+            clearable
+            size="md"
+            maxDropdownHeight={360}
+            classNames={{ input: classes['searchInput'] }}
+            comboboxProps={{ shadow: 'md', offset: 6 }}
+            data={autocompleteData}
+            filter={({ options }) => options}
+            value={query}
+            onChange={(next) => {
+              // Choosing an option writes its value (an item id) into the input;
+              // keep the typed query instead, since the page navigates away.
+              if (next === SEE_ALL_RESULTS_VALUE || suggestionsById.has(next)) {
+                return;
+              }
+              setQuery(next);
+            }}
+            onOptionSubmit={handleOptionSubmit}
+            renderOption={renderSuggestionOption}
+          />
+        </form>
         <SimpleGrid cols={{ base: 1, sm: 2, lg: 4 }} spacing="md">
           {panels.map((panel) => {
             const headingId = `items-group-${panel.group.id}`;
@@ -150,6 +284,43 @@ export function ItemsLandingPage({
             );
           })}
         </SimpleGrid>
+        {showCraftingLookup ? (
+          <Paper
+            component="section"
+            withBorder
+            radius="md"
+            p="md"
+            className={classes['panel']}
+            aria-labelledby="items-quick-lookups"
+          >
+            <Title
+              order={2}
+              size="h4"
+              id="items-quick-lookups"
+              className={classes['lookupsTitle']}
+            >
+              Quick lookups
+            </Title>
+            <ul className={classes['lookupsList']}>
+              <li className={classes['item']}>
+                <Link
+                  to="/maplestory/{-$buildId}/items/all"
+                  params={{ buildId: buildParam }}
+                  search={{
+                    ...itemBrowseSearch.defaultSearch,
+                    usedInRecipes: true,
+                  }}
+                  className={classes['lookupLink']}
+                >
+                  <span className={classes['label']}>Crafting ingredients</span>
+                  <span className={classes['count']}>
+                    {numberFormat.format(craftingCount)}
+                  </span>
+                </Link>
+              </li>
+            </ul>
+          </Paper>
+        ) : null}
       </Stack>
     </BrowsePageShell>
   );

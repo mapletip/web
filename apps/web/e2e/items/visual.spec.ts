@@ -21,6 +21,27 @@ test('mobile Items landing', async ({ page }) => {
   await expect(page).toHaveScreenshot('mobile-items-landing.png');
 });
 
+test('desktop Items landing suggestions', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 1100 });
+  await page.goto(LANDING);
+  await browseReady(page);
+  await page.waitForFunction(() => {
+    const main = document.querySelector('main');
+    return (
+      main !== null &&
+      Object.keys(main).some((key) => key.startsWith('__reactProps'))
+    );
+  });
+  await page
+    .getByRole('combobox', { name: 'Search Classic World items' })
+    .fill('Pebble');
+  await expect(
+    page.getByRole('option', { name: 'See all results' }),
+  ).toBeVisible();
+  await browseReady(page);
+  await expect(page).toHaveScreenshot('desktop-items-landing-suggestions.png');
+});
+
 test('desktop Items all', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 1100 });
   await page.goto(ALL);

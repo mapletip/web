@@ -27,5 +27,11 @@ function ItemsPage() {
   const params = Route.useParams();
   const buildId = requireBuildId(params.buildId);
   const result = browseRouteApi.useLoaderData();
-  return <ItemsLandingPage buildId={buildId} rows={result.rows} />;
+  return (
+    <ItemsLandingPage
+      buildId={buildId}
+      rows={result.rows}
+      coverage={result.coverage}
+    />
+  );
 }
