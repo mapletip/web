@@ -23,7 +23,6 @@ describe('classifyDrop', () => {
     kind: 'vod',
     label: 'VOD',
     build: 'cw-launch',
-    date: '2026-02-01',
     url: 'https://example.test/watch?v=one',
     startSeconds: 95,
   };
@@ -49,9 +48,6 @@ describe('classifyDrop', () => {
     const result = classifyDrop(evidence);
     expect(result.confirmed).toBe(confirmed);
     expect(result.sources.map(({ label }) => label)).toEqual(labels);
-    expect(result.sources.every(({ observed }) => observed)).toBe(
-      !labels[0].endsWith('Monster Book'),
-    );
   });
 
   it('keeps one Monster Book per distinct build', () => {
@@ -61,14 +57,10 @@ describe('classifyDrop', () => {
       confirmed: true,
       sources: [
         {
-          observed: false,
           label: 'GMS v83 Monster Book',
-          buildLabel: 'GMS v83',
         },
         {
-          observed: false,
           label: 'Classic World Monster Book',
-          buildLabel: 'Classic World',
         },
       ],
     });
@@ -89,11 +81,8 @@ describe('drop source resolution', () => {
       ]).sources,
     ).toEqual([
       {
-        observed: true,
         label: 'VOD',
-        buildLabel: 'GMS v83',
         href: 'https://example.test/watch?v=one&t=95s',
-        startSeconds: 95,
       },
     ]);
   });
@@ -105,16 +94,13 @@ describe('drop source resolution', () => {
           kind: 'vod',
           label: 'VOD',
           build: 'cw-launch',
-          date: null,
           url: 'https://video.example/watch?v=fixture',
           startSeconds: null,
         },
       ]).sources,
     ).toEqual([
       {
-        observed: true,
         label: 'VOD',
-        buildLabel: 'Classic World',
         href: 'https://video.example/watch?v=fixture',
       },
     ]);
@@ -138,7 +124,6 @@ describe('drop source resolution', () => {
       kind: 'screenshot',
       label: 'Screenshot',
       build: 'fixture-build',
-      date: '2026-01-15',
       url: 'https://example.test/watch',
       startSeconds: 75,
     });

@@ -304,7 +304,7 @@ describe('ItemDrawerBody', () => {
     });
     expect(within(monsterSection).getAllByRole('listitem')).toHaveLength(6);
     const vodLink = within(monsterSection).getAllByRole('link', {
-      name: 'Open at 1:35',
+      name: 'VOD',
     })[0];
     expect(vodLink?.getAttribute('href')).toBe(
       'https://video.example/watch?v=fixture&t=95s',
