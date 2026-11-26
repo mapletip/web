@@ -3,9 +3,24 @@ import { browseReady } from '../browse-ready';
 import { expect, test } from '../fixtures';
 
 const LANDING = '/maplestory/items';
+const GROUP = '/maplestory/items/etc';
 const CATEGORY = '/maplestory/items/use/scrolls';
 const ORES = '/maplestory/items/etc/ores-and-gems';
 const ALL = '/maplestory/items/all';
+
+test('desktop Items group', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 1100 });
+  await page.goto(GROUP);
+  await browseReady(page);
+  await expect(page).toHaveScreenshot('desktop-items-group.png');
+});
+
+test('mobile Items group', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 1600 });
+  await page.goto(GROUP);
+  await browseReady(page);
+  await expect(page).toHaveScreenshot('mobile-items-group.png');
+});
 
 test('desktop Items landing', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 1100 });

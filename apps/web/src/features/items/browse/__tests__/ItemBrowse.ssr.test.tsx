@@ -17,6 +17,8 @@ import { fixtureRelease } from '@/mocks/release';
 import { routeTree } from '@/routeTree.gen';
 
 import { ITEM_KINDS } from '../../kinds';
+import { ITEM_CARD_COLUMNS } from '../item-card';
+import { buildGroupShelves } from '../ItemsGroupPage';
 import {
   ITEM_BROWSE_UNAVAILABLE_MESSAGE,
   loadItemBrowse,
@@ -466,6 +468,104 @@ describe('Items Browse server rendering', () => {
       ).toContain(String(useCount));
     },
   );
+
+  it.each(
+    (['cw-launch', 'gms-v83'] as const).flatMap((buildId) =>
+      ITEM_GROUPS.map((group) => [buildId, group.id, group.label] as const),
+    ),
+  )(
+    'renders %s group page %s with category shelves in rail order, counts, See all links, and no empty categories',
+    async (buildId, groupId, groupLabel) => {
+      const browse = fixtureBrowse(buildId);
+      const path = itemPath({ buildId, group: groupId });
+      const { router, html } = await renderPath(path);
+      const main = mainHtml(html).replaceAll('<!-- -->', '');
+
+      expect(isNotFound(router)).toBe(false);
+      expect(main).toContain('Item categories');
+      expect(main).toContain('All items');
+      expect(main).toContain(
+        `Search ${buildId === 'cw-launch' ? 'Classic World' : 'GMS v83'} items`,
+      );
+
+      const expectedShelves = buildGroupShelves({
+        group: groupId,
+        rows: browse.rows,
+      });
+      const maxPerRow = ITEM_CARD_COLUMNS.lg;
+      const numberFormat = new Intl.NumberFormat('en-US');
+
+      let lastHeadingIndex = -1;
+      for (const shelf of expectedShelves) {
+        const headingPattern = new RegExp(
+          `<h2[^>]*id="items-shelf-${escapeRegExp(shelf.kind.id)}"[^>]*>${escapeRegExp(escapeHtml(shelf.kind.label))}</h2>`,
+          'u',
+        );
+        const match = headingPattern.exec(main);
+        expect(match, `shelf heading for ${shelf.kind.id}`).not.toBeNull();
+        expect(match!.index).toBeGreaterThan(lastHeadingIndex);
+        lastHeadingIndex = match!.index;
+
+        const kindHref = itemPath({
+          buildId,
+          group: groupId,
+          kind: shelf.kind.slug,
+        });
+        const formattedCount = numberFormat.format(shelf.totalCount);
+        const seeAllPattern = new RegExp(
+          `<a[^>]*href="${escapeRegExp(kindHref)}"[^>]*>See all ${escapeRegExp(formattedCount)}</a>`,
+          'u',
+        );
+        expect(main).toMatch(seeAllPattern);
+
+        expect(shelf.previewRows.length).toBeLessThanOrEqual(maxPerRow);
+        for (const row of shelf.previewRows) {
+          expect(main).toContain(escapeHtml(row.name!));
+        }
+      }
+
+      const emptyGroupKinds = ITEM_KINDS.filter(
+        (kind) =>
+          kind.group === groupId &&
+          !expectedShelves.some((shelf) => shelf.kind.id === kind.id),
+      );
+      for (const emptyKind of emptyGroupKinds) {
+        expect(main).not.toContain(`items-shelf-${emptyKind.id}`);
+        expect(main).not.toContain(
+          itemPath({ buildId, group: groupId, kind: emptyKind.slug }),
+        );
+      }
+      expect(main).toContain(escapeHtml(groupLabel));
+    },
+  );
+
+  it('omits empty categories from a group page shelves and rail, and caps shelves to one row', async () => {
+    const base = fixtureBrowse('cw-launch');
+    mockedLoad.mockResolvedValue({
+      ...base,
+      rows: base.rows.filter((row) => row.kind !== 'quest-items'),
+    });
+
+    const { html } = await renderPath('/maplestory/items/etc');
+    const main = mainHtml(html).replaceAll('<!-- -->', '');
+
+    expect(main).not.toContain('items-shelf-quest-items');
+    expect(main).not.toContain('/maplestory/items/etc/quest-items');
+    expect(main).not.toContain('Quest Items');
+
+    // Monster Drops has > 5 items in the fixture; the 6th in default order is not on the shelf.
+    const monsterDrops = base.rows
+      .filter((row) => row.kind === 'monster-drops')
+      .sort((left, right) =>
+        (left.name ?? '').localeCompare(right.name ?? '', 'en-US', {
+          numeric: true,
+          sensitivity: 'base',
+        }),
+      );
+    expect(monsterDrops.length).toBeGreaterThan(ITEM_CARD_COLUMNS.lg);
+    const sixth = monsterDrops[ITEM_CARD_COLUMNS.lg]!;
+    expect(main).not.toContain(escapeHtml(sixth.name!));
+  });
 
   it('shows the generic unavailable state when item data fails to load', async () => {
     mockedLoad.mockRejectedValue(new Error(ITEM_BROWSE_UNAVAILABLE_MESSAGE));

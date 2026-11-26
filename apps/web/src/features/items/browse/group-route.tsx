@@ -35,12 +35,14 @@ export function itemGroupRouteOptions<TPath extends GroupRoutePath>({
     const params = routeApi.useParams();
     const search = routeApi.useSearch();
     const result = browseRouteApi.useLoaderData();
+    const buildId = requireBuildId(params.buildId);
+    const kind = resolveItemKind({ group, slug: params.kind });
     return (
       <ItemFrame
-        buildId={requireBuildId(params.buildId)}
+        buildId={buildId}
         rows={result.rows}
         group={group}
-        kind={resolveItemKind({ group, slug: params.kind })}
+        {...(kind === undefined ? {} : { kind })}
         search={search}
         onSearchChange={({ search: nextSearch, replace }) =>
           router.navigate({ to: '.', search: nextSearch, replace })

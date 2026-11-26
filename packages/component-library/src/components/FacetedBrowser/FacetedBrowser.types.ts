@@ -294,8 +294,12 @@ type PresentationProps<TRecord extends Record<string, unknown>> =
       readonly presentation: 'custom';
       readonly renderResults: (args: {
         readonly records: readonly TRecord[];
+        /** All matching records after navigation, search, filters, and sort. */
+        readonly matchingRecords: readonly TRecord[];
         readonly state: BrowseState;
       }) => ReactNode;
+      /** Hide page controls and the page-size select when the custom results show every matching record. */
+      readonly showPagination?: boolean;
       readonly columns?: never;
       readonly identityField?: never;
       readonly renderCard?: never;
