@@ -40,7 +40,7 @@ export const ITEM_DRAWER_QUEST_LIMIT = 5;
 export const ITEM_DRAWER_RECIPE_LIMIT = 5;
 export const ITEM_DRAWER_MONSTER_LIMIT = 6;
 
-const REQUIRED_QUEST_ROLES: ReadonlySet<QuestRole> = new Set([
+export const REQUIRED_QUEST_ROLES: ReadonlySet<QuestRole> = new Set([
   'turned-in',
   'held-to-complete',
   'held-to-start',

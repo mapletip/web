@@ -41,6 +41,7 @@ import {
   type ItemGroup,
 } from './page';
 import type { CategorizedItemRow } from './project';
+import type { ProjectedRelations } from './relation-projection';
 import { createItemRelationReader } from './relations';
 import { itemBrowseSearch, ITEM_SORT_OPTIONS } from './search-params';
 
@@ -48,6 +49,7 @@ interface ItemFrameProps {
   readonly buildId: BuildId;
   readonly rows: readonly CategorizedItemRow[];
   readonly coverage?: ItemBrowseCoverage | undefined;
+  readonly relations?: ProjectedRelations | undefined;
   readonly group?: ItemGroup | undefined;
   readonly kind?: ItemKind | undefined;
   readonly all?: boolean;
@@ -134,15 +136,21 @@ export function categoryFacets({
   rows,
   kind,
   coverage,
+  relations = {},
 }: {
   readonly rows: readonly CategorizedItemRow[];
   readonly kind: ItemKind | undefined;
   readonly coverage: ItemBrowseCoverage | undefined;
+  readonly relations?: ProjectedRelations | undefined;
 }): readonly FacetDefinition<CategorizedItemRow>[] {
   if (kind === undefined) return [];
   const categoryRows = rows.filter((row) => row.kind === kind.id);
   return [
-    ...(kind.card?.facets?.({ rows: categoryRows, coverage }) ?? []),
+    ...(kind.card?.facets?.({
+      rows: categoryRows,
+      coverage,
+      relations,
+    }) ?? []),
     ...(categoryRows.some((row) => (row.questRewardCount ?? 0) > 0)
       ? [QUEST_REWARD_FACET]
       : []),
@@ -158,7 +166,10 @@ export function itemPrimaryFact({
   const category: ItemKind | undefined = ITEM_KINDS.find(
     (entry) => entry.id === record.kind,
   );
-  const categoryLead = category?.card?.lead(record);
+  const categoryLead = category?.card?.lead(record, {
+    coverage: undefined,
+    relations: {},
+  });
   if (categoryLead !== undefined) return categoryLead;
   if (record.success !== undefined) {
     return `${numberFormat.format(record.success)}% success`;
@@ -225,6 +236,7 @@ export function ItemFrame({
   buildId,
   rows,
   coverage,
+  relations = {},
   group,
   kind,
   all = false,
@@ -301,12 +313,12 @@ export function ItemFrame({
     [overlay],
   );
   const facets = useMemo(() => {
-    if (!all) return categoryFacets({ rows, kind, coverage });
+    if (!all) return categoryFacets({ rows, kind, coverage, relations });
     if (coverage?.relationships['used-in-recipe'] === 'unsupported') {
       return ALL_FACETS.filter((facet) => facet.id !== 'used-in-recipes');
     }
     return ALL_FACETS;
-  }, [all, coverage, kind, rows]);
+  }, [all, coverage, kind, rows, relations]);
   const details =
     overlay.overlay?.type === 'record-details' ? overlay.overlay : undefined;
 
@@ -396,7 +408,10 @@ export function ItemFrame({
         queryFields={
           all
             ? ALL_QUERY_FIELDS
-            : [...CATEGORY_QUERY_FIELDS, ...(kind?.card?.queryFields ?? [])]
+            : [
+                ...CATEGORY_QUERY_FIELDS,
+                ...(kind?.card?.queryFields?.({ coverage, relations }) ?? []),
+              ]
         }
         searchFields={all ? ALL_SEARCH_FIELDS : CATEGORY_SEARCH_FIELDS}
         facets={facets}
@@ -441,6 +456,7 @@ export function ItemFrame({
               ) =>
                 renderItemCard({
                   record,
+                  context: { coverage, relations },
                   openDetails,
                   isDetailsOpen,
                   ...(all

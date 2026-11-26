@@ -12,6 +12,25 @@ const CASH_SHOP = '/maplestory/items/cash/cash-shop';
 const POTIONS = '/maplestory/items/use/potions-and-food';
 const PROJECTILES = '/maplestory/items/use/stars-and-arrows';
 const MONSTER_CARDS = '/maplestory/gms-v83/items/use/monster-cards';
+const QUEST_ITEMS = '/maplestory/items/etc/quest-items';
+
+test('desktop Items quest items', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 1100 });
+  await page.goto(QUEST_ITEMS);
+  await browseReady(page);
+  await page.getByText(/^Required by a quest \(/u).click();
+  await expect(page.getByText('2 Items', { exact: true })).toBeVisible();
+  await expect(page).toHaveScreenshot('desktop-items-quest-items.png');
+});
+
+test('mobile Items quest items', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 1600 });
+  await page.goto(QUEST_ITEMS);
+  await browseReady(page);
+  await page.getByText(/^Required by a quest \(/u).click();
+  await expect(page.getByText('2 Items', { exact: true })).toBeVisible();
+  await expect(page).toHaveScreenshot('mobile-items-quest-items.png');
+});
 
 test('desktop Items projectiles', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 1100 });

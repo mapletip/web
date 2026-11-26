@@ -38,6 +38,7 @@ describe('Stars & Arrows card', () => {
         categorized({ types: ['arrow'] }),
       ],
       coverage: undefined,
+      relations: {},
     });
     expect(withoutBullets).toHaveLength(1);
     expect(withoutBullets[0]).toMatchObject({
@@ -56,6 +57,7 @@ describe('Stars & Arrows card', () => {
         categorized({ types: ['bullet'] }),
       ],
       coverage: undefined,
+      relations: {},
     });
     expect(withBullets[0]?.options).toEqual([
       { value: 'throwing-star', label: 'Throwing stars' },
@@ -64,14 +66,20 @@ describe('Stars & Arrows card', () => {
     ]);
 
     expect(
-      starsAndArrows.card.facets({ rows: [], coverage: undefined }),
+      starsAndArrows.card.facets({
+        rows: [],
+        coverage: undefined,
+        relations: {},
+      }),
     ).toEqual([]);
   });
 
   it('extracts projectile types and sorts by attack', () => {
-    const field = starsAndArrows.card.queryFields.find(
-      (entry) => typeof entry !== 'string' && entry.id === 'projectileTypes',
-    );
+    const field = starsAndArrows.card
+      .queryFields()
+      .find(
+        (entry) => typeof entry !== 'string' && entry.id === 'projectileTypes',
+      );
     expect(field).toBeDefined();
     if (
       field === undefined ||

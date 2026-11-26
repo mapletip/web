@@ -82,7 +82,7 @@ export const potionsAndFood = {
       },
       ...buffStatFilter(rows),
     ],
-    queryFields: [
+    queryFields: () => [
       { id: 'recoveryTypes', accessor: recoveryTypes, sortable: false },
       {
         id: 'buffStats',

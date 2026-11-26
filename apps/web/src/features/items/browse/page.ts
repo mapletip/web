@@ -58,7 +58,7 @@ export function resolveItemKind({
 }: {
   readonly group: ItemGroup;
   readonly slug?: string | undefined;
-}) {
+}): ItemKind | undefined {
   if (slug === undefined) return undefined;
   const kind = itemKind({ group, slug });
   if (kind === undefined) {

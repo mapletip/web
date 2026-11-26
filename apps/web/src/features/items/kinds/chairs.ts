@@ -36,7 +36,7 @@ export const chairs = {
         ],
       },
     ],
-    queryFields: [
+    queryFields: () => [
       {
         id: 'recoveryTypes',
         accessor: (row) => [

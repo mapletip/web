@@ -5,7 +5,7 @@ import type { ReactElement } from 'react';
 import { MAPLEKIT_RELEASE } from '@/config/maplekit';
 
 import { ITEM_KINDS } from '../kinds';
-import type { ItemKind } from '../kinds/types';
+import type { ItemCardContext, ItemKind } from '../kinds/types';
 
 import type { CategorizedItemRow } from './project';
 
@@ -38,6 +38,7 @@ export interface RenderItemCardOptions {
   readonly isDetailsOpen?: boolean | undefined;
   readonly secondaryLine?: string | undefined;
   readonly showCategoryLabel?: boolean | undefined;
+  readonly context?: ItemCardContext | undefined;
 }
 
 // 32px item icons, magnified to fill each layout's media slot (52px column on short cards).
@@ -50,13 +51,14 @@ export function renderItemCard({
   openDetails,
   isDetailsOpen,
   secondaryLine,
-  showCategoryLabel = true,
+  showCategoryLabel = false,
+  context = { coverage: undefined, relations: {} },
 }: RenderItemCardOptions): ReactElement {
   const kind: ItemKind | undefined = ITEM_KINDS.find(
     (entry) => entry.id === record.kind,
   );
   const card = kind?.card;
-  const fact = secondaryLine ?? card?.lead(record);
+  const fact = secondaryLine ?? card?.lead(record, context);
   const media = (
     <Thumbnail
       src={
