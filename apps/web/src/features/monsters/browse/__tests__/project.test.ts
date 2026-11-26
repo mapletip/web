@@ -231,8 +231,7 @@ describe('Monster drop projection', () => {
       projectRows(fixtureCatalog({ records: [sentinelRecord()] }), drops),
     );
     expect(row.drops.entries[0]?.sources).toEqual([
-      { label: "This version's game files", buildLabel: 'Classic World' },
-      { label: 'Screenshot', buildLabel: 'Classic World' },
+      { observed: true, label: 'Screenshot', buildLabel: 'Classic World' },
     ]);
     expect(row.drops.entries).toHaveLength(2);
   });
@@ -264,14 +263,22 @@ describe('Monster drop projection', () => {
       itemRefState: 'ambiguous',
       itemName: 'Known but ambiguous potion',
       sources: [
-        { label: "This version's game files", buildLabel: 'Classic World' },
+        {
+          observed: false,
+          label: 'Classic World Monster Book',
+          buildLabel: 'Classic World',
+        },
       ],
     });
     expect(row.drops.entries[0]).not.toHaveProperty('itemCategory');
     expect(row.drops.entries[1]).toMatchObject({
       itemKey: 'fixture:item:known',
       sources: [
-        { label: "Another version's game files", buildLabel: 'GMS v83' },
+        {
+          observed: false,
+          label: 'GMS v83 Monster Book',
+          buildLabel: 'GMS v83',
+        },
       ],
     });
     expect(row.drops.itemKeys).toEqual(['fixture:item:known']);

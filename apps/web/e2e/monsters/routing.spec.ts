@@ -27,11 +27,15 @@ test('build-specific routes serve their own fixture and reject unsupported slugs
   const alphaDrops = monsterPage.drops.tableButton('Native Alpha', 2);
   await alphaDrops.click();
   const panel = monsterPage.drops.panel('Native Alpha', 2);
-  const sourceButton = monsterPage.drops.sourceButton(panel, 'Native Flake');
+  const sourceButton = monsterPage.drops.certaintyButton(
+    panel,
+    'Native Flake',
+    true,
+  );
   await sourceButton.focus();
   await sourceButton.hover();
-  const dialog = monsterPage.drops.sourceDialog('Native Flake');
+  const dialog = monsterPage.drops.certaintyDialog('Native Flake', true);
   await expect(dialog).toBeVisible();
-  await expect(dialog.getByText('Source')).toBeVisible();
-  await expect(dialog.getByText("This version's game files")).toBeVisible();
+  await expect(dialog.getByText('Confirmed')).toBeVisible();
+  await expect(dialog.getByText('Source: GMS v83 Monster Book.')).toBeVisible();
 });

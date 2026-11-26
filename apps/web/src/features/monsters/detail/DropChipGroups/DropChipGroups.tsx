@@ -2,7 +2,10 @@ import { Group, Stack, Text, Title } from '@mantine/core';
 import type { ReactElement } from 'react';
 
 import { ItemRecordChip } from '@/features/items/shared';
-import { DropSources } from '@/features/monsters/shared';
+import {
+  DropCertaintyDisclosure,
+  DropCertaintyLegend,
+} from '@/features/monsters/shared';
 
 import type { MonsterDetailDropsView } from '../project';
 
@@ -24,6 +27,7 @@ export function DropChipGroups({ drops }: DropChipGroupsProps): ReactElement {
 
   return (
     <Stack className={classes['root']} gap="md">
+      <DropCertaintyLegend />
       <Stack className={classes['groups']} gap="md">
         {drops.groups.map((group) => (
           <section className={classes['group']} key={group.id}>
@@ -36,8 +40,9 @@ export function DropChipGroups({ drops }: DropChipGroupsProps): ReactElement {
                   key={`${entry.name}:${index}`}
                   item={entry}
                   trailing={
-                    <DropSources
+                    <DropCertaintyDisclosure
                       itemName={entry.name}
+                      confirmed={entry.confirmed}
                       sources={entry.sources}
                     />
                   }

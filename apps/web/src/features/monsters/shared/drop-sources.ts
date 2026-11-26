@@ -3,11 +3,48 @@ import type { StaticMonsterDropBrowseV1_2 } from '@mapletip/data/monsters';
 import { BUILDS, isBuildId } from '@/config/maplekit';
 
 export interface DropSource {
+  /** False for game files ("GMS v83 Monster Book"), true for an observation such as a VOD. */
+  readonly observed: boolean;
   readonly label: string;
   readonly buildLabel: string;
   readonly date?: string;
   readonly href?: string;
   readonly startSeconds?: number;
+}
+
+export interface DropEvidence {
+  readonly kind: string;
+  readonly label: string;
+  readonly build: string;
+  readonly date?: string | null | undefined;
+  readonly url?: string | null | undefined;
+  readonly startSeconds?: number | null | undefined;
+}
+
+export function classifyDrop(evidence: readonly DropEvidence[]): {
+  readonly confirmed: boolean;
+  readonly sources: readonly DropSource[];
+} {
+  const observations = evidence.filter(
+    ({ kind }) => kind !== 'native' && kind !== 'historical-overlay',
+  );
+  if (observations.length > 0) {
+    return { confirmed: true, sources: observations.map(toDropSource) };
+  }
+
+  const builds = new Set<string>();
+  const sources = evidence.flatMap((source) => {
+    if (builds.has(source.build)) return [];
+    builds.add(source.build);
+    const label = buildLabel(source.build);
+    return [
+      { observed: false, label: `${label} Monster Book`, buildLabel: label },
+    ];
+  });
+  return {
+    confirmed: evidence.some(({ kind }) => kind === 'native'),
+    sources,
+  };
 }
 
 function buildLabel(build: string): string {
@@ -27,21 +64,16 @@ function sourceHref({
   return href.toString();
 }
 
-export function toDropSource({
+function toDropSource({
   label,
   build,
   date,
   url,
   startSeconds,
-}: {
-  readonly label: string;
-  readonly build: string;
-  readonly date?: string | null | undefined;
-  readonly url?: string | null | undefined;
-  readonly startSeconds?: number | null | undefined;
-}): DropSource {
+}: DropEvidence): DropSource {
   const normalizedStartSeconds = startSeconds ?? undefined;
   return {
+    observed: true,
     label,
     buildLabel: buildLabel(build),
     ...(date == null ? {} : { date }),
@@ -54,7 +86,7 @@ export function toDropSource({
   };
 }
 
-export function resolveBrowseDropSource({
+export function resolveBrowseDropEvidence({
   pack,
   evidence,
 }: {
@@ -62,7 +94,7 @@ export function resolveBrowseDropSource({
   readonly evidence: NonNullable<
     StaticMonsterDropBrowseV1_2['records'][string]
   >['entries'][number]['evidence'][number];
-}): DropSource {
+}): DropEvidence {
   const source = pack.evidenceSources[evidence.source];
   if (source === undefined) {
     throw new Error(
@@ -77,11 +109,12 @@ export function resolveBrowseDropSource({
       `Monster drop browse references missing kind label ${source.kind}.`,
     );
   }
-  return toDropSource({
+  return {
+    kind: source.kind,
     label,
     build: source.build,
     date: source.date,
     url: source.url,
     startSeconds: evidence.startSeconds,
-  });
+  };
 }

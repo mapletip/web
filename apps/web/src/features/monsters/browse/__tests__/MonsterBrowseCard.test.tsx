@@ -231,8 +231,14 @@ describe('MonsterBrowseCard', () => {
           {
             itemRefState: 'ambiguous',
             itemName: 'Unknown item name',
+            confirmed: false,
+
             sources: [
-              { label: "Another version's game files", buildLabel: 'GMS v83' },
+              {
+                observed: false,
+                label: 'GMS v83 Monster Book',
+                buildLabel: 'GMS v83',
+              },
             ],
           },
         ],
@@ -275,8 +281,14 @@ describe('MonsterBrowseCard', () => {
           {
             itemRefState: 'ambiguous',
             itemName: 'Unknown item name',
+            confirmed: false,
+
             sources: [
-              { label: "Another version's game files", buildLabel: 'GMS v83' },
+              {
+                observed: false,
+                label: 'GMS v83 Monster Book',
+                buildLabel: 'GMS v83',
+              },
             ],
           },
         ],
@@ -295,7 +307,7 @@ describe('MonsterBrowseCard', () => {
       screen.queryByRole('button', { name: /Close Drops/u }),
     ).not.toBeInTheDocument();
     const sourceButton = screen.getByRole('button', {
-      name: 'Sources for Unknown item name',
+      name: 'Show unconfirmed drop details for Unknown item name',
     });
     expect(sourceButton).toBeVisible();
 
@@ -331,8 +343,14 @@ describe('MonsterBrowseCard', () => {
           {
             itemRefState: 'resolved',
             itemName: 'Green Headband',
+            confirmed: false,
+
             sources: [
-              { label: "Another version's game files", buildLabel: 'GMS v83' },
+              {
+                observed: false,
+                label: 'GMS v83 Monster Book',
+                buildLabel: 'GMS v83',
+              },
             ],
           },
         ],
@@ -346,13 +364,13 @@ describe('MonsterBrowseCard', () => {
     );
 
     const statusButton = screen.getByRole('button', {
-      name: 'Sources for Green Headband',
+      name: 'Show unconfirmed drop details for Green Headband',
     });
     await user.hover(statusButton);
     expect(statusButton).toHaveAttribute('aria-expanded', 'true');
     await waitFor(() =>
       expect(
-        screen.getByText("Another version's game files"),
+        screen.getByText('Source: GMS v83 Monster Book.'),
       ).toBeInTheDocument(),
     );
     await user.keyboard('{Escape}');
@@ -385,8 +403,14 @@ describe('MonsterBrowseCard', () => {
           {
             itemRefState: 'resolved',
             itemName: 'Crimson Tonic',
+            confirmed: true,
+
             sources: [
-              { label: "This version's game files", buildLabel: 'GMS v83' },
+              {
+                observed: false,
+                label: 'GMS v83 Monster Book',
+                buildLabel: 'GMS v83',
+              },
             ],
           },
         ],
@@ -399,12 +423,14 @@ describe('MonsterBrowseCard', () => {
     );
 
     const statusButton = screen.getByRole('button', {
-      name: 'Sources for Crimson Tonic',
+      name: 'Show confirmed drop details for Crimson Tonic',
     });
     await user.click(statusButton);
     expect(statusButton).toHaveAttribute('aria-expanded', 'true');
     await waitFor(() =>
-      expect(screen.getByText("This version's game files")).toBeInTheDocument(),
+      expect(
+        screen.getByText('Source: GMS v83 Monster Book.'),
+      ).toBeInTheDocument(),
     );
     expect(
       document.querySelector('table[aria-label="Drop sources"]'),
@@ -421,8 +447,14 @@ describe('MonsterBrowseCard', () => {
           {
             itemRefState: 'resolved',
             itemName: 'Unknown source drop',
+            confirmed: false,
+
             sources: [
-              { label: "Another version's game files", buildLabel: 'GMS v83' },
+              {
+                observed: false,
+                label: 'GMS v83 Monster Book',
+                buildLabel: 'GMS v83',
+              },
             ],
           },
         ],
@@ -436,12 +468,12 @@ describe('MonsterBrowseCard', () => {
 
     await user.click(
       screen.getByRole('button', {
-        name: 'Sources for Unknown source drop',
+        name: 'Show unconfirmed drop details for Unknown source drop',
       }),
     );
     await waitFor(() =>
       expect(
-        screen.getByText("Another version's game files"),
+        screen.getByText('Source: GMS v83 Monster Book.'),
       ).toBeInTheDocument(),
     );
   });

@@ -61,9 +61,12 @@ test('mobile cards, quick filters and the drops drawer work together', async ({
   const reopened = monsterPage.drops.drawer('Crowned Warden');
   await expect(reopened).toBeVisible();
 
-  const sourceButton = monsterPage.drops.sourceButton(reopened, 'Practice Cap');
+  const sourceButton = monsterPage.drops.certaintyButton(
+    reopened,
+    'Practice Cap',
+  );
   await sourceButton.click();
-  const detailDialog = monsterPage.drops.sourceDialog('Practice Cap');
+  const detailDialog = monsterPage.drops.certaintyDialog('Practice Cap');
   await expect(detailDialog).toBeVisible();
   await page.keyboard.press('Escape');
   await expect(detailDialog).toHaveCount(0);

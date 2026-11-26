@@ -58,17 +58,23 @@ describe('Monster page drop sources', () => {
     const view = projectMonsterDetail(fixture, 'cw-launch');
     expect(view.drops.state).toBe('present');
     if (view.drops.state !== 'present') throw new Error('Expected drops.');
+    expect(view.drops.groups[0]?.entries[0]?.confirmed).toBe(true);
     expect(view.drops.groups[0]?.entries[0]?.sources).toEqual([
-      { label: "Another version's game files", buildLabel: 'GMS v83' },
       {
+        observed: true,
         label: 'VOD',
         buildLabel: 'Classic World',
         date: '2026-02-01',
         href: 'https://example.test/watch?v=one&t=95s',
         startSeconds: 95,
       },
-      { label: 'VOD', buildLabel: 'Classic World', date: '2026-02-02' },
-      { label: 'Screenshot', buildLabel: 'other-build' },
+      {
+        observed: true,
+        label: 'VOD',
+        buildLabel: 'Classic World',
+        date: '2026-02-02',
+      },
+      { observed: true, label: 'Screenshot', buildLabel: 'other-build' },
     ]);
     expect(view.drops.count).toBe(1);
   });
@@ -489,7 +495,8 @@ describe('projectMonsterDetail', () => {
               iconUrl: itemIconUrl(MAPLEKIT_RELEASE.baseUrl, iconId),
               sources: [
                 {
-                  label: "Another version's game files",
+                  observed: false,
+                  label: 'GMS v83 Monster Book',
                   buildLabel: 'GMS v83',
                 },
               ],

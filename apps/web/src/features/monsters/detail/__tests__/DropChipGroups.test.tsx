@@ -28,9 +28,12 @@ describe('DropChipGroups', () => {
           entries: [
             {
               name: 'Practice Tonic',
+              confirmed: true,
+
               sources: [
                 {
-                  label: "This version's game files",
+                  observed: false,
+                  label: 'Classic World Monster Book',
                   buildLabel: 'Classic World',
                 },
               ],
@@ -44,8 +47,11 @@ describe('DropChipGroups', () => {
           entries: [
             {
               name: 'Item name unavailable',
+              confirmed: true,
+
               sources: [
                 {
+                  observed: true,
                   label: 'VOD',
                   buildLabel: 'GMS v83',
                   date: '2026-01-15',
@@ -53,7 +59,8 @@ describe('DropChipGroups', () => {
                   startSeconds: 95,
                 },
                 {
-                  label: "This version's game files",
+                  observed: false,
+                  label: 'Classic World Monster Book',
                   buildLabel: 'Classic World',
                   href: 'https://video.example/watch?v=fixture',
                 },
@@ -74,13 +81,14 @@ describe('DropChipGroups', () => {
       container.querySelectorAll('img[data-fallback="true"]'),
     ).toHaveLength(2);
     const button = screen.getByRole('button', {
-      name: 'Sources for Item name unavailable',
+      name: 'Show confirmed drop details for Item name unavailable',
     });
-    await user.click(button);
-    const dialog = await screen.findByRole('dialog', {
-      name: 'Sources for Item name unavailable',
-    });
-    expect(within(dialog).getByText('Sources')).toBeInTheDocument();
+    await user.hover(button);
+    const dialog = (await screen.findByText('VOD')).closest('[role="dialog"]');
+    expect(dialog).not.toBeNull();
+    if (!(dialog instanceof HTMLElement))
+      throw new Error('Expected drop dialog.');
+    expect(within(dialog).getByText('Sources:')).toBeInTheDocument();
     expect(within(dialog).getByText('VOD')).toBeInTheDocument();
     expect(
       within(dialog).getByText('GMS v83 · Jan 15, 2026'),

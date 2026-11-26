@@ -1,3 +1,7 @@
+import type {
+  ItemBrowseCoverage,
+  ItemBrowseRecordV2_2,
+} from '@mapletip/data/items';
 import type { MapPageRecordV1_2, MapRestrictionV1 } from '@mapletip/data/maps';
 import type { MonsterPageRecordV1_4 } from '@mapletip/data/monsters';
 
@@ -75,6 +79,70 @@ export interface FixtureItem {
   readonly name?: string;
   readonly itemClass: FixtureFact<ItemClass>;
   readonly category: FixtureCategory;
+  readonly sprite?: SpriteState;
+  readonly types?: NonNullable<ItemBrowseRecordV2_2['types']>;
+  readonly functions?: NonNullable<ItemBrowseRecordV2_2['functions']>;
+  readonly family?: string;
+  readonly recovery?: NonNullable<ItemBrowseRecordV2_2['recovery']>;
+  readonly buff?: NonNullable<ItemBrowseRecordV2_2['buff']>;
+  readonly projectileAttack?: FixtureFact<number>;
+  readonly scroll?: NonNullable<ItemBrowseRecordV2_2['scroll']>;
+  readonly sellPrice?: FixtureFact<number>;
+  readonly cashShopSale?: NonNullable<ItemBrowseRecordV2_2['cashShopSale']>;
+  readonly questFlag?: boolean;
+  readonly questUses?: readonly FixtureItemQuestUse[];
+  readonly questRewards?: readonly FixtureQuest[];
+  readonly description?: string;
+}
+
+export type FixtureQuestRole =
+  | 'turned-in'
+  | 'held-to-complete'
+  | 'held-to-start'
+  | 'must-not-be-held'
+  | 'pet'
+  | 'monster-card'
+  | 'not-established';
+
+export interface FixtureQuest {
+  readonly id: string;
+  readonly name: string;
+  readonly startLevel?: number;
+}
+
+export interface FixtureItemQuestUse {
+  readonly quest: FixtureQuest;
+  readonly roles: readonly {
+    readonly role: FixtureQuestRole;
+    readonly amount?: number;
+  }[];
+}
+
+export interface FixtureRecipe {
+  readonly id: string;
+  readonly name: string;
+  readonly fee: FixtureFact<number>;
+  readonly ingredients: readonly {
+    readonly itemId: string;
+    readonly amount: number;
+  }[];
+  readonly products: readonly {
+    readonly itemId?: string;
+    readonly name: string;
+    readonly outcome: 'guaranteed' | 'random';
+  }[];
+}
+
+export interface FixtureContainer {
+  readonly id: string;
+  readonly name: string;
+  readonly itemIds: readonly string[];
+}
+
+export interface FixtureCashShopListing {
+  readonly id: string;
+  readonly name: string;
+  readonly itemIds: readonly string[];
 }
 
 export interface FixtureDropEvidence {
@@ -176,6 +244,10 @@ export interface FixtureBuild {
   readonly historicalDrops: 'supported' | 'unsupported';
   readonly monsters: readonly FixtureMonster[];
   readonly items: readonly FixtureItem[];
+  readonly itemBrowseCoverage: ItemBrowseCoverage;
+  readonly recipes: readonly FixtureRecipe[];
+  readonly containers: readonly FixtureContainer[];
+  readonly cashShopListings: readonly FixtureCashShopListing[];
   readonly drops: Readonly<Record<string, readonly FixtureDrop[]>>;
   readonly maps: readonly FixtureMap[];
 }
@@ -489,7 +561,7 @@ const cwMonsters: readonly FixtureMonster[] = [
   }),
 ];
 
-const cwItems: readonly FixtureItem[] = [
+const cwBaseItems: readonly FixtureItem[] = [
   {
     id: 'practice-cap',
     name: 'Practice Cap',
@@ -519,30 +591,53 @@ const cwItems: readonly FixtureItem[] = [
     name: 'Practice Tonic A',
     itemClass: known('consume'),
     category: { kind: 'item-class', value: 'consume' },
+    types: ['potion'],
+    functions: ['recovery'],
+    recovery: { hp: 300 },
+    sellPrice: known(0),
+    sprite: 'small',
   },
   {
     id: 'practice-tonic-b',
     name: 'Practice Tonic B',
     itemClass: known('consume'),
     category: { kind: 'item-class', value: 'consume' },
+    types: ['potion'],
+    functions: ['recovery'],
+    recovery: { mp: 120 },
+    sellPrice: known(1),
+    sprite: 'exact',
   },
   {
     id: 'sample-draught',
     name: 'Sample Draught',
     itemClass: known('consume'),
     category: { kind: 'item-class', value: 'consume' },
+    types: ['potion'],
+    functions: ['recovery'],
+    recovery: { hp: 150, mp: 80 },
+    sellPrice: known(1_200),
+    sprite: 'large',
   },
   {
     id: 'training-snack',
     name: 'Training Snack',
     itemClass: known('consume'),
     category: { kind: 'item-class', value: 'consume' },
+    types: ['food-buff'],
+    buff: {
+      durationSeconds: 600,
+      effects: [{ stat: 'weaponAttack', unit: 'flat', value: 5 }],
+    },
+    sellPrice: unknown(),
   },
   {
     id: 'pebble-token',
     name: 'Pebble Token',
     itemClass: known('consume'),
     category: { kind: 'item-class', value: 'consume' },
+    types: ['potion'],
+    sprite: 'missing',
   },
   {
     id: 'quiet-bell',
@@ -555,96 +650,141 @@ const cwItems: readonly FixtureItem[] = [
     name: 'Sample Charm',
     itemClass: known('etc'),
     category: { kind: 'item-class', value: 'etc' },
+    types: ['monster-material'],
+    sellPrice: known(10),
+    questFlag: true,
   },
   {
     id: 'sample-charm-b',
     name: 'Sample Charm',
     itemClass: known('etc'),
     category: { kind: 'item-class', value: 'etc' },
+    types: ['gem'],
+    sellPrice: known(10),
   },
   {
     id: 'warden-token',
     name: 'Warden Token',
     itemClass: known('etc'),
     category: { kind: 'item-class', value: 'etc' },
+    types: ['monster-material'],
+    sellPrice: known(2_500),
   },
   {
     id: 'long-named-drop',
     name: 'An Extraordinarily Long Synthetic Drop Name For Narrow Layouts',
     itemClass: known('etc'),
     category: { kind: 'item-class', value: 'etc' },
+    types: ['monster-material'],
+    sellPrice: known(25),
+    sprite: 'wide',
+    description:
+      'A long, invented description that wraps comfortably in a narrow card. It stops after two lines in browse and remains available in the detail drawer.',
   },
   {
     id: 'woven-thread',
     name: 'Woven Thread',
     itemClass: known('etc'),
     category: { kind: 'item-class', value: 'etc' },
+    types: ['refined-material'],
+    sellPrice: known(35),
+    questUses: [
+      {
+        quest: { id: 'thread-trial', name: 'Thread Trial' },
+        roles: [{ role: 'turned-in', amount: 4 }],
+      },
+    ],
   },
   {
     id: 'practice-lantern',
     name: 'Practice Lantern',
     itemClass: known('setup'),
     category: { kind: 'item-class', value: 'setup' },
+    types: ['furniture'],
+    sprite: 'wide',
   },
   {
     id: 'training-banner',
     name: 'Training Banner',
     itemClass: known('setup'),
     category: { kind: 'item-class', value: 'setup' },
+    types: ['holiday-ornament'],
+    sprite: 'tall',
   },
   {
     id: 'paper-kite',
     name: 'Paper Kite',
     itemClass: known('setup'),
     category: { kind: 'item-class', value: 'setup' },
+    types: ['chair'],
+    sprite: 'small',
   },
   {
     id: 'color-card',
     name: 'Color Card',
     itemClass: known('setup'),
     category: { kind: 'item-class', value: 'setup' },
+    types: ['crafting-station'],
   },
   {
     id: 'pixel-pin',
     name: 'Pixel Pin',
     itemClass: known('cash'),
     category: { kind: 'item-class', value: 'cash' },
+    sellPrice: known(0),
+    cashShopSale: {
+      state: 'on-sale',
+      duration: { kind: 'permanent' },
+      price: 120,
+      quantity: 1,
+    },
   },
   {
     id: 'star-badge',
     name: 'Star Badge',
     itemClass: known('cash'),
     category: { kind: 'item-class', value: 'cash' },
+    cashShopSale: {
+      state: 'on-sale',
+      duration: { kind: 'days', days: 7 },
+      price: 45,
+      quantity: 1,
+    },
   },
   {
     id: 'toy-cape',
     name: 'Toy Cape',
     itemClass: known('cash'),
     category: { kind: 'item-class', value: 'cash' },
+    cashShopSale: { state: 'not-on-sale' },
   },
   {
     id: 'toy-mite',
     name: 'Toy Mite',
     itemClass: known('pet'),
     category: { kind: 'item-class', value: 'pet' },
+    functions: ['pet'],
   },
   {
     id: 'paper-bird',
     name: 'Paper Bird',
     itemClass: known('pet'),
     category: { kind: 'item-class', value: 'pet' },
+    functions: ['pet'],
   },
   {
     id: 'plush-dot',
     name: 'Plush Dot',
     itemClass: known('pet'),
     category: { kind: 'item-class', value: 'pet' },
+    functions: ['pet'],
   },
   {
     id: 'clockwork-seed',
     name: 'Clockwork Seed',
     itemClass: known('pet'),
     category: { kind: 'item-class', value: 'pet' },
+    functions: ['pet'],
   },
   {
     id: 'unresolved-token',
@@ -653,7 +793,652 @@ const cwItems: readonly FixtureItem[] = [
   },
 ];
 
-const wardenItemIds = cwItems
+const threadTrial: FixtureQuest = {
+  id: 'thread-trial',
+  name: 'Thread Trial',
+  startLevel: 8,
+};
+const lanternAssembly: FixtureQuest = {
+  id: 'lantern-assembly',
+  name: 'Lantern Assembly',
+  startLevel: 12,
+};
+
+function item(
+  options: Omit<FixtureItem, 'itemClass' | 'category'> & {
+    readonly itemClass: ItemClass;
+  },
+): FixtureItem {
+  const { itemClass, ...details } = options;
+  return {
+    ...details,
+    itemClass: known(itemClass),
+    category: { kind: 'item-class', value: itemClass },
+  };
+}
+
+const cwItems: readonly FixtureItem[] = [
+  ...cwBaseItems,
+  item({
+    id: 'unnamed-sprout',
+    itemClass: 'etc',
+    types: ['monster-material'],
+    sellPrice: known(0),
+    sprite: 'unknown',
+  }),
+  item({
+    id: 'flat-hp-salve',
+    name: 'Flat HP Salve',
+    itemClass: 'consume',
+    types: ['potion'],
+    functions: ['recovery'],
+    recovery: { hp: 420 },
+    sprite: 'exact',
+  }),
+  item({
+    id: 'flat-mp-salve',
+    name: 'Flat MP Salve',
+    itemClass: 'consume',
+    types: ['potion'],
+    functions: ['recovery'],
+    recovery: { mp: 260 },
+  }),
+  item({
+    id: 'dual-recovery-draught',
+    name: 'Dual Recovery Draught',
+    itemClass: 'consume',
+    types: ['potion'],
+    functions: ['recovery'],
+    recovery: { hp: 80, mp: 40 },
+  }),
+  item({
+    id: 'percentage-recovery-tonic',
+    name: 'Percentage Recovery Tonic',
+    itemClass: 'consume',
+    types: ['potion'],
+    functions: ['recovery'],
+    recovery: { hpPercent: 35, mpPercent: 20 },
+  }),
+  item({
+    id: 'no-effect-potion',
+    name: 'Quiet Potion',
+    itemClass: 'consume',
+    types: ['potion'],
+  }),
+  item({
+    id: 'practice-stars',
+    name: 'Practice Stars',
+    itemClass: 'consume',
+    types: ['throwing-star'],
+    projectileAttack: known(27),
+    sprite: 'tall',
+  }),
+  item({
+    id: 'silent-arrow',
+    name: 'Silent Arrow',
+    itemClass: 'consume',
+    types: ['arrow'],
+    projectileAttack: unknown(),
+  }),
+  item({
+    id: 'empty-bullet',
+    name: 'Empty Bullet',
+    itemClass: 'consume',
+    types: ['bullet'],
+  }),
+  item({
+    id: 'pet-food-pouch',
+    name: 'Pet Food Pouch',
+    itemClass: 'consume',
+    types: ['pet-food'],
+  }),
+  item({
+    id: 'plain-use-item',
+    name: 'Plain Use Item',
+    itemClass: 'consume',
+    description: 'An invented item with a short published description.',
+    sellPrice: known(10),
+  }),
+  item({
+    id: 'calling-sack',
+    name: 'Calling Sack',
+    itemClass: 'consume',
+    functions: ['summon'],
+    description: 'A small sack that calls one invented practice creature.',
+  }),
+  item({
+    id: 'sprout-box',
+    name: 'Sprout Box',
+    itemClass: 'consume',
+    functions: ['reward-container'],
+  }),
+  item({
+    id: 'twin-sprout-card',
+    name: 'Twin Sprout Card',
+    itemClass: 'consume',
+    functions: ['monster-card'],
+  }),
+  item({
+    id: 'lantern-skill-book',
+    name: 'Lantern Skill Book',
+    itemClass: 'consume',
+    functions: ['skill'],
+    types: ['potion'],
+    recovery: { hp: 1 },
+  }),
+  item({
+    id: 'plain-skill-book',
+    name: 'Plain Practice Skill Book',
+    itemClass: 'consume',
+    functions: ['skill'],
+  }),
+  item({
+    id: 'return-scroll',
+    name: 'Grove Return Scroll',
+    itemClass: 'consume',
+    types: ['return-scroll'],
+  }),
+  ...(['lesser', 'intermediate', 'greater', 'chaos'] as const).map(
+    (tier): FixtureItem =>
+      item({
+        id: `practice-sword-scroll-${tier}`,
+        name: `${tier[0]?.toUpperCase()}${tier.slice(1)} Practice Sword Scroll`,
+        itemClass: 'consume',
+        types: ['upgrade-scroll'],
+        functions: ['upgrade'],
+        family: 'practice-sword-scrolls',
+        scroll: {
+          targetLabel: 'one-handed-sword',
+          tier,
+          success: tier === 'chaos' ? 50 : 80,
+          ...(tier === 'greater' ? { cursed: 10 } : {}),
+          deltas: { weaponAttack: tier === 'chaos' ? 5 : 2 },
+          ...(tier === 'lesser' ? { specials: ['warm-support'] } : {}),
+        },
+        sprite: 'small',
+      }),
+  ),
+  ...(['lesser', 'greater'] as const).map((tier): FixtureItem =>
+    item({
+      id: `practice-shield-scroll-${tier}`,
+      name: `${tier[0]?.toUpperCase()}${tier.slice(1)} Practice Shield Scroll`,
+      itemClass: 'consume',
+      types: ['upgrade-scroll'],
+      functions: ['upgrade'],
+      family: 'practice-shield-scrolls',
+      scroll: {
+        targetLabel: 'shield',
+        tier,
+        success: 70,
+        deltas: { weaponDefense: 2, magicDefense: 3 },
+      },
+    }),
+  ),
+  item({
+    id: 'unknown-target-scroll',
+    name: 'Unsorted Practice Scroll',
+    itemClass: 'consume',
+    types: ['upgrade-scroll'],
+    functions: ['upgrade'],
+    scroll: { success: 60, deltas: { speed: 1 } },
+    sprite: 'exact',
+  }),
+  item({
+    id: 'meso-pouch',
+    name: 'Pebble Meso Pouch',
+    itemClass: 'consume',
+    types: ['food-buff', 'meso-pouch'],
+  }),
+  item({
+    id: 'plain-meso-pouch',
+    name: 'Plain Pebble Pouch',
+    itemClass: 'consume',
+    types: ['meso-pouch'],
+  }),
+  item({
+    id: 'turn-in-stamp',
+    name: 'Turn-in Stamp',
+    itemClass: 'etc',
+    types: ['monster-material'],
+    questFlag: true,
+    questUses: [
+      {
+        quest: threadTrial,
+        roles: [{ role: 'turned-in', amount: 3 }],
+      },
+    ],
+    questRewards: [lanternAssembly],
+    sellPrice: known(1),
+  }),
+  item({
+    id: 'many-quest-token',
+    name: 'Many Quest Token',
+    itemClass: 'etc',
+    questFlag: true,
+    questUses: [
+      {
+        quest: threadTrial,
+        roles: [{ role: 'held-to-complete', amount: 2 }],
+      },
+      {
+        quest: lanternAssembly,
+        roles: [{ role: 'held-to-start' }],
+      },
+    ],
+  }),
+  item({
+    id: 'multi-role-relic',
+    name: 'Multi-role Relic',
+    itemClass: 'etc',
+    questFlag: true,
+    questUses: [
+      {
+        quest: threadTrial,
+        roles: [
+          { role: 'turned-in', amount: 1 },
+          { role: 'held-to-complete', amount: 1 },
+          { role: 'not-established' },
+        ],
+      },
+    ],
+  }),
+  item({
+    id: 'must-not-hold-token',
+    name: 'Must Not Hold Token',
+    itemClass: 'etc',
+    questUses: [
+      { quest: lanternAssembly, roles: [{ role: 'must-not-be-held' }] },
+    ],
+  }),
+  item({
+    id: 'pet-role-biscuit',
+    name: 'Pet Role Biscuit',
+    itemClass: 'etc',
+    questUses: [{ quest: threadTrial, roles: [{ role: 'pet' }] }],
+  }),
+  item({
+    id: 'card-role-token',
+    name: 'Card Role Token',
+    itemClass: 'etc',
+    questUses: [{ quest: lanternAssembly, roles: [{ role: 'monster-card' }] }],
+  }),
+  item({
+    id: 'given-and-taken',
+    name: 'Given And Taken Sprout',
+    itemClass: 'etc',
+    types: ['monster-material'],
+    questFlag: true,
+    questUses: [
+      { quest: threadTrial, roles: [{ role: 'turned-in', amount: 2 }] },
+    ],
+    questRewards: [threadTrial],
+  }),
+  item({
+    id: 'only-taken',
+    name: 'Only Taken Sprout',
+    itemClass: 'etc',
+    types: ['monster-material'],
+    questFlag: true,
+    questUses: [
+      {
+        quest: lanternAssembly,
+        roles: [{ role: 'held-to-complete', amount: 5 }],
+      },
+    ],
+  }),
+  item({
+    id: 'only-given',
+    name: 'Only Given Pebble',
+    itemClass: 'etc',
+    questRewards: [lanternAssembly],
+  }),
+  item({
+    id: 'ore-chip',
+    name: 'Lamplight Ore',
+    itemClass: 'etc',
+    types: ['ore'],
+  }),
+  item({
+    id: 'refined-bloom',
+    name: 'Refined Bloom',
+    itemClass: 'etc',
+    types: ['refined-material'],
+  }),
+  item({
+    id: 'other-etc',
+    name: 'Quiet Gallery Note',
+    itemClass: 'etc',
+    questFlag: true,
+    sprite: 'small',
+  }),
+  item({
+    id: 'plain-pet-food',
+    name: 'Plain Pet Food',
+    itemClass: 'pet',
+    types: ['pet-food'],
+    functions: ['pet'],
+  }),
+  item({
+    id: 'other-setup',
+    name: 'Practice Place Marker',
+    itemClass: 'setup',
+  }),
+  item({
+    id: 'uncategorized-cash',
+    name: 'Unlisted Cash Pin',
+    itemClass: 'cash',
+    cashShopSale: { state: 'not-on-sale' },
+  }),
+  ...Array.from({ length: 51 }, (_, index) =>
+    item({
+      id: `pebble-shard-${String(index + 1).padStart(2, '0')}`,
+      name: `Pebble Shard ${String(index + 1).padStart(2, '0')}`,
+      itemClass: 'etc',
+      types: ['monster-material'],
+      sellPrice: known(index),
+      sprite: (['exact', 'small', 'large', 'wide', 'tall'] as const)[
+        index % 5
+      ]!,
+    }),
+  ),
+];
+
+const cwRecipes: readonly FixtureRecipe[] = [
+  {
+    id: 'woven-kite',
+    name: 'Woven Kite Recipe',
+    fee: known(0),
+    ingredients: [
+      { itemId: 'woven-thread', amount: 2 },
+      { itemId: 'sample-charm-a', amount: 1 },
+    ],
+    products: [
+      { itemId: 'paper-kite', name: 'Paper Kite', outcome: 'guaranteed' },
+    ],
+  },
+  {
+    id: 'sprout-meal',
+    name: 'Sprout Meal Recipe',
+    fee: known(5),
+    ingredients: [
+      { itemId: 'sample-charm-a', amount: 1 },
+      { itemId: 'training-snack', amount: 1 },
+    ],
+    products: [{ name: 'Warm Sprout Meal', outcome: 'guaranteed' }],
+  },
+];
+
+const cwContainers: readonly FixtureContainer[] = [
+  {
+    id: 'seeded-crate',
+    name: 'Seeded Crate',
+    itemIds: ['calling-sack', 'sprout-box', 'twin-sprout-card'],
+  },
+];
+
+const cwCashShopListings: readonly FixtureCashShopListing[] = [
+  {
+    id: 'spring-window',
+    name: 'Spring Window',
+    itemIds: ['pixel-pin', 'star-badge'],
+  },
+  {
+    id: 'autumn-window',
+    name: 'Autumn Window',
+    itemIds: ['uncategorized-cash'],
+  },
+];
+
+const cwItemBrowseCoverage: ItemBrowseCoverage = {
+  scrollTier: 'complete',
+  relationships: {
+    'cash-shop-listing': 'complete',
+    'found-in-container': 'complete',
+    'made-by-recipe': 'complete',
+    'monster-drop': 'complete',
+    'needed-for-quest': 'complete',
+    'quest-reward': 'complete',
+    'used-in-recipe': 'partial',
+  },
+  playerFacts: {
+    buff: 'complete',
+    flatRecovery: 'complete',
+    levelRange: 'complete',
+    maxStack: 'complete',
+    percentRecovery: 'complete',
+    requirementJobs: 'complete',
+    requirementLevel: 'complete',
+    sellPrice: 'partial',
+  },
+};
+
+const gmsItems: readonly FixtureItem[] = [
+  item({
+    id: 'native-flake',
+    name: 'Native Flake',
+    itemClass: 'etc',
+    types: ['monster-material'],
+    questFlag: true,
+    sprite: 'exact',
+  }),
+  item({
+    id: 'native-bloom',
+    name: 'Native Bloom',
+    itemClass: 'consume',
+    types: ['potion'],
+    functions: ['recovery'],
+    recovery: { hp: 100 },
+    sprite: 'small',
+  }),
+  item({
+    id: 'gms-unnamed',
+    itemClass: 'etc',
+    sprite: 'unknown',
+  }),
+  item({
+    id: 'gms-scroll',
+    name: 'Grove Return Scroll',
+    itemClass: 'consume',
+    types: ['return-scroll'],
+  }),
+  item({
+    id: 'gms-upgrade-scroll-a',
+    name: 'GMS Practice Hat Scroll',
+    itemClass: 'consume',
+    types: ['upgrade-scroll'],
+    functions: ['upgrade'],
+    scroll: {
+      targetLabel: 'hat',
+      success: 80,
+      deltas: { dexterity: 1 },
+    },
+  }),
+  item({
+    id: 'gms-upgrade-scroll-b',
+    name: 'GMS Unnamed Target Scroll',
+    itemClass: 'consume',
+    types: ['upgrade-scroll'],
+    functions: ['upgrade'],
+    scroll: { success: 60, deltas: { speed: 1 } },
+  }),
+  item({
+    id: 'gms-buff',
+    name: 'GMS Lamplight Snack',
+    itemClass: 'consume',
+    types: ['food-buff'],
+    buff: {
+      durationSeconds: 300,
+      effects: [{ stat: 'speed', unit: 'flat', value: 2 }],
+    },
+  }),
+  item({
+    id: 'gms-star',
+    name: 'GMS Practice Star',
+    itemClass: 'consume',
+    types: ['throwing-star'],
+    projectileAttack: known(5),
+  }),
+  item({
+    id: 'gms-arrow',
+    name: 'GMS Practice Arrow',
+    itemClass: 'consume',
+    types: ['arrow'],
+  }),
+  item({
+    id: 'gms-bullet',
+    name: 'GMS Practice Bullet',
+    itemClass: 'consume',
+    types: ['bullet'],
+  }),
+  item({
+    id: 'gms-pet-food',
+    name: 'GMS Pet Food',
+    itemClass: 'consume',
+    types: ['pet-food'],
+  }),
+  item({
+    id: 'gms-sack',
+    name: 'GMS Sprout Sack',
+    itemClass: 'consume',
+    functions: ['summon'],
+  }),
+  item({
+    id: 'gms-box',
+    name: 'GMS Quiet Box',
+    itemClass: 'consume',
+    functions: ['reward-container'],
+  }),
+  item({
+    id: 'gms-card',
+    name: 'GMS Native Alpha Card',
+    itemClass: 'consume',
+    functions: ['monster-card'],
+  }),
+  item({
+    id: 'gms-skill-book',
+    name: 'GMS Skill Book',
+    itemClass: 'consume',
+    functions: ['skill'],
+  }),
+  item({
+    id: 'gms-other-use',
+    name: 'GMS Other Use',
+    itemClass: 'consume',
+    description: 'A short note in an invented second-build inventory.',
+  }),
+  item({
+    id: 'gms-meso-pouch',
+    name: 'GMS Pebble Pouch',
+    itemClass: 'consume',
+    types: ['meso-pouch'],
+  }),
+  item({
+    id: 'gms-ore',
+    name: 'GMS Lamplight Ore',
+    itemClass: 'etc',
+    types: ['ore'],
+  }),
+  item({
+    id: 'gms-gem',
+    name: 'GMS Soft Gem',
+    itemClass: 'etc',
+    types: ['gem'],
+  }),
+  item({
+    id: 'gms-refined',
+    name: 'GMS Refined Thread',
+    itemClass: 'etc',
+    types: ['refined-material'],
+  }),
+  item({
+    id: 'gms-monster-material',
+    name: 'GMS Monster Material',
+    itemClass: 'etc',
+    types: ['monster-material'],
+  }),
+  item({
+    id: 'gms-quest-item',
+    name: 'GMS Quest Note',
+    itemClass: 'etc',
+    questFlag: true,
+  }),
+  item({
+    id: 'gms-other-etc',
+    name: 'GMS Other ETC',
+    itemClass: 'etc',
+  }),
+  item({
+    id: 'gms-chair',
+    name: 'GMS Practice Seat',
+    itemClass: 'setup',
+    types: ['chair'],
+  }),
+  item({
+    id: 'gms-ornament',
+    name: 'GMS Paper Ornament',
+    itemClass: 'setup',
+    types: ['holiday-ornament'],
+  }),
+  item({
+    id: 'gms-furniture',
+    name: 'GMS Practice Shelf',
+    itemClass: 'setup',
+    types: ['furniture'],
+  }),
+  item({
+    id: 'gms-station',
+    name: 'GMS Thread Station',
+    itemClass: 'setup',
+    types: ['crafting-station'],
+  }),
+  item({
+    id: 'gms-other-setup',
+    name: 'GMS Paper Marker',
+    itemClass: 'setup',
+  }),
+  item({
+    id: 'gms-cash',
+    name: 'GMS Cash Badge',
+    itemClass: 'cash',
+    cashShopSale: { state: 'not-on-sale' },
+  }),
+  item({
+    id: 'gms-pet',
+    name: 'GMS Paper Mite',
+    itemClass: 'pet',
+    functions: ['pet'],
+  }),
+];
+
+// This fixture deliberately breaks cross-product consistency to cover the unsupported Items roster; nothing reads both.
+const gmsItemBrowseCoverage: ItemBrowseCoverage = {
+  scrollTier: 'unsupported',
+  relationships: {
+    'cash-shop-listing': 'complete',
+    'found-in-container': 'complete',
+    'made-by-recipe': 'complete',
+    'monster-drop': 'unsupported',
+    'needed-for-quest': 'complete',
+    'quest-reward': 'complete',
+    'used-in-recipe': 'partial',
+  },
+  playerFacts: {
+    buff: 'complete',
+    flatRecovery: 'complete',
+    levelRange: 'complete',
+    maxStack: 'complete',
+    percentRecovery: 'complete',
+    requirementJobs: 'complete',
+    requirementLevel: 'complete',
+    sellPrice: 'partial',
+  },
+};
+
+const gmsRecipes: readonly FixtureRecipe[] = [];
+const gmsContainers: readonly FixtureContainer[] = [];
+const gmsCashShopListings: readonly FixtureCashShopListing[] = [];
+
+const wardenItemIds = cwBaseItems
   .map(({ id }) => id)
   .filter(
     (id) =>
@@ -978,8 +1763,18 @@ export const world: { readonly builds: readonly FixtureBuild[] } = {
       historicalDrops: 'supported',
       monsters: cwMonsters,
       items: cwItems,
+      itemBrowseCoverage: cwItemBrowseCoverage,
+      recipes: cwRecipes,
+      containers: cwContainers,
+      cashShopListings: cwCashShopListings,
       maps: fixtureMaps,
       drops: {
+        ...Object.fromEntries(
+          cwMonsters
+            .filter(({ id }) => id.startsWith('filler-'))
+            .slice(0, 7)
+            .map(({ id }) => [id, [historical('pebble-shard-01')]]),
+        ),
         'plain-pebble': [historical('pebble-token')],
         'crowned-warden': wardenItemIds.map(historical),
         'crowned-revenant': [
@@ -992,6 +1787,8 @@ export const world: { readonly builds: readonly FixtureBuild[] } = {
           },
           historical('sample-charm-a'),
           historical('long-named-drop'),
+          historical('given-and-taken'),
+          historical('only-taken'),
         ],
       },
     },
@@ -1056,20 +1853,11 @@ export const world: { readonly builds: readonly FixtureBuild[] } = {
           sprite: 'exact',
         },
       ],
-      items: [
-        {
-          id: 'native-flake',
-          name: 'Native Flake',
-          itemClass: known('etc'),
-          category: { kind: 'item-class', value: 'etc' },
-        },
-        {
-          id: 'native-bloom',
-          name: 'Native Bloom',
-          itemClass: known('consume'),
-          category: { kind: 'item-class', value: 'consume' },
-        },
-      ],
+      items: gmsItems,
+      itemBrowseCoverage: gmsItemBrowseCoverage,
+      recipes: gmsRecipes,
+      containers: gmsContainers,
+      cashShopListings: gmsCashShopListings,
       maps: fixtureMaps.map((map): FixtureMap => {
         const alternate = { ...map, monsters: [] };
         if (map.id === 'lantern-rehearsal') {

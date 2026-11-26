@@ -21,7 +21,8 @@ import type {
 import { UNNAMED_MONSTER_LABEL } from '../shared';
 import type { MonsterFactId, UnknownFactState } from '../shared';
 import {
-  resolveBrowseDropSource,
+  classifyDrop,
+  resolveBrowseDropEvidence,
   type DropSource,
 } from '../shared/drop-sources';
 
@@ -43,6 +44,7 @@ export interface MonsterDropEntry {
   readonly itemName: string;
   readonly itemCategory?: string;
   readonly sources: readonly DropSource[];
+  readonly confirmed: boolean;
 }
 
 export interface MonsterDropItemOption {
@@ -349,8 +351,10 @@ function projectDropEntries(
       itemRefState: item.itemRef.state,
       itemName: formatDropItemName(item.itemName),
       ...(category === undefined ? {} : { itemCategory: category }),
-      sources: entry.evidence.map((evidence) =>
-        resolveBrowseDropSource({ pack: dropBrowse, evidence }),
+      ...classifyDrop(
+        entry.evidence.map((evidence) =>
+          resolveBrowseDropEvidence({ pack: dropBrowse, evidence }),
+        ),
       ),
     };
   });

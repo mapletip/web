@@ -395,8 +395,14 @@ describe('MonsterBrowse', () => {
           {
             itemRefState: 'unresolved',
             itemName: 'Unknown item name',
+            confirmed: false,
+
             sources: [
-              { label: "Another version's game files", buildLabel: 'GMS v83' },
+              {
+                observed: false,
+                label: 'GMS v83 Monster Book',
+                buildLabel: 'GMS v83',
+              },
             ],
           },
         ],
@@ -446,8 +452,14 @@ describe('MonsterBrowse', () => {
           {
             itemRefState: 'resolved',
             itemName: 'Green Headband',
+            confirmed: false,
+
             sources: [
-              { label: "Another version's game files", buildLabel: 'GMS v83' },
+              {
+                observed: false,
+                label: 'GMS v83 Monster Book',
+                buildLabel: 'GMS v83',
+              },
             ],
           },
         ],
@@ -465,7 +477,7 @@ describe('MonsterBrowse', () => {
     });
 
     const statusButton = within(drawer).getByRole('button', {
-      name: 'Sources for Green Headband',
+      name: 'Show unconfirmed drop details for Green Headband',
     });
     await user.click(statusButton);
     expect(statusButton).toHaveAttribute('aria-expanded', 'true');

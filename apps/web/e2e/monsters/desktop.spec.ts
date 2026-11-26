@@ -210,14 +210,14 @@ test('desktop drop panels group and search entries and close in Escape order', a
   await expect(panel.getByText(/No drop entries match/u)).toBeVisible();
   await itemSearch.clear();
 
-  const sourceButton = monsterPage.drops.sourceButton(panel, 'Practice Cap');
+  const sourceButton = monsterPage.drops.certaintyButton(panel, 'Practice Cap');
   await sourceButton.focus();
   await sourceButton.hover();
-  const detailDialog = monsterPage.drops.sourceDialog('Practice Cap');
+  const detailDialog = monsterPage.drops.certaintyDialog('Practice Cap');
   await expect(detailDialog).toBeVisible();
-  await expect(detailDialog.getByText('Source')).toBeVisible();
+  await expect(detailDialog.getByText('Maybe')).toBeVisible();
   await expect(
-    detailDialog.getByText("Another version's game files"),
+    detailDialog.getByText('Source: GMS v83 Monster Book.'),
   ).toBeVisible();
   await page.keyboard.press('Escape');
   await expect(detailDialog).toHaveCount(0);

@@ -1,4 +1,5 @@
 import { MissingRecordError } from '@mapletip/data';
+import type { ItemBrowseRelationshipKind } from '@mapletip/data/items';
 import {
   getMapBrowse,
   getMapPage,
@@ -69,6 +70,71 @@ describe('fixture release', () => {
         MissingRecordError,
       );
     }
+  });
+
+  it('opens the Items product, browse, descriptions, and every published roster', async () => {
+    const release = await openRelease({
+      baseUrl: 'https://d0.mapletip.com/',
+      pin: fixtureRelease.pin,
+      fetch: fileFetch(fixtureRelease.files),
+    });
+
+    for (const buildId of ['cw-launch', 'gms-v83'] as const) {
+      const items = await release.openItemBuild(buildId);
+      const [catalog, browse, descriptions] = await Promise.all([
+        items.loadCatalog(),
+        items.loadBrowse(),
+        items.loadDescriptions(),
+      ]);
+      expect(catalog.scope.build_id).toBe(buildId);
+      expect(browse.contractVersion).toBe('2.2');
+      expect(browse.scope.build_id).toBe(buildId);
+      expect(browse.records.length).toBeGreaterThan(0);
+      expect(Object.keys(descriptions).length).toBeGreaterThan(0);
+
+      const kinds = Object.keys(
+        items.manifest.relatedEntityBrowsePacks ?? {},
+      ) as ItemBrowseRelationshipKind[];
+      const expectedKinds: ItemBrowseRelationshipKind[] =
+        buildId === 'cw-launch'
+          ? [
+              'cash-shop-listing',
+              'found-in-container',
+              'made-by-recipe',
+              'monster-drop',
+              'needed-for-quest',
+              'quest-reward',
+              'used-in-recipe',
+            ]
+          : [];
+      expect(kinds).toEqual(expect.arrayContaining(expectedKinds));
+      expect(kinds.includes('monster-drop')).toBe(buildId === 'cw-launch');
+      for (const kind of kinds) {
+        const roster = await items.loadRelatedEntities(kind);
+        expect(roster.relationshipKind).toBe(kind);
+        expect(roster.scope.build_id).toBe(buildId);
+      }
+    }
+  });
+
+  it('rejects an Items browse pack whose bytes no longer match its digest', async () => {
+    const browsePath = fixtureRelease.builds.get('cw-launch')?.itemBrowse.path;
+    if (browsePath === undefined) throw new Error('Missing Items browse path.');
+    const files = new Map(fixtureRelease.files);
+    const original = files.get(browsePath);
+    if (original === undefined) throw new Error('Missing Items browse bytes.');
+    const tampered = new Uint8Array(original);
+    tampered[0] = (tampered[0] ?? 0) ^ 1;
+    files.set(browsePath, tampered);
+
+    const release = await openRelease({
+      baseUrl: 'https://d0.mapletip.com/',
+      pin: fixtureRelease.pin,
+      fetch: fileFetch(files),
+    });
+    const items = await release.openItemBuild('cw-launch');
+
+    await expect(items.loadBrowse()).rejects.toThrow();
   });
 
   it('serves validated Map pages for each synthetic fixture case', async () => {

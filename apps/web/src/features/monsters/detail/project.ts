@@ -35,7 +35,7 @@ import {
   getMonsterDropCategoryLabel,
   MONSTER_DROP_CATEGORIES,
 } from '../shared/drop-categories';
-import { toDropSource, type DropSource } from '../shared/drop-sources';
+import { classifyDrop, type DropSource } from '../shared/drop-sources';
 import {
   projectMonsterLocationCards,
   type MonsterLocationMapView,
@@ -59,6 +59,7 @@ export interface MonsterElementResponseView {
 
 export interface MonsterDetailDropEntryView extends ItemRecordChipView {
   readonly sources: readonly DropSource[];
+  readonly confirmed: boolean;
 }
 
 export interface MonsterDetailDropGroupView {
@@ -334,15 +335,7 @@ function projectMonsterDrops(
           ? { iconContentId: entry.icon.value }
           : {}),
       }),
-      sources: entry.evidence.map((evidence) =>
-        toDropSource({
-          label: evidence.label,
-          build: evidence.build,
-          date: evidence.date,
-          url: evidence.url,
-          startSeconds: evidence.startSeconds,
-        }),
-      ),
+      ...classifyDrop(entry.evidence),
     });
     groupedEntries.set(category, group);
   }

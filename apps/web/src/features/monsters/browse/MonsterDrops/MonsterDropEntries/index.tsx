@@ -4,7 +4,8 @@ import { MagnifyingGlass } from '@phosphor-icons/react';
 import { useState, type ReactElement } from 'react';
 
 import {
-  DropSources,
+  DropCertaintyDisclosure,
+  DropCertaintyLegend,
   getMonsterDropCategoryId,
   MONSTER_DROP_CATEGORIES,
 } from '@/features/monsters/shared';
@@ -77,6 +78,7 @@ export function MonsterDropEntries({
         leftSection={<MagnifyingGlass aria-hidden="true" size={16} />}
         size="sm"
       />
+      <DropCertaintyLegend />
       {orderedGroups.length === 0 ? (
         <Text size="sm" c="dimmed">
           No drop entries match “{search.trim()}”.
@@ -118,8 +120,9 @@ export function MonsterDropEntries({
                             {entry.itemName}
                           </Text>
                         </Group>
-                        <DropSources
+                        <DropCertaintyDisclosure
                           itemName={entry.itemName}
+                          confirmed={entry.confirmed}
                           sources={entry.sources}
                           onEscape={(event) =>
                             closeDropsPanelOnEscape(event, onClose)

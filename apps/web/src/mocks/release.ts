@@ -1,3 +1,8 @@
+import type {
+  ItemBrowseCoverage,
+  ItemBrowseRecordV2_2,
+  ItemRelatedEntityBrowsePack,
+} from '@mapletip/data/items';
 import type { MapGeographyModelV1_1 } from '@mapletip/data/map-geography';
 import type {
   MapBrowseRowV1_1,
@@ -22,6 +27,10 @@ import type {
   FixtureMapPoint,
   FixtureMonster,
   FixtureEvidenceKind,
+  FixtureItem,
+  FixtureItemQuestUse,
+  FixtureQuest,
+  SpriteCase,
 } from './world';
 import { FIXTURE_EVIDENCE_KINDS, spriteDimensions, world } from './world';
 
@@ -56,6 +65,11 @@ export interface FixtureBuildArtifacts {
   readonly mapProductManifest: FileDescriptor;
   readonly mapPagePack: FileDescriptor;
   readonly mapBrowseRows: FileDescriptor;
+  readonly itemProductManifest: FileDescriptor;
+  readonly itemCatalog: FileDescriptor;
+  readonly itemBrowse: FileDescriptor;
+  readonly itemDescriptions: FileDescriptor;
+  readonly itemRelatedEntityBrowse: Readonly<Record<string, FileDescriptor>>;
 }
 
 export interface FixtureRelease {
@@ -1223,6 +1237,699 @@ async function buildMapProduct(
   };
 }
 
+type FixtureItemRelationshipKind = keyof ItemBrowseCoverage['relationships'];
+interface FixtureItemBrowsePackV2_2 {
+  readonly format: 'item-browse-pack/1';
+  readonly contractVersion: '2.2';
+  readonly scope: MonsterPageRecordV1_4['scope'];
+  readonly coverage: ItemBrowseCoverage;
+  readonly records: Record<string, ItemBrowseRecordV2_2 | undefined>;
+  readonly scrollTargetIcons: Readonly<Record<string, string>>;
+}
+
+type ItemQuestBrowsePack = Extract<
+  ItemRelatedEntityBrowsePack,
+  { readonly relationshipKind: 'needed-for-quest' }
+>;
+type ItemQuestRewardBrowsePack = Extract<
+  ItemRelatedEntityBrowsePack,
+  { readonly relationshipKind: 'quest-reward' }
+>;
+type ItemRecipeBrowsePack = Extract<
+  ItemRelatedEntityBrowsePack,
+  { readonly relationshipKind: 'used-in-recipe' }
+>;
+type ItemMadeByRecipeBrowsePack = Extract<
+  ItemRelatedEntityBrowsePack,
+  { readonly relationshipKind: 'made-by-recipe' }
+>;
+type ItemContainerBrowsePack = Extract<
+  ItemRelatedEntityBrowsePack,
+  { readonly relationshipKind: 'found-in-container' }
+>;
+type ItemCashShopBrowsePack = Extract<
+  ItemRelatedEntityBrowsePack,
+  { readonly relationshipKind: 'cash-shop-listing' }
+>;
+type ItemMonsterDropBrowsePack = Extract<
+  ItemRelatedEntityBrowsePack,
+  { readonly relationshipKind: 'monster-drop' }
+>;
+
+interface BuiltItemProduct {
+  readonly catalog: FileDescriptor;
+  readonly browse: FileDescriptor;
+  readonly descriptions: FileDescriptor;
+  readonly relatedEntityBrowse: Readonly<Record<string, FileDescriptor>>;
+  readonly productManifest: FileDescriptor;
+  readonly productDescriptor: Record<string, unknown>;
+}
+
+interface BuildItemProductOptions {
+  readonly build: FixtureBuild;
+  readonly scope: MonsterPageRecordV1_4['scope'];
+  readonly itemById: ReadonlyMap<
+    string,
+    { readonly item: FixtureItem; readonly key: string }
+  >;
+  readonly monsters: readonly {
+    readonly monster: FixtureMonster;
+    readonly key: string;
+    readonly publicId: string;
+    readonly spriteId?: string;
+  }[];
+  readonly monsterRecords: ReadonlyMap<
+    string,
+    MonsterCatalogV2_5['records'][number]
+  >;
+  readonly key: (prefix: string, id: string) => Promise<string>;
+  readonly put: (dir: string, value: unknown) => Promise<FileDescriptor>;
+  readonly spriteIds: Map<string, string>;
+}
+
+function rangeForKeys(keys: readonly string[]): RangeDescriptor {
+  return {
+    count: keys.length,
+    firstKey: keys[0] ?? '',
+    lastKey: keys.at(-1) ?? '',
+  };
+}
+
+function itemRelationshipCounts(options: {
+  readonly itemId: string;
+  readonly build: FixtureBuild;
+  readonly monstersByItem: ReadonlyMap<string, ReadonlySet<string>>;
+}): ItemBrowseRecordV2_2['relationships'] {
+  const { itemId, build, monstersByItem } = options;
+  const neededQuestIds = new Set<string>();
+  const notEstablishedQuestIds = new Set<string>();
+  const rewardQuestIds = new Set<string>();
+  const item = build.items.find((candidate) => candidate.id === itemId);
+  for (const use of item?.questUses ?? []) {
+    if (
+      use.roles.some(({ role }) =>
+        ['turned-in', 'held-to-complete', 'held-to-start'].includes(role),
+      )
+    ) {
+      neededQuestIds.add(use.quest.id);
+    }
+    if (use.roles.some(({ role }) => role === 'not-established')) {
+      notEstablishedQuestIds.add(use.quest.id);
+    }
+  }
+  for (const quest of item?.questRewards ?? []) rewardQuestIds.add(quest.id);
+
+  const usedRecipeIds = new Set<string>();
+  const madeRecipeIds = new Set<string>();
+  for (const recipe of build.recipes) {
+    if (
+      recipe.ingredients.some(
+        ({ itemId: ingredientId }) => ingredientId === itemId,
+      )
+    ) {
+      usedRecipeIds.add(recipe.id);
+    }
+    if (recipe.products.some(({ itemId: productId }) => productId === itemId)) {
+      madeRecipeIds.add(recipe.id);
+    }
+  }
+  const containerCount = build.containers.filter(({ itemIds }) =>
+    itemIds.includes(itemId),
+  ).length;
+  const cashShopListingCount = build.cashShopListings.filter(({ itemIds }) =>
+    itemIds.includes(itemId),
+  ).length;
+  const counts: NonNullable<ItemBrowseRecordV2_2['relationships']> = {};
+  const setPositive = (
+    key: FixtureItemRelationshipKind | 'needed-for-quest-not-established',
+    value: number,
+  ) => {
+    if (value > 0) counts[key] = value;
+  };
+  setPositive('needed-for-quest', neededQuestIds.size);
+  setPositive('needed-for-quest-not-established', notEstablishedQuestIds.size);
+  setPositive('quest-reward', rewardQuestIds.size);
+  setPositive('used-in-recipe', usedRecipeIds.size);
+  setPositive('made-by-recipe', madeRecipeIds.size);
+  setPositive('found-in-container', containerCount);
+  setPositive('cash-shop-listing', cashShopListingCount);
+  if (
+    build.itemBrowseCoverage.relationships['monster-drop'] !== 'unsupported'
+  ) {
+    setPositive('monster-drop', monstersByItem.get(itemId)?.size ?? 0);
+  }
+  return Object.keys(counts).length === 0 ? undefined : counts;
+}
+
+async function buildItemProduct(
+  options: BuildItemProductOptions,
+): Promise<BuiltItemProduct> {
+  const {
+    build,
+    scope,
+    itemById,
+    monsters,
+    monsterRecords,
+    key,
+    put,
+    spriteIds,
+  } = options;
+  const sortedItems = [...itemById.values()].sort((left, right) =>
+    left.key.localeCompare(right.key),
+  );
+  const browseItems = sortedItems.filter(
+    ({ item }) =>
+      item.category.kind === 'item-class' &&
+      item.itemClass.state === 'known' &&
+      item.name !== undefined,
+  );
+  const monstersByItem = new Map<string, Set<string>>();
+  for (const monster of build.monsters) {
+    for (const drop of build.drops[monster.id] ?? []) {
+      const sources = monstersByItem.get(drop.itemId) ?? new Set<string>();
+      sources.add(monster.id);
+      monstersByItem.set(drop.itemId, sources);
+    }
+  }
+
+  const spriteIdsByCase = new Map<string, string>();
+  const spriteIdForCase = async (spriteCase: SpriteCase): Promise<string> => {
+    const existing = spriteIdsByCase.get(spriteCase);
+    if (existing !== undefined) return existing;
+    const contentId = await sha256Hex(
+      encoder.encode(`fixture:sprite:${spriteCase}`),
+    );
+    spriteIdsByCase.set(spriteCase, contentId);
+    spriteIds.set(contentId, spriteCase);
+    return contentId;
+  };
+  const scrollLabels = [
+    ...new Set(
+      browseItems.flatMap(({ item }) =>
+        item.scroll?.targetLabel ? [item.scroll.targetLabel] : [],
+      ),
+    ),
+  ].sort();
+  const scrollTargetIcons = Object.fromEntries(
+    await Promise.all(
+      scrollLabels.map(async (label) => {
+        const contentId = await sha256Hex(
+          encoder.encode(`fixture:sprite:scroll-target:${label}`),
+        );
+        spriteIds.set(contentId, 'exact');
+        return [label, contentId] as const;
+      }),
+    ),
+  );
+
+  const browseRows = await Promise.all(
+    browseItems.map(async ({ item, key: itemKey }) => {
+      if (item.itemClass.state !== 'known') {
+        throw new Error(`Fixture Item "${item.id}" has no known class.`);
+      }
+      const publicId = fixturePublicId(`item:${build.buildId}:${item.id}`);
+      const sprite = item.sprite ?? 'unknown';
+      let icon: ItemBrowseRecordV2_2['icon'];
+      if (sprite === 'unknown') {
+        icon = { state: 'unknown' };
+      } else if (sprite === 'absent') {
+        icon = {
+          state: 'absent',
+          coverageKey: `fixture:item:${item.id}:icon`,
+        };
+      } else {
+        icon = { state: 'known', value: await spriteIdForCase(sprite) };
+      }
+      const sellPrice =
+        item.sellPrice?.state === 'known' ? item.sellPrice.value : undefined;
+      const projectileAttack =
+        item.projectileAttack?.state === 'known'
+          ? item.projectileAttack.value
+          : undefined;
+      const scroll = item.scroll ? { ...item.scroll } : undefined;
+      const slugParts = item.name?.toLowerCase().match(/[a-z0-9]+/gu);
+      const relationships = itemRelationshipCounts({
+        itemId: item.id,
+        build,
+        monstersByItem,
+      });
+      const record: ItemBrowseRecordV2_2 = {
+        publicId,
+        slug:
+          slugParts && slugParts.length > 0
+            ? slugParts.join('-')
+            : `item-${publicId}`,
+        sourceId: item.id,
+        name: item.name === undefined ? { state: 'unknown' } : known(item.name),
+        itemClass: item.itemClass.value,
+        icon,
+        ...(item.types && item.types.length > 0
+          ? { types: [...item.types] }
+          : {}),
+        ...(item.functions && item.functions.length > 0
+          ? { functions: [...item.functions] }
+          : {}),
+        ...(item.family === undefined ? {} : { family: item.family }),
+        ...(item.recovery === undefined ? {} : { recovery: item.recovery }),
+        ...(item.buff === undefined ? {} : { buff: item.buff }),
+        ...(projectileAttack === undefined ? {} : { projectileAttack }),
+        ...(scroll === undefined ? {} : { scroll }),
+        ...(sellPrice === undefined ? {} : { sellPrice }),
+        ...(item.cashShopSale === undefined
+          ? {}
+          : { cashShopSale: item.cashShopSale }),
+        ...(item.questFlag === undefined ? {} : { questFlag: item.questFlag }),
+        ...(relationships === undefined ? {} : { relationships }),
+      };
+      return [itemKey, record] as const;
+    }),
+  );
+  const browseRecords = Object.fromEntries(browseRows);
+  const browseKeys = browseRows.map(([recordKey]) => recordKey);
+  const browsePack = await put('v2/items/browse', {
+    format: 'item-browse-pack/1',
+    contractVersion: '2.2',
+    scope,
+    coverage: build.itemBrowseCoverage,
+    records: browseRecords,
+    scrollTargetIcons,
+  } satisfies FixtureItemBrowsePackV2_2);
+
+  const descriptionEntries = sortedItems.flatMap(({ item, key: itemKey }) =>
+    item.description === undefined
+      ? []
+      : [[itemKey, item.description] as const],
+  );
+  const descriptions = await put('v2/items/descriptions', {
+    format: 'item-description-pack/1',
+    contractVersion: '1.0',
+    scope,
+    records: Object.fromEntries(descriptionEntries),
+  });
+  const descriptionRange = rangeForKeys(
+    descriptionEntries.map(([descriptionKey]) => descriptionKey),
+  );
+
+  const questById = new Map<string, FixtureQuest>();
+  for (const { item } of sortedItems) {
+    for (const quest of [
+      ...(item.questRewards ?? []),
+      ...(item.questUses ?? []).map(({ quest: usedQuest }) => usedQuest),
+    ]) {
+      const existing = questById.get(quest.id);
+      if (existing !== undefined && existing.name !== quest.name) {
+        throw new Error(`Fixture Quest "${quest.id}" has conflicting names.`);
+      }
+      questById.set(quest.id, quest);
+    }
+  }
+  const quests = [...questById.values()].sort((left, right) =>
+    left.id.localeCompare(right.id),
+  );
+  const questTargets = quests.map((quest) => ({
+    key: `quest-${quest.id}`,
+    publicId: fixturePublicId(`quest:${quest.id}`),
+    displayName: quest.name,
+    recurrence: { state: 'unknown' as const },
+    startLevel:
+      quest.startLevel === undefined
+        ? { state: 'unknown' as const }
+        : known(quest.startLevel),
+    startNpc: { state: 'unknown' as const },
+  }));
+  const questIndexById = new Map(
+    quests.map((quest, index) => [quest.id, index] as const),
+  );
+  const neededQuestRecords: ItemQuestBrowsePack['records'] = {};
+  const rewardRecords: ItemQuestRewardBrowsePack['records'] = {};
+  for (const { item, key: itemKey } of sortedItems) {
+    const groupedRoles = new Map<string, Map<string, number | undefined>>();
+    for (const use of item.questUses ?? []) {
+      const roles =
+        groupedRoles.get(use.quest.id) ?? new Map<string, number | undefined>();
+      for (const { role, amount } of use.roles) roles.set(role, amount);
+      groupedRoles.set(use.quest.id, roles);
+    }
+    const needEdges = [...groupedRoles.entries()].flatMap(
+      ([questId, roles]) => {
+        const target = questIndexById.get(questId);
+        if (target === undefined) return [];
+        return [
+          {
+            target,
+            roles: [...roles.entries()].map(([role, amount]) => ({
+              role: role as FixtureItemQuestUse['roles'][number]['role'],
+              ...(amount === undefined ? {} : { amount }),
+            })) as NonNullable<
+              ItemQuestBrowsePack['records'][string]
+            >[number]['roles'],
+          },
+        ];
+      },
+    );
+    if (needEdges.length > 0) neededQuestRecords[itemKey] = needEdges;
+    const rewardIndices = [
+      ...new Set(
+        (item.questRewards ?? []).flatMap((quest) => {
+          const target = questIndexById.get(quest.id);
+          return target === undefined ? [] : [target];
+        }),
+      ),
+    ];
+    if (rewardIndices.length > 0) rewardRecords[itemKey] = rewardIndices;
+  }
+  const recipes = [...build.recipes].sort((left, right) =>
+    left.id.localeCompare(right.id),
+  );
+  const recipeKeys = await Promise.all(
+    recipes.map(({ id }) => key('recipe', `${build.buildId}:${id}`)),
+  );
+  const recipeTargets = recipes.map((recipe, index) => {
+    let fee: ItemRecipeBrowsePack['targets'][number]['fee'];
+    switch (recipe.fee.state) {
+      case 'known':
+        fee = known(recipe.fee.value);
+        break;
+      case 'absent':
+        fee = { state: 'absent', coverageKey: recipe.fee.coverageKey };
+        break;
+      case 'unknown':
+      case 'unsupported':
+        fee = { state: recipe.fee.state };
+        break;
+    }
+    return {
+      key: recipeKeys[index] ?? '',
+      fee,
+      products: recipe.products.map((product) => {
+        const productKey = product.itemId
+          ? itemById.get(product.itemId)?.key
+          : undefined;
+        return {
+          name: known(product.name),
+          outcome: product.outcome,
+          ...(productKey === undefined
+            ? {}
+            : { key: productKey, kind: 'item' as const }),
+        };
+      }) as ItemRecipeBrowsePack['targets'][number]['products'],
+    };
+  });
+  const recipeIndexById = new Map(
+    recipes.map((recipe, index) => [recipe.id, index] as const),
+  );
+  const usedRecipeRecords: ItemRecipeBrowsePack['records'] = {};
+  const madeRecipeRecords: ItemMadeByRecipeBrowsePack['records'] = {};
+  for (const { item, key: itemKey } of sortedItems) {
+    const usedEdges = recipes.flatMap((recipe) => {
+      const target = recipeIndexById.get(recipe.id);
+      if (target === undefined) return [];
+      return recipe.ingredients.flatMap((ingredient) =>
+        ingredient.itemId === item.id
+          ? [{ target, amount: ingredient.amount }]
+          : [],
+      );
+    });
+    if (usedEdges.length > 0) usedRecipeRecords[itemKey] = usedEdges;
+    const madeTargets = recipes.flatMap((recipe) => {
+      const target = recipeIndexById.get(recipe.id);
+      if (target === undefined) return [];
+      return recipe.products.some(({ itemId }) => itemId === item.id)
+        ? [target]
+        : [];
+    });
+    if (madeTargets.length > 0) madeRecipeRecords[itemKey] = madeTargets;
+  }
+  const containerTargets = await Promise.all(
+    build.containers.map(async ({ id, name }) => ({
+      key: await key('container', `${build.buildId}:${id}`),
+      displayName: name,
+    })),
+  );
+  const containerRecords: ItemContainerBrowsePack['records'] = {};
+  for (const { item, key: itemKey } of sortedItems) {
+    const indices = build.containers.flatMap((container, index) =>
+      container.itemIds.includes(item.id) ? [index] : [],
+    );
+    if (indices.length > 0) containerRecords[itemKey] = indices;
+  }
+  const cashShopTargets = await Promise.all(
+    build.cashShopListings.map(async ({ id, name }) => ({
+      key: await key('cash-shop-listing', `${build.buildId}:${id}`),
+      displayName: name,
+    })),
+  );
+  const cashShopRecords: ItemCashShopBrowsePack['records'] = {};
+  for (const { item, key: itemKey } of sortedItems) {
+    const indices = build.cashShopListings.flatMap((listing, index) =>
+      listing.itemIds.includes(item.id) ? [index] : [],
+    );
+    if (indices.length > 0) cashShopRecords[itemKey] = indices;
+  }
+  const monsterTargets = monsters.flatMap(
+    ({ monster, key: monsterKey, publicId }) => {
+      const record = monsterRecords.get(monster.id);
+      return record === undefined
+        ? []
+        : [
+            {
+              key: monsterKey,
+              publicId,
+              ...(monster.name === undefined
+                ? {}
+                : { displayName: monster.name }),
+              level: known(monster.level),
+              sprite: record.sprite,
+            },
+          ];
+    },
+  );
+  const monsterIndexById = new Map(
+    monsters.map(({ monster }, index) => [monster.id, index] as const),
+  );
+  const evidenceKinds: ItemMonsterDropBrowsePack['evidence']['evidenceKinds'] =
+    [];
+  const kindKeys = new Set<string>();
+  const evidenceSources: ItemMonsterDropBrowsePack['evidence']['evidenceSources'] =
+    [];
+  const monsterDropRecords: ItemMonsterDropBrowsePack['records'] = {};
+  for (const monster of build.monsters) {
+    const target = monsterIndexById.get(monster.id);
+    if (target === undefined) continue;
+    for (const drop of build.drops[monster.id] ?? []) {
+      const itemTarget = itemById.get(drop.itemId);
+      if (itemTarget === undefined) {
+        throw new Error(
+          `Fixture drop references unknown item "${drop.itemId}".`,
+        );
+      }
+      const edges = monsterDropRecords[itemTarget.key] ?? [];
+      const evidence = drop.evidence.map((entry) => {
+        kindKeys.add(entry.kind);
+        const source = evidenceSources.length;
+        evidenceSources.push({
+          kind: entry.kind,
+          build: entry.build,
+          ...(entry.date === undefined ? {} : { date: entry.date }),
+          ...(entry.url === undefined ? {} : { url: entry.url }),
+        });
+        return {
+          source,
+          ...(entry.startSeconds === undefined
+            ? {}
+            : { startSeconds: entry.startSeconds }),
+        };
+      });
+      monsterDropRecords[itemTarget.key] = [
+        ...edges,
+        {
+          target,
+          evidence: evidence as NonNullable<
+            ItemMonsterDropBrowsePack['records'][string]
+          >[number]['evidence'],
+        },
+      ];
+    }
+  }
+  for (const [kind, { label }] of Object.entries(FIXTURE_EVIDENCE_KINDS)) {
+    if (kindKeys.has(kind)) evidenceKinds.push({ key: kind, label });
+  }
+  const relatedEntityPacks: {
+    readonly kind: FixtureItemRelationshipKind;
+    readonly pack: ItemRelatedEntityBrowsePack;
+    readonly keys: readonly string[];
+  }[] = [
+    {
+      kind: 'cash-shop-listing',
+      pack: {
+        format: 'item-related-entity-browse/1',
+        contractVersion: '2.0',
+        scope,
+        relationshipKind: 'cash-shop-listing',
+        records: cashShopRecords,
+        targets: cashShopTargets,
+      } satisfies ItemCashShopBrowsePack,
+      keys: Object.keys(cashShopRecords).sort(),
+    },
+    {
+      kind: 'found-in-container',
+      pack: {
+        format: 'item-related-entity-browse/1',
+        contractVersion: '2.0',
+        scope,
+        relationshipKind: 'found-in-container',
+        records: containerRecords,
+        targets: containerTargets,
+      } satisfies ItemContainerBrowsePack,
+      keys: Object.keys(containerRecords).sort(),
+    },
+    {
+      kind: 'made-by-recipe',
+      pack: {
+        format: 'item-related-entity-browse/1',
+        contractVersion: '2.0',
+        scope,
+        relationshipKind: 'made-by-recipe',
+        records: madeRecipeRecords,
+        targets: recipeTargets,
+      } satisfies ItemMadeByRecipeBrowsePack,
+      keys: Object.keys(madeRecipeRecords).sort(),
+    },
+    {
+      kind: 'needed-for-quest',
+      pack: {
+        format: 'item-related-entity-browse/1',
+        contractVersion: '2.0',
+        scope,
+        relationshipKind: 'needed-for-quest',
+        records: neededQuestRecords,
+        targets: questTargets,
+      } satisfies ItemQuestBrowsePack,
+      keys: Object.keys(neededQuestRecords).sort(),
+    },
+    {
+      kind: 'quest-reward',
+      pack: {
+        format: 'item-related-entity-browse/1',
+        contractVersion: '2.0',
+        scope,
+        relationshipKind: 'quest-reward',
+        records: rewardRecords,
+        targets: questTargets,
+      } satisfies ItemQuestRewardBrowsePack,
+      keys: Object.keys(rewardRecords).sort(),
+    },
+    {
+      kind: 'used-in-recipe',
+      pack: {
+        format: 'item-related-entity-browse/1',
+        contractVersion: '2.0',
+        scope,
+        relationshipKind: 'used-in-recipe',
+        records: usedRecipeRecords,
+        targets: recipeTargets,
+      } satisfies ItemRecipeBrowsePack,
+      keys: Object.keys(usedRecipeRecords).sort(),
+    },
+  ];
+  if (
+    build.itemBrowseCoverage.relationships['monster-drop'] !== 'unsupported'
+  ) {
+    relatedEntityPacks.push({
+      kind: 'monster-drop',
+      pack: {
+        format: 'item-related-entity-browse/1',
+        contractVersion: '2.0',
+        scope,
+        relationshipKind: 'monster-drop',
+        evidence: { evidenceKinds, evidenceSources },
+        records: monsterDropRecords,
+        targets: monsterTargets,
+      } satisfies ItemMonsterDropBrowsePack,
+      keys: Object.keys(monsterDropRecords).sort(),
+    });
+  }
+
+  const relatedEntityBrowse: Record<string, FileDescriptor> = {};
+  for (const { kind, pack, keys } of relatedEntityPacks) {
+    if (keys.length === 0) continue;
+    const descriptor = await put('v2/items/related-entity-browse', pack);
+    relatedEntityBrowse[kind] = { ...descriptor, ...rangeForKeys(keys) };
+  }
+
+  const catalog = await put('v2/catalogs', {
+    format: 'item-catalog/1',
+    contractVersion: '2.0',
+    scope,
+    defaultLocale: { state: 'unknown', reason: 'fixture browse-only catalog' },
+    recordCount: { state: 'unknown', reason: 'fixture browse-only catalog' },
+    records: { state: 'unknown', reason: 'fixture browse-only catalog' },
+  });
+  const catalogRange: RangeDescriptor = { count: 0, firstKey: '', lastKey: '' };
+  const browseRange = rangeForKeys(browseKeys);
+  const itemCapabilities = [
+    'evidence-pages-v2',
+    'item-descriptions-v1',
+    'item-player-facts-v1',
+    'item-related-entities-v1',
+    'items-v1',
+    'product-input-identity-v1',
+    'record-packs-v1',
+    'wire-2.0',
+  ];
+  const productId = `items-${ZERO}`;
+  const productManifest = await put('v2/products', {
+    format: 'mapletip.product-manifest',
+    contractVersion: '2.0',
+    scope,
+    productId: 'items',
+    coverage: 'partial',
+    identity: {
+      identityFormat: 'mapletip-product-id-v2',
+      productId,
+      inputFingerprint: ZERO,
+      semanticFingerprint: ZERO,
+      schemaFingerprint: ZERO,
+      producerFingerprint: ZERO,
+      optionsFingerprint: ZERO,
+      projectionRevision: 'fixture',
+      productDigest: ZERO,
+    },
+    requiredClientCapabilities: itemCapabilities,
+    packingPolicy: { targetBytes: 524288, maxBytes: 1048576 },
+    catalog: { ...catalog, ...catalogRange },
+    detailPacks: [],
+    pagePacks: [],
+    relationshipPacks: [],
+    browsePacks: [{ ...browsePack, ...browseRange }],
+    descriptionPacks: [{ ...descriptions, ...descriptionRange }],
+    relatedEntityBrowsePacks: relatedEntityBrowse,
+    totalEntityCount: browseRows.length,
+  });
+  return {
+    catalog,
+    browse: browsePack,
+    descriptions,
+    relatedEntityBrowse,
+    productManifest,
+    productDescriptor: {
+      productId,
+      familyId: build.familyId,
+      buildId: build.buildId,
+      productDigest: ZERO,
+      contractVersion: '2.0',
+      schemaSha256: ZERO,
+      coverage: 'partial',
+      completionClass: 'local-diagnostic',
+      requiredClientCapabilities: itemCapabilities,
+      productManifest,
+      productAlias: productManifest,
+      catalog,
+      catalogAlias: catalog,
+    },
+  };
+}
+
 export async function buildRelease(fixtureWorld: {
   readonly builds: readonly FixtureBuild[];
 }): Promise<FixtureRelease> {
@@ -1284,12 +1991,13 @@ export async function buildRelease(fixtureWorld: {
           key: await key('monster', `${build.buildId}:${monster.id}`),
           publicId,
           slug: monsterSlug(monster.name, publicId),
-          spriteId:
-            monster.sprite === 'unknown' || monster.sprite === 'absent'
-              ? undefined
-              : await sha256Hex(
+          ...(monster.sprite === 'unknown' || monster.sprite === 'absent'
+            ? {}
+            : {
+                spriteId: await sha256Hex(
                   encoder.encode(`fixture:sprite:${monster.sprite}`),
                 ),
+              }),
         };
       }),
     );
@@ -1480,6 +2188,20 @@ export async function buildRelease(fixtureWorld: {
       minimapIds,
       markIds,
     });
+    const itemArtifacts = await buildItemProduct({
+      build,
+      scope,
+      itemById,
+      monsters,
+      monsterRecords: new Map(
+        projectedMonsters.map(
+          ({ monster, record }) => [monster.id, record] as const,
+        ),
+      ),
+      key,
+      put,
+      spriteIds,
+    });
     const capabilities = [
       'evidence-pages-v2',
       'monster-core-v1',
@@ -1536,8 +2258,12 @@ export async function buildRelease(fixtureWorld: {
     buildDescriptors.push({
       familyId: build.familyId,
       buildId: build.buildId,
-      productCapabilities: ['maps-v1', 'monster-core-v1'],
-      products: [descriptor, mapsArtifacts.productDescriptor],
+      productCapabilities: ['items-v1', 'maps-v1', 'monster-core-v1'],
+      products: [
+        descriptor,
+        mapsArtifacts.productDescriptor,
+        itemArtifacts.productDescriptor,
+      ],
     });
     builds.set(build.buildId, {
       productManifest,
@@ -1548,6 +2274,11 @@ export async function buildRelease(fixtureWorld: {
       mapProductManifest: mapsArtifacts.productManifest,
       mapPagePack: mapsArtifacts.pagePack,
       mapBrowseRows: mapsArtifacts.browseRows,
+      itemProductManifest: itemArtifacts.productManifest,
+      itemCatalog: itemArtifacts.catalog,
+      itemBrowse: itemArtifacts.browse,
+      itemDescriptions: itemArtifacts.descriptions,
+      itemRelatedEntityBrowse: itemArtifacts.relatedEntityBrowse,
     });
   }
 
@@ -1566,6 +2297,10 @@ export async function buildRelease(fixtureWorld: {
     coverage: 'partial',
     requiredClientCapabilities: [
       'evidence-pages-v2',
+      'item-descriptions-v1',
+      'item-player-facts-v1',
+      'item-related-entities-v1',
+      'items-v1',
       'monster-core-v1',
       'monster-drop-browse-v1',
       'monster-location-browse-v1',

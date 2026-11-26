@@ -42,12 +42,16 @@ export class MonsterDrops {
     return listing.getByRole('textbox', { name: 'Search items' });
   }
 
-  sourceButton(listing: Locator, item: string): Locator {
-    return listing.getByRole('button', { name: `Sources for ${item}` });
+  certaintyButton(listing: Locator, item: string, confirmed = false): Locator {
+    return listing.getByRole('button', {
+      name: `Show ${confirmed ? 'confirmed' : 'unconfirmed'} drop details for ${item}`,
+    });
   }
 
-  sourceDialog(item: string): Locator {
-    return this.page.getByRole('dialog', { name: `Sources for ${item}` });
+  certaintyDialog(item: string, confirmed = false): Locator {
+    return this.page.locator(
+      `[role="dialog"][aria-label="${confirmed ? 'Confirmed' : 'Maybe'} drop details for ${item}"]`,
+    );
   }
 
   closeButton(listing: Locator, monster: string): Locator {

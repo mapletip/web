@@ -36,5 +36,6 @@ export {
   type MonsterRecordCardView,
 } from './monsterRecordCardProjection';
 
-export { DropSources } from './DropSources';
+export { DropCertaintyDisclosure } from './DropCertaintyDisclosure';
+export { DropCertaintyLegend } from './DropCertaintyLegend';
 export type { DropSource } from './drop-sources';
