@@ -73,6 +73,7 @@ export function RecordCard({
   title,
   layout = 'default',
   secondaryLine,
+  leadLine,
   badges,
   media,
   footer,
@@ -83,6 +84,51 @@ export function RecordCard({
   renderLink: linkRenderer,
   linkScope = 'card',
 }: RecordCardProps): ReactElement {
+  if (layout === 'picture') {
+    const titleControl = renderTitleControl({
+      destination,
+      linkRenderer,
+      children: title,
+      action,
+      isDetailsOpen,
+    });
+    return (
+      <div className={classes['linkedCard']}>
+        <Card
+          className={`${classes['card']} ${classes['pictureCard']}`}
+          padding={0}
+          radius="md"
+          withBorder
+          data-record-card="true"
+          data-record-card-layout="picture"
+          data-details-open={isDetailsOpen ? 'true' : undefined}
+        >
+          <Card.Section className={classes['pictureMedia']}>
+            {media}
+          </Card.Section>
+          <div className={classes['pictureText']}>
+            <Title order={3} className={classes['pictureTitle']}>
+              {titleControl}
+            </Title>
+            {leadLine === undefined ? null : (
+              <Text className={classes['pictureLead']}>{leadLine}</Text>
+            )}
+            {secondaryLine === undefined ? null : (
+              <Text className={classes['pictureSecondary']}>
+                {secondaryLine}
+              </Text>
+            )}
+            {badges === undefined ? null : (
+              <div className={classes['badges']}>{badges}</div>
+            )}
+            {footer === undefined ? null : (
+              <div className={classes['footer']}>{footer}</div>
+            )}
+          </div>
+        </Card>
+      </div>
+    );
+  }
   if (layout === 'identity') {
     const titleControl = renderTitleControl({
       destination,
@@ -110,8 +156,8 @@ export function RecordCard({
               <Title order={3} className={classes['identityTitle']}>
                 {titleControl}
               </Title>
-              {secondaryLine === undefined ? null : (
-                <Text className={classes['identityLead']}>{secondaryLine}</Text>
+              {leadLine === undefined ? null : (
+                <Text className={classes['identityLead']}>{leadLine}</Text>
               )}
               {badges === undefined ? null : (
                 <div className={classes['badges']}>{badges}</div>
