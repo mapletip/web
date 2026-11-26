@@ -18,6 +18,7 @@ export interface RenderItemCardOptions {
   readonly openDetails?: (() => void) | undefined;
   readonly isDetailsOpen?: boolean | undefined;
   readonly secondaryLine?: string | undefined;
+  readonly showCategoryLabel?: boolean | undefined;
 }
 
 /** Shared item card renderer used by category pages, cross-category results, and group shelves. */
@@ -26,12 +27,15 @@ export function renderItemCard({
   openDetails,
   isDetailsOpen,
   secondaryLine,
+  showCategoryLabel = true,
 }: RenderItemCardOptions): ReactElement {
   return (
     <RecordCard
       layout="picture"
       title={record.name}
-      leadLine={ITEM_KIND_LABELS.get(record.kind)}
+      leadLine={
+        showCategoryLabel ? ITEM_KIND_LABELS.get(record.kind) : undefined
+      }
       {...(secondaryLine === undefined ? {} : { secondaryLine })}
       media={
         <Thumbnail

@@ -65,7 +65,15 @@ const SUMMARY_NOUN = { one: 'Item', other: 'Items' } as const;
 const numberFormat = new Intl.NumberFormat('en-US');
 
 const CATEGORY_QUERY_FIELDS: readonly QueryFieldDefinition<CategorizedItemRow>[] =
-  ['name', { id: 'kindPath', accessor: 'kindPath', sortable: false }];
+  [
+    'name',
+    { id: 'kindPath', accessor: 'kindPath', sortable: false },
+    {
+      id: 'questReward',
+      accessor: (row) => (row.questRewardCount ?? 0) > 0,
+      sortable: false,
+    },
+  ];
 
 const ALL_QUERY_FIELDS: readonly QueryFieldDefinition<CategorizedItemRow>[] = [
   ...CATEGORY_QUERY_FIELDS,
@@ -86,16 +94,16 @@ const ALL_QUERY_FIELDS: readonly QueryFieldDefinition<CategorizedItemRow>[] = [
     accessor: (row) => (row.usedInRecipeCount ?? 0) > 0,
     sortable: false,
   },
-  {
-    id: 'questReward',
-    accessor: (row) => (row.questRewardCount ?? 0) > 0,
-    sortable: false,
-  },
 ];
 
 const CATEGORY_SEARCH_FIELDS = ['name'] as const;
 const ALL_SEARCH_FIELDS = ['name', 'sourceId'] as const;
-const EMPTY_FACETS: readonly FacetDefinition<CategorizedItemRow>[] = [];
+const QUEST_REWARD_FACET: FacetDefinition<CategorizedItemRow> = {
+  id: 'quest-reward',
+  field: 'questReward',
+  label: 'Quest reward',
+  kind: 'boolean',
+};
 const ALL_FACETS: readonly FacetDefinition<CategorizedItemRow>[] = [
   {
     id: 'kind',
@@ -123,13 +131,32 @@ const ALL_FACETS: readonly FacetDefinition<CategorizedItemRow>[] = [
     label: 'Used in recipes',
     kind: 'boolean',
   },
-  {
-    id: 'quest-reward',
-    field: 'questReward',
-    label: 'Quest reward',
-    kind: 'boolean',
-  },
+  QUEST_REWARD_FACET,
 ];
+
+export function categoryFacets({
+  rows,
+  kind,
+  coverage,
+}: {
+  readonly rows: readonly CategorizedItemRow[];
+  readonly kind: ItemKind | undefined;
+  readonly coverage: ItemBrowseCoverage | undefined;
+}): readonly FacetDefinition<CategorizedItemRow>[] {
+  const pills = kind?.card?.pills?.(coverage);
+  return [
+    ...(pills === undefined ? [] : [pills]),
+    ...(kind !== undefined &&
+    rows.some(
+      (row) =>
+        row.kind === kind.id &&
+        row.questRewardCount !== undefined &&
+        row.questRewardCount > 0,
+    )
+      ? [QUEST_REWARD_FACET]
+      : []),
+  ];
+}
 
 /** First published fact shown on cross-category picture cards, or undefined if none. */
 export function itemPrimaryFact({
@@ -137,6 +164,11 @@ export function itemPrimaryFact({
 }: {
   readonly record: CategorizedItemRow;
 }): string | undefined {
+  const category: ItemKind | undefined = ITEM_KINDS.find(
+    (entry) => entry.id === record.kind,
+  );
+  const categoryLead = category?.card?.lead(record);
+  if (categoryLead !== undefined) return categoryLead;
   if (
     record.hp !== undefined ||
     record.hpPercent !== undefined ||
@@ -149,17 +181,6 @@ export function itemPrimaryFact({
   }
   if (record.success !== undefined) {
     return `${numberFormat.format(record.success)}% success`;
-  }
-  if (record.seatHp !== undefined || record.seatMp !== undefined) {
-    const parts = [
-      record.seatHp === undefined
-        ? undefined
-        : `+${numberFormat.format(record.seatHp)} HP`,
-      record.seatMp === undefined
-        ? undefined
-        : `+${numberFormat.format(record.seatMp)} MP`,
-    ].filter((part): part is string => part !== undefined);
-    return parts.join(', ');
   }
   if (record.fullness !== undefined) {
     return `Restores ${numberFormat.format(record.fullness)} fullness`;
@@ -299,12 +320,12 @@ export function ItemFrame({
     [overlay],
   );
   const facets = useMemo(() => {
-    if (!all) return EMPTY_FACETS;
+    if (!all) return categoryFacets({ rows, kind, coverage });
     if (coverage?.relationships['used-in-recipe'] === 'unsupported') {
       return ALL_FACETS.filter((facet) => facet.id !== 'used-in-recipes');
     }
     return ALL_FACETS;
-  }, [all, coverage]);
+  }, [all, coverage, kind, rows]);
   const details =
     overlay.overlay?.type === 'record-details' ? overlay.overlay : undefined;
 
@@ -391,10 +412,18 @@ export function ItemFrame({
         }}
         records={rows}
         idAccessor="sourceId"
-        queryFields={all ? ALL_QUERY_FIELDS : CATEGORY_QUERY_FIELDS}
+        queryFields={
+          all
+            ? ALL_QUERY_FIELDS
+            : [...CATEGORY_QUERY_FIELDS, ...(kind?.card?.queryFields ?? [])]
+        }
         searchFields={all ? ALL_SEARCH_FIELDS : CATEGORY_SEARCH_FIELDS}
         facets={facets}
-        sortOptions={ITEM_SORT_OPTIONS}
+        sortOptions={
+          kind?.card?.sortOptions === undefined
+            ? ITEM_SORT_OPTIONS
+            : [...ITEM_SORT_OPTIONS, ...kind.card.sortOptions]
+        }
         recordNoun={`${BUILDS[buildId].label} items`}
         summaryMode="total"
         summaryNoun={SUMMARY_NOUN}
@@ -433,7 +462,10 @@ export function ItemFrame({
                   record,
                   openDetails,
                   isDetailsOpen,
-                  secondaryLine: all ? itemPrimaryFact({ record }) : undefined,
+                  secondaryLine: all
+                    ? itemPrimaryFact({ record })
+                    : kind?.card?.lead(record),
+                  showCategoryLabel: all,
                 }),
             })}
         recordDetailsTitle={(record) => record.name}

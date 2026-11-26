@@ -84,6 +84,9 @@ export interface FixtureItem {
   readonly functions?: NonNullable<ItemBrowseRecordV2_2['functions']>;
   readonly family?: string;
   readonly recovery?: NonNullable<ItemBrowseRecordV2_2['recovery']>;
+  readonly seatingRecovery?: NonNullable<
+    ItemBrowseRecordV2_2['seatingRecovery']
+  >;
   readonly buff?: NonNullable<ItemBrowseRecordV2_2['buff']>;
   readonly projectileAttack?: FixtureFact<number>;
   readonly scroll?: NonNullable<ItemBrowseRecordV2_2['scroll']>;
@@ -820,6 +823,35 @@ function item(
 const cwItems: readonly FixtureItem[] = [
   ...cwBaseItems,
   item({
+    id: 'amber-seat',
+    name: 'Amber Seat',
+    itemClass: 'setup',
+    types: ['chair'],
+    seatingRecovery: { hp: 50 },
+    questRewards: [lanternAssembly],
+  }),
+  item({
+    id: 'blue-seat',
+    name: 'Blue Seat',
+    itemClass: 'setup',
+    types: ['chair'],
+    seatingRecovery: { mp: 40 },
+  }),
+  item({
+    id: 'azure-seat',
+    name: 'Azure Seat',
+    itemClass: 'setup',
+    types: ['chair'],
+    seatingRecovery: { mp: 50 },
+  }),
+  item({
+    id: 'green-seat',
+    name: 'Green Seat',
+    itemClass: 'setup',
+    types: ['chair'],
+    seatingRecovery: { hp: 50, mp: 50 },
+  }),
+  item({
     id: 'unnamed-sprout',
     itemClass: 'etc',
     types: ['monster-material'],
@@ -1414,7 +1446,7 @@ const gmsItems: readonly FixtureItem[] = [
 const gmsItemBrowseCoverage: ItemBrowseCoverage = {
   scrollTier: 'unsupported',
   relationships: {
-    'cash-shop-listing': 'complete',
+    'cash-shop-listing': 'partial',
     'found-in-container': 'complete',
     'made-by-recipe': 'complete',
     'monster-drop': 'unsupported',

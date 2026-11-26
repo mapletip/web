@@ -5,6 +5,39 @@ import { ItemsPage } from './page/items-page';
 
 const SCROLLS = '/maplestory/items/use/scrolls';
 
+test('Chairs and Cash Shop show published facts and coverage-based pills', async ({
+  page,
+  isMobile,
+}) => {
+  await page.goto('/maplestory/items/setup/chairs');
+  await expect(page.getByText('Amber Seat')).toBeVisible();
+  await expect(page.getByText('+50 HP', { exact: true }).first()).toBeVisible();
+  await expect(page.getByText(/^Recovers HP \(/u)).toBeVisible();
+  await expect(page.getByText(/^Recovers MP \(/u)).toBeVisible();
+  if (!isMobile) {
+    await page.getByRole('combobox', { name: 'Sort' }).click();
+    await page.getByRole('option', { name: 'Recovery' }).click();
+    await expect(
+      page.locator('[data-record-card-layout="picture"] h3'),
+    ).toContainText([
+      'Green Seat',
+      'Amber Seat',
+      'Azure Seat',
+      'Blue Seat',
+      'Paper Kite',
+    ]);
+  }
+
+  await page.goto('/maplestory/items/cash/cash-shop');
+  await expect(page.getByText('120 NX')).toBeVisible();
+  await expect(page.getByText(/^Listed \(/u)).toBeVisible();
+  await expect(page.getByText(/^Not listed \(/u)).toBeVisible();
+
+  await page.goto('/maplestory/gms-v83/items/cash/cash-shop');
+  await expect(page.getByText('GMS Cash Badge')).toBeVisible();
+  await expect(page.getByText(/^Listed \(/u)).toHaveCount(0);
+});
+
 test('Items category is server rendered with metadata and stable addresses', async ({
   page,
   request,

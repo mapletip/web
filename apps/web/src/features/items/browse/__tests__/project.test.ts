@@ -19,6 +19,26 @@ function makeBaseRow(
 }
 
 describe('projectItemBrowseRows', () => {
+  it('projects a published Cash Shop price and omits an unpublished one', () => {
+    const rows = projectItemBrowseRows([
+      makeBaseRow({
+        itemClass: 'cash',
+        cashShopSale: {
+          state: 'on-sale',
+          duration: { kind: 'permanent' },
+          price: 2400,
+          quantity: 1,
+        },
+      }),
+      makeBaseRow({
+        key: 'item:fixture:2',
+        sourceId: '02000002',
+        itemClass: 'cash',
+        cashShopSale: { state: 'not-on-sale' },
+      }),
+    ]);
+    expect(rows.map((row) => row.nxPrice)).toEqual([2400, undefined]);
+  });
   it('drops unknown and unsupported names while keeping known icons', () => {
     const rows = projectItemBrowseRows([
       makeBaseRow({

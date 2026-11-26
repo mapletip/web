@@ -1491,6 +1491,9 @@ async function buildItemProduct(
           : {}),
         ...(item.family === undefined ? {} : { family: item.family }),
         ...(item.recovery === undefined ? {} : { recovery: item.recovery }),
+        ...(item.seatingRecovery === undefined
+          ? {}
+          : { seatingRecovery: item.seatingRecovery }),
         ...(item.buff === undefined ? {} : { buff: item.buff }),
         ...(projectileAttack === undefined ? {} : { projectileAttack }),
         ...(scroll === undefined ? {} : { scroll }),
