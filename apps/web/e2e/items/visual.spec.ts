@@ -2,9 +2,24 @@ import { fixtureRelease } from '../../src/mocks/release';
 import { browseReady } from '../browse-ready';
 import { expect, test } from '../fixtures';
 
+const LANDING = '/maplestory/items';
 const CATEGORY = '/maplestory/items/use/scrolls';
 const ORES = '/maplestory/items/etc/ores-and-gems';
 const ALL = '/maplestory/items/all';
+
+test('desktop Items landing', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 1100 });
+  await page.goto(LANDING);
+  await browseReady(page);
+  await expect(page).toHaveScreenshot('desktop-items-landing.png');
+});
+
+test('mobile Items landing', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 1600 });
+  await page.goto(LANDING);
+  await browseReady(page);
+  await expect(page).toHaveScreenshot('mobile-items-landing.png');
+});
 
 test('desktop Items all', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 1100 });

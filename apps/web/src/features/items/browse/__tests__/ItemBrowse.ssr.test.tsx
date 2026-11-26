@@ -16,11 +16,13 @@ import type { BuildId } from '@/config/maplekit';
 import { fixtureRelease } from '@/mocks/release';
 import { routeTree } from '@/routeTree.gen';
 
+import { ITEM_KINDS } from '../../kinds';
 import {
   ITEM_BROWSE_UNAVAILABLE_MESSAGE,
   loadItemBrowse,
   type LoadedItemBrowse,
 } from '../load';
+import { ITEM_GROUPS, itemPath } from '../page';
 import { projectItemBrowseRows } from '../project';
 
 vi.mock('../load', async (importOriginal) => {
@@ -92,6 +94,36 @@ function isNotFound(router: TestRouter): boolean {
       match.status === 'notFound' ||
       Boolean((match as { _notFound?: boolean })._notFound),
   );
+}
+
+function escapeRegExp(value: string): string {
+  return value.replaceAll(/[.*+?^${}()|[\]\\]/gu, '\\$&');
+}
+
+function escapeHtml(value: string): string {
+  return value.replaceAll('&', '&amp;');
+}
+
+function mainHtml(html: string): string {
+  const match = /<main[^>]*id="main-content"[^>]*>([\s\S]*?)<\/main>/u.exec(
+    html,
+  );
+  if (!match?.[1]) throw new Error('Expected main#main-content in SSR HTML');
+  return match[1];
+}
+
+function anchorInnerHtml({
+  html,
+  href,
+}: {
+  readonly html: string;
+  readonly href: string;
+}): string | undefined {
+  const pattern = new RegExp(
+    `<a[^>]*href="${escapeRegExp(href)}"[^>]*>([\\s\\S]*?)</a>`,
+    'u',
+  );
+  return pattern.exec(html.replaceAll('<!-- -->', ''))?.[1];
 }
 
 describe('Items Browse server rendering', () => {
@@ -283,6 +315,116 @@ describe('Items Browse server rendering', () => {
       content: 'noindex,follow',
     });
   });
+
+  it.each([
+    ['cw-launch', '/maplestory/items', 'MapleStory Classic World Items'],
+    ['gms-v83', '/maplestory/gms-v83/items', 'MapleStory GMS v83 Items'],
+  ] as const)(
+    'renders the %s landing directory with every non-empty category link, counts and no item list',
+    async (buildId, path, expectedHeading) => {
+      const browse = fixtureBrowse(buildId);
+      const { html } = await renderPath(path);
+      const main = mainHtml(html);
+
+      expect(main).toMatch(
+        new RegExp(`<h1[^>]*>${escapeRegExp(expectedHeading)}</h1>`, 'u'),
+      );
+      expect(anchorInnerHtml({ html: main, href: '/' })).toContain('Home');
+
+      const countsByKind = new Map<string, number>();
+      const countsByGroup = new Map<string, number>();
+      for (const row of browse.rows) {
+        countsByKind.set(row.kind, (countsByKind.get(row.kind) ?? 0) + 1);
+        const groupId = row.kindPath[1];
+        countsByGroup.set(groupId, (countsByGroup.get(groupId) ?? 0) + 1);
+      }
+
+      for (const group of ITEM_GROUPS) {
+        const groupHref = itemPath({ buildId, group: group.id });
+        const inner = anchorInnerHtml({ html: main, href: groupHref });
+        expect(inner).toBeDefined();
+        expect(inner).toContain(escapeHtml(group.label));
+        expect(inner).toContain(String(countsByGroup.get(group.id) ?? 0));
+      }
+
+      const nonEmptyKinds = ITEM_KINDS.filter(
+        (kind) => (countsByKind.get(kind.id) ?? 0) > 0,
+      );
+      expect(nonEmptyKinds.length).toBeGreaterThan(0);
+
+      for (const kind of nonEmptyKinds) {
+        const count = countsByKind.get(kind.id) ?? 0;
+        const kindHref = itemPath({
+          buildId,
+          group: kind.group,
+          kind: kind.slug,
+        });
+        const inner = anchorInnerHtml({ html: main, href: kindHref });
+        expect(inner).toBeDefined();
+        expect(inner).toContain(escapeHtml(kind.label));
+        expect(inner).toContain(String(count));
+        expect(inner).toContain('<img');
+      }
+
+      const emptyKinds = ITEM_KINDS.filter(
+        (kind) => (countsByKind.get(kind.id) ?? 0) === 0,
+      );
+      for (const kind of emptyKinds) {
+        const kindHref = itemPath({
+          buildId,
+          group: kind.group,
+          kind: kind.slug,
+        });
+        expect(anchorInnerHtml({ html: main, href: kindHref })).toBeUndefined();
+      }
+
+      for (const row of browse.rows) {
+        expect(main).not.toContain(row.name!);
+      }
+    },
+  );
+
+  it.each([
+    ['cw-launch', '/maplestory/items'],
+    ['gms-v83', '/maplestory/gms-v83/items'],
+  ] as const)(
+    'omits empty categories from the %s landing directory',
+    async (buildId, path) => {
+      const base = fixtureBrowse(buildId);
+      const filteredRows = base.rows.filter(
+        (row) => row.kind !== 'monster-cards' && row.kind !== 'boxes',
+      );
+      mockedLoad.mockResolvedValue({ ...base, rows: filteredRows });
+
+      const { html } = await renderPath(path);
+      const main = mainHtml(html);
+
+      expect(
+        anchorInnerHtml({
+          html: main,
+          href: itemPath({ buildId, group: 'use', kind: 'monster-cards' }),
+        }),
+      ).toBeUndefined();
+      expect(
+        anchorInnerHtml({
+          html: main,
+          href: itemPath({ buildId, group: 'use', kind: 'boxes' }),
+        }),
+      ).toBeUndefined();
+      expect(main).not.toContain('Monster Cards');
+      expect(main).not.toContain('Boxes');
+
+      const useCount = filteredRows.filter(
+        (row) => row.kindPath[1] === 'use',
+      ).length;
+      expect(
+        anchorInnerHtml({
+          html: main,
+          href: itemPath({ buildId, group: 'use' }),
+        }),
+      ).toContain(String(useCount));
+    },
+  );
 
   it('shows the generic unavailable state when item data fails to load', async () => {
     mockedLoad.mockRejectedValue(new Error(ITEM_BROWSE_UNAVAILABLE_MESSAGE));
