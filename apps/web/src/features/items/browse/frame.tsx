@@ -7,6 +7,8 @@ import {
   type BrowseState,
   type DrillDownNode,
   type DrawerOpenedChangeDetails,
+  type FacetDefinition,
+  type QueryFieldDefinition,
   type StateChangeDetails,
 } from '@mapletip/component-library';
 import { itemIconUrl } from '@mapletip/data/items';
@@ -30,7 +32,7 @@ import { useRouteOverlay } from '@/features/route-overlay/useRouteOverlay';
 import { ITEM_KINDS } from '../kinds';
 import type { ItemKind } from '../kinds/types';
 
-import { ItemDrawerBody } from './ItemDrawerBody';
+import { formatItemFacts, ItemDrawerBody } from './ItemDrawerBody';
 import {
   ITEM_GROUPS,
   itemPageMetadata,
@@ -65,6 +67,149 @@ const CARD_COLUMNS = { base: 2, md: 4, lg: 5 } as const;
 const KIND_LABELS: ReadonlyMap<string, string> = new Map(
   ITEM_KINDS.map((entry) => [entry.id, entry.label]),
 );
+const numberFormat = new Intl.NumberFormat('en-US');
+
+const CATEGORY_QUERY_FIELDS: readonly QueryFieldDefinition<CategorizedItemRow>[] =
+  ['name', { id: 'kindPath', accessor: 'kindPath', sortable: false }];
+
+const ALL_QUERY_FIELDS: readonly QueryFieldDefinition<CategorizedItemRow>[] = [
+  ...CATEGORY_QUERY_FIELDS,
+  { id: 'kind', accessor: 'kind', sortable: false },
+  {
+    id: 'sourceId',
+    accessor: 'sourceId',
+    searchMatch: ({ value, query }) =>
+      typeof value === 'string' && value.toLowerCase() === query,
+  },
+  {
+    id: 'requiredByQuests',
+    accessor: (row) => (row.neededForQuestCount ?? 0) > 0,
+    sortable: false,
+  },
+  {
+    id: 'questReward',
+    accessor: (row) => (row.questRewardCount ?? 0) > 0,
+    sortable: false,
+  },
+];
+
+const CATEGORY_SEARCH_FIELDS = ['name'] as const;
+const ALL_SEARCH_FIELDS = ['name', 'sourceId'] as const;
+const EMPTY_FACETS: readonly FacetDefinition<CategorizedItemRow>[] = [];
+const ALL_FACETS: readonly FacetDefinition<CategorizedItemRow>[] = [
+  {
+    id: 'kind',
+    field: 'kind',
+    label: 'Category',
+    kind: 'multi-select',
+    placement: 'results',
+    // Same order as the rail: Use, ETC, Set-up, then Pets & Cash.
+    options: ITEM_GROUPS.flatMap((group) =>
+      ITEM_KINDS.filter((entry) => entry.group === group.id).map((entry) => ({
+        value: entry.id,
+        label: entry.label,
+      })),
+    ),
+  },
+  {
+    id: 'required-by-quests',
+    field: 'requiredByQuests',
+    label: 'Required by quests',
+    kind: 'boolean',
+  },
+  {
+    id: 'quest-reward',
+    field: 'questReward',
+    label: 'Quest reward',
+    kind: 'boolean',
+  },
+];
+
+/** First published fact shown on cross-category picture cards, or undefined if none. */
+export function itemPrimaryFact({
+  record,
+}: {
+  readonly record: CategorizedItemRow;
+}): string | undefined {
+  if (
+    record.hp !== undefined ||
+    record.hpPercent !== undefined ||
+    record.mp !== undefined ||
+    record.mpPercent !== undefined ||
+    (record.buff !== undefined && record.buff.effects.length > 0) ||
+    record.attack !== undefined
+  ) {
+    return formatItemFacts({ record })[0];
+  }
+  if (record.success !== undefined) {
+    return `${numberFormat.format(record.success)}% success`;
+  }
+  if (record.seatHp !== undefined || record.seatMp !== undefined) {
+    const parts = [
+      record.seatHp === undefined
+        ? undefined
+        : `+${numberFormat.format(record.seatHp)} HP`,
+      record.seatMp === undefined
+        ? undefined
+        : `+${numberFormat.format(record.seatMp)} MP`,
+    ].filter((part): part is string => part !== undefined);
+    return parts.join(', ');
+  }
+  if (record.fullness !== undefined) {
+    return `Restores ${numberFormat.format(record.fullness)} fullness`;
+  }
+  if ((record.neededForQuestCount ?? 0) > 0) {
+    return record.neededForQuestCount === 1
+      ? 'Required by a quest'
+      : `Required by ${numberFormat.format(record.neededForQuestCount!)} quests`;
+  }
+  if ((record.usedInRecipeCount ?? 0) > 0) {
+    return record.usedInRecipeCount === 1
+      ? 'Used in a recipe'
+      : `Used in ${numberFormat.format(record.usedInRecipeCount!)} recipes`;
+  }
+  if ((record.monsterDropCount ?? 0) > 0) {
+    return record.monsterDropCount === 1
+      ? 'Dropped by a monster'
+      : `Dropped by ${numberFormat.format(record.monsterDropCount!)} monsters`;
+  }
+  return formatItemFacts({ record })[0];
+}
+
+function itemNavigationTree({
+  buildId,
+  nonEmptyKinds,
+  currentId,
+  counts,
+}: {
+  readonly buildId: BuildId;
+  readonly nonEmptyKinds: ReadonlySet<string>;
+  readonly currentId: string;
+  readonly counts: ReadonlyMap<string, number> | undefined;
+}): DrillDownNode {
+  return {
+    id: 'all',
+    label: 'All items',
+    href: `${itemPath({ buildId })}/all`,
+    count: counts?.get('all') ?? 0,
+    children: ITEM_GROUPS.map((entry) => ({
+      id: entry.id,
+      label: entry.label,
+      href: itemPath({ buildId, group: entry.id }),
+      count: counts?.get(entry.id) ?? 0,
+      children: ITEM_KINDS.filter(
+        (candidate) =>
+          candidate.group === entry.id &&
+          (nonEmptyKinds.has(candidate.id) || candidate.id === currentId),
+      ).map((candidate) => ({
+        id: candidate.id,
+        label: candidate.label,
+        href: itemPath({ buildId, group: entry.id, kind: candidate.slug }),
+        count: counts?.get(candidate.id) ?? 0,
+      })),
+    })),
+  };
+}
 
 /** Shared group and category results, driven by the category registry. */
 export function ItemFrame({
@@ -95,28 +240,9 @@ export function ItemFrame({
     slug: kind?.slug,
     all,
   });
-  const tree = useMemo(
-    (): DrillDownNode => ({
-      id: 'all',
-      label: 'All items',
-      href: `${itemPath({ buildId })}/all`,
-      count: rows.length,
-      children: ITEM_GROUPS.map((entry) => ({
-        id: entry.id,
-        label: entry.label,
-        href: itemPath({ buildId, group: entry.id }),
-        count: rows.filter((row) => row.kindPath[1] === entry.id).length,
-        children: ITEM_KINDS.filter(
-          (candidate) => candidate.group === entry.id,
-        ).map((candidate) => ({
-          id: candidate.id,
-          label: candidate.label,
-          href: itemPath({ buildId, group: entry.id, kind: candidate.slug }),
-          count: rows.filter((row) => row.kind === candidate.id).length,
-        })),
-      })),
-    }),
-    [buildId, rows],
+  const nonEmptyKinds = useMemo(
+    () => new Set(rows.map((row) => row.kind)),
+    [rows],
   );
   const currentId = kind?.id ?? group ?? 'all';
   const navSearch = itemBrowseSearch.browseStateToUrl({
@@ -218,12 +344,16 @@ export function ItemFrame({
           },
           render: (context) => (
             <DrillDownNav
-              root={tree}
+              root={itemNavigationTree({
+                buildId,
+                nonEmptyKinds,
+                currentId,
+                counts: context.counts,
+              })}
               currentId={
                 context.mode === 'drawer' ? context.selectedId : currentId
               }
               label="Item categories"
-              hideEmpty
               {...(context.mode === 'drawer'
                 ? { onSelect: context.onSelect }
                 : {
@@ -246,12 +376,9 @@ export function ItemFrame({
         }}
         records={rows}
         idAccessor="sourceId"
-        queryFields={[
-          'name',
-          { id: 'kindPath', accessor: 'kindPath', sortable: false },
-        ]}
-        searchFields={['name']}
-        facets={[]}
+        queryFields={all ? ALL_QUERY_FIELDS : CATEGORY_QUERY_FIELDS}
+        searchFields={all ? ALL_SEARCH_FIELDS : CATEGORY_SEARCH_FIELDS}
+        facets={all ? ALL_FACETS : EMPTY_FACETS}
         sortOptions={ITEM_SORT_OPTIONS}
         recordNoun={`${BUILDS[buildId].label} items`}
         summaryMode="total"
@@ -259,27 +386,31 @@ export function ItemFrame({
         pageSizeOptions={PAGE_SIZE_OPTIONS}
         presentation="cards"
         cardColumns={CARD_COLUMNS}
-        renderCard={(record, { openDetails, isDetailsOpen }) => (
-          <RecordCard
-            layout="picture"
-            title={record.name}
-            leadLine={KIND_LABELS.get(record.kind)}
-            media={
-              <Thumbnail
-                src={
-                  record.icon === undefined
-                    ? undefined
-                    : itemIconUrl(MAPLEKIT_RELEASE.baseUrl, record.icon)
-                }
-                size={80}
-                magnify={2}
-              />
-            }
-            {...(openDetails === undefined
-              ? {}
-              : { action: openDetails, isDetailsOpen })}
-          />
-        )}
+        renderCard={(record, { openDetails, isDetailsOpen }) => {
+          const secondaryLine = all ? itemPrimaryFact({ record }) : undefined;
+          return (
+            <RecordCard
+              layout="picture"
+              title={record.name}
+              leadLine={KIND_LABELS.get(record.kind)}
+              {...(secondaryLine === undefined ? {} : { secondaryLine })}
+              media={
+                <Thumbnail
+                  src={
+                    record.icon === undefined
+                      ? undefined
+                      : itemIconUrl(MAPLEKIT_RELEASE.baseUrl, record.icon)
+                  }
+                  size={80}
+                  magnify={2}
+                />
+              }
+              {...(openDetails === undefined
+                ? {}
+                : { action: openDetails, isDetailsOpen })}
+            />
+          );
+        }}
         recordDetailsTitle={(record) => record.name}
         recordDetailsSideOnDesktop
         recordDetailsSideSize="md"

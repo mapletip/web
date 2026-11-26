@@ -230,3 +230,108 @@ test('Items drawer keeps item facts when connections fail, hides diagnostics, an
   await expect(drawer).toContainText('Level 17');
   await expect(drawer).toContainText('Source: GMS v83 Monster Book.');
 });
+
+test('/items/all searches by name and exact id, updates pills, filters, and stays noindex', async ({
+  page,
+  request,
+  isMobile,
+}) => {
+  for (const path of [
+    '/maplestory/items/all',
+    '/maplestory/items/all?q=Sample',
+  ]) {
+    const response = await request.get(path);
+    expect(response.status(), path).toBe(200);
+    expect(await response.text(), path).toContain('noindex,follow');
+  }
+
+  const items = new ItemsPage(page);
+  await items.goto('/maplestory/items/all');
+  await expect(items.heading()).toHaveText('MapleStory Classic World Items');
+
+  const search = page.getByRole('textbox', {
+    name: 'Search Classic World items',
+  });
+  const pills = page.getByRole('region', { name: 'Category choices' });
+
+  await search.fill('Sample');
+  await expect(items.item('Sample Draught')).toBeVisible();
+  await expect(items.item('Only Given Pebble')).toBeHidden();
+  await expect(pills.getByText(/^Potions & Food \(\d+\)$/u)).toBeVisible();
+  await expect(pills.getByText(/^Chairs \(/u)).toHaveCount(0);
+
+  await pills.getByText(/^Potions & Food \(\d+\)$/u).click();
+  await expect(items.item('Sample Draught')).toBeVisible();
+  await expect(items.summary).toHaveText('1 Item');
+  await pills.getByText(/^All \(\d+\)$/u).click();
+  await expect(items.item('Sample Charm').first()).toBeVisible();
+
+  await search.fill('only-given');
+  await expect(items.item('Only Given Pebble')).toBeVisible();
+  await expect(items.summary).toHaveText('1 Item');
+  const card = page
+    .locator('[data-record-card="true"]')
+    .filter({ hasText: 'Only Given Pebble' });
+  await expect(card).not.toContainText('only-given');
+
+  await search.fill('only-giv');
+  await expect(items.item('Only Given Pebble')).toBeHidden();
+  await expect(items.summary).toHaveText('0 Items');
+
+  await search.fill('');
+  await expect(page).toHaveURL('/maplestory/items/all');
+  if (isMobile) {
+    await page.getByRole('button', { name: /Quest reward/u }).click();
+    const filterDrawer = page.getByRole('dialog');
+    await filterDrawer.getByRole('checkbox', { name: /^Yes \(/u }).click();
+    await filterDrawer.getByRole('button', { name: /^Show /u }).click();
+  } else {
+    const questReward = page.getByRole('group', { name: 'Quest reward' });
+    await questReward.getByRole('checkbox', { name: /^Yes \(/u }).click();
+  }
+  await expect(items.item('Only Given Pebble')).toBeVisible();
+  await expect(items.item('Only Taken Sprout')).toBeHidden();
+});
+
+test('/items/all rail group counts follow search and filters and match after choosing a group', async ({
+  page,
+  isMobile,
+}) => {
+  test.skip(
+    isMobile,
+    'Desktop rail covers persistent filter-aware group counts.',
+  );
+  const items = new ItemsPage(page);
+  await items.goto('/maplestory/items/all');
+
+  const search = page.getByRole('textbox', {
+    name: 'Search Classic World items',
+  });
+  await search.fill('Pebble');
+
+  const useLink = items.rail.getByRole('link', { name: /^Use\s+\d+$/u });
+  const etcLink = items.rail.getByRole('link', { name: /^ETC\s+\d+$/u });
+  const setupLink = items.rail.getByRole('link', { name: /^Set-up\s+0$/u });
+  await expect(useLink).toBeVisible();
+  await expect(etcLink).toBeVisible();
+  await expect(setupLink).toBeVisible();
+
+  const useText = (await useLink.textContent()) ?? '';
+  const useCount = Number(useText.match(/(\d+)$/u)?.[1]);
+  expect(useCount).toBeGreaterThan(0);
+
+  const requiredByQuests = page.getByRole('group', {
+    name: 'Required by quests',
+  });
+  await requiredByQuests.getByRole('checkbox', { name: /^Yes \(/u }).click();
+  await expect(
+    items.rail.getByRole('link', { name: /^Use\s+0$/u }),
+  ).toBeVisible();
+  await requiredByQuests.getByRole('checkbox', { name: /^Yes \(/u }).click();
+
+  await useLink.click();
+  await expect(page).toHaveURL('/maplestory/items/use?q=Pebble');
+  await expect(items.summary).toHaveText(
+    `${useCount} ${useCount === 1 ? 'Item' : 'Items'}`,
+  );
+});
