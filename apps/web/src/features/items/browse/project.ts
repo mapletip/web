@@ -10,6 +10,8 @@ import type {
   ItemBrowseRowV2_2,
 } from '@mapletip/data/items';
 
+import { assignItemKind } from '../kinds';
+
 type Fact = ItemBrowseRowV2_2['name'];
 type Scroll = NonNullable<ItemBrowseRecordV2_2['scroll']>;
 export type ItemBrowseClass = ItemBrowseRecordV2_2['itemClass'];
@@ -63,9 +65,19 @@ export type ItemRow = {
   readonly specials?: readonly ItemBrowseUpgradeSpecial[];
   readonly stats?: Readonly<ItemBrowseScrollDeltas>;
   readonly directTargetCount?: number;
+  readonly sellPrice?: number;
+  readonly maxStack?: number;
+  readonly level?: number;
+  readonly buff?: NonNullable<ItemBrowseRecordV2_2['buff']>;
 };
 
 type WritableItemRow = { -readonly [K in keyof ItemRow]: ItemRow[K] };
+
+/** A projected row with its category, set once here and read everywhere else. */
+export type CategorizedItemRow = ItemRow & {
+  readonly kind: string;
+  readonly kindPath: readonly [string, string, string];
+};
 
 function setField<K extends keyof ItemRow>(
   row: WritableItemRow,
@@ -124,7 +136,7 @@ export const RELATIONSHIP_COUNT_FIELDS = [
 
 export function projectItemBrowseRows(
   records: readonly ItemBrowseRowV2_2[],
-): readonly ItemRow[] {
+): readonly CategorizedItemRow[] {
   const petByTargetKey = new Map<string, ItemPetTarget>();
   for (const record of records) {
     const name = extractKnownFact(record.name);
@@ -136,13 +148,15 @@ export function projectItemBrowseRows(
     petByTargetKey.set(record.sourceId, pet);
   }
 
-  return records.map((record) => {
+  return records.flatMap((record) => {
+    const name = extractKnownFact(record.name);
+    if (name === undefined) return [];
     const row: WritableItemRow = {
       sourceId: record.sourceId,
       itemClass: record.itemClass,
+      name,
     };
 
-    setField(row, 'name', extractKnownFact(record.name));
     setField(row, 'icon', extractKnownFact(record.icon));
     setField(row, 'types', filterNonEmptyArray(record.types));
     setField(row, 'functions', filterNonEmptyArray(record.functions));
@@ -193,7 +207,20 @@ export function projectItemBrowseRows(
         : undefined,
     );
     setField(row, 'directTargetCount', scroll?.targets?.length || undefined);
+    setField(row, 'sellPrice', record.sellPrice);
+    setField(row, 'maxStack', record.maxStack);
+    setField(row, 'level', record.requirement?.level);
+    setField(row, 'buff', record.buff);
 
-    return row;
+    const kind = assignItemKind({ row });
+    if (kind === undefined) {
+      throw new Error(`No category for item ${record.sourceId}.`);
+    }
+    const categorized: CategorizedItemRow = {
+      ...row,
+      kind: kind.id,
+      kindPath: ['all', kind.group, kind.id],
+    };
+    return [categorized];
   });
 }
