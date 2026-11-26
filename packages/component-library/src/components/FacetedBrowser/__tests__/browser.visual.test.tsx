@@ -50,6 +50,33 @@ const visualCases: readonly VisualCase[] = [
     hidden: [hiddenCards],
   },
   {
+    name: 'faceted-browser-result-pills-desktop-dark',
+    story: dark.ResultPills,
+    storyId: 'components-facetedbrowser--result-pills',
+    width: 1440,
+    height: 768,
+    visible: [page.getByRole('group', { name: 'Category' })],
+  },
+  {
+    name: 'faceted-browser-result-pills-mobile-dark',
+    story: dark.ResultPillsOverflow,
+    storyId: 'components-facetedbrowser--result-pills-overflow',
+    width: 390,
+    height: 812,
+    visible: [page.getByRole('group', { name: 'Category' })],
+    beforeScreenshot: async () => {
+      await expect
+        .element(page.getByRole('region', { name: 'Category choices' }))
+        .toBeVisible();
+      const scroller = page
+        .getByRole('region', { name: 'Category choices' })
+        .element()
+        .querySelector<HTMLElement>('.mantine-Scroller-container')!;
+      expect(scroller.scrollWidth).toBeGreaterThan(scroller.clientWidth);
+      expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(390);
+    },
+  },
+  {
     name: 'faceted-browser-focus-dark',
     story: dark.Default,
     storyId: 'components-facetedbrowser--default',

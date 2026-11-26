@@ -47,7 +47,10 @@ export function normalizeFacetFilters<TRecord extends Record<string, unknown>>({
         (entry): entry is string =>
           typeof entry === 'string' && validOptions.has(entry),
       );
-      if (selected.length > 0) normalized[field] = selected;
+      if (selected.length > 0) {
+        normalized[field] =
+          facet.placement === 'results' ? selected.slice(0, 1) : selected;
+      }
       continue;
     }
 

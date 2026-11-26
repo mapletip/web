@@ -86,6 +86,7 @@ function BrowserExample({
   fillHeight = true,
   groupedCategories = false,
   regionPicker = false,
+  resultPills = false,
   navigation,
   sortOptions,
   renderPageLink,
@@ -96,6 +97,7 @@ function BrowserExample({
   readonly fillHeight?: boolean;
   readonly groupedCategories?: boolean;
   readonly regionPicker?: boolean;
+  readonly resultPills?: boolean;
   readonly navigation?: FacetedBrowserNavigation;
   readonly sortOptions?: readonly BrowseSortOption[];
   readonly renderPageLink?: PageLinkRenderer;
@@ -145,6 +147,7 @@ function BrowserExample({
         field: 'group',
         label: 'Category',
         kind: 'multi-select',
+        ...(resultPills ? { placement: 'results' as const } : {}),
         options: demoGroupFacetOptions.map(({ value, label }, index) => ({
           value,
           label,
@@ -180,7 +183,7 @@ function BrowserExample({
         kind: 'boolean',
       },
     ],
-    [groupedCategories, regionPicker],
+    [groupedCategories, regionPicker, resultPills],
   );
   const [drawerOpened, setDrawerOpened] = useState(variant === 'drawerOpen');
   const defaultState: BrowseState = {
@@ -245,6 +248,42 @@ export const Default: Story = {
 export const GroupedOptions: Story = {
   name: 'Grouped facet options',
   render: () => <BrowserExample groupedCategories />,
+};
+
+export const ResultPills: Story = {
+  name: 'Result pills',
+  render: () => <BrowserExample resultPills />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const group = canvas.getByRole('group', { name: 'Category' });
+    const all = within(group).getByRole('radio', { name: /^All \(/u });
+    all.focus();
+    await userEvent.keyboard('{ArrowRight}');
+    await waitFor(() =>
+      expect(
+        within(group).getByRole('radio', { name: /^Alpha \(/u }),
+      ).toBeChecked(),
+    );
+  },
+};
+
+export const ResultPillsOverflow: Story = {
+  name: 'Result pills overflow',
+  render: () => <BrowserExample resultPills />,
+  globals: { viewport: { value: 'mobileBreakpoint', isRotated: false } },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const region = canvas.getByRole('region', { name: 'Category choices' });
+    await waitFor(async () => {
+      const scroller = region.querySelector<HTMLElement>(
+        '.mantine-Scroller-container',
+      )!;
+      await expect(scroller.scrollWidth).toBeGreaterThan(scroller.clientWidth);
+      await expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(
+        document.documentElement.clientWidth,
+      );
+    });
+  },
 };
 
 export const Active: Story = {

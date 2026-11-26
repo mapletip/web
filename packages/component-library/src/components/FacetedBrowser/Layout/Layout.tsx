@@ -16,6 +16,7 @@ export interface LayoutProps {
   readonly activeFilters?: ReactNode;
   readonly summary?: ReactNode;
   readonly toolbar?: ReactNode;
+  readonly resultPills?: ReactNode;
   /** Replaces the results (table, cards and pagination) when defined. */
   readonly status?: ReactNode;
   /** aria-label for the results region. */
@@ -82,6 +83,7 @@ export function Layout({
   activeFilters,
   summary,
   toolbar,
+  resultPills,
   status,
   resultsLabel,
   table,
@@ -118,6 +120,7 @@ export function Layout({
             {toolbar}
           </div>
         ) : null}
+        {resultPills}
         {status ? (
           <div className={classes['status']}>{status}</div>
         ) : (
