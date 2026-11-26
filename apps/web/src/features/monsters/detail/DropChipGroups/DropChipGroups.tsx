@@ -1,10 +1,11 @@
 import { Group, Stack, Text, Title } from '@mantine/core';
 import type { ReactElement } from 'react';
 
-import type { BuildId } from '@/config/maplekit';
 import { ItemRecordChip } from '@/features/items/shared';
-import { DropCertaintyDisclosure } from '@/features/monsters/shared/DropCertaintyDisclosure';
-import { DropCertaintyLegend } from '@/features/monsters/shared/DropCertaintyLegend';
+import {
+  DropCertaintyDisclosure,
+  DropCertaintyLegend,
+} from '@/features/monsters/shared';
 
 import type { MonsterDetailDropsView } from '../project';
 
@@ -12,14 +13,10 @@ import classes from './DropChipGroups.module.css';
 
 export interface DropChipGroupsProps {
   readonly drops: MonsterDetailDropsView;
-  readonly buildId: BuildId;
 }
 
 /** Render every projected drop, preserving the SDK's within-group order. */
-export function DropChipGroups({
-  drops,
-  buildId,
-}: DropChipGroupsProps): ReactElement {
+export function DropChipGroups({ drops }: DropChipGroupsProps): ReactElement {
   if (drops.state === 'no-recorded') {
     return <Text size="sm">No recorded drop information.</Text>;
   }
@@ -40,16 +37,13 @@ export function DropChipGroups({
             <Group className={classes['items']} gap="xs">
               {group.entries.map((entry, index) => (
                 <ItemRecordChip
-                  key={`${entry.name}:${entry.assertionKind}:${entry.sourceBuild ?? ''}:${index}`}
+                  key={`${entry.name}:${index}`}
                   item={entry}
                   trailing={
                     <DropCertaintyDisclosure
                       itemName={entry.name}
-                      assertionKind={entry.assertionKind}
-                      {...(entry.sourceBuild === undefined
-                        ? {}
-                        : { sourceBuild: entry.sourceBuild })}
-                      buildId={buildId}
+                      confirmed={entry.confirmed}
+                      sources={entry.sources}
                     />
                   }
                 />

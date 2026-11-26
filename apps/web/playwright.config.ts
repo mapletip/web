@@ -46,6 +46,7 @@ export default defineConfig({
         '**/desktop.spec.ts',
         '**/routing.spec.ts',
         '**/detail.spec.ts',
+        '**/items/smoke.spec.ts',
       ],
       use: {
         ...devices['Desktop Chrome'],
@@ -56,7 +57,11 @@ export default defineConfig({
     },
     {
       name: 'mobile',
-      testMatch: ['**/mobile.spec.ts', '**/detail.spec.ts'],
+      testMatch: [
+        '**/mobile.spec.ts',
+        '**/detail.spec.ts',
+        '**/items/smoke.spec.ts',
+      ],
       use: {
         ...devices['iPhone 13'],
         ...use,

@@ -44,7 +44,7 @@ test('desktop Monster Detail opens an enlarged minimap on click', async ({
   );
 });
 
-test('desktop page with expanded drops and certainty details', async ({
+test('desktop page with expanded drops and drop sources', async ({
   page,
   monsterPage,
 }) => {
@@ -54,16 +54,10 @@ test('desktop page with expanded drops and certainty details', async ({
   await monsterPage.captureReady();
   await monsterPage.drops.tableButton('Crowned Warden', 24).click();
   const panel = monsterPage.drops.panel('Crowned Warden', 24);
-  const certainty = monsterPage.drops.certaintyButton(
-    panel,
-    'unconfirmed',
-    'Practice Cap',
-  );
-  await certainty.focus();
-  await certainty.hover();
-  const detailDialog = monsterPage.drops.certaintyDialog(
-    'Show unconfirmed drop details for Practice Cap',
-  );
+  const sourceButton = monsterPage.drops.certaintyButton(panel, 'Practice Cap');
+  await sourceButton.focus();
+  await sourceButton.hover();
+  const detailDialog = monsterPage.drops.certaintyDialog('Practice Cap');
   await expect(detailDialog).toBeVisible();
   await expect(detailDialog.getByText('Maybe')).toBeVisible();
   await expect(
@@ -71,6 +65,41 @@ test('desktop page with expanded drops and certainty details', async ({
   ).toBeVisible();
   await monsterPage.captureReady();
   await expect(page).toHaveScreenshot('desktop-drops-expanded.png');
+});
+
+test('desktop Monster Detail shows the confirmed drop explanation for Native Bloom', async ({
+  page,
+  monsterPage,
+}) => {
+  await page.setViewportSize({ width: 1366, height: 900 });
+  await page.addInitScript(() => localStorage.clear());
+  const publicId = monsterPublicId('native-alpha');
+  const slug = monsterSlug('Native Alpha', publicId);
+  await monsterPage.goto(`/maplestory/gms-v83/monsters/${slug}-${publicId}`);
+
+  await page
+    .getByRole('navigation', { name: 'Record sections' })
+    .getByRole('link', { name: 'Drops (2)' })
+    .click();
+  const sourceButton = page.getByRole('button', {
+    name: 'Show confirmed drop details for Native Bloom',
+  });
+  await expect(sourceButton).toBeVisible();
+  await sourceButton.focus();
+  await sourceButton.hover();
+
+  const dialog = page.locator(
+    '[role="dialog"][aria-label="Confirmed drop details for Native Bloom"]',
+  );
+  await expect(dialog).toBeVisible();
+  await expect(dialog.getByText('VOD', { exact: true })).toBeVisible();
+  await expect(dialog.getByText('Screenshot', { exact: true })).toBeVisible();
+  const timedLink = dialog.getByRole('link', { name: 'Open at 1:35' });
+  await expect(timedLink).toHaveAttribute('target', '_blank');
+  await monsterPage.captureReady();
+  await expect(dialog).toHaveScreenshot(
+    'desktop-native-bloom-drop-explanation.png',
+  );
 });
 
 test('desktop page with boolean and range filters active in the rail', async ({
@@ -153,7 +182,6 @@ test('mobile drops drawer opens over the active boss filter', async ({
   await monsterPage.drops.cardButton('Crowned Warden', 24).click();
   const drawer = monsterPage.drops.drawer('Crowned Warden');
   await expect(monsterPage.drops.category(drawer, 'Drops (24)')).toBeVisible();
-  await expect(monsterPage.drops.certaintyLegend(drawer)).toBeVisible();
   await monsterPage.captureReady();
   await expect(page).toHaveScreenshot('mobile-drops-drawer.png');
 });

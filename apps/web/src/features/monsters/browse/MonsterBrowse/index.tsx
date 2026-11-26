@@ -289,11 +289,7 @@ export function MonsterBrowse({
           />
         )}
         rowExpansionContent={(record, { onClose }) => (
-          <MonsterDropListing
-            record={record}
-            buildId={buildId}
-            onClose={onClose}
-          />
+          <MonsterDropListing record={record} onClose={onClose} />
         )}
         recordDetailsContent={(record, { onClose, surface }) =>
           drawerRelation === 'locations' ? (
@@ -306,7 +302,6 @@ export function MonsterBrowse({
           ) : (
             <MonsterDropListing
               record={record}
-              buildId={buildId}
               onClose={onClose}
               surface={surface}
             />

@@ -3,13 +3,12 @@ import { Thumbnail } from '@mapletip/component-library';
 import { MagnifyingGlass } from '@phosphor-icons/react';
 import { useState, type ReactElement } from 'react';
 
-import type { BuildId } from '@/config/maplekit';
 import {
+  DropCertaintyDisclosure,
+  DropCertaintyLegend,
   getMonsterDropCategoryId,
   MONSTER_DROP_CATEGORIES,
 } from '@/features/monsters/shared';
-import { DropCertaintyDisclosure } from '@/features/monsters/shared/DropCertaintyDisclosure';
-import { DropCertaintyLegend } from '@/features/monsters/shared/DropCertaintyLegend';
 
 import type { MonsterBrowseRow, MonsterDropEntry } from '../../project';
 import { closeDropsPanelOnEscape } from '../escape';
@@ -34,11 +33,9 @@ function matchesDropSearch(entry: MonsterDropEntry, query: string): boolean {
 
 export function MonsterDropEntries({
   record,
-  buildId,
   onClose,
 }: {
   readonly record: MonsterBrowseRow;
-  readonly buildId: BuildId;
   readonly onClose?: () => void;
 }): ReactElement {
   const [search, setSearch] = useState('');
@@ -125,11 +122,8 @@ export function MonsterDropEntries({
                         </Group>
                         <DropCertaintyDisclosure
                           itemName={entry.itemName}
-                          assertionKind={entry.assertionKind}
-                          {...(entry.sourceBuild === undefined
-                            ? {}
-                            : { sourceBuild: entry.sourceBuild })}
-                          buildId={buildId}
+                          confirmed={entry.confirmed}
+                          sources={entry.sources}
                           onEscape={(event) =>
                             closeDropsPanelOnEscape(event, onClose)
                           }

@@ -231,8 +231,15 @@ describe('MonsterBrowseCard', () => {
           {
             itemRefState: 'ambiguous',
             itemName: 'Unknown item name',
-            assertionKind: 'historical-overlay',
-            sourceBuild: 'gms-v83',
+            confirmed: false,
+
+            sources: [
+              {
+                observed: false,
+                label: 'GMS v83 Monster Book',
+                buildLabel: 'GMS v83',
+              },
+            ],
           },
         ],
       },
@@ -274,20 +281,22 @@ describe('MonsterBrowseCard', () => {
           {
             itemRefState: 'ambiguous',
             itemName: 'Unknown item name',
-            assertionKind: 'historical-overlay',
-            sourceBuild: 'gms-v83',
+            confirmed: false,
+
+            sources: [
+              {
+                observed: false,
+                label: 'GMS v83 Monster Book',
+                buildLabel: 'GMS v83',
+              },
+            ],
           },
         ],
       },
     };
     render(
       <MantineProvider>
-        <MonsterDropListing
-          record={row}
-          buildId={DEFAULT_BUILD_ID}
-          onClose={vi.fn()}
-          surface="drawer"
-        />
+        <MonsterDropListing record={row} onClose={vi.fn()} surface="drawer" />
       </MantineProvider>,
     );
 
@@ -297,16 +306,10 @@ describe('MonsterBrowseCard', () => {
     expect(
       screen.queryByRole('button', { name: /Close Drops/u }),
     ).not.toBeInTheDocument();
-    expect(
-      screen.getByRole('group', { name: 'Drop certainty legend' }),
-    ).toHaveTextContent('Confirmed');
-    expect(
-      screen.getByRole('group', { name: 'Drop certainty legend' }),
-    ).toHaveTextContent('Unconfirmed');
-    const uncertaintyButton = screen.getByRole('button', {
+    const sourceButton = screen.getByRole('button', {
       name: 'Show unconfirmed drop details for Unknown item name',
     });
-    expect(uncertaintyButton).toHaveAttribute('data-confirmed', 'false');
+    expect(sourceButton).toBeVisible();
 
     const search = screen.getByRole('textbox', {
       name: 'Search items',
@@ -330,7 +333,7 @@ describe('MonsterBrowseCard', () => {
     expect(onShowDrops).toHaveBeenCalledOnce();
   });
 
-  it('closes a status popover before its containing desktop drops panel', async () => {
+  it('closes a source explanation before its containing desktop drops panel', async () => {
     const user = userEvent.setup();
     const row: MonsterBrowseRow = {
       ...knownRow(),
@@ -340,8 +343,15 @@ describe('MonsterBrowseCard', () => {
           {
             itemRefState: 'resolved',
             itemName: 'Green Headband',
-            assertionKind: 'historical-overlay',
-            sourceBuild: 'gms-v83',
+            confirmed: false,
+
+            sources: [
+              {
+                observed: false,
+                label: 'GMS v83 Monster Book',
+                buildLabel: 'GMS v83',
+              },
+            ],
           },
         ],
       },
@@ -349,11 +359,7 @@ describe('MonsterBrowseCard', () => {
     const onClose = vi.fn();
     render(
       <MantineProvider>
-        <MonsterDropListing
-          record={row}
-          buildId={DEFAULT_BUILD_ID}
-          onClose={onClose}
-        />
+        <MonsterDropListing record={row} onClose={onClose} />
       </MantineProvider>,
     );
 
@@ -387,7 +393,7 @@ describe('MonsterBrowseCard', () => {
     expect(onClose).toHaveBeenCalledTimes(2);
   });
 
-  it('uses the current build as the source for a confirmed drop', async () => {
+  it('uses the current build as the source for a drop', async () => {
     const user = userEvent.setup();
     const row: MonsterBrowseRow = {
       ...knownRow(),
@@ -397,14 +403,22 @@ describe('MonsterBrowseCard', () => {
           {
             itemRefState: 'resolved',
             itemName: 'Crimson Tonic',
-            assertionKind: 'native',
+            confirmed: true,
+
+            sources: [
+              {
+                observed: false,
+                label: 'GMS v83 Monster Book',
+                buildLabel: 'GMS v83',
+              },
+            ],
           },
         ],
       },
     };
     render(
       <MantineProvider>
-        <MonsterDropListing record={row} buildId="gms-v83" onClose={vi.fn()} />
+        <MonsterDropListing record={row} onClose={vi.fn()} />
       </MantineProvider>,
     );
 
@@ -423,7 +437,7 @@ describe('MonsterBrowseCard', () => {
     ).toBeNull();
   });
 
-  it('omits source attribution when a historical entry has no source build', async () => {
+  it('renders a published source label', async () => {
     const user = userEvent.setup();
     const row: MonsterBrowseRow = {
       ...knownRow(),
@@ -433,18 +447,22 @@ describe('MonsterBrowseCard', () => {
           {
             itemRefState: 'resolved',
             itemName: 'Unknown source drop',
-            assertionKind: 'historical-overlay',
+            confirmed: false,
+
+            sources: [
+              {
+                observed: false,
+                label: 'GMS v83 Monster Book',
+                buildLabel: 'GMS v83',
+              },
+            ],
           },
         ],
       },
     };
     render(
       <MantineProvider>
-        <MonsterDropListing
-          record={row}
-          buildId={DEFAULT_BUILD_ID}
-          onClose={vi.fn()}
-        />
+        <MonsterDropListing record={row} onClose={vi.fn()} />
       </MantineProvider>,
     );
 
@@ -453,7 +471,10 @@ describe('MonsterBrowseCard', () => {
         name: 'Show unconfirmed drop details for Unknown source drop',
       }),
     );
-    await waitFor(() => expect(screen.getByText('Maybe')).toBeInTheDocument());
-    expect(screen.queryByText(/^Source:/u)).not.toBeInTheDocument();
+    await waitFor(() =>
+      expect(
+        screen.getByText('Source: GMS v83 Monster Book.'),
+      ).toBeInTheDocument(),
+    );
   });
 });

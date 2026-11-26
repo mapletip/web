@@ -1,64 +1,95 @@
-import { ActionIcon, HoverCard, Stack, Text } from '@mantine/core';
+import { ActionIcon, Anchor, HoverCard, Stack, Text } from '@mantine/core';
 import { Check, Question } from '@phosphor-icons/react';
 import { useState, type KeyboardEvent, type ReactElement } from 'react';
 
-import { BUILDS, isBuildId, type BuildId } from '@/config/maplekit';
-
 import classes from './drop-certainty.module.css';
+import type { DropSource } from './drop-sources';
 
-export type MonsterDropAssertionKind = 'native' | 'historical-overlay';
-
-export interface MonsterDropCertaintyProps {
+export interface DropCertaintyDisclosureProps {
   readonly itemName: string;
-  readonly assertionKind: MonsterDropAssertionKind;
-  readonly sourceBuild?: string;
-}
-
-export interface DropCertaintyDisclosureProps extends MonsterDropCertaintyProps {
-  readonly buildId: BuildId;
+  readonly confirmed: boolean;
+  readonly sources: readonly DropSource[];
   readonly onEscape?: (event: KeyboardEvent<HTMLElement>) => void;
 }
 
-function buildLabel(buildId: string): string {
-  return isBuildId(buildId) ? BUILDS[buildId].label : buildId;
+const dateFormatter = new Intl.DateTimeFormat('en-US', {
+  dateStyle: 'medium',
+  timeZone: 'UTC',
+});
+
+function timeLabel(seconds: number): string {
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  const remainder = seconds % 60;
+  return hours > 0
+    ? `${hours}:${String(minutes).padStart(2, '0')}:${String(remainder).padStart(2, '0')}`
+    : `${minutes}:${String(remainder).padStart(2, '0')}`;
 }
 
-function dropSourceLabel(
-  certainty: MonsterDropCertaintyProps,
-  buildId: BuildId,
-): string | undefined {
-  if (certainty.assertionKind === 'native' && buildId === 'gms-v83') {
-    return `${BUILDS[buildId].label} Monster Book`;
+function SourceExplanation({
+  sources,
+}: {
+  readonly sources: readonly DropSource[];
+}): ReactElement | null {
+  if (sources.length === 0) return null;
+  if (sources.every(({ observed }) => !observed)) {
+    return (
+      <Text size="xs" c="dimmed">
+        {sources.length === 1 ? 'Source' : 'Sources'}:{' '}
+        {sources.map(({ label }) => label).join(', ')}.
+      </Text>
+    );
   }
-  if (certainty.sourceBuild !== undefined) {
-    const label = buildLabel(certainty.sourceBuild);
-    return certainty.sourceBuild === 'gms-v83'
-      ? `${label} Monster Book`
-      : label;
-  }
-  return undefined;
+  return (
+    <Stack gap="xs">
+      {sources.length > 1 ? (
+        <Text size="xs" c="dimmed">
+          Sources:
+        </Text>
+      ) : null}
+      {sources.map((source, index) => (
+        <Stack gap={0} key={`${source.label}:${source.buildLabel}:${index}`}>
+          <Text size="sm" fw={500}>
+            {source.label}
+          </Text>
+          <Text size="xs" c="dimmed">
+            {[
+              source.buildLabel,
+              source.date === undefined
+                ? undefined
+                : dateFormatter.format(new Date(`${source.date}T00:00:00Z`)),
+            ]
+              .filter(Boolean)
+              .join(' · ')}
+          </Text>
+          {source.href === undefined ? null : (
+            <Anchor
+              size="xs"
+              href={source.href}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              {source.startSeconds === undefined
+                ? 'Open link'
+                : `Open at ${timeLabel(source.startSeconds)}`}
+            </Anchor>
+          )}
+        </Stack>
+      ))}
+    </Stack>
+  );
 }
 
 /** Shared certainty marker and explanation for Monster Browse and Detail. */
 export function DropCertaintyDisclosure({
   itemName,
-  assertionKind,
-  sourceBuild,
-  buildId,
+  confirmed,
+  sources,
   onEscape,
 }: DropCertaintyDisclosureProps): ReactElement {
   const [explanationOpen, setExplanationOpen] = useState(false);
-  const confirmed = assertionKind === 'native';
   const stateLabel = confirmed ? 'Confirmed' : 'Maybe';
   const actionLabel = `Show ${confirmed ? 'confirmed' : 'unconfirmed'} drop details for ${itemName}`;
-  const sourceLabel = dropSourceLabel(
-    {
-      itemName,
-      assertionKind,
-      ...(sourceBuild === undefined ? {} : { sourceBuild }),
-    },
-    buildId,
-  );
 
   function handleEscape(event: KeyboardEvent<HTMLElement>): void {
     if (
@@ -112,11 +143,7 @@ export function DropCertaintyDisclosure({
           <Text fw={600} size="sm">
             {stateLabel}
           </Text>
-          {sourceLabel === undefined ? null : (
-            <Text size="xs" c="dimmed">
-              Source: {sourceLabel}.
-            </Text>
-          )}
+          <SourceExplanation sources={sources} />
         </Stack>
       </HoverCard.Dropdown>
     </HoverCard>

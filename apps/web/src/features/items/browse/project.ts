@@ -4,22 +4,24 @@
  *
  * Absent values are omitted (undefined means "no value"; never coerce to 0).
  */
-import type { ItemBrowseRecord, ItemBrowseRow } from '@mapletip/data/items';
+import type {
+  ItemBrowseCoverage,
+  ItemBrowseRecordV2_2,
+  ItemBrowseRowV2_2,
+} from '@mapletip/data/items';
 
-type Fact = ItemBrowseRow['name'];
-type Scroll = NonNullable<ItemBrowseRecord['scroll']>;
-export type ItemBrowseClass = ItemBrowseRecord['itemClass'];
-export type ItemBrowseType = NonNullable<ItemBrowseRecord['types']>[number];
+type Fact = ItemBrowseRowV2_2['name'];
+type Scroll = NonNullable<ItemBrowseRecordV2_2['scroll']>;
+export type ItemBrowseClass = ItemBrowseRecordV2_2['itemClass'];
+export type ItemBrowseType = NonNullable<ItemBrowseRecordV2_2['types']>[number];
 export type ItemBrowseFunction = NonNullable<
-  ItemBrowseRecord['functions']
+  ItemBrowseRecordV2_2['functions']
 >[number];
 export type ItemBrowseScrollDeltas = NonNullable<Scroll['deltas']>;
 export type ItemBrowseUpgradeTarget = NonNullable<Scroll['targetLabel']>;
 export type ItemBrowseUpgradeTier = NonNullable<Scroll['tier']>;
 export type ItemBrowseUpgradeSpecial = NonNullable<Scroll['specials']>[number];
-export type ItemRelationshipKind = keyof NonNullable<
-  ItemBrowseRecord['relationships']
->;
+export type ItemRelationshipKind = keyof ItemBrowseCoverage['relationships'];
 
 interface ItemPetTarget {
   readonly sourceId: string;
@@ -121,7 +123,7 @@ export const RELATIONSHIP_COUNT_FIELDS = [
 ])[];
 
 export function projectItemBrowseRows(
-  records: readonly ItemBrowseRow[],
+  records: readonly ItemBrowseRowV2_2[],
 ): readonly ItemRow[] {
   const petByTargetKey = new Map<string, ItemPetTarget>();
   for (const record of records) {

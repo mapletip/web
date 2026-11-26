@@ -1,3 +1,5 @@
+import { ITEM_SCOPES } from '../features/items/browse/categories';
+
 import { fixtureRelease } from './release';
 import { spriteDimensions, type SpriteCase } from './world';
 
@@ -16,6 +18,13 @@ const spriteFills: Readonly<Record<SpriteCase, string>> = {
   missing: '#758b55',
 };
 
+// These are today's hard-coded Items category icons; remove this when the category tree is rebuilt.
+const fixedItemIconIds = new Set(
+  Object.values(ITEM_SCOPES).flatMap(({ children }) =>
+    children.flatMap((child) => child.iconContentIds ?? []),
+  ),
+);
+
 /** Return an invented flat SVG for a fixture content id, or a 404 case. */
 export function spriteResponse(contentId: string): SpriteResponse {
   if (fixtureRelease.minimapIds.has(contentId)) {
@@ -32,8 +41,9 @@ export function spriteResponse(contentId: string): SpriteResponse {
       body: '<svg xmlns="http://www.w3.org/2000/svg" width="38" height="38" viewBox="0 0 38 38"><circle cx="19" cy="19" r="17" fill="#c77724"/><path d="M11 24 19 10l8 14z" fill="#f2eee4"/></svg>',
     };
   }
-  const spriteCase = fixtureRelease.spriteIds.get(contentId) as
-    SpriteCase | undefined;
+  const spriteCase =
+    (fixtureRelease.spriteIds.get(contentId) as SpriteCase | undefined) ??
+    (fixedItemIconIds.has(contentId) ? 'exact' : undefined);
   if (spriteCase === undefined || spriteCase === 'missing') {
     return { status: 404, body: '', contentType: 'image/svg+xml' };
   }

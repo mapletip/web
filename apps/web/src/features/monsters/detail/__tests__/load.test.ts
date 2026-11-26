@@ -87,6 +87,18 @@ describe('loadMonsterDetail', () => {
     ).rejects.toThrow(MONSTER_DETAIL_UNAVAILABLE_MESSAGE);
   });
 
+  it('turns an unexpected page revision into the unavailable state', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    getMonsterPage.mockResolvedValue({
+      ...monsterPageFixture(),
+      contractVersion: '1.3',
+    });
+
+    await expect(
+      loadMonsterDetail({ buildId: 'cw-launch', publicId: '36z2h01p' }),
+    ).rejects.toThrow(MONSTER_DETAIL_UNAVAILABLE_MESSAGE);
+  });
+
   it('preserves AbortError and strips technical fields from other errors', () => {
     const abort = new DOMException('Aborted', 'AbortError');
     expect(sanitizeMonsterDetailError(abort)).toBe(abort);

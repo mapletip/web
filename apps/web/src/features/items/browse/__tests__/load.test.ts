@@ -33,4 +33,12 @@ describe('loadItemBrowse', () => {
 
     await expect(loadItemBrowse('cw-launch')).rejects.toBe(abort);
   });
+
+  it('turns an unexpected browse revision into the unavailable state', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    getItemBrowse.mockResolvedValue({ contractVersion: '2.1' });
+    await expect(loadItemBrowse('cw-launch')).rejects.toThrow(
+      ITEM_BROWSE_UNAVAILABLE_MESSAGE,
+    );
+  });
 });

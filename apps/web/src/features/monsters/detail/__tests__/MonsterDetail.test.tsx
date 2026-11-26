@@ -112,7 +112,13 @@ describe('MonsterDetail hero', () => {
             name: { state: 'known', value: 'Practice Tonic' },
             category: { kind: 'item-class', value: 'consume' },
             icon: { state: 'unknown' },
-            assertion: { kind: 'native' },
+            evidence: [
+              {
+                kind: 'native',
+                label: "This version's game files",
+                build: 'cw-launch',
+              },
+            ],
           },
         ],
         summary: { native: { state: 'known', count: 1, lowerBound: true } },

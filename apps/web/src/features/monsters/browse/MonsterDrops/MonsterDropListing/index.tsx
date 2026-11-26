@@ -3,8 +3,6 @@ import type { RecordDetailsContentContext } from '@mapletip/component-library';
 import { Package } from '@phosphor-icons/react';
 import type { ReactElement } from 'react';
 
-import type { BuildId } from '@/config/maplekit';
-
 import type { MonsterBrowseRow } from '../../project';
 import { closeDropsPanelOnEscape } from '../escape';
 import { MonsterDropEntries } from '../MonsterDropEntries';
@@ -29,12 +27,10 @@ export type MonsterDropSurface = RecordDetailsContentContext['surface'];
 
 export function MonsterDropListing({
   record,
-  buildId,
   onClose,
   surface = 'table',
 }: {
   readonly record: MonsterBrowseRow;
-  readonly buildId: BuildId;
   readonly onClose: () => void;
   readonly surface?: MonsterDropSurface;
 }): ReactElement {
@@ -48,7 +44,7 @@ export function MonsterDropListing({
         <Title order={3} size="sm">
           {countText}
         </Title>
-        <MonsterDropEntries record={record} buildId={buildId} />
+        <MonsterDropEntries record={record} />
       </Stack>
     );
   }
@@ -77,7 +73,7 @@ export function MonsterDropListing({
           className={classes['panelClose']}
         />
       </Group>
-      <MonsterDropEntries record={record} buildId={buildId} onClose={onClose} />
+      <MonsterDropEntries record={record} onClose={onClose} />
     </section>
   );
 }

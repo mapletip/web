@@ -44,7 +44,13 @@ describe('MonsterDetail server rendering', () => {
               name: { state: 'known', value: 'Synthetic Tonic' },
               category: { kind: 'item-class', value: 'consume' },
               icon: { state: 'unknown' },
-              assertion: { kind: 'native' },
+              evidence: [
+                {
+                  kind: 'native',
+                  label: "This version's game files",
+                  build: 'cw-launch',
+                },
+              ],
             },
           ],
           summary: {

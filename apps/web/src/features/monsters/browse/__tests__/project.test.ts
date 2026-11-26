@@ -1,7 +1,6 @@
 import { itemIconUrl } from '@mapletip/data/items';
 import type {
-  MonsterDropBrowseV1,
-  StaticMonsterDropBrowse,
+  StaticMonsterDropBrowseV1_2,
   StaticMonsterCatalog,
 } from '@mapletip/data/monsters';
 import { describe, expect, it } from 'vitest';
@@ -34,7 +33,7 @@ function firstRow(rows: readonly MonsterBrowseRow[]): MonsterBrowseRow {
 
 function projectRows(
   catalog: StaticMonsterCatalog,
-  dropBrowse: MonsterDropBrowseV1 = emptyDropBrowseFixture(),
+  dropBrowse: StaticMonsterDropBrowseV1_2 = emptyDropBrowseFixture(),
 ): readonly MonsterBrowseRow[] {
   return projectCatalogRows(catalog, dropBrowse);
 }
@@ -177,19 +176,33 @@ describe('projectMonsterBrowseRows contract-2.2 tuple mapping', () => {
 });
 
 describe('Monster drop projection', () => {
-  function dropBrowseFixture(): MonsterDropBrowseV1 {
+  function dropBrowseFixture(): StaticMonsterDropBrowseV1_2 {
     return {
       format: 'mapletip.monster-drop-browse',
-      contractVersion: '1.0',
+      contractVersion: '1.2',
       scope: { build_id: 'cw-launch', family_id: 'classic-world' },
+
+      evidenceKinds: [
+        { key: 'native', label: "This version's game files" },
+        {
+          key: 'historical-overlay',
+          label: "Another version's game files",
+        },
+      ],
+      evidenceSources: [
+        { kind: 'native', build: 'cw-launch' },
+        { kind: 'historical-overlay', build: 'gms-v83' },
+      ],
       items: [
         {
+          icon: { state: 'unknown' },
           itemRef: { state: 'ambiguous' },
           itemName: { state: 'known', value: 'Known but ambiguous potion' },
           itemClass: { state: 'unknown' },
           category: { kind: 'unknown' },
         },
         {
+          icon: { state: 'unknown' },
           itemRef: { state: 'resolved', key: 'fixture:item:known' },
           itemName: { state: 'known', value: 'Known item' },
           itemClass: { state: 'known', value: 'etc' },
@@ -199,18 +212,45 @@ describe('Monster drop projection', () => {
       records: {
         'fixture:monster:001': {
           entries: [
-            { assertionKind: 'native', item: 0 },
-            {
-              assertionKind: 'historical-overlay',
-              sourceBuild: 'gms-v83',
-              confidence: 'maybe',
-              item: 1,
-            },
+            { item: 0, evidence: [{ source: 0 }] },
+            { item: 1, evidence: [{ source: 1 }] },
           ],
         },
       },
     };
   }
+
+  it('projects multiple published sources on one drop', () => {
+    const drops = dropBrowseFixture();
+    drops.evidenceKinds.push({ key: 'screenshot', label: 'Screenshot' });
+    drops.evidenceSources.push({ kind: 'screenshot', build: 'cw-launch' });
+    drops.records['fixture:monster:001']!.entries[0]!.evidence.push({
+      source: 2,
+    });
+    const row = firstRow(
+      projectRows(fixtureCatalog({ records: [sentinelRecord()] }), drops),
+    );
+    expect(row.drops.entries[0]?.sources).toEqual([
+      { observed: true, label: 'Screenshot', buildLabel: 'Classic World' },
+    ]);
+    expect(row.drops.entries).toHaveLength(2);
+  });
+
+  it('rejects invalid evidence', () => {
+    const catalog = fixtureCatalog({ records: [sentinelRecord()] });
+    const missingSource = dropBrowseFixture();
+    missingSource.records[
+      'fixture:monster:001'
+    ]!.entries[0]!.evidence[0].source = 99;
+    expect(() => projectRows(catalog, missingSource)).toThrow(
+      'missing source index 99',
+    );
+    const missingKind = dropBrowseFixture();
+    missingKind.evidenceKinds.length = 0;
+    expect(() => projectRows(catalog, missingKind)).toThrow(
+      'missing kind label native',
+    );
+  });
 
   it('keeps unresolved entries but exposes only resolved item keys to filtering', () => {
     const drops = dropBrowseFixture();
@@ -222,13 +262,24 @@ describe('Monster drop projection', () => {
     expect(row.drops.entries[0]).toMatchObject({
       itemRefState: 'ambiguous',
       itemName: 'Known but ambiguous potion',
-      assertionKind: 'native',
+      sources: [
+        {
+          observed: false,
+          label: 'Classic World Monster Book',
+          buildLabel: 'Classic World',
+        },
+      ],
     });
     expect(row.drops.entries[0]).not.toHaveProperty('itemCategory');
     expect(row.drops.entries[1]).toMatchObject({
       itemKey: 'fixture:item:known',
-      assertionKind: 'historical-overlay',
-      sourceBuild: 'gms-v83',
+      sources: [
+        {
+          observed: false,
+          label: 'GMS v83 Monster Book',
+          buildLabel: 'GMS v83',
+        },
+      ],
     });
     expect(row.drops.itemKeys).toEqual(['fixture:item:known']);
   });
@@ -236,14 +287,15 @@ describe('Monster drop projection', () => {
   it('normalizes equipment slots and leaves unknown categories unclassified', () => {
     const drops = dropBrowseFixture();
     drops.items.push({
+      icon: { state: 'unknown' },
       itemRef: { state: 'resolved', key: 'fixture:item:headband' },
       itemName: { state: 'known', value: 'Green Headband' },
       itemClass: { state: 'unknown' },
       category: { kind: 'equip-slot', code: 'cap' },
     });
     drops.records['fixture:monster:001']!.entries.push({
-      assertionKind: 'native',
       item: 2,
+      evidence: [{ source: 0 }],
     });
 
     const row = firstRow(
@@ -283,10 +335,13 @@ describe('Monster drop projection', () => {
   it('projects known item icons into drop filter options', () => {
     const baseUrl = 'https://assets.example.test/';
     const iconId = 'a'.repeat(64);
-    const dropBrowse: StaticMonsterDropBrowse = {
+    const dropBrowse: StaticMonsterDropBrowseV1_2 = {
       format: 'mapletip.monster-drop-browse',
-      contractVersion: '1.1',
+      contractVersion: '1.2',
       scope: { build_id: 'cw-launch', family_id: 'classic-world' },
+
+      evidenceKinds: [],
+      evidenceSources: [],
       items: [
         {
           itemRef: { state: 'resolved', key: 'fixture:item:green-headband' },

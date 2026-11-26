@@ -1,4 +1,7 @@
-import type { StaticMonsterPageRecord } from '@mapletip/data/monsters';
+import type {
+  MonsterPageRecordV1_4,
+  StaticMonsterPageRecord,
+} from '@mapletip/data/monsters';
 
 import type { BuildId } from '@/config/maplekit';
 import { buildRecordDetailPath } from '@/features/detail';
@@ -32,6 +35,7 @@ import {
   getMonsterDropCategoryLabel,
   MONSTER_DROP_CATEGORIES,
 } from '../shared/drop-categories';
+import { classifyDrop, type DropSource } from '../shared/drop-sources';
 import {
   projectMonsterLocationCards,
   type MonsterLocationMapView,
@@ -54,8 +58,8 @@ export interface MonsterElementResponseView {
 }
 
 export interface MonsterDetailDropEntryView extends ItemRecordChipView {
-  readonly assertionKind: 'native' | 'historical-overlay';
-  readonly sourceBuild?: string;
+  readonly sources: readonly DropSource[];
+  readonly confirmed: boolean;
 }
 
 export interface MonsterDetailDropGroupView {
@@ -308,7 +312,7 @@ function projectMonsterLocations({
 }
 
 function projectMonsterDrops(
-  record: StaticMonsterPageRecord,
+  record: MonsterPageRecordV1_4,
 ): MonsterDetailDropsView {
   const groupedEntries = new Map<
     MonsterDropCategoryId,
@@ -331,10 +335,7 @@ function projectMonsterDrops(
           ? { iconContentId: entry.icon.value }
           : {}),
       }),
-      assertionKind: entry.assertion.kind,
-      ...(entry.assertion.kind === 'historical-overlay'
-        ? { sourceBuild: entry.assertion.sourceBuild }
-        : {}),
+      ...classifyDrop(entry.evidence),
     });
     groupedEntries.set(category, group);
   }
@@ -377,7 +378,7 @@ function projectMonsterDrops(
  * view. Non-known facts keep the same wording as Monster Browse.
  */
 export function projectMonsterDetail(
-  record: StaticMonsterPageRecord,
+  record: MonsterPageRecordV1_4,
   buildId: BuildId,
 ): MonsterDetailView {
   const name =

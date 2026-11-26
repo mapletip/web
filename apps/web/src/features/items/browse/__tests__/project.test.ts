@@ -1,12 +1,16 @@
-import type { ItemBrowseRow } from '@mapletip/data/items';
+import type { ItemBrowseRowV2_2 } from '@mapletip/data/items';
 import { describe, expect, it } from 'vitest';
 
 import { projectItemBrowseRows } from '../project';
 
-function makeBaseRow(overrides: Partial<ItemBrowseRow> = {}): ItemBrowseRow {
+function makeBaseRow(
+  overrides: Partial<ItemBrowseRowV2_2> = {},
+): ItemBrowseRowV2_2 {
   return {
     key: 'item:fixture:1',
     sourceId: '02000000',
+    publicId: 'test0001',
+    slug: 'crimson-tonic',
     itemClass: 'consume',
     name: { state: 'known', value: 'Crimson Tonic' },
     icon: { state: 'known', value: 'a'.repeat(64) },
