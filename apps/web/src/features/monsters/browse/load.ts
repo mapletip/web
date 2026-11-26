@@ -45,6 +45,12 @@ export function loadMonsterBrowse(
         monsterProduct.loadDropBrowse(operation),
       ]);
 
+      if (dropBrowse.contractVersion !== '1.2') {
+        throw new Error(
+          `Unexpected Monster drop browse revision ${dropBrowse.contractVersion}.`,
+        );
+      }
+
       return {
         rows: projectMonsterBrowseRows(
           catalog,

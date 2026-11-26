@@ -395,8 +395,9 @@ describe('MonsterBrowse', () => {
           {
             itemRefState: 'unresolved',
             itemName: 'Unknown item name',
-            assertionKind: 'historical-overlay',
-            sourceBuild: 'gms-v83',
+            sources: [
+              { label: "Another version's game files", buildLabel: 'GMS v83' },
+            ],
           },
         ],
       },
@@ -420,8 +421,6 @@ describe('MonsterBrowse', () => {
     });
     expect(drawer).toHaveTextContent('Drops (1)');
     expect(drawer).toHaveTextContent('Unresolved item reference');
-    expect(drawer).toHaveTextContent('Unconfirmed');
-    expect(drawer).not.toHaveTextContent('Historical · GMS v83 · maybe');
 
     await user.click(
       within(drawer).getByRole('button', {
@@ -435,7 +434,7 @@ describe('MonsterBrowse', () => {
     await waitFor(() => expect(expandButton).toHaveFocus());
   });
 
-  it('lets Escape close a status popover before the shared mobile drawer', async () => {
+  it('lets Escape close a source explanation before the shared mobile drawer', async () => {
     const user = userEvent.setup();
     const [first] = rows;
     if (first === undefined) throw new Error('Fixture produced no rows.');
@@ -447,8 +446,9 @@ describe('MonsterBrowse', () => {
           {
             itemRefState: 'resolved',
             itemName: 'Green Headband',
-            assertionKind: 'historical-overlay',
-            sourceBuild: 'gms-v83',
+            sources: [
+              { label: "Another version's game files", buildLabel: 'GMS v83' },
+            ],
           },
         ],
       },
@@ -465,7 +465,7 @@ describe('MonsterBrowse', () => {
     });
 
     const statusButton = within(drawer).getByRole('button', {
-      name: 'Show unconfirmed drop details for Green Headband',
+      name: 'Sources for Green Headband',
     });
     await user.click(statusButton);
     expect(statusButton).toHaveAttribute('aria-expanded', 'true');
@@ -486,6 +486,7 @@ describe('MonsterBrowse', () => {
       expect(screen.queryByRole('dialog')).not.toBeInTheDocument(),
     );
     expect(trigger).toHaveAttribute('aria-expanded', 'false');
+    expect(trigger).toHaveFocus();
   });
 
   it('filters monsters by a stable dropped item key through the shared facet', async () => {

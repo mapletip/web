@@ -1,13 +1,13 @@
-import type { MonsterPageRecordV1 } from '@mapletip/data/monsters';
+import type { MonsterPageRecordV1_4 } from '@mapletip/data/monsters';
 
 const UNKNOWN = { state: 'unknown' } as const;
 
 export function monsterPageFixture(
-  overrides: Partial<MonsterPageRecordV1> = {},
-): MonsterPageRecordV1 {
+  overrides: { readonly [key: string]: unknown } = {},
+): MonsterPageRecordV1_4 {
   return {
     format: 'mapletip.monster-page',
-    contractVersion: '1.0',
+    contractVersion: '1.4',
     scope: { build_id: 'cw-launch', family_id: 'classic-world' },
     key: 'fixture:monster:001',
     publicId: '36z2h01p',
@@ -41,6 +41,7 @@ export function monsterPageFixture(
       entries: [],
       summary: {
         native: UNKNOWN,
+        count: 0,
       },
     },
     locations: {
@@ -53,5 +54,5 @@ export function monsterPageFixture(
     },
     summonedByItems: [],
     ...overrides,
-  };
+  } as unknown as MonsterPageRecordV1_4;
 }

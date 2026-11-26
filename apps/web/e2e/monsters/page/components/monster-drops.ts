@@ -42,22 +42,12 @@ export class MonsterDrops {
     return listing.getByRole('textbox', { name: 'Search items' });
   }
 
-  certaintyButton(
-    listing: Locator,
-    confirmation: 'confirmed' | 'unconfirmed',
-    item: string,
-  ): Locator {
-    return listing.getByRole('button', {
-      name: `Show ${confirmation} drop details for ${item}`,
-    });
+  sourceButton(listing: Locator, item: string): Locator {
+    return listing.getByRole('button', { name: `Sources for ${item}` });
   }
 
-  certaintyDialog(buttonName: string): Locator {
-    return this.page.getByRole('dialog', { name: buttonName });
-  }
-
-  certaintyLegend(listing: Locator): Locator {
-    return listing.getByRole('group', { name: 'Drop certainty legend' });
+  sourceDialog(item: string): Locator {
+    return this.page.getByRole('dialog', { name: `Sources for ${item}` });
   }
 
   closeButton(listing: Locator, monster: string): Locator {

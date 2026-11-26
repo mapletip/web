@@ -35,3 +35,6 @@ export {
   type MapPageMonsterRecord,
   type MonsterRecordCardView,
 } from './monsterRecordCardProjection';
+
+export { DropSources } from './DropSources';
+export type { DropSource } from './drop-sources';

@@ -264,7 +264,7 @@ describe('fixture release', () => {
     ]);
   });
 
-  it('serves matching Monster location and Map page identities from v1.3 fixtures', async () => {
+  it('serves matching Monster location and Map page identities from v1.4 fixtures', async () => {
     const options = {
       baseUrl: 'https://d0.mapletip.com/',
       pin: fixtureRelease.pin,
@@ -283,15 +283,15 @@ describe('fixture release', () => {
       getMonsterLocationBrowse(options),
     ]);
     if (
-      page.contractVersion !== '1.3' ||
-      eventMonster.contractVersion !== '1.3' ||
+      page.contractVersion !== '1.4' ||
+      eventMonster.contractVersion !== '1.4' ||
       locations.contractVersion !== '1.4'
     ) {
       throw new Error(
         'Expected the current Monster page and location revisions.',
       );
     }
-    expect(page.contractVersion).toBe('1.3');
+    expect(page.contractVersion).toBe('1.4');
     expect(locations.contractVersion).toBe('1.4');
     expect(page.sprite).toMatchObject({
       contentId: { state: 'known' },

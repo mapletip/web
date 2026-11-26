@@ -1,4 +1,4 @@
-import type { MonsterDropBrowseV1 } from '@mapletip/data/monsters';
+import type { MonsterDropBrowseV1_2 } from '@mapletip/data/monsters';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { MAPLEKIT_RELEASE } from '@/config/maplekit';
@@ -38,11 +38,14 @@ function catalogFixture() {
   };
 }
 
-function dropBrowseFixture(): MonsterDropBrowseV1 {
+function dropBrowseFixture(): MonsterDropBrowseV1_2 {
   return {
     format: 'mapletip.monster-drop-browse',
-    contractVersion: '1.0',
+    contractVersion: '1.2',
     scope: { build_id: 'cw-launch', family_id: 'classic-world' },
+    itemIcons: [{ state: 'unknown' }],
+    evidenceKinds: [{ key: 'native', label: "This version's game files" }],
+    evidenceSources: [{ kind: 'native', build: 'cw-launch' }],
     items: [
       {
         itemRef: { state: 'resolved', key: 'fixture:item:crimson-tonic' },
@@ -53,7 +56,7 @@ function dropBrowseFixture(): MonsterDropBrowseV1 {
     ],
     records: {
       'fixture:monster:001': {
-        entries: [{ assertionKind: 'native', item: 0 }],
+        entries: [{ item: 0, evidence: [{ source: 0 }] }],
       },
     },
   };
@@ -111,6 +114,16 @@ describe('loadMonsterBrowse', () => {
       code: 'INTEGRITY_ERROR',
     });
     loadCatalog.mockRejectedValue(failure);
+
+    await expect(loadMonsterBrowse('cw-launch')).rejects.toThrow(
+      MONSTER_BROWSE_UNAVAILABLE_MESSAGE,
+    );
+  });
+
+  it('turns an unexpected drop browse revision into the unavailable state', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    setProduct();
+    loadDropBrowse.mockResolvedValue({ contractVersion: '1.1' });
 
     await expect(loadMonsterBrowse('cw-launch')).rejects.toThrow(
       MONSTER_BROWSE_UNAVAILABLE_MESSAGE,

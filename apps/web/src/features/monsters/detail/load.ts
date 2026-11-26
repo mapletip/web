@@ -44,6 +44,11 @@ export async function loadMonsterDetail({
       publicId,
       ...(signal === undefined ? {} : { signal }),
     });
+    if (record.contractVersion !== '1.4') {
+      throw new Error(
+        `Unexpected Monster page revision ${record.contractVersion}.`,
+      );
+    }
     return {
       status: 'found',
       view: projectMonsterDetail(record, buildId),

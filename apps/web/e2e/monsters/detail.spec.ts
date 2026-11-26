@@ -243,7 +243,7 @@ test('failed detail origin returns 500 with noindex and zero SDK diagnostics', a
   }
 });
 
-test('Monster Detail shows grouped Drops and certainty at each viewport', async ({
+test('Monster Detail shows grouped Drops and sources at each viewport', async ({
   page,
   monsterPage,
 }, testInfo) => {
@@ -313,19 +313,23 @@ test('Monster Detail shows grouped Drops and certainty at each viewport', async 
   const itemName = page.getByText('Warden Token', { exact: true });
   await expect(itemName).toBeVisible();
   await expect(page.getByRole('link', { name: 'Warden Token' })).toHaveCount(0);
-  const certainty = page.getByRole('button', {
-    name: 'Show unconfirmed drop details for Warden Token',
+  const sourceButton = page.getByRole('button', {
+    name: 'Sources for Warden Token',
   });
-  await certainty.click();
-  await expect(page.getByText('Source: GMS v83 Monster Book.')).toBeVisible();
+  await sourceButton.click();
+  await expect(page.getByText("Another version's game files")).toBeVisible();
   await page.keyboard.press('Escape');
-  await expect(page.getByText('Source: GMS v83 Monster Book.')).toHaveCount(0);
+  await expect(
+    page.getByRole('dialog', { name: 'Sources for Warden Token' }),
+  ).toHaveCount(0);
   await page.mouse.move(5, 5);
   await page.evaluate(() => {
     const activeElement = document.activeElement;
     if (activeElement instanceof HTMLElement) activeElement.blur();
   });
-  await expect(page.getByText('Source: GMS v83 Monster Book.')).toHaveCount(0);
+  await expect(
+    page.getByRole('dialog', { name: 'Sources for Warden Token' }),
+  ).toHaveCount(0);
 
   const widths = await page.evaluate(() => ({
     document: document.documentElement.scrollWidth,

@@ -14,12 +14,16 @@ import type {
   MonsterCatalogV2_3,
   MonsterCatalogV2_4,
   MonsterCatalogV2_5,
-  StaticMonsterDropBrowse,
+  StaticMonsterDropBrowseV1_2,
   StaticMonsterCatalog,
 } from '@mapletip/data/monsters';
 
 import { UNNAMED_MONSTER_LABEL } from '../shared';
 import type { MonsterFactId, UnknownFactState } from '../shared';
+import {
+  resolveBrowseDropSource,
+  type DropSource,
+} from '../shared/drop-sources';
 
 export { formatMonsterFact, UNNAMED_MONSTER_LABEL } from '../shared';
 export type { MonsterFactId, UnknownFactState } from '../shared';
@@ -38,8 +42,7 @@ export interface MonsterDropEntry {
   readonly itemRefState: string;
   readonly itemName: string;
   readonly itemCategory?: string;
-  readonly assertionKind: 'native' | 'historical-overlay';
-  readonly sourceBuild?: string;
+  readonly sources: readonly DropSource[];
 }
 
 export interface MonsterDropItemOption {
@@ -162,7 +165,7 @@ function readFact<T>(
 
 function projectRecord(
   record: MonsterCatalogRecord,
-  dropBrowse: StaticMonsterDropBrowse,
+  dropBrowse: StaticMonsterDropBrowseV1_2,
   baseUrl?: string,
 ): MonsterBrowseRow {
   const factStates: Partial<Record<MonsterFactId, UnknownFactState>> = {};
@@ -297,7 +300,7 @@ function projectRecord(
  */
 export function projectMonsterBrowseRows(
   catalog: StaticMonsterCatalog,
-  dropBrowse: StaticMonsterDropBrowse,
+  dropBrowse: StaticMonsterDropBrowseV1_2,
   baseUrl?: string,
 ): readonly MonsterBrowseRow[] {
   if (!hasMonsterBrowseSummaries(catalog)) {
@@ -312,7 +315,7 @@ export function projectMonsterBrowseRows(
 }
 
 function projectDropEntries(
-  dropBrowse: StaticMonsterDropBrowse,
+  dropBrowse: StaticMonsterDropBrowseV1_2,
   monsterKey: string,
   baseUrl?: string,
 ): readonly MonsterDropEntry[] {
@@ -346,18 +349,15 @@ function projectDropEntries(
       itemRefState: item.itemRef.state,
       itemName: formatDropItemName(item.itemName),
       ...(category === undefined ? {} : { itemCategory: category }),
-      assertionKind: entry.assertionKind,
-      ...(entry.assertionKind === 'historical-overlay'
-        ? {
-            sourceBuild: entry.sourceBuild,
-          }
-        : {}),
+      sources: entry.evidence.map((evidence) =>
+        resolveBrowseDropSource({ pack: dropBrowse, evidence }),
+      ),
     };
   });
 }
 
 function projectDropItemIconUrl(
-  item: StaticMonsterDropBrowse['items'][number],
+  item: StaticMonsterDropBrowseV1_2['items'][number],
   baseUrl?: string,
 ): string | undefined {
   const iconId =
@@ -368,7 +368,7 @@ function projectDropItemIconUrl(
 }
 
 function formatDropItemName(
-  fact: StaticMonsterDropBrowse['items'][number]['itemName'],
+  fact: StaticMonsterDropBrowseV1_2['items'][number]['itemName'],
 ): string {
   if (fact.state === 'known') return fact.value;
   if (fact.state === 'unknown') return 'Unknown item name';
@@ -378,7 +378,7 @@ function formatDropItemName(
 
 /** Unique, key-valued options for the shared FacetedBrowser item facet. */
 export function projectMonsterDropItemOptions(
-  dropBrowse: StaticMonsterDropBrowse,
+  dropBrowse: StaticMonsterDropBrowseV1_2,
   baseUrl?: string,
 ): readonly MonsterDropItemOption[] {
   const resolved = dropBrowse.items.flatMap((item) => {

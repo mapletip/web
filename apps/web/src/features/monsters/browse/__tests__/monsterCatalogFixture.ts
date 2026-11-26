@@ -1,7 +1,7 @@
 /** Deterministic drop-summary catalog fixtures for tests. */
 import type {
   MonsterCatalogV2_2,
-  MonsterDropBrowseV1,
+  StaticMonsterDropBrowseV1_2,
 } from '@mapletip/data/monsters';
 
 type MonsterRecord = MonsterCatalogV2_2['records'][number];
@@ -68,12 +68,15 @@ export function fixtureCatalog({
   };
 }
 
-export function emptyDropBrowseFixture(): MonsterDropBrowseV1 {
+export function emptyDropBrowseFixture(): StaticMonsterDropBrowseV1_2 {
   return {
     format: 'mapletip.monster-drop-browse',
-    contractVersion: '1.0',
+    contractVersion: '1.2',
     scope: { build_id: 'cw-launch', family_id: 'classic-world' },
     items: [],
+
+    evidenceKinds: [],
+    evidenceSources: [],
     records: {},
   };
 }

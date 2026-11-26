@@ -49,7 +49,6 @@ test('mobile cards, quick filters and the drops drawer work together', async ({
   await expect(wardenDrops).toHaveAttribute('aria-expanded', 'true');
   const drawer = monsterPage.drops.drawer('Crowned Warden');
   await expect(monsterPage.drops.category(drawer, 'Drops (24)')).toBeVisible();
-  await expect(monsterPage.drops.certaintyLegend(drawer)).toBeVisible();
   await expect(monsterPage.drops.category(drawer, 'Equipment')).toBeVisible();
   await expect(monsterPage.drops.category(drawer, 'Other')).toBeVisible();
 
@@ -62,15 +61,9 @@ test('mobile cards, quick filters and the drops drawer work together', async ({
   const reopened = monsterPage.drops.drawer('Crowned Warden');
   await expect(reopened).toBeVisible();
 
-  const certainty = monsterPage.drops.certaintyButton(
-    reopened,
-    'unconfirmed',
-    'Practice Cap',
-  );
-  await certainty.click();
-  const detailDialog = monsterPage.drops.certaintyDialog(
-    'Show unconfirmed drop details for Practice Cap',
-  );
+  const sourceButton = monsterPage.drops.sourceButton(reopened, 'Practice Cap');
+  await sourceButton.click();
+  const detailDialog = monsterPage.drops.sourceDialog('Practice Cap');
   await expect(detailDialog).toBeVisible();
   await page.keyboard.press('Escape');
   await expect(detailDialog).toHaveCount(0);

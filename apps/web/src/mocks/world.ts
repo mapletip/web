@@ -1,5 +1,5 @@
 import type { MapPageRecordV1_2, MapRestrictionV1 } from '@mapletip/data/maps';
-import type { MonsterPageRecordV1_2 } from '@mapletip/data/monsters';
+import type { MonsterPageRecordV1_4 } from '@mapletip/data/monsters';
 
 /**
  * Invented Monster Browse rows used only by the web mock and integration tests.
@@ -16,6 +16,15 @@ export type SpriteCase =
   'exact' | 'small' | 'large' | 'wide' | 'tall' | 'missing';
 export type SpriteState = SpriteCase | 'unknown' | 'absent';
 export type ItemClass = 'consume' | 'etc' | 'setup' | 'cash' | 'pet';
+
+export const FIXTURE_EVIDENCE_KINDS = {
+  native: { label: "This version's game files" },
+  'historical-overlay': { label: "Another version's game files" },
+  vod: { label: 'VOD' },
+  screenshot: { label: 'Screenshot' },
+} as const;
+
+export type FixtureEvidenceKind = keyof typeof FIXTURE_EVIDENCE_KINDS;
 
 export type FixtureCategory =
   | { readonly kind: 'equip-slot'; readonly code: string }
@@ -48,7 +57,7 @@ export interface FixtureMonster {
   readonly elements?: readonly FixtureMonsterElement[];
   readonly locationsState?: 'known' | 'absent' | 'unresolved';
   readonly locations?: readonly FixtureLocation[];
-  readonly quests?: MonsterPageRecordV1_2['quests'];
+  readonly quests?: MonsterPageRecordV1_4['quests'];
   readonly summonedByItemIds?: readonly string[];
   readonly sprite: SpriteState;
 }
@@ -68,11 +77,17 @@ export interface FixtureItem {
   readonly category: FixtureCategory;
 }
 
+export interface FixtureDropEvidence {
+  readonly kind: FixtureEvidenceKind;
+  readonly build: string;
+  readonly date?: string;
+  readonly url?: string;
+  readonly startSeconds?: number;
+}
+
 export interface FixtureDrop {
   readonly itemId: string;
-  readonly assertionKind: 'native' | 'historical-overlay';
-  readonly sourceBuild?: string;
-  readonly confidence?: 'maybe';
+  readonly evidence: readonly [FixtureDropEvidence, ...FixtureDropEvidence[]];
 }
 
 export interface FixtureMapPoint {
@@ -368,6 +383,7 @@ const cwMonsters: readonly FixtureMonster[] = [
           name: known('Synthetic Warden Hunt'),
           minLevel: known(12),
           jobCodes: { state: 'known', items: [100] },
+          jobFamilies: { state: 'unknown' },
           repeatable: known(true),
           killCount: known(18),
           countGroupSize: known(3),
@@ -429,6 +445,7 @@ const cwMonsters: readonly FixtureMonster[] = [
           name: known('Lantern Festival Challenge'),
           minLevel: known(10),
           jobCodes: { state: 'known', items: [100] },
+          jobFamilies: { state: 'unknown' },
           repeatable: known(false),
           killCount: known(10),
           startNpc: { state: 'absent', coverageKey: 'fixture:quest-start-npc' },
@@ -644,9 +661,7 @@ const wardenItemIds = cwItems
   );
 const historical = (itemId: string): FixtureDrop => ({
   itemId,
-  assertionKind: 'historical-overlay',
-  sourceBuild: 'gms-v83',
-  confidence: 'maybe',
+  evidence: [{ kind: 'historical-overlay', build: 'gms-v83' }],
 });
 
 const fixtureMapTargets: readonly Omit<
@@ -968,7 +983,13 @@ export const world: { readonly builds: readonly FixtureBuild[] } = {
         'plain-pebble': [historical('pebble-token')],
         'crowned-warden': wardenItemIds.map(historical),
         'crowned-revenant': [
-          historical('practice-tonic-a'),
+          {
+            itemId: 'practice-tonic-a',
+            evidence: [
+              { kind: 'historical-overlay', build: 'gms-v83' },
+              { kind: 'vod', build: 'cw-launch', date: '2026-02-01' },
+            ],
+          },
           historical('sample-charm-a'),
           historical('long-named-drop'),
         ],
@@ -1079,8 +1100,23 @@ export const world: { readonly builds: readonly FixtureBuild[] } = {
       }),
       drops: {
         'native-alpha': [
-          { itemId: 'native-flake', assertionKind: 'native' },
-          { itemId: 'native-bloom', assertionKind: 'native' },
+          {
+            itemId: 'native-flake',
+            evidence: [{ kind: 'native', build: 'gms-v83' }],
+          },
+          {
+            itemId: 'native-bloom',
+            evidence: [
+              {
+                kind: 'vod',
+                build: 'gms-v83',
+                date: '2026-01-15',
+                url: 'https://video.example/watch?v=fixture',
+                startSeconds: 95,
+              },
+              { kind: 'screenshot', build: 'gms-v83' },
+            ],
+          },
         ],
       },
     },

@@ -1,10 +1,8 @@
 import { Group, Stack, Text, Title } from '@mantine/core';
 import type { ReactElement } from 'react';
 
-import type { BuildId } from '@/config/maplekit';
 import { ItemRecordChip } from '@/features/items/shared';
-import { DropCertaintyDisclosure } from '@/features/monsters/shared/DropCertaintyDisclosure';
-import { DropCertaintyLegend } from '@/features/monsters/shared/DropCertaintyLegend';
+import { DropSources } from '@/features/monsters/shared';
 
 import type { MonsterDetailDropsView } from '../project';
 
@@ -12,14 +10,10 @@ import classes from './DropChipGroups.module.css';
 
 export interface DropChipGroupsProps {
   readonly drops: MonsterDetailDropsView;
-  readonly buildId: BuildId;
 }
 
 /** Render every projected drop, preserving the SDK's within-group order. */
-export function DropChipGroups({
-  drops,
-  buildId,
-}: DropChipGroupsProps): ReactElement {
+export function DropChipGroups({ drops }: DropChipGroupsProps): ReactElement {
   if (drops.state === 'no-recorded') {
     return <Text size="sm">No recorded drop information.</Text>;
   }
@@ -30,7 +24,6 @@ export function DropChipGroups({
 
   return (
     <Stack className={classes['root']} gap="md">
-      <DropCertaintyLegend />
       <Stack className={classes['groups']} gap="md">
         {drops.groups.map((group) => (
           <section className={classes['group']} key={group.id}>
@@ -40,16 +33,12 @@ export function DropChipGroups({
             <Group className={classes['items']} gap="xs">
               {group.entries.map((entry, index) => (
                 <ItemRecordChip
-                  key={`${entry.name}:${entry.assertionKind}:${entry.sourceBuild ?? ''}:${index}`}
+                  key={`${entry.name}:${index}`}
                   item={entry}
                   trailing={
-                    <DropCertaintyDisclosure
+                    <DropSources
                       itemName={entry.name}
-                      assertionKind={entry.assertionKind}
-                      {...(entry.sourceBuild === undefined
-                        ? {}
-                        : { sourceBuild: entry.sourceBuild })}
-                      buildId={buildId}
+                      sources={entry.sources}
                     />
                   }
                 />

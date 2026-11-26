@@ -1,24 +1,21 @@
 import { MantineProvider } from '@mantine/core';
-import { render, screen, waitFor, within } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
 
 import { DropChipGroups } from '../DropChipGroups';
 import type { MonsterDetailDropsView } from '../project';
 
-function renderDrops(
-  drops: MonsterDetailDropsView,
-  buildId: 'cw-launch' | 'gms-v83' = 'cw-launch',
-) {
+function renderDrops(drops: MonsterDetailDropsView) {
   return render(
     <MantineProvider>
-      <DropChipGroups drops={drops} buildId={buildId} />
+      <DropChipGroups drops={drops} />
     </MantineProvider>,
   );
 }
 
 describe('DropChipGroups', () => {
-  it('renders groups, legend, plain names, placeholders and certainty details', async () => {
+  it('renders groups, sources, placeholders, and a source link', async () => {
     const user = userEvent.setup();
     const drops: MonsterDetailDropsView = {
       state: 'present',
@@ -31,7 +28,12 @@ describe('DropChipGroups', () => {
           entries: [
             {
               name: 'Practice Tonic',
-              assertionKind: 'native',
+              sources: [
+                {
+                  label: "This version's game files",
+                  buildLabel: 'Classic World',
+                },
+              ],
             },
           ],
         },
@@ -42,100 +44,69 @@ describe('DropChipGroups', () => {
           entries: [
             {
               name: 'Item name unavailable',
-              assertionKind: 'historical-overlay',
-              sourceBuild: 'gms-v83',
+              sources: [
+                {
+                  label: 'VOD',
+                  buildLabel: 'GMS v83',
+                  date: '2026-01-15',
+                  href: 'https://example.test/watch?t=95s',
+                  startSeconds: 95,
+                },
+                {
+                  label: "This version's game files",
+                  buildLabel: 'Classic World',
+                  href: 'https://video.example/watch?v=fixture',
+                },
+              ],
             },
           ],
         },
       ],
     };
-
     const { container } = renderDrops(drops);
-
-    expect(
-      screen.getByRole('group', { name: 'Drop certainty legend' }),
-    ).toHaveTextContent('Confirmed');
-    expect(
-      screen.getByRole('group', { name: 'Drop certainty legend' }),
-    ).toHaveTextContent('Unconfirmed');
     expect(
       screen.getByRole('heading', { level: 3, name: 'Usable (1)' }),
     ).toBeVisible();
     expect(
       screen.getByRole('heading', { level: 3, name: 'Unknown type (1)' }),
     ).toBeVisible();
-    expect(screen.getByText('Practice Tonic')).toBeVisible();
-    expect(screen.queryByRole('link', { name: 'Practice Tonic' })).toBeNull();
     expect(
       container.querySelectorAll('img[data-fallback="true"]'),
     ).toHaveLength(2);
-
-    const unconfirmedButton = screen.getByRole('button', {
-      name: 'Show unconfirmed drop details for Item name unavailable',
+    const button = screen.getByRole('button', {
+      name: 'Sources for Item name unavailable',
     });
-    await user.hover(unconfirmedButton);
-    await waitFor(() =>
-      expect(unconfirmedButton).toHaveAttribute('aria-expanded', 'true'),
-    );
-    await waitFor(() =>
-      expect(
-        screen.getByText('Source: GMS v83 Monster Book.'),
-      ).toBeInTheDocument(),
-    );
-    expect(screen.getByText('Maybe')).toBeInTheDocument();
+    await user.click(button);
+    const dialog = await screen.findByRole('dialog', {
+      name: 'Sources for Item name unavailable',
+    });
+    expect(within(dialog).getByText('Sources')).toBeInTheDocument();
+    expect(within(dialog).getByText('VOD')).toBeInTheDocument();
+    expect(
+      within(dialog).getByText('GMS v83 · Jan 15, 2026'),
+    ).toBeInTheDocument();
+    expect(
+      within(dialog).getByRole('link', { name: 'Open at 1:35', hidden: true }),
+    ).toHaveAttribute('href', 'https://example.test/watch?t=95s');
+    expect(
+      within(dialog).getByRole('link', { name: 'Open at 1:35', hidden: true }),
+    ).toHaveAttribute('target', '_blank');
+    expect(
+      within(dialog).getByRole('link', { name: 'Open link', hidden: true }),
+    ).toHaveAttribute('href', 'https://video.example/watch?v=fixture');
+    expect(
+      within(dialog).getByRole('link', { name: 'Open link', hidden: true }),
+    ).toHaveAttribute('rel', 'noopener noreferrer');
   });
 
-  it('shows the no-recorded-drops message', () => {
-    renderDrops({ state: 'no-recorded', count: 0 });
-
+  it('shows the no-recorded and unavailable messages', () => {
+    const { rerender } = renderDrops({ state: 'no-recorded', count: 0 });
     expect(screen.getByText('No recorded drop information.')).toBeVisible();
-    expect(
-      screen.queryByRole('group', { name: 'Drop certainty legend' }),
-    ).toBeNull();
-  });
-
-  it('shows unavailable wording for unresolved collection information', () => {
-    renderDrops({ state: 'unavailable', count: 'unknown' });
-
+    rerender(
+      <MantineProvider>
+        <DropChipGroups drops={{ state: 'unavailable', count: 'unknown' }} />
+      </MantineProvider>,
+    );
     expect(screen.getByText('Drop information is unavailable.')).toBeVisible();
-    expect(
-      screen.queryByRole('group', { name: 'Drop certainty legend' }),
-    ).toBeNull();
-  });
-
-  it('explains a confirmed GMS assertion with the current build source', async () => {
-    const user = userEvent.setup();
-    renderDrops(
-      {
-        state: 'present',
-        count: 1,
-        groups: [
-          {
-            id: 'etc',
-            label: 'ETC',
-            count: 1,
-            entries: [{ name: 'Native Flake', assertionKind: 'native' }],
-          },
-        ],
-      },
-      'gms-v83',
-    );
-
-    const confirmedButton = screen.getByRole('button', {
-      name: 'Show confirmed drop details for Native Flake',
-    });
-    await user.click(confirmedButton);
-    expect(confirmedButton).toHaveAttribute('aria-expanded', 'true');
-    await waitFor(() =>
-      expect(
-        screen.getByText('Source: GMS v83 Monster Book.'),
-      ).toBeInTheDocument(),
-    );
-    const dialog = document.querySelector<HTMLElement>(
-      '[role="dialog"][aria-label="Confirmed drop details for Native Flake"]',
-    );
-    expect(dialog).not.toBeNull();
-    if (dialog === null) throw new Error('Expected certainty details.');
-    expect(within(dialog).getByText('Confirmed')).toBeInTheDocument();
   });
 });

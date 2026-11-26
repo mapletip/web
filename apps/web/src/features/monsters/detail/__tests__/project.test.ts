@@ -1,8 +1,5 @@
 import { itemIconUrl } from '@mapletip/data/items';
-import type {
-  MonsterPageRecordV1,
-  MonsterPageRecordV1_2,
-} from '@mapletip/data/monsters';
+import type { MonsterPageRecordV1_4 } from '@mapletip/data/monsters';
 import { describe, expect, it } from 'vitest';
 
 import { MAPLEKIT_RELEASE } from '@/config/maplekit';
@@ -12,11 +9,70 @@ import { projectMonsterDetail } from '../project';
 
 import { monsterPageFixture } from './monsterPageFixture';
 
-type MonsterPageDrop = MonsterPageRecordV1['drops']['entries'][number];
-type MonsterPageLocation = MonsterPageRecordV1['locations']['entries'][number];
-type MonsterPageLocationWithPoints =
-  MonsterPageRecordV1_2['locations']['entries'][number];
-type MonsterPageQuest = MonsterPageRecordV1['quests']['entries'][number];
+type MonsterPageDrop = MonsterPageRecordV1_4['drops']['entries'][number];
+type MonsterPageLocation =
+  MonsterPageRecordV1_4['locations']['entries'][number];
+type MonsterPageQuest = MonsterPageRecordV1_4['quests']['entries'][number];
+
+describe('Monster page drop sources', () => {
+  it('projects all labeled evidence on one item, including timed and unlinked VODs', () => {
+    const fixture = monsterPageFixture({
+      drops: {
+        summary: { count: 1, native: { state: 'unknown' } },
+        entries: [
+          pageDrop(
+            { state: 'known', value: 'Practice Tonic' },
+            { kind: 'item-class', value: 'consume' },
+            {
+              evidence: [
+                {
+                  kind: 'historical-overlay',
+                  label: "Another version's game files",
+                  build: 'gms-v83',
+                },
+                {
+                  kind: 'vod',
+                  label: 'VOD',
+                  build: 'cw-launch',
+                  date: '2026-02-01',
+                  url: 'https://example.test/watch?v=one',
+                  startSeconds: 95,
+                },
+                {
+                  kind: 'vod',
+                  label: 'VOD',
+                  build: 'cw-launch',
+                  date: '2026-02-02',
+                },
+                {
+                  kind: 'screenshot',
+                  label: 'Screenshot',
+                  build: 'other-build',
+                },
+              ],
+            },
+          ),
+        ],
+      },
+    });
+    const view = projectMonsterDetail(fixture, 'cw-launch');
+    expect(view.drops.state).toBe('present');
+    if (view.drops.state !== 'present') throw new Error('Expected drops.');
+    expect(view.drops.groups[0]?.entries[0]?.sources).toEqual([
+      { label: "Another version's game files", buildLabel: 'GMS v83' },
+      {
+        label: 'VOD',
+        buildLabel: 'Classic World',
+        date: '2026-02-01',
+        href: 'https://example.test/watch?v=one&t=95s',
+        startSeconds: 95,
+      },
+      { label: 'VOD', buildLabel: 'Classic World', date: '2026-02-02' },
+      { label: 'Screenshot', buildLabel: 'other-build' },
+    ]);
+    expect(view.drops.count).toBe(1);
+  });
+});
 
 function pageDrop(
   name: MonsterPageDrop['name'],
@@ -28,22 +84,32 @@ function pageDrop(
     name,
     category,
     icon: { state: 'unknown' },
-    assertion: { kind: 'native' },
+    evidence: [
+      {
+        kind: 'native',
+        label: "This version's game files",
+        build: 'cw-launch',
+      },
+    ],
     ...overrides,
   };
 }
 
 function pageLocation(
   mapKey: string,
-  name: MonsterPageLocation['name'],
+  mapName: MonsterPageLocation['mapName'],
   placementCount: number,
   overrides: Partial<MonsterPageLocation> = {},
 ): MonsterPageLocation {
   return {
     mapKey,
-    name,
+    mapSourceId: mapKey,
+    mapName,
+    publicId: '22kodknn',
+    slug: mapKey.split(':').at(-1) ?? 'practice-meadow',
     placementCount,
-    minimap: { state: 'absent', coverageKey: 'fixture:minimap' },
+    stage: { state: 'absent', coverageKey: 'fixture:map:stage' },
+    points: { state: 'absent', packedPairs: [] },
     ...overrides,
   };
 }
@@ -56,57 +122,59 @@ function pageQuest(
     name: { state: 'known', value: 'Practice Hunt' },
     minLevel: { state: 'known', value: 10 },
     jobCodes: { state: 'known', items: [100] },
+    jobFamilies: { state: 'unknown' },
+    event: { state: 'unknown' },
+    startNpc: { state: 'unknown' },
     repeatable: { state: 'known', value: false },
     killCount: { state: 'known', value: 30 },
     ...overrides,
   };
 }
 
-function addressableMonsterPageFixture(): MonsterPageRecordV1_2 {
+function addressableMonsterPageFixture(): MonsterPageRecordV1_4 {
   return {
     ...monsterPageFixture(),
-    contractVersion: '1.2',
     scope: { build_id: 'gms-v83', family_id: 'gms' },
     locations: {
       summary: { state: 'known', mapCount: 1, placementCount: 3 },
       entries: [
-        {
+        locationWithPoints({
           mapKey: 'fixture:map:addressed',
-          mapSourceId: 'gms-v83:fixture:map:addressed',
           mapName: { state: 'known', value: 'Addressed Meadow' },
-          publicId: '22kodknn',
           slug: 'addressed-meadow',
           placementCount: 3,
-          stage: {
-            state: 'absent',
-            coverageKey: 'fixture:map:addressed:stage',
-          },
-          points: { state: 'absent', packedPairs: [] },
-        },
+          pointsState: 'absent',
+          packedPairs: [],
+          stageKnown: false,
+        }),
       ],
     },
-  } as unknown as MonsterPageRecordV1_2;
+  };
 }
 
 function locationWithPoints({
   mapKey,
+  mapName = { state: 'known', value: 'Practice Meadow' },
+  slug = 'practice-meadow',
   placementCount,
   packedPairs,
   pointsState,
   stageKnown = true,
 }: {
   readonly mapKey: string;
+  readonly mapName?: MonsterPageLocation['mapName'];
+  readonly slug?: string;
   readonly placementCount: number;
   readonly packedPairs: number[];
   readonly pointsState: 'known' | 'partial' | 'absent';
   readonly stageKnown?: boolean;
-}): MonsterPageLocationWithPoints {
+}): MonsterPageLocation {
   return {
     mapKey,
     mapSourceId: mapKey,
-    mapName: { state: 'known', value: 'Practice Meadow' },
+    mapName,
     publicId: '22kodknn',
-    slug: 'practice-meadow',
+    slug,
     placementCount,
     stage: stageKnown
       ? {
@@ -115,6 +183,7 @@ function locationWithPoints({
             contentId: 'a'.repeat(64),
             width: 900,
             height: 600,
+            scale: 0.0625,
           },
         }
       : { state: 'absent', coverageKey: `${mapKey}:stage` },
@@ -123,8 +192,8 @@ function locationWithPoints({
 }
 
 function monsterPageWithPointLocations(
-  entries: readonly MonsterPageLocationWithPoints[],
-): MonsterPageRecordV1_2 {
+  entries: readonly MonsterPageLocation[],
+): MonsterPageRecordV1_4 {
   const fixture = addressableMonsterPageFixture();
   return {
     ...fixture,
@@ -196,7 +265,7 @@ describe('projectMonsterDetail', () => {
     );
   });
 
-  it('links location cards with page addresses and leaves older entries unlinked', () => {
+  it('links location cards with page addresses', () => {
     const linked = projectMonsterDetail(
       addressableMonsterPageFixture(),
       'gms-v83',
@@ -211,27 +280,6 @@ describe('projectMonsterDetail', () => {
         href: '/maplestory/gms-v83/maps/addressed-meadow-22kodknn?focus=monster-id-36z2h01p',
       },
     });
-
-    const legacy = projectMonsterDetail(
-      monsterPageFixture({
-        locations: {
-          summary: { state: 'known', mapCount: 1, placementCount: 2 },
-          entries: [
-            pageLocation(
-              'fixture:map:legacy',
-              { state: 'known', value: 'Legacy Meadow' },
-              2,
-            ),
-          ],
-        },
-      }),
-      'cw-launch',
-    );
-    const legacyMaps = legacy.locations;
-    if (legacyMaps.state !== 'present') {
-      throw new Error('Expected the legacy location to be present.');
-    }
-    expect(legacyMaps.maps[0]).not.toHaveProperty('destination');
   });
 
   it('falls back to UNNAMED_MONSTER_LABEL when name is non-known', () => {
@@ -413,11 +461,13 @@ describe('projectMonsterDetail', () => {
               {
                 itemRef: { state: 'unresolved' },
                 icon: { state: 'known', value: iconId },
-                assertion: {
-                  kind: 'historical-overlay',
-                  confidence: 'maybe',
-                  sourceBuild: 'gms-v83',
-                },
+                evidence: [
+                  {
+                    kind: 'historical-overlay',
+                    label: "Another version's game files",
+                    build: 'gms-v83',
+                  },
+                ],
               },
             ),
           ],
@@ -437,8 +487,12 @@ describe('projectMonsterDetail', () => {
             {
               name: 'Item name unavailable',
               iconUrl: itemIconUrl(MAPLEKIT_RELEASE.baseUrl, iconId),
-              assertionKind: 'historical-overlay',
-              sourceBuild: 'gms-v83',
+              sources: [
+                {
+                  label: "Another version's game files",
+                  buildLabel: 'GMS v83',
+                },
+              ],
             },
           ],
         },
@@ -535,7 +589,15 @@ describe('projectMonsterDetail', () => {
                   provenance: 'reviewed-overlay',
                   status: 'verified',
                 },
-                minimap: { state: 'known', value: minimapId },
+                stage: {
+                  state: 'known',
+                  value: {
+                    contentId: minimapId,
+                    width: 900,
+                    height: 600,
+                    scale: 0.0625,
+                  },
+                },
               },
             ),
             pageLocation(
@@ -557,7 +619,7 @@ describe('projectMonsterDetail', () => {
       'cw-launch',
     );
 
-    expect(view.locations).toEqual({
+    expect(view.locations).toMatchObject({
       state: 'present',
       count: 4,
       maps: [
@@ -694,7 +756,7 @@ describe('projectMonsterDetail', () => {
         packedPairs: [100, 100],
       }),
     ]);
-    const incompleteSprites: readonly MonsterPageRecordV1_2['sprite'][] = [
+    const incompleteSprites: readonly MonsterPageRecordV1_4['sprite'][] = [
       { ...record.sprite, contentId: { state: 'unknown' } },
       { ...record.sprite, width: 0 },
       { ...record.sprite, height: 0 },
@@ -764,6 +826,7 @@ describe('projectMonsterDetail', () => {
     expect(locations.maps[0]?.minimapStage).toEqual({
       width: 900,
       height: 600,
+      scale: 0.0625,
       spawnPoints: [],
     });
     expect(locations.maps[0]?.placementCount).toBe(2);

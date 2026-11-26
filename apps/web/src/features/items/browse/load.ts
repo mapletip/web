@@ -34,6 +34,12 @@ export function loadItemBrowse(
         ...(signal === undefined ? {} : { signal }),
       });
 
+      if (browse.contractVersion !== '2.2') {
+        throw new Error(
+          `Unexpected Item browse revision ${browse.contractVersion}.`,
+        );
+      }
+
       return {
         rows: projectItemBrowseRows(browse.records),
         coverage: browse.coverage,

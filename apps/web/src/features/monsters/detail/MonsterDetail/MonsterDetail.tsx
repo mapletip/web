@@ -168,9 +168,7 @@ export function MonsterDetail({ view }: MonsterDetailProps): ReactElement {
                 />
               ),
               count: view.drops.count,
-              content: (
-                <DropChipGroups drops={view.drops} buildId={view.buildId} />
-              ),
+              content: <DropChipGroups drops={view.drops} />,
             },
             {
               id: 'quests',

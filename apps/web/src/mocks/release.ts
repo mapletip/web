@@ -8,10 +8,10 @@ import type {
 } from '@mapletip/data/maps';
 import type {
   MonsterCatalogV2_5,
-  MonsterDropBrowseV1,
+  MonsterDropBrowseV1_2,
   MonsterLocationBrowseV1_4,
-  MonsterPagePackV1_3,
-  MonsterPageRecordV1_3,
+  MonsterPagePackV1_4,
+  MonsterPageRecordV1_4,
 } from '@mapletip/data/monsters';
 
 import type {
@@ -21,8 +21,9 @@ import type {
   FixtureMap,
   FixtureMapPoint,
   FixtureMonster,
+  FixtureEvidenceKind,
 } from './world';
-import { spriteDimensions, world } from './world';
+import { FIXTURE_EVIDENCE_KINDS, spriteDimensions, world } from './world';
 
 type MapBrowseRosterV1_1 = Extract<
   StaticMapBrowseRoster,
@@ -87,6 +88,14 @@ async function sha256Hex(bytes: Uint8Array): Promise<string> {
 
 function wireFact<T>(fact: FixtureFact<T>): FixtureFact<T> {
   return fact;
+}
+
+function mapNonEmpty<T, U>(
+  values: readonly [T, ...T[]],
+  project: (value: T) => U,
+): [U, ...U[]] {
+  const [first, ...rest] = values;
+  return [project(first), ...rest.map(project)];
 }
 
 function known<T>(value: T): FixtureFact<T> {
@@ -327,15 +336,15 @@ function projectMonsterLocationSummary(
 }
 
 function projectMonsterPage(
-  scope: MonsterPageRecordV1_3['scope'],
+  scope: MonsterPageRecordV1_4['scope'],
   catalogRecord: MonsterCatalogV2_5['records'][number],
-  entries: MonsterPageRecordV1_3['drops']['entries'],
+  entries: MonsterPageRecordV1_4['drops']['entries'],
   monster: FixtureMonster,
   itemById: ReadonlyMap<
     string,
     { readonly item: FixtureBuild['items'][number]; readonly key: string }
   >,
-): MonsterPageRecordV1_3 {
+): MonsterPageRecordV1_4 {
   const [
     level,
     hp,
@@ -351,11 +360,11 @@ function projectMonsterPage(
     speed,
   ] = catalogRecord.stats;
   const locationFixtures = monster.locations ?? [];
-  const locationEntries: MonsterPageRecordV1_3['locations']['entries'] =
+  const locationEntries: MonsterPageRecordV1_4['locations']['entries'] =
     locationFixtures.map((location: FixtureLocation) => {
       const points = location.points ?? [];
       const hasStage = location.minimapContentId !== undefined;
-      let pointsState: MonsterPageRecordV1_3['locations']['entries'][number]['points']['state'];
+      let pointsState: MonsterPageRecordV1_4['locations']['entries'][number]['points']['state'];
       if (!hasStage) {
         pointsState = 'absent';
       } else if (points.length === location.placementCount) {
@@ -428,7 +437,7 @@ function projectMonsterPage(
 
   return {
     format: 'mapletip.monster-page',
-    contractVersion: '1.3',
+    contractVersion: '1.4',
     scope,
     key: catalogRecord.key,
     publicId: catalogRecord.publicId,
@@ -460,7 +469,8 @@ function projectMonsterPage(
       speed,
     },
     drops: {
-      summary: catalogRecord.drops,
+      // The page count includes every projected entry, including evidence kinds outside catalog summaries.
+      summary: { ...catalogRecord.drops, count: entries.length },
       entries,
     },
     locations: {
@@ -1334,7 +1344,7 @@ export async function buildRelease(fixtureWorld: {
     const pageRecords = projectedMonsters
       .map(({ monster, record }) => {
         const drops = build.drops[monster.id] ?? [];
-        const entries: MonsterPageRecordV1_3['drops']['entries'] = drops.map(
+        const entries: MonsterPageRecordV1_4['drops']['entries'] = drops.map(
           (drop) => {
             const target = itemById.get(drop.itemId);
             if (target === undefined) {
@@ -1353,14 +1363,16 @@ export async function buildRelease(fixtureWorld: {
                   : known(target.item.name),
               category: target.item.category,
               icon: { state: 'unknown' },
-              assertion:
-                drop.assertionKind === 'native'
-                  ? { kind: 'native' }
-                  : {
-                      kind: 'historical-overlay',
-                      sourceBuild: drop.sourceBuild ?? 'gms-v83',
-                      confidence: drop.confidence ?? 'maybe',
-                    },
+              evidence: mapNonEmpty(drop.evidence, (evidence) => ({
+                kind: evidence.kind,
+                label: FIXTURE_EVIDENCE_KINDS[evidence.kind].label,
+                build: evidence.build,
+                ...(evidence.date === undefined ? {} : { date: evidence.date }),
+                ...(evidence.url === undefined ? {} : { url: evidence.url }),
+                ...(evidence.startSeconds === undefined
+                  ? {}
+                  : { startSeconds: evidence.startSeconds }),
+              })),
             };
           },
         );
@@ -1374,13 +1386,13 @@ export async function buildRelease(fixtureWorld: {
     };
     const pagePack = await put('v2/monsters/page-packs', {
       format: 'mapletip.monster-page-pack',
-      contractVersion: '1.3',
+      contractVersion: '1.4',
       recordKind: 'monster-page',
       scope,
       records: Object.fromEntries(
         pageRecords.map((record) => [record.publicId, record]),
       ),
-    } satisfies MonsterPagePackV1_3);
+    } satisfies MonsterPagePackV1_4);
     const locationBrowseRecords: MonsterLocationBrowseV1_4['records'] =
       Object.fromEntries(
         pageRecords
@@ -1399,7 +1411,9 @@ export async function buildRelease(fixtureWorld: {
       firstKey: locationBrowseKeys[0] ?? '',
       lastKey: locationBrowseKeys.at(-1) ?? '',
     };
-    const dropRecords: MonsterDropBrowseV1['records'] = {};
+    const evidenceSources: MonsterDropBrowseV1_2['evidenceSources'] = [];
+    const usedEvidenceKinds = new Set<FixtureEvidenceKind>();
+    const dropRecords: MonsterDropBrowseV1_2['records'] = {};
     for (const { monster, key: monsterKey } of monsters) {
       const drops = build.drops[monster.id] ?? [];
       dropRecords[monsterKey] = {
@@ -1410,22 +1424,42 @@ export async function buildRelease(fixtureWorld: {
               `Fixture drop references unknown item "${drop.itemId}".`,
             );
           }
-          return drop.assertionKind === 'native'
-            ? { assertionKind: 'native', item }
-            : {
-                assertionKind: 'historical-overlay',
-                item,
-                sourceBuild: drop.sourceBuild ?? 'gms-v83',
-                confidence: drop.confidence ?? 'maybe',
+          return {
+            item,
+            evidence: mapNonEmpty(drop.evidence, (evidence) => {
+              usedEvidenceKinds.add(evidence.kind);
+              const source =
+                evidenceSources.push({
+                  kind: evidence.kind,
+                  build: evidence.build,
+                  ...(evidence.date === undefined
+                    ? {}
+                    : { date: evidence.date }),
+                  ...(evidence.url === undefined ? {} : { url: evidence.url }),
+                }) - 1;
+              return {
+                source,
+                ...(evidence.startSeconds === undefined
+                  ? {}
+                  : { startSeconds: evidence.startSeconds }),
               };
+            }),
+          };
         }),
       };
     }
+    const evidenceKinds: MonsterDropBrowseV1_2['evidenceKinds'] =
+      Object.entries(FIXTURE_EVIDENCE_KINDS)
+        .filter(([kind]) => usedEvidenceKinds.has(kind as FixtureEvidenceKind))
+        .map(([key, { label }]) => ({ key, label }));
     const dropBrowse = await put('v2/browse', {
       format: 'mapletip.monster-drop-browse',
-      contractVersion: '1.0',
+      contractVersion: '1.2',
       scope,
       items,
+      itemIcons: items.map(() => ({ state: 'unknown' as const })),
+      evidenceKinds,
+      evidenceSources,
       records: Object.fromEntries(
         Object.entries(dropRecords).sort(([left], [right]) =>
           left.localeCompare(right),

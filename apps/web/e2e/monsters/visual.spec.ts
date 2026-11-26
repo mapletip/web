@@ -44,7 +44,7 @@ test('desktop Monster Detail opens an enlarged minimap on click', async ({
   );
 });
 
-test('desktop page with expanded drops and certainty details', async ({
+test('desktop page with expanded drops and drop sources', async ({
   page,
   monsterPage,
 }) => {
@@ -54,20 +54,14 @@ test('desktop page with expanded drops and certainty details', async ({
   await monsterPage.captureReady();
   await monsterPage.drops.tableButton('Crowned Warden', 24).click();
   const panel = monsterPage.drops.panel('Crowned Warden', 24);
-  const certainty = monsterPage.drops.certaintyButton(
-    panel,
-    'unconfirmed',
-    'Practice Cap',
-  );
-  await certainty.focus();
-  await certainty.hover();
-  const detailDialog = monsterPage.drops.certaintyDialog(
-    'Show unconfirmed drop details for Practice Cap',
-  );
+  const sourceButton = monsterPage.drops.sourceButton(panel, 'Practice Cap');
+  await sourceButton.focus();
+  await sourceButton.hover();
+  const detailDialog = monsterPage.drops.sourceDialog('Practice Cap');
   await expect(detailDialog).toBeVisible();
-  await expect(detailDialog.getByText('Maybe')).toBeVisible();
+  await expect(detailDialog.getByText('Source')).toBeVisible();
   await expect(
-    detailDialog.getByText('Source: GMS v83 Monster Book.'),
+    detailDialog.getByText("Another version's game files"),
   ).toBeVisible();
   await monsterPage.captureReady();
   await expect(page).toHaveScreenshot('desktop-drops-expanded.png');
@@ -153,7 +147,6 @@ test('mobile drops drawer opens over the active boss filter', async ({
   await monsterPage.drops.cardButton('Crowned Warden', 24).click();
   const drawer = monsterPage.drops.drawer('Crowned Warden');
   await expect(monsterPage.drops.category(drawer, 'Drops (24)')).toBeVisible();
-  await expect(monsterPage.drops.certaintyLegend(drawer)).toBeVisible();
   await monsterPage.captureReady();
   await expect(page).toHaveScreenshot('mobile-drops-drawer.png');
 });
