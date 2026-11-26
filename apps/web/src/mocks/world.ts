@@ -634,6 +634,7 @@ const cwBaseItems: readonly FixtureItem[] = [
     },
     sellPrice: unknown(),
   },
+
   {
     id: 'pebble-token',
     name: 'Pebble Token',
@@ -822,6 +823,33 @@ function item(
 
 const cwItems: readonly FixtureItem[] = [
   ...cwBaseItems,
+  // Not in cwBaseItems: those are also the Warden's drops in Monster fixtures.
+  {
+    id: 'zesty-tonic',
+    name: 'Zesty Tonic',
+    itemClass: known('consume'),
+    category: { kind: 'item-class', value: 'consume' },
+    types: ['potion'],
+    functions: ['recovery'],
+    recovery: { hp: 90 },
+    buff: {
+      durationSeconds: 600,
+      effects: [{ stat: 'weaponAttack', unit: 'flat', value: 10 }],
+    },
+  },
+  {
+    id: 'brisk-tonic',
+    name: 'Brisk Tonic',
+    itemClass: known('consume'),
+    category: { kind: 'item-class', value: 'consume' },
+    types: ['potion'],
+    functions: ['recovery'],
+    recovery: { hp: 200 },
+    buff: {
+      durationSeconds: 300,
+      effects: [{ stat: 'weaponAttack', unit: 'flat', value: 5 }],
+    },
+  },
   item({
     id: 'amber-seat',
     name: 'Amber Seat',
