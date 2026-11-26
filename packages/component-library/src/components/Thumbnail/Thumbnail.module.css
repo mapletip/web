@@ -6,3 +6,24 @@
   background: var(--mantine-color-default-hover);
   border-radius: var(--mantine-radius-sm);
 }
+
+.magnifiedBox {
+  display: inline-grid;
+  flex-shrink: 0;
+  place-items: center;
+  width: var(--thumbnail-size);
+  height: var(--thumbnail-size);
+}
+
+.magnifiedImage {
+  width: var(--thumbnail-inner-size);
+  height: var(--thumbnail-inner-size);
+  image-rendering: pixelated;
+  transform: scale(var(--thumbnail-magnify));
+}
+
+.magnifiedImage[data-fallback] {
+  width: var(--thumbnail-size);
+  height: var(--thumbnail-size);
+  transform: none;
+}
