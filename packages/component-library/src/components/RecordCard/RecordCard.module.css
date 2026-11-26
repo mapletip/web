@@ -34,6 +34,161 @@
   text-decoration: none;
 }
 
+.action {
+  color: inherit;
+  font: inherit;
+  text-align: inherit;
+}
+
+.action:focus-visible {
+  outline: none;
+  box-shadow: none;
+}
+
+.action::after {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  border-radius: var(--mantine-radius-md);
+  content: '';
+  cursor: pointer;
+}
+
+.linkedCard:has(.action:focus-visible) .card {
+  outline: 2px solid var(--mapletip-color-focus);
+  outline-offset: 3px;
+}
+
+.identityCard {
+  display: flex;
+  flex-direction: column;
+}
+
+.identityCard[data-details-open='true'] {
+  border-color: var(--mapletip-color-focus);
+  box-shadow: inset 0 0 0 1px var(--mapletip-color-focus);
+}
+
+.identityHeader {
+  display: flex;
+  flex: 1 0 auto;
+  align-items: center;
+  gap: var(--mantine-spacing-sm);
+  min-width: 0;
+  padding: var(--mantine-spacing-md);
+  background: var(--mapletip-color-identity);
+}
+
+.identityCard:has(.facts) .identityHeader {
+  flex: 0 0 auto;
+}
+
+.identityMedia {
+  display: flex;
+  flex: 0 0 56px;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+}
+
+.identityMedia > * {
+  max-width: 100%;
+}
+
+.identityText {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.identityTitle {
+  color: var(--mapletip-color-ink);
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+
+.identityLead {
+  color: var(--mapletip-color-muted);
+  font-size: var(--mantine-font-size-sm);
+  overflow-wrap: anywhere;
+}
+
+.facts {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  min-width: 0;
+  margin: 0;
+  padding: var(--mantine-spacing-xs) var(--mantine-spacing-md);
+  list-style: none;
+}
+
+.fact {
+  min-width: 0;
+}
+
+.fact + .fact {
+  border-top: 1px solid var(--mapletip-color-border-subtle);
+}
+
+.factRow {
+  display: flex;
+  align-items: center;
+  gap: var(--mantine-spacing-xs);
+  width: 100%;
+  min-width: 0;
+  padding: var(--mantine-spacing-xs) 0;
+  color: var(--mapletip-color-ink);
+  font-size: var(--mantine-font-size-sm);
+  line-height: 1.4;
+  text-align: left;
+}
+
+.factButton {
+  position: relative;
+  z-index: 2;
+  border-radius: var(--mantine-radius-sm);
+}
+
+.factButton:hover {
+  color: var(--mapletip-color-link);
+}
+
+.factIcon {
+  display: flex;
+  flex: 0 0 20px;
+  align-items: center;
+  justify-content: center;
+}
+
+.factText {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.factLabel,
+.factDetail,
+.factValues > span {
+  display: block;
+}
+
+.factDetail {
+  overflow: hidden;
+  color: var(--mapletip-color-muted);
+  font-size: var(--mantine-font-size-xs);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.factValues {
+  flex: 0 0 auto;
+  color: var(--mapletip-color-ink);
+  font-size: var(--mantine-font-size-sm);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
 /* The card draws the focus ring; drop the theme's outline and gap band on the title. */
 .link:focus-visible {
   outline: none;
@@ -319,4 +474,9 @@
     .headerLinkRegion {
     outline-color: Highlight;
   }
+}
+
+.factCaret {
+  flex: none;
+  color: var(--mapletip-color-muted);
 }

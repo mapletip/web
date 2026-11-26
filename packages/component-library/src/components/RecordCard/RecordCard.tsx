@@ -1,8 +1,9 @@
-import { Card, Group, Stack, Text, Title } from '@mantine/core';
+import { Card, Group, Stack, Text, Title, UnstyledButton } from '@mantine/core';
 import { CaretRight } from '@phosphor-icons/react';
 import type { ReactElement, ReactNode } from 'react';
 
 import classes from '@/components/RecordCard/RecordCard.module.css';
+import { RecordFacts } from '@/components/RecordCard/RecordFacts';
 import type {
   RecordCardDestination,
   RecordCardLinkRenderer,
@@ -14,6 +15,39 @@ interface RenderLinkOptions {
   readonly destination: RecordCardDestination;
   readonly linkRenderer: RecordCardLinkRenderer | undefined;
   readonly children: ReactNode;
+}
+
+interface RenderTitleControlOptions {
+  readonly destination: RecordCardDestination | undefined;
+  readonly linkRenderer: RecordCardLinkRenderer | undefined;
+  readonly children: ReactNode;
+  readonly action: (() => void) | undefined;
+  readonly isDetailsOpen: boolean | undefined;
+}
+
+function renderTitleControl({
+  destination,
+  linkRenderer,
+  children,
+  action,
+  isDetailsOpen,
+}: RenderTitleControlOptions): ReactNode {
+  if (action !== undefined) {
+    return (
+      <UnstyledButton
+        className={classes['action']}
+        onClick={action}
+        aria-haspopup="dialog"
+        aria-expanded={isDetailsOpen ?? false}
+      >
+        {children}
+      </UnstyledButton>
+    );
+  }
+  if (destination !== undefined) {
+    return renderLink({ destination, linkRenderer, children });
+  }
+  return children;
 }
 
 function renderLink({
@@ -43,9 +77,52 @@ export function RecordCard({
   media,
   footer,
   destination,
+  action,
+  isDetailsOpen,
+  facts,
   renderLink: linkRenderer,
   linkScope = 'card',
 }: RecordCardProps): ReactElement {
+  if (layout === 'identity') {
+    const titleControl = renderTitleControl({
+      destination,
+      linkRenderer,
+      children: title,
+      action,
+      isDetailsOpen,
+    });
+    return (
+      <div className={classes['linkedCard']}>
+        <Card
+          className={`${classes['card']} ${classes['identityCard']}`}
+          padding={0}
+          radius="md"
+          withBorder
+          data-record-card="true"
+          data-record-card-layout="identity"
+          data-details-open={isDetailsOpen ? 'true' : undefined}
+        >
+          <Card.Section className={classes['identityHeader']}>
+            {media === undefined ? null : (
+              <div className={classes['identityMedia']}>{media}</div>
+            )}
+            <div className={classes['identityText']}>
+              <Title order={3} className={classes['identityTitle']}>
+                {titleControl}
+              </Title>
+              {secondaryLine === undefined ? null : (
+                <Text className={classes['identityLead']}>{secondaryLine}</Text>
+              )}
+              {badges === undefined ? null : (
+                <div className={classes['badges']}>{badges}</div>
+              )}
+            </div>
+          </Card.Section>
+          {facts === undefined ? null : <RecordFacts facts={facts} />}
+        </Card>
+      </div>
+    );
+  }
   const mediaAside = layout === 'mediaAside' || layout === 'compactMediaAside';
   const compactMediaAside = layout === 'compactMediaAside';
   const hasMedia = media !== undefined;
@@ -71,13 +148,13 @@ export function RecordCard({
       <Stack className={classes['text']} gap="xs">
         <Group align="center" gap="xs" wrap="wrap">
           <Title order={3} className={classes['title']}>
-            {destination === undefined
-              ? title
-              : renderLink({
-                  destination,
-                  linkRenderer,
-                  children: title,
-                })}
+            {renderTitleControl({
+              destination,
+              linkRenderer,
+              children: title,
+              action,
+              isDetailsOpen,
+            })}
           </Title>
           {badges === undefined ? null : (
             <div className={classes['badges']}>{badges}</div>
@@ -175,7 +252,7 @@ export function RecordCard({
     </Card>
   );
 
-  return destination === undefined ? (
+  return destination === undefined && action === undefined ? (
     body
   ) : (
     <div

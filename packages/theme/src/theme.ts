@@ -266,6 +266,7 @@ function schemeVariables(scheme: SchemeColors): Record<string, string> {
     '--pagination-active-color': scheme.onBrand,
     '--mapletip-color-canvas': scheme.canvas,
     '--mapletip-color-panel': scheme.panel,
+    '--mapletip-color-identity': scheme.identity,
     '--mapletip-color-raised': scheme.raised,
     '--mapletip-color-rail': scheme.rail,
     '--mapletip-color-border-subtle': scheme.borderSubtle,

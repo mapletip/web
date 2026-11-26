@@ -69,6 +69,7 @@ export interface CtaColors {
 export interface SchemeColors {
   readonly canvas: string;
   readonly panel: string;
+  readonly identity: string;
   readonly raised: string;
   readonly rail: string;
   /** Decorative separators. */
@@ -102,6 +103,7 @@ export interface SchemeColors {
 export const mapleTwilightScheme: SchemeColors = {
   canvas: '#111417',
   panel: '#1A1D20',
+  identity: '#2B3037',
   raised: '#22262B',
   rail: '#111417',
   borderSubtle: '#2C3137',
