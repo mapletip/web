@@ -372,12 +372,8 @@ describe('projectItemDrawerRelations', () => {
         spriteUrl: expect.stringContaining('a'.repeat(64)) as unknown,
         sources: [
           {
-            observed: true,
             label: 'VOD',
-            buildLabel: 'Classic World',
-            date: '2026-02-01',
             href: 'https://video.example/watch?v=fixture&t=95s',
-            startSeconds: 95,
           },
         ],
       },
@@ -386,9 +382,7 @@ describe('projectItemDrawerRelations', () => {
         name: 'Quiet Sprite',
         sources: [
           {
-            observed: false,
             label: 'GMS v83 Monster Book',
-            buildLabel: 'GMS v83',
           },
         ],
       },

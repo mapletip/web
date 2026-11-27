@@ -92,10 +92,10 @@ test('desktop Monster Detail shows the confirmed drop explanation for Native Blo
     '[role="dialog"][aria-label="Confirmed drop details for Native Bloom"]',
   );
   await expect(dialog).toBeVisible();
-  await expect(dialog.getByText('VOD', { exact: true })).toBeVisible();
-  await expect(dialog.getByText('Screenshot', { exact: true })).toBeVisible();
-  const timedLink = dialog.getByRole('link', { name: 'Open at 1:35' });
-  await expect(timedLink).toHaveAttribute('target', '_blank');
+  await expect(dialog.getByText('Sources: VOD, Screenshot.')).toBeVisible();
+  const vodLink = dialog.getByRole('link', { name: 'VOD' });
+  await expect(vodLink).toHaveAttribute('href', /[?&]t=95s/u);
+  await expect(vodLink).toHaveAttribute('target', '_blank');
   await monsterPage.captureReady();
   await expect(dialog).toHaveScreenshot(
     'desktop-native-bloom-drop-explanation.png',

@@ -32,9 +32,7 @@ describe('DropChipGroups', () => {
 
               sources: [
                 {
-                  observed: false,
                   label: 'Classic World Monster Book',
-                  buildLabel: 'Classic World',
                 },
               ],
             },
@@ -51,17 +49,11 @@ describe('DropChipGroups', () => {
 
               sources: [
                 {
-                  observed: true,
                   label: 'VOD',
-                  buildLabel: 'GMS v83',
-                  date: '2026-01-15',
                   href: 'https://example.test/watch?t=95s',
-                  startSeconds: 95,
                 },
                 {
-                  observed: false,
                   label: 'Classic World Monster Book',
-                  buildLabel: 'Classic World',
                   href: 'https://video.example/watch?v=fixture',
                 },
               ],
@@ -88,22 +80,20 @@ describe('DropChipGroups', () => {
     expect(dialog).not.toBeNull();
     if (!(dialog instanceof HTMLElement))
       throw new Error('Expected drop dialog.');
-    expect(within(dialog).getByText('Sources:')).toBeInTheDocument();
-    expect(within(dialog).getByText('VOD')).toBeInTheDocument();
+    const vodLink = within(dialog).getByRole('link', {
+      name: 'VOD',
+      hidden: true,
+    });
+    expect(vodLink.closest('p')).toHaveTextContent(
+      'Sources: VOD, Classic World Monster Book.',
+    );
+    expect(vodLink).toHaveAttribute('href', 'https://example.test/watch?t=95s');
+    expect(vodLink).toHaveAttribute('target', '_blank');
     expect(
-      within(dialog).getByText('GMS v83 · Jan 15, 2026'),
-    ).toBeInTheDocument();
-    expect(
-      within(dialog).getByRole('link', { name: 'Open at 1:35', hidden: true }),
-    ).toHaveAttribute('href', 'https://example.test/watch?t=95s');
-    expect(
-      within(dialog).getByRole('link', { name: 'Open at 1:35', hidden: true }),
-    ).toHaveAttribute('target', '_blank');
-    expect(
-      within(dialog).getByRole('link', { name: 'Open link', hidden: true }),
-    ).toHaveAttribute('href', 'https://video.example/watch?v=fixture');
-    expect(
-      within(dialog).getByRole('link', { name: 'Open link', hidden: true }),
+      within(dialog).getByRole('link', {
+        name: 'Classic World Monster Book',
+        hidden: true,
+      }),
     ).toHaveAttribute('rel', 'noopener noreferrer');
   });
 

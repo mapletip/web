@@ -399,9 +399,7 @@ describe('MonsterBrowse', () => {
 
             sources: [
               {
-                observed: false,
                 label: 'GMS v83 Monster Book',
-                buildLabel: 'GMS v83',
               },
             ],
           },
@@ -456,9 +454,7 @@ describe('MonsterBrowse', () => {
 
             sources: [
               {
-                observed: false,
                 label: 'GMS v83 Monster Book',
-                buildLabel: 'GMS v83',
               },
             ],
           },

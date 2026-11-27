@@ -61,20 +61,13 @@ describe('Monster page drop sources', () => {
     expect(view.drops.groups[0]?.entries[0]?.confirmed).toBe(true);
     expect(view.drops.groups[0]?.entries[0]?.sources).toEqual([
       {
-        observed: true,
         label: 'VOD',
-        buildLabel: 'Classic World',
-        date: '2026-02-01',
         href: 'https://example.test/watch?v=one&t=95s',
-        startSeconds: 95,
       },
       {
-        observed: true,
         label: 'VOD',
-        buildLabel: 'Classic World',
-        date: '2026-02-02',
       },
-      { observed: true, label: 'Screenshot', buildLabel: 'other-build' },
+      { label: 'Screenshot' },
     ]);
     expect(view.drops.count).toBe(1);
   });
@@ -495,9 +488,7 @@ describe('projectMonsterDetail', () => {
               iconUrl: itemIconUrl(MAPLEKIT_RELEASE.baseUrl, iconId),
               sources: [
                 {
-                  observed: false,
                   label: 'GMS v83 Monster Book',
-                  buildLabel: 'GMS v83',
                 },
               ],
             },

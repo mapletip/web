@@ -230,9 +230,7 @@ describe('Monster drop projection', () => {
     const row = firstRow(
       projectRows(fixtureCatalog({ records: [sentinelRecord()] }), drops),
     );
-    expect(row.drops.entries[0]?.sources).toEqual([
-      { observed: true, label: 'Screenshot', buildLabel: 'Classic World' },
-    ]);
+    expect(row.drops.entries[0]?.sources).toEqual([{ label: 'Screenshot' }]);
     expect(row.drops.entries).toHaveLength(2);
   });
 
@@ -264,9 +262,7 @@ describe('Monster drop projection', () => {
       itemName: 'Known but ambiguous potion',
       sources: [
         {
-          observed: false,
           label: 'Classic World Monster Book',
-          buildLabel: 'Classic World',
         },
       ],
     });
@@ -275,9 +271,7 @@ describe('Monster drop projection', () => {
       itemKey: 'fixture:item:known',
       sources: [
         {
-          observed: false,
           label: 'GMS v83 Monster Book',
-          buildLabel: 'GMS v83',
         },
       ],
     });

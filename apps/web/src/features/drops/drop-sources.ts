@@ -2,21 +2,16 @@ import type { StaticMonsterDropBrowseV1_2 } from '@mapletip/data/monsters';
 
 import { BUILDS, isBuildId } from '@/config/maplekit';
 
+/** A drop source as players see it: its name, linked when it has a link. */
 export interface DropSource {
-  /** False for game files ("GMS v83 Monster Book"), true for an observation such as a VOD. */
-  readonly observed: boolean;
   readonly label: string;
-  readonly buildLabel: string;
-  readonly date?: string;
   readonly href?: string;
-  readonly startSeconds?: number;
 }
 
 export interface DropEvidence {
   readonly kind: string;
   readonly label: string;
   readonly build: string;
-  readonly date?: string | null | undefined;
   readonly url?: string | null | undefined;
   readonly startSeconds?: number | null | undefined;
 }
@@ -36,10 +31,7 @@ export function classifyDrop(evidence: readonly DropEvidence[]): {
   const sources = evidence.flatMap((source) => {
     if (builds.has(source.build)) return [];
     builds.add(source.build);
-    const label = buildLabel(source.build);
-    return [
-      { observed: false, label: `${label} Monster Book`, buildLabel: label },
-    ];
+    return [{ label: `${buildLabel(source.build)} Monster Book` }];
   });
   return {
     confirmed: evidence.some(({ kind }) => kind === 'native'),
@@ -64,26 +56,13 @@ function sourceHref({
   return href.toString();
 }
 
-function toDropSource({
-  label,
-  build,
-  date,
-  url,
-  startSeconds,
-}: DropEvidence): DropSource {
-  const normalizedStartSeconds = startSeconds ?? undefined;
-  return {
-    observed: true,
-    label,
-    buildLabel: buildLabel(build),
-    ...(date == null ? {} : { date }),
-    ...(url == null
-      ? {}
-      : { href: sourceHref({ url, startSeconds: normalizedStartSeconds }) }),
-    ...(normalizedStartSeconds === undefined
-      ? {}
-      : { startSeconds: normalizedStartSeconds }),
-  };
+function toDropSource({ label, url, startSeconds }: DropEvidence): DropSource {
+  return url == null
+    ? { label }
+    : {
+        label,
+        href: sourceHref({ url, startSeconds: startSeconds ?? undefined }),
+      };
 }
 
 export function resolveBrowseDropEvidence({
@@ -117,7 +96,6 @@ export function resolveBrowseDropEvidence({
     kind: source.kind,
     label,
     build: source.build,
-    date: source.date,
     url: source.url,
     startSeconds: evidence.startSeconds,
   };
