@@ -251,6 +251,39 @@ describe('Items Browse server rendering', () => {
     },
   );
 
+  it('renders /items/all with category pills, quest filters, primary facts and noindex', async () => {
+    const { router, html } = await renderPath('/maplestory/items/all');
+    const text = html.replaceAll('<!-- -->', '');
+
+    expect(html).toMatch(/<h1[^>]*>MapleStory Classic World Items<\/h1>/u);
+    expect(text).toContain('Category choices');
+    expect(text).toContain('Required by quests');
+    expect(text).toContain('Quest reward');
+    expect(text).toContain('Scrolls (');
+    expect(text).toContain('Monster Drops (');
+    expect(headMeta(router)).toContainEqual({
+      name: 'robots',
+      content: 'noindex,follow',
+    });
+    expect(canonical(router)).toEqual({
+      rel: 'canonical',
+      href: 'https://mapletip.com/maplestory/items/all',
+    });
+  });
+
+  it('matches exact source id on /items/all without showing it on the card and updates rail counts', async () => {
+    const { router, html } = await renderPath(
+      '/maplestory/items/all?q=only-given',
+    );
+
+    expect(html).toContain('Only Given Pebble');
+    expect(html).not.toContain('Pebble Shard 01');
+    expect(headMeta(router)).toContainEqual({
+      name: 'robots',
+      content: 'noindex,follow',
+    });
+  });
+
   it('shows the generic unavailable state when item data fails to load', async () => {
     mockedLoad.mockRejectedValue(new Error(ITEM_BROWSE_UNAVAILABLE_MESSAGE));
 
