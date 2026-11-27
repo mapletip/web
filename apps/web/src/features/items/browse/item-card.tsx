@@ -36,7 +36,7 @@ export const ITEM_KIND_LABELS: ReadonlyMap<string, string> = new Map(
   ITEM_KINDS.map((entry) => [entry.id, entry.label]),
 );
 
-export interface RenderItemCardOptions {
+interface RenderItemCardOptions {
   readonly record: CategorizedItemRow;
   readonly openDetails?: (() => void) | undefined;
   readonly isDetailsOpen?: boolean | undefined;

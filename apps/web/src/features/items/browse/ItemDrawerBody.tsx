@@ -307,7 +307,7 @@ function ItemDrawerRelationsSection({
   );
 }
 
-export interface ItemDrawerBodyProps {
+interface ItemDrawerBodyProps {
   readonly record: CategorizedItemRow;
   readonly categoryLabel?: string | undefined;
   readonly reader: ItemRelationReader;

@@ -133,13 +133,13 @@ export interface ItemDrawerQuestEntry {
   readonly recurrenceText?: string;
 }
 
-export interface ItemDrawerRecipeEntry {
+interface ItemDrawerRecipeEntry {
   readonly key: string;
   readonly productName: string;
   readonly amountText?: string;
 }
 
-export interface ItemDrawerMonsterEntry {
+interface ItemDrawerMonsterEntry {
   readonly key: string;
   readonly name: string;
   readonly levelText?: string;
