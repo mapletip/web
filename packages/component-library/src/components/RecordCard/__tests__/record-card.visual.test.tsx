@@ -128,6 +128,14 @@ const cases: readonly VisualCase[] = [
     height: 1000,
     visible: [page.getByRole('link', { name: 'Copper Compass' })],
   },
+  {
+    name: 'record-facts-selected-dark',
+    story: dark.SelectedFacts,
+    storyId: 'components-recordcard--selected-facts',
+    width: 720,
+    height: 220,
+    visible: [page.getByRole('button', { name: /Greater.*80% success/u })],
+  },
 ];
 
 describe('RecordCard visual states', () => {

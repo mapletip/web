@@ -9,7 +9,7 @@ import {
 } from '@mantine/core';
 import { Thumbnail } from '@mapletip/component-library';
 import { itemIconUrl } from '@mapletip/data/items';
-import { useEffect, useState, type ReactElement } from 'react';
+import { useEffect, useState, type ReactElement, type ReactNode } from 'react';
 
 import { MAPLEKIT_RELEASE } from '@/config/maplekit';
 import { DropSources } from '@/features/drops';
@@ -301,6 +301,7 @@ export interface ItemDrawerBodyProps {
   readonly record: CategorizedItemRow;
   readonly categoryLabel?: string | undefined;
   readonly reader: ItemRelationReader;
+  readonly additionalContent?: ReactNode;
 }
 
 /** Item summary, published facts, and lazy connections shown inside the record-details drawer. */
@@ -308,6 +309,7 @@ export function ItemDrawerBody({
   record,
   categoryLabel,
   reader,
+  additionalContent,
 }: ItemDrawerBodyProps): ReactElement {
   const facts = formatItemFacts({ record });
   return (
@@ -343,6 +345,7 @@ export function ItemDrawerBody({
           ))}
         </Stack>
       ) : null}
+      {additionalContent}
       <ItemDrawerRelationsSection
         key={record.key}
         record={record}

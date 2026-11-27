@@ -25,6 +25,7 @@ export interface RecordFact {
   readonly detail?: string;
   readonly values?: readonly [ReactNode, ReactNode?];
   readonly action?: () => void;
+  readonly selected?: boolean;
 }
 
 interface RecordCardBaseProps {

@@ -5,7 +5,7 @@ import type { CategorizedItemRow, ItemBrowseScrollDeltas } from './project';
 const TIERS = ['lesser', 'intermediate', 'greater', 'chaos'] as const;
 const collator = new Intl.Collator('en-US');
 
-const SCROLL_STAT_LABELS: Readonly<
+export const SCROLL_STAT_LABELS: Readonly<
   Record<keyof ItemBrowseScrollDeltas, string>
 > = {
   accuracy: 'accuracy',
@@ -28,6 +28,8 @@ const SCROLL_STAT_LABELS: Readonly<
   weaponDefense: 'weapon defense',
 };
 
+type ItemBrowseScrollStat = keyof ItemBrowseScrollDeltas;
+
 export function scrollChanges({
   stats,
 }: {
@@ -48,36 +50,71 @@ export function scrollChanges({
     );
 }
 
-function leadingStat({ row }: { readonly row: CategorizedItemRow }): string {
-  const entries = Object.entries(row.stats ?? {});
+function leadingStat({
+  row,
+}: {
+  readonly row: CategorizedItemRow;
+}): ItemBrowseScrollStat | undefined {
+  const entries = Object.entries(row.stats ?? {}) as [
+    ItemBrowseScrollStat,
+    number | null,
+  ][];
   entries.sort(
     (left, right) => Math.abs(right[1] ?? 0) - Math.abs(left[1] ?? 0),
   );
-  return entries[0]?.[0] ?? '';
+  return entries.find(([, value]) => value !== null && value !== 0)?.[0];
 }
 
-function equipmentName(label: string): string {
+export function equipmentName({
+  label,
+}: {
+  readonly label: NonNullable<CategorizedItemRow['targetLabel']>;
+}): string {
   return label
     .split('-')
-    .map((part) => part[0]!.toUpperCase() + part.slice(1))
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
     .join(' ');
 }
 
 /** The card's lead line: its leading stat in sentence case ("Weapon attack"). */
-function statLead({ row }: { readonly row: CategorizedItemRow }): string {
-  const label =
-    SCROLL_STAT_LABELS[leadingStat({ row }) as keyof ItemBrowseScrollDeltas];
-  return label[0]!.toUpperCase() + label.slice(1);
+function statLead({
+  row,
+}: {
+  readonly row: CategorizedItemRow;
+}): string | undefined {
+  const stat = leadingStat({ row });
+  if (stat === undefined) return undefined;
+  const label = SCROLL_STAT_LABELS[stat];
+  return label.charAt(0).toUpperCase() + label.slice(1);
+}
+
+const SCROLL_STAT_KEYS = Object.keys(
+  SCROLL_STAT_LABELS,
+) as ItemBrowseScrollStat[];
+
+function scrollStats({
+  rows,
+}: {
+  readonly rows: readonly CategorizedItemRow[];
+}): readonly ItemBrowseScrollStat[] {
+  return SCROLL_STAT_KEYS.filter((stat) =>
+    rows.some((row) => {
+      const value = row.stats?.[stat];
+      return value !== undefined && value !== null && value !== 0;
+    }),
+  );
 }
 
 function single(row: CategorizedItemRow): CategorizedItemRow {
+  const lead = statLead({ row });
   return {
     ...row,
     scrollMembers: [row],
     names: row.name ? [row.name] : [],
-    scrollLead: statLead({ row }),
+    ...(lead === undefined ? {} : { scrollLead: lead }),
+    scrollStats: scrollStats({ rows: [row] }),
     scrollSort: row.targetLabel
-      ? `0:${row.targetLabel}:${leadingStat({ row })}:${row.name}`
+      ? `0:${row.targetLabel}:${leadingStat({ row }) ?? ''}:${row.name}`
       : `1:${row.name}`,
   };
 }
@@ -95,11 +132,12 @@ export function groupScrollFamilies({
   const candidates = new Map<string, CategorizedItemRow[]>();
   const singles: CategorizedItemRow[] = [];
   for (const row of rows) {
-    if (!row.targetLabel || !row.tier || !leadingStat({ row })) {
+    const stat = leadingStat({ row });
+    if (!row.targetLabel || !row.tier || stat === undefined) {
       singles.push(single(row));
       continue;
     }
-    const key = `${row.targetLabel}:${leadingStat({ row })}`;
+    const key = `${row.targetLabel}:${stat}`;
     const members = candidates.get(key) ?? [];
     members.push(row);
     candidates.set(key, members);
@@ -110,16 +148,33 @@ export function groupScrollFamilies({
       continue;
     }
     members.sort(
-      (left, right) => TIERS.indexOf(left.tier!) - TIERS.indexOf(right.tier!),
+      (left, right) =>
+        TIERS.indexOf(left.tier ?? 'lesser') -
+        TIERS.indexOf(right.tier ?? 'lesser'),
     );
-    const first = members[0]!;
+    const first = members[0];
+    const targetLabel = first?.targetLabel;
+    if (first === undefined || targetLabel === undefined) {
+      singles.push(...members.map(single));
+      continue;
+    }
+    const familyStats = scrollStats({ rows: members });
+    const familyNames = members.flatMap((row) => (row.name ? [row.name] : []));
+    const familyLead = statLead({ row: first });
+    const familyMembers = members.map((member) => ({
+      ...member,
+      scrollMembers: members,
+      names: familyNames,
+      scrollStats: familyStats,
+    }));
     singles.push({
       ...first,
-      name: equipmentName(first.targetLabel!),
-      scrollMembers: members,
-      names: members.flatMap((row) => (row.name ? [row.name] : [])),
-      scrollLead: statLead({ row: first }),
-      scrollSort: `0:${first.targetLabel}:${leadingStat({ row: first })}`,
+      name: equipmentName({ label: targetLabel }),
+      scrollMembers: familyMembers,
+      names: familyNames,
+      scrollStats: familyStats,
+      ...(familyLead === undefined ? {} : { scrollLead: familyLead }),
+      scrollSort: `0:${targetLabel}:${leadingStat({ row: first }) ?? ''}`,
     });
   }
   return singles.sort(compare);

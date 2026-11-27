@@ -40,7 +40,11 @@ export function RecordFacts({ facts }: RecordFactsProps): ReactElement | null {
         );
 
         return (
-          <li key={fact.id} className={classes['fact']}>
+          <li
+            key={fact.id}
+            className={classes['fact']}
+            aria-current={fact.selected ? 'true' : undefined}
+          >
             {fact.action === undefined ? (
               <div className={classes['factRow']}>{content}</div>
             ) : (

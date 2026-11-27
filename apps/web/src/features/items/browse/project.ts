@@ -83,6 +83,7 @@ export type CategorizedItemRow = ItemRow & {
   readonly scrollMembers?: readonly CategorizedItemRow[];
   readonly names?: readonly string[];
   readonly scrollSort?: string;
+  readonly scrollStats?: readonly (keyof ItemBrowseScrollDeltas)[];
 };
 
 function setField<K extends keyof ItemRow>(

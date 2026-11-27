@@ -38,10 +38,19 @@ export interface ItemCardDescription {
   readonly group?: (
     context: ItemCardContext & { readonly rows: readonly CategorizedItemRow[] },
   ) => readonly CategorizedItemRow[];
+  readonly groupMembers?: (options: {
+    readonly record: CategorizedItemRow;
+  }) => readonly CategorizedItemRow[];
   /** Pills and filters for the category page, given only this category's rows. */
   readonly facets?: (
     context: ItemCardContext & { readonly rows: readonly CategorizedItemRow[] },
   ) => readonly FacetDefinition<CategorizedItemRow>[];
+  readonly drawerContent?: (options: {
+    readonly record: CategorizedItemRow;
+    readonly selectedRecordId: string;
+    readonly context: ItemCardContext;
+    readonly openRecordDetails: (sourceId: string) => void;
+  }) => ReactNode;
   readonly queryFields?: (
     context: ItemCardContext,
   ) => readonly QueryFieldDefinition<CategorizedItemRow>[];

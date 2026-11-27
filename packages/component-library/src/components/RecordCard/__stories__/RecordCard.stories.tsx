@@ -10,7 +10,7 @@ import {
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, fn, userEvent, within } from 'storybook/test';
 
-import { RecordCard } from '@/components/RecordCard';
+import { RecordCard, RecordFacts } from '@/components/RecordCard';
 import { Thumbnail } from '@/components/Thumbnail';
 import smallImage from '@/fixtures/thumbnail-small.svg?url';
 
@@ -269,6 +269,32 @@ export const IdentityOpen: Story = {
         action={openDetails}
         isDetailsOpen
         facts={[{ id: 'source', label: 'Found in', values: ['3 regions'] }]}
+      />
+    </Stage>
+  ),
+};
+
+export const SelectedFacts: Story = {
+  args: { title: 'Copper Compass' },
+  render: () => (
+    <Stage>
+      <RecordFacts
+        facts={[
+          {
+            id: 'lesser',
+            label: 'Lesser',
+            detail: '80% success',
+            values: ['+2 weapon attack'],
+            selected: true,
+          },
+          {
+            id: 'greater',
+            label: 'Greater',
+            detail: '80% success · can destroy item',
+            values: ['+5 weapon attack'],
+            action: fn(),
+          },
+        ]}
       />
     </Stage>
   ),
