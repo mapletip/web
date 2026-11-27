@@ -4,6 +4,22 @@ import { expect, test } from '../fixtures';
 import { ItemsPage } from './page/items-page';
 
 const SCROLLS = '/maplestory/items/use/scrolls';
+
+test('a scroll tier opens that scroll in the existing drawer', async ({
+  page,
+}) => {
+  const items = new ItemsPage(page);
+  await items.goto(SCROLLS);
+  const card = page
+    .locator('[data-record-card-layout="identity"]')
+    .filter({ has: page.getByRole('heading', { name: 'One Handed Sword' }) });
+  await card
+    .getByRole('button', { name: /Greater.*80% success.*can destroy item/u })
+    .click();
+  await expect(
+    page.getByRole('dialog', { name: 'Greater Practice Sword Scroll' }),
+  ).toBeVisible();
+});
 const POTIONS = '/maplestory/items/use/potions-and-food';
 const PROJECTILES = '/maplestory/items/use/stars-and-arrows';
 const QUEST_ITEMS = '/maplestory/items/etc/quest-items';
@@ -195,7 +211,7 @@ test('Items category is server rendered with metadata and stable addresses', asy
   expect(response.status()).toBe(200);
   const html = await response.text();
   expect(html).toContain('MapleStory Classic World Scrolls');
-  expect(html).toContain('Practice Sword Scroll');
+  expect(html).toContain('One Handed Sword');
   expect(html).toContain('rel="canonical"');
   expect(html).toContain(SCROLLS);
   expect(html).toContain('Item categories');

@@ -9,7 +9,10 @@ import {
   type QueryFieldDefinition,
   type StateChangeDetails,
 } from '@mapletip/component-library';
-import type { ItemBrowseCoverage } from '@mapletip/data/items';
+import type {
+  ItemBrowseCoverage,
+  StaticItemBrowseV2_2,
+} from '@mapletip/data/items';
 import { Link, useRouter } from '@tanstack/react-router';
 import { useCallback, useMemo } from 'react';
 
@@ -49,6 +52,7 @@ interface ItemFrameProps {
   readonly buildId: BuildId;
   readonly rows: readonly CategorizedItemRow[];
   readonly coverage?: ItemBrowseCoverage | undefined;
+  readonly scrollTargetIcons?: StaticItemBrowseV2_2['scrollTargetIcons'];
   readonly relations?: ProjectedRelations | undefined;
   readonly group?: ItemGroup | undefined;
   readonly kind?: ItemKind | undefined;
@@ -236,6 +240,7 @@ export function ItemFrame({
   buildId,
   rows,
   coverage,
+  scrollTargetIcons,
   relations = {},
   group,
   kind,
@@ -336,6 +341,23 @@ export function ItemFrame({
   }, [all, coverage, kind, rows, relations]);
   const details =
     overlay.overlay?.type === 'record-details' ? overlay.overlay : undefined;
+  const displayedRows = useMemo(
+    () =>
+      kind?.card?.group?.({
+        rows: rows.filter((row) => row.kind === kind.id),
+        coverage,
+        relations,
+      }) ?? rows,
+    [kind, rows, coverage, relations],
+  );
+  const rowBySourceId = useMemo(
+    () => new Map(rows.map((row) => [row.sourceId, row])),
+    [rows],
+  );
+  const categorySearchFields = kind?.card?.group
+    ? (['name', 'names'] as const)
+    : CATEGORY_SEARCH_FIELDS;
+  const searchFields = all ? ALL_SEARCH_FIELDS : categorySearchFields;
 
   return (
     <BrowsePageShell fillViewport={false}>
@@ -418,8 +440,9 @@ export function ItemFrame({
             />
           ),
         }}
-        records={rows}
+        records={displayedRows}
         idAccessor="sourceId"
+        resolveRecordDetails={(selectedId) => rowBySourceId.get(selectedId)}
         queryFields={
           all
             ? ALL_QUERY_FIELDS
@@ -428,7 +451,7 @@ export function ItemFrame({
                 ...(kind?.card?.queryFields?.({ coverage, relations }) ?? []),
               ]
         }
-        searchFields={all ? ALL_SEARCH_FIELDS : CATEGORY_SEARCH_FIELDS}
+        searchFields={searchFields}
         facets={facets}
         sortOptions={sortOptions}
         recordNoun={`${BUILDS[buildId].label} items`}
@@ -468,13 +491,19 @@ export function ItemFrame({
               ) =>
                 renderItemCard({
                   record,
-                  context: { coverage, relations },
+                  context: {
+                    coverage,
+                    relations,
+                    ...(scrollTargetIcons ? { scrollTargetIcons } : {}),
+                  },
                   openDetails,
+                  openItemDetails: (recordId) =>
+                    overlay.open({ type: 'record-details', recordId }),
                   isDetailsOpen,
                   ...(all
                     ? { secondaryLine: itemPrimaryFact({ record }) }
                     : {}),
-                  showCategoryLabel: all,
+                  crossCategory: all,
                 }),
             })}
         recordDetailsTitle={(record) => record.name}

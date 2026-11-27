@@ -4,7 +4,11 @@ import type {
   QueryFieldDefinition,
   RecordFact,
 } from '@mapletip/component-library';
-import type { ItemBrowseCoverage } from '@mapletip/data/items';
+import type {
+  ItemBrowseCoverage,
+  StaticItemBrowseV2_2,
+} from '@mapletip/data/items';
+import type { ReactNode } from 'react';
 
 import type { CategorizedItemRow, ItemRow } from '../browse/project';
 import type {
@@ -15,15 +19,25 @@ import type {
 export interface ItemCardContext {
   readonly coverage: ItemBrowseCoverage | undefined;
   readonly relations: ProjectedRelations;
+  readonly scrollTargetIcons?: StaticItemBrowseV2_2['scrollTargetIcons'];
+  readonly openItemDetails?: (sourceId: string) => void;
 }
 
 export interface ItemCardDescription {
   readonly layout?: 'picture' | 'short' | 'identity';
+  readonly media?: (
+    row: CategorizedItemRow,
+    context: ItemCardContext,
+  ) => ReactNode;
   readonly lead: (row: ItemRow, context: ItemCardContext) => string | undefined;
   readonly facts?: (
-    row: ItemRow,
+    row: CategorizedItemRow,
     context: ItemCardContext,
   ) => readonly RecordFact[];
+  /** Category records to list after projecting the flat item rows. */
+  readonly group?: (
+    context: ItemCardContext & { readonly rows: readonly CategorizedItemRow[] },
+  ) => readonly CategorizedItemRow[];
   /** Pills and filters for the category page, given only this category's rows. */
   readonly facets?: (
     context: ItemCardContext & { readonly rows: readonly CategorizedItemRow[] },

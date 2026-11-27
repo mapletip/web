@@ -43,7 +43,7 @@ describe('RecordCard stretched link in the browser', () => {
     expect(open).toHaveBeenCalledOnce();
   });
 
-  it('fits long identity text at 320px and clips its detail to one line', async () => {
+  it('fits long identity text at 320px and wraps its detail in full', async () => {
     const detail =
       'The northern orchard beyond the quiet meadow and western road';
     await render(
@@ -64,9 +64,9 @@ describe('RecordCard stretched link in the browser', () => {
     await page.viewport(320, 500);
     const detailElement = page.getByText(detail).element();
     expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(320);
-    expect(getComputedStyle(detailElement).textOverflow).toBe('ellipsis');
-    expect(getComputedStyle(detailElement).whiteSpace).toBe('nowrap');
-    expect(detailElement.getAttribute('title')).toBe(detail);
+    // Details can carry warnings, so they wrap instead of truncating.
+    expect(getComputedStyle(detailElement).whiteSpace).toBe('normal');
+    expect(detailElement.textContent).toBe(detail);
   });
   it('stretches identity cards equally and activates only the chosen control', async () => {
     const open = vi.fn();

@@ -40,8 +40,10 @@ export interface RenderItemCardOptions {
   readonly openDetails?: (() => void) | undefined;
   readonly isDetailsOpen?: boolean | undefined;
   readonly secondaryLine?: string | undefined;
-  readonly showCategoryLabel?: boolean | undefined;
+  /** Cross-category results: a plain picture card labelled with the item's category. */
+  readonly crossCategory?: boolean | undefined;
   readonly context?: ItemCardContext | undefined;
+  readonly openItemDetails?: ((sourceId: string) => void) | undefined;
 }
 
 // 32px item icons, magnified to fill each layout's media slot (52-56px beside the name).
@@ -54,22 +56,25 @@ export function renderItemCard({
   openDetails,
   isDetailsOpen,
   secondaryLine,
-  showCategoryLabel = false,
+  crossCategory = false,
   context = { coverage: undefined, relations: {} },
+  openItemDetails,
 }: RenderItemCardOptions): ReactElement {
   const kind: ItemKind | undefined = ITEM_KINDS.find(
     (entry) => entry.id === record.kind,
   );
-  const card = kind?.card;
+  // Category cards only on their own category page and shelf.
+  const card = crossCategory ? undefined : kind?.card;
+  const layout = card?.layout ?? 'picture';
   const fact = secondaryLine ?? card?.lead(record, context);
-  const media = (
+  const media = card?.media?.(record, context) ?? (
     <Thumbnail
       src={
         record.icon === undefined
           ? undefined
           : itemIconUrl(MAPLEKIT_RELEASE.baseUrl, record.icon)
       }
-      {...(isPictureLayout(kind) ? PICTURE_THUMBNAIL : ASIDE_THUMBNAIL)}
+      {...(layout === 'picture' ? PICTURE_THUMBNAIL : ASIDE_THUMBNAIL)}
     />
   );
   const shared = {
@@ -82,8 +87,11 @@ export function renderItemCard({
           ...(isDetailsOpen === undefined ? {} : { isDetailsOpen }),
         }),
   };
-  if (card?.layout === 'identity') {
-    const facts = card.facts?.(record, context);
+  if (layout === 'identity') {
+    const facts = card?.facts?.(record, {
+      ...context,
+      ...(openItemDetails ? { openItemDetails } : {}),
+    });
     return (
       <RecordCard
         layout="identity"
@@ -93,7 +101,7 @@ export function renderItemCard({
       />
     );
   }
-  return card?.layout === 'short' ? (
+  return layout === 'short' ? (
     <RecordCard
       layout="compactMediaAside"
       {...(fact === undefined ? {} : { secondaryLine: fact })}
@@ -102,9 +110,7 @@ export function renderItemCard({
   ) : (
     <RecordCard
       layout="picture"
-      leadLine={
-        showCategoryLabel ? ITEM_KIND_LABELS.get(record.kind) : undefined
-      }
+      leadLine={crossCategory ? ITEM_KIND_LABELS.get(record.kind) : undefined}
       {...(fact === undefined ? {} : { secondaryLine: fact })}
       {...shared}
     />

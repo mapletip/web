@@ -26,9 +26,7 @@ export function RecordFacts({ facts }: RecordFactsProps): ReactElement | null {
             <span className={classes['factText']}>
               <span className={classes['factLabel']}>{fact.label}</span>
               {fact.detail === undefined ? null : (
-                <span className={classes['factDetail']} title={fact.detail}>
-                  {fact.detail}
-                </span>
+                <span className={classes['factDetail']}>{fact.detail}</span>
               )}
             </span>
             {fact.values === undefined ? null : (

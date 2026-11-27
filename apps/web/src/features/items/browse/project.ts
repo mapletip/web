@@ -71,6 +71,7 @@ export type ItemRow = {
   readonly maxStack?: number;
   readonly level?: number;
   readonly buff?: NonNullable<ItemBrowseRecordV2_2['buff']>;
+  readonly scrollLead?: string;
 };
 
 type WritableItemRow = { -readonly [K in keyof ItemRow]: ItemRow[K] };
@@ -79,6 +80,9 @@ type WritableItemRow = { -readonly [K in keyof ItemRow]: ItemRow[K] };
 export type CategorizedItemRow = ItemRow & {
   readonly kind: string;
   readonly kindPath: readonly [string, string, string];
+  readonly scrollMembers?: readonly CategorizedItemRow[];
+  readonly names?: readonly string[];
+  readonly scrollSort?: string;
 };
 
 function setField<K extends keyof ItemRow>(

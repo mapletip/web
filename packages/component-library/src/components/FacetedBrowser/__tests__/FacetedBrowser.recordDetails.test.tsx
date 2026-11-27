@@ -20,6 +20,31 @@ const defaultState: BrowseState = {
   hiddenColumns: [],
 };
 
+it('resolves a selected member outside the displayed records', async () => {
+  const member = demoRecords[2]!;
+  render(
+    <MantineProvider>
+      <FacetedBrowser
+        title={<h1>Records</h1>}
+        records={records}
+        idAccessor="id"
+        presentation="cards"
+        renderCard={(record) => <span>{record.name}</span>}
+        recordDetails={{ selectedId: member.id, onSelectedIdChange: vi.fn() }}
+        resolveRecordDetails={(selectedId) =>
+          selectedId === member.id ? member : undefined
+        }
+        recordDetailsTitle={(record) => record.name}
+        recordDetailsContent={(record) => <p>content for {record.name}</p>}
+        defaultState={defaultState}
+      />
+    </MantineProvider>,
+  );
+  expect(
+    await screen.findByRole('dialog', { name: member.name }),
+  ).toHaveTextContent(`content for ${member.name}`);
+});
+
 function Browser({
   rows = records,
   withDetails = true,

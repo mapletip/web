@@ -214,6 +214,8 @@ interface CommonProps<TRecord extends Record<string, unknown>> {
   readonly recordDetailsTitle?: (record: TRecord) => ReactNode;
   /** Optional host-controlled drawer selection. */
   readonly recordDetails?: RecordDetailsSelection;
+  /** Resolve a selected detail id that belongs to a displayed grouped record. */
+  readonly resolveRecordDetails?: (selectedId: string) => TRecord | undefined;
   /** Drawer content for a selected record. Comparison mode can use row expansion content instead. */
   readonly recordDetailsContent?: (
     record: TRecord,

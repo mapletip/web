@@ -5,6 +5,44 @@ import { expect, test } from '../fixtures';
 const LANDING = '/maplestory/items';
 const GROUP = '/maplestory/items/etc';
 const CATEGORY = '/maplestory/items/use/scrolls';
+
+test('desktop Items scrolls', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 1100 });
+  await page.goto(CATEGORY);
+  await browseReady(page);
+  await expect(
+    page.getByText('5 Items', { exact: true }).first(),
+  ).toBeVisible();
+  await expect(page).toHaveScreenshot('desktop-items-scrolls.png');
+});
+
+test('mobile Items scrolls', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 1100 });
+  await page.goto(CATEGORY);
+  await browseReady(page);
+  await expect(
+    page.getByText('5 Items', { exact: true }).first(),
+  ).toBeVisible();
+  await expect(page).toHaveScreenshot('mobile-items-scrolls.png');
+});
+
+test('desktop Items scrolls with two stats', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 1100 });
+  await page.goto(`${CATEGORY}?q=shield`);
+  await browseReady(page);
+  await expect(page.getByText('1 Item', { exact: true }).first()).toBeVisible();
+  await expect(page).toHaveScreenshot('desktop-items-scrolls-two-stats.png');
+});
+
+test('desktop Items scrolls without tiers', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 1100 });
+  await page.goto('/maplestory/gms-v83/items/use/scrolls');
+  await browseReady(page);
+  await expect(
+    page.getByText('2 Items', { exact: true }).first(),
+  ).toBeVisible();
+  await expect(page).toHaveScreenshot('desktop-items-scrolls-untiered.png');
+});
 const ORES = '/maplestory/items/etc/ores-and-gems';
 const ALL = '/maplestory/items/all';
 const CHAIRS = '/maplestory/items/setup/chairs';
@@ -84,7 +122,9 @@ test('desktop Items quest items', async ({ page }) => {
   await page.goto(QUEST_ITEMS);
   await browseReady(page);
   await page.getByText(/^Required by a quest \(/u).click();
-  await expect(page.getByText('2 Items', { exact: true })).toBeVisible();
+  await expect(
+    page.getByText('2 Items', { exact: true }).first(),
+  ).toBeVisible();
   await expect(page).toHaveScreenshot('desktop-items-quest-items.png');
 });
 
@@ -93,7 +133,9 @@ test('mobile Items quest items', async ({ page }) => {
   await page.goto(QUEST_ITEMS);
   await browseReady(page);
   await page.getByText(/^Required by a quest \(/u).click();
-  await expect(page.getByText('2 Items', { exact: true })).toBeVisible();
+  await expect(
+    page.getByText('2 Items', { exact: true }).first(),
+  ).toBeVisible();
   await expect(page).toHaveScreenshot('mobile-items-quest-items.png');
 });
 
@@ -137,7 +179,9 @@ test('desktop Items potions filtered', async ({ page }) => {
   await page.goto(POTIONS);
   await browseReady(page);
   await page.getByText(/^Buffs \(/u).click();
-  await expect(page.getByText('3 Items', { exact: true })).toBeVisible();
+  await expect(
+    page.getByText('3 Items', { exact: true }).first(),
+  ).toBeVisible();
   await expect(page).toHaveScreenshot('desktop-items-potions-filtered.png');
 });
 
