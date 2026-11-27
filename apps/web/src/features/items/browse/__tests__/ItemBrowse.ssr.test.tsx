@@ -5,6 +5,7 @@ import type {
   ItemRelatedEntityBrowsePack,
 } from '@mapletip/data/items';
 import { getItemRelatedEntities } from '@mapletip/data/items';
+import { openRelease } from '@mapletip/data/release';
 import { theme } from '@mapletip/theme';
 import {
   createMemoryHistory,
@@ -40,8 +41,14 @@ vi.mock(import('@mapletip/data/items'), async (original) => ({
   getItemRelatedEntities: vi.fn(),
 }));
 
+vi.mock(import('@mapletip/data/release'), async (original) => ({
+  ...(await original()),
+  openRelease: vi.fn(),
+}));
+
 const mockedLoad = vi.mocked(loadItemBrowse);
 const mockedRelations = vi.mocked(getItemRelatedEntities);
+const mockedOpenRelease = vi.mocked(openRelease);
 
 function fixtureRelation(
   buildId: BuildId,
@@ -76,6 +83,19 @@ function fixtureBrowse(buildId: BuildId): LoadedItemBrowse {
     coverage: pack.coverage,
     scrollTargetIcons: pack.scrollTargetIcons,
   };
+}
+
+function fixtureDescriptions(
+  buildId: BuildId,
+): Readonly<Record<string, string>> {
+  const descriptor = fixtureRelease.builds.get(buildId)?.itemDescriptions;
+  if (!descriptor) throw new Error(`Missing description pack for ${buildId}`);
+  const bytes = fixtureRelease.files.get(descriptor.path);
+  if (!bytes) throw new Error(`Missing description bytes for ${buildId}`);
+  const pack = JSON.parse(new TextDecoder().decode(bytes)) as {
+    readonly records: Readonly<Record<string, string>>;
+  };
+  return pack.records;
 }
 
 async function renderPath(path: string) {
@@ -167,6 +187,15 @@ describe('Items Browse server rendering', () => {
         ),
       ),
     );
+    mockedOpenRelease.mockResolvedValue({
+      openItemBuild: vi.fn((buildId: BuildId) =>
+        Promise.resolve({
+          loadDescriptions: vi.fn(() =>
+            Promise.resolve(fixtureDescriptions(buildId)),
+          ),
+        }),
+      ),
+    } as never);
   });
 
   it('renders Quest Items with a named quest in the first response', async () => {
@@ -284,6 +313,16 @@ describe('Items Browse server rendering', () => {
     expect(main).toContain('Restores HP');
     expect(main).toContain('Restores MP');
     expect(main).toContain('Buff stat');
+    expect(main).toContain('data-record-card-layout="compactMediaAside"');
+  });
+
+  it('renders an Other Use description in the first response', async () => {
+    const { html } = await renderPath('/maplestory/items/use/other-use');
+    const main = mainHtml(html);
+    expect(main).toContain('Plain Use Item');
+    expect(main).toContain(
+      'An invented item with a short published description.',
+    );
     expect(main).toContain('data-record-card-layout="compactMediaAside"');
   });
 

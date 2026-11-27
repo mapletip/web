@@ -19,17 +19,28 @@ import type {
 export interface ItemCardContext {
   readonly coverage: ItemBrowseCoverage | undefined;
   readonly relations: ProjectedRelations;
+  readonly descriptions?: Readonly<Record<string, string>>;
   readonly scrollTargetIcons?: StaticItemBrowseV2_2['scrollTargetIcons'];
   readonly openItemDetails?: (sourceId: string) => void;
 }
 
 export interface ItemCardDescription {
   readonly layout?: 'picture' | 'short' | 'identity';
+  readonly columns?: {
+    readonly base: number;
+    readonly md?: number;
+    readonly lg: number;
+  };
   readonly media?: (
     row: CategorizedItemRow,
     context: ItemCardContext,
   ) => ReactNode;
   readonly lead: (row: ItemRow, context: ItemCardContext) => string | undefined;
+  readonly secondaryLineClamp?: number;
+  readonly footer?: (
+    row: CategorizedItemRow,
+    context: ItemCardContext,
+  ) => string | undefined;
   readonly facts?: (
     row: CategorizedItemRow,
     context: ItemCardContext,
@@ -66,5 +77,6 @@ export interface ItemKind {
   readonly iconContentId?: string;
   readonly matches: (row: ItemRow) => boolean;
   readonly relations?: readonly ProjectedRelationKind[];
+  readonly descriptions?: true;
   readonly card?: ItemCardDescription;
 }

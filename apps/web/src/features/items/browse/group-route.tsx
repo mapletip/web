@@ -12,7 +12,7 @@ import { monsterDrops } from '../kinds/monster-drops';
 import { ItemFrame } from './frame';
 import type { LoadedItemBrowse } from './load';
 import { itemPageHead, resolveItemKind, type ItemGroup } from './page';
-import { loadProjectedRelations } from './relation-projection';
+import { loadProjectedItemData } from './relation-projection';
 import { itemBrowseSearch } from './search-params';
 
 const browseRouteApi = getRouteApi('/maplestory/{-$buildId}/items/_browse');
@@ -38,7 +38,7 @@ export function itemGroupRouteOptions<TPath extends GroupRoutePath>({
     const params = routeApi.useParams();
     const search = routeApi.useSearch();
     const result = browseRouteApi.useLoaderData();
-    const { relations } = routeApi.useLoaderData();
+    const { descriptions, relations } = routeApi.useLoaderData();
     const buildId = requireBuildId(params.buildId);
     const kind = resolveItemKind({ group, slug: params.kind });
     return (
@@ -48,6 +48,7 @@ export function itemGroupRouteOptions<TPath extends GroupRoutePath>({
         coverage={result.coverage}
         scrollTargetIcons={result.scrollTargetIcons}
         relations={relations}
+        {...(descriptions === undefined ? {} : { descriptions })}
         group={group}
         {...(kind === undefined ? {} : { kind })}
         search={search}
@@ -77,17 +78,17 @@ export function itemGroupRouteOptions<TPath extends GroupRoutePath>({
     }) => {
       const kind = resolveItemKind({ group, slug: params.kind });
       const { loaderData } = await parentMatchPromise;
-      const relations =
+      const projected =
         (kind !== undefined || group === 'etc') && loaderData !== undefined
-          ? await loadProjectedRelations({
+          ? await loadProjectedItemData({
               buildId: requireBuildId(params.buildId),
               kind: kind ?? monsterDrops,
               rows: loaderData.rows,
               coverage: loaderData.coverage,
             })
-          : {};
+          : { relations: {} };
       return {
-        relations,
+        ...projected,
         empty:
           kind !== undefined &&
           loaderData?.rows.every((row) => row.kind !== kind.id),

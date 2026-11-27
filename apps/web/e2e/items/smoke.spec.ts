@@ -4,6 +4,7 @@ import { expect, test } from '../fixtures';
 import { ItemsPage } from './page/items-page';
 
 const SCROLLS = '/maplestory/items/use/scrolls';
+const OTHER_USE = '/maplestory/items/use/other-use';
 
 test('a scroll tier opens that scroll in the existing drawer', async ({
   page,
@@ -65,6 +66,23 @@ test('a scroll family matches the full name of any tier', async ({ page }) => {
   await items.goto(`${SCROLLS}?q=Lesser%20Practice%20Sword%20Scroll`);
   await expect(items.summary).toHaveText('1 Item');
   await expect(items.item('One Handed Sword')).toBeVisible();
+});
+
+test('Other Use type pills keep untyped items under All', async ({ page }) => {
+  const items = new ItemsPage(page);
+  await items.goto(OTHER_USE);
+  const allPill = page.getByText(/^All \((\d+)\)$/u).first();
+  const allCount = Number(
+    (await allPill.textContent())?.match(/\((\d+)\)/u)?.[1],
+  );
+
+  await page.getByText(/^Return scrolls \(\d+\)$/u).click();
+  await expect(items.summary).toHaveText('1 Item');
+  await expect(items.item('Plain Use Item')).toBeHidden();
+
+  await page.getByText(`All (${allCount})`, { exact: true }).click();
+  await expect(items.summary).toHaveText(`${allCount} Items`);
+  await expect(items.item('Plain Use Item')).toBeVisible();
 });
 const POTIONS = '/maplestory/items/use/potions-and-food';
 const PROJECTILES = '/maplestory/items/use/stars-and-arrows';

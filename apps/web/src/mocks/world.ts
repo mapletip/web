@@ -88,6 +88,7 @@ export interface FixtureItem {
     ItemBrowseRecordV2_2['seatingRecovery']
   >;
   readonly buff?: NonNullable<ItemBrowseRecordV2_2['buff']>;
+  readonly petFood?: NonNullable<ItemBrowseRecordV2_2['petFood']>;
   readonly projectileAttack?: FixtureFact<number>;
   readonly maxStack?: number;
   readonly scroll?: NonNullable<ItemBrowseRecordV2_2['scroll']>;
@@ -957,6 +958,7 @@ const cwItems: readonly FixtureItem[] = [
     name: 'Pet Food Pouch',
     itemClass: 'consume',
     types: ['pet-food'],
+    petFood: { fullness: 30 },
   }),
   item({
     id: 'plain-use-item',
@@ -964,6 +966,41 @@ const cwItems: readonly FixtureItem[] = [
     itemClass: 'consume',
     description: 'An invented item with a short published description.',
     sellPrice: known(10),
+  }),
+  item({
+    id: 'priced-use-item',
+    name: 'Practice Token',
+    itemClass: 'consume',
+    sellPrice: known(10),
+  }),
+  item({
+    id: 'long-use-note',
+    name: 'Long Practice Note',
+    itemClass: 'consume',
+    description:
+      'A long invented description that wraps across a narrow card and continues with a second thought. The full note remains available in the item details drawer.',
+    sellPrice: known(0),
+  }),
+  item({
+    id: 'transformation-token',
+    name: 'Practice Transformation Token',
+    itemClass: 'consume',
+    types: ['transformation'],
+    description: 'An invented token for a practice transformation.',
+  }),
+  item({
+    id: 'catalyst-chip',
+    name: 'Practice Catalyst Chip',
+    itemClass: 'etc',
+    types: ['crafting-catalyst'],
+    description: 'An invented crafting catalyst.',
+    sellPrice: known(35),
+  }),
+  item({
+    id: 'plain-etc-note',
+    name: 'Plain Practice Note',
+    itemClass: 'etc',
+    sellPrice: known(0),
   }),
   item({
     id: 'calling-sack',
@@ -1380,6 +1417,7 @@ const gmsItems: readonly FixtureItem[] = [
     name: 'GMS Pet Food',
     itemClass: 'consume',
     types: ['pet-food'],
+    petFood: { fullness: 25 },
   }),
   item({
     id: 'gms-sack',
@@ -1428,6 +1466,13 @@ const gmsItems: readonly FixtureItem[] = [
     description: 'A short note in an invented second-build inventory.',
   }),
   item({
+    id: 'gms-transformation-token',
+    name: 'GMS Practice Token',
+    itemClass: 'consume',
+    types: ['transformation'],
+    sellPrice: known(12),
+  }),
+  item({
     id: 'gms-meso-pouch',
     name: 'GMS Pebble Pouch',
     itemClass: 'consume',
@@ -1467,6 +1512,13 @@ const gmsItems: readonly FixtureItem[] = [
     id: 'gms-other-etc',
     name: 'GMS Other ETC',
     itemClass: 'etc',
+  }),
+  item({
+    id: 'gms-catalyst-chip',
+    name: 'GMS Practice Catalyst',
+    itemClass: 'etc',
+    types: ['crafting-catalyst'],
+    sellPrice: known(20),
   }),
   item({
     id: 'gms-chair',

@@ -1,3 +1,4 @@
+import { textCard } from './text-card';
 import type { ItemKind } from './types';
 
 export const summoningSacks = {
@@ -9,4 +10,6 @@ export const summoningSacks = {
     '6c254da1ae5e2f8294a162a86622807c3c45d1bcb123660e17ebdd1739174357',
   matches: (row) =>
     row.itemClass === 'consume' && row.functions?.includes('summon') === true,
+  descriptions: true,
+  card: textCard(),
 } satisfies ItemKind;

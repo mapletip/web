@@ -70,6 +70,21 @@ describe('RecordCard', () => {
     ).toEqual([title, 'A bright keepsake', 'Found beyond the western road']);
   });
 
+  it('clamps the secondary line when a limit is provided', () => {
+    const { container } = mount(
+      <RecordCard
+        layout="compactMediaAside"
+        title="Quiet keepsake"
+        secondaryLine="A long description that should take no more than two lines."
+        secondaryLineClamp={2}
+      />,
+    );
+
+    expect(container.querySelector('[class*="secondary"]')).toHaveStyle(
+      '--text-line-clamp: 2',
+    );
+  });
+
   it('opens picture details through the title action', () => {
     const open = vi.fn();
     const { container } = mount(

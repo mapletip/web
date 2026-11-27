@@ -41,6 +41,8 @@ interface RecordCardBaseProps {
    */
   readonly linkScope?: 'card' | 'header';
   readonly secondaryLine?: ReactNode;
+  /** Maximum number of lines shown for the secondary line. */
+  readonly secondaryLineClamp?: number;
   readonly badges?: ReactNode;
   /** Optional illustration or other media shown beside the text. */
   readonly media?: ReactNode;
