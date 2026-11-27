@@ -78,3 +78,6 @@ catalog:
 # decide what installs.
 minimumReleaseAgeExclude:
   - '@mapletip/*'
+
+patchedDependencies:
+  seroval@1.7.6: patches/seroval@1.7.6.patch
