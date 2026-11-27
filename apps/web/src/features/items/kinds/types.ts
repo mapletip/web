@@ -3,6 +3,7 @@ import type {
   FacetDefinition,
   QueryFieldDefinition,
   RecordFact,
+  RecordCardInlineLabel,
 } from '@mapletip/component-library';
 import type {
   ItemBrowseCoverage,
@@ -26,7 +27,7 @@ export interface ItemCardContext {
 }
 
 export interface ItemCardDescription {
-  readonly layout?: 'picture' | 'short' | 'identity';
+  readonly layout?: 'picture' | 'short' | 'identity' | 'quietIdentity';
   readonly columns?: {
     readonly base: number;
     readonly md?: number;
@@ -49,6 +50,15 @@ export interface ItemCardDescription {
     row: CategorizedItemRow,
     context: ItemCardContext,
   ) => readonly RecordFact[];
+  readonly inlineLabels?: (
+    row: CategorizedItemRow,
+    context: ItemCardContext,
+  ) => readonly RecordCardInlineLabel[];
+  readonly detailLine?: (
+    row: CategorizedItemRow,
+    context: ItemCardContext,
+  ) => ReactNode;
+  readonly detailFirst?: true;
   /** Category records to list after projecting the flat item rows. */
   readonly group?: (
     context: ItemCardContext & { readonly rows: readonly CategorizedItemRow[] },

@@ -1,4 +1,7 @@
+import { MantineProvider } from '@mantine/core';
 import type { ItemBrowseCoverage } from '@mapletip/data/items';
+import { createElement } from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 
 import type { CategorizedItemRow } from '../../browse/project';
@@ -69,11 +72,11 @@ function labels(options: {
   relations?: ProjectedRelations;
 }): readonly string[] {
   return monsterDrops.card
-    .facts(options.row, {
+    .inlineLabels(options.row, {
       coverage: options.coverage,
       relations: options.relations ?? {},
     })
-    .map((fact) => fact.label);
+    .map((label) => label.label);
 }
 
 describe('Monster Drops card', () => {
@@ -81,9 +84,8 @@ describe('Monster Drops card', () => {
     const item = row({ quests: 1, recipes: 1, monsters: 1, sellPrice: 35 });
     expect(monsterDrops.card.lead(item)).toBe('Sells for 35 mesos');
     expect(labels({ row: item, coverage: complete, relations })).toEqual([
-      'Required by Amber Errand',
-      'Used in Amber Mixture',
-      'Dropped by Amber Beast',
+      'Required by quests',
+      'Used in recipes',
     ]);
   });
 
@@ -94,24 +96,16 @@ describe('Monster Drops card', () => {
         coverage: complete,
         relations,
       }),
-    ).toEqual([
-      'Required by 6 quests',
-      'Used in 4 recipes',
-      'Dropped by 3 monsters',
-    ]);
+    ).toEqual(['Required by quests', 'Used in recipes']);
     expect(
       labels({
         row: row({ quests: 1, recipes: 1, monsters: 1 }),
         relations: {},
       }),
-    ).toEqual([
-      'Required by 1 quest',
-      'Used in 1 recipe',
-      'Dropped by 1 monster',
-    ]);
+    ).toEqual(['Required by quests', 'Used in recipes']);
     expect(
       labels({ row: row({ quests: 1, recipes: 1 }), relations: {} }),
-    ).toEqual(['Required by 1 quest', 'Used in 1 recipe']);
+    ).toEqual(['Required by quests', 'Used in recipes']);
   });
 
   it('shows Not required only with complete coverage and established meaning', () => {
@@ -127,10 +121,65 @@ describe('Monster Drops card', () => {
         relations,
       }),
     ).toEqual([]);
+  });
+
+  it('keeps unestablished quest links unlabeled and shows recipes alone', () => {
     expect(
-      monsterDrops.card.facts(unused, { coverage: complete, relations })[0]
-        ?.detail,
-    ).toBe('No quest or recipe uses it');
+      labels({
+        row: row({ key: 'item:unknown', quests: 1 }),
+        coverage: complete,
+        relations,
+      }),
+    ).toEqual([]);
+    expect(
+      labels({ row: row({ recipes: 1 }), coverage: complete, relations }),
+    ).toEqual(['Used in recipes']);
+    expect(
+      labels({ row: row({ quests: 1 }), coverage: complete, relations }),
+    ).toEqual(['Required by quests']);
+  });
+
+  it('shows one monster with its published sprite and level, several, or no line', () => {
+    const detail = monsterDrops.card.detailLine(row({ monsters: 1 }), {
+      coverage: complete,
+      relations: {
+        'monster-drop': {
+          targets: [
+            {
+              name: 'Amber Beast',
+              level: 8,
+              spriteContentId:
+                'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+            },
+          ],
+          byItem: { one: [0] },
+        },
+      },
+    });
+    const html = renderToStaticMarkup(
+      createElement(MantineProvider, null, detail),
+    );
+    expect(html).toContain('Amber Beast, level 8');
+    expect(html).toContain(
+      'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+    );
+    expect(
+      monsterDrops.card.detailLine(row({ monsters: 2 }), {
+        coverage: complete,
+        relations: {
+          'monster-drop': {
+            targets: [{ name: 'Amber Beast' }, { name: 'Blue Beast' }],
+            byItem: { one: [0, 1] },
+          },
+        },
+      }),
+    ).toBe('Drops from 2 monsters');
+    expect(
+      monsterDrops.card.detailLine(row({}), {
+        coverage: complete,
+        relations: {},
+      }),
+    ).toBeUndefined();
   });
 
   it('does not say Not required when the quest roster is missing', () => {
@@ -188,5 +237,10 @@ describe('Monster Drops card', () => {
     expect(monsterDrops.card.sortOptions.map((option) => option.field)).toEqual(
       ['neededForQuestCount', 'sellPrice'],
     );
+    expect(monsterDrops.card.defaultSort).toEqual({
+      label: 'Name',
+      field: 'name',
+      direction: 'asc',
+    });
   });
 });

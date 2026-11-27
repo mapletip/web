@@ -7,6 +7,7 @@ import {
   Stack,
   Text,
 } from '@mantine/core';
+import { BookBookmark, Check } from '@phosphor-icons/react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, fn, userEvent, within } from 'storybook/test';
 
@@ -51,6 +52,36 @@ export const WithMedia: Story = {
         }
         footer="12 spawns"
         destination={{ href: '/synthetic/maps/practice-meadow' }}
+      />
+    </Stage>
+  ),
+};
+
+export const QuietIdentity: Story = {
+  args: { title: 'Copper Compass', layout: 'quietIdentity' },
+  render: () => (
+    <Stage>
+      <RecordCard
+        layout="quietIdentity"
+        title="Copper Compass"
+        leadLine="Sells for 35 coins"
+        media={<Thumbnail src={smallImage} size={48} />}
+        inlineLabels={[
+          {
+            id: 'tasks',
+            icon: <BookBookmark size={16} />,
+            label: 'Used in tasks',
+            tone: 'brand',
+          },
+          {
+            id: 'ready',
+            icon: <Check size={16} />,
+            label: 'Ready to use',
+            tone: 'success',
+          },
+        ]}
+        detailLine="Found in the practice meadow"
+        action={fn()}
       />
     </Stage>
   ),

@@ -49,17 +49,21 @@ describe('Ores & Gems card', () => {
   it('shows monsters then quests, without recipe or refining facts', () => {
     const item = row({ monsters: 1, quests: 1, recipes: 3 });
     expect(oresAndGems.relations).toEqual(['monster-drop', 'needed-for-quest']);
+    expect(oresAndGems.card.detailFirst).toBe(true);
     expect(oresAndGems.card.lead(item)).toBe('Sells for 35 mesos');
     expect(
       oresAndGems.card
-        .facts(item, { coverage: undefined, relations })
-        .map((fact) => fact.label),
-    ).toEqual(['Dropped by Paper Beast', 'Required by Amber Errand']);
+        .inlineLabels(item, { coverage: undefined, relations })
+        .map((label) => label.label),
+    ).toEqual(['Required by quests']);
+    expect(
+      oresAndGems.card.detailLine(item, { coverage: undefined, relations }),
+    ).toBeTruthy();
   });
 
   it('shows only the identity header when no monster or quest is published', () => {
     expect(
-      oresAndGems.card.facts(row({ recipes: 1 }), {
+      oresAndGems.card.inlineLabels(row({ recipes: 1 }), {
         coverage: undefined,
         relations: {},
       }),
@@ -68,7 +72,7 @@ describe('Ores & Gems card', () => {
 
   it('hides quest requirements whose role is unestablished', () => {
     expect(
-      oresAndGems.card.facts(row({ quests: 1 }), {
+      oresAndGems.card.inlineLabels(row({ quests: 1 }), {
         coverage: undefined,
         relations: {
           'needed-for-quest': {

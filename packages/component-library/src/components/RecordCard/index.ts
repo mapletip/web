@@ -5,5 +5,6 @@ export type {
   RecordCardLinkRenderer,
   RecordCardLinkRenderProps,
   RecordCardProps,
+  RecordCardInlineLabel,
   RecordFact,
 } from './types';

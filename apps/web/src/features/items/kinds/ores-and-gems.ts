@@ -1,6 +1,6 @@
 import { formatSellPrice } from '../browse/sell-price';
 
-import { relationFact } from './relation-facts';
+import { dropSourceLine, hasQuestUse, questUseLabel } from './relation-facts';
 import { relationFilter, relationQueryField } from './relation-filter';
 import type { ItemKind } from './types';
 
@@ -29,23 +29,19 @@ export const oresAndGems = {
     ) === true,
   relations: ['monster-drop', 'needed-for-quest'],
   card: {
-    layout: 'identity',
+    layout: 'quietIdentity',
     lead: (row) => formatSellPrice({ sellPrice: row.sellPrice }),
-    facts: (row, { relations }) =>
-      [
-        relationFact({
-          row,
-          relations,
-          kind: 'monster-drop',
-          count: row.monsterDropCount,
-        }),
-        relationFact({
-          row,
-          relations,
-          kind: 'needed-for-quest',
-          count: row.neededForQuestCount,
-        }),
-      ].filter((fact) => fact !== undefined),
+    inlineLabels: (row, { relations }) =>
+      hasQuestUse({
+        sourceId: row.sourceId,
+        count: row.neededForQuestCount,
+        relations,
+      })
+        ? [questUseLabel]
+        : [],
+    detailLine: (row, { relations }) =>
+      dropSourceLine({ sourceId: row.sourceId, relations }),
+    detailFirst: true,
     facets: ({ relations }) => [
       ...relationFilter({ relations, kind: 'monster-drop', label: 'Monster' }),
       ...relationFilter({

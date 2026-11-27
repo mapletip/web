@@ -83,7 +83,7 @@ test('desktop Items monster drops', async ({ page }) => {
   await page.goto(MONSTER_DROPS);
   await browseReady(page);
   await expect(
-    page.locator('[data-record-card-layout="identity"]').first(),
+    page.locator('[data-record-card-layout="quietIdentity"]').first(),
   ).toBeVisible();
   await expect(page).toHaveScreenshot('desktop-items-drops.png');
 });
@@ -93,7 +93,7 @@ test('mobile Items monster drops', async ({ page }) => {
   await page.goto(MONSTER_DROPS);
   await browseReady(page);
   await expect(
-    page.locator('[data-record-card-layout="identity"]').first(),
+    page.locator('[data-record-card-layout="quietIdentity"]').first(),
   ).toBeVisible();
   await expect(page).toHaveScreenshot('mobile-items-drops.png');
 });
@@ -103,7 +103,7 @@ test('desktop Items ores', async ({ page }) => {
   await page.goto(ORES);
   await browseReady(page);
   await expect(
-    page.locator('[data-record-card-layout="identity"]').first(),
+    page.locator('[data-record-card-layout="quietIdentity"]').first(),
   ).toBeVisible();
   await expect(page.getByText('Lamplight Ore')).toBeVisible();
   await expect(page).toHaveScreenshot('desktop-items-ores.png');
@@ -114,7 +114,7 @@ test('mobile Items ores', async ({ page }) => {
   await page.goto(ORES);
   await browseReady(page);
   await expect(
-    page.locator('[data-record-card-layout="identity"]').first(),
+    page.locator('[data-record-card-layout="quietIdentity"]').first(),
   ).toBeVisible();
   await expect(page.getByText('Lamplight Ore')).toBeVisible();
   await expect(page).toHaveScreenshot('mobile-items-ores.png');
@@ -241,7 +241,13 @@ test('mobile Items text types', async ({ page }) => {
   await returnScrolls.click();
   await expect(page.getByText('1 Item', { exact: true }).first()).toBeVisible();
   // Show the chosen pill and no hover state in the capture.
-  await returnScrolls.scrollIntoViewIfNeeded();
+  await returnScrolls.evaluate((element) =>
+    element.scrollIntoView({
+      block: 'nearest',
+      inline: 'center',
+      behavior: 'instant',
+    }),
+  );
   await page.mouse.move(0, 0);
   await expect(page).toHaveScreenshot('mobile-items-text.png');
 });
@@ -319,13 +325,6 @@ test('desktop Items landing suggestions', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 1100 });
   await page.goto(LANDING);
   await browseReady(page);
-  await page.waitForFunction(() => {
-    const main = document.querySelector('main');
-    return (
-      main !== null &&
-      Object.keys(main).some((key) => key.startsWith('__reactProps'))
-    );
-  });
   await page
     .getByRole('combobox', { name: 'Search Classic World items' })
     .fill('Pebble');

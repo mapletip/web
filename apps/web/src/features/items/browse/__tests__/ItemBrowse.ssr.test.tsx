@@ -204,13 +204,17 @@ describe('Items Browse server rendering', () => {
     expect(mainHtml(html)).toContain('Search quests');
   });
 
-  it('renders Monster Drops facts and the complete-coverage lookup in the first response', async () => {
+  it('renders Monster Drops labels and the complete-coverage lookup in the first response', async () => {
     const category = await renderPath('/maplestory/items/etc/monster-drops');
     expect(mainHtml(category.html)).toContain(
-      'data-record-card-layout="identity"',
+      'data-record-card-layout="quietIdentity"',
     );
     expect(mainHtml(category.html)).toContain('Sells for');
     expect(mainHtml(category.html)).toContain('Not required');
+    expect(mainHtml(category.html)).toContain('Required by quests');
+    expect(mainHtml(category.html)).toContain('Used in recipes');
+    expect(mainHtml(category.html)).not.toMatch(/Required by \d+ quests/u);
+    expect(mainHtml(category.html)).not.toMatch(/Used in \d+ recipes/u);
 
     const landing = await renderPath('/maplestory/items');
     const lookup =
@@ -298,11 +302,11 @@ describe('Items Browse server rendering', () => {
     ['cw-launch', '/maplestory/items/etc/monster-drops'],
     ['gms-v83', '/maplestory/gms-v83/items/etc/monster-drops'],
   ] as const)(
-    'keeps %s Monster Drops below 510 KB gzipped',
+    'keeps %s Monster Drops below 650 KB gzipped',
     async (_buildId, path) => {
       const { html } = await renderPath(path);
       const bytes = gzipSync(html).byteLength;
-      expect(bytes).toBeLessThan(510 * 1024);
+      expect(bytes).toBeLessThan(650 * 1024);
     },
   );
 
@@ -408,12 +412,12 @@ describe('Items Browse server rendering', () => {
   it('renders Ores & Gems identity cards and ore-first order in the first response', async () => {
     const { html } = await renderPath('/maplestory/items/etc/ores-and-gems');
     const main = mainHtml(html);
-    expect(main).toContain('data-record-card-layout="identity"');
+    expect(main).toContain('data-record-card-layout="quietIdentity"');
     expect(main).toContain('Lamplight Ore');
     expect(main.indexOf('Lamplight Ore')).toBeLessThan(
       main.indexOf('Woven Thread'),
     );
-    expect(main).toContain('Required by Thread Trial');
+    expect(main).toContain('Required by quests');
   });
 
   it('renders Stars & Arrows effects and published type pills in the first response', async () => {

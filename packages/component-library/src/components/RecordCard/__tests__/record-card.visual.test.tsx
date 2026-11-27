@@ -136,6 +136,17 @@ const cases: readonly VisualCase[] = [
     height: 220,
     visible: [page.getByRole('button', { name: /Greater.*80% success/u })],
   },
+  {
+    name: 'record-card-quiet-identity-dark',
+    story: dark.QuietIdentity,
+    storyId: 'components-recordcard--quiet-identity',
+    width: 720,
+    height: 240,
+    visible: [
+      page.getByText('Used in tasks'),
+      page.getByText('Found in the practice meadow'),
+    ],
+  },
 ];
 
 describe('RecordCard visual states', () => {
