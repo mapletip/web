@@ -41,6 +41,7 @@ export function itemGroupRouteOptions<TPath extends GroupRoutePath>({
       <ItemFrame
         buildId={buildId}
         rows={result.rows}
+        coverage={result.coverage}
         group={group}
         {...(kind === undefined ? {} : { kind })}
         search={search}

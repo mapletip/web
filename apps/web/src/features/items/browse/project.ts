@@ -39,6 +39,7 @@ export type ItemRow = {
   readonly types?: readonly ItemBrowseType[];
   readonly functions?: readonly ItemBrowseFunction[];
   readonly cashShopListingCount?: number;
+  readonly nxPrice?: number;
   readonly foundInContainerCount?: number;
   readonly madeByRecipeCount?: number;
   readonly monsterDropCount?: number;
@@ -149,80 +150,95 @@ export function projectItemBrowseRows(
     petByTargetKey.set(record.sourceId, pet);
   }
 
-  return records.flatMap((record) => {
-    const name = extractKnownFact(record.name);
-    if (name === undefined) return [];
-    const row: WritableItemRow = {
-      key: record.key,
-      sourceId: record.sourceId,
-      itemClass: record.itemClass,
-      name,
-    };
+  // Name order up front: TanStack breaks sort ties by row order, so any
+  // other sort (such as Chairs' Recovery) lists equal values A–Z.
+  return records
+    .flatMap((record): CategorizedItemRow[] => {
+      const name = extractKnownFact(record.name);
+      if (name === undefined) return [];
+      const row: WritableItemRow = {
+        key: record.key,
+        sourceId: record.sourceId,
+        itemClass: record.itemClass,
+        name,
+      };
 
-    setField(row, 'icon', extractKnownFact(record.icon));
-    setField(row, 'types', filterNonEmptyArray(record.types));
-    setField(row, 'functions', filterNonEmptyArray(record.functions));
+      setField(row, 'icon', extractKnownFact(record.icon));
+      setField(row, 'types', filterNonEmptyArray(record.types));
+      setField(row, 'functions', filterNonEmptyArray(record.functions));
 
-    if (record.relationships) {
-      for (const [relationshipKind, fieldKey] of RELATIONSHIP_COUNT_FIELDS) {
-        setField(row, fieldKey, record.relationships[relationshipKind]);
+      if (record.relationships) {
+        for (const [relationshipKind, fieldKey] of RELATIONSHIP_COUNT_FIELDS) {
+          setField(row, fieldKey, record.relationships[relationshipKind]);
+        }
       }
-    }
 
-    setField(row, 'questFlag', record.questFlag);
-    setField(row, 'family', record.family || undefined);
-    setField(row, 'attack', record.projectileAttack);
-    setField(row, 'hp', record.recovery?.hp);
-    setField(row, 'mp', record.recovery?.mp);
-    setField(row, 'hpPercent', record.recovery?.hpPercent);
-    setField(row, 'mpPercent', record.recovery?.mpPercent);
+      setField(row, 'questFlag', record.questFlag);
+      setField(row, 'family', record.family || undefined);
+      setField(row, 'attack', record.projectileAttack);
+      setField(row, 'hp', record.recovery?.hp);
+      setField(row, 'mp', record.recovery?.mp);
+      setField(row, 'hpPercent', record.recovery?.hpPercent);
+      setField(row, 'mpPercent', record.recovery?.mpPercent);
 
-    const petFood = record.petFood;
-    setField(row, 'closeness', petFood?.closeness);
-    setField(row, 'fullness', petFood?.fullness);
-    setField(row, 'tameness', petFood?.tameness);
-    setField(
-      row,
-      'petTargets',
-      resolvePetTargets(petFood?.targets, petByTargetKey),
+      const petFood = record.petFood;
+      setField(row, 'closeness', petFood?.closeness);
+      setField(row, 'fullness', petFood?.fullness);
+      setField(row, 'tameness', petFood?.tameness);
+      setField(
+        row,
+        'petTargets',
+        resolvePetTargets(petFood?.targets, petByTargetKey),
+      );
+      setField(
+        row,
+        'unresolvedPetTargets',
+        filterNonEmptyArray(petFood?.unresolvedTargets),
+      );
+
+      setField(row, 'seatHp', record.seatingRecovery?.hp);
+      setField(row, 'seatMp', record.seatingRecovery?.mp);
+
+      const scroll = record.scroll;
+      setField(row, 'success', scroll?.success);
+      setField(row, 'cursed', scroll?.cursed);
+      setField(row, 'targetLabel', scroll?.targetLabel);
+      setField(row, 'tier', scroll?.tier);
+      setField(row, 'specials', filterNonEmptyArray(scroll?.specials));
+      setField(
+        row,
+        'stats',
+        scroll?.deltas && Object.keys(scroll.deltas).length > 0
+          ? scroll.deltas
+          : undefined,
+      );
+      setField(row, 'directTargetCount', scroll?.targets?.length || undefined);
+      setField(row, 'sellPrice', record.sellPrice);
+      setField(row, 'maxStack', record.maxStack);
+      setField(row, 'level', record.requirement?.level);
+      setField(
+        row,
+        'nxPrice',
+        record.cashShopSale?.state === 'on-sale'
+          ? record.cashShopSale.price
+          : undefined,
+      );
+      setField(row, 'buff', record.buff);
+
+      const kind = assignItemKind({ row });
+      if (kind === undefined) {
+        throw new Error(`No category for item ${record.sourceId}.`);
+      }
+      const categorized: CategorizedItemRow = {
+        ...row,
+        kind: kind.id,
+        kindPath: ['all', kind.group, kind.id],
+      };
+      return [categorized];
+    })
+    .sort((left, right) =>
+      nameCollator.compare(left.name ?? '', right.name ?? ''),
     );
-    setField(
-      row,
-      'unresolvedPetTargets',
-      filterNonEmptyArray(petFood?.unresolvedTargets),
-    );
-
-    setField(row, 'seatHp', record.seatingRecovery?.hp);
-    setField(row, 'seatMp', record.seatingRecovery?.mp);
-
-    const scroll = record.scroll;
-    setField(row, 'success', scroll?.success);
-    setField(row, 'cursed', scroll?.cursed);
-    setField(row, 'targetLabel', scroll?.targetLabel);
-    setField(row, 'tier', scroll?.tier);
-    setField(row, 'specials', filterNonEmptyArray(scroll?.specials));
-    setField(
-      row,
-      'stats',
-      scroll?.deltas && Object.keys(scroll.deltas).length > 0
-        ? scroll.deltas
-        : undefined,
-    );
-    setField(row, 'directTargetCount', scroll?.targets?.length || undefined);
-    setField(row, 'sellPrice', record.sellPrice);
-    setField(row, 'maxStack', record.maxStack);
-    setField(row, 'level', record.requirement?.level);
-    setField(row, 'buff', record.buff);
-
-    const kind = assignItemKind({ row });
-    if (kind === undefined) {
-      throw new Error(`No category for item ${record.sourceId}.`);
-    }
-    const categorized: CategorizedItemRow = {
-      ...row,
-      kind: kind.id,
-      kindPath: ['all', kind.group, kind.id],
-    };
-    return [categorized];
-  });
 }
+
+const nameCollator = new Intl.Collator('en-US');

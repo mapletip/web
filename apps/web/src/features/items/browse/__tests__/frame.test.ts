@@ -1,6 +1,9 @@
+import type { ItemBrowseCoverage } from '@mapletip/data/items';
 import { describe, expect, it } from 'vitest';
 
-import { itemPrimaryFact } from '../frame';
+import { cashShop } from '../../kinds/cash-shop';
+import { chairs } from '../../kinds/chairs';
+import { categoryFacets, itemPrimaryFact } from '../frame';
 import type { CategorizedItemRow } from '../project';
 
 function makeRow(
@@ -85,7 +88,9 @@ describe('itemPrimaryFact', () => {
       itemPrimaryFact({
         record: makeRow({ kind: 'chairs', seatHp: 50, seatMp: 40 }),
       }),
-    ).toBe('+50 HP, +40 MP');
+    ).toBe('+50 HP · +40 MP');
+
+    expect(chairs.card.lead(makeRow({ kind: 'chairs' }))).toBeUndefined();
 
     expect(
       itemPrimaryFact({
@@ -169,5 +174,72 @@ describe('itemPrimaryFact', () => {
         record: makeRow({ kind: 'ornaments' }),
       }),
     ).toBeUndefined();
+  });
+});
+
+describe('visual category cards', () => {
+  it.each([
+    [{ seatHp: 50 }, '+50 HP', ['hp']],
+    [{ seatMp: 40 }, '+40 MP', ['mp']],
+    [{ seatHp: 50, seatMp: 40 }, '+50 HP · +40 MP', ['hp', 'mp']],
+    [{}, undefined, []],
+  ] as const)('describes chair recovery', (facts, lead, types) => {
+    const row = makeRow({ kind: 'chairs', ...facts });
+    expect(chairs.card.lead(row)).toBe(lead);
+    const field = chairs.card.queryFields.find(
+      (entry) => typeof entry !== 'string' && entry.id === 'recoveryTypes',
+    );
+    expect(
+      typeof field === 'string' ? undefined : field?.accessor?.(row),
+    ).toEqual(types);
+  });
+
+  it('offers recovery pills and a descending recovery sort', () => {
+    expect(chairs.card.pills()?.options).toEqual([
+      { value: 'hp', label: 'Recovers HP' },
+      { value: 'mp', label: 'Recovers MP' },
+    ]);
+    expect(chairs.card.sortOptions).toEqual([
+      { label: 'Recovery', field: 'recovery', direction: 'desc' },
+    ]);
+  });
+
+  it('uses the published NX price and only offers listing pills with complete coverage', () => {
+    expect(cashShop.card.lead(makeRow({ nxPrice: 2400 }))).toBe('2,400 NX');
+    expect(cashShop.card.lead(makeRow())).toBeUndefined();
+    const coverage = {
+      relationships: { 'cash-shop-listing': 'complete' },
+    } as ItemBrowseCoverage;
+    expect(cashShop.card.pills(coverage)?.options).toEqual([
+      { value: 'listed', label: 'Listed' },
+      { value: 'not-listed', label: 'Not listed' },
+    ]);
+    expect(
+      cashShop.card.pills({
+        ...coverage,
+        relationships: {
+          ...coverage.relationships,
+          'cash-shop-listing': 'partial',
+        },
+      }),
+    ).toBeUndefined();
+  });
+
+  it('offers Quest reward only when a category has a grant', () => {
+    const row = makeRow({ kind: 'chairs' });
+    expect(
+      categoryFacets({
+        rows: [row, makeRow({ kind: 'boxes', questRewardCount: 1 })],
+        kind: chairs,
+        coverage: undefined,
+      }).map((facet) => facet.id),
+    ).toEqual(['recovery-type']);
+    expect(
+      categoryFacets({
+        rows: [{ ...row, questRewardCount: 1 }],
+        kind: chairs,
+        coverage: undefined,
+      }).map((facet) => facet.id),
+    ).toEqual(['recovery-type', 'quest-reward']);
   });
 });

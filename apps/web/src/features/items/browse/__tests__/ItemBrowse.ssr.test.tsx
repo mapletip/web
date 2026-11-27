@@ -187,6 +187,13 @@ describe('Items Browse server rendering', () => {
     });
   });
 
+  it('renders chair recovery in the first response', async () => {
+    const { html } = await renderPath('/maplestory/items/setup/chairs');
+    expect(mainHtml(html)).toContain('Amber Seat');
+    expect(mainHtml(html)).toContain('+50 HP');
+    expect(mainHtml(html)).toContain('Recovers HP');
+  });
+
   it('serves an empty category with its heading, empty state and noindex, and hides it from group rails', async () => {
     const base = fixtureBrowse('cw-launch');
     mockedLoad.mockResolvedValue({
