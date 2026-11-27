@@ -28,3 +28,22 @@ describe('thumbnail-gallery-dark', () => {
     await expectApprovedScreenshot(visualCase);
   });
 });
+
+const magnifiedCase: VisualCase = {
+  name: 'thumbnail-magnified-gallery-dark',
+  story: dark.MagnifiedGallery,
+  storyId: 'components-thumbnail--magnified-gallery',
+  width: 640,
+  height: 360,
+  element: page.getByTestId('magnified-thumbnail-story'),
+};
+
+describe('thumbnail-magnified-gallery-dark', () => {
+  test('matches the approved baseline', async () => {
+    await openVisualCase(magnifiedCase);
+    await expect
+      .element(page.getByTestId('magnified-thumbnail-story'))
+      .toBeVisible();
+    await expectApprovedScreenshot(magnifiedCase);
+  });
+});

@@ -1,5 +1,6 @@
 import { Group, SimpleGrid, Stack, Text } from '@mantine/core';
 import type { Meta, StoryObj } from '@storybook/react-vite';
+import { expect, within } from 'storybook/test';
 
 import { Thumbnail } from '@/components/Thumbnail';
 import recordImageStress from '@/fixtures/record-image-stress.svg?url';
@@ -75,4 +76,48 @@ export const Gallery: Story = {
       ))}
     </SimpleGrid>
   ),
+};
+
+function imageOfSize({ width, height }: { width: number; height: number }) {
+  return `data:image/svg+xml,${encodeURIComponent(
+    `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}"><rect width="100%" height="100%" fill="#e6b84c"/><rect x="0" y="0" width="4" height="4" fill="#354e64"/></svg>`,
+  )}`;
+}
+
+const magnifiedTiles = [
+  { label: 'Small 4 × 4', src: imageOfSize({ width: 4, height: 4 }) },
+  { label: 'Exact 20 × 20', src: imageOfSize({ width: 20, height: 20 }) },
+  { label: 'Large 80 × 80', src: imageOfSize({ width: 80, height: 80 }) },
+  { label: 'Wide 32 × 8', src: imageOfSize({ width: 32, height: 8 }) },
+  { label: 'Tall 8 × 32', src: imageOfSize({ width: 8, height: 32 }) },
+  { label: 'Missing image', src: undefined },
+];
+
+export const MagnifiedGallery: Story = {
+  render: () => (
+    <SimpleGrid
+      data-testid="magnified-thumbnail-story"
+      cols={3}
+      spacing="lg"
+      w={480}
+    >
+      {magnifiedTiles.map(({ label, src }) => (
+        <Stack key={label} align="center" gap="xs">
+          <Text size="sm">{label}</Text>
+          <Thumbnail src={src} size={40} magnify={2} alt={label} />
+        </Stack>
+      ))}
+    </SimpleGrid>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    for (const { label } of magnifiedTiles) {
+      await expect(
+        canvas.getByRole('img', { name: label }),
+      ).toBeInTheDocument();
+    }
+    await expect(
+      canvas.getByRole('img', { name: 'Missing image' }),
+    ).toHaveAttribute('data-fallback', 'true');
+  },
 };
