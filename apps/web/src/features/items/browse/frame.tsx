@@ -160,9 +160,6 @@ export function itemPrimaryFact({
   );
   const categoryLead = category?.card?.lead(record);
   if (categoryLead !== undefined) return categoryLead;
-  if (record.attack !== undefined) {
-    return formatItemFacts({ record })[0];
-  }
   if (record.success !== undefined) {
     return `${numberFormat.format(record.success)}% success`;
   }

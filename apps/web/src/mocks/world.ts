@@ -89,6 +89,7 @@ export interface FixtureItem {
   >;
   readonly buff?: NonNullable<ItemBrowseRecordV2_2['buff']>;
   readonly projectileAttack?: FixtureFact<number>;
+  readonly maxStack?: number;
   readonly scroll?: NonNullable<ItemBrowseRecordV2_2['scroll']>;
   readonly sellPrice?: FixtureFact<number>;
   readonly cashShopSale?: NonNullable<ItemBrowseRecordV2_2['cashShopSale']>;
@@ -931,7 +932,17 @@ const cwItems: readonly FixtureItem[] = [
     itemClass: 'consume',
     types: ['throwing-star'],
     projectileAttack: known(27),
+    maxStack: 800,
     sprite: 'tall',
+  }),
+  item({
+    id: 'training-stars',
+    name: 'Training Stars',
+    itemClass: 'consume',
+    types: ['throwing-star'],
+    projectileAttack: known(15),
+    maxStack: 500,
+    sprite: 'small',
   }),
   item({
     id: 'silent-arrow',
@@ -939,12 +950,7 @@ const cwItems: readonly FixtureItem[] = [
     itemClass: 'consume',
     types: ['arrow'],
     projectileAttack: unknown(),
-  }),
-  item({
-    id: 'empty-bullet',
-    name: 'Empty Bullet',
-    itemClass: 'consume',
-    types: ['bullet'],
+    maxStack: 2000,
   }),
   item({
     id: 'pet-food-pouch',
@@ -1337,18 +1343,22 @@ const gmsItems: readonly FixtureItem[] = [
     itemClass: 'consume',
     types: ['throwing-star'],
     projectileAttack: known(5),
+    maxStack: 500,
   }),
   item({
     id: 'gms-arrow',
     name: 'GMS Practice Arrow',
     itemClass: 'consume',
     types: ['arrow'],
+    maxStack: 1000,
   }),
   item({
     id: 'gms-bullet',
     name: 'GMS Practice Bullet',
     itemClass: 'consume',
     types: ['bullet'],
+    projectileAttack: known(10),
+    maxStack: 600,
   }),
   item({
     id: 'gms-pet-food',
@@ -1373,6 +1383,22 @@ const gmsItems: readonly FixtureItem[] = [
     name: 'GMS Native Alpha Card',
     itemClass: 'consume',
     functions: ['monster-card'],
+    buff: {
+      durationSeconds: 1800,
+      effects: [{ stat: 'weaponAttack', unit: 'flat', value: 5 }],
+    },
+    sprite: 'exact',
+  }),
+  item({
+    id: 'gms-beta-card',
+    name: 'GMS Native Beta Card',
+    itemClass: 'consume',
+    functions: ['monster-card'],
+    buff: {
+      durationSeconds: 1800,
+      effects: [{ stat: 'maxHp', unit: 'flat', value: 100 }],
+    },
+    sprite: 'small',
   }),
   item({
     id: 'gms-skill-book',

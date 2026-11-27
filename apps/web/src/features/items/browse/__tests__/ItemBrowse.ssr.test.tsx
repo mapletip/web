@@ -205,6 +205,58 @@ describe('Items Browse server rendering', () => {
     expect(main).toContain('data-record-card-layout="compactMediaAside"');
   });
 
+  it('renders Stars & Arrows effects and published type pills in the first response', async () => {
+    const cw = await renderPath('/maplestory/items/use/stars-and-arrows');
+    const cwMain = mainHtml(cw.html);
+    expect(cwMain).toContain('Practice Stars');
+    expect(cwMain).toContain('+27 attack · 800 per stack');
+    expect(cwMain).toContain('Silent Arrow');
+    expect(cwMain).toContain('2,000 per stack');
+    expect(cwMain).toContain('Throwing stars');
+    expect(cwMain).toContain('Arrows');
+    expect(cwMain).not.toContain('Bullets');
+    expect(cwMain).toContain('data-record-card-layout="compactMediaAside"');
+
+    const gms = await renderPath(
+      '/maplestory/gms-v83/items/use/stars-and-arrows',
+    );
+    const gmsMain = mainHtml(gms.html);
+    expect(gmsMain).toContain('GMS Practice Bullet');
+    expect(gmsMain).toContain('Bullets');
+
+    const desc = await renderPath(
+      '/maplestory/items/use/stars-and-arrows?sort=attack-desc',
+    );
+    const descMain = mainHtml(desc.html);
+    expect(descMain.indexOf('Practice Stars')).toBeLessThan(
+      descMain.indexOf('Training Stars'),
+    );
+    expect(descMain.indexOf('Training Stars')).toBeLessThan(
+      descMain.indexOf('Silent Arrow'),
+    );
+
+    const asc = await renderPath(
+      '/maplestory/items/use/stars-and-arrows?sort=attack-asc',
+    );
+    const ascMain = mainHtml(asc.html);
+    expect(ascMain.indexOf('Training Stars')).toBeLessThan(
+      ascMain.indexOf('Practice Stars'),
+    );
+    expect(ascMain.indexOf('Practice Stars')).toBeLessThan(
+      ascMain.indexOf('Silent Arrow'),
+    );
+  });
+
+  it('renders Monster Cards with their buff in the second fixture build', async () => {
+    const { html } = await renderPath(
+      '/maplestory/gms-v83/items/use/monster-cards',
+    );
+    const main = mainHtml(html);
+    expect(main).toContain('GMS Native Alpha Card');
+    expect(main).toContain('+5 weapon attack · Lasts 30 min');
+    expect(main).toContain('data-record-card-layout="compactMediaAside"');
+  });
+
   it.each(['hp', 'mp'] as const)(
     'sorts flat %s amounts before percentage and absent values in both directions',
     async (field) => {

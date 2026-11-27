@@ -5,6 +5,49 @@ import { ItemsPage } from './page/items-page';
 
 const SCROLLS = '/maplestory/items/use/scrolls';
 const POTIONS = '/maplestory/items/use/potions-and-food';
+const PROJECTILES = '/maplestory/items/use/stars-and-arrows';
+
+test('Stars & Arrows pills, attack sort, and GMS v83 Monster Cards work as published', async ({
+  page,
+  isMobile,
+}) => {
+  test.skip(
+    isMobile,
+    'Desktop sidebar covers the projectile sort and second-build journey.',
+  );
+  const items = new ItemsPage(page);
+  await items.goto(PROJECTILES);
+  await expect(items.item('Practice Stars')).toBeVisible();
+  await expect(
+    page.getByText('+27 attack · 800 per stack', { exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByText('2,000 per stack', { exact: true }),
+  ).toBeVisible();
+  await expect(page.getByText(/^Throwing stars \(/u)).toBeVisible();
+  await expect(page.getByText(/^Arrows \(/u)).toBeVisible();
+  await expect(page.getByText(/^Bullets \(/u)).toHaveCount(0);
+
+  await page.getByRole('combobox', { name: 'Sort' }).click();
+  await page.getByRole('option', { name: 'Attack (high to low)' }).click();
+  await expect(
+    page.locator('[data-record-card-layout="compactMediaAside"] h3'),
+  ).toContainText(['Practice Stars', 'Training Stars', 'Silent Arrow']);
+  await expect(page).toHaveURL(/sort=attack-desc/u);
+
+  await page.getByText(/^Arrows \(/u).click();
+  await expect(items.item('Silent Arrow')).toBeVisible();
+  await expect(items.item('Practice Stars')).toBeHidden();
+
+  await items.goto('/maplestory/gms-v83/items/use/stars-and-arrows');
+  await expect(page.getByText(/^Bullets \(/u)).toBeVisible();
+
+  await items.goto('/maplestory/gms-v83/items/use/monster-cards');
+  await expect(items.item('GMS Native Alpha Card')).toBeVisible();
+  await expect(
+    page.getByText('+5 weapon attack · Lasts 30 min', { exact: true }),
+  ).toBeVisible();
+});
 
 test('Potions pill, Buffs filter, and HP sort narrow and order cards', async ({
   page,

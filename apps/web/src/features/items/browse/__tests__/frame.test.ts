@@ -62,7 +62,19 @@ describe('itemPrimaryFact', () => {
           maxStack: 800,
         }),
       }),
-    ).toBe('+27 attack');
+    ).toBe('+27 attack · 800 per stack');
+
+    expect(
+      itemPrimaryFact({
+        record: makeRow({
+          kind: 'monster-cards',
+          buff: {
+            durationSeconds: 1800,
+            effects: [{ stat: 'weaponAttack', unit: 'flat', value: 5 }],
+          },
+        }),
+      }),
+    ).toBe('+5 weapon attack · Lasts 30 min');
   });
 
   it('formats scroll success, chair seating recovery, and pet food fullness', () => {

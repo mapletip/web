@@ -10,6 +10,29 @@ const ALL = '/maplestory/items/all';
 const CHAIRS = '/maplestory/items/setup/chairs';
 const CASH_SHOP = '/maplestory/items/cash/cash-shop';
 const POTIONS = '/maplestory/items/use/potions-and-food';
+const PROJECTILES = '/maplestory/items/use/stars-and-arrows';
+const MONSTER_CARDS = '/maplestory/gms-v83/items/use/monster-cards';
+
+test('desktop Items projectiles', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 1100 });
+  await page.goto(PROJECTILES);
+  await browseReady(page);
+  await expect(page).toHaveScreenshot('desktop-items-projectiles.png');
+});
+
+test('mobile Items projectiles', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 1600 });
+  await page.goto(PROJECTILES);
+  await browseReady(page);
+  await expect(page).toHaveScreenshot('mobile-items-projectiles.png');
+});
+
+test('desktop Items monster cards', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 1100 });
+  await page.goto(MONSTER_CARDS);
+  await browseReady(page);
+  await expect(page).toHaveScreenshot('desktop-items-monster-cards.png');
+});
 
 test('desktop Items potions', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 1100 });
