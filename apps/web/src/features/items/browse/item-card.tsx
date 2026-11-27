@@ -10,18 +10,12 @@ import type { ItemCardContext, ItemKind } from '../kinds/types';
 import { GameText } from './GameText';
 import type { CategorizedItemRow } from './project';
 
-const PICTURE_CARD_COLUMNS = { base: 2, md: 4, lg: 5 } as const;
 // Cards with the picture beside the text: 1 phone, 2 tablet; short value cards fit 4 wide,
 // identity cards with fact or tier rows need 3 (shelf CSS in ItemsGroupPage.module.css follows).
 const SHORT_CARD_COLUMNS = { base: 1, sm: 2, lg: 4 } as const;
 const IDENTITY_CARD_COLUMNS = { base: 1, sm: 2, lg: 3 } as const;
 
-/** Picture cards show the icon across the top; every other layout puts it beside the name. */
-export function isPictureLayout(kind: ItemKind | undefined): boolean {
-  return (kind?.card?.layout ?? 'picture') === 'picture';
-}
-
-/** Grid columns for a category's cards; cross-category results use picture cards. */
+/** Grid columns for a category's cards. */
 export function itemCardColumns({
   kind,
 }: {
@@ -33,10 +27,10 @@ export function itemCardColumns({
   readonly lg: number;
 } {
   if (kind?.card?.columns !== undefined) return kind.card.columns;
-  if (isPictureLayout(kind)) return PICTURE_CARD_COLUMNS;
-  return kind?.card?.layout === 'short'
-    ? SHORT_CARD_COLUMNS
-    : IDENTITY_CARD_COLUMNS;
+  return kind?.card?.layout === 'identity' ||
+    kind?.card?.layout === 'quietIdentity'
+    ? IDENTITY_CARD_COLUMNS
+    : SHORT_CARD_COLUMNS;
 }
 export const ITEM_KIND_LABELS: ReadonlyMap<string, string> = new Map(
   [...ITEM_KINDS_BY_ID].map(([id, kind]) => [id, kind.label]),
@@ -47,14 +41,13 @@ interface RenderItemCardOptions {
   readonly openDetails?: (() => void) | undefined;
   readonly isDetailsOpen?: boolean | undefined;
   readonly secondaryLine?: string | undefined;
-  /** Cross-category results: a plain picture card labelled with the item's category. */
+  /** Cross-category results use the category and primary fact as their quiet line. */
   readonly crossCategory?: boolean | undefined;
   readonly context?: ItemCardContext | undefined;
   readonly openItemDetails?: ((sourceId: string) => void) | undefined;
 }
 
-// 32px item icons, magnified to fill each layout's media slot (52-56px beside the name).
-const PICTURE_THUMBNAIL = { size: 80, magnify: 2 } as const;
+// 32px item icons, magnified to fill the aside media slot.
 const ASIDE_THUMBNAIL = { size: 48, magnify: 1.5 } as const;
 
 /** Shared item card renderer used by category pages, cross-category results, and group shelves. */
@@ -70,9 +63,13 @@ export function renderItemCard({
   const kind: ItemKind | undefined = ITEM_KINDS_BY_ID.get(record.kind);
   // Category cards only on their own category page and shelf.
   const card = crossCategory ? undefined : kind?.card;
-  const layout = card?.layout ?? 'picture';
+  const layout = card?.layout ?? 'short';
   const value = card?.value?.(record, context);
-  const fact = secondaryLine ?? card?.lead?.(record, context);
+  const fact = crossCategory
+    ? [ITEM_KIND_LABELS.get(record.kind), secondaryLine]
+        .filter((part): part is string => part !== undefined)
+        .join(' · ')
+    : (secondaryLine ?? card?.lead?.(record, context));
   const renderedFact =
     fact === undefined || typeof fact === 'string' ? (
       fact
@@ -87,7 +84,7 @@ export function renderItemCard({
           ? undefined
           : itemIconUrl(MAPLEKIT_RELEASE.baseUrl, record.icon)
       }
-      {...(layout === 'picture' ? PICTURE_THUMBNAIL : ASIDE_THUMBNAIL)}
+      {...ASIDE_THUMBNAIL}
     />
   );
   const shared = {
@@ -132,7 +129,7 @@ export function renderItemCard({
       />
     );
   }
-  return layout === 'short' ? (
+  return (
     <RecordCard
       layout="compactMediaAside"
       {...(value === undefined ? {} : { value })}
@@ -141,14 +138,6 @@ export function renderItemCard({
         ? {}
         : { secondaryLineClamp: card.secondaryLineClamp })}
       {...(footer === undefined ? {} : { footer })}
-      {...shared}
-    />
-  ) : (
-    <RecordCard
-      layout="picture"
-      {...(value === undefined ? {} : { value })}
-      leadLine={crossCategory ? ITEM_KIND_LABELS.get(record.kind) : undefined}
-      {...(renderedFact === undefined ? {} : { secondaryLine: renderedFact })}
       {...shared}
     />
   );

@@ -28,7 +28,7 @@ export interface ItemCardContext {
 }
 
 export interface ItemCardDescription {
-  readonly layout?: 'picture' | 'short' | 'identity' | 'quietIdentity';
+  readonly layout?: 'short' | 'identity' | 'quietIdentity';
   readonly columns?: {
     readonly base: number;
     readonly md?: number;

@@ -42,22 +42,28 @@ describe('Quest Items card', () => {
     };
     expect(
       questItems.card.lead(row({ key: 'item:one', count: 1 }), context),
-    ).toBe('Required by Amber Errand');
+    ).toEqual([
+      { text: 'For the quest ', emphasis: false },
+      { text: 'Amber Errand', emphasis: 'primary' },
+    ]);
     expect(
       questItems.card.lead(row({ key: 'item:one', count: 3 }), context),
-    ).toBe('Required by Amber Errand');
+    ).toEqual([
+      { text: 'For the quest ', emphasis: false },
+      { text: 'Amber Errand', emphasis: 'primary' },
+    ]);
     expect(
       questItems.card.lead(row({ key: 'item:many', count: 3 }), context),
-    ).toBe('Required by 3 quests');
+    ).toBe('For 3 quests');
     expect(
       questItems.card.lead(row({ key: 'item:one', count: 1 }), {
         coverage: complete,
         relations: {},
       }),
-    ).toBe('Required by 1 quest');
+    ).toBe('For 1 quest');
   });
 
-  it('shows a zero lead and pill only with complete coverage', () => {
+  it('shows a zero lead and filter only with complete coverage', () => {
     const empty = row({ key: 'item:empty', count: 0 });
     expect(
       questItems.card.lead(empty, { coverage: complete, relations: {} }),

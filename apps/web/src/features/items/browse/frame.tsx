@@ -165,7 +165,7 @@ export function categoryFacets({
   ];
 }
 
-/** First published fact shown on cross-category picture cards, or undefined if none. */
+/** First published fact shown on cross-category cards, or undefined if none. */
 export function itemPrimaryFact({
   record,
 }: {

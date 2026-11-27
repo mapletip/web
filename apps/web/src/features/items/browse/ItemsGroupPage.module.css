@@ -44,34 +44,18 @@
 }
 
 /* One row per shelf: hide cards past each breakpoint's column count (see itemCardColumns). */
-.shelfGrid[data-card-columns='picture'] > :nth-child(n + 3) {
-  display: none;
-}
-
-.shelfGrid[data-card-columns='aside'] > :nth-child(n + 2) {
+.shelfGrid > :nth-child(n + 2) {
   display: none;
 }
 
 @media (min-width: 48em) {
-  .shelfGrid[data-card-columns='aside'] > :nth-child(2) {
+  .shelfGrid > :nth-child(2) {
     display: revert;
-  }
-}
-
-@media (min-width: 62em) {
-  .shelfGrid[data-card-columns='picture'] > :nth-child(n + 3) {
-    display: revert;
-  }
-  .shelfGrid[data-card-columns='picture'] > :nth-child(n + 5) {
-    display: none;
   }
 }
 
 @media (min-width: 75em) {
-  .shelfGrid[data-card-columns='picture'] > :nth-child(n + 5) {
-    display: revert;
-  }
-  .shelfGrid[data-card-columns='aside'] > :nth-child(n + 3) {
+  .shelfGrid > :nth-child(n + 3) {
     display: revert;
   }
 }
