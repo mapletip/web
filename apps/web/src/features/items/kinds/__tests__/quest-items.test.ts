@@ -10,7 +10,7 @@ const relation: ProjectedRelation = {
     { publicId: 'quest-a', name: 'Amber Errand' },
     { publicId: 'quest-b', name: 'Zinc Errand' },
   ],
-  byItem: { 'item:one': [0], 'item:many': [0, 1] },
+  byItem: { one: [0], many: [0, 1] },
 };
 
 const complete = {
@@ -23,7 +23,7 @@ const partial = {
 function row(options: { key: string; count?: number }): CategorizedItemRow {
   return {
     key: options.key,
-    sourceId: options.key,
+    sourceId: options.key.replace('item:', ''),
     name: 'Practice Token',
     itemClass: 'etc',
     kind: 'quest-items',

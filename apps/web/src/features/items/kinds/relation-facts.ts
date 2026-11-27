@@ -40,16 +40,19 @@ export function relationFact({
   kind,
   count,
 }: {
-  readonly row: { readonly key: string };
+  readonly row: { readonly sourceId: string };
   readonly relations: ProjectedRelations;
   readonly kind: ProjectedRelationKind;
   readonly count: number | undefined;
 }): RecordFact | undefined {
   if (count === undefined || count === 0) return undefined;
   const relation = relations[kind];
-  if (kind === 'needed-for-quest' && relation?.unestablished?.includes(row.key))
+  if (
+    kind === 'needed-for-quest' &&
+    relation?.unestablished?.includes(row.sourceId)
+  )
     return undefined;
-  const indices = relation?.byItem[row.key] ?? [];
+  const indices = relation?.byItem[row.sourceId] ?? [];
   const name =
     indices.length === 1
       ? relation?.targets[indices[0] ?? -1]?.name

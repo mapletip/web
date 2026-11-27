@@ -40,15 +40,18 @@ interface ProjectedItemData {
 
 export function projectItemDescriptions({
   descriptions,
-  itemKeys,
+  items,
 }: {
   readonly descriptions: Readonly<Record<string, string>>;
-  readonly itemKeys: ReadonlySet<string>;
+  readonly items: readonly {
+    readonly key: string;
+    readonly sourceId: string;
+  }[];
 }): Readonly<Record<string, string>> {
   return Object.fromEntries(
-    [...itemKeys].flatMap((key) => {
+    items.flatMap(({ key, sourceId }) => {
       const description = descriptions[key]?.trim();
-      return description ? [[key, description]] : [];
+      return description ? [[sourceId, description]] : [];
     }),
   );
 }
@@ -81,29 +84,32 @@ function targetName(
  */
 export function projectItemRelation({
   pack,
-  itemKeys,
+  items,
 }: {
   readonly pack: ItemDrawerPack<ProjectedRelationKind>;
-  readonly itemKeys: ReadonlySet<string>;
+  readonly items: readonly {
+    readonly key: string;
+    readonly sourceId: string;
+  }[];
 }): ProjectedRelation {
   const referencesByItem = new Map<string, readonly number[]>();
   const unestablished: string[] = [];
-  for (const itemKey of itemKeys) {
+  for (const { key, sourceId } of items) {
     let references: readonly number[];
     if (pack.relationshipKind === 'needed-for-quest') {
-      const edges = pack.records[itemKey] ?? [];
+      const edges = pack.records[key] ?? [];
       references = edges.flatMap((edge) =>
         edge.roles.some(({ role }) => REQUIRED_QUEST_ROLES.has(role))
           ? [edge.target]
           : [],
       );
       if (edges.length > 0 && references.length === 0) {
-        unestablished.push(itemKey);
+        unestablished.push(sourceId);
       }
     } else {
-      references = (pack.records[itemKey] ?? []).map((edge) => edge.target);
+      references = (pack.records[key] ?? []).map((edge) => edge.target);
     }
-    if (references.length > 0) referencesByItem.set(itemKey, references);
+    if (references.length > 0) referencesByItem.set(sourceId, references);
   }
 
   const referenced = new Set([...referencesByItem.values()].flat());
@@ -117,7 +123,7 @@ export function projectItemRelation({
   );
 
   const byItem: Record<string, readonly number[]> = {};
-  for (const [itemKey, references] of referencesByItem) {
+  for (const [sourceId, references] of referencesByItem) {
     const indices = [
       ...new Set(
         references.flatMap((reference) => {
@@ -126,7 +132,7 @@ export function projectItemRelation({
         }),
       ),
     ];
-    if (indices.length > 0) byItem[itemKey] = indices;
+    if (indices.length > 0) byItem[sourceId] = indices;
   }
   return {
     targets: targets.map(({ publicId, name }) =>
@@ -157,18 +163,20 @@ export async function loadProjectedItemData({
   kind,
   rows,
   coverage,
-  relationKinds = kind.relations ?? [],
+  relationKinds = kind?.relations ?? [],
 }: {
   readonly buildId: BuildId;
-  readonly kind: ItemKind;
+  /** Omit to project every browse row, as for cross-category pages. */
+  readonly kind?: ItemKind | undefined;
   readonly rows: readonly CategorizedItemRow[];
   readonly coverage: ItemBrowseCoverage;
   /** Defaults to every relationship the category lists. */
   readonly relationKinds?: readonly ProjectedRelationKind[];
 }): Promise<ProjectedItemData> {
   const reader = createItemRelationReader(buildId);
-  const categoryRows = rows.filter((row) => row.kind === kind.id);
-  const itemKeys = new Set(categoryRows.map((row) => row.key));
+  const items = rows
+    .filter((row) => kind === undefined || row.kind === kind.id)
+    .map(({ key, sourceId }) => ({ key, sourceId }));
   const wanted = relationKinds.filter((relationKind) =>
     canReadItemRelation({ kind: relationKind, coverage }),
   );
@@ -180,7 +188,7 @@ export async function loadProjectedItemData({
           logMessage: 'Items Browse relationship load failed.',
           load: () => reader.readRelation(relationKind),
         });
-        return [relationKind, projectItemRelation({ pack, itemKeys })] as const;
+        return [relationKind, projectItemRelation({ pack, items })] as const;
       } catch (error) {
         if (isAbortError(error)) throw error;
         return undefined;
@@ -190,7 +198,7 @@ export async function loadProjectedItemData({
   const loadedDescriptions: Promise<
     Readonly<Record<string, string>> | undefined
   > =
-    kind.descriptions !== true || itemKeys.size === 0
+    kind?.descriptions !== true || items.length === 0
       ? Promise.resolve(undefined)
       : (async () => {
           try {
@@ -214,7 +222,7 @@ export async function loadProjectedItemData({
     ),
     ...(descriptions === undefined
       ? {}
-      : { descriptions: projectItemDescriptions({ descriptions, itemKeys }) }),
+      : { descriptions: projectItemDescriptions({ descriptions, items }) }),
   };
 }
 

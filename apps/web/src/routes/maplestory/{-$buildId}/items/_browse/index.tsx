@@ -9,10 +9,7 @@ import type { LoadedItemBrowse } from '@/features/items/browse/load';
 import { itemPageHead } from '@/features/items/browse/page';
 import { loadProjectedRelations } from '@/features/items/browse/relation-projection';
 import { itemBrowseSearch } from '@/features/items/browse/search-params';
-import {
-  countNotRequiredDrops,
-  monsterDrops,
-} from '@/features/items/kinds/monster-drops';
+import { countNotRequiredDrops } from '@/features/items/kinds/monster-drops';
 import { ItemsLandingPage } from '@/features/items/landing/ItemsLandingPage';
 
 const browseRouteApi = getRouteApi('/maplestory/{-$buildId}/items/_browse');
@@ -29,30 +26,35 @@ export const Route = createFileRoute('/maplestory/{-$buildId}/items/_browse/')({
   }) => {
     const { loaderData } = await parentMatchPromise;
     const { coverage, rows } = loaderData ?? {};
-    if (
-      coverage?.relationships['needed-for-quest'] !== 'complete' ||
-      coverage.relationships['used-in-recipe'] !== 'complete' ||
-      rows === undefined
-    ) {
-      return {};
+    if (coverage === undefined || rows === undefined) {
+      return {
+        lookupTargets: { quest: [], monster: [] },
+        notRequiredDropCount: undefined,
+      };
     }
-    // Only quest links are needed: they say which drops have unestablished requirements.
     const relations = await loadProjectedRelations({
       buildId: requireBuildId(params.buildId),
-      kind: monsterDrops,
       rows,
       coverage,
-      relationKinds: ['needed-for-quest'],
+      relationKinds: ['needed-for-quest', 'monster-drop'],
     });
-    return relations['needed-for-quest'] === undefined
-      ? {}
-      : {
-          notRequiredDropCount: countNotRequiredDrops({
+    const notRequiredDropCount =
+      coverage.relationships['needed-for-quest'] === 'complete' &&
+      coverage.relationships['used-in-recipe'] === 'complete' &&
+      relations['needed-for-quest'] !== undefined
+        ? countNotRequiredDrops({
             rows,
             coverage,
             relations,
-          }),
-        };
+          })
+        : undefined;
+    return {
+      lookupTargets: {
+        quest: relations['needed-for-quest']?.targets ?? [],
+        monster: relations['monster-drop']?.targets ?? [],
+      },
+      notRequiredDropCount,
+    };
   },
   head: ({ params, match }) =>
     itemPageHead({
@@ -67,12 +69,13 @@ function ItemsPage() {
   const params = Route.useParams();
   const buildId = requireBuildId(params.buildId);
   const result = browseRouteApi.useLoaderData();
-  const { notRequiredDropCount } = Route.useLoaderData();
+  const { lookupTargets, notRequiredDropCount } = Route.useLoaderData();
   return (
     <ItemsLandingPage
       buildId={buildId}
       rows={result.rows}
       coverage={result.coverage}
+      lookupTargets={lookupTargets}
       notRequiredDropCount={notRequiredDropCount}
     />
   );

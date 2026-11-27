@@ -221,6 +221,79 @@ describe('Items Browse server rendering', () => {
     expect(Number(lookup?.[1])).toBeGreaterThan(0);
   });
 
+  it('renders both published relationship lookups and all-items filters', async () => {
+    const landing = await renderPath('/maplestory/items');
+    const landingMain = mainHtml(landing.html);
+    expect(landingMain).toContain('Items a quest requires');
+    expect(landingMain).toContain('Items a monster drops');
+
+    const all = await renderPath('/maplestory/items/all');
+    const allMain = mainHtml(all.html);
+    expect(allMain).toContain('Search quests');
+    expect(allMain).toContain('Search monsters');
+  });
+
+  it('hides the Monster lookup and filter when the build does not publish drops', async () => {
+    const errorSpy = vi
+      .spyOn(console, 'error')
+      .mockImplementation(() => undefined);
+    const landing = await renderPath('/maplestory/gms-v83/items');
+    expect(mainHtml(landing.html)).not.toContain('Items a monster drops');
+
+    const all = await renderPath('/maplestory/gms-v83/items/all');
+    expect(mainHtml(all.html)).not.toContain('Search monsters');
+    errorSpy.mockRestore();
+  });
+
+  it('keeps the Monster lookup when the quest roster fails', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    mockedRelations.mockImplementation(({ buildId, kind }) => {
+      if (kind === 'needed-for-quest')
+        return Promise.reject(new Error('Fixture roster unavailable'));
+      if (kind === 'monster-drop')
+        return Promise.resolve(
+          fixtureRelation(
+            buildId === 'gms-v83' ? 'gms-v83' : 'cw-launch',
+            'monster-drop',
+          ),
+        );
+      return Promise.reject(new Error('Unexpected fixture relationship kind'));
+    });
+
+    const { html } = await renderPath('/maplestory/items');
+    const main = mainHtml(html);
+    expect(main).not.toContain('Items a quest requires');
+    expect(main).toContain('Items a monster drops');
+    expect(main).toContain('Crafting ingredients');
+  });
+
+  it('filters cross-category results by a published quest', async () => {
+    const questRoster = fixtureRelation('cw-launch', 'needed-for-quest');
+    if (questRoster.relationshipKind !== 'needed-for-quest')
+      throw new Error('Expected the quest requirement roster');
+    const questTarget = questRoster.targets.find(
+      ({ displayName }) => displayName === 'Thread Trial',
+    );
+    if (
+      questTarget === undefined ||
+      !('publicId' in questTarget) ||
+      typeof questTarget.publicId !== 'string'
+    )
+      throw new Error('Missing the fixture quest public id');
+    const questPublicId = questTarget.publicId;
+    const questFilter = encodeURIComponent(JSON.stringify([questPublicId]));
+    const { router, html } = await renderPath(
+      `/maplestory/items/all?quest=${questFilter}`,
+    );
+    expect(router.state.location.search).toMatchObject({
+      quest: [questPublicId],
+    });
+    const main = mainHtml(html);
+    expect(main).toContain('Many Quest Token');
+    expect(main).not.toContain('Practice Cap');
+    expect(main).toContain('Remove Quest: Thread Trial');
+  });
+
   it.each([
     ['cw-launch', '/maplestory/items/etc/monster-drops'],
     ['gms-v83', '/maplestory/gms-v83/items/etc/monster-drops'],

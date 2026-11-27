@@ -238,7 +238,9 @@ test('Chairs and Cash Shop show published facts and coverage-based pills', async
   page,
   isMobile,
 }) => {
-  await page.goto('/maplestory/items/setup/chairs');
+  // Wait for hydration before using the sort menu.
+  const items = new ItemsPage(page);
+  await items.goto('/maplestory/items/setup/chairs');
   await expect(page.getByText('Amber Seat')).toBeVisible();
   await expect(page.getByText('+50 HP', { exact: true }).first()).toBeVisible();
   await expect(page.getByText(/^Recovers HP \(/u)).toBeVisible();
@@ -257,12 +259,12 @@ test('Chairs and Cash Shop show published facts and coverage-based pills', async
     ]);
   }
 
-  await page.goto('/maplestory/items/cash/cash-shop');
+  await items.goto('/maplestory/items/cash/cash-shop');
   await expect(page.getByText('120 NX')).toBeVisible();
   await expect(page.getByText(/^Listed \(/u)).toBeVisible();
   await expect(page.getByText(/^Not listed \(/u)).toBeVisible();
 
-  await page.goto('/maplestory/gms-v83/items/cash/cash-shop');
+  await items.goto('/maplestory/gms-v83/items/cash/cash-shop');
   await expect(page.getByText('GMS Cash Badge')).toBeVisible();
   await expect(page.getByText(/^Listed \(/u)).toHaveCount(0);
 });
@@ -765,4 +767,36 @@ test('Items landing search suggestions and Crafting ingredients lookup', async (
     `${craftingCount} ${craftingCount === 1 ? 'Item' : 'Items'}`,
   );
   await expect(items.item('Woven Thread')).toBeVisible();
+});
+
+test('Items landing quest and monster lookups filter cross-category results', async ({
+  page,
+}) => {
+  const items = new ItemsPage(page);
+  await items.goto('/maplestory/items');
+
+  const quest = page.getByRole('combobox', {
+    name: 'Items a quest requires',
+  });
+  await quest.fill('Thread Trial');
+  await page.getByRole('option', { name: 'Thread Trial' }).click();
+  await expect(page).toHaveURL(/\/maplestory\/items\/all\?quest=/u);
+  await expect(items.summary).toHaveText(/^[1-9]\d* Items?$/u);
+  await expect(items.item('Many Quest Token')).toBeVisible();
+  await expect(items.item('Practice Cap')).toBeHidden();
+
+  await items.goto('/maplestory/items');
+  const monster = page.getByRole('combobox', {
+    name: 'Items a monster drops',
+  });
+  await monster.fill('Crowned Warden');
+  await page.getByRole('option', { name: 'Crowned Warden' }).click();
+  await expect(page).toHaveURL(/\/maplestory\/items\/all\?monster=/u);
+  await expect(items.summary).toHaveText(/^[1-9]\d* Items?$/u);
+  await expect(
+    page.getByRole('button', { name: 'Remove Monster: Crowned Warden' }),
+  ).toBeVisible();
+  await expect(
+    page.locator('[data-record-card-layout="picture"]').first(),
+  ).toBeVisible();
 });

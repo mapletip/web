@@ -27,7 +27,7 @@ function row(options: {
 }): CategorizedItemRow {
   return {
     key: options.key ?? 'item:one',
-    sourceId: options.key ?? 'item:one',
+    sourceId: (options.key ?? 'item:one').replace('item:', ''),
     name: 'Practice Token',
     itemClass: 'etc',
     kind: 'monster-drops',
@@ -50,16 +50,16 @@ function row(options: {
 const relations: ProjectedRelations = {
   'needed-for-quest': {
     targets: [{ publicId: 'quest:a', name: 'Amber Errand' }],
-    byItem: { 'item:one': [0] },
-    unestablished: ['item:unknown'],
+    byItem: { one: [0] },
+    unestablished: ['unknown'],
   },
   'used-in-recipe': {
     targets: [{ publicId: 'recipe:a', name: 'Amber Mixture' }],
-    byItem: { 'item:one': [0] },
+    byItem: { one: [0] },
   },
   'monster-drop': {
     targets: [{ publicId: 'monster:a', name: 'Amber Beast' }],
-    byItem: { 'item:one': [0] },
+    byItem: { one: [0] },
   },
 };
 

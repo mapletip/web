@@ -1,6 +1,7 @@
 import {
   Autocomplete,
   Paper,
+  Select,
   SimpleGrid,
   Stack,
   Title,
@@ -22,6 +23,7 @@ import {
   itemPageMetadata,
 } from '../browse/page';
 import type { CategorizedItemRow } from '../browse/project';
+import type { ProjectedRelation } from '../browse/relation-projection';
 import { itemBrowseSearch } from '../browse/search-params';
 import { ITEM_KINDS } from '../kinds';
 import type { ItemKind } from '../kinds/types';
@@ -33,6 +35,10 @@ interface ItemsLandingPageProps {
   readonly buildId: BuildId;
   readonly rows: readonly CategorizedItemRow[];
   readonly coverage: ItemBrowseCoverage;
+  readonly lookupTargets: {
+    readonly quest: ProjectedRelation['targets'];
+    readonly monster: ProjectedRelation['targets'];
+  };
   /** Monster Drops no quest or recipe uses; undefined when the build cannot say. */
   readonly notRequiredDropCount?: number | undefined;
 }
@@ -85,6 +91,7 @@ export function ItemsLandingPage({
   buildId,
   rows,
   coverage,
+  lookupTargets,
   notRequiredDropCount,
 }: ItemsLandingPageProps): ReactElement {
   const navigate = useNavigate();
@@ -122,12 +129,37 @@ export function ItemsLandingPage({
     [rows, showCraftingLookup],
   );
   const showUnusedLookup = notRequiredDropCount !== undefined;
+  const questOptions = lookupTargets.quest.flatMap(({ publicId, name }) =>
+    publicId === undefined ? [] : [{ value: publicId, label: name }],
+  );
+  const monsterOptions = lookupTargets.monster.flatMap(({ publicId, name }) =>
+    publicId === undefined ? [] : [{ value: publicId, label: name }],
+  );
+  const showQuestLookup = questOptions.length > 0;
+  const showMonsterLookup = monsterOptions.length > 0;
 
   function navigateToAllResults(searchQuery: string): void {
     void navigate({
       to: '/maplestory/{-$buildId}/items/all',
       params: { buildId: buildParam },
       search: { ...itemBrowseSearch.defaultSearch, q: searchQuery },
+    });
+  }
+
+  function navigateToRelationItems({
+    filter,
+    publicId,
+  }: {
+    readonly filter: 'quest' | 'monster';
+    readonly publicId: string;
+  }): void {
+    void navigate({
+      to: '/maplestory/{-$buildId}/items/all',
+      params: { buildId: buildParam },
+      search: {
+        ...itemBrowseSearch.defaultSearch,
+        [filter]: [publicId],
+      },
     });
   }
 
@@ -288,7 +320,10 @@ export function ItemsLandingPage({
             );
           })}
         </SimpleGrid>
-        {showCraftingLookup || showUnusedLookup ? (
+        {showQuestLookup ||
+        showMonsterLookup ||
+        showCraftingLookup ||
+        showUnusedLookup ? (
           <Paper
             component="section"
             withBorder
@@ -305,6 +340,39 @@ export function ItemsLandingPage({
             >
               Quick lookups
             </Title>
+            {showQuestLookup || showMonsterLookup ? (
+              <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="sm">
+                {showQuestLookup ? (
+                  <Select
+                    label="Items a quest requires"
+                    placeholder="Search quests"
+                    searchable
+                    data={questOptions}
+                    value={null}
+                    onChange={(publicId) => {
+                      if (publicId !== null)
+                        navigateToRelationItems({ filter: 'quest', publicId });
+                    }}
+                  />
+                ) : null}
+                {showMonsterLookup ? (
+                  <Select
+                    label="Items a monster drops"
+                    placeholder="Search monsters"
+                    searchable
+                    data={monsterOptions}
+                    value={null}
+                    onChange={(publicId) => {
+                      if (publicId !== null)
+                        navigateToRelationItems({
+                          filter: 'monster',
+                          publicId,
+                        });
+                    }}
+                  />
+                ) : null}
+              </SimpleGrid>
+            ) : null}
             <ul className={classes['lookupsList']}>
               {showCraftingLookup ? (
                 <li className={classes['item']}>

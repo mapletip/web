@@ -13,7 +13,7 @@ export function textCard({
     columns: { base: 1, md: 2, lg: 2 },
     secondaryLineClamp: 2,
     lead: (row, { descriptions }) => {
-      const description = descriptions?.[row.key]?.trim();
+      const description = descriptions?.[row.sourceId]?.trim();
       return description || formatSellPrice({ sellPrice: row.sellPrice });
     },
     ...(extraFact === undefined ? {} : { footer: (row) => extraFact(row) }),

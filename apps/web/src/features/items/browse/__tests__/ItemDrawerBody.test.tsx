@@ -178,7 +178,7 @@ describe('ItemDrawerBody', () => {
           categoryLabel="Other Use"
           reader={makeReader({ descriptions: readDescriptions })}
           descriptions={{
-            'item:fixture:1':
+            'fixture-item':
               'A full long description stays available inside the item drawer.',
           }}
         />

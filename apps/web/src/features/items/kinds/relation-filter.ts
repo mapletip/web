@@ -50,7 +50,7 @@ export function relationQueryField({
   return {
     id: label.toLowerCase(),
     accessor: (row) =>
-      (relations[kind]?.byItem[row.key] ?? [])
+      (relations[kind]?.byItem[row.sourceId] ?? [])
         .map((index) => relations[kind]?.targets[index]?.publicId)
         .filter((id) => id !== undefined),
     sortable: false,

@@ -51,7 +51,7 @@ describe('text category cards', () => {
     expect(
       otherUse.card?.lead(baseRow, {
         ...context,
-        descriptions: { [baseRow.key]: description },
+        descriptions: { [baseRow.sourceId]: description },
       }),
     ).toBe(expected);
   });
