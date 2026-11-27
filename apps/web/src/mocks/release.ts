@@ -1495,6 +1495,7 @@ async function buildItemProduct(
           ? {}
           : { seatingRecovery: item.seatingRecovery }),
         ...(item.buff === undefined ? {} : { buff: item.buff }),
+        ...(item.petFood === undefined ? {} : { petFood: item.petFood }),
         ...(projectileAttack === undefined ? {} : { projectileAttack }),
         ...(item.maxStack === undefined ? {} : { maxStack: item.maxStack }),
         ...(scroll === undefined ? {} : { scroll }),

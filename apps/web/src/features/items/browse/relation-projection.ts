@@ -33,6 +33,26 @@ export type ProjectedRelations = Partial<
   Record<ProjectedRelationKind, ProjectedRelation>
 >;
 
+interface ProjectedItemData {
+  readonly relations: ProjectedRelations;
+  readonly descriptions?: Readonly<Record<string, string>>;
+}
+
+export function projectItemDescriptions({
+  descriptions,
+  itemKeys,
+}: {
+  readonly descriptions: Readonly<Record<string, string>>;
+  readonly itemKeys: ReadonlySet<string>;
+}): Readonly<Record<string, string>> {
+  return Object.fromEntries(
+    [...itemKeys].flatMap((key) => {
+      const description = descriptions[key]?.trim();
+      return description ? [[key, description]] : [];
+    }),
+  );
+}
+
 function targetName(
   pack: ItemDrawerPack<ProjectedRelationKind>,
   index: number,
@@ -132,7 +152,7 @@ export function canReadItemRelation({
  * build does not publish; a failed read only removes
  * names and filters, since counts always come from the browse rows.
  */
-export async function loadProjectedRelations({
+export async function loadProjectedItemData({
   buildId,
   kind,
   rows,
@@ -145,14 +165,14 @@ export async function loadProjectedRelations({
   readonly coverage: ItemBrowseCoverage;
   /** Defaults to every relationship the category lists. */
   readonly relationKinds?: readonly ProjectedRelationKind[];
-}): Promise<ProjectedRelations> {
+}): Promise<ProjectedItemData> {
   const reader = createItemRelationReader(buildId);
   const categoryRows = rows.filter((row) => row.kind === kind.id);
   const itemKeys = new Set(categoryRows.map((row) => row.key));
   const wanted = relationKinds.filter((relationKind) =>
     canReadItemRelation({ kind: relationKind, coverage }),
   );
-  const loaded = await Promise.all(
+  const loadedRelations = Promise.all(
     wanted.map(async (relationKind) => {
       try {
         const pack = await withLoadBoundary({
@@ -167,5 +187,40 @@ export async function loadProjectedRelations({
       }
     }),
   );
-  return Object.fromEntries(loaded.filter((entry) => entry !== undefined));
+  const loadedDescriptions: Promise<
+    Readonly<Record<string, string>> | undefined
+  > =
+    kind.descriptions !== true || itemKeys.size === 0
+      ? Promise.resolve(undefined)
+      : (async () => {
+          try {
+            return await withLoadBoundary({
+              failureMessage: 'Item descriptions could not be loaded.',
+              logMessage: 'Items Browse description load failed.',
+              load: () => reader.readDescriptions(),
+            });
+          } catch (error) {
+            if (isAbortError(error)) throw error;
+            return undefined;
+          }
+        })();
+  const [relations, descriptions] = await Promise.all([
+    loadedRelations,
+    loadedDescriptions,
+  ]);
+  return {
+    relations: Object.fromEntries(
+      relations.filter((entry) => entry !== undefined),
+    ),
+    ...(descriptions === undefined
+      ? {}
+      : { descriptions: projectItemDescriptions({ descriptions, itemKeys }) }),
+  };
+}
+
+/** Load only the relationship projections used by landing-page lookups. */
+export async function loadProjectedRelations(
+  options: Parameters<typeof loadProjectedItemData>[0],
+): Promise<ProjectedRelations> {
+  return (await loadProjectedItemData(options)).relations;
 }

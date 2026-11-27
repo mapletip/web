@@ -29,6 +29,7 @@ export function itemCardColumns({
   readonly md?: number;
   readonly lg: number;
 } {
+  if (kind?.card?.columns !== undefined) return kind.card.columns;
   return isPictureLayout(kind) ? PICTURE_CARD_COLUMNS : ASIDE_CARD_COLUMNS;
 }
 export const ITEM_KIND_LABELS: ReadonlyMap<string, string> = new Map(
@@ -67,6 +68,7 @@ export function renderItemCard({
   const card = crossCategory ? undefined : kind?.card;
   const layout = card?.layout ?? 'picture';
   const fact = secondaryLine ?? card?.lead(record, context);
+  const footer = card?.footer?.(record, context);
   const media = card?.media?.(record, context) ?? (
     <Thumbnail
       src={
@@ -105,6 +107,10 @@ export function renderItemCard({
     <RecordCard
       layout="compactMediaAside"
       {...(fact === undefined ? {} : { secondaryLine: fact })}
+      {...(card?.secondaryLineClamp === undefined
+        ? {}
+        : { secondaryLineClamp: card.secondaryLineClamp })}
+      {...(footer === undefined ? {} : { footer })}
       {...shared}
     />
   ) : (

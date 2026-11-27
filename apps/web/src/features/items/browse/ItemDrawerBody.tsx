@@ -136,9 +136,11 @@ function QuestRow({
 function ItemDrawerRelationsSection({
   record,
   reader,
+  descriptions,
 }: {
   readonly record: CategorizedItemRow;
   readonly reader: ItemRelationReader;
+  readonly descriptions?: Readonly<Record<string, string>>;
 }): ReactElement {
   const [attempt, setAttempt] = useState(0);
   const [result, setResult] = useState<
@@ -148,7 +150,10 @@ function ItemDrawerRelationsSection({
   useEffect(() => {
     let active = true;
     const kinds = requiredRelationKindsForItem({ record });
-    const descriptionsRequest = reader.readDescriptions();
+    const descriptionsRequest =
+      descriptions === undefined
+        ? reader.readDescriptions()
+        : Promise.resolve(descriptions);
     const relationRequests = kinds.map((kind) => ({
       kind,
       request: reader.readRelation(kind),
@@ -210,7 +215,7 @@ function ItemDrawerRelationsSection({
     return () => {
       active = false;
     };
-  }, [attempt, reader, record]);
+  }, [attempt, descriptions, reader, record]);
 
   if (result === undefined) {
     return (
@@ -301,6 +306,7 @@ export interface ItemDrawerBodyProps {
   readonly record: CategorizedItemRow;
   readonly categoryLabel?: string | undefined;
   readonly reader: ItemRelationReader;
+  readonly descriptions?: Readonly<Record<string, string>>;
   readonly additionalContent?: ReactNode;
 }
 
@@ -309,6 +315,7 @@ export function ItemDrawerBody({
   record,
   categoryLabel,
   reader,
+  descriptions,
   additionalContent,
 }: ItemDrawerBodyProps): ReactElement {
   const facts = formatItemFacts({ record });
@@ -350,6 +357,7 @@ export function ItemDrawerBody({
         key={record.key}
         record={record}
         reader={reader}
+        {...(descriptions === undefined ? {} : { descriptions })}
       />
     </Stack>
   );

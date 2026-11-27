@@ -167,6 +167,30 @@ describe('ItemDrawerBody', () => {
     expect(screen.queryByRole('list')).toBeNull();
   });
 
+  it('uses the category description projection without reading descriptions again', async () => {
+    const readDescriptions = vi.fn(() =>
+      Promise.reject(new Error('description read should not repeat')),
+    );
+    render(
+      <MantineProvider>
+        <ItemDrawerBody
+          record={row()}
+          categoryLabel="Other Use"
+          reader={makeReader({ descriptions: readDescriptions })}
+          descriptions={{
+            'item:fixture:1':
+              'A full long description stays available inside the item drawer.',
+          }}
+        />
+      </MantineProvider>,
+    );
+
+    await screen.findByText(
+      'A full long description stays available inside the item drawer.',
+    );
+    expect(readDescriptions).not.toHaveBeenCalled();
+  });
+
   it('renders description, quests, recipes, monsters with VOD links, and expands shortened lists', async () => {
     const questsPack: ItemDrawerPack<'needed-for-quest'> = {
       contractVersion: '2.0',

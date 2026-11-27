@@ -1,3 +1,6 @@
+import { formatFullness } from '../browse/fullness';
+
+import { textCard } from './text-card';
 import type { ItemKind } from './types';
 
 export const petFood = {
@@ -8,4 +11,8 @@ export const petFood = {
   iconContentId:
     '48bbbec3311d822c327cfc030c8d5a2d5f0c726a263356c40c02af0f125aac7c',
   matches: (row) => row.types?.includes('pet-food') === true,
+  descriptions: true,
+  card: textCard({
+    extraFact: (row) => formatFullness({ fullness: row.fullness }),
+  }),
 } satisfies ItemKind;

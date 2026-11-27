@@ -1,10 +1,28 @@
-import { describe, expect, it } from 'vitest';
+import type { ItemBrowseCoverage } from '@mapletip/data/items';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { otherUse } from '../../kinds/other-use';
+import type { CategorizedItemRow } from '../project';
 import {
   canReadItemRelation,
+  loadProjectedItemData,
+  projectItemDescriptions,
   projectItemRelation,
 } from '../relation-projection';
 import type { ItemDrawerPack } from '../relations';
+
+const reader = vi.hoisted(() => ({
+  readRelation: vi.fn(),
+  readDescriptions: vi.fn(),
+}));
+
+vi.mock('../relations', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../relations')>();
+  return {
+    ...actual,
+    createItemRelationReader: () => reader as never,
+  };
+});
 
 const pack: ItemDrawerPack<'needed-for-quest'> = {
   contractVersion: '2.0',
@@ -91,5 +109,94 @@ describe('item relation projection', () => {
         } as Parameters<typeof canReadItemRelation>[0]['coverage'],
       }),
     ).toBe(false);
+  });
+});
+
+describe('projected category descriptions', () => {
+  const rows: readonly CategorizedItemRow[] = [
+    {
+      key: 'item:use',
+      sourceId: 'use',
+      itemClass: 'consume',
+      kind: 'other-use',
+      kindPath: ['all', 'use', 'other-use'],
+    },
+    {
+      key: 'item:other',
+      sourceId: 'other',
+      itemClass: 'etc',
+      kind: 'other-etc',
+      kindPath: ['all', 'etc', 'other-etc'],
+    },
+  ];
+  const coverage = { relationships: {} } as ItemBrowseCoverage;
+
+  beforeEach(() => {
+    reader.readRelation.mockReset();
+    reader.readDescriptions.mockReset();
+  });
+
+  it('keeps only trimmed descriptions for the category items', () => {
+    expect(
+      projectItemDescriptions({
+        descriptions: {
+          'item:use': '  A useful note.  ',
+          'item:other': 'A different category.',
+          'item:missing': 'An unrelated item.',
+          'item:blank': '  ',
+        },
+        itemKeys: new Set(['item:use', 'item:blank']),
+      }),
+    ).toEqual({ 'item:use': 'A useful note.' });
+  });
+
+  it('loads descriptions once and projects only the current category items', async () => {
+    reader.readDescriptions.mockResolvedValue({
+      'item:use': '  A useful note.  ',
+      'item:other': 'A different category.',
+    });
+
+    const loaded = await loadProjectedItemData({
+      buildId: 'cw-launch',
+      kind: otherUse,
+      rows,
+      coverage,
+    });
+
+    expect(reader.readDescriptions).toHaveBeenCalledOnce();
+    expect(loaded).toEqual({
+      relations: {},
+      descriptions: { 'item:use': 'A useful note.' },
+    });
+  });
+
+  it('omits descriptions when the MapleKit read fails', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    reader.readRelation.mockResolvedValue({
+      ...pack,
+      records: {
+        'item:use': [{ target: 1, roles: [{ role: 'held-to-start' }] }],
+      },
+    });
+    reader.readDescriptions.mockRejectedValue(
+      new Error('hidden fixture integrity detail'),
+    );
+
+    await expect(
+      loadProjectedItemData({
+        buildId: 'cw-launch',
+        kind: otherUse,
+        rows,
+        coverage,
+        relationKinds: ['needed-for-quest'],
+      }),
+    ).resolves.toMatchObject({
+      relations: {
+        'needed-for-quest': {
+          targets: [{ name: 'Amber Errand' }],
+          byItem: { 'item:use': [0] },
+        },
+      },
+    });
   });
 });

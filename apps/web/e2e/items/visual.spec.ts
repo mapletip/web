@@ -75,6 +75,8 @@ const PROJECTILES = '/maplestory/items/use/stars-and-arrows';
 const MONSTER_CARDS = '/maplestory/gms-v83/items/use/monster-cards';
 const QUEST_ITEMS = '/maplestory/items/etc/quest-items';
 const MONSTER_DROPS = '/maplestory/items/etc/monster-drops';
+const OTHER_USE = '/maplestory/items/use/other-use';
+const PET_FOOD = '/maplestory/items/cash/pet-food';
 
 test('desktop Items monster drops', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 1100 });
@@ -206,6 +208,50 @@ test('desktop Items potions filtered', async ({ page }) => {
     page.getByText('3 Items', { exact: true }).first(),
   ).toBeVisible();
   await expect(page).toHaveScreenshot('desktop-items-potions-filtered.png');
+});
+
+test('desktop Items text', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 1100 });
+  await page.goto(OTHER_USE);
+  await browseReady(page);
+  await expect(
+    page.locator('[data-record-card-layout="compactMediaAside"]').first(),
+  ).toBeVisible();
+  await expect(page).toHaveScreenshot('desktop-items-text.png');
+});
+
+test('mobile Items text types', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 1100 });
+  await page.goto(OTHER_USE);
+  await browseReady(page);
+  const allPill = page.getByText(/^All \((\d+)\)$/u).first();
+  const allCount = Number(
+    (await allPill.textContent())?.match(/\((\d+)\)/u)?.[1],
+  );
+  await expect(allPill).toContainText(`(${allCount})`);
+  await page.getByText(/^Return scrolls \(\d+\)$/u).click();
+  await expect(page.getByText('1 Item', { exact: true }).first()).toBeVisible();
+  await expect(page.getByText('Plain Use Item')).toBeHidden();
+  await page.getByText(`All (${allCount})`, { exact: true }).click();
+  await expect(
+    page.getByText(`${allCount} Items`, { exact: true }).first(),
+  ).toBeVisible();
+  await expect(page.getByText('Plain Use Item')).toBeVisible();
+  const returnScrolls = page.getByText(/^Return scrolls \(\d+\)$/u);
+  await returnScrolls.click();
+  await expect(page.getByText('1 Item', { exact: true }).first()).toBeVisible();
+  // Show the chosen pill and no hover state in the capture.
+  await returnScrolls.scrollIntoViewIfNeeded();
+  await page.mouse.move(0, 0);
+  await expect(page).toHaveScreenshot('mobile-items-text.png');
+});
+
+test('desktop Items pet food', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 1100 });
+  await page.goto(PET_FOOD);
+  await browseReady(page);
+  await expect(page.getByText('Restores 30 fullness')).toBeVisible();
+  await expect(page).toHaveScreenshot('desktop-items-pet-food.png');
 });
 
 test('desktop Items chairs', async ({ page }) => {

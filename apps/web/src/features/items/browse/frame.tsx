@@ -33,6 +33,7 @@ import { useRouteOverlay } from '@/features/route-overlay/useRouteOverlay';
 import { ITEM_KINDS } from '../kinds';
 import type { ItemKind } from '../kinds/types';
 
+import { formatFullness } from './fullness';
 import { itemCardColumns, ITEM_KIND_LABELS, renderItemCard } from './item-card';
 import { formatItemFacts, ItemDrawerBody } from './ItemDrawerBody';
 import { ItemsGroupShelves } from './ItemsGroupPage';
@@ -54,6 +55,7 @@ interface ItemFrameProps {
   readonly coverage?: ItemBrowseCoverage | undefined;
   readonly scrollTargetIcons?: StaticItemBrowseV2_2['scrollTargetIcons'];
   readonly relations?: ProjectedRelations | undefined;
+  readonly descriptions?: Readonly<Record<string, string>>;
   readonly group?: ItemGroup | undefined;
   readonly kind?: ItemKind | undefined;
   readonly all?: boolean;
@@ -180,7 +182,7 @@ export function itemPrimaryFact({
     return `${numberFormat.format(record.success)}% success`;
   }
   if (record.fullness !== undefined) {
-    return `Restores ${numberFormat.format(record.fullness)} fullness`;
+    return formatFullness({ fullness: record.fullness });
   }
   if ((record.neededForQuestCount ?? 0) > 0) {
     return record.neededForQuestCount === 1
@@ -243,6 +245,7 @@ export function ItemFrame({
   coverage,
   scrollTargetIcons,
   relations = {},
+  descriptions,
   group,
   kind,
   all = false,
@@ -390,13 +393,21 @@ export function ItemFrame({
         context: {
           coverage,
           relations,
+          ...(descriptions === undefined ? {} : { descriptions }),
           ...(scrollTargetIcons ? { scrollTargetIcons } : {}),
         },
         openRecordDetails: (sourceId) =>
           overlay.open({ type: 'record-details', recordId: sourceId }),
       });
     },
-    [coverage, details?.recordId, overlay, relations, scrollTargetIcons],
+    [
+      coverage,
+      descriptions,
+      details?.recordId,
+      overlay,
+      relations,
+      scrollTargetIcons,
+    ],
   );
 
   return (
@@ -534,6 +545,7 @@ export function ItemFrame({
                   context: {
                     coverage,
                     relations,
+                    ...(descriptions === undefined ? {} : { descriptions }),
                     ...(scrollTargetIcons ? { scrollTargetIcons } : {}),
                   },
                   openDetails,
@@ -556,6 +568,7 @@ export function ItemFrame({
               record={record}
               categoryLabel={ITEM_KIND_LABELS.get(record.kind)}
               reader={relationReader}
+              {...(descriptions === undefined ? {} : { descriptions })}
               {...(additionalContent === undefined
                 ? {}
                 : { additionalContent })}

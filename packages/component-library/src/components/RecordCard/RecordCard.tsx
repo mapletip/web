@@ -73,6 +73,7 @@ export function RecordCard({
   title,
   layout = 'default',
   secondaryLine,
+  secondaryLineClamp,
   leadLine,
   badges,
   media,
@@ -114,7 +115,12 @@ export function RecordCard({
               <Text className={classes['pictureLead']}>{leadLine}</Text>
             )}
             {secondaryLine === undefined ? null : (
-              <Text className={classes['pictureSecondary']}>
+              <Text
+                className={classes['pictureSecondary']}
+                {...(secondaryLineClamp === undefined
+                  ? {}
+                  : { lineClamp: secondaryLineClamp })}
+              >
                 {secondaryLine}
               </Text>
             )}
@@ -207,7 +213,14 @@ export function RecordCard({
           )}
         </Group>
         {secondaryLine === undefined ? null : (
-          <Text className={classes['secondary']} size="sm" c="dimmed">
+          <Text
+            className={classes['secondary']}
+            size="sm"
+            c="dimmed"
+            {...(secondaryLineClamp === undefined
+              ? {}
+              : { lineClamp: secondaryLineClamp })}
+          >
             {secondaryLine}
           </Text>
         )}
