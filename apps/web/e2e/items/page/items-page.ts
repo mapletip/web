@@ -29,12 +29,5 @@ export class ItemsPage {
   async goto(path: string): Promise<void> {
     await this.page.goto(path);
     await browseReady(this.page);
-    await this.page.waitForFunction(() => {
-      const main = document.querySelector('main');
-      return (
-        main !== null &&
-        Object.keys(main).some((key) => key.startsWith('__reactProps'))
-      );
-    });
   }
 }

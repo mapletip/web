@@ -9,6 +9,65 @@ function mount(card: React.ReactNode) {
 }
 
 describe('RecordCard', () => {
+  it('renders quiet identity labels as text and keeps one card action', () => {
+    const open = vi.fn();
+    const { container } = mount(
+      <RecordCard
+        layout="quietIdentity"
+        title="Copper Compass"
+        leadLine="Sells for 35 coins"
+        inlineLabels={[
+          {
+            id: 'use',
+            icon: <span>★</span>,
+            label: 'Used in tasks',
+            tone: 'brand',
+          },
+        ]}
+        detailLine="Found in the practice meadow"
+        action={open}
+      />,
+    );
+    expect(
+      screen.getByRole('button', { name: 'Copper Compass' }),
+    ).toBeVisible();
+    expect(screen.getByText('Used in tasks')).toBeVisible();
+    expect(screen.getByText('★').parentElement).toHaveAttribute(
+      'aria-hidden',
+      'true',
+    );
+    expect(
+      container.querySelector('[data-record-card-layout="quietIdentity"]'),
+    ).toBeTruthy();
+    expect(screen.getAllByRole('button')).toHaveLength(1);
+    fireEvent.click(screen.getByRole('button', { name: 'Copper Compass' }));
+    expect(open).toHaveBeenCalledOnce();
+  });
+
+  it('puts the detail before labels in reading order when requested', () => {
+    const { container } = mount(
+      <RecordCard
+        layout="quietIdentity"
+        title="Amber Lantern"
+        inlineLabels={[
+          {
+            id: 'use',
+            icon: <span>★</span>,
+            label: 'Used in tasks',
+            tone: 'muted',
+          },
+        ]}
+        detailLine="Found in the meadow"
+        detailFirst
+      />,
+    );
+    const card = container.querySelector(
+      '[data-record-card-layout="quietIdentity"]',
+    );
+    expect(
+      Array.from(card?.children ?? []).map((child) => child.textContent),
+    ).toEqual(['Amber Lantern', 'Found in the meadow', '★Used in tasks']);
+  });
   it('marks the selected fact in its semantic list', () => {
     mount(
       <RecordFacts

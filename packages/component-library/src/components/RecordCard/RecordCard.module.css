@@ -64,6 +64,62 @@
   flex-direction: column;
 }
 
+.quietIdentity {
+  padding-bottom: var(--mantine-spacing-md);
+}
+
+.quietIdentity .identityHeader {
+  flex: 0 0 auto;
+  background: transparent;
+  padding-bottom: var(--mantine-spacing-sm);
+}
+
+.inlineLabels {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--mantine-spacing-xs) var(--mantine-spacing-md);
+  margin: 0;
+  padding: 0 var(--mantine-spacing-md);
+  list-style: none;
+  font-size: var(--mantine-font-size-sm);
+  font-weight: 600;
+}
+
+.inlineLabels li {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.inlineLabelIcon {
+  display: inline-flex;
+}
+.inlineLabelbrand {
+  color: var(--mapletip-color-brand-text);
+}
+.inlineLabelmuted {
+  color: var(--mapletip-color-muted);
+}
+.inlineLabelsuccess {
+  color: var(--mapletip-color-status-success);
+}
+
+.quietDetail {
+  display: flex;
+  align-items: center;
+  gap: var(--mantine-spacing-xs);
+  padding: var(--mantine-spacing-xs) var(--mantine-spacing-md) 0;
+  color: var(--mapletip-color-muted);
+  font-size: var(--mantine-font-size-sm);
+}
+
+.detailFirst .quietDetail {
+  padding-top: 0;
+}
+.detailFirst .inlineLabels {
+  padding-top: var(--mantine-spacing-xs);
+}
+
 .pictureCard {
   display: flex;
   flex-direction: column;

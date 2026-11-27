@@ -69,22 +69,27 @@ function renderLink({
 }
 
 /** A generic record card with optional media, footer and host-rendered link. */
-export function RecordCard({
-  title,
-  layout = 'default',
-  secondaryLine,
-  secondaryLineClamp,
-  leadLine,
-  badges,
-  media,
-  footer,
-  destination,
-  action,
-  isDetailsOpen,
-  facts,
-  renderLink: linkRenderer,
-  linkScope = 'card',
-}: RecordCardProps): ReactElement {
+export function RecordCard(props: RecordCardProps): ReactElement {
+  const {
+    title,
+    layout = 'default',
+    secondaryLine,
+    secondaryLineClamp,
+    leadLine,
+    badges,
+    media,
+    footer,
+    destination,
+    action,
+    isDetailsOpen,
+    renderLink: linkRenderer,
+    linkScope = 'card',
+  } = props;
+  const facts = props.layout === 'quietIdentity' ? undefined : props.facts;
+  const quiet = props.layout === 'quietIdentity' ? props : undefined;
+  const inlineLabels = quiet?.inlineLabels;
+  const detailLine = quiet?.detailLine;
+  const detailFirst = quiet?.detailFirst === true;
   if (layout === 'picture') {
     const titleControl = renderTitleControl({
       destination,
@@ -135,7 +140,7 @@ export function RecordCard({
       </div>
     );
   }
-  if (layout === 'identity') {
+  if (layout === 'identity' || layout === 'quietIdentity') {
     const titleControl = renderTitleControl({
       destination,
       linkRenderer,
@@ -143,15 +148,34 @@ export function RecordCard({
       action,
       isDetailsOpen,
     });
+    const labelsContent =
+      layout === 'quietIdentity' &&
+      inlineLabels !== undefined &&
+      inlineLabels.length > 0 ? (
+        <ul className={classes['inlineLabels']}>
+          {inlineLabels.map((item) => (
+            <li key={item.id} className={classes[`inlineLabel${item.tone}`]}>
+              <span aria-hidden="true" className={classes['inlineLabelIcon']}>
+                {item.icon}
+              </span>
+              {item.label}
+            </li>
+          ))}
+        </ul>
+      ) : null;
+    const detailContent =
+      layout === 'quietIdentity' && detailLine !== undefined ? (
+        <div className={classes['quietDetail']}>{detailLine}</div>
+      ) : null;
     return (
       <div className={classes['linkedCard']}>
         <Card
-          className={`${classes['card']} ${classes['identityCard']}`}
+          className={`${classes['card']} ${classes['identityCard']} ${layout === 'quietIdentity' ? classes['quietIdentity'] : ''} ${detailFirst ? classes['detailFirst'] : ''}`}
           padding={0}
           radius="md"
           withBorder
           data-record-card="true"
-          data-record-card-layout="identity"
+          data-record-card-layout={layout}
           data-details-open={isDetailsOpen ? 'true' : undefined}
         >
           <Card.Section className={classes['identityHeader']}>
@@ -170,6 +194,8 @@ export function RecordCard({
               )}
             </div>
           </Card.Section>
+          {detailFirst ? detailContent : labelsContent}
+          {detailFirst ? labelsContent : detailContent}
           {facts === undefined ? null : <RecordFacts facts={facts} />}
         </Card>
       </div>

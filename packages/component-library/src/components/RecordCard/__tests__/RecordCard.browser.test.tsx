@@ -8,6 +8,44 @@ import '@/styles.css';
 import { RecordCard } from '@/components/RecordCard';
 
 describe('RecordCard stretched link in the browser', () => {
+  it('uses one keyboard action for a quiet identity card and hides decorative icons', async () => {
+    const open = vi.fn();
+    await render(
+      <MantineProvider
+        theme={theme}
+        cssVariablesResolver={cssVariablesResolver}
+        forceColorScheme="dark"
+      >
+        <RecordCard
+          layout="quietIdentity"
+          title="Copper Compass"
+          leadLine="Sells for 35 coins"
+          inlineLabels={[
+            {
+              id: 'task',
+              icon: <span>★</span>,
+              label: 'Used in tasks',
+              tone: 'brand',
+            },
+          ]}
+          detailLine="Found in the meadow"
+          action={open}
+        />
+      </MantineProvider>,
+    );
+    const button = page.getByRole('button', { name: 'Copper Compass' });
+    expect(
+      document.querySelectorAll(
+        '[data-record-card-layout="quietIdentity"] button',
+      ),
+    ).toHaveLength(1);
+    expect(
+      page.getByText('★').element().parentElement?.getAttribute('aria-hidden'),
+    ).toBe('true');
+    button.element().focus();
+    await userEvent.keyboard('{Enter}');
+    expect(open).toHaveBeenCalledOnce();
+  });
   it('keeps picture media height and long titles within a narrow card', async () => {
     const open = vi.fn();
     await render(

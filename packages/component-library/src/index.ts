@@ -64,6 +64,7 @@ export type {
   RecordCardLinkRenderer,
   RecordCardLinkRenderProps,
   RecordCardProps,
+  RecordCardInlineLabel,
   RecordFact,
 } from '@/components/RecordCard';
 export { Header } from '@/components/Header';

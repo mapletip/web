@@ -2,9 +2,17 @@ import type { Page } from '@playwright/test';
 
 import { expect } from './fixtures';
 
-/** Wait for the shared browse frame and its visible images before a capture. */
+/** Wait for the page to hydrate and its visible images to load before interacting or capturing. */
 export async function browseReady(page: Page): Promise<void> {
   await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
+  // Server HTML is visible before React attaches handlers; interacting earlier is a race.
+  await page.waitForFunction(() => {
+    const main = document.querySelector('main');
+    return (
+      main !== null &&
+      Object.keys(main).some((key) => key.startsWith('__reactProps'))
+    );
+  });
   await page.evaluate(async () => {
     await document.fonts.ready;
   });

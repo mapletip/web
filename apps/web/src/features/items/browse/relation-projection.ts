@@ -20,6 +20,8 @@ export interface ProjectedRelation {
   readonly targets: readonly {
     readonly publicId?: string;
     readonly name: string;
+    readonly level?: number;
+    readonly spriteContentId?: string;
   }[];
   readonly byItem: Readonly<Record<string, readonly number[]>>;
   /**
@@ -59,7 +61,7 @@ export function projectItemDescriptions({
 function targetName(
   pack: ItemDrawerPack<ProjectedRelationKind>,
   index: number,
-): { readonly publicId?: string; readonly name: string } | undefined {
+): ProjectedRelation['targets'][number] | undefined {
   if (pack.relationshipKind === 'used-in-recipe') {
     const recipe = pack.targets[index];
     const name = recipe?.products
@@ -72,9 +74,22 @@ function targetName(
   }
   const target = pack.targets[index];
   const name = target?.displayName?.trim();
-  return target !== undefined && name
-    ? { publicId: target.publicId, name }
-    : undefined;
+  if (target === undefined || !name) return undefined;
+  if (pack.relationshipKind === 'monster-drop') {
+    const monster = pack.targets[index];
+    if (monster === undefined) return undefined;
+    return {
+      publicId: monster.publicId,
+      name,
+      ...(monster.level.state === 'known'
+        ? { level: monster.level.value }
+        : {}),
+      ...(monster.sprite.state === 'known'
+        ? { spriteContentId: monster.sprite.value }
+        : {}),
+    };
+  }
+  return { publicId: target.publicId, name };
 }
 
 /**
@@ -135,9 +150,12 @@ export function projectItemRelation({
     if (indices.length > 0) byItem[sourceId] = indices;
   }
   return {
-    targets: targets.map(({ publicId, name }) =>
-      publicId === undefined ? { name } : { publicId, name },
-    ),
+    targets: targets.map(({ publicId, name, level, spriteContentId }) => ({
+      name,
+      ...(publicId === undefined ? {} : { publicId }),
+      ...(level === undefined ? {} : { level }),
+      ...(spriteContentId === undefined ? {} : { spriteContentId }),
+    })),
     byItem,
     ...(pack.relationshipKind === 'needed-for-quest' ? { unestablished } : {}),
   };

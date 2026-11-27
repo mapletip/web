@@ -94,6 +94,24 @@ export function renderItemCard({
           ...(isDetailsOpen === undefined ? {} : { isDetailsOpen }),
         }),
   };
+  if (layout === 'quietIdentity') {
+    return (
+      <RecordCard
+        layout="quietIdentity"
+        {...(renderedFact === undefined ? {} : { leadLine: renderedFact })}
+        {...(card?.inlineLabels === undefined
+          ? {}
+          : { inlineLabels: card.inlineLabels(record, context) })}
+        {...(card?.detailLine === undefined
+          ? {}
+          : { detailLine: card.detailLine(record, context) })}
+        {...(card?.detailFirst === undefined
+          ? {}
+          : { detailFirst: card.detailFirst })}
+        {...shared}
+      />
+    );
+  }
   if (layout === 'identity') {
     const facts = card?.facts?.(record, {
       ...context,

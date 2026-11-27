@@ -1,65 +1,73 @@
-import type { RecordFact } from '@mapletip/component-library';
+import {
+  Thumbnail,
+  type RecordCardInlineLabel,
+} from '@mapletip/component-library';
+import { BookBookmark, Check, Hammer } from '@phosphor-icons/react';
+import { createElement, Fragment, type ReactNode } from 'react';
 
-import type {
-  ProjectedRelationKind,
-  ProjectedRelations,
-} from '../browse/relation-projection';
+import { resolveMonsterSpriteUrl } from '@/features/monsters/shared/sprite';
 
-const WORDING: Record<
-  ProjectedRelationKind,
-  {
-    readonly id: string;
-    readonly lead: string;
-    readonly singular: string;
-    readonly plural: string;
-  }
-> = {
-  'needed-for-quest': {
-    id: 'quests',
-    lead: 'Required by',
-    singular: 'quest',
-    plural: 'quests',
-  },
-  'used-in-recipe': {
-    id: 'recipes',
-    lead: 'Used in',
-    singular: 'recipe',
-    plural: 'recipes',
-  },
-  'monster-drop': {
-    id: 'monsters',
-    lead: 'Dropped by',
-    singular: 'monster',
-    plural: 'monsters',
-  },
+import type { ProjectedRelations } from '../browse/relation-projection';
+
+export const questUseLabel: RecordCardInlineLabel = {
+  id: 'quests',
+  icon: createElement(BookBookmark, { size: 16 }),
+  label: 'Required by quests',
+  tone: 'brand',
+};
+export const recipeUseLabel: RecordCardInlineLabel = {
+  id: 'recipes',
+  icon: createElement(Hammer, { size: 16 }),
+  label: 'Used in recipes',
+  tone: 'muted',
+};
+export const notRequiredLabel: RecordCardInlineLabel = {
+  id: 'not-required',
+  icon: createElement(Check, { size: 16 }),
+  label: 'Not required',
+  tone: 'success',
 };
 
-export function relationFact({
-  row,
-  relations,
-  kind,
+export function hasQuestUse({
+  sourceId,
   count,
+  relations,
 }: {
-  readonly row: { readonly sourceId: string };
-  readonly relations: ProjectedRelations;
-  readonly kind: ProjectedRelationKind;
+  readonly sourceId: string;
   readonly count: number | undefined;
-}): RecordFact | undefined {
-  if (count === undefined || count === 0) return undefined;
-  const relation = relations[kind];
-  if (
-    kind === 'needed-for-quest' &&
-    relation?.unestablished?.includes(row.sourceId)
-  )
-    return undefined;
-  const indices = relation?.byItem[row.sourceId] ?? [];
-  const name =
-    indices.length === 1
-      ? relation?.targets[indices[0] ?? -1]?.name
-      : undefined;
-  const { id, lead, singular, plural } = WORDING[kind];
-  return {
-    id,
-    label: `${lead} ${count === 1 && name ? name : `${count} ${count === 1 ? singular : plural}`}`,
-  };
+  readonly relations: ProjectedRelations;
+}): boolean {
+  return (
+    (count ?? 0) > 0 &&
+    relations['needed-for-quest']?.unestablished?.includes(sourceId) !== true
+  );
+}
+
+export function dropSourceLine({
+  sourceId,
+  relations,
+}: {
+  readonly sourceId: string;
+  readonly relations: ProjectedRelations;
+}): ReactNode {
+  const relation = relations['monster-drop'];
+  const monsters = (relation?.byItem[sourceId] ?? []).flatMap((index) => {
+    const target = relation?.targets[index];
+    return target === undefined ? [] : [target];
+  });
+  if (monsters.length === 0) return undefined;
+  if (monsters.length > 1) return 'Drops from ' + monsters.length + ' monsters';
+  const monster = monsters[0];
+  if (monster === undefined) return undefined;
+  const spriteUrl = resolveMonsterSpriteUrl(monster.spriteContentId);
+  return createElement(
+    Fragment,
+    null,
+    'Drops from',
+    spriteUrl === undefined
+      ? null
+      : createElement(Thumbnail, { src: spriteUrl, size: 24 }),
+    monster.name +
+      (monster.level === undefined ? '' : ', level ' + monster.level),
+  );
 }

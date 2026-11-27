@@ -1,11 +1,17 @@
-import type { RecordFact } from '@mapletip/component-library';
+import type { RecordCardInlineLabel } from '@mapletip/component-library';
 import type { ItemBrowseCoverage } from '@mapletip/data/items';
 
 import type { CategorizedItemRow } from '../browse/project';
 import type { ProjectedRelations } from '../browse/relation-projection';
 import { formatSellPrice } from '../browse/sell-price';
 
-import { relationFact } from './relation-facts';
+import {
+  dropSourceLine,
+  hasQuestUse,
+  notRequiredLabel,
+  questUseLabel,
+  recipeUseLabel,
+} from './relation-facts';
 import { relationFilter, relationQueryField } from './relation-filter';
 import type { ItemKind } from './types';
 
@@ -59,37 +65,26 @@ export const monsterDrops = {
     row.itemClass === 'etc' && row.types?.includes('monster-material') === true,
   relations: ['needed-for-quest', 'used-in-recipe', 'monster-drop'],
   card: {
-    layout: 'identity',
+    layout: 'quietIdentity',
     lead: (row) => formatSellPrice({ sellPrice: row.sellPrice }),
-    facts: (row, { coverage, relations }) => {
-      const facts: RecordFact[] = [
-        relationFact({
-          row,
-          relations,
-          kind: 'needed-for-quest',
+    inlineLabels: (
+      row,
+      { coverage, relations },
+    ): readonly RecordCardInlineLabel[] => {
+      if (hasNoUses({ row, coverage, relations })) return [notRequiredLabel];
+      return [
+        ...(hasQuestUse({
+          sourceId: row.sourceId,
           count: row.neededForQuestCount,
-        }),
-        relationFact({
-          row,
           relations,
-          kind: 'used-in-recipe',
-          count: row.usedInRecipeCount,
-        }),
-        relationFact({
-          row,
-          relations,
-          kind: 'monster-drop',
-          count: row.monsterDropCount,
-        }),
-      ].filter((fact) => fact !== undefined);
-      if (hasNoUses({ row, coverage, relations }))
-        facts.push({
-          id: 'not-required',
-          label: 'Not required',
-          detail: 'No quest or recipe uses it',
-        });
-      return facts;
+        })
+          ? [questUseLabel]
+          : []),
+        ...((row.usedInRecipeCount ?? 0) > 0 ? [recipeUseLabel] : []),
+      ];
     },
+    detailLine: (row, { relations }) =>
+      dropSourceLine({ sourceId: row.sourceId, relations }),
     facets: ({ coverage, relations, rows }) => [
       {
         id: 'drop-use',
@@ -160,10 +155,6 @@ export const monsterDrops = {
       },
       { label: 'Highest sell price', field: 'sellPrice', direction: 'desc' },
     ],
-    defaultSort: {
-      label: 'Most requiring quests',
-      field: 'neededForQuestCount',
-      direction: 'desc',
-    },
+    defaultSort: { label: 'Name', field: 'name', direction: 'asc' },
   },
 } satisfies ItemKind;
