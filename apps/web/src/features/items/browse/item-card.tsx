@@ -76,6 +76,19 @@ export function renderItemCard({
     ) : (
       <GameText segments={fact} />
     );
+  let versionLine = renderedFact;
+  if (record.versions) {
+    const note = `${record.versions.length} versions`;
+    if (renderedFact === undefined) versionLine = note;
+    else if (typeof renderedFact === 'string')
+      versionLine = `${renderedFact} · ${note}`;
+    else
+      versionLine = (
+        <>
+          {renderedFact} · {note}
+        </>
+      );
+  }
   const footer = card?.footer?.(record, context);
   const media = card?.media?.(record, context) ?? (
     <Thumbnail
@@ -101,7 +114,7 @@ export function renderItemCard({
     return (
       <RecordCard
         layout="quietIdentity"
-        {...(renderedFact === undefined ? {} : { leadLine: renderedFact })}
+        {...(versionLine === undefined ? {} : { leadLine: versionLine })}
         {...(card?.inlineLabels === undefined
           ? {}
           : { inlineLabels: card.inlineLabels(record, context) })}
@@ -123,7 +136,7 @@ export function renderItemCard({
     return (
       <RecordCard
         layout="identity"
-        {...(renderedFact === undefined ? {} : { leadLine: renderedFact })}
+        {...(versionLine === undefined ? {} : { leadLine: versionLine })}
         {...(facts === undefined ? {} : { facts })}
         {...shared}
       />
@@ -133,7 +146,7 @@ export function renderItemCard({
     <RecordCard
       layout="compactMediaAside"
       {...(value === undefined ? {} : { value })}
-      {...(renderedFact === undefined ? {} : { secondaryLine: renderedFact })}
+      {...(versionLine === undefined ? {} : { secondaryLine: versionLine })}
       {...(card?.secondaryLineClamp === undefined
         ? {}
         : { secondaryLineClamp: card.secondaryLineClamp })}

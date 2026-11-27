@@ -6,6 +6,30 @@ import { ItemsPage } from './page/items-page';
 const SCROLLS = '/maplestory/items/use/scrolls';
 const OTHER_USE = '/maplestory/items/use/other-use';
 
+test('identical items share a card and switch versions in the drawer', async ({
+  page,
+}) => {
+  const items = new ItemsPage(page);
+  await items.goto(
+    '/maplestory/items/use/potions-and-food?q=Silverleaf%20Draught',
+  );
+  await expect(page.getByText('1 Item', { exact: true }).first()).toBeVisible();
+  const card = page
+    .locator('[data-record-card]')
+    .filter({ has: items.item('Silverleaf Draught') });
+  await expect(card).toContainText('2 versions');
+  await items.itemAction('Silverleaf Draught').click();
+  const drawer = page.getByRole('dialog', { name: 'Silverleaf Draught' });
+  const versions = drawer.getByRole('region', { name: 'Versions' });
+  await expect(versions).toContainText('Quest reward');
+  const second = versions.getByRole('button', {
+    name: /Version 2.*No known quest reward/u,
+  });
+  await second.click();
+  // The open version is the highlighted one.
+  await expect(second).toHaveAttribute('data-variant', 'light');
+});
+
 test('a scroll tier opens that scroll in the existing drawer', async ({
   page,
 }) => {

@@ -825,6 +825,42 @@ function item(
 
 const cwItems: readonly FixtureItem[] = [
   ...cwBaseItems,
+  item({
+    id: 'silverleaf-draught-first',
+    name: 'Silverleaf Draught',
+    itemClass: 'consume',
+    types: ['potion'],
+    recovery: { hp: 120 },
+    sprite: 'exact',
+    maxStack: 100,
+    // Same as the second version except that a quest gives this one.
+    questRewards: [lanternAssembly],
+  }),
+  item({
+    id: 'silverleaf-draught-second',
+    name: 'Silverleaf Draught',
+    itemClass: 'consume',
+    types: ['potion'],
+    recovery: { hp: 120 },
+    sprite: 'exact',
+    maxStack: 100,
+  }),
+  item({
+    id: 'copperleaf-draught-first',
+    name: 'Copperleaf Draught',
+    itemClass: 'consume',
+    types: ['potion'],
+    recovery: { hp: 100 },
+    sprite: 'exact',
+  }),
+  item({
+    id: 'copperleaf-draught-second',
+    name: 'Copperleaf Draught',
+    itemClass: 'consume',
+    types: ['potion'],
+    recovery: { hp: 150 },
+    sprite: 'exact',
+  }),
   // Not in cwBaseItems: those are also the Warden's drops in Monster fixtures.
   {
     id: 'zesty-tonic',
