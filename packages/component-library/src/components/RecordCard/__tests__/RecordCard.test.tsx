@@ -9,13 +9,78 @@ function mount(card: React.ReactNode) {
 }
 
 describe('RecordCard', () => {
+  it('places picture media above the title without empty text lines', () => {
+    const { container } = mount(
+      <RecordCard
+        layout="picture"
+        title="Copper Compass"
+        media={<img src="/compass.svg" alt="" />}
+      />,
+    );
+    const card = container.querySelector('[data-record-card-layout="picture"]');
+    expect(card?.firstElementChild?.querySelector('img')).toHaveAttribute(
+      'src',
+      '/compass.svg',
+    );
+    expect(card?.lastElementChild).toContainElement(
+      screen.getByRole('heading', { name: 'Copper Compass' }),
+    );
+    expect(card?.lastElementChild?.children).toHaveLength(1);
+  });
+
+  it('keeps the picture section when media is missing', () => {
+    const { container } = mount(
+      <RecordCard layout="picture" title="Still Stone" />,
+    );
+    const card = container.querySelector('[data-record-card-layout="picture"]');
+    expect(card?.firstElementChild?.className).toContain('pictureMedia');
+    expect(card?.firstElementChild).toBeEmptyDOMElement();
+  });
+
+  it('shows a lead and one secondary line below a long picture title', () => {
+    const title =
+      'A remarkably long name for an amber lantern carried through the valley';
+    const { container } = mount(
+      <RecordCard
+        layout="picture"
+        title={title}
+        leadLine="A bright keepsake"
+        secondaryLine="Found beyond the western road"
+      />,
+    );
+    const text = container.querySelector('[class*="pictureText"]');
+    expect(
+      Array.from(text?.children ?? []).map((child) => child.textContent),
+    ).toEqual([title, 'A bright keepsake', 'Found beyond the western road']);
+  });
+
+  it('opens picture details through the title action', () => {
+    const open = vi.fn();
+    const { container } = mount(
+      <RecordCard
+        layout="picture"
+        title="Amber Lantern"
+        action={open}
+        isDetailsOpen
+      />,
+    );
+    const button = screen.getByRole('button', { name: 'Amber Lantern' });
+    expect(button).toHaveAttribute('aria-haspopup', 'dialog');
+    expect(button).toHaveAttribute('aria-expanded', 'true');
+    expect(
+      container.querySelector('[data-details-open="true"]'),
+    ).not.toBeNull();
+    fireEvent.click(button);
+    expect(open).toHaveBeenCalledOnce();
+  });
+
   it('renders identity facts as a list with full detail and aligned values', () => {
     const detail = 'A long description of the northern practice orchard';
     const { container } = mount(
       <RecordCard
         layout="identity"
         title="Copper Compass"
-        secondaryLine="A keepsake for travelers"
+        leadLine="A keepsake for travelers"
         media={<img src="/compass.svg" alt="" />}
         facts={[
           { id: 'place', label: 'Found in', detail, values: ['3 regions'] },

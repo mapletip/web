@@ -8,6 +8,41 @@ import '@/styles.css';
 import { RecordCard } from '@/components/RecordCard';
 
 describe('RecordCard stretched link in the browser', () => {
+  it('keeps picture media height and long titles within a narrow card', async () => {
+    const open = vi.fn();
+    await render(
+      <MantineProvider
+        theme={theme}
+        cssVariablesResolver={cssVariablesResolver}
+        forceColorScheme="dark"
+      >
+        <div style={{ width: 320, padding: 8, boxSizing: 'border-box' }}>
+          <RecordCard
+            layout="picture"
+            title="A remarkably long name for an amber lantern carried through the valley"
+            leadLine="A bright keepsake"
+            secondaryLine="Found beyond the western road"
+            action={open}
+          />
+        </div>
+      </MantineProvider>,
+    );
+    await page.viewport(320, 500);
+    const card = document.querySelector('[data-record-card-layout="picture"]');
+    const media = card?.firstElementChild;
+    const title = page.getByRole('button', {
+      name: 'A remarkably long name for an amber lantern carried through the valley',
+    });
+    expect(media?.getBoundingClientRect().height).toBe(160);
+    expect(media?.getBoundingClientRect().width).toBe(
+      (card?.getBoundingClientRect().width ?? 0) - 2,
+    );
+    expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(320);
+    expect(getComputedStyle(title.element()).overflowWrap).toBe('anywhere');
+    await title.click();
+    expect(open).toHaveBeenCalledOnce();
+  });
+
   it('fits long identity text at 320px and clips its detail to one line', async () => {
     const detail =
       'The northern orchard beyond the quiet meadow and western road';

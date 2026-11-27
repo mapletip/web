@@ -11,6 +11,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, fn, userEvent, within } from 'storybook/test';
 
 import { RecordCard } from '@/components/RecordCard';
+import { Thumbnail } from '@/components/Thumbnail';
 import smallImage from '@/fixtures/thumbnail-small.svg?url';
 
 const meta = {
@@ -194,7 +195,7 @@ export const IdentityGallery: Story = {
         <RecordCard
           layout="identity"
           title="Copper Compass"
-          secondaryLine="A keepsake for travelers"
+          leadLine="A keepsake for travelers"
           media={<Box w={48} h={48} bg="var(--mapletip-color-border-strong)" />}
           destination={{ href: '#compass' }}
           facts={[
@@ -205,7 +206,7 @@ export const IdentityGallery: Story = {
         <RecordCard
           layout="identity"
           title="Still Stone"
-          secondaryLine="A quiet keepsake"
+          leadLine="A quiet keepsake"
         />
         <RecordCard
           layout="identity"
@@ -231,7 +232,7 @@ export const IdentityActionFacts: Story = {
       <RecordCard
         layout="identity"
         title="Copper Compass"
-        secondaryLine="A keepsake for travelers"
+        leadLine="A keepsake for travelers"
         action={openDetails}
         facts={[
           {
@@ -280,7 +281,7 @@ export const IdentityLongText: Story = {
       <RecordCard
         layout="identity"
         title="A remarkably long name for a copper navigation compass"
-        secondaryLine="A keepsake for travelers throughout the valley"
+        leadLine="A keepsake for travelers throughout the valley"
         facts={[
           {
             id: 'place',
@@ -293,4 +294,45 @@ export const IdentityLongText: Story = {
       />
     </Box>
   ),
+};
+
+export const PictureGallery: Story = {
+  args: { title: 'Copper Compass', layout: 'picture' },
+  render: () => (
+    <Box w={960} maw="100%" p="md" bg="var(--mapletip-color-canvas)">
+      <SimpleGrid cols={{ base: 1, sm: 3 }} spacing="sm">
+        <RecordCard
+          layout="picture"
+          title="Copper Compass"
+          media={<Thumbnail src={smallImage} size={96} alt="" />}
+          destination={{ href: '#picture-compass' }}
+        />
+        <RecordCard
+          layout="picture"
+          title="Still Stone"
+          media={<Thumbnail src="/missing-stone.png" size={96} alt="" />}
+          leadLine="A quiet keepsake"
+          secondaryLine="Found in the northern orchard"
+        />
+        <RecordCard
+          layout="picture"
+          title="A remarkably long name for an amber lantern carried through the valley"
+          media={<Thumbnail src={smallImage} size={96} alt="" />}
+          leadLine="A bright keepsake"
+          secondaryLine="Found beyond the western road"
+          action={openDetails}
+        />
+      </SimpleGrid>
+    </Box>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const openButton = canvas.getByRole('button', {
+      name: 'A remarkably long name for an amber lantern carried through the valley',
+    });
+    await expect(openButton).toHaveAttribute('aria-haspopup', 'dialog');
+    await userEvent.click(openButton);
+    await expect(openDetails).toHaveBeenCalled();
+    await expect(canvas.getAllByRole('heading')).toHaveLength(3);
+  },
 };

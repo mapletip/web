@@ -112,6 +112,22 @@ const cases: readonly VisualCase[] = [
     height: 280,
     visible: [page.getByRole('button', { name: 'Copper Compass' })],
   },
+  {
+    name: 'record-card-picture-gallery-desktop-dark',
+    story: dark.PictureGallery,
+    storyId: 'components-recordcard--picture-gallery',
+    width: 1440,
+    height: 400,
+    visible: [page.getByRole('link', { name: 'Copper Compass' })],
+  },
+  {
+    name: 'record-card-picture-gallery-mobile-dark',
+    story: dark.PictureGallery,
+    storyId: 'components-recordcard--picture-gallery',
+    width: 390,
+    height: 1000,
+    visible: [page.getByRole('link', { name: 'Copper Compass' })],
+  },
 ];
 
 describe('RecordCard visual states', () => {

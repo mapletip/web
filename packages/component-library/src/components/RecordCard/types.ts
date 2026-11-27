@@ -31,7 +31,8 @@ interface RecordCardBaseProps {
   /** Main record label shown as the card heading. */
   readonly title: ReactNode;
   /** Place media beside the text with the footer aligned below the text. */
-  readonly layout?: 'default' | 'mediaAside' | 'compactMediaAside' | 'identity';
+  readonly layout?:
+    'default' | 'mediaAside' | 'compactMediaAside' | 'identity' | 'picture';
   /**
    * Scope the destination link to the identity header, leaving footer controls
    * and footer space outside the click box and link feedback. Defaults to the
@@ -67,9 +68,22 @@ type RecordCardNavigation =
 export type RecordCardProps = RecordCardBaseProps &
   RecordCardNavigation &
   (
-    | { readonly layout: 'identity'; readonly facts?: readonly RecordFact[] }
+    | {
+        readonly layout: 'identity';
+        readonly facts?: readonly RecordFact[];
+        /** Short line under the title. */
+        readonly leadLine?: ReactNode;
+        readonly secondaryLine?: never;
+      }
+    | {
+        readonly layout: 'picture';
+        /** Short line under the title. */
+        readonly leadLine?: ReactNode;
+        readonly facts?: never;
+      }
     | {
         readonly layout?: 'default' | 'mediaAside' | 'compactMediaAside';
+        readonly leadLine?: never;
         readonly facts?: never;
       }
   );
