@@ -19,7 +19,7 @@ function makeBaseRow(
 }
 
 describe('projectItemBrowseRows', () => {
-  it('omits absent or unknown name and icon while keeping known values', () => {
+  it('drops unknown and unsupported names while keeping known icons', () => {
     const rows = projectItemBrowseRows([
       makeBaseRow({
         key: 'item:1',
@@ -30,18 +30,19 @@ describe('projectItemBrowseRows', () => {
       makeBaseRow({
         key: 'item:2',
         sourceId: '02000002',
-        name: { state: 'absent', coverageKey: 'test' },
+        name: { state: 'unsupported' },
         icon: { state: 'absent', coverageKey: 'test' },
+      }),
+      makeBaseRow({
+        key: 'item:3',
+        sourceId: '02000003',
+        icon: { state: 'unsupported' },
       }),
     ]);
 
-    expect(rows[0]?.name).toBeUndefined();
-    expect(rows[0]?.icon).toBe('b'.repeat(64));
-    expect(rows[0]?.sourceId).toBe('02000001');
-    expect('key' in (rows[0] ?? {})).toBe(false);
-
-    expect(rows[1]?.name).toBeUndefined();
-    expect(rows[1]?.icon).toBeUndefined();
+    expect(rows).toHaveLength(1);
+    expect(rows[0]?.sourceId).toBe('02000003');
+    expect(rows[0]?.icon).toBeUndefined();
 
     // Verify dropped payload fields are not present on rows
     expect('nameState' in (rows[0] ?? {})).toBe(false);
@@ -143,6 +144,7 @@ describe('projectItemBrowseRows', () => {
 
     const food = rows.find((r) => r.sourceId === '05240020');
     expect(food).toBeDefined();
+    expect(rows).toHaveLength(3);
 
     // Two distinct pets sharing the same name stay separate; unnamed pets keep no invented name
     expect(food?.petTargets).toEqual([
@@ -196,5 +198,66 @@ describe('projectItemBrowseRows', () => {
     expect(row?.mpPercent).toBe(50);
     expect(row?.hp).toBeUndefined();
     expect(row?.mp).toBeUndefined();
+  });
+
+  it('projects published player facts without stand-in values or extra serialized keys', () => {
+    const [known, unknown, unsupported] = projectItemBrowseRows([
+      makeBaseRow({
+        types: ['potion'],
+        sellPrice: 0,
+        maxStack: 1,
+        requirement: { level: 12 },
+        buff: {
+          durationSeconds: 600,
+          effects: [{ stat: 'speed', unit: 'flat', value: 5 }],
+        },
+      }),
+      makeBaseRow({
+        sourceId: '02000001',
+        maxStack: null,
+        requirement: { level: null },
+        buff: null,
+      }),
+      makeBaseRow({
+        sourceId: '02000002',
+      }),
+    ]);
+
+    expect(known).toMatchObject({
+      sellPrice: 0,
+      maxStack: 1,
+      level: 12,
+      buff: {
+        durationSeconds: 600,
+        effects: [{ stat: 'speed', unit: 'flat', value: 5 }],
+      },
+      kind: 'potions-and-food',
+      kindPath: ['all', 'use', 'potions-and-food'],
+    });
+    for (const row of [unknown, unsupported]) {
+      expect(row?.sellPrice).toBeUndefined();
+      expect(row?.maxStack).toBeUndefined();
+      expect(row?.level).toBeUndefined();
+      expect(row?.buff).toBeUndefined();
+    }
+    const serialized = JSON.parse(JSON.stringify(known)) as Record<
+      string,
+      unknown
+    >;
+    expect(Object.keys(serialized).sort()).toEqual(
+      [
+        'buff',
+        'icon',
+        'itemClass',
+        'kind',
+        'kindPath',
+        'level',
+        'maxStack',
+        'name',
+        'sellPrice',
+        'sourceId',
+        'types',
+      ].sort(),
+    );
   });
 });
