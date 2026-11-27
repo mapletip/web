@@ -1,6 +1,6 @@
 export interface GameTextSegment {
   readonly text: string;
-  readonly emphasis: boolean;
+  readonly emphasis: boolean | 'primary';
 }
 
 /** Interpret the text markers published in item descriptions. */

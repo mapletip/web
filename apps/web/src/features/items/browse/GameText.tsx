@@ -10,7 +10,16 @@ export function GameText({
 }): ReactNode {
   return segments.map(({ text, emphasis }, index) =>
     emphasis ? (
-      <Text key={index} span fw={600} c="var(--mapletip-color-brand-text)">
+      <Text
+        key={index}
+        span
+        fw={600}
+        c={
+          emphasis === 'primary'
+            ? 'var(--mapletip-color-ink)'
+            : 'var(--mapletip-color-brand-text)'
+        }
+      >
         {text}
       </Text>
     ) : (

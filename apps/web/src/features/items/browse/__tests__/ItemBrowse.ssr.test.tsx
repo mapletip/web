@@ -21,7 +21,7 @@ import { fixtureRelease } from '@/mocks/release';
 import { routeTree } from '@/routeTree.gen';
 
 import { ITEM_KINDS } from '../../kinds';
-import { itemCardColumns } from '../item-card';
+import { itemCardColumns, renderItemCard } from '../item-card';
 import { buildGroupShelves } from '../ItemsGroupPage';
 import {
   ITEM_BROWSE_UNAVAILABLE_MESSAGE,
@@ -200,7 +200,10 @@ describe('Items Browse server rendering', () => {
 
   it('renders Quest Items with a named quest in the first response', async () => {
     const { html } = await renderPath('/maplestory/items/etc/quest-items');
-    expect(mainHtml(html)).toContain('Required by Thread Trial');
+    expect(mainHtml(html).replaceAll('<!-- -->', '')).toContain(
+      'For the quest ',
+    );
+    expect(mainHtml(html)).toContain('Thread Trial');
     expect(mainHtml(html)).toContain('Search quests');
   });
 
@@ -313,7 +316,7 @@ describe('Items Browse server rendering', () => {
   it('keeps Quest Items counts when the roster fails and removes the Quest picker', async () => {
     mockedRelations.mockRejectedValue(new Error('Fixture roster unavailable'));
     const { html } = await renderPath('/maplestory/items/etc/quest-items');
-    expect(mainHtml(html)).toContain('Required by 2 quests');
+    expect(mainHtml(html)).toContain('For 2 quests');
     expect(mainHtml(html)).not.toContain('Search quests');
   });
 
@@ -321,6 +324,7 @@ describe('Items Browse server rendering', () => {
     const { router, html } = await renderPath('/maplestory/items/use/scrolls');
     const rail = railHtml(html);
 
+    expect(mainHtml(html)).toContain('data-record-card-layout="identity"');
     expect(html).toMatch(/<h1[^>]*>MapleStory Classic World Scrolls<\/h1>/u);
     expect(html).toContain('Unsorted Practice Scroll');
     expect(mainHtml(html)).toContain('One Handed Sword');
@@ -377,6 +381,9 @@ describe('Items Browse server rendering', () => {
 
   it('renders chair recovery in the first response', async () => {
     const { html } = await renderPath('/maplestory/items/setup/chairs');
+    expect(mainHtml(html)).toContain(
+      'data-record-card-layout="compactMediaAside"',
+    );
     expect(mainHtml(html)).toContain('Amber Seat');
     expect(mainHtml(html)).toContain('+50 HP');
     expect(mainHtml(html)).toContain('Recovers HP');
@@ -606,11 +613,12 @@ describe('Items Browse server rendering', () => {
     expect(text).toContain('Quest reward');
     expect(text).toContain('Scrolls (');
     expect(text).toContain('Monster Drops (');
-    // Cross-category results use one plain picture card, never a category's own card.
-    expect(html).toContain('data-record-card-layout="picture"');
+    // Cross-category results use a short card with category and fact in one line.
+    expect(html).toContain('data-record-card-layout="compactMediaAside"');
     expect(html).not.toMatch(
-      /data-record-card-layout="(identity|compactMediaAside)"/u,
+      /data-record-card-layout="(identity|quietIdentity|picture)"/u,
     );
+    expect(text).toMatch(/Quest Items · For \d+ quests/u);
     expect(headMeta(router)).toContainEqual({
       name: 'robots',
       content: 'noindex,follow',
@@ -619,6 +627,21 @@ describe('Items Browse server rendering', () => {
       rel: 'canonical',
       href: 'https://mapletip.com/maplestory/items/all',
     });
+  });
+
+  it('shows only the category in the cross-category quiet line when no fact is published', () => {
+    const chair = fixtureBrowse('cw-launch').rows.find(
+      (row) => row.kind === 'chairs',
+    );
+    if (chair === undefined) throw new Error('Missing chair fixture');
+    const html = renderToString(
+      <MantineProvider theme={theme} forceColorScheme="dark">
+        {renderItemCard({ record: chair, crossCategory: true })}
+      </MantineProvider>,
+    );
+    expect(html).toContain('data-record-card-layout="compactMediaAside"');
+    expect(html).toMatch(/>Chairs<\/p>/u);
+    expect(html).not.toContain(' · ');
   });
 
   it('matches exact source id on /items/all without showing it on the card and updates rail counts', async () => {

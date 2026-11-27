@@ -142,10 +142,10 @@ test('Quest Items shows named requirements and filters by quest, then removes it
   const items = new ItemsPage(page);
   await items.goto(QUEST_ITEMS);
   await expect(
-    page.getByText('Required by Thread Trial', { exact: true }).first(),
+    page.getByText('For the quest Thread Trial', { exact: true }).first(),
   ).toBeVisible();
   await expect(
-    page.getByText('Required by 2 quests', { exact: true }).first(),
+    page.getByText('For 2 quests', { exact: true }).first(),
   ).toBeVisible();
   if (isMobile) await page.getByRole('button', { name: /Filters/u }).click();
   const quest = page.getByRole('combobox', { name: 'Quest' });
@@ -251,7 +251,7 @@ test('Chairs and Cash Shop show published facts and coverage-based pills', async
     await page.getByRole('combobox', { name: 'Sort' }).click();
     await page.getByRole('option', { name: 'Recovery' }).click();
     await expect(
-      page.locator('[data-record-card-layout="picture"] h3'),
+      page.locator('[data-record-card-layout="compactMediaAside"] h3'),
     ).toContainText([
       'Green Seat',
       'Amber Seat',
@@ -799,6 +799,6 @@ test('Items landing quest and monster lookups filter cross-category results', as
     page.getByRole('button', { name: 'Remove Monster: Crowned Warden' }),
   ).toBeVisible();
   await expect(
-    page.locator('[data-record-card-layout="picture"]').first(),
+    page.locator('[data-record-card-layout="compactMediaAside"]').first(),
   ).toBeVisible();
 });

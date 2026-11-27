@@ -9,7 +9,7 @@ import { ITEM_KINDS } from '../kinds';
 import { kindSortValue } from '../kinds/sort-value';
 import type { ItemKind, ItemCardContext } from '../kinds/types';
 
-import { isPictureLayout, itemCardColumns, renderItemCard } from './item-card';
+import { itemCardColumns, renderItemCard } from './item-card';
 import classes from './ItemsGroupPage.module.css';
 import { numberFormat } from './number-format';
 import { ITEM_GROUP_ROUTES, type ItemGroup } from './page';
@@ -148,9 +148,6 @@ export function ItemsGroupShelves({
               cols={itemCardColumns({ kind: shelf.kind })}
               spacing="sm"
               className={classes['shelfGrid']}
-              data-card-columns={
-                isPictureLayout(shelf.kind) ? 'picture' : 'aside'
-              }
             >
               {shelf.previewRows.map((row) => (
                 <Fragment key={row.sourceId}>

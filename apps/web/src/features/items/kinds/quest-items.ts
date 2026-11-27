@@ -17,11 +17,14 @@ export const questItems = {
       const firstIndex = indices[0];
       if (indices.length === 1 && firstIndex !== undefined) {
         const name = relation?.targets[firstIndex]?.name;
-        if (name !== undefined) return `Required by ${name}`;
+        if (name !== undefined)
+          return [
+            { text: 'For the quest ', emphasis: false },
+            { text: name, emphasis: 'primary' },
+          ];
       }
       const count = row.neededForQuestCount ?? 0;
-      if (count > 0)
-        return `Required by ${count} ${count === 1 ? 'quest' : 'quests'}`;
+      if (count > 0) return `For ${count} ${count === 1 ? 'quest' : 'quests'}`;
       return coverage?.relationships['needed-for-quest'] === 'complete'
         ? 'No known quest'
         : undefined;
