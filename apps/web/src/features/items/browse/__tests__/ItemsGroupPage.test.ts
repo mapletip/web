@@ -8,11 +8,13 @@ function makeRow({
   name,
   group = 'etc',
   kind,
+  types,
 }: {
   readonly sourceId: string;
   readonly name: string;
   readonly group?: 'use' | 'etc' | 'setup' | 'cash';
   readonly kind: string;
+  readonly types?: CategorizedItemRow['types'];
 }): CategorizedItemRow {
   return {
     key: `item:test:${sourceId}`,
@@ -20,6 +22,7 @@ function makeRow({
     itemClass: 'etc',
     name,
     kind,
+    ...(types === undefined ? {} : { types }),
     kindPath: ['all', group, kind],
   };
 }
@@ -70,11 +73,25 @@ describe('buildGroupShelves', () => {
         sourceId: 'etc-o2',
         name: 'Zinc Ore',
         kind: 'ores-and-gems',
+        types: ['ore'],
       }),
       makeRow({
         sourceId: 'etc-o1',
         name: 'Amber Ore',
         kind: 'ores-and-gems',
+        types: ['ore'],
+      }),
+      makeRow({
+        sourceId: 'etc-g1',
+        name: 'A Gem',
+        kind: 'ores-and-gems',
+        types: ['gem'],
+      }),
+      makeRow({
+        sourceId: 'etc-i1',
+        name: 'A Refined Piece',
+        kind: 'ores-and-gems',
+        types: ['refined-material'],
       }),
     ];
 
@@ -87,10 +104,11 @@ describe('buildGroupShelves', () => {
       'quest-items',
     ]);
 
-    expect(shelves[0]?.totalCount).toBe(2);
+    expect(shelves[0]?.totalCount).toBe(4);
     expect(shelves[0]?.previewRows.map((row) => row.name)).toEqual([
       'Amber Ore',
       'Zinc Ore',
+      'A Refined Piece',
     ]);
 
     expect(shelves[1]?.totalCount).toBe(6);
