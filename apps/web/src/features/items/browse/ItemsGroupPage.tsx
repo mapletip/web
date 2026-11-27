@@ -14,7 +14,7 @@ import { ITEM_GROUP_ROUTES, type ItemGroup } from './page';
 import type { CategorizedItemRow } from './project';
 import { itemBrowseSearch, ITEM_SORT_OPTIONS } from './search-params';
 
-export interface GroupCategoryShelf {
+interface GroupCategoryShelf {
   readonly kind: ItemKind;
   readonly totalCount: number;
   readonly previewRows: readonly CategorizedItemRow[];

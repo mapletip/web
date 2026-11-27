@@ -50,13 +50,13 @@ const FNV1A_64_OFFSET = 14695981039346656037n;
 const FNV1A_64_PRIME = 1099511628211n;
 const BASE36_8_MOD = 36n ** 8n;
 
-export interface FileDescriptor {
+interface FileDescriptor {
   readonly path: string;
   readonly sha256: string;
   readonly byteLength: number;
 }
 
-export interface FixtureBuildArtifacts {
+interface FixtureBuildArtifacts {
   readonly productManifest: FileDescriptor;
   readonly catalog: FileDescriptor;
   readonly dropBrowse: FileDescriptor;
@@ -72,7 +72,7 @@ export interface FixtureBuildArtifacts {
   readonly itemRelatedEntityBrowse: Readonly<Record<string, FileDescriptor>>;
 }
 
-export interface FixtureRelease {
+interface FixtureRelease {
   readonly files: ReadonlyMap<string, Uint8Array>;
   readonly pin: {
     readonly format: 'mapletip.local-release-pin';

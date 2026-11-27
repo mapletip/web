@@ -14,21 +14,16 @@ import { assignItemKind } from '../kinds';
 
 type Fact = ItemBrowseRowV2_2['name'];
 type Scroll = NonNullable<ItemBrowseRecordV2_2['scroll']>;
-export type ItemBrowseClass = ItemBrowseRecordV2_2['itemClass'];
+type ItemBrowseClass = ItemBrowseRecordV2_2['itemClass'];
 export type ItemBrowseType = NonNullable<ItemBrowseRecordV2_2['types']>[number];
-export type ItemBrowseFunction = NonNullable<
+type ItemBrowseFunction = NonNullable<
   ItemBrowseRecordV2_2['functions']
 >[number];
 export type ItemBrowseScrollDeltas = NonNullable<Scroll['deltas']>;
 export type ItemBrowseUpgradeTarget = NonNullable<Scroll['targetLabel']>;
-export type ItemBrowseUpgradeTier = NonNullable<Scroll['tier']>;
-export type ItemBrowseUpgradeSpecial = NonNullable<Scroll['specials']>[number];
-export type ItemRelationshipKind = keyof ItemBrowseCoverage['relationships'];
-
-interface ItemPetTarget {
-  readonly sourceId: string;
-  readonly name?: string;
-}
+type ItemBrowseUpgradeTier = NonNullable<Scroll['tier']>;
+type ItemBrowseUpgradeSpecial = NonNullable<Scroll['specials']>[number];
+type ItemRelationshipKind = keyof ItemBrowseCoverage['relationships'];
 
 export type ItemRow = {
   readonly key: string;
@@ -40,8 +35,6 @@ export type ItemRow = {
   readonly functions?: readonly ItemBrowseFunction[];
   readonly cashShopListingCount?: number;
   readonly nxPrice?: number;
-  readonly foundInContainerCount?: number;
-  readonly madeByRecipeCount?: number;
   readonly monsterDropCount?: number;
   readonly neededForQuestCount?: number;
   readonly questRewardCount?: number;
@@ -53,11 +46,7 @@ export type ItemRow = {
   readonly hpPercent?: number;
   readonly mpPercent?: number;
   readonly attack?: number;
-  readonly closeness?: number;
   readonly fullness?: number;
-  readonly tameness?: number;
-  readonly petTargets?: readonly ItemPetTarget[];
-  readonly unresolvedPetTargets?: readonly string[];
   readonly seatHp?: number;
   readonly seatMp?: number;
   readonly success?: number;
@@ -66,7 +55,6 @@ export type ItemRow = {
   readonly tier?: ItemBrowseUpgradeTier;
   readonly specials?: readonly ItemBrowseUpgradeSpecial[];
   readonly stats?: Readonly<ItemBrowseScrollDeltas>;
-  readonly directTargetCount?: number;
   readonly sellPrice?: number;
   readonly maxStack?: number;
   readonly level?: number;
@@ -112,26 +100,8 @@ function filterNonEmptyArray<T>(
   return undefined;
 }
 
-function resolvePetTargets(
-  targets: readonly string[] | undefined,
-  petByTargetKey: ReadonlyMap<string, ItemPetTarget>,
-): readonly ItemPetTarget[] | undefined {
-  if (!targets || targets.length === 0) {
-    return undefined;
-  }
-
-  const resolved = new Map<string, ItemPetTarget>();
-  for (const targetKey of targets) {
-    const pet = petByTargetKey.get(targetKey) ?? { sourceId: targetKey };
-    resolved.set(pet.sourceId, pet);
-  }
-  return Array.from(resolved.values());
-}
-
-export const RELATIONSHIP_COUNT_FIELDS = [
+const RELATIONSHIP_COUNT_FIELDS = [
   ['cash-shop-listing', 'cashShopListingCount'],
-  ['found-in-container', 'foundInContainerCount'],
-  ['made-by-recipe', 'madeByRecipeCount'],
   ['monster-drop', 'monsterDropCount'],
   ['needed-for-quest', 'neededForQuestCount'],
   ['quest-reward', 'questRewardCount'],
@@ -144,17 +114,6 @@ export const RELATIONSHIP_COUNT_FIELDS = [
 export function projectItemBrowseRows(
   records: readonly ItemBrowseRowV2_2[],
 ): readonly CategorizedItemRow[] {
-  const petByTargetKey = new Map<string, ItemPetTarget>();
-  for (const record of records) {
-    const name = extractKnownFact(record.name);
-    const pet = {
-      sourceId: record.sourceId,
-      ...(name !== undefined ? { name } : {}),
-    };
-    petByTargetKey.set(record.key, pet);
-    petByTargetKey.set(record.sourceId, pet);
-  }
-
   // Name order up front: TanStack breaks sort ties by row order, so any
   // other sort (such as Chairs' Recovery) lists equal values A–Z.
   return records
@@ -187,19 +146,7 @@ export function projectItemBrowseRows(
       setField(row, 'mpPercent', record.recovery?.mpPercent);
 
       const petFood = record.petFood;
-      setField(row, 'closeness', petFood?.closeness);
       setField(row, 'fullness', petFood?.fullness);
-      setField(row, 'tameness', petFood?.tameness);
-      setField(
-        row,
-        'petTargets',
-        resolvePetTargets(petFood?.targets, petByTargetKey),
-      );
-      setField(
-        row,
-        'unresolvedPetTargets',
-        filterNonEmptyArray(petFood?.unresolvedTargets),
-      );
 
       setField(row, 'seatHp', record.seatingRecovery?.hp);
       setField(row, 'seatMp', record.seatingRecovery?.mp);
@@ -217,7 +164,6 @@ export function projectItemBrowseRows(
           ? scroll.deltas
           : undefined,
       );
-      setField(row, 'directTargetCount', scroll?.targets?.length || undefined);
       setField(row, 'sellPrice', record.sellPrice);
       setField(row, 'maxStack', record.maxStack);
       setField(row, 'level', record.requirement?.level);

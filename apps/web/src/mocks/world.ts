@@ -18,8 +18,8 @@ export type FixtureFact<T> =
 
 export type SpriteCase =
   'exact' | 'small' | 'large' | 'wide' | 'tall' | 'missing';
-export type SpriteState = SpriteCase | 'unknown' | 'absent';
-export type ItemClass = 'consume' | 'etc' | 'setup' | 'cash' | 'pet';
+type SpriteState = SpriteCase | 'unknown' | 'absent';
+type ItemClass = 'consume' | 'etc' | 'setup' | 'cash' | 'pet';
 
 export const FIXTURE_EVIDENCE_KINDS = {
   native: { label: "This version's game files" },
@@ -30,7 +30,7 @@ export const FIXTURE_EVIDENCE_KINDS = {
 
 export type FixtureEvidenceKind = keyof typeof FIXTURE_EVIDENCE_KINDS;
 
-export type FixtureCategory =
+type FixtureCategory =
   | { readonly kind: 'equip-slot'; readonly code: string }
   | { readonly kind: 'item-class'; readonly value: ItemClass }
   | { readonly kind: 'unknown' };
@@ -66,7 +66,7 @@ export interface FixtureMonster {
   readonly sprite: SpriteState;
 }
 
-export interface FixtureMonsterElement {
+interface FixtureMonsterElement {
   readonly code: string;
   readonly effect: number;
   readonly meaning: string;
@@ -123,7 +123,7 @@ export interface FixtureItemQuestUse {
   }[];
 }
 
-export interface FixtureRecipe {
+interface FixtureRecipe {
   readonly id: string;
   readonly name: string;
   readonly fee: FixtureFact<number>;
@@ -138,19 +138,19 @@ export interface FixtureRecipe {
   }[];
 }
 
-export interface FixtureContainer {
+interface FixtureContainer {
   readonly id: string;
   readonly name: string;
   readonly itemIds: readonly string[];
 }
 
-export interface FixtureCashShopListing {
+interface FixtureCashShopListing {
   readonly id: string;
   readonly name: string;
   readonly itemIds: readonly string[];
 }
 
-export interface FixtureDropEvidence {
+interface FixtureDropEvidence {
   readonly kind: FixtureEvidenceKind;
   readonly build: string;
   readonly date?: string;
@@ -158,7 +158,7 @@ export interface FixtureDropEvidence {
   readonly startSeconds?: number;
 }
 
-export interface FixtureDrop {
+interface FixtureDrop {
   readonly itemId: string;
   readonly evidence: readonly [FixtureDropEvidence, ...FixtureDropEvidence[]];
 }
@@ -168,13 +168,13 @@ export interface FixtureMapPoint {
   readonly y: number;
 }
 
-export interface FixtureMapMonster {
+interface FixtureMapMonster {
   readonly monsterId: string;
   readonly points: readonly FixtureMapPoint[];
   readonly respawn?: MapPageRecordV1_2['monsters']['items'][number]['respawn'];
 }
 
-export interface FixtureMapNpc {
+interface FixtureMapNpc {
   readonly id: string;
   readonly name: string;
   readonly points: readonly FixtureMapPoint[];
@@ -183,12 +183,12 @@ export interface FixtureMapNpc {
   readonly sprite?: SpriteCase;
 }
 
-export interface FixtureMapConnection {
+interface FixtureMapConnection {
   readonly mapId: string;
   readonly points: readonly FixtureMapPoint[];
 }
 
-export interface FixtureMapWarp {
+interface FixtureMapWarp {
   readonly ends: readonly [FixtureMapPoint, FixtureMapPoint];
 }
 
@@ -228,7 +228,7 @@ export interface FixtureMap {
   readonly player?: FixtureMapPlayerFacts;
 }
 
-export interface FixtureMapPlayerFacts {
+interface FixtureMapPlayerFacts {
   readonly entryLevel?: number;
   readonly levelCap?: number;
   readonly hpDrain?: {

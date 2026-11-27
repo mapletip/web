@@ -3,7 +3,7 @@ import { ITEM_KINDS } from '../features/items/kinds';
 import { fixtureRelease } from './release';
 import { spriteDimensions, type SpriteCase } from './world';
 
-export interface SpriteResponse {
+interface SpriteResponse {
   readonly status: number;
   readonly body: string;
   readonly contentType: string;

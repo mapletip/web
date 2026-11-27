@@ -70,26 +70,20 @@ describe('projectItemBrowseRows', () => {
     expect('statKeys' in (rows[0] ?? {})).toBe(false);
   });
 
-  it('keeps known 0 values for numeric properties and records directTargetCount only when > 0', () => {
-    const [rowWithZero, rowWithTargets] = projectItemBrowseRows([
+  it('keeps known 0 values for numeric properties', () => {
+    const [rowWithZero] = projectItemBrowseRows([
       makeBaseRow({
         projectileAttack: 0,
         recovery: { hp: 0, mp: 0, hpPercent: 0, mpPercent: 0 },
         seatingRecovery: { hp: 0, mp: 0 },
-        petFood: { closeness: 0, fullness: 0, tameness: 0 },
+        petFood: { fullness: 0 },
         scroll: {
           success: 0,
           cursed: 0,
           deltas: { weaponAttack: 0 },
-          targets: [],
         },
         relationships: {
           'cash-shop-listing': 0,
-        },
-      }),
-      makeBaseRow({
-        scroll: {
-          targets: ['equip:1', 'equip:2'],
         },
       }),
     ]);
@@ -101,81 +95,9 @@ describe('projectItemBrowseRows', () => {
     expect(rowWithZero?.mpPercent).toBe(0);
     expect(rowWithZero?.seatHp).toBe(0);
     expect(rowWithZero?.seatMp).toBe(0);
-    expect(rowWithZero?.closeness).toBe(0);
     expect(rowWithZero?.fullness).toBe(0);
-    expect(rowWithZero?.tameness).toBe(0);
     expect(rowWithZero?.success).toBe(0);
     expect(rowWithZero?.cursed).toBe(0);
-    // directTargetCount is only recorded when > 0
-    expect(rowWithZero?.directTargetCount).toBeUndefined();
-
-    expect(rowWithTargets?.directTargetCount).toBe(2);
-  });
-
-  it('resolves pet targets by source ID, preserving distinct same-named pets and unnamed pets', () => {
-    const dragonPetA = 'item:pet:dragon-black';
-    const dragonPetB = 'item:pet:dragon-red';
-    const unnamedPetA = 'item:pet:unnamed-1';
-    const unnamedPetB = 'item:pet:unnamed-2';
-
-    const rows = projectItemBrowseRows([
-      makeBaseRow({
-        key: dragonPetA,
-        sourceId: '5000020',
-        itemClass: 'pet',
-        name: { state: 'known', value: 'Hatchling Wyrm' },
-      }),
-      makeBaseRow({
-        key: dragonPetB,
-        sourceId: '5000021',
-        itemClass: 'pet',
-        name: { state: 'known', value: 'Hatchling Wyrm' },
-      }),
-      makeBaseRow({
-        key: unnamedPetA,
-        sourceId: '5000098',
-        itemClass: 'pet',
-        name: { state: 'unknown' },
-      }),
-      makeBaseRow({
-        key: unnamedPetB,
-        sourceId: '5000099',
-        itemClass: 'pet',
-        name: { state: 'absent', coverageKey: 'test' },
-      }),
-      makeBaseRow({
-        key: 'item:food:dragon-food',
-        sourceId: '05240020',
-        itemClass: 'cash',
-        name: { state: 'known', value: 'Dragon Food' },
-        petFood: {
-          closeness: 100,
-          targets: [
-            dragonPetA,
-            dragonPetB,
-            unnamedPetA,
-            unnamedPetB,
-            dragonPetA, // duplicate key in raw data should be deduped
-          ],
-          unresolvedTargets: ['5000046'],
-        },
-      }),
-    ]);
-
-    const food = rows.find((r) => r.sourceId === '05240020');
-    expect(food).toBeDefined();
-    expect(rows).toHaveLength(3);
-
-    // Two distinct pets sharing the same name stay separate; unnamed pets keep no invented name
-    expect(food?.petTargets).toEqual([
-      { sourceId: '5000020', name: 'Hatchling Wyrm' },
-      { sourceId: '5000021', name: 'Hatchling Wyrm' },
-      { sourceId: '5000098' },
-      { sourceId: '5000099' },
-    ]);
-
-    // Unresolved targets stay separate
-    expect(food?.unresolvedPetTargets).toEqual(['5000046']);
   });
 
   it('preserves questFlag as true, false, and undefined distinctly', () => {

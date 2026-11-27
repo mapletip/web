@@ -204,7 +204,7 @@ export function itemPrimaryFact({
 }
 
 /** Build the DrillDownNav tree for Items pages with non-empty categories in rail order. */
-export function itemNavigationTree({
+function itemNavigationTree({
   buildId,
   nonEmptyKinds,
   currentId,
