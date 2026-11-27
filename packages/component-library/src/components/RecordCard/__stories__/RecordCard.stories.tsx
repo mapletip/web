@@ -1,5 +1,14 @@
-import { Badge, Box, Button, Image, Stack, Text } from '@mantine/core';
+import {
+  Badge,
+  Box,
+  Button,
+  Image,
+  SimpleGrid,
+  Stack,
+  Text,
+} from '@mantine/core';
 import type { Meta, StoryObj } from '@storybook/react-vite';
+import { expect, fn, userEvent, within } from 'storybook/test';
 
 import { RecordCard } from '@/components/RecordCard';
 import smallImage from '@/fixtures/thumbnail-small.svg?url';
@@ -171,5 +180,117 @@ export const UnlinkedCard: Story = {
         />
       </Stack>
     </Stage>
+  ),
+};
+
+const openDetails = fn();
+const inspectSource = fn();
+
+export const IdentityGallery: Story = {
+  args: { title: 'Copper Compass', layout: 'identity' },
+  render: () => (
+    <Box w={960} maw="100%" p="md" bg="var(--mapletip-color-canvas)">
+      <SimpleGrid cols={{ base: 1, sm: 3 }} spacing="sm">
+        <RecordCard
+          layout="identity"
+          title="Copper Compass"
+          secondaryLine="A keepsake for travelers"
+          media={<Box w={48} h={48} bg="var(--mapletip-color-border-strong)" />}
+          destination={{ href: '#compass' }}
+          facts={[
+            { id: 'region', label: 'Found in', detail: 'Northern orchard' },
+            { id: 'value', label: 'Value', values: ['250', '100'] },
+          ]}
+        />
+        <RecordCard
+          layout="identity"
+          title="Still Stone"
+          secondaryLine="A quiet keepsake"
+        />
+        <RecordCard
+          layout="identity"
+          title="Amber Lantern"
+          facts={[{ id: 'sources', label: 'Sources', values: ['4'] }]}
+        />
+      </SimpleGrid>
+    </Box>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getAllByRole('listitem')).toHaveLength(3);
+    await expect(
+      canvas.getByRole('link', { name: 'Copper Compass' }),
+    ).toBeVisible();
+  },
+};
+
+export const IdentityActionFacts: Story = {
+  args: { title: 'Copper Compass', layout: 'identity' },
+  render: () => (
+    <Box w={360} maw="100%" p="md" bg="var(--mapletip-color-canvas)">
+      <RecordCard
+        layout="identity"
+        title="Copper Compass"
+        secondaryLine="A keepsake for travelers"
+        action={openDetails}
+        facts={[
+          {
+            id: 'source',
+            label: 'Inspect source',
+            detail: 'Northern orchard',
+            action: inspectSource,
+          },
+          { id: 'value', label: 'Value', values: ['250', '100'] },
+        ]}
+      />
+    </Box>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(
+      canvas.getByRole('button', { name: 'Inspect source Northern orchard' }),
+    );
+    await expect(inspectSource).toHaveBeenCalled();
+    await userEvent.click(
+      canvas.getByRole('button', { name: 'Copper Compass' }),
+    );
+    await expect(openDetails).toHaveBeenCalled();
+  },
+};
+
+export const IdentityOpen: Story = {
+  args: { title: 'Copper Compass', layout: 'identity' },
+  render: () => (
+    <Stage>
+      <RecordCard
+        layout="identity"
+        title="Copper Compass"
+        action={openDetails}
+        isDetailsOpen
+        facts={[{ id: 'source', label: 'Found in', values: ['3 regions'] }]}
+      />
+    </Stage>
+  ),
+};
+
+export const IdentityLongText: Story = {
+  args: { title: 'Copper Compass', layout: 'identity' },
+  render: () => (
+    <Box w={320} maw="100%" p="md" bg="var(--mapletip-color-canvas)">
+      <RecordCard
+        layout="identity"
+        title="A remarkably long name for a copper navigation compass"
+        secondaryLine="A keepsake for travelers throughout the valley"
+        facts={[
+          {
+            id: 'place',
+            label: 'Found in',
+            detail:
+              'The northern orchard beyond the quiet meadow and the long western road',
+            values: ['12'],
+          },
+        ]}
+      />
+    </Box>
   ),
 };

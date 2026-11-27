@@ -80,9 +80,51 @@ const cases: readonly VisualCase[] = [
       page.getByRole('link', { name: 'Red Gloop', exact: true }),
     ],
   },
+  {
+    name: 'record-card-identity-gallery-desktop-dark',
+    story: dark.IdentityGallery,
+    storyId: 'components-recordcard--identity-gallery',
+    width: 1440,
+    height: 360,
+    visible: [page.getByRole('link', { name: 'Copper Compass' })],
+  },
+  {
+    name: 'record-card-identity-gallery-mobile-dark',
+    story: dark.IdentityGallery,
+    storyId: 'components-recordcard--identity-gallery',
+    width: 390,
+    height: 760,
+    visible: [page.getByRole('link', { name: 'Copper Compass' })],
+  },
+  {
+    name: 'record-card-identity-action-facts-dark',
+    story: dark.IdentityActionFacts,
+    storyId: 'components-recordcard--identity-action-facts',
+    width: 420,
+    height: 360,
+    visible: [page.getByRole('button', { name: 'Copper Compass' })],
+  },
+  {
+    name: 'record-card-identity-open-dark',
+    story: dark.IdentityOpen,
+    storyId: 'components-recordcard--identity-open',
+    width: 720,
+    height: 280,
+    visible: [page.getByRole('button', { name: 'Copper Compass' })],
+  },
 ];
 
 describe('RecordCard visual states', () => {
+  test.each(cases.slice(6))('matches $name', async (visualCase) => {
+    await openVisualCase(visualCase);
+    for (const locator of visualCase.visible ?? []) {
+      await expect.element(locator).toBeVisible();
+    }
+    expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(
+      visualCase.width,
+    );
+    await expectApprovedScreenshot(visualCase);
+  });
   test('matches the media card baseline', async () => {
     const visualCase = cases[0]!;
     await openVisualCase(visualCase);

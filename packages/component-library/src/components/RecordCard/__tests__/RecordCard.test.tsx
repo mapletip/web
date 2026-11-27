@@ -9,6 +9,70 @@ function mount(card: React.ReactNode) {
 }
 
 describe('RecordCard', () => {
+  it('renders identity facts as a list with full detail and aligned values', () => {
+    const detail = 'A long description of the northern practice orchard';
+    const { container } = mount(
+      <RecordCard
+        layout="identity"
+        title="Copper Compass"
+        secondaryLine="A keepsake for travelers"
+        media={<img src="/compass.svg" alt="" />}
+        facts={[
+          { id: 'place', label: 'Found in', detail, values: ['3 regions'] },
+          { id: 'price', label: 'Value', values: ['250', '100'] },
+        ]}
+      />,
+    );
+
+    expect(screen.getByRole('list').children).toHaveLength(2);
+    expect(
+      screen.getByRole('heading', { name: 'Copper Compass' }),
+    ).toBeVisible();
+    expect(screen.getByText(detail)).toHaveAttribute('title', detail);
+    expect(screen.getByText('3 regions')).toBeVisible();
+    expect(screen.getByText('250').parentElement?.children).toHaveLength(2);
+    expect(
+      container.querySelector('[data-record-card-layout="identity"]'),
+    ).not.toBeNull();
+    expect(screen.queryByRole('button')).toBeNull();
+  });
+
+  it('fills a factless identity card with its header', () => {
+    const { container } = mount(
+      <RecordCard layout="identity" title="Still Stone" />,
+    );
+    expect(screen.queryByRole('list')).toBeNull();
+    expect(container.querySelector('[class*="identityHeader"]')).toBeVisible();
+  });
+
+  it('activates the card once by pointer and exposes ordered keyboard stops', () => {
+    const open = vi.fn();
+    const inspect = vi.fn();
+    const { container } = mount(
+      <RecordCard
+        layout="identity"
+        title="Copper Compass"
+        action={open}
+        isDetailsOpen
+        facts={[{ id: 'location', label: 'Inspect location', action: inspect }]}
+      />,
+    );
+    const titleButton = screen.getByRole('button', { name: 'Copper Compass' });
+    const factButton = screen.getByRole('button', { name: 'Inspect location' });
+    expect(titleButton).toHaveAttribute('aria-haspopup', 'dialog');
+    expect(titleButton).toHaveAttribute('aria-expanded', 'true');
+    expect(
+      container.querySelector('[data-details-open="true"]'),
+    ).not.toBeNull();
+    expect(screen.getAllByRole('button')).toEqual([titleButton, factButton]);
+    expect(
+      container.querySelector('[data-record-card="true"]'),
+    ).not.toHaveAttribute('tabindex');
+    fireEvent.click(titleButton);
+    fireEvent.click(factButton);
+    expect(open).toHaveBeenCalledOnce();
+    expect(inspect).toHaveBeenCalledOnce();
+  });
   it('links only the title and keeps the other card content outside the link', () => {
     const { container } = mount(
       <RecordCard

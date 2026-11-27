@@ -76,6 +76,18 @@ function surfaceCases(
 const cases: readonly ContrastCase[] = [
   ...surfaceCases(mapleTwilightScheme, 'maple twilight'),
   {
+    name: 'identity title contrast',
+    foreground: mapleTwilightScheme.textPrimary,
+    background: mapleTwilightScheme.identity,
+    minimum: 4.5,
+  },
+  {
+    name: 'identity secondary text contrast',
+    foreground: mapleTwilightScheme.textSecondary,
+    background: mapleTwilightScheme.identity,
+    minimum: 4.5,
+  },
+  {
     name: 'maple twilight filled Walnut CTA label on CTA background',
     foreground: mapleTwilightScheme.cta.foreground,
     background: mapleTwilightScheme.cta.background,
@@ -134,6 +146,7 @@ describe('MapleTip approved theme foundation', () => {
   it('exposes the Maple Twilight tokens', () => {
     expect(mapleTwilightScheme.canvas).toBe('#111417');
     expect(mapleTwilightScheme.panel).toBe('#1A1D20');
+    expect(mapleTwilightScheme.identity).toBe('#2B3037');
     expect(mapleTwilightScheme.raised).toBe('#22262B');
     expect(mapleTwilightScheme.textPrimary).toBe('#F4F1EA');
     expect(mapleTwilightScheme.textSecondary).toBe('#C0C4C8');
@@ -206,6 +219,9 @@ describe('MapleTip approved theme foundation', () => {
     );
     expect(variables.dark?.['--mapletip-color-focus']).toBe(
       mapleTwilightScheme.focus,
+    );
+    expect(variables.dark?.['--mapletip-color-identity']).toBe(
+      mapleTwilightScheme.identity,
     );
     expect(variables.dark?.['--mapletip-color-focus-gap']).toBe(
       mapleTwilightScheme.focusGap,

@@ -8,6 +8,85 @@ import '@/styles.css';
 import { RecordCard } from '@/components/RecordCard';
 
 describe('RecordCard stretched link in the browser', () => {
+  it('fits long identity text at 320px and clips its detail to one line', async () => {
+    const detail =
+      'The northern orchard beyond the quiet meadow and western road';
+    await render(
+      <MantineProvider
+        theme={theme}
+        cssVariablesResolver={cssVariablesResolver}
+        forceColorScheme="dark"
+      >
+        <div style={{ width: 320, padding: 8, boxSizing: 'border-box' }}>
+          <RecordCard
+            layout="identity"
+            title="A remarkably long compass name for travelers"
+            facts={[{ id: 'place', label: 'Found in', detail, values: ['12'] }]}
+          />
+        </div>
+      </MantineProvider>,
+    );
+    await page.viewport(320, 500);
+    const detailElement = page.getByText(detail).element();
+    expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(320);
+    expect(getComputedStyle(detailElement).textOverflow).toBe('ellipsis');
+    expect(getComputedStyle(detailElement).whiteSpace).toBe('nowrap');
+    expect(detailElement.getAttribute('title')).toBe(detail);
+  });
+  it('stretches identity cards equally and activates only the chosen control', async () => {
+    const open = vi.fn();
+    const inspect = vi.fn();
+    await render(
+      <MantineProvider
+        theme={theme}
+        cssVariablesResolver={cssVariablesResolver}
+        forceColorScheme="dark"
+      >
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+            gap: 8,
+            width: 600,
+          }}
+        >
+          <RecordCard
+            layout="identity"
+            title="Copper Compass"
+            media={
+              <div
+                data-testid="identity-media"
+                style={{ width: 40, height: 40 }}
+              />
+            }
+            action={open}
+            facts={[
+              { id: 'source', label: 'Inspect source', action: inspect },
+              { id: 'value', label: 'Value', values: ['250', '100'] },
+            ]}
+          />
+          <RecordCard layout="identity" title="Still Stone" />
+        </div>
+      </MantineProvider>,
+    );
+    const cards = document.querySelectorAll('[data-record-card="true"]');
+    expect(cards).toHaveLength(2);
+    expect(cards[0]!.getBoundingClientRect().height).toBe(
+      cards[1]!.getBoundingClientRect().height,
+    );
+    const title = page.getByRole('button', { name: 'Copper Compass' });
+    const fact = page.getByRole('button', { name: 'Inspect source' });
+    await page.getByTestId('identity-media').click({ force: true });
+    expect(open).toHaveBeenCalledOnce();
+    await fact.click();
+    expect(inspect).toHaveBeenCalledOnce();
+    expect(open).toHaveBeenCalledOnce();
+    title.element().focus();
+    await userEvent.keyboard('{Enter}');
+    expect(open).toHaveBeenCalledTimes(2);
+    await userEvent.tab();
+    expect(document.activeElement).toBe(fact.element());
+  });
   it('keeps a linked mediaAside card footer action above the stretched link', async () => {
     const onLocate = vi.fn();
 
