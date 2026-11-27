@@ -429,6 +429,55 @@ export const RecordDetails: Story = {
   },
 };
 
+export const CardRecordDetails: Story = {
+  name: 'Card record details',
+  render: () => (
+    <FacetedBrowser
+      title={<Title order={1}>Browse records</Title>}
+      records={demoRecords.slice(0, 6)}
+      idAccessor="id"
+      presentation="cards"
+      cardColumns={{ base: 1, md: 3 }}
+      renderCard={(record, { openDetails, isDetailsOpen }) => (
+        <div style={{ display: 'grid', gap: 8 }}>
+          <FacetedBrowserRecordCard record={record} />
+          <Button
+            type="button"
+            variant={isDetailsOpen === true ? 'light' : 'default'}
+            aria-haspopup="dialog"
+            aria-expanded={isDetailsOpen}
+            onClick={openDetails}
+          >
+            Details for {record.name}
+          </Button>
+        </div>
+      )}
+      recordDetailsTitle={(record) => `Details: ${record.name}`}
+      recordDetailsContent={(record) => (
+        <Text size="sm">Drawer details for {record.name}.</Text>
+      )}
+      recordDetailsSideOnDesktop
+      defaultState={{
+        search: '',
+        filters: {},
+        page: 1,
+        pageSize: 6,
+        hiddenColumns: [],
+      }}
+    />
+  ),
+  play: async ({ canvasElement }) => {
+    const trigger = within(canvasElement).getByRole('button', {
+      name: 'Details for Record 001',
+    });
+    await userEvent.click(trigger);
+    await expect(
+      await screen.findByRole('dialog', { name: 'Details: Record 001' }),
+    ).toBeInTheDocument();
+    await expect(trigger).toHaveAttribute('aria-expanded', 'true');
+  },
+};
+
 export const ControlledRecordDetails: Story = {
   name: 'Controlled record details',
   render: function ControlledRecordDetailsExample() {

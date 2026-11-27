@@ -16,7 +16,7 @@ export interface RecordDetailsDrawerProps {
 }
 
 /**
- * Shared comparison record-details drawer. Mantine owns the
+ * Shared record-details drawer. Mantine owns the
  * overlay, focus trap, Escape handling and focus return; this wrapper only
  * carries the placement, fixed header and scrolling body.
  */

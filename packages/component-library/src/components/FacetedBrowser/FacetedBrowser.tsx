@@ -230,10 +230,9 @@ export function FacetedBrowser<TRecord extends Record<string, unknown>>(
       : (navigationCounts.get(navigationCurrentId) ?? 0));
 
   const comparisonRowExpansionContent = comparisonProps?.rowExpansionContent;
-  const comparisonRecordDetailsContent =
-    comparisonProps?.recordDetailsContent ?? comparisonRowExpansionContent;
-  const comparisonRecordDetailsTitle = comparisonProps?.recordDetailsTitle;
-  const recordDetailsSelection = comparisonProps?.recordDetails;
+  const recordDetailsContent =
+    props.recordDetailsContent ?? comparisonRowExpansionContent;
+  const recordDetailsSelection = props.recordDetails;
   const [internalSelectedDetailsRecordId, setInternalSelectedDetailsRecordId] =
     useState<string | undefined>(undefined);
   const selectedDetailsRecordId =
@@ -263,7 +262,7 @@ export function FacetedBrowser<TRecord extends Record<string, unknown>>(
   // The drawer is open exactly while the selected identity is on the current
   // page. No effect, no second expansion engine and nothing in browse state.
   const selectedDetailsRecord =
-    comparisonRecordDetailsContent !== undefined &&
+    recordDetailsContent !== undefined &&
     selectedDetailsRecordId !== undefined &&
     selectedDetailsRecordId !== null
       ? browser.records.find(
@@ -278,7 +277,7 @@ export function FacetedBrowser<TRecord extends Record<string, unknown>>(
   const selectedDetailsTitle =
     selectedDetailsRecord === undefined
       ? null
-      : (comparisonRecordDetailsTitle?.(selectedDetailsRecord) ??
+      : (props.recordDetailsTitle?.(selectedDetailsRecord) ??
         selectedDetailsLabel ??
         null);
 
@@ -484,12 +483,10 @@ export function FacetedBrowser<TRecord extends Record<string, unknown>>(
   ) : undefined;
 
   const renderBrowserCard = (record: TRecord): ReactNode => {
-    if (props.presentation === 'cards') return props.renderCard(record);
-    if (props.presentation !== 'comparison') return null;
-
+    if (props.presentation === 'custom') return null;
     return props.renderCard(
       record,
-      comparisonRecordDetailsContent === undefined
+      recordDetailsContent === undefined
         ? {}
         : {
             openDetails: () => openRecordDetails(record),
@@ -767,11 +764,11 @@ export function FacetedBrowser<TRecord extends Record<string, unknown>>(
           />
         }
       />
-      {comparisonRecordDetailsContent !== undefined ? (
+      {recordDetailsContent !== undefined ? (
         <RecordDetailsDrawer
           opened={detailsOpen}
-          sideOnDesktop={comparisonProps?.recordDetailsSideOnDesktop === true}
-          bottomSize={comparisonProps?.recordDetailsBottomSize}
+          sideOnDesktop={props.recordDetailsSideOnDesktop === true}
+          bottomSize={props.recordDetailsBottomSize}
           title={selectedDetailsTitle}
           closeLabel={
             selectedDetailsLabel === undefined
@@ -782,7 +779,7 @@ export function FacetedBrowser<TRecord extends Record<string, unknown>>(
         >
           {selectedDetailsRecord === undefined
             ? null
-            : comparisonRecordDetailsContent(selectedDetailsRecord, {
+            : recordDetailsContent(selectedDetailsRecord, {
                 onClose: closeRecordDetails,
                 surface: 'drawer',
               })}

@@ -58,6 +58,38 @@ const visualCases: readonly VisualCase[] = [
     visible: [page.getByRole('group', { name: 'Category' })],
   },
   {
+    name: 'faceted-browser-card-details-side-dark',
+    story: dark.CardRecordDetails,
+    storyId: 'components-facetedbrowser--card-record-details',
+    width: 1440,
+    height: 900,
+    visible: [page.getByRole('list', { name: 'records cards' })],
+    beforeScreenshot: async () => {
+      await userEvent.click(
+        page.getByRole('button', { name: 'Details for Record 001' }),
+      );
+      await expect
+        .element(page.getByRole('dialog', { name: 'Details: Record 001' }))
+        .toBeVisible();
+    },
+  },
+  {
+    name: 'faceted-browser-card-details-bottom-dark',
+    story: dark.CardRecordDetails,
+    storyId: 'components-facetedbrowser--card-record-details',
+    width: 390,
+    height: 844,
+    visible: [page.getByRole('list', { name: 'records cards' })],
+    beforeScreenshot: async () => {
+      await userEvent.click(
+        page.getByRole('button', { name: 'Details for Record 001' }),
+      );
+      await expect
+        .element(page.getByRole('dialog', { name: 'Details: Record 001' }))
+        .toBeVisible();
+    },
+  },
+  {
     name: 'faceted-browser-result-pills-mobile-dark',
     story: dark.ResultPillsOverflow,
     storyId: 'components-facetedbrowser--result-pills-overflow',

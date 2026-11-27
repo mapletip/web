@@ -96,7 +96,7 @@ export type FacetedBrowserNavigation = FacetedBrowserNavigationCommon &
   );
 
 /**
- * Context for a comparison-mode card. Both fields exist only when the host
+ * Context for a browser card. Both fields exist only when the host
  * supplies record details content, so a card without details keeps its plain
  * one-argument renderer.
  */
@@ -210,6 +210,19 @@ interface CommonProps<TRecord extends Record<string, unknown>> {
    * document-scrolling layout every existing consumer has.
    */
   readonly fillHeight?: boolean;
+  /** Drawer heading. Defaults to the record's `identityField` value in comparison mode. */
+  readonly recordDetailsTitle?: (record: TRecord) => ReactNode;
+  /** Optional host-controlled drawer selection. */
+  readonly recordDetails?: RecordDetailsSelection;
+  /** Drawer content for a selected record. Comparison mode can use row expansion content instead. */
+  readonly recordDetailsContent?: (
+    record: TRecord,
+    context: RecordDetailsContentContext,
+  ) => ReactNode;
+  /** Use a side drawer at the table breakpoint. Defaults to a bottom sheet. */
+  readonly recordDetailsSideOnDesktop?: boolean;
+  /** Size of the record details bottom sheet. */
+  readonly recordDetailsBottomSize?: DrawerProps['size'];
 }
 
 type StateProps =
@@ -262,24 +275,14 @@ type PresentationProps<TRecord extends Record<string, unknown>> =
         record: TRecord,
         context: RecordDetailsContentContext,
       ) => ReactNode;
-      /** Drawer heading. Defaults to the record's `identityField` value. */
-      readonly recordDetailsTitle?: (record: TRecord) => ReactNode;
-      /** Optional host-controlled drawer selection. */
-      readonly recordDetails?: RecordDetailsSelection;
-      /** Drawer content when it differs from the inline expansion. */
-      readonly recordDetailsContent?: (
-        record: TRecord,
-        context: RecordDetailsContentContext,
-      ) => ReactNode;
-      /** Use a side drawer at the table breakpoint. Defaults to a bottom sheet. */
-      readonly recordDetailsSideOnDesktop?: boolean;
-      /** Size of the record details bottom sheet. */
-      readonly recordDetailsBottomSize?: DrawerProps['size'];
       readonly rowExpansionControl?: RowExpansionControl<TRecord>;
     }
   | {
       readonly presentation: 'cards';
-      readonly renderCard: (record: TRecord) => ReactNode;
+      readonly renderCard: (
+        record: TRecord,
+        context: RecordCardContext,
+      ) => ReactNode;
       /** Responsive card columns, such as `{ base: 1, md: 2 }`; one column by default. */
       readonly cardColumns?: StyleProp<number>;
       readonly columns?: never;
