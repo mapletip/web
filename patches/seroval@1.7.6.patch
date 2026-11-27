@@ -1,0 +1,132 @@
+diff --git a/dist/dev/index.cjs b/dist/dev/index.cjs
+index 37d605cf44c5bcf658416adec528052a9c61b393..d18b463b7dd6e5bd947c01d016ab11e07f472247 100644
+--- a/dist/dev/index.cjs
++++ b/dist/dev/index.cjs
+@@ -67,8 +67,8 @@ function createSymbolStringTable() {
+ }
+ const SYMBOL_STRING = /* @__PURE__ */ createSymbolStringTable();
+ function createInverseSymbolTable() {
+-	const result = {};
+-	for (let i = 0; i <= 12; i++) result[SYMBOL_REF[i]] = i;
++	const result = new Map();
++	for (let i = 0; i <= 12; i++) result.set(SYMBOL_REF[i], i);
+ 	return result;
+ }
+ const INV_SYMBOL_REF = /* @__PURE__ */ createInverseSymbolTable();
+@@ -439,7 +439,7 @@ function createRegExpNode(id, current) {
+ 	return createSerovalNode(6, id, void 0, serializeString(getRegExpSource.call(current)), getRegExpFlags.call(current));
+ }
+ function createWKSymbolNode(id, current) {
+-	return createSerovalNode(17, id, INV_SYMBOL_REF[current]);
++	return createSerovalNode(17, id, INV_SYMBOL_REF.get(current));
+ }
+ function createReferenceNode(id, referenceId) {
+ 	return createSerovalNode(18, id, serializeString(referenceId));
+@@ -1263,7 +1263,7 @@ function getReferenceNode(ctx, current) {
+ function parseWellKnownSymbol(ctx, current) {
+ 	const ref = getReferenceNode(ctx, current);
+ 	if (typeof ref !== "number") return ref;
+-	if (current in INV_SYMBOL_REF) return createWKSymbolNode(ref, current);
++	if (INV_SYMBOL_REF.has(current)) return createWKSymbolNode(ref, current);
+ 	throw new SerovalUnsupportedTypeError(current);
+ }
+ function parseSpecialReference(ctx, ref) {
+diff --git a/dist/dev/index.js b/dist/dev/index.js
+index 35b347ec615b4b893f69e2aa69a98a32cc53bef9..bb783a32717fea468767b0db4557aebb325ce143 100644
+--- a/dist/dev/index.js
++++ b/dist/dev/index.js
+@@ -66,8 +66,8 @@ function createSymbolStringTable() {
+ }
+ const SYMBOL_STRING = /* @__PURE__ */ createSymbolStringTable();
+ function createInverseSymbolTable() {
+-	const result = {};
+-	for (let i = 0; i <= 12; i++) result[SYMBOL_REF[i]] = i;
++	const result = new Map();
++	for (let i = 0; i <= 12; i++) result.set(SYMBOL_REF[i], i);
+ 	return result;
+ }
+ const INV_SYMBOL_REF = /* @__PURE__ */ createInverseSymbolTable();
+@@ -438,7 +438,7 @@ function createRegExpNode(id, current) {
+ 	return createSerovalNode(6, id, void 0, serializeString(getRegExpSource.call(current)), getRegExpFlags.call(current));
+ }
+ function createWKSymbolNode(id, current) {
+-	return createSerovalNode(17, id, INV_SYMBOL_REF[current]);
++	return createSerovalNode(17, id, INV_SYMBOL_REF.get(current));
+ }
+ function createReferenceNode(id, referenceId) {
+ 	return createSerovalNode(18, id, serializeString(referenceId));
+@@ -1262,7 +1262,7 @@ function getReferenceNode(ctx, current) {
+ function parseWellKnownSymbol(ctx, current) {
+ 	const ref = getReferenceNode(ctx, current);
+ 	if (typeof ref !== "number") return ref;
+-	if (current in INV_SYMBOL_REF) return createWKSymbolNode(ref, current);
++	if (INV_SYMBOL_REF.has(current)) return createWKSymbolNode(ref, current);
+ 	throw new SerovalUnsupportedTypeError(current);
+ }
+ function parseSpecialReference(ctx, ref) {
+diff --git a/dist/index.cjs b/dist/index.cjs
+index dfbd70744ea0ab63036eefd453f3d0f2e896a9c2..53763dc0f940dd77ec18b0ff28c20cdeeb0af342 100644
+--- a/dist/index.cjs
++++ b/dist/index.cjs
+@@ -67,8 +67,8 @@ function createSymbolStringTable() {
+ }
+ const SYMBOL_STRING = /* @__PURE__ */ createSymbolStringTable();
+ function createInverseSymbolTable() {
+-	const result = {};
+-	for (let i = 0; i <= 12; i++) result[SYMBOL_REF[i]] = i;
++	const result = new Map();
++	for (let i = 0; i <= 12; i++) result.set(SYMBOL_REF[i], i);
+ 	return result;
+ }
+ const INV_SYMBOL_REF = /* @__PURE__ */ createInverseSymbolTable();
+@@ -423,7 +423,7 @@ function createRegExpNode(id, current) {
+ 	return createSerovalNode(6, id, void 0, serializeString(getRegExpSource.call(current)), getRegExpFlags.call(current));
+ }
+ function createWKSymbolNode(id, current) {
+-	return createSerovalNode(17, id, INV_SYMBOL_REF[current]);
++	return createSerovalNode(17, id, INV_SYMBOL_REF.get(current));
+ }
+ function createReferenceNode(id, referenceId) {
+ 	return createSerovalNode(18, id, serializeString(referenceId));
+@@ -1247,7 +1247,7 @@ function getReferenceNode(ctx, current) {
+ function parseWellKnownSymbol(ctx, current) {
+ 	const ref = getReferenceNode(ctx, current);
+ 	if (typeof ref !== "number") return ref;
+-	if (current in INV_SYMBOL_REF) return createWKSymbolNode(ref, current);
++	if (INV_SYMBOL_REF.has(current)) return createWKSymbolNode(ref, current);
+ 	throw new SerovalUnsupportedTypeError(current);
+ }
+ function parseSpecialReference(ctx, ref) {
+diff --git a/dist/index.js b/dist/index.js
+index 355e68876c9c0844001cea6ffb92d3ace57ac89c..98bbe45f7c398da87e633aeaf5db51994989d23b 100644
+--- a/dist/index.js
++++ b/dist/index.js
+@@ -66,8 +66,8 @@ function createSymbolStringTable() {
+ }
+ const SYMBOL_STRING = /* @__PURE__ */ createSymbolStringTable();
+ function createInverseSymbolTable() {
+-	const result = {};
+-	for (let i = 0; i <= 12; i++) result[SYMBOL_REF[i]] = i;
++	const result = new Map();
++	for (let i = 0; i <= 12; i++) result.set(SYMBOL_REF[i], i);
+ 	return result;
+ }
+ const INV_SYMBOL_REF = /* @__PURE__ */ createInverseSymbolTable();
+@@ -422,7 +422,7 @@ function createRegExpNode(id, current) {
+ 	return createSerovalNode(6, id, void 0, serializeString(getRegExpSource.call(current)), getRegExpFlags.call(current));
+ }
+ function createWKSymbolNode(id, current) {
+-	return createSerovalNode(17, id, INV_SYMBOL_REF[current]);
++	return createSerovalNode(17, id, INV_SYMBOL_REF.get(current));
+ }
+ function createReferenceNode(id, referenceId) {
+ 	return createSerovalNode(18, id, serializeString(referenceId));
+@@ -1246,7 +1246,7 @@ function getReferenceNode(ctx, current) {
+ function parseWellKnownSymbol(ctx, current) {
+ 	const ref = getReferenceNode(ctx, current);
+ 	if (typeof ref !== "number") return ref;
+-	if (current in INV_SYMBOL_REF) return createWKSymbolNode(ref, current);
++	if (INV_SYMBOL_REF.has(current)) return createWKSymbolNode(ref, current);
+ 	throw new SerovalUnsupportedTypeError(current);
+ }
+ function parseSpecialReference(ctx, ref) {
