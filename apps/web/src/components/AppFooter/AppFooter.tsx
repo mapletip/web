@@ -38,7 +38,7 @@ const groups = [
       },
       {
         id: 'cash-items',
-        label: 'Cash Items & Pets',
+        label: 'Pets & Cash',
         href: '/maplestory/items/cash',
       },
     ],

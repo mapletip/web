@@ -10,10 +10,10 @@ import { getItemBrowse, type ItemBrowseCoverage } from '@mapletip/data/items';
 import { MAPLEKIT_RELEASE, type BuildId } from '@/config/maplekit';
 import { withLoadBoundary } from '@/features/detail/load-error';
 
-import { projectItemBrowseRows, type ItemRow } from './project';
+import { projectItemBrowseRows, type CategorizedItemRow } from './project';
 
 export interface LoadedItemBrowse {
-  readonly rows: readonly ItemRow[];
+  readonly rows: readonly CategorizedItemRow[];
   readonly coverage: ItemBrowseCoverage;
 }
 

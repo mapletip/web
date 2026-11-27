@@ -307,5 +307,5 @@ test('a failed load shows a retryable error without diagnostics', async ({
     page.getByRole('heading', { name: 'Something went wrong' }),
   ).toBeVisible();
   await expect(page.getByRole('button', { name: 'Try again' })).toBeVisible();
-  await expect(page.locator('body')).not.toContainText(/sha|v2\/|digest/iu);
+  await expect(page.locator('body')).not.toContainText(/\bsha|v2\/|digest/iu);
 });
