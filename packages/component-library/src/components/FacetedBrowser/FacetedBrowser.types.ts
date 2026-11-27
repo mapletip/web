@@ -223,6 +223,8 @@ interface CommonProps<TRecord extends Record<string, unknown>> {
   readonly recordDetailsSideOnDesktop?: boolean;
   /** Size of the record details bottom sheet. */
   readonly recordDetailsBottomSize?: DrawerProps['size'];
+  /** Width of the record details side drawer. Defaults to 75vw. */
+  readonly recordDetailsSideSize?: DrawerProps['size'];
 }
 
 type StateProps =

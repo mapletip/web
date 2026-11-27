@@ -2,6 +2,7 @@ import { browseReady } from '../browse-ready';
 import { expect, test } from '../fixtures';
 
 const CATEGORY = '/maplestory/items/use/scrolls';
+const POTIONS = '/maplestory/items/use/potions-and-food';
 
 test('desktop Items category', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 1100 });
@@ -45,4 +46,30 @@ test('desktop Items unavailable', async ({ page }) => {
     page.getByRole('heading', { name: 'Something went wrong' }),
   ).toBeVisible();
   await expect(page).toHaveScreenshot('desktop-items-unavailable.png');
+});
+
+test('desktop Items drawer', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 1100 });
+  await page.goto(POTIONS);
+  await browseReady(page);
+  await page
+    .getByRole('button', { name: 'Sample Draught', exact: true })
+    .click();
+  await expect(
+    page.getByRole('dialog', { name: 'Sample Draught' }),
+  ).toBeVisible();
+  await expect(page).toHaveScreenshot('desktop-items-drawer.png');
+});
+
+test('mobile Items drawer', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 950 });
+  await page.goto(POTIONS);
+  await browseReady(page);
+  await page
+    .getByRole('button', { name: 'Sample Draught', exact: true })
+    .click();
+  await expect(
+    page.getByRole('dialog', { name: 'Sample Draught' }),
+  ).toBeVisible();
+  await expect(page).toHaveScreenshot('mobile-items-drawer.png');
 });

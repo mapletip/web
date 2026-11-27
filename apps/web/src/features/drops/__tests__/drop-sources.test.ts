@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import { emptyDropBrowseFixture } from '../../browse/__tests__/monsterCatalogFixture';
+import { emptyDropBrowseFixture } from '@/features/monsters/browse/__tests__/monsterCatalogFixture';
+
 import {
   classifyDrop,
   resolveBrowseDropEvidence,

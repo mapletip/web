@@ -30,6 +30,7 @@ import { useRouteOverlay } from '@/features/route-overlay/useRouteOverlay';
 import { ITEM_KINDS } from '../kinds';
 import type { ItemKind } from '../kinds/types';
 
+import { ItemDrawerBody } from './ItemDrawerBody';
 import {
   ITEM_GROUPS,
   itemPageMetadata,
@@ -60,6 +61,9 @@ const GROUP_ROUTES = {
 
 const SUMMARY_NOUN = { one: 'Item', other: 'Items' } as const;
 const CARD_COLUMNS = { base: 2, md: 4, lg: 5 } as const;
+const KIND_LABELS: ReadonlyMap<string, string> = new Map(
+  ITEM_KINDS.map((entry) => [entry.id, entry.label]),
+);
 
 /** Shared group and category results, driven by the category registry. */
 export function ItemFrame({
@@ -155,6 +159,8 @@ export function ItemFrame({
     },
     [overlay],
   );
+  const details =
+    overlay.overlay?.type === 'record-details' ? overlay.overlay : undefined;
 
   return (
     <BrowsePageShell fillViewport={false}>
@@ -248,14 +254,11 @@ export function ItemFrame({
         pageSizeOptions={PAGE_SIZE_OPTIONS}
         presentation="cards"
         cardColumns={CARD_COLUMNS}
-        renderCard={(record) => (
+        renderCard={(record, { openDetails, isDetailsOpen }) => (
           <RecordCard
             layout="picture"
             title={record.name}
-            leadLine={
-              ITEM_KINDS.find((candidate) => candidate.id === record.kind)
-                ?.label
-            }
+            leadLine={KIND_LABELS.get(record.kind)}
             media={
               <Thumbnail
                 src={
@@ -267,8 +270,32 @@ export function ItemFrame({
                 magnify={2}
               />
             }
+            {...(openDetails === undefined
+              ? {}
+              : { action: openDetails, isDetailsOpen })}
           />
         )}
+        recordDetailsTitle={(record) => record.name}
+        recordDetailsSideOnDesktop
+        recordDetailsSideSize="md"
+        recordDetailsContent={(record) => (
+          <ItemDrawerBody
+            record={record}
+            categoryLabel={KIND_LABELS.get(record.kind)}
+          />
+        )}
+        recordDetails={{
+          selectedId: details?.recordId ?? null,
+          onSelectedIdChange: (selectedId, reason) => {
+            if (reason === 'open' && selectedId !== null) {
+              overlay.open({ type: 'record-details', recordId: selectedId });
+            } else if (reason === 'invalidate') {
+              void overlay.invalidate('record-details');
+            } else if (reason === 'dismiss') {
+              overlay.dismiss('record-details');
+            }
+          },
+        }}
         state={browseState}
         onStateChange={onStateChange}
         drawerOpened={overlay.overlay?.type === 'filters'}
