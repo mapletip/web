@@ -174,9 +174,8 @@ test('Stars & Arrows pills, attack sort, and GMS v83 Monster Cards work as publi
   const items = new ItemsPage(page);
   await items.goto(PROJECTILES);
   await expect(items.item('Practice Stars')).toBeVisible();
-  await expect(
-    page.getByText('+27 attack · 800 per stack', { exact: true }),
-  ).toBeVisible();
+  await expect(page.getByText('+27 attack', { exact: true })).toBeVisible();
+  await expect(page.getByText('800 per stack', { exact: true })).toBeVisible();
   await expect(
     page.getByText('2,000 per stack', { exact: true }),
   ).toBeVisible();
@@ -201,7 +200,10 @@ test('Stars & Arrows pills, attack sort, and GMS v83 Monster Cards work as publi
   await items.goto('/maplestory/gms-v83/items/use/monster-cards');
   await expect(items.item('GMS Native Alpha Card')).toBeVisible();
   await expect(
-    page.getByText('+5 weapon attack · Lasts 30 min', { exact: true }),
+    page.getByText('+5 weapon attack', { exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByText('Lasts 30 minutes', { exact: true }).first(),
   ).toBeVisible();
 });
 

@@ -1,4 +1,4 @@
-import { formatBuff } from '../browse/buff-format';
+import { formatBuffParts } from '../browse/buff-format';
 
 import type { ItemKind } from './types';
 
@@ -14,7 +14,13 @@ export const monsterCards = {
     row.functions?.includes('monster-card') === true,
   card: {
     layout: 'short',
+    value: (row) =>
+      row.buff?.effects.length
+        ? formatBuffParts({ buff: row.buff }).effects
+        : undefined,
     lead: (row) =>
-      row.buff?.effects.length ? formatBuff({ buff: row.buff }) : undefined,
+      row.buff?.effects.length
+        ? formatBuffParts({ buff: row.buff }).duration
+        : undefined,
   },
 } satisfies ItemKind;

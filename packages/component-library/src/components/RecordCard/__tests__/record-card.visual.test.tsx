@@ -147,6 +147,19 @@ const cases: readonly VisualCase[] = [
       page.getByText('Found in the practice meadow'),
     ],
   },
+  {
+    name: 'record-card-value-headline-dark',
+    story: dark.ValueHeadline,
+    storyId: 'components-recordcard--value-headline',
+    width: 720,
+    height: 440,
+    visible: [
+      page.getByText('+300 vitality'),
+      page.getByText('+150 focus'),
+      page.getByText('−5 balance'),
+      page.getByText('Lasts 5 minutes'),
+    ],
+  },
 ];
 
 describe('RecordCard visual states', () => {

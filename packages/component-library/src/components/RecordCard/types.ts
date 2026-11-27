@@ -35,6 +35,14 @@ export interface RecordCardInlineLabel {
   readonly tone: 'brand' | 'muted' | 'success';
 }
 
+export type RecordCardValueTone = 'accent' | 'warm' | 'cool' | 'critical';
+
+export interface RecordCardValuePart {
+  readonly id: string;
+  readonly text: string;
+  readonly tone?: RecordCardValueTone;
+}
+
 interface RecordCardBaseProps {
   /** Main record label shown as the card heading. */
   readonly title: ReactNode;
@@ -107,10 +115,14 @@ export type RecordCardProps = RecordCardBaseProps &
         readonly layout: 'picture';
         /** Short line under the title. */
         readonly leadLine?: ReactNode;
+        /** Deciding value parts shown as a headline directly under the title. */
+        readonly value?: readonly RecordCardValuePart[];
         readonly facts?: never;
       }
     | {
         readonly layout?: 'default' | 'mediaAside' | 'compactMediaAside';
+        /** Deciding value parts shown as a headline directly under the title. */
+        readonly value?: readonly RecordCardValuePart[];
         readonly leadLine?: never;
         readonly facts?: never;
       }

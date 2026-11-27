@@ -9,6 +9,7 @@ import type {
   RecordCardLinkRenderer,
   RecordCardLinkRenderProps,
   RecordCardProps,
+  RecordCardValuePart,
 } from '@/components/RecordCard/types';
 
 interface RenderLinkOptions {
@@ -68,6 +69,24 @@ function renderLink({
   );
 }
 
+function renderValueLine(
+  parts: readonly RecordCardValuePart[] | undefined,
+): ReactNode {
+  if (parts === undefined || parts.length === 0) return null;
+  return (
+    <div className={classes['valueLine']}>
+      {parts.map((part) => (
+        <span
+          key={part.id}
+          className={classes[`valuePart${part.tone ?? 'accent'}`]}
+        >
+          {part.text}
+        </span>
+      ))}
+    </div>
+  );
+}
+
 /** A generic record card with optional media, footer and host-rendered link. */
 export function RecordCard(props: RecordCardProps): ReactElement {
   const {
@@ -86,6 +105,11 @@ export function RecordCard(props: RecordCardProps): ReactElement {
     linkScope = 'card',
   } = props;
   const facts = props.layout === 'quietIdentity' ? undefined : props.facts;
+  const value =
+    props.layout === 'identity' || props.layout === 'quietIdentity'
+      ? undefined
+      : props.value;
+  const valueLine = renderValueLine(value);
   const quiet = props.layout === 'quietIdentity' ? props : undefined;
   const inlineLabels = quiet?.inlineLabels;
   const detailLine = quiet?.detailLine;
@@ -116,6 +140,7 @@ export function RecordCard(props: RecordCardProps): ReactElement {
             <Title order={3} className={classes['pictureTitle']}>
               {titleControl}
             </Title>
+            {valueLine}
             {leadLine === undefined ? null : (
               <Text className={classes['pictureLead']}>{leadLine}</Text>
             )}
@@ -238,6 +263,7 @@ export function RecordCard(props: RecordCardProps): ReactElement {
             <div className={classes['badges']}>{badges}</div>
           )}
         </Group>
+        {valueLine}
         {secondaryLine === undefined ? null : (
           <Text
             className={classes['secondary']}

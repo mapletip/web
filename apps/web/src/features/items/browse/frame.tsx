@@ -172,10 +172,18 @@ export function itemPrimaryFact({
   readonly record: CategorizedItemRow;
 }): string | undefined {
   const category: ItemKind | undefined = ITEM_KINDS_BY_ID.get(record.kind);
-  const categoryLead = category?.card?.lead(record, {
-    coverage: undefined,
-    relations: {},
-  });
+  const context = { coverage: undefined, relations: {} };
+  const categoryValue = category?.card?.value?.(record, context);
+  const categoryLead = category?.card?.lead?.(record, context);
+  const valueText =
+    categoryValue && categoryValue.length > 0
+      ? categoryValue.map((part) => part.text).join(' · ')
+      : undefined;
+  if (valueText !== undefined) {
+    return typeof categoryLead === 'string'
+      ? `${valueText} · ${categoryLead}`
+      : valueText;
+  }
   if (typeof categoryLead === 'string') return categoryLead;
   if (record.success !== undefined) {
     return `${numberFormat.format(record.success)}% success`;

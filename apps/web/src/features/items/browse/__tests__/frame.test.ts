@@ -52,7 +52,7 @@ describe('itemPrimaryFact', () => {
           },
         }),
       }),
-    ).toBe('+5 speed · Lasts 10 min');
+    ).toBe('+5 speed · Lasts 10 minutes');
 
     expect(
       itemPrimaryFact({
@@ -74,7 +74,7 @@ describe('itemPrimaryFact', () => {
           },
         }),
       }),
-    ).toBe('+5 weapon attack · Lasts 30 min');
+    ).toBe('+5 weapon attack · Lasts 30 minutes');
   });
 
   it('formats scroll success, chair seating recovery, and pet food fullness', () => {
@@ -102,7 +102,7 @@ describe('itemPrimaryFact', () => {
       }),
     ).toBe('+50 HP · +40 MP');
 
-    expect(chairs.card.lead(makeRow({ kind: 'chairs' }))).toBeUndefined();
+    expect(chairs.card.value(makeRow({ kind: 'chairs' }))).toBeUndefined();
 
     expect(
       itemPrimaryFact({
@@ -191,13 +191,20 @@ describe('itemPrimaryFact', () => {
 
 describe('visual category cards', () => {
   it.each([
-    [{ seatHp: 50 }, '+50 HP', ['hp']],
-    [{ seatMp: 40 }, '+40 MP', ['mp']],
-    [{ seatHp: 50, seatMp: 40 }, '+50 HP · +40 MP', ['hp', 'mp']],
+    [{ seatHp: 50 }, [{ id: 'hp', text: '+50 HP', tone: 'warm' }], ['hp']],
+    [{ seatMp: 40 }, [{ id: 'mp', text: '+40 MP', tone: 'cool' }], ['mp']],
+    [
+      { seatHp: 50, seatMp: 40 },
+      [
+        { id: 'hp', text: '+50 HP', tone: 'warm' },
+        { id: 'mp', text: '+40 MP', tone: 'cool' },
+      ],
+      ['hp', 'mp'],
+    ],
     [{}, undefined, []],
-  ] as const)('describes chair recovery', (facts, lead, types) => {
+  ] as const)('describes chair recovery', (facts, value, types) => {
     const row = makeRow({ kind: 'chairs', ...facts });
-    expect(chairs.card.lead(row)).toBe(lead);
+    expect(chairs.card.value(row)).toEqual(value);
     const field = chairs.card
       .queryFields()
       .find(
@@ -219,8 +226,10 @@ describe('visual category cards', () => {
   });
 
   it('uses the published NX price and only offers listing pills with complete coverage', () => {
-    expect(cashShop.card.lead(makeRow({ nxPrice: 2400 }))).toBe('2,400 NX');
-    expect(cashShop.card.lead(makeRow())).toBeUndefined();
+    expect(cashShop.card.value(makeRow({ nxPrice: 2400 }))).toEqual([
+      { id: 'nx-price', text: '2,400 NX', tone: 'accent' },
+    ]);
+    expect(cashShop.card.value(makeRow())).toBeUndefined();
     const coverage = {
       relationships: { 'cash-shop-listing': 'complete' },
     } as ItemBrowseCoverage;

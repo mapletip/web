@@ -49,7 +49,7 @@ describe('text category cards', () => {
     ],
   ])('leads with the published description: %s', (description, expected) => {
     expect(
-      otherUse.card?.lead(baseRow, {
+      otherUse.card?.lead?.(baseRow, {
         ...context,
         descriptions: { [baseRow.sourceId]: description },
       }),
@@ -57,7 +57,7 @@ describe('text category cards', () => {
   });
 
   it('uses the sell price when a description is missing', () => {
-    expect(otherUse.card?.lead({ ...baseRow, sellPrice: 10 }, context)).toBe(
+    expect(otherUse.card?.lead?.({ ...baseRow, sellPrice: 10 }, context)).toBe(
       'Sells for 10 mesos',
     );
   });
@@ -69,21 +69,20 @@ describe('text category cards', () => {
   ] as const)(
     'shows known sell price and omits an unknown price',
     (facts, expected) => {
-      expect(otherUse.card?.lead({ ...baseRow, ...facts }, context)).toBe(
+      expect(otherUse.card?.lead?.({ ...baseRow, ...facts }, context)).toBe(
         expected,
       );
     },
   );
 
-  it('shows the published fullness on Pet Food cards', () => {
+  it('shows the published fullness as the headline on Pet Food cards', () => {
     expect(
-      petFood.card?.footer?.(
-        categorized({ kind: 'pet-food', fullness: 30 }),
-        context,
-      ),
-    ).toBe('Restores 30 fullness');
+      petFood.card.value(categorized({ kind: 'pet-food', fullness: 30 })),
+    ).toEqual([
+      { id: 'fullness', text: 'Restores 30 fullness', tone: 'accent' },
+    ]);
     expect(
-      petFood.card?.footer?.(categorized({ kind: 'pet-food' }), context),
+      petFood.card.value(categorized({ kind: 'pet-food' })),
     ).toBeUndefined();
   });
 

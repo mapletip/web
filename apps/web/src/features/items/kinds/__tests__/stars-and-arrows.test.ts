@@ -23,13 +23,29 @@ function categorized(
 
 describe('Stars & Arrows card', () => {
   it.each([
-    [{ attack: 27, maxStack: 800 }, '+27 attack · 800 per stack'],
-    [{ attack: 27 }, '+27 attack'],
-    [{ maxStack: 2000 }, '2,000 per stack'],
-    [{}, undefined],
-  ] as const)('formats lead from published facts', (facts, expected) => {
-    expect(starsAndArrows.card.lead({ ...baseRow, ...facts })).toBe(expected);
-  });
+    [
+      { attack: 27, maxStack: 800 },
+      [{ id: 'attack', text: '+27 attack', tone: 'accent' }],
+      '800 per stack',
+    ],
+    [
+      { attack: 27 },
+      [{ id: 'attack', text: '+27 attack', tone: 'accent' }],
+      undefined,
+    ],
+    [{ maxStack: 2000 }, undefined, '2,000 per stack'],
+    [{}, undefined, undefined],
+  ] as const)(
+    'formats headline attack and quiet stack size from published facts',
+    (facts, expectedValue, expectedLead) => {
+      expect(starsAndArrows.card.value({ ...baseRow, ...facts })).toEqual(
+        expectedValue,
+      );
+      expect(starsAndArrows.card.lead({ ...baseRow, ...facts })).toBe(
+        expectedLead,
+      );
+    },
+  );
 
   it('offers type pills only for types present in the category rows', () => {
     const withoutBullets = starsAndArrows.card.facets({

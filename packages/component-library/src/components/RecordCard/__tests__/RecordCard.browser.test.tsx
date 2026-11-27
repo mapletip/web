@@ -442,4 +442,56 @@ describe('RecordCard stretched link in the browser', () => {
       expect(footer.scrollWidth).toBeLessThanOrEqual(footer.clientWidth);
     },
   );
+
+  it('styles value headline parts at 16px bold with tabular digits and distinct tone colors', async () => {
+    const open = vi.fn();
+    await render(
+      <MantineProvider
+        theme={theme}
+        cssVariablesResolver={cssVariablesResolver}
+        forceColorScheme="dark"
+      >
+        <div style={{ width: 320 }}>
+          <RecordCard
+            layout="compactMediaAside"
+            title="Meadow Draught"
+            value={[
+              { id: 'accent', text: '+15 power', tone: 'accent' },
+              { id: 'warm', text: '+300 vitality', tone: 'warm' },
+              { id: 'cool', text: '+150 focus', tone: 'cool' },
+              { id: 'critical', text: '−5 balance', tone: 'critical' },
+            ]}
+            secondaryLine="Lasts 5 minutes"
+            action={open}
+          />
+        </div>
+      </MantineProvider>,
+    );
+
+    const accentEl = page.getByText('+15 power').element();
+    const warmEl = page.getByText('+300 vitality').element();
+    const coolEl = page.getByText('+150 focus').element();
+    const criticalEl = page.getByText('−5 balance').element();
+    const valueLine = accentEl.parentElement;
+    if (valueLine === null) throw new Error('Value line container is missing.');
+
+    expect(getComputedStyle(valueLine).fontSize).toBe('16px');
+    expect(getComputedStyle(valueLine).fontWeight).toBe('700');
+    expect(getComputedStyle(valueLine).fontVariantNumeric).toContain(
+      'tabular-nums',
+    );
+    expect(getComputedStyle(warmEl).color).not.toBe(
+      getComputedStyle(coolEl).color,
+    );
+    expect(getComputedStyle(warmEl).color).not.toBe(
+      getComputedStyle(accentEl).color,
+    );
+    expect(getComputedStyle(criticalEl).color).not.toBe(
+      getComputedStyle(accentEl).color,
+    );
+
+    const button = page.getByRole('button', { name: 'Meadow Draught' });
+    await button.click();
+    expect(open).toHaveBeenCalledOnce();
+  });
 });

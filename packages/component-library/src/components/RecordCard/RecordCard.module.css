@@ -379,6 +379,35 @@
   overflow-wrap: break-word;
 }
 
+.valueLine {
+  display: flex;
+  flex-wrap: wrap;
+  column-gap: 10px;
+  row-gap: 2px;
+  color: var(--mapletip-color-brand-text);
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.3;
+  font-variant-numeric: tabular-nums;
+}
+
+.valuePartaccent {
+  color: var(--mapletip-color-brand-text);
+}
+
+.valuePartwarm {
+  color: var(--mapletip-color-status-danger);
+}
+
+.valuePartcool {
+  color: var(--mapletip-color-status-info);
+}
+
+.valuePartcritical {
+  /* Warning, not danger: danger is the warm tone, and the minus sign and words carry the meaning. */
+  color: var(--mapletip-color-status-warning);
+}
+
 .media {
   display: flex;
   flex: 0 1 10rem;
