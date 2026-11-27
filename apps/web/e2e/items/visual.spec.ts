@@ -13,6 +13,49 @@ const POTIONS = '/maplestory/items/use/potions-and-food';
 const PROJECTILES = '/maplestory/items/use/stars-and-arrows';
 const MONSTER_CARDS = '/maplestory/gms-v83/items/use/monster-cards';
 const QUEST_ITEMS = '/maplestory/items/etc/quest-items';
+const MONSTER_DROPS = '/maplestory/items/etc/monster-drops';
+
+test('desktop Items monster drops', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 1100 });
+  await page.goto(MONSTER_DROPS);
+  await browseReady(page);
+  await expect(
+    page.locator('[data-record-card-layout="identity"]').first(),
+  ).toBeVisible();
+  await expect(page).toHaveScreenshot('desktop-items-drops.png');
+});
+
+test('mobile Items monster drops', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 1600 });
+  await page.goto(MONSTER_DROPS);
+  await browseReady(page);
+  await expect(
+    page.locator('[data-record-card-layout="identity"]').first(),
+  ).toBeVisible();
+  await expect(page).toHaveScreenshot('mobile-items-drops.png');
+});
+
+test('desktop Items monster drops not required', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 1100 });
+  await page.goto(MONSTER_DROPS);
+  await browseReady(page);
+  const pill = page.getByText(/^Not required \((\d+)\)$/u).first();
+  const count = Number((await pill.textContent())?.match(/\((\d+)\)/u)?.[1]);
+  await pill.click();
+  await expect(
+    page.getByText(`${count} Items`, { exact: true }).first(),
+  ).toBeVisible();
+  await expect(page).toHaveScreenshot('desktop-items-drops-not-required.png');
+});
+
+test('mobile Items monster drops filters', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 1600 });
+  await page.goto(MONSTER_DROPS);
+  await browseReady(page);
+  await page.getByRole('button', { name: /Filters/u }).click();
+  await expect(page.getByRole('combobox', { name: 'Monster' })).toBeVisible();
+  await expect(page).toHaveScreenshot('mobile-items-drops-filters.png');
+});
 
 test('desktop Items quest items', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 1100 });

@@ -62,6 +62,7 @@ describe('item relation projection', () => {
         { publicId: 'z', name: 'Zinc Errand' },
       ],
       byItem: { 'item:one': [1, 0] },
+      unestablished: ['item:unknown'],
     });
   });
 
@@ -74,10 +75,11 @@ describe('item relation projection', () => {
     ).toEqual({
       targets: [{ publicId: 'z', name: 'Zinc Errand' }],
       byItem: { 'item:other-category': [0] },
+      unestablished: [],
     });
     expect(
       projectItemRelation({ pack, itemKeys: new Set(['item:unknown']) }),
-    ).toEqual({ targets: [], byItem: {} });
+    ).toEqual({ targets: [], byItem: {}, unestablished: ['item:unknown'] });
   });
 
   it('skips an unsupported relationship', () => {

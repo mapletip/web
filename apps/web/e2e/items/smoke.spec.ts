@@ -7,6 +7,53 @@ const SCROLLS = '/maplestory/items/use/scrolls';
 const POTIONS = '/maplestory/items/use/potions-and-food';
 const PROJECTILES = '/maplestory/items/use/stars-and-arrows';
 const QUEST_ITEMS = '/maplestory/items/etc/quest-items';
+const MONSTER_DROPS = '/maplestory/items/etc/monster-drops';
+
+test('Monster Drops landing lookup opens Not required sorted by sell price', async ({
+  page,
+  isMobile,
+}) => {
+  const items = new ItemsPage(page);
+  await items.goto('/maplestory/items');
+  const lookup = page.getByRole('link', {
+    name: /^Drops no quest or recipe uses\s+\d+$/u,
+  });
+  const count = Number((await lookup.textContent())?.match(/(\d+)$/u)?.[1]);
+  await lookup.click();
+  await expect(page).toHaveURL(/\/items\/etc\/monster-drops.*dropUses/u);
+  await expect(
+    page.getByText(`${count} Items`, { exact: true }).first(),
+  ).toBeVisible();
+  await expect(page.getByText(/^Not required \(/u)).toBeVisible();
+  await expect(page).toHaveURL(/sort=sellPrice-desc/u);
+  if (!isMobile) {
+    await expect(page.getByRole('combobox', { name: 'Sort' })).toHaveValue(
+      'Highest sell price',
+    );
+  }
+});
+
+test('Monster Drops mobile filters narrow by Monster', async ({
+  page,
+  isMobile,
+}) => {
+  test.skip(!isMobile, 'The mobile drawer is the subject of this journey.');
+  const items = new ItemsPage(page);
+  await items.goto(MONSTER_DROPS);
+  await page.getByRole('button', { name: /Filters/u }).click();
+  const monster = page.getByRole('combobox', { name: 'Monster' });
+  await monster.click();
+  const option = page.getByRole('option').first();
+  const name = await option.textContent();
+  await option.click();
+  await page
+    .getByRole('button', { name: /Show \d+ Classic World items/u })
+    .click();
+  await expect(
+    page.getByRole('button', { name: `Remove Monster: ${name}` }),
+  ).toBeVisible();
+  await expect(items.summary).toBeVisible();
+});
 
 test('Quest Items shows named requirements and filters by quest, then removes it', async ({
   page,
@@ -493,28 +540,18 @@ test('Items group page shows category shelves with one row, See all links, and i
   const monsterDropsShelf = page.getByRole('region', {
     name: 'Monster Drops',
   });
-  await expect(
-    monsterDropsShelf.locator('[data-record-card="true"]'),
-  ).toHaveCount(5);
+  // Monster Drops use identity cards: one per row on phones, two on tablets, three wide.
+  const dropCards = monsterDropsShelf.locator('[data-record-card="true"]');
+  await expect(dropCards).toHaveCount(3);
   if (isMobile) {
-    await expect(
-      monsterDropsShelf.locator('[data-record-card="true"]').nth(1),
-    ).toBeVisible();
-    await expect(
-      monsterDropsShelf.locator('[data-record-card="true"]').nth(2),
-    ).toBeHidden();
+    await expect(dropCards.nth(0)).toBeVisible();
+    await expect(dropCards.nth(1)).toBeHidden();
   } else {
-    await expect(
-      monsterDropsShelf.locator('[data-record-card="true"]').nth(4),
-    ).toBeVisible();
+    await expect(dropCards.nth(2)).toBeVisible();
     const viewport = page.viewportSize();
     await page.setViewportSize({ width: 1050, height: 900 });
-    await expect(
-      monsterDropsShelf.locator('[data-record-card="true"]').nth(3),
-    ).toBeVisible();
-    await expect(
-      monsterDropsShelf.locator('[data-record-card="true"]').nth(4),
-    ).toBeHidden();
+    await expect(dropCards.nth(1)).toBeVisible();
+    await expect(dropCards.nth(2)).toBeHidden();
     if (viewport !== null) await page.setViewportSize(viewport);
   }
 

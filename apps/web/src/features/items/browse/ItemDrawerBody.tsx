@@ -27,6 +27,7 @@ import {
   type ItemDrawerRelations,
   type ItemRelationReader,
 } from './relations';
+import { formatSellPrice } from './sell-price';
 
 const numberFormat = new Intl.NumberFormat('en-US');
 
@@ -61,11 +62,8 @@ export function formatItemFacts({
   if (record.maxStack !== undefined) {
     facts.push(`Stacks to ${numberFormat.format(record.maxStack)}`);
   }
-  if (record.sellPrice !== undefined) {
-    facts.push(
-      `Sells for ${numberFormat.format(record.sellPrice)} ${record.sellPrice === 1 ? 'meso' : 'mesos'}`,
-    );
-  }
+  const sellPrice = formatSellPrice({ sellPrice: record.sellPrice });
+  if (sellPrice !== undefined) facts.push(sellPrice);
   return facts;
 }
 

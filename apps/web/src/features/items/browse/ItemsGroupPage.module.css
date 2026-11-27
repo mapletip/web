@@ -43,21 +43,35 @@
   text-decoration: underline;
 }
 
-.shelfGrid > :nth-child(n + 3) {
+/* One row per shelf: hide cards past each breakpoint's column count (see itemCardColumns). */
+.shelfGrid[data-card-columns='picture'] > :nth-child(n + 3) {
   display: none;
 }
 
-@media (min-width: 62em) {
-  .shelfGrid > :nth-child(n + 3) {
+.shelfGrid[data-card-columns='aside'] > :nth-child(n + 2) {
+  display: none;
+}
+
+@media (min-width: 48em) {
+  .shelfGrid[data-card-columns='aside'] > :nth-child(2) {
     display: revert;
   }
-  .shelfGrid > :nth-child(n + 5) {
+}
+
+@media (min-width: 62em) {
+  .shelfGrid[data-card-columns='picture'] > :nth-child(n + 3) {
+    display: revert;
+  }
+  .shelfGrid[data-card-columns='picture'] > :nth-child(n + 5) {
     display: none;
   }
 }
 
 @media (min-width: 75em) {
-  .shelfGrid > :nth-child(n + 5) {
+  .shelfGrid[data-card-columns='picture'] > :nth-child(n + 5) {
+    display: revert;
+  }
+  .shelfGrid[data-card-columns='aside'] > :nth-child(3) {
     display: revert;
   }
 }

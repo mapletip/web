@@ -101,15 +101,17 @@ type SortOptions = readonly BrowseSortOption[];
  */
 export function defineBrowseSearch({
   sortOptions: pageSortOptions,
+  defaultSortKey,
 }: {
   readonly sortOptions: readonly [BrowseSortOption, ...BrowseSortOption[]];
+  readonly defaultSortKey?: string;
 }) {
   const [pageDefaultSort] = pageSortOptions;
   const defaultSearch = {
     q: '',
     page: DEFAULT_PAGE,
     pageSize: DEFAULT_PAGE_SIZE,
-    sort: sortKey(pageDefaultSort),
+    sort: defaultSortKey ?? sortKey(pageDefaultSort),
   } as const;
   const defaultState = {
     search: defaultSearch.q,
@@ -137,8 +139,10 @@ export function defineBrowseSearch({
   }): BrowseState {
     const { q, page, pageSize, sort, ...filters } = search;
     const resolvedSort =
-      sortOptions.find((option) => sortKey(option) === sort) ??
-      defaultSortOf(sortOptions);
+      sort === defaultSearch.sort && defaultSortKey !== undefined
+        ? defaultSortOf(sortOptions)
+        : (sortOptions.find((option) => sortKey(option) === sort) ??
+          defaultSortOf(sortOptions));
 
     return {
       ...defaultState,
@@ -170,7 +174,11 @@ export function defineBrowseSearch({
       q: state.search,
       page: includePage ? state.page : defaultSearch.page,
       pageSize: state.pageSize,
-      sort: sortKey(resolvedSort),
+      sort:
+        defaultSortKey !== undefined &&
+        sortKey(resolvedSort) === sortKey(defaultSortOf(sortOptions))
+          ? defaultSearch.sort
+          : sortKey(resolvedSort),
       ...state.filters,
     };
   }

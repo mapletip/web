@@ -7,6 +7,8 @@ import {
 import type { BrowseSearch } from '@/features/browse/search-params';
 import { requireBuildId } from '@/features/detail';
 
+import { monsterDrops } from '../kinds/monster-drops';
+
 import { ItemFrame } from './frame';
 import type { LoadedItemBrowse } from './load';
 import { itemPageHead, resolveItemKind, type ItemGroup } from './page';
@@ -75,10 +77,10 @@ export function itemGroupRouteOptions<TPath extends GroupRoutePath>({
       const kind = resolveItemKind({ group, slug: params.kind });
       const { loaderData } = await parentMatchPromise;
       const relations =
-        kind !== undefined && loaderData !== undefined
+        (kind !== undefined || group === 'etc') && loaderData !== undefined
           ? await loadProjectedRelations({
               buildId: requireBuildId(params.buildId),
-              kind,
+              kind: kind ?? monsterDrops,
               rows: loaderData.rows,
               coverage: loaderData.coverage,
             })

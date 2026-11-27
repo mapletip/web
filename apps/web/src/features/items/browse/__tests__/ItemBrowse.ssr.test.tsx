@@ -11,6 +11,7 @@ import {
   createRouter,
   RouterProvider,
 } from '@tanstack/react-router';
+import { gzipSync } from 'node:zlib';
 import { renderToString } from 'react-dom/server';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -42,11 +43,12 @@ vi.mock(import('@mapletip/data/items'), async (original) => ({
 const mockedLoad = vi.mocked(loadItemBrowse);
 const mockedRelations = vi.mocked(getItemRelatedEntities);
 
-function fixtureRelation(buildId: BuildId): ItemRelatedEntityBrowsePack {
+function fixtureRelation(
+  buildId: BuildId,
+  kind: 'needed-for-quest' | 'used-in-recipe' | 'monster-drop',
+): ItemRelatedEntityBrowsePack {
   const descriptor =
-    fixtureRelease.builds.get(buildId)?.itemRelatedEntityBrowse[
-      'needed-for-quest'
-    ];
+    fixtureRelease.builds.get(buildId)?.itemRelatedEntityBrowse[kind];
   if (!descriptor) throw new Error(`Missing quest roster for ${buildId}`);
   const bytes = fixtureRelease.files.get(descriptor.path);
   if (!bytes) throw new Error(`Missing quest roster bytes for ${buildId}`);
@@ -155,9 +157,12 @@ describe('Items Browse server rendering', () => {
     mockedLoad.mockImplementation((buildId) =>
       Promise.resolve(fixtureBrowse(buildId)),
     );
-    mockedRelations.mockImplementation(({ buildId }) =>
+    mockedRelations.mockImplementation(({ buildId, kind }) =>
       Promise.resolve(
-        fixtureRelation(buildId === 'gms-v83' ? 'gms-v83' : 'cw-launch'),
+        fixtureRelation(
+          buildId === 'gms-v83' ? 'gms-v83' : 'cw-launch',
+          kind as 'needed-for-quest' | 'used-in-recipe' | 'monster-drop',
+        ),
       ),
     );
   });
@@ -167,6 +172,35 @@ describe('Items Browse server rendering', () => {
     expect(mainHtml(html)).toContain('Required by Thread Trial');
     expect(mainHtml(html)).toContain('Search quests');
   });
+
+  it('renders Monster Drops facts and the complete-coverage lookup in the first response', async () => {
+    const category = await renderPath('/maplestory/items/etc/monster-drops');
+    expect(mainHtml(category.html)).toContain(
+      'data-record-card-layout="identity"',
+    );
+    expect(mainHtml(category.html)).toContain('Sells for');
+    expect(mainHtml(category.html)).toContain('Not required');
+
+    const landing = await renderPath('/maplestory/items');
+    const lookup =
+      /<a[^>]*href="[^"]*dropUses[^"]*"[^>]*>[\s\S]*?Drops no quest or recipe uses[\s\S]*?<span[^>]*>(\d+)<\/span>[\s\S]*?<\/a>/u.exec(
+        mainHtml(landing.html),
+      );
+    expect(lookup?.[1]).toBeDefined();
+    expect(Number(lookup?.[1])).toBeGreaterThan(0);
+  });
+
+  it.each([
+    ['cw-launch', '/maplestory/items/etc/monster-drops'],
+    ['gms-v83', '/maplestory/gms-v83/items/etc/monster-drops'],
+  ] as const)(
+    'keeps %s Monster Drops below 510 KB gzipped',
+    async (_buildId, path) => {
+      const { html } = await renderPath(path);
+      const bytes = gzipSync(html).byteLength;
+      expect(bytes).toBeLessThan(510 * 1024);
+    },
+  );
 
   it('keeps Quest Items counts when the roster fails and removes the Quest picker', async () => {
     mockedRelations.mockRejectedValue(new Error('Fixture roster unavailable'));

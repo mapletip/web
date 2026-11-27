@@ -2,6 +2,7 @@ import type {
   BrowseSortOption,
   FacetDefinition,
   QueryFieldDefinition,
+  RecordFact,
 } from '@mapletip/component-library';
 import type { ItemBrowseCoverage } from '@mapletip/data/items';
 
@@ -17,8 +18,12 @@ export interface ItemCardContext {
 }
 
 export interface ItemCardDescription {
-  readonly layout?: 'picture' | 'short';
+  readonly layout?: 'picture' | 'short' | 'identity';
   readonly lead: (row: ItemRow, context: ItemCardContext) => string | undefined;
+  readonly facts?: (
+    row: ItemRow,
+    context: ItemCardContext,
+  ) => readonly RecordFact[];
   /** Pills and filters for the category page, given only this category's rows. */
   readonly facets?: (
     context: ItemCardContext & { readonly rows: readonly CategorizedItemRow[] },
@@ -27,6 +32,7 @@ export interface ItemCardDescription {
     context: ItemCardContext,
   ) => readonly QueryFieldDefinition<CategorizedItemRow>[];
   readonly sortOptions?: readonly BrowseSortOption[];
+  readonly defaultSort?: BrowseSortOption;
 }
 
 export interface ItemKind {

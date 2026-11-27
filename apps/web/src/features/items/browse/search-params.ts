@@ -10,6 +10,7 @@ export const ITEM_SORT_OPTIONS = [
 ] as const;
 
 export const itemBrowseSearch = defineBrowseSearch({
+  defaultSortKey: 'default-asc',
   sortOptions: [
     ...ITEM_SORT_OPTIONS,
     ...ITEM_KINDS.flatMap((kind: ItemKind) => kind.card?.sortOptions ?? []),

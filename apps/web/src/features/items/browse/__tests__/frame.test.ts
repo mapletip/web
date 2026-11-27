@@ -120,7 +120,7 @@ describe('itemPrimaryFact', () => {
           sellPrice: 10,
         }),
       }),
-    ).toBe('Required by a quest');
+    ).toBe('Sells for 10 mesos');
 
     expect(
       itemPrimaryFact({

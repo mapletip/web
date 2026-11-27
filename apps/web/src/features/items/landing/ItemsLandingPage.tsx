@@ -33,6 +33,8 @@ interface ItemsLandingPageProps {
   readonly buildId: BuildId;
   readonly rows: readonly CategorizedItemRow[];
   readonly coverage: ItemBrowseCoverage;
+  /** Monster Drops no quest or recipe uses; undefined when the build cannot say. */
+  readonly notRequiredDropCount?: number | undefined;
 }
 
 interface DirectoryCategory {
@@ -83,6 +85,7 @@ export function ItemsLandingPage({
   buildId,
   rows,
   coverage,
+  notRequiredDropCount,
 }: ItemsLandingPageProps): ReactElement {
   const navigate = useNavigate();
   const { heading } = itemPageMetadata({ buildId, all: false });
@@ -118,6 +121,7 @@ export function ItemsLandingPage({
         : 0,
     [rows, showCraftingLookup],
   );
+  const showUnusedLookup = notRequiredDropCount !== undefined;
 
   function navigateToAllResults(searchQuery: string): void {
     void navigate({
@@ -284,7 +288,7 @@ export function ItemsLandingPage({
             );
           })}
         </SimpleGrid>
-        {showCraftingLookup ? (
+        {showCraftingLookup || showUnusedLookup ? (
           <Paper
             component="section"
             withBorder
@@ -302,22 +306,47 @@ export function ItemsLandingPage({
               Quick lookups
             </Title>
             <ul className={classes['lookupsList']}>
-              <li className={classes['item']}>
-                <Link
-                  to="/maplestory/{-$buildId}/items/all"
-                  params={{ buildId: buildParam }}
-                  search={{
-                    ...itemBrowseSearch.defaultSearch,
-                    usedInRecipes: true,
-                  }}
-                  className={classes['lookupLink']}
-                >
-                  <span className={classes['label']}>Crafting ingredients</span>
-                  <span className={classes['count']}>
-                    {numberFormat.format(craftingCount)}
-                  </span>
-                </Link>
-              </li>
+              {showCraftingLookup ? (
+                <li className={classes['item']}>
+                  <Link
+                    to="/maplestory/{-$buildId}/items/all"
+                    params={{ buildId: buildParam }}
+                    search={{
+                      ...itemBrowseSearch.defaultSearch,
+                      usedInRecipes: true,
+                    }}
+                    className={classes['lookupLink']}
+                  >
+                    <span className={classes['label']}>
+                      Crafting ingredients
+                    </span>
+                    <span className={classes['count']}>
+                      {numberFormat.format(craftingCount)}
+                    </span>
+                  </Link>
+                </li>
+              ) : null}
+              {showUnusedLookup ? (
+                <li className={classes['item']}>
+                  <Link
+                    to={ITEM_GROUP_ROUTES.etc}
+                    params={{ buildId: buildParam, kind: 'monster-drops' }}
+                    search={{
+                      ...itemBrowseSearch.defaultSearch,
+                      dropUses: ['not-required'],
+                      sort: 'sellPrice-desc',
+                    }}
+                    className={classes['lookupLink']}
+                  >
+                    <span className={classes['label']}>
+                      Drops no quest or recipe uses
+                    </span>
+                    <span className={classes['count']}>
+                      {numberFormat.format(notRequiredDropCount ?? 0)}
+                    </span>
+                  </Link>
+                </li>
+              ) : null}
             </ul>
           </Paper>
         ) : null}

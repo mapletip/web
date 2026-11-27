@@ -1264,7 +1264,7 @@ const cwItemBrowseCoverage: ItemBrowseCoverage = {
     'monster-drop': 'complete',
     'needed-for-quest': 'complete',
     'quest-reward': 'complete',
-    'used-in-recipe': 'partial',
+    'used-in-recipe': 'complete',
   },
   playerFacts: {
     buff: 'complete',
