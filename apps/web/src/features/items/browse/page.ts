@@ -22,6 +22,13 @@ export const ITEM_GROUPS = [
   { id: 'cash', label: 'Pets & Cash' },
 ] as const;
 
+export const ITEM_GROUP_ROUTES = {
+  use: '/maplestory/{-$buildId}/items/use/{-$kind}',
+  etc: '/maplestory/{-$buildId}/items/etc/{-$kind}',
+  setup: '/maplestory/{-$buildId}/items/setup/{-$kind}',
+  cash: '/maplestory/{-$buildId}/items/cash/{-$kind}',
+} as const satisfies Record<ItemGroup, string>;
+
 export function itemPath({
   buildId,
   group,

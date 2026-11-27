@@ -35,6 +35,7 @@ import type { ItemKind } from '../kinds/types';
 import { formatItemFacts, ItemDrawerBody } from './ItemDrawerBody';
 import {
   ITEM_GROUPS,
+  ITEM_GROUP_ROUTES,
   itemPageMetadata,
   itemPath,
   type ItemGroup,
@@ -54,13 +55,6 @@ interface ItemFrameProps {
     options: OnSearchChangeOptions,
   ) => void | Promise<void>;
 }
-
-const GROUP_ROUTES = {
-  use: '/maplestory/{-$buildId}/items/use/{-$kind}',
-  etc: '/maplestory/{-$buildId}/items/etc/{-$kind}',
-  setup: '/maplestory/{-$buildId}/items/setup/{-$kind}',
-  cash: '/maplestory/{-$buildId}/items/cash/{-$kind}',
-} as const satisfies Record<ItemGroup, string>;
 
 const SUMMARY_NOUN = { one: 'Item', other: 'Items' } as const;
 const CARD_COLUMNS = { base: 2, md: 4, lg: 5 } as const;
@@ -317,7 +311,7 @@ export function ItemFrame({
                         : {
                             label: groupLabel,
                             linkProps: {
-                              to: GROUP_ROUTES[group],
+                              to: ITEM_GROUP_ROUTES[group],
                               params: {
                                 buildId: canonicalBuildParam(buildId),
                                 kind: undefined,

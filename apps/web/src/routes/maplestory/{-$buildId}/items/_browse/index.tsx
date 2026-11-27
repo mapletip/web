@@ -1,18 +1,15 @@
-import { Stack, Title } from '@mantine/core';
 import {
   createFileRoute,
-  Link,
+  getRouteApi,
   stripSearchParams,
 } from '@tanstack/react-router';
 
-import { BUILDS } from '@/config/maplekit';
 import { requireBuildId } from '@/features/detail';
-import {
-  ITEM_GROUPS,
-  itemPageHead,
-  itemPath,
-} from '@/features/items/browse/page';
+import { itemPageHead } from '@/features/items/browse/page';
 import { itemBrowseSearch } from '@/features/items/browse/search-params';
+import { ItemsLandingPage } from '@/features/items/landing/ItemsLandingPage';
+
+const browseRouteApi = getRouteApi('/maplestory/{-$buildId}/items/_browse');
 
 export const Route = createFileRoute('/maplestory/{-$buildId}/items/_browse/')({
   validateSearch: itemBrowseSearch.schema,
@@ -25,17 +22,10 @@ export const Route = createFileRoute('/maplestory/{-$buildId}/items/_browse/')({
     }),
   component: ItemsPage,
 });
+
 function ItemsPage() {
   const params = Route.useParams();
   const buildId = requireBuildId(params.buildId);
-  return (
-    <Stack p="lg">
-      <Title order={1}>MapleStory {BUILDS[buildId].label} Items</Title>
-      {ITEM_GROUPS.map((group) => (
-        <Link key={group.id} to={itemPath({ buildId, group: group.id })}>
-          {group.label}
-        </Link>
-      ))}
-    </Stack>
-  );
+  const result = browseRouteApi.useLoaderData();
+  return <ItemsLandingPage buildId={buildId} rows={result.rows} />;
 }
