@@ -11,7 +11,7 @@ import {
   type QueryFieldDefinition,
   type StateChangeDetails,
 } from '@mapletip/component-library';
-import { itemIconUrl } from '@mapletip/data/items';
+import { itemIconUrl, type ItemBrowseCoverage } from '@mapletip/data/items';
 import { Link, useRouter } from '@tanstack/react-router';
 import { useCallback, useMemo } from 'react';
 
@@ -47,6 +47,7 @@ import { itemBrowseSearch, ITEM_SORT_OPTIONS } from './search-params';
 interface ItemFrameProps {
   readonly buildId: BuildId;
   readonly rows: readonly CategorizedItemRow[];
+  readonly coverage?: ItemBrowseCoverage | undefined;
   readonly group?: ItemGroup | undefined;
   readonly kind?: ItemKind | undefined;
   readonly all?: boolean;
@@ -81,6 +82,11 @@ const ALL_QUERY_FIELDS: readonly QueryFieldDefinition<CategorizedItemRow>[] = [
     sortable: false,
   },
   {
+    id: 'usedInRecipes',
+    accessor: (row) => (row.usedInRecipeCount ?? 0) > 0,
+    sortable: false,
+  },
+  {
     id: 'questReward',
     accessor: (row) => (row.questRewardCount ?? 0) > 0,
     sortable: false,
@@ -109,6 +115,12 @@ const ALL_FACETS: readonly FacetDefinition<CategorizedItemRow>[] = [
     id: 'required-by-quests',
     field: 'requiredByQuests',
     label: 'Required by quests',
+    kind: 'boolean',
+  },
+  {
+    id: 'used-in-recipes',
+    field: 'usedInRecipes',
+    label: 'Used in recipes',
     kind: 'boolean',
   },
   {
@@ -209,6 +221,7 @@ function itemNavigationTree({
 export function ItemFrame({
   buildId,
   rows,
+  coverage,
   group,
   kind,
   all = false,
@@ -284,6 +297,13 @@ export function ItemFrame({
     },
     [overlay],
   );
+  const facets = useMemo(() => {
+    if (!all) return EMPTY_FACETS;
+    if (coverage?.relationships['used-in-recipe'] === 'unsupported') {
+      return ALL_FACETS.filter((facet) => facet.id !== 'used-in-recipes');
+    }
+    return ALL_FACETS;
+  }, [all, coverage]);
   const details =
     overlay.overlay?.type === 'record-details' ? overlay.overlay : undefined;
 
@@ -372,7 +392,7 @@ export function ItemFrame({
         idAccessor="sourceId"
         queryFields={all ? ALL_QUERY_FIELDS : CATEGORY_QUERY_FIELDS}
         searchFields={all ? ALL_SEARCH_FIELDS : CATEGORY_SEARCH_FIELDS}
-        facets={all ? ALL_FACETS : EMPTY_FACETS}
+        facets={facets}
         sortOptions={ITEM_SORT_OPTIONS}
         recordNoun={`${BUILDS[buildId].label} items`}
         summaryMode="total"

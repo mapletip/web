@@ -1,3 +1,19 @@
+.searchForm {
+  width: 100%;
+  max-width: 520px;
+}
+
+.searchInput {
+  min-height: 44px;
+}
+
+.seeAllOption {
+  width: 100%;
+  margin-top: 2px;
+  padding-top: 6px;
+  border-top: 1px solid var(--mapletip-color-border-subtle);
+}
+
 .panel {
   display: flex;
   flex-direction: column;
@@ -7,7 +23,8 @@
   border-color: var(--mapletip-color-border-subtle);
 }
 
-.panelTitle {
+.panelTitle,
+.lookupsTitle {
   margin: 0;
   padding-bottom: var(--mantine-spacing-xs);
   border-bottom: 1px solid var(--mapletip-color-border-subtle);
@@ -42,6 +59,15 @@
   list-style: none;
 }
 
+.lookupsList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--mantine-spacing-xs);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
 .item {
   min-width: 0;
 }
@@ -67,6 +93,28 @@
   color: var(--mapletip-color-ink);
 }
 
+.lookupLink {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--mantine-spacing-sm);
+  min-height: 44px;
+  padding: 6px var(--mantine-spacing-sm);
+  border: 1px solid var(--mapletip-color-border-subtle);
+  border-radius: var(--mantine-radius-sm);
+  color: var(--mapletip-color-ink);
+  font-size: var(--mantine-font-size-sm);
+  line-height: 1.35;
+  text-decoration: none;
+  transition:
+    background-color 150ms ease,
+    color 150ms ease;
+}
+
+.lookupLink:hover {
+  background-color: var(--mapletip-color-hover);
+  color: var(--mapletip-color-ink);
+}
+
 .label {
   flex: 1 1 auto;
   min-width: 0;
@@ -83,7 +131,8 @@
 
 @media (prefers-reduced-motion: reduce) {
   .panelHeadingLink,
-  .categoryLink {
+  .categoryLink,
+  .lookupLink {
     transition: none;
   }
 }

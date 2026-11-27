@@ -290,6 +290,7 @@ describe('Items Browse server rendering', () => {
     expect(html).toMatch(/<h1[^>]*>MapleStory Classic World Items<\/h1>/u);
     expect(text).toContain('Category choices');
     expect(text).toContain('Required by quests');
+    expect(text).toContain('Used in recipes');
     expect(text).toContain('Quest reward');
     expect(text).toContain('Scrolls (');
     expect(text).toContain('Monster Drops (');
@@ -317,11 +318,11 @@ describe('Items Browse server rendering', () => {
   });
 
   it.each([
-    ['cw-launch', '/maplestory/items', 'MapleStory Classic World Items'],
-    ['gms-v83', '/maplestory/gms-v83/items', 'MapleStory GMS v83 Items'],
+    ['cw-launch', '/maplestory/items', 'MapleStory Classic World Items', 1],
+    ['gms-v83', '/maplestory/gms-v83/items', 'MapleStory GMS v83 Items', 0],
   ] as const)(
     'renders the %s landing directory with every non-empty category link, counts and no item list',
-    async (buildId, path, expectedHeading) => {
+    async (buildId, path, expectedHeading, minCraftingCount) => {
       const browse = fixtureBrowse(buildId);
       const { html } = await renderPath(path);
       const main = mainHtml(html);
@@ -381,8 +382,48 @@ describe('Items Browse server rendering', () => {
       for (const row of browse.rows) {
         expect(main).not.toContain(row.name!);
       }
+
+      const craftingCount = browse.rows.filter(
+        (row) => (row.usedInRecipeCount ?? 0) > 0,
+      ).length;
+      expect(craftingCount).toBeGreaterThanOrEqual(minCraftingCount);
+      const craftingHref = `${itemPath({ buildId })}/all?usedInRecipes=true`;
+      const craftingInner = anchorInnerHtml({ html: main, href: craftingHref });
+      expect(craftingInner).toBeDefined();
+      expect(craftingInner).toContain('Crafting ingredients');
+      expect(craftingInner).toContain(String(craftingCount));
     },
   );
+
+  it('hides the Crafting ingredients lookup and Used in recipes filter when used-in-recipe is unsupported', async () => {
+    const base = fixtureBrowse('cw-launch');
+    mockedLoad.mockResolvedValue({
+      ...base,
+      coverage: {
+        ...base.coverage,
+        relationships: {
+          ...base.coverage.relationships,
+          'used-in-recipe': 'unsupported',
+        },
+      },
+    });
+
+    const landing = await renderPath('/maplestory/items');
+    expect(mainHtml(landing.html)).not.toContain('Crafting ingredients');
+
+    const all = await renderPath('/maplestory/items/all');
+    expect(mainHtml(all.html)).not.toContain('Used in recipes');
+  });
+
+  it('filters /items/all to items used in recipes when usedInRecipes=true', async () => {
+    const { html } = await renderPath(
+      '/maplestory/items/all?usedInRecipes=true',
+    );
+    const main = mainHtml(html);
+
+    expect(main).toContain('Woven Thread');
+    expect(main).not.toContain('Sample Draught');
+  });
 
   it.each([
     ['cw-launch', '/maplestory/items'],

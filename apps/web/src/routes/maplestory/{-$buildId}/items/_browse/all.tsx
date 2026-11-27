@@ -33,6 +33,7 @@ function ItemsPage() {
     <ItemFrame
       buildId={buildId}
       rows={result.rows}
+      coverage={result.coverage}
       all
       search={search}
       onSearchChange={({ search: nextSearch, replace }) =>
