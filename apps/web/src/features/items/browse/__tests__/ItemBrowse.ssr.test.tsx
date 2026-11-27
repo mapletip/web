@@ -393,9 +393,15 @@ describe('Items Browse server rendering', () => {
     const { html } = await renderPath('/maplestory/items/use/other-use');
     const main = mainHtml(html);
     expect(main).toContain('Plain Use Item');
-    expect(main).toContain(
-      'An invented item with a short published description.',
+    expect(main).toMatch(/<span[^>]*>Double-click<\/span>/u);
+    expect(main).toMatch(
+      /<span[^>]*font-weight:600[^>]*>Double-click<\/span>/u,
     );
+    expect(main).toContain(
+      'to open the practice box. A small surprise waits inside.',
+    );
+    expect(main).not.toContain('#c');
+    expect(main).not.toContain('\\n');
     expect(main).toContain('data-record-card-layout="compactMediaAside"');
   });
 

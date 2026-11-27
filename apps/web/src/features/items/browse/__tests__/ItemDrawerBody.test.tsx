@@ -191,6 +191,29 @@ describe('ItemDrawerBody', () => {
     expect(readDescriptions).not.toHaveBeenCalled();
   });
 
+  it('renders description text codes as emphasized words and spaces', async () => {
+    const { container } = render(
+      <MantineProvider>
+        <ItemDrawerBody
+          record={row()}
+          categoryLabel="Other Use"
+          reader={makeReader()}
+          descriptions={{
+            'fixture-item':
+              '#cDouble-click# the practice box.\\nSee what is inside.',
+          }}
+        />
+      </MantineProvider>,
+    );
+    await screen.findByText('Double-click');
+    expect(container.textContent).toContain(
+      'Double-click the practice box. See what is inside.',
+    );
+    expect(container.textContent).not.toContain('#');
+    expect(container.textContent).not.toContain('\\n');
+    expect(screen.getByText('Double-click')).toHaveStyle({ fontWeight: '600' });
+  });
+
   it('renders description, quests, recipes, monsters with VOD links, and expands shortened lists', async () => {
     const questsPack: ItemDrawerPack<'needed-for-quest'> = {
       contractVersion: '2.0',

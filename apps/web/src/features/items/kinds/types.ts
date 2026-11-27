@@ -10,6 +10,7 @@ import type {
 } from '@mapletip/data/items';
 import type { ReactNode } from 'react';
 
+import type { GameTextSegment } from '../browse/game-text';
 import type { CategorizedItemRow, ItemRow } from '../browse/project';
 import type {
   ProjectedRelationKind,
@@ -35,7 +36,10 @@ export interface ItemCardDescription {
     row: CategorizedItemRow,
     context: ItemCardContext,
   ) => ReactNode;
-  readonly lead: (row: ItemRow, context: ItemCardContext) => string | undefined;
+  readonly lead: (
+    row: ItemRow,
+    context: ItemCardContext,
+  ) => string | readonly GameTextSegment[] | undefined;
   readonly secondaryLineClamp?: number;
   readonly footer?: (
     row: CategorizedItemRow,
