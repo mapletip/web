@@ -94,12 +94,11 @@ describe('buildGroupShelves', () => {
     ]);
 
     expect(shelves[1]?.totalCount).toBe(6);
+    // Monster Drops use identity cards, three to the widest row.
     expect(shelves[1]?.previewRows.map((row) => row.name)).toEqual([
       'Drop 01',
       'Drop 02',
       'Drop 03',
-      'Drop 04',
-      'Drop 05',
     ]);
 
     expect(shelves[2]?.totalCount).toBe(1);

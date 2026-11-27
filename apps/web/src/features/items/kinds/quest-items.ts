@@ -1,3 +1,4 @@
+import { relationFilter, relationQueryField } from './relation-filter';
 import type { ItemKind } from './types';
 
 export const questItems = {
@@ -39,23 +40,11 @@ export const questItems = {
             : []),
         ],
       },
-      ...(relations['needed-for-quest']?.targets.length
-        ? [
-            {
-              id: 'quest',
-              field: 'quest',
-              label: 'Quest',
-              kind: 'multi-select' as const,
-              options: relations['needed-for-quest'].targets.map(
-                ({ publicId, name }) => ({ value: publicId, label: name }),
-              ),
-              picker: {
-                placeholder: 'Search quests',
-                nothingFound: 'No quests match',
-              },
-            },
-          ]
-        : []),
+      ...relationFilter({
+        relations,
+        kind: 'needed-for-quest',
+        label: 'Quest',
+      }),
     ],
     queryFields: ({ relations }) => [
       {
@@ -64,17 +53,11 @@ export const questItems = {
           (row.neededForQuestCount ?? 0) > 0 ? 'required' : 'unknown',
         sortable: false,
       },
-      {
-        id: 'quest',
-        accessor: (row) =>
-          (relations['needed-for-quest']?.byItem[row.key] ?? [])
-            .map(
-              (index) =>
-                relations['needed-for-quest']?.targets[index]?.publicId,
-            )
-            .filter((id) => id !== undefined),
-        sortable: false,
-      },
+      relationQueryField({
+        relations,
+        kind: 'needed-for-quest',
+        label: 'Quest',
+      }),
     ],
   },
 } satisfies ItemKind;

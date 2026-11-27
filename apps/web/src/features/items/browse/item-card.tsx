@@ -10,8 +10,13 @@ import type { ItemCardContext, ItemKind } from '../kinds/types';
 import type { CategorizedItemRow } from './project';
 
 const PICTURE_CARD_COLUMNS = { base: 2, md: 4, lg: 5 } as const;
-// Short cards put text beside the picture, so they need wider columns.
-const SHORT_CARD_COLUMNS = { base: 1, sm: 2, lg: 3 } as const;
+// Short and identity cards put text beside the picture, so they need wider columns.
+const ASIDE_CARD_COLUMNS = { base: 1, sm: 2, lg: 3 } as const;
+
+/** Picture cards show the icon across the top; every other layout puts it beside the name. */
+export function isPictureLayout(kind: ItemKind | undefined): boolean {
+  return (kind?.card?.layout ?? 'picture') === 'picture';
+}
 
 /** Grid columns for a category's cards; cross-category results use picture cards. */
 export function itemCardColumns({
@@ -24,9 +29,7 @@ export function itemCardColumns({
   readonly md?: number;
   readonly lg: number;
 } {
-  return kind?.card?.layout === 'short'
-    ? SHORT_CARD_COLUMNS
-    : PICTURE_CARD_COLUMNS;
+  return isPictureLayout(kind) ? PICTURE_CARD_COLUMNS : ASIDE_CARD_COLUMNS;
 }
 export const ITEM_KIND_LABELS: ReadonlyMap<string, string> = new Map(
   ITEM_KINDS.map((entry) => [entry.id, entry.label]),
@@ -41,9 +44,9 @@ export interface RenderItemCardOptions {
   readonly context?: ItemCardContext | undefined;
 }
 
-// 32px item icons, magnified to fill each layout's media slot (52px column on short cards).
+// 32px item icons, magnified to fill each layout's media slot (52-56px beside the name).
 const PICTURE_THUMBNAIL = { size: 80, magnify: 2 } as const;
-const SHORT_THUMBNAIL = { size: 48, magnify: 1.5 } as const;
+const ASIDE_THUMBNAIL = { size: 48, magnify: 1.5 } as const;
 
 /** Shared item card renderer used by category pages, cross-category results, and group shelves. */
 export function renderItemCard({
@@ -66,13 +69,12 @@ export function renderItemCard({
           ? undefined
           : itemIconUrl(MAPLEKIT_RELEASE.baseUrl, record.icon)
       }
-      {...(card?.layout === 'short' ? SHORT_THUMBNAIL : PICTURE_THUMBNAIL)}
+      {...(isPictureLayout(kind) ? PICTURE_THUMBNAIL : ASIDE_THUMBNAIL)}
     />
   );
   const shared = {
     title: record.name,
     media,
-    ...(fact === undefined ? {} : { secondaryLine: fact }),
     ...(openDetails === undefined
       ? {}
       : {
@@ -80,14 +82,30 @@ export function renderItemCard({
           ...(isDetailsOpen === undefined ? {} : { isDetailsOpen }),
         }),
   };
+  if (card?.layout === 'identity') {
+    const facts = card.facts?.(record, context);
+    return (
+      <RecordCard
+        layout="identity"
+        {...(fact === undefined ? {} : { leadLine: fact })}
+        {...(facts === undefined ? {} : { facts })}
+        {...shared}
+      />
+    );
+  }
   return card?.layout === 'short' ? (
-    <RecordCard layout="compactMediaAside" {...shared} />
+    <RecordCard
+      layout="compactMediaAside"
+      {...(fact === undefined ? {} : { secondaryLine: fact })}
+      {...shared}
+    />
   ) : (
     <RecordCard
       layout="picture"
       leadLine={
         showCategoryLabel ? ITEM_KIND_LABELS.get(record.kind) : undefined
       }
+      {...(fact === undefined ? {} : { secondaryLine: fact })}
       {...shared}
     />
   );

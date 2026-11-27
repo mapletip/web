@@ -552,7 +552,7 @@ const itemCases: readonly ItemCase[] = [
   {
     name: 'a relationship whose coverage is not complete',
     matches: () =>
-      browsePack('cw-launch').coverage.relationships['used-in-recipe'] !==
+      browsePack('gms-v83').coverage.relationships['used-in-recipe'] !==
       'complete',
   },
   {

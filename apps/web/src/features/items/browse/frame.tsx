@@ -249,9 +249,24 @@ export function ItemFrame({
     () => createItemRelationReader(buildId),
     [buildId],
   );
+  const sortOptions = useMemo(() => {
+    const options = [...ITEM_SORT_OPTIONS, ...(kind?.card?.sortOptions ?? [])];
+    const preferred = kind?.card?.defaultSort;
+    return preferred === undefined
+      ? options
+      : [
+          preferred,
+          ...options.filter(
+            (option) =>
+              option.field !== preferred.field ||
+              option.direction !== preferred.direction,
+          ),
+        ];
+  }, [kind]);
   const { browseState, handleStateChange: commitState } = useBrowseUrlState({
     address: itemBrowseSearch,
     search,
+    sortOptions,
     onSearchChange,
   });
   const groupLabel = ITEM_GROUPS.find((entry) => entry.id === group)?.label;
@@ -415,11 +430,7 @@ export function ItemFrame({
         }
         searchFields={all ? ALL_SEARCH_FIELDS : CATEGORY_SEARCH_FIELDS}
         facets={facets}
-        sortOptions={
-          kind?.card?.sortOptions === undefined
-            ? ITEM_SORT_OPTIONS
-            : [...ITEM_SORT_OPTIONS, ...kind.card.sortOptions]
-        }
+        sortOptions={sortOptions}
         recordNoun={`${BUILDS[buildId].label} items`}
         summaryMode="total"
         summaryNoun={SUMMARY_NOUN}
@@ -437,6 +448,7 @@ export function ItemFrame({
                   buildId={buildId}
                   group={group}
                   records={matchingRecords}
+                  context={{ coverage, relations }}
                   selectedRecordId={details?.recordId}
                   openDetails={(recordId) =>
                     overlay.open({ type: 'record-details', recordId })

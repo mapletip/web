@@ -6,9 +6,9 @@ import type { BuildId } from '@/config/maplekit';
 import { canonicalBuildParam } from '@/features/detail';
 
 import { ITEM_KINDS } from '../kinds';
-import type { ItemKind } from '../kinds/types';
+import type { ItemKind, ItemCardContext } from '../kinds/types';
 
-import { itemCardColumns, renderItemCard } from './item-card';
+import { isPictureLayout, itemCardColumns, renderItemCard } from './item-card';
 import classes from './ItemsGroupPage.module.css';
 import { ITEM_GROUP_ROUTES, type ItemGroup } from './page';
 import type { CategorizedItemRow } from './project';
@@ -26,6 +26,7 @@ interface ItemsGroupShelvesProps {
   readonly records: readonly CategorizedItemRow[];
   readonly selectedRecordId?: string | undefined;
   readonly openDetails: (recordId: string) => void;
+  readonly context: ItemCardContext;
 }
 
 const numberFormat = new Intl.NumberFormat('en-US');
@@ -42,18 +43,26 @@ function sortKeyString(value: unknown): string {
 
 function sortByDefaultOrder(
   rows: readonly CategorizedItemRow[],
+  kind: ItemKind,
 ): readonly CategorizedItemRow[] {
   const defaultSort =
-    itemBrowseSearch.defaultState.sort ?? ITEM_SORT_OPTIONS[0];
+    kind.card?.defaultSort ??
+    itemBrowseSearch.defaultState.sort ??
+    ITEM_SORT_OPTIONS[0];
   const direction = defaultSort.direction === 'desc' ? -1 : 1;
   const field = defaultSort.field as keyof CategorizedItemRow;
-  return [...rows].sort(
-    (left, right) =>
-      collator.compare(
-        sortKeyString(left[field]),
-        sortKeyString(right[field]),
-      ) * direction,
-  );
+  return [...rows].sort((left, right) => {
+    const order =
+      typeof left[field] === 'number' && typeof right[field] === 'number'
+        ? Number(left[field]) - Number(right[field])
+        : collator.compare(
+            sortKeyString(left[field]),
+            sortKeyString(right[field]),
+          );
+    return order === 0
+      ? collator.compare(left.name ?? '', right.name ?? '')
+      : order * direction;
+  });
 }
 
 /** Build one preview shelf per non-empty category of the group in rail order. */
@@ -80,7 +89,7 @@ export function buildGroupShelves({
     shelves.push({
       kind,
       totalCount: kindRows.length,
-      previewRows: sortByDefaultOrder(kindRows).slice(
+      previewRows: sortByDefaultOrder(kindRows, kind).slice(
         0,
         itemCardColumns({ kind }).lg,
       ),
@@ -96,6 +105,7 @@ export function ItemsGroupShelves({
   records,
   selectedRecordId,
   openDetails,
+  context,
 }: ItemsGroupShelvesProps): ReactElement {
   const shelves = buildGroupShelves({ group, rows: records });
   return (
@@ -135,11 +145,15 @@ export function ItemsGroupShelves({
               cols={itemCardColumns({ kind: shelf.kind })}
               spacing="sm"
               className={classes['shelfGrid']}
+              data-card-columns={
+                isPictureLayout(shelf.kind) ? 'picture' : 'aside'
+              }
             >
               {shelf.previewRows.map((row) => (
                 <Fragment key={row.sourceId}>
                   {renderItemCard({
                     record: row,
+                    context,
                     openDetails: () => openDetails(row.sourceId),
                     isDetailsOpen: selectedRecordId === row.sourceId,
                   })}
