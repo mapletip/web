@@ -25,7 +25,12 @@ function fixtureRecords({ buildId }: { buildId: (typeof buildIds)[number] }) {
 }
 
 function fixtureRow({ overrides }: { overrides: Partial<ItemRow> }): ItemRow {
-  return { sourceId: 'fixture', itemClass: 'consume', ...overrides };
+  return {
+    key: 'item:fixture',
+    sourceId: 'fixture',
+    itemClass: 'consume',
+    ...overrides,
+  };
 }
 
 describe('item kind registry', () => {

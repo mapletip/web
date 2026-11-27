@@ -1,3 +1,4 @@
+import { fixtureRelease } from '../../src/mocks/release';
 import { expect, test } from '../fixtures';
 
 import { ItemsPage } from './page/items-page';
@@ -169,4 +170,63 @@ test('Items card opens and closes the item drawer with focus return and stable a
   await expect(cardButton).toHaveAttribute('aria-expanded', 'false');
   await expect(cardButton).toBeFocused();
   await expect(page).toHaveURL(path);
+});
+
+test('Items drawer shortens monster lists beyond the limit and expands on request', async ({
+  page,
+}) => {
+  const items = new ItemsPage(page);
+  await items.goto('/maplestory/items/etc/monster-drops?q=Pebble%20Shard%2001');
+
+  await items.itemAction('Pebble Shard 01').click();
+  const drawer = page.getByRole('dialog', { name: 'Pebble Shard 01' });
+  const monsters = drawer.getByRole('region', { name: 'Dropped by monsters' });
+  await expect(monsters.getByRole('listitem')).toHaveCount(6);
+  const showAll = monsters.getByRole('button', { name: 'Show all 7' });
+  await expect(showAll).toBeVisible();
+  await showAll.click();
+  await expect(monsters.getByRole('listitem')).toHaveCount(7);
+  await expect(showAll).toBeHidden();
+});
+
+test('Items drawer keeps item facts when connections fail, hides diagnostics, and recovers on retry', async ({
+  page,
+}) => {
+  const neededQuestPath = `/${fixtureRelease.builds.get('cw-launch')!.itemRelatedEntityBrowse['needed-for-quest']!.path}`;
+  const items = new ItemsPage(page);
+  await items.goto('/maplestory/items/etc/ores-and-gems');
+
+  await page.evaluate((path) => {
+    const originalFetch = window.fetch.bind(window);
+    let failOnce = true;
+    window.fetch = async (input, init) => {
+      const url = input instanceof Request ? input.url : String(input);
+      if (failOnce && new URL(url).pathname === path) {
+        failOnce = false;
+        return new Response('Unavailable', { status: 503 });
+      }
+      return originalFetch(input, init);
+    };
+  }, neededQuestPath);
+
+  await items.itemAction('Woven Thread').click();
+  const drawer = page.getByRole('dialog', { name: 'Woven Thread' });
+  await expect(drawer).toBeVisible();
+  await expect(drawer).toContainText('Ores & Gems');
+  await expect(drawer).toContainText('Sells for 35 mesos');
+  await expect(drawer.getByRole('alert')).toHaveText(
+    'Quests, recipes and monsters could not be loaded.',
+  );
+  await expect(drawer).not.toContainText('503');
+  await expect(drawer).not.toContainText('v2/items');
+
+  await drawer.getByRole('button', { name: 'Try again' }).click();
+  await expect(drawer).toContainText('Thread Trial');
+  await expect(drawer).toContainText('4 needed');
+  await expect(drawer).toContainText('Level 8');
+  await expect(drawer).toContainText('Paper Kite');
+  await expect(drawer).toContainText('2 needed');
+  await expect(drawer).toContainText('Crowned Warden');
+  await expect(drawer).toContainText('Level 17');
+  await expect(drawer).toContainText('Source: GMS v83 Monster Book.');
 });

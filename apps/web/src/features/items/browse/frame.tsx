@@ -38,6 +38,7 @@ import {
   type ItemGroup,
 } from './page';
 import type { CategorizedItemRow } from './project';
+import { createItemRelationReader } from './relations';
 import { itemBrowseSearch, ITEM_SORT_OPTIONS } from './search-params';
 
 interface ItemFrameProps {
@@ -77,6 +78,10 @@ export function ItemFrame({
 }: ItemFrameProps) {
   const router = useRouter();
   const overlay = useRouteOverlay(browseOverlayOptions);
+  const relationReader = useMemo(
+    () => createItemRelationReader(buildId),
+    [buildId],
+  );
   const { browseState, handleStateChange: commitState } = useBrowseUrlState({
     address: itemBrowseSearch,
     search,
@@ -282,6 +287,7 @@ export function ItemFrame({
           <ItemDrawerBody
             record={record}
             categoryLabel={KIND_LABELS.get(record.kind)}
+            reader={relationReader}
           />
         )}
         recordDetails={{
