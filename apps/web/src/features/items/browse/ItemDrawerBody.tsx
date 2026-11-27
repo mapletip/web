@@ -15,6 +15,7 @@ import { MAPLEKIT_RELEASE } from '@/config/maplekit';
 import { DropSources } from '@/features/drops';
 
 import { formatBuff } from './buff-format';
+import { numberFormat } from './number-format';
 import type { CategorizedItemRow } from './project';
 import {
   ITEM_DRAWER_MONSTER_LIMIT,
@@ -28,8 +29,6 @@ import {
   type ItemRelationReader,
 } from './relations';
 import { formatSellPrice } from './sell-price';
-
-const numberFormat = new Intl.NumberFormat('en-US');
 
 /** Plain US English statements for the published facts on an item row. */
 export function formatItemFacts({

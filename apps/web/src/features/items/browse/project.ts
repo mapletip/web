@@ -29,7 +29,7 @@ export type ItemRow = {
   readonly key: string;
   readonly sourceId: string;
   readonly itemClass: ItemBrowseClass;
-  readonly name?: string;
+  readonly name: string;
   readonly icon?: string;
   readonly types?: readonly ItemBrowseType[];
   readonly functions?: readonly ItemBrowseFunction[];
@@ -40,7 +40,6 @@ export type ItemRow = {
   readonly questRewardCount?: number;
   readonly usedInRecipeCount?: number;
   readonly questFlag?: boolean;
-  readonly family?: string;
   readonly hp?: number;
   readonly mp?: number;
   readonly hpPercent?: number;
@@ -138,7 +137,6 @@ export function projectItemBrowseRows(
       }
 
       setField(row, 'questFlag', record.questFlag);
-      setField(row, 'family', record.family || undefined);
       setField(row, 'attack', record.projectileAttack);
       setField(row, 'hp', record.recovery?.hp);
       setField(row, 'mp', record.recovery?.mp);
@@ -187,9 +185,7 @@ export function projectItemBrowseRows(
       };
       return [categorized];
     })
-    .sort((left, right) =>
-      nameCollator.compare(left.name ?? '', right.name ?? ''),
-    );
+    .sort((left, right) => nameCollator.compare(left.name, right.name));
 }
 
 const nameCollator = new Intl.Collator('en-US');

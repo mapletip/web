@@ -12,6 +12,7 @@ import {
 } from '@/features/drops';
 import { resolveMonsterSpriteUrl } from '@/features/monsters/shared/sprite';
 
+import { numberFormat } from './number-format';
 import type { CategorizedItemRow } from './project';
 
 export type ItemDrawerRelationKind =
@@ -45,8 +46,6 @@ export const REQUIRED_QUEST_ROLES: ReadonlySet<QuestRole> = new Set([
   'held-to-complete',
   'held-to-start',
 ]);
-
-const numberFormat = new Intl.NumberFormat('en-US');
 
 /** One lazy relationship and description reader per mounted Items page. */
 export function createItemRelationReader(buildId: BuildId) {

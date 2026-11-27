@@ -66,7 +66,9 @@ export interface ItemCardDescription {
     context: ItemCardContext,
   ) => readonly QueryFieldDefinition<CategorizedItemRow>[];
   readonly sortOptions?: readonly BrowseSortOption[];
-  readonly defaultSort?: BrowseSortOption;
+  readonly defaultSort?: Omit<BrowseSortOption, 'field'> & {
+    readonly field: keyof CategorizedItemRow | 'typeRank';
+  };
 }
 
 export interface ItemKind {

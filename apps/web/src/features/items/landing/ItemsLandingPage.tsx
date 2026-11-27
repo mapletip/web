@@ -17,6 +17,7 @@ import { BrowsePageShell } from '@/components/BrowsePageShell';
 import { BUILDS, MAPLEKIT_RELEASE, type BuildId } from '@/config/maplekit';
 import { canonicalBuildParam, DetailBreadcrumbs } from '@/features/detail';
 
+import { numberFormat } from '../browse/number-format';
 import {
   ITEM_GROUPS,
   ITEM_GROUP_ROUTES,
@@ -25,11 +26,11 @@ import {
 import type { CategorizedItemRow } from '../browse/project';
 import type { ProjectedRelation } from '../browse/relation-projection';
 import { itemBrowseSearch } from '../browse/search-params';
-import { ITEM_KINDS } from '../kinds';
+import { ITEM_KINDS, ITEM_KINDS_BY_ID } from '../kinds';
 import type { ItemKind } from '../kinds/types';
 
 import classes from './ItemsLandingPage.module.css';
-import { matchItemSuggestions } from './suggestions';
+import { MAX_ITEM_SUGGESTIONS, matchItemSuggestions } from './suggestions';
 
 interface ItemsLandingPageProps {
   readonly buildId: BuildId;
@@ -55,10 +56,6 @@ interface DirectoryPanel {
 }
 
 const SEE_ALL_RESULTS_VALUE = '__see_all_results__';
-const KINDS_BY_ID: ReadonlyMap<string, ItemKind> = new Map(
-  ITEM_KINDS.map((kind) => [kind.id, kind]),
-);
-const numberFormat = new Intl.NumberFormat('en-US');
 
 function buildDirectoryPanels({
   rows,
@@ -100,24 +97,22 @@ export function ItemsLandingPage({
   const [query, setQuery] = useState('');
 
   const panels = useMemo(() => buildDirectoryPanels({ rows }), [rows]);
-  const suggestions = useMemo(
-    () => matchItemSuggestions({ rows, query }),
-    [rows, query],
+  const namedRows = useMemo(
+    () =>
+      rows.map((row) => ({
+        value: row.sourceId,
+        label: row.name,
+      })),
+    [rows],
   );
   const suggestionsById = useMemo(
-    () => new Map(suggestions.map((row) => [row.sourceId, row])),
-    [suggestions],
+    () => new Map(rows.map((row) => [row.sourceId, row])),
+    [rows],
   );
-  const autocompleteData = useMemo(() => {
-    if (suggestions.length === 0) return [];
-    return [
-      ...suggestions.map((row) => ({
-        value: row.sourceId,
-        label: row.name ?? '',
-      })),
-      { value: SEE_ALL_RESULTS_VALUE, label: query.trim() },
-    ];
-  }, [query, suggestions]);
+  const autocompleteData = useMemo(
+    () => [...namedRows, { value: SEE_ALL_RESULTS_VALUE, label: query.trim() }],
+    [namedRows, query],
+  );
 
   const showCraftingLookup =
     coverage.relationships['used-in-recipe'] !== 'unsupported';
@@ -174,8 +169,8 @@ export function ItemsLandingPage({
       return;
     }
     const row = suggestionsById.get(value);
-    const kind = row === undefined ? undefined : KINDS_BY_ID.get(row.kind);
-    if (row?.name === undefined || kind === undefined) return;
+    const kind = row === undefined ? undefined : ITEM_KINDS_BY_ID.get(row.kind);
+    if (row === undefined || kind === undefined) return;
     void navigate({
       to: ITEM_GROUP_ROUTES[kind.group],
       params: { buildId: buildParam, kind: kind.slug },
@@ -195,7 +190,8 @@ export function ItemsLandingPage({
       );
     }
     const row = suggestionsById.get(option.value);
-    const kind = row === undefined ? undefined : KINDS_BY_ID.get(row.kind);
+    if (row === undefined) return null;
+    const kind = ITEM_KINDS_BY_ID.get(row.kind);
     return (
       <EntityOption
         icon={
@@ -208,7 +204,7 @@ export function ItemsLandingPage({
             size={24}
           />
         }
-        label={row?.name ?? option.value}
+        label={row.name}
         {...(kind === undefined ? {} : { description: kind.label })}
       />
     );
@@ -241,7 +237,8 @@ export function ItemsLandingPage({
             classNames={{ input: classes['searchInput'] }}
             comboboxProps={{ shadow: 'md', offset: 6 }}
             data={autocompleteData}
-            filter={({ options }) => options}
+            filter={matchItemSuggestions}
+            limit={MAX_ITEM_SUGGESTIONS}
             value={query}
             onChange={(next) => {
               // Choosing an option writes its value (an item id) into the input;

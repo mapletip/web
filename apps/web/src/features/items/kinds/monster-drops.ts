@@ -24,6 +24,7 @@ function hasNoUses({
 }): boolean {
   return (
     coverage?.relationships['needed-for-quest'] === 'complete' &&
+    relations['needed-for-quest'] !== undefined &&
     coverage.relationships['used-in-recipe'] === 'complete' &&
     (row.neededForQuestCount ?? 0) === 0 &&
     (row.usedInRecipeCount ?? 0) === 0 &&
@@ -100,6 +101,7 @@ export const monsterDrops = {
           { value: 'quests', label: 'Required by quests' },
           { value: 'recipes', label: 'Used in recipes' },
           ...(coverage?.relationships['needed-for-quest'] === 'complete' &&
+          relations['needed-for-quest'] !== undefined &&
           coverage.relationships['used-in-recipe'] === 'complete'
             ? [{ value: 'not-required', label: 'Not required' }]
             : []),

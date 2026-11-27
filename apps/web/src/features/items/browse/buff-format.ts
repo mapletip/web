@@ -1,5 +1,7 @@
 import type { ItemBrowseRecordV2_2 } from '@mapletip/data/items';
 
+import { numberFormat } from './number-format';
+
 type Buff = NonNullable<ItemBrowseRecordV2_2['buff']>;
 type BuffStat = Buff['effects'][number]['stat'];
 
@@ -19,8 +21,6 @@ export const BUFF_STAT_LABELS: Readonly<Record<BuffStat, string>> = {
   itemDropRate: 'item drop rate',
   mesoDropRate: 'meso drop rate',
 };
-
-const numberFormat = new Intl.NumberFormat('en-US');
 
 function formatDuration(seconds: number): string {
   if (seconds < 60) return `${seconds} sec`;

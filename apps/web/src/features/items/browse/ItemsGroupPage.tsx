@@ -1,18 +1,20 @@
 import { SimpleGrid, Title } from '@mantine/core';
 import { Link } from '@tanstack/react-router';
-import { Fragment, type ReactElement } from 'react';
+import { Fragment, useMemo, type ReactElement } from 'react';
 
 import type { BuildId } from '@/config/maplekit';
 import { canonicalBuildParam } from '@/features/detail';
 
 import { ITEM_KINDS } from '../kinds';
+import { kindSortValue } from '../kinds/sort-value';
 import type { ItemKind, ItemCardContext } from '../kinds/types';
 
 import { isPictureLayout, itemCardColumns, renderItemCard } from './item-card';
 import classes from './ItemsGroupPage.module.css';
+import { numberFormat } from './number-format';
 import { ITEM_GROUP_ROUTES, type ItemGroup } from './page';
 import type { CategorizedItemRow } from './project';
-import { itemBrowseSearch, ITEM_SORT_OPTIONS } from './search-params';
+import { itemBrowseSearch } from './search-params';
 
 interface GroupCategoryShelf {
   readonly kind: ItemKind;
@@ -29,7 +31,6 @@ interface ItemsGroupShelvesProps {
   readonly context: ItemCardContext;
 }
 
-const numberFormat = new Intl.NumberFormat('en-US');
 const collator = new Intl.Collator('en-US', {
   numeric: true,
   sensitivity: 'base',
@@ -45,23 +46,12 @@ function sortByDefaultOrder(
   rows: readonly CategorizedItemRow[],
   kind: ItemKind,
 ): readonly CategorizedItemRow[] {
-  const defaultSort =
-    kind.card?.defaultSort ??
-    itemBrowseSearch.defaultState.sort ??
-    ITEM_SORT_OPTIONS[0];
+  const defaultSort = kind.card?.defaultSort ?? {
+    field: 'name',
+    direction: 'asc',
+  };
   const direction = defaultSort.direction === 'desc' ? -1 : 1;
-  const field = defaultSort.field as keyof CategorizedItemRow;
-  const queryField = kind.card
-    ?.queryFields?.({ coverage: undefined, relations: {} })
-    .find(
-      (entry) => typeof entry !== 'string' && entry.id === defaultSort.field,
-    );
-  const accessor =
-    queryField && typeof queryField !== 'string'
-      ? queryField.accessor
-      : undefined;
-  const value = (row: CategorizedItemRow): unknown =>
-    typeof accessor === 'function' ? accessor(row) : row[accessor ?? field];
+  const value = kindSortValue({ kind, field: defaultSort.field });
   return [...rows].sort((left, right) => {
     const leftValue = value(left);
     const rightValue = value(right);
@@ -69,9 +59,7 @@ function sortByDefaultOrder(
       typeof leftValue === 'number' && typeof rightValue === 'number'
         ? leftValue - rightValue
         : collator.compare(sortKeyString(leftValue), sortKeyString(rightValue));
-    return order === 0
-      ? collator.compare(left.name ?? '', right.name ?? '')
-      : order * direction;
+    return order * direction;
   });
 }
 
@@ -99,10 +87,12 @@ export function buildGroupShelves({
     shelves.push({
       kind,
       totalCount: kindRows.length,
-      previewRows: sortByDefaultOrder(kindRows, kind).slice(
-        0,
-        itemCardColumns({ kind }).lg,
-      ),
+      previewRows: sortByDefaultOrder(
+        [...kindRows].sort((left, right) =>
+          collator.compare(left.name, right.name),
+        ),
+        kind,
+      ).slice(0, itemCardColumns({ kind }).lg),
     });
   }
   return shelves;
@@ -117,7 +107,10 @@ export function ItemsGroupShelves({
   openDetails,
   context,
 }: ItemsGroupShelvesProps): ReactElement {
-  const shelves = buildGroupShelves({ group, rows: records });
+  const shelves = useMemo(
+    () => buildGroupShelves({ group, rows: records }),
+    [group, records],
+  );
   return (
     <div className={classes['shelves']}>
       {shelves.map((shelf) => {

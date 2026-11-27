@@ -47,3 +47,8 @@ export function assignItemKind({
 }) {
   return ITEM_KINDS.find((kind) => kind.matches(row));
 }
+
+export const ITEM_KINDS_BY_ID: ReadonlyMap<
+  string,
+  (typeof ITEM_KINDS)[number]
+> = new Map(ITEM_KINDS.map((kind) => [kind.id, kind]));
