@@ -68,6 +68,7 @@ export type CategorizedItemRow = ItemRow & {
   readonly kind: string;
   readonly kindPath: readonly [string, string, string];
   readonly scrollMembers?: readonly CategorizedItemRow[];
+  readonly versions?: readonly CategorizedItemRow[];
   readonly names?: readonly string[];
   readonly scrollSort?: string;
   readonly scrollStats?: readonly (keyof ItemBrowseScrollDeltas)[];

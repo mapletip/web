@@ -318,6 +318,38 @@ interface ItemDrawerBodyProps {
   readonly reader: ItemRelationReader;
   readonly descriptions?: Readonly<Record<string, string>>;
   readonly additionalContent?: ReactNode;
+  readonly openVersion?: (sourceId: string) => void;
+}
+
+export function versionDetails({
+  record,
+  versions,
+}: {
+  readonly record: CategorizedItemRow;
+  readonly versions: readonly CategorizedItemRow[];
+}): string {
+  const parts: string[] = [];
+  if (
+    versions.some(
+      (version) => version.questRewardCount !== record.questRewardCount,
+    )
+  )
+    parts.push(
+      (record.questRewardCount ?? 0) > 0
+        ? 'Quest reward'
+        : 'No known quest reward',
+    );
+  if (
+    versions.some((version) => version.sellPrice !== record.sellPrice) &&
+    record.sellPrice !== undefined
+  )
+    parts.push(formatSellPrice({ sellPrice: record.sellPrice }) ?? '');
+  if (
+    versions.some((version) => version.maxStack !== record.maxStack) &&
+    record.maxStack !== undefined
+  )
+    parts.push(`Stacks to ${numberFormat.format(record.maxStack)}`);
+  return parts.length > 0 ? parts.join(' · ') : 'Same in-game stats';
 }
 
 /** Item summary, published facts, and lazy connections shown inside the record-details drawer. */
@@ -327,6 +359,7 @@ export function ItemDrawerBody({
   reader,
   descriptions,
   additionalContent,
+  openVersion,
 }: ItemDrawerBodyProps): ReactElement {
   const facts = formatItemFacts({ record });
   return (
@@ -363,6 +396,33 @@ export function ItemDrawerBody({
         </Stack>
       ) : null}
       {additionalContent}
+      {record.versions && openVersion ? (
+        <Stack component="section" aria-label="Versions" gap="xs">
+          <Divider />
+          <Title order={3} size="sm">
+            Versions
+          </Title>
+          {record.versions.map((version, index) => (
+            <Button
+              key={version.sourceId}
+              variant={
+                version.sourceId === record.sourceId ? 'light' : 'subtle'
+              }
+              size="compact-sm"
+              justify="space-between"
+              onClick={() => openVersion(version.sourceId)}
+            >
+              <span>{`Version ${index + 1}`}</span>
+              <span>
+                {versionDetails({
+                  record: version,
+                  versions: record.versions ?? [],
+                })}
+              </span>
+            </Button>
+          ))}
+        </Stack>
+      ) : null}
       <ItemDrawerRelationsSection
         key={record.key}
         record={record}

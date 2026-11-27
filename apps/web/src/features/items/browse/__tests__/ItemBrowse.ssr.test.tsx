@@ -21,6 +21,7 @@ import { fixtureRelease } from '@/mocks/release';
 import { routeTree } from '@/routeTree.gen';
 
 import { ITEM_KINDS } from '../../kinds';
+import { groupItemRows } from '../identical-items';
 import { itemCardColumns, renderItemCard } from '../item-card';
 import { buildGroupShelves } from '../ItemsGroupPage';
 import {
@@ -226,6 +227,16 @@ describe('Items Browse server rendering', () => {
       );
     expect(lookup?.[1]).toBeDefined();
     expect(Number(lookup?.[1])).toBeGreaterThan(0);
+  });
+
+  it('renders identical items as one card in the first response', async () => {
+    const { html } = await renderPath(
+      '/maplestory/items/use/potions-and-food?q=Silverleaf%20Draught',
+    );
+    const main = mainHtml(html).replaceAll('<!-- -->', '');
+    expect(main).toContain('1 Item');
+    expect(main).toContain('2 versions');
+    expect(main.match(/>Silverleaf Draught<\/button>/gu)).toHaveLength(1);
   });
 
   it('renders both published relationship lookups and all-items filters', async () => {
@@ -828,7 +839,11 @@ describe('Items Browse server rendering', () => {
 
       const expectedShelves = buildGroupShelves({
         group: groupId,
-        rows: browse.rows,
+        rows: groupItemRows({
+          rows: browse.rows,
+          kinds: ITEM_KINDS,
+          context: { coverage: browse.coverage, relations: {} },
+        }),
       });
       const numberFormat = new Intl.NumberFormat('en-US');
 

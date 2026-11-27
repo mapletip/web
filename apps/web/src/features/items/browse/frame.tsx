@@ -35,6 +35,7 @@ import { relationFilter, relationQueryField } from '../kinds/relation-filter';
 import type { ItemKind } from '../kinds/types';
 
 import { formatFullness } from './fullness';
+import { groupItemRows } from './identical-items';
 import { itemCardColumns, ITEM_KIND_LABELS, renderItemCard } from './item-card';
 import { formatItemFacts, ItemDrawerBody } from './ItemDrawerBody';
 import { ItemsGroupShelves } from './ItemsGroupPage';
@@ -68,7 +69,6 @@ interface ItemFrameProps {
 }
 
 const SUMMARY_NOUN = { one: 'Item', other: 'Items' } as const;
-const itemKinds: readonly ItemKind[] = ITEM_KINDS;
 
 const CATEGORY_QUERY_FIELDS: readonly QueryFieldDefinition<CategorizedItemRow>[] =
   [
@@ -347,16 +347,26 @@ export function ItemFrame({
     overlay.overlay?.type === 'record-details' ? overlay.overlay : undefined;
   const displayedRows = useMemo(
     () =>
-      kind?.card?.group?.({
-        rows: rows.filter((row) => row.kind === kind.id),
-        coverage,
-        relations,
-      }) ?? rows,
-    [kind, rows, coverage, relations],
+      groupItemRows({
+        rows,
+        kinds: ITEM_KINDS,
+        context: {
+          coverage,
+          relations,
+          ...(descriptions === undefined ? {} : { descriptions }),
+          ...(scrollTargetIcons === undefined ? {} : { scrollTargetIcons }),
+        },
+      }).filter((row) => kind === undefined || row.kind === kind.id),
+    [kind, rows, coverage, relations, descriptions, scrollTargetIcons],
   );
   const facets = useMemo(() => {
     if (!all)
-      return categoryFacets({ rows: displayedRows, kind, coverage, relations });
+      return categoryFacets({
+        rows: displayedRows,
+        kind,
+        coverage,
+        relations,
+      });
     return [
       ...ALL_FACETS.filter(
         (facet) =>
@@ -385,27 +395,23 @@ export function ItemFrame({
   );
   const rowBySourceId = useMemo(() => {
     const detailsRows = new Map(rows.map((row) => [row.sourceId, row]));
-    for (const entry of itemKinds) {
-      const card = entry.card;
-      if (card?.group === undefined) continue;
-      const groupedRows =
-        entry.id === kind?.id
-          ? displayedRows
-          : card.group({
-              rows: rows.filter((row) => row.kind === entry.id),
-              coverage,
-              relations,
-            });
-      for (const groupedRow of groupedRows) {
-        for (const member of card.groupMembers?.({
-          record: groupedRow,
-        }) ?? [groupedRow]) {
-          detailsRows.set(member.sourceId, member);
-        }
+    for (const groupedRow of displayedRows) {
+      const itemKind: ItemKind | undefined = ITEM_KINDS_BY_ID.get(
+        groupedRow.kind,
+      );
+      const card = itemKind?.card;
+      for (const member of card?.groupMembers?.({ record: groupedRow }) ??
+        groupedRow.versions ?? [groupedRow]) {
+        detailsRows.set(
+          member.sourceId,
+          groupedRow.versions
+            ? { ...member, versions: groupedRow.versions }
+            : member,
+        );
       }
     }
     return detailsRows;
-  }, [coverage, displayedRows, kind, relations, rows]);
+  }, [displayedRows, rows]);
   const categorySearchFields = kind?.card?.group
     ? (['name', 'names'] as const)
     : CATEGORY_SEARCH_FIELDS;
@@ -594,6 +600,9 @@ export function ItemFrame({
               record={record}
               categoryLabel={ITEM_KIND_LABELS.get(record.kind)}
               reader={relationReader}
+              openVersion={(sourceId) =>
+                overlay.open({ type: 'record-details', recordId: sourceId })
+              }
               {...(descriptions === undefined ? {} : { descriptions })}
               {...(additionalContent === undefined
                 ? {}
