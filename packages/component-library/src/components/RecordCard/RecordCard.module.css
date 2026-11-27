@@ -225,11 +225,10 @@
 }
 
 .factDetail {
-  overflow: hidden;
   color: var(--mapletip-color-muted);
   font-size: var(--mantine-font-size-xs);
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  /* Wrap rather than truncate: details can carry warnings a player must see. */
+  overflow-wrap: anywhere;
 }
 
 .factValues {

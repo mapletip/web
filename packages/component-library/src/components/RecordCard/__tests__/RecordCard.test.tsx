@@ -93,7 +93,7 @@ describe('RecordCard', () => {
     expect(
       screen.getByRole('heading', { name: 'Copper Compass' }),
     ).toBeVisible();
-    expect(screen.getByText(detail)).toHaveAttribute('title', detail);
+    expect(screen.getByText(detail)).toBeVisible();
     expect(screen.getByText('3 regions')).toBeVisible();
     expect(screen.getByText('250').parentElement?.children).toHaveLength(2);
     expect(

@@ -64,6 +64,7 @@ function fixtureBrowse(buildId: BuildId): LoadedItemBrowse {
   if (!bytes) throw new Error(`Missing fixture file for ${buildId}`);
   const pack = JSON.parse(new TextDecoder().decode(bytes)) as {
     coverage: LoadedItemBrowse['coverage'];
+    scrollTargetIcons: LoadedItemBrowse['scrollTargetIcons'];
     records: Record<string, ItemBrowseRecordV2_2 | undefined>;
   };
   const records = Object.entries(pack.records).flatMap(
@@ -73,6 +74,7 @@ function fixtureBrowse(buildId: BuildId): LoadedItemBrowse {
   return {
     rows: projectItemBrowseRows(records),
     coverage: pack.coverage,
+    scrollTargetIcons: pack.scrollTargetIcons,
   };
 }
 
@@ -215,6 +217,11 @@ describe('Items Browse server rendering', () => {
 
     expect(html).toMatch(/<h1[^>]*>MapleStory Classic World Scrolls<\/h1>/u);
     expect(html).toContain('Unsorted Practice Scroll');
+    expect(mainHtml(html)).toContain('One Handed Sword');
+    expect(mainHtml(html)).toContain('can destroy item');
+    expect(mainHtml(html)).toContain('+3 magic defense');
+    expect(mainHtml(html)).toContain('+2 weapon defense');
+    expect(mainHtml(html)).toContain('5 Items');
     const links = rail.match(/<a\b[^>]*>/gu) ?? [];
     expect(links).toHaveLength(3);
     expect(links[0]).toContain('href="/maplestory/items/all"');
@@ -246,6 +253,8 @@ describe('Items Browse server rendering', () => {
     );
 
     expect(html).toMatch(/<h1[^>]*>MapleStory GMS v83 Scrolls<\/h1>/u);
+    expect(mainHtml(html)).toContain('+1 dexterity');
+    expect(mainHtml(html)).toContain('2 Items');
     expect(mockedLoad).toHaveBeenCalledWith('gms-v83', expect.any(AbortSignal));
     expect(headMeta(router)).toContainEqual({
       title: 'MapleStory GMS v83 Scrolls – MapleTip',
@@ -473,6 +482,11 @@ describe('Items Browse server rendering', () => {
     expect(text).toContain('Quest reward');
     expect(text).toContain('Scrolls (');
     expect(text).toContain('Monster Drops (');
+    // Cross-category results use one plain picture card, never a category's own card.
+    expect(html).toContain('data-record-card-layout="picture"');
+    expect(html).not.toMatch(
+      /data-record-card-layout="(identity|compactMediaAside)"/u,
+    );
     expect(headMeta(router)).toContainEqual({
       name: 'robots',
       content: 'noindex,follow',

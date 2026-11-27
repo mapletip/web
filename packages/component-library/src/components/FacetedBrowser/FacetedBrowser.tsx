@@ -264,12 +264,13 @@ export function FacetedBrowser<TRecord extends Record<string, unknown>>(
     recordDetailsContent !== undefined &&
     selectedDetailsRecordId !== undefined &&
     selectedDetailsRecordId !== null
-      ? (props.presentation === 'custom'
+      ? (props.resolveRecordDetails?.(selectedDetailsRecordId) ??
+        (props.presentation === 'custom'
           ? browser.allFilteredRecords
           : browser.records
         ).find(
           (record) => String(record[idAccessor]) === selectedDetailsRecordId,
-        )
+        ))
       : undefined;
   const detailsIdentityField = comparisonProps?.identityField;
   const selectedDetailsLabel =

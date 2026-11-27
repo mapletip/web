@@ -1040,6 +1040,21 @@ const cwItems: readonly FixtureItem[] = [
       },
     }),
   ),
+  ...(['alpha', 'beta'] as const).map((variant): FixtureItem =>
+    item({
+      id: `practice-cape-scroll-${variant}`,
+      name: `${variant === 'alpha' ? 'Bright' : 'Quiet'} Practice Cape Scroll`,
+      itemClass: 'consume',
+      types: ['upgrade-scroll'],
+      functions: ['upgrade'],
+      scroll: {
+        targetLabel: 'cape',
+        tier: 'lesser',
+        success: 60,
+        deltas: { speed: 2 },
+      },
+    }),
+  ),
   item({
     id: 'unknown-target-scroll',
     name: 'Unsorted Practice Scroll',

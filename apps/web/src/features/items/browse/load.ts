@@ -5,7 +5,11 @@
  * the Monster loader, behind the shared load boundary; no cache, retry or
  * fallback.
  */
-import { getItemBrowse, type ItemBrowseCoverage } from '@mapletip/data/items';
+import {
+  getItemBrowse,
+  type ItemBrowseCoverage,
+  type StaticItemBrowseV2_2,
+} from '@mapletip/data/items';
 
 import { MAPLEKIT_RELEASE, type BuildId } from '@/config/maplekit';
 import { withLoadBoundary } from '@/features/detail/load-error';
@@ -15,6 +19,7 @@ import { projectItemBrowseRows, type CategorizedItemRow } from './project';
 export interface LoadedItemBrowse {
   readonly rows: readonly CategorizedItemRow[];
   readonly coverage: ItemBrowseCoverage;
+  readonly scrollTargetIcons: StaticItemBrowseV2_2['scrollTargetIcons'];
 }
 
 export const ITEM_BROWSE_UNAVAILABLE_MESSAGE = 'Item data could not be loaded.';
@@ -43,6 +48,7 @@ export function loadItemBrowse(
       return {
         rows: projectItemBrowseRows(browse.records),
         coverage: browse.coverage,
+        scrollTargetIcons: browse.scrollTargetIcons,
       };
     },
   });

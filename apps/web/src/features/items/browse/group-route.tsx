@@ -46,6 +46,7 @@ export function itemGroupRouteOptions<TPath extends GroupRoutePath>({
         buildId={buildId}
         rows={result.rows}
         coverage={result.coverage}
+        scrollTargetIcons={result.scrollTargetIcons}
         relations={relations}
         group={group}
         {...(kind === undefined ? {} : { kind })}
