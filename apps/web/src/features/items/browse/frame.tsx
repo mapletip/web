@@ -65,6 +65,7 @@ interface ItemFrameProps {
 
 const SUMMARY_NOUN = { one: 'Item', other: 'Items' } as const;
 const numberFormat = new Intl.NumberFormat('en-US');
+const itemKinds: readonly ItemKind[] = ITEM_KINDS;
 
 const CATEGORY_QUERY_FIELDS: readonly QueryFieldDefinition<CategorizedItemRow>[] =
   [
@@ -332,13 +333,6 @@ export function ItemFrame({
     },
     [overlay],
   );
-  const facets = useMemo(() => {
-    if (!all) return categoryFacets({ rows, kind, coverage, relations });
-    if (coverage?.relationships['used-in-recipe'] === 'unsupported') {
-      return ALL_FACETS.filter((facet) => facet.id !== 'used-in-recipes');
-    }
-    return ALL_FACETS;
-  }, [all, coverage, kind, rows, relations]);
   const details =
     overlay.overlay?.type === 'record-details' ? overlay.overlay : undefined;
   const displayedRows = useMemo(
@@ -350,14 +344,60 @@ export function ItemFrame({
       }) ?? rows,
     [kind, rows, coverage, relations],
   );
-  const rowBySourceId = useMemo(
-    () => new Map(rows.map((row) => [row.sourceId, row])),
-    [rows],
-  );
+  const facets = useMemo(() => {
+    if (!all)
+      return categoryFacets({ rows: displayedRows, kind, coverage, relations });
+    if (coverage?.relationships['used-in-recipe'] === 'unsupported') {
+      return ALL_FACETS.filter((facet) => facet.id !== 'used-in-recipes');
+    }
+    return ALL_FACETS;
+  }, [all, coverage, displayedRows, kind, relations]);
+  const rowBySourceId = useMemo(() => {
+    const detailsRows = new Map(rows.map((row) => [row.sourceId, row]));
+    for (const entry of itemKinds) {
+      const card = entry.card;
+      if (card?.group === undefined) continue;
+      const groupedRows =
+        entry.id === kind?.id
+          ? displayedRows
+          : card.group({
+              rows: rows.filter((row) => row.kind === entry.id),
+              coverage,
+              relations,
+            });
+      for (const groupedRow of groupedRows) {
+        for (const member of card.groupMembers?.({
+          record: groupedRow,
+        }) ?? [groupedRow]) {
+          detailsRows.set(member.sourceId, member);
+        }
+      }
+    }
+    return detailsRows;
+  }, [coverage, displayedRows, kind, relations, rows]);
   const categorySearchFields = kind?.card?.group
     ? (['name', 'names'] as const)
     : CATEGORY_SEARCH_FIELDS;
   const searchFields = all ? ALL_SEARCH_FIELDS : categorySearchFields;
+  const itemDrawerContent = useCallback(
+    (record: CategorizedItemRow) => {
+      const itemKind: ItemKind | undefined = ITEM_KINDS.find(
+        (entry) => entry.id === record.kind,
+      );
+      return itemKind?.card?.drawerContent?.({
+        record,
+        selectedRecordId: details?.recordId ?? record.sourceId,
+        context: {
+          coverage,
+          relations,
+          ...(scrollTargetIcons ? { scrollTargetIcons } : {}),
+        },
+        openRecordDetails: (sourceId) =>
+          overlay.open({ type: 'record-details', recordId: sourceId }),
+      });
+    },
+    [coverage, details?.recordId, overlay, relations, scrollTargetIcons],
+  );
 
   return (
     <BrowsePageShell fillViewport={false}>
@@ -509,13 +549,19 @@ export function ItemFrame({
         recordDetailsTitle={(record) => record.name}
         recordDetailsSideOnDesktop
         recordDetailsSideSize="md"
-        recordDetailsContent={(record) => (
-          <ItemDrawerBody
-            record={record}
-            categoryLabel={ITEM_KIND_LABELS.get(record.kind)}
-            reader={relationReader}
-          />
-        )}
+        recordDetailsContent={(record) => {
+          const additionalContent = itemDrawerContent(record);
+          return (
+            <ItemDrawerBody
+              record={record}
+              categoryLabel={ITEM_KIND_LABELS.get(record.kind)}
+              reader={relationReader}
+              {...(additionalContent === undefined
+                ? {}
+                : { additionalContent })}
+            />
+          );
+        }}
         recordDetails={{
           selectedId: details?.recordId ?? null,
           onSelectedIdChange: (selectedId, reason) => {

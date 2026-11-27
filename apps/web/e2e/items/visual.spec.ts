@@ -43,6 +43,29 @@ test('desktop Items scrolls without tiers', async ({ page }) => {
   ).toBeVisible();
   await expect(page).toHaveScreenshot('desktop-items-scrolls-untiered.png');
 });
+
+test('desktop Items scroll tier drawer comparison', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 1100 });
+  await page.goto(CATEGORY);
+  await browseReady(page);
+  const card = page
+    .locator('[data-record-card-layout="identity"]')
+    .filter({ has: page.getByRole('heading', { name: 'One Handed Sword' }) });
+  await card
+    .getByRole('button', { name: /Greater.*80% success.*can destroy item/u })
+    .click();
+  const drawer = page.getByRole('dialog', {
+    name: 'Greater Practice Sword Scroll',
+  });
+  await expect(drawer).toBeVisible();
+  await expect(
+    drawer.getByRole('region', { name: 'Scroll tiers' }),
+  ).toContainText('Lesser');
+  await expect(drawer.locator('[aria-current="true"]')).toContainText(
+    'Greater',
+  );
+  await expect(page).toHaveScreenshot('desktop-items-scroll-drawer.png');
+});
 const ORES = '/maplestory/items/etc/ores-and-gems';
 const ALL = '/maplestory/items/all';
 const CHAIRS = '/maplestory/items/setup/chairs';

@@ -16,9 +16,55 @@ test('a scroll tier opens that scroll in the existing drawer', async ({
   await card
     .getByRole('button', { name: /Greater.*80% success.*can destroy item/u })
     .click();
+  const drawer = page.getByRole('dialog', {
+    name: 'Greater Practice Sword Scroll',
+  });
+  await expect(drawer).toBeVisible();
+  const tiers = drawer.getByRole('region', { name: 'Scroll tiers' });
+  await expect(tiers.locator('[aria-current="true"]')).toContainText('Greater');
+  await tiers.getByRole('button', { name: /Lesser.*80% success/u }).click();
   await expect(
-    page.getByRole('dialog', { name: 'Greater Practice Sword Scroll' }),
+    page.getByRole('dialog', { name: 'Lesser Practice Sword Scroll' }),
   ).toBeVisible();
+  await expect(
+    page
+      .getByRole('dialog', { name: 'Lesser Practice Sword Scroll' })
+      .getByRole('region', { name: 'Scroll tiers' })
+      .locator('[aria-current="true"]'),
+  ).toContainText('Lesser');
+});
+
+test('Scroll pills and filters count family cards', async ({
+  page,
+  isMobile,
+}) => {
+  test.skip(isMobile, 'The desktop sidebar covers the scroll filter journey.');
+  const items = new ItemsPage(page);
+  await items.goto(SCROLLS);
+  await expect(items.summary).toHaveText('5 Items');
+
+  await page.getByText('Weapons (1)', { exact: true }).click();
+  await expect(items.summary).toHaveText('1 Item');
+  await page.getByText('All (5)', { exact: true }).click();
+
+  const equipment = page.getByRole('group', { name: 'Equipment' });
+  const sword = equipment.getByRole('checkbox', {
+    name: 'One Handed Sword (1)',
+  });
+  await sword.click();
+  await expect(items.summary).toHaveText('1 Item');
+  await sword.click();
+
+  const stat = page.getByRole('group', { name: 'Stat' });
+  await stat.getByRole('checkbox', { name: 'Magic defense (1)' }).click();
+  await expect(items.summary).toHaveText('1 Item');
+});
+
+test('a scroll family matches the full name of any tier', async ({ page }) => {
+  const items = new ItemsPage(page);
+  await items.goto(`${SCROLLS}?q=Lesser%20Practice%20Sword%20Scroll`);
+  await expect(items.summary).toHaveText('1 Item');
+  await expect(items.item('One Handed Sword')).toBeVisible();
 });
 const POTIONS = '/maplestory/items/use/potions-and-food';
 const PROJECTILES = '/maplestory/items/use/stars-and-arrows';

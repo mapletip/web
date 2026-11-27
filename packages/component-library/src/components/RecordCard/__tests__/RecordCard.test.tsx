@@ -2,13 +2,29 @@ import { MantineProvider } from '@mantine/core';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
-import { RecordCard } from '@/components/RecordCard';
+import { RecordCard, RecordFacts } from '@/components/RecordCard';
 
 function mount(card: React.ReactNode) {
   return render(<MantineProvider>{card}</MantineProvider>);
 }
 
 describe('RecordCard', () => {
+  it('marks the selected fact in its semantic list', () => {
+    mount(
+      <RecordFacts
+        facts={[
+          { id: 'lesser', label: 'Lesser', selected: true },
+          { id: 'greater', label: 'Greater', action: vi.fn() },
+        ]}
+      />,
+    );
+
+    expect(screen.getByRole('listitem', { current: true })).toHaveTextContent(
+      'Lesser',
+    );
+    expect(screen.getByRole('button', { name: 'Greater' })).toBeVisible();
+  });
+
   it('places picture media above the title without empty text lines', () => {
     const { container } = mount(
       <RecordCard

@@ -58,6 +58,7 @@ export type {
   RecordSectionsProps,
 } from '@/components/RecordSections';
 export { RecordCard } from '@/components/RecordCard';
+export { RecordFacts } from '@/components/RecordCard';
 export type {
   RecordCardDestination,
   RecordCardLinkRenderer,
