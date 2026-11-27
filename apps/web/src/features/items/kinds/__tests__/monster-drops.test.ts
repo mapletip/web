@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { CategorizedItemRow } from '../../browse/project';
 import type { ProjectedRelations } from '../../browse/relation-projection';
-import { monsterDrops } from '../monster-drops';
+import { countNotRequiredDrops, monsterDrops } from '../monster-drops';
 
 const complete = {
   relationships: {
@@ -131,6 +131,39 @@ describe('Monster Drops card', () => {
       monsterDrops.card.facts(unused, { coverage: complete, relations })[0]
         ?.detail,
     ).toBe('No quest or recipe uses it');
+  });
+
+  it('does not say Not required when the quest roster is missing', () => {
+    const item = row({ key: 'item:unlisted', quests: 0, recipes: 0 });
+    expect(labels({ row: item, coverage: complete, relations: {} })).toEqual(
+      [],
+    );
+    expect(
+      countNotRequiredDrops({
+        rows: [item],
+        coverage: complete,
+        relations: {},
+      }),
+    ).toBe(0);
+    const fields = monsterDrops.card.queryFields({
+      coverage: complete,
+      relations: {},
+    });
+    const uses = fields.find(
+      (field) => typeof field !== 'string' && field.id === 'dropUses',
+    );
+    expect(
+      uses && typeof uses !== 'string' && typeof uses.accessor === 'function'
+        ? uses.accessor(item)
+        : undefined,
+    ).toEqual([]);
+    expect(
+      monsterDrops.card.facets({
+        rows: [item],
+        coverage: complete,
+        relations: {},
+      })[0]?.options,
+    ).not.toContainEqual({ value: 'not-required', label: 'Not required' });
   });
 
   it('offers overlapping pills, published filters, and both sort orders', () => {

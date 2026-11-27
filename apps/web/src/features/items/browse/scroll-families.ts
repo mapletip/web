@@ -159,7 +159,7 @@ export function groupScrollFamilies({
       continue;
     }
     const familyStats = scrollStats({ rows: members });
-    const familyNames = members.flatMap((row) => (row.name ? [row.name] : []));
+    const familyNames = members.map((row) => row.name);
     const familyLead = statLead({ row: first });
     const familyMembers = members.map((member) => ({
       ...member,

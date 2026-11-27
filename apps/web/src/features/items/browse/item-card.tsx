@@ -4,7 +4,7 @@ import type { ReactElement } from 'react';
 
 import { MAPLEKIT_RELEASE } from '@/config/maplekit';
 
-import { ITEM_KINDS } from '../kinds';
+import { ITEM_KINDS_BY_ID } from '../kinds';
 import type { ItemCardContext, ItemKind } from '../kinds/types';
 
 import type { CategorizedItemRow } from './project';
@@ -33,7 +33,7 @@ export function itemCardColumns({
   return isPictureLayout(kind) ? PICTURE_CARD_COLUMNS : ASIDE_CARD_COLUMNS;
 }
 export const ITEM_KIND_LABELS: ReadonlyMap<string, string> = new Map(
-  ITEM_KINDS.map((entry) => [entry.id, entry.label]),
+  [...ITEM_KINDS_BY_ID].map(([id, kind]) => [id, kind.label]),
 );
 
 interface RenderItemCardOptions {
@@ -61,9 +61,7 @@ export function renderItemCard({
   context = { coverage: undefined, relations: {} },
   openItemDetails,
 }: RenderItemCardOptions): ReactElement {
-  const kind: ItemKind | undefined = ITEM_KINDS.find(
-    (entry) => entry.id === record.kind,
-  );
+  const kind: ItemKind | undefined = ITEM_KINDS_BY_ID.get(record.kind);
   // Category cards only on their own category page and shelf.
   const card = crossCategory ? undefined : kind?.card;
   const layout = card?.layout ?? 'picture';

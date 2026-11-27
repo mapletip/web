@@ -29,6 +29,7 @@ function fixtureRow({ overrides }: { overrides: Partial<ItemRow> }): ItemRow {
     key: 'item:fixture',
     sourceId: 'fixture',
     itemClass: 'consume',
+    name: 'Practice Item',
     ...overrides,
   };
 }

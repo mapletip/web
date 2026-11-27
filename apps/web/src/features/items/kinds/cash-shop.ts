@@ -1,6 +1,6 @@
-import type { ItemKind } from './types';
+import { numberFormat } from '../browse/number-format';
 
-const numberFormat = new Intl.NumberFormat('en-US');
+import type { ItemKind } from './types';
 
 export const cashShop = {
   id: 'cash-shop',

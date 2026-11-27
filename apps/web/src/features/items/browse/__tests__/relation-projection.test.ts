@@ -136,6 +136,7 @@ describe('item relation projection', () => {
       {
         key: 'item:one',
         sourceId: 'one',
+        name: 'Practice Item',
         itemClass: 'etc',
         kind: 'other-use',
         kindPath: ['all', 'use', 'other-use'],
@@ -143,6 +144,7 @@ describe('item relation projection', () => {
       {
         key: 'item:other-category',
         sourceId: 'other',
+        name: 'Other Practice Item',
         itemClass: 'etc',
         kind: 'other-etc',
         kindPath: ['all', 'etc', 'other-etc'],
@@ -174,6 +176,7 @@ describe('projected category descriptions', () => {
     {
       key: 'item:use',
       sourceId: 'use',
+      name: 'Practice Tonic',
       itemClass: 'consume',
       kind: 'other-use',
       kindPath: ['all', 'use', 'other-use'],
@@ -181,6 +184,7 @@ describe('projected category descriptions', () => {
     {
       key: 'item:other',
       sourceId: 'other',
+      name: 'Other Practice Item',
       itemClass: 'etc',
       kind: 'other-etc',
       kindPath: ['all', 'etc', 'other-etc'],

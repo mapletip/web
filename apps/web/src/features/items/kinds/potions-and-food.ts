@@ -1,11 +1,10 @@
 import type { FacetDefinition } from '@mapletip/component-library';
 
 import { BUFF_STAT_LABELS, formatBuff } from '../browse/buff-format';
+import { numberFormat } from '../browse/number-format';
 import type { CategorizedItemRow, ItemRow } from '../browse/project';
 
 import type { ItemKind } from './types';
-
-const numberFormat = new Intl.NumberFormat('en-US');
 
 function recoveryTypes(row: ItemRow): string[] {
   return [

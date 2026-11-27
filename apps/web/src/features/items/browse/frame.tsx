@@ -30,7 +30,7 @@ import { browseOverlayOptions } from '@/features/browse-overlay/browseOverlay';
 import { canonicalBuildParam, DetailBreadcrumbs } from '@/features/detail';
 import { useRouteOverlay } from '@/features/route-overlay/useRouteOverlay';
 
-import { ITEM_KINDS } from '../kinds';
+import { ITEM_KINDS, ITEM_KINDS_BY_ID } from '../kinds';
 import { relationFilter, relationQueryField } from '../kinds/relation-filter';
 import type { ItemKind } from '../kinds/types';
 
@@ -38,6 +38,7 @@ import { formatFullness } from './fullness';
 import { itemCardColumns, ITEM_KIND_LABELS, renderItemCard } from './item-card';
 import { formatItemFacts, ItemDrawerBody } from './ItemDrawerBody';
 import { ItemsGroupShelves } from './ItemsGroupPage';
+import { numberFormat } from './number-format';
 import {
   ITEM_GROUPS,
   ITEM_GROUP_ROUTES,
@@ -67,7 +68,6 @@ interface ItemFrameProps {
 }
 
 const SUMMARY_NOUN = { one: 'Item', other: 'Items' } as const;
-const numberFormat = new Intl.NumberFormat('en-US');
 const itemKinds: readonly ItemKind[] = ITEM_KINDS;
 
 const CATEGORY_QUERY_FIELDS: readonly QueryFieldDefinition<CategorizedItemRow>[] =
@@ -171,9 +171,7 @@ export function itemPrimaryFact({
 }: {
   readonly record: CategorizedItemRow;
 }): string | undefined {
-  const category: ItemKind | undefined = ITEM_KINDS.find(
-    (entry) => entry.id === record.kind,
-  );
+  const category: ItemKind | undefined = ITEM_KINDS_BY_ID.get(record.kind);
   const categoryLead = category?.card?.lead(record, {
     coverage: undefined,
     relations: {},
@@ -305,7 +303,7 @@ export function ItemFrame({
   });
   const navigateNode = useCallback(
     (id: string, options: { readonly replace: true }) => {
-      const target = ITEM_KINDS.find((candidate) => candidate.id === id);
+      const target = ITEM_KINDS_BY_ID.get(id);
       const targetGroup =
         target?.group ?? ITEM_GROUPS.find((entry) => entry.id === id)?.id;
       void router.navigate({
@@ -406,9 +404,7 @@ export function ItemFrame({
   const searchFields = all ? ALL_SEARCH_FIELDS : categorySearchFields;
   const itemDrawerContent = useCallback(
     (record: CategorizedItemRow) => {
-      const itemKind: ItemKind | undefined = ITEM_KINDS.find(
-        (entry) => entry.id === record.kind,
-      );
+      const itemKind: ItemKind | undefined = ITEM_KINDS_BY_ID.get(record.kind);
       return itemKind?.card?.drawerContent?.({
         record,
         selectedRecordId: details?.recordId ?? record.sourceId,

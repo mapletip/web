@@ -1,4 +1,4 @@
-const numberFormat = new Intl.NumberFormat('en-US');
+import { numberFormat } from './number-format';
 
 export function formatSellPrice({
   sellPrice,

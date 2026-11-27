@@ -685,7 +685,7 @@ describe('Items Browse server rendering', () => {
       }
 
       for (const row of browse.rows) {
-        expect(main).not.toContain(row.name!);
+        expect(main).not.toContain(row.name);
       }
 
       const craftingCount = browse.rows.filter(
@@ -824,7 +824,7 @@ describe('Items Browse server rendering', () => {
           itemCardColumns({ kind: shelf.kind }).lg,
         );
         for (const row of shelf.previewRows) {
-          expect(main).toContain(escapeHtml(row.name!));
+          expect(main).toContain(escapeHtml(row.name));
         }
       }
 
@@ -861,7 +861,7 @@ describe('Items Browse server rendering', () => {
     const monsterDrops = base.rows
       .filter((row) => row.kind === 'monster-drops')
       .sort((left, right) =>
-        (left.name ?? '').localeCompare(right.name ?? '', 'en-US', {
+        left.name.localeCompare(right.name, 'en-US', {
           numeric: true,
           sensitivity: 'base',
         }),
@@ -870,7 +870,7 @@ describe('Items Browse server rendering', () => {
       itemCardColumns({ kind: undefined }).lg,
     );
     const sixth = monsterDrops[itemCardColumns({ kind: undefined }).lg]!;
-    expect(main).not.toContain(escapeHtml(sixth.name!));
+    expect(main).not.toContain(escapeHtml(sixth.name));
   });
 
   it('shows the generic unavailable state when item data fails to load', async () => {
