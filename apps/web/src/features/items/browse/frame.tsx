@@ -2,8 +2,6 @@ import { Stack, Title } from '@mantine/core';
 import {
   DrillDownNav,
   FacetedBrowser,
-  RecordCard,
-  Thumbnail,
   type BrowseState,
   type DrillDownNode,
   type DrawerOpenedChangeDetails,
@@ -11,12 +9,12 @@ import {
   type QueryFieldDefinition,
   type StateChangeDetails,
 } from '@mapletip/component-library';
-import { itemIconUrl, type ItemBrowseCoverage } from '@mapletip/data/items';
+import type { ItemBrowseCoverage } from '@mapletip/data/items';
 import { Link, useRouter } from '@tanstack/react-router';
 import { useCallback, useMemo } from 'react';
 
 import { BrowsePageShell } from '@/components/BrowsePageShell';
-import { BUILDS, MAPLEKIT_RELEASE, type BuildId } from '@/config/maplekit';
+import { BUILDS, type BuildId } from '@/config/maplekit';
 import {
   PAGE_SIZE_OPTIONS,
   type BrowseSearch,
@@ -32,7 +30,13 @@ import { useRouteOverlay } from '@/features/route-overlay/useRouteOverlay';
 import { ITEM_KINDS } from '../kinds';
 import type { ItemKind } from '../kinds/types';
 
+import {
+  ITEM_CARD_COLUMNS,
+  ITEM_KIND_LABELS,
+  renderItemCard,
+} from './item-card';
 import { formatItemFacts, ItemDrawerBody } from './ItemDrawerBody';
+import { ItemsGroupShelves } from './ItemsGroupPage';
 import {
   ITEM_GROUPS,
   ITEM_GROUP_ROUTES,
@@ -58,10 +62,6 @@ interface ItemFrameProps {
 }
 
 const SUMMARY_NOUN = { one: 'Item', other: 'Items' } as const;
-const CARD_COLUMNS = { base: 2, md: 4, lg: 5 } as const;
-const KIND_LABELS: ReadonlyMap<string, string> = new Map(
-  ITEM_KINDS.map((entry) => [entry.id, entry.label]),
-);
 const numberFormat = new Intl.NumberFormat('en-US');
 
 const CATEGORY_QUERY_FIELDS: readonly QueryFieldDefinition<CategorizedItemRow>[] =
@@ -182,7 +182,8 @@ export function itemPrimaryFact({
   return formatItemFacts({ record })[0];
 }
 
-function itemNavigationTree({
+/** Build the DrillDownNav tree for Items pages with non-empty categories in rail order. */
+export function itemNavigationTree({
   buildId,
   nonEmptyKinds,
   currentId,
@@ -398,40 +399,50 @@ export function ItemFrame({
         summaryMode="total"
         summaryNoun={SUMMARY_NOUN}
         pageSizeOptions={PAGE_SIZE_OPTIONS}
-        presentation="cards"
-        cardColumns={CARD_COLUMNS}
-        renderCard={(record, { openDetails, isDetailsOpen }) => {
-          const secondaryLine = all ? itemPrimaryFact({ record }) : undefined;
-          return (
-            <RecordCard
-              layout="picture"
-              title={record.name}
-              leadLine={KIND_LABELS.get(record.kind)}
-              {...(secondaryLine === undefined ? {} : { secondaryLine })}
-              media={
-                <Thumbnail
-                  src={
-                    record.icon === undefined
-                      ? undefined
-                      : itemIconUrl(MAPLEKIT_RELEASE.baseUrl, record.icon)
+        {...(group !== undefined && kind === undefined
+          ? {
+              presentation: 'custom' as const,
+              showPagination: false,
+              renderResults: ({
+                matchingRecords,
+              }: {
+                matchingRecords: readonly CategorizedItemRow[];
+              }) => (
+                <ItemsGroupShelves
+                  buildId={buildId}
+                  group={group}
+                  records={matchingRecords}
+                  selectedRecordId={details?.recordId}
+                  openDetails={(recordId) =>
+                    overlay.open({ type: 'record-details', recordId })
                   }
-                  size={80}
-                  magnify={2}
                 />
-              }
-              {...(openDetails === undefined
-                ? {}
-                : { action: openDetails, isDetailsOpen })}
-            />
-          );
-        }}
+              ),
+            }
+          : {
+              presentation: 'cards' as const,
+              cardColumns: ITEM_CARD_COLUMNS,
+              renderCard: (
+                record: CategorizedItemRow,
+                {
+                  openDetails,
+                  isDetailsOpen,
+                }: { openDetails?: () => void; isDetailsOpen?: boolean },
+              ) =>
+                renderItemCard({
+                  record,
+                  openDetails,
+                  isDetailsOpen,
+                  secondaryLine: all ? itemPrimaryFact({ record }) : undefined,
+                }),
+            })}
         recordDetailsTitle={(record) => record.name}
         recordDetailsSideOnDesktop
         recordDetailsSideSize="md"
         recordDetailsContent={(record) => (
           <ItemDrawerBody
             record={record}
-            categoryLabel={KIND_LABELS.get(record.kind)}
+            categoryLabel={ITEM_KIND_LABELS.get(record.kind)}
             reader={relationReader}
           />
         )}

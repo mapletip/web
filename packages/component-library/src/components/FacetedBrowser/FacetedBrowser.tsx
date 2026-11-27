@@ -259,13 +259,15 @@ export function FacetedBrowser<TRecord extends Record<string, unknown>>(
     }
     setInternalSelectedDetailsRecordId(undefined);
   }, [recordDetailsSelection]);
-  // The drawer is open exactly while the selected identity is on the current
-  // page. No effect, no second expansion engine and nothing in browse state.
+  // Custom results may show all matching records; card and table results show one page.
   const selectedDetailsRecord =
     recordDetailsContent !== undefined &&
     selectedDetailsRecordId !== undefined &&
     selectedDetailsRecordId !== null
-      ? browser.records.find(
+      ? (props.presentation === 'custom'
+          ? browser.allFilteredRecords
+          : browser.records
+        ).find(
           (record) => String(record[idAccessor]) === selectedDetailsRecordId,
         )
       : undefined;
@@ -530,7 +532,11 @@ export function FacetedBrowser<TRecord extends Record<string, unknown>>(
   }
   const customResults =
     props.presentation === 'custom'
-      ? props.renderResults({ records: browser.records, state: canonicalState })
+      ? props.renderResults({
+          records: browser.records,
+          matchingRecords: browser.allFilteredRecords,
+          state: canonicalState,
+        })
       : undefined;
 
   // A short noun may replace the descriptive `recordNoun` in the summary only.
@@ -640,6 +646,11 @@ export function FacetedBrowser<TRecord extends Record<string, unknown>>(
     />
   );
 
+  // Without page controls a page size means nothing, so it is hidden too.
+  const showPaging = !(
+    props.presentation === 'custom' && props.showPagination === false
+  );
+  const pagingToolbar = showPaging ? primaryToolbar : null;
   const toolbarContent =
     sortOptions && sortOptions.length > 0 ? (
       <Group gap="xs">
@@ -656,10 +667,10 @@ export function FacetedBrowser<TRecord extends Record<string, unknown>>(
             />
           </Group>
         </Box>
-        {primaryToolbar}
+        {pagingToolbar}
       </Group>
     ) : (
-      primaryToolbar
+      pagingToolbar
     );
 
   const effectiveState = useMemo(
@@ -754,14 +765,17 @@ export function FacetedBrowser<TRecord extends Record<string, unknown>>(
         {...(cardResults ? { cards: cardResults } : {})}
         {...(customResults !== undefined ? { results: customResults } : {})}
         pagination={
-          <Pagination
-            page={browser.page}
-            pageCount={browser.pageCount}
-            recordNoun={recordNoun}
-            state={effectiveState}
-            renderPageLink={renderPageLink}
-            onPageChange={browser.setPage}
-          />
+          props.presentation === 'custom' &&
+          props.showPagination === false ? null : (
+            <Pagination
+              page={browser.page}
+              pageCount={browser.pageCount}
+              recordNoun={recordNoun}
+              state={effectiveState}
+              renderPageLink={renderPageLink}
+              onPageChange={browser.setPage}
+            />
+          )
         }
       />
       {recordDetailsContent !== undefined ? (

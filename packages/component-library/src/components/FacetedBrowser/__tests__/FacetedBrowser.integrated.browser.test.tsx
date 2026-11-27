@@ -896,8 +896,12 @@ describe('integrated FacetedBrowser', () => {
           queryFields={queryFields}
           idAccessor="id"
           presentation="custom"
-          renderResults={({ records, state: current }) => (
-            <ul data-testid="custom-results" data-page={current.page}>
+          renderResults={({ records, matchingRecords, state: current }) => (
+            <ul
+              data-testid="custom-results"
+              data-page={current.page}
+              data-matching-count={matchingRecords.length}
+            >
               {records.map((record) => (
                 <li key={record.id}>
                   <a href={record.href}>{record.name}</a>
@@ -920,6 +924,7 @@ describe('integrated FacetedBrowser', () => {
       '[data-testid="custom-results"]',
     );
     expect(results?.dataset['page']).toBe('2');
+    expect(results?.dataset['matchingCount']).toBe('25');
     expect(results?.querySelectorAll('li')).toHaveLength(10);
     expect(
       results?.querySelector('a[href="/records/record-011"]'),
@@ -927,6 +932,41 @@ describe('integrated FacetedBrowser', () => {
     expect(document.querySelector('table')).toBeNull();
     expect(page.getByRole('button', { name: 'Next page' })).toBeVisible();
     expect(document.querySelector('a[href^="?page="]')).toBeNull();
+  });
+
+  it('hides page controls and the page size when custom results show every match', async () => {
+    await render(
+      <MantineProvider>
+        <FacetedBrowser
+          title={<h1>Record discovery</h1>}
+          records={demoRecords.slice(0, 25)}
+          queryFields={queryFields}
+          idAccessor="id"
+          presentation="custom"
+          showPagination={false}
+          renderResults={({ matchingRecords }) => (
+            <ul data-testid="custom-results">
+              {matchingRecords.map((record) => (
+                <li key={record.id}>{record.name}</li>
+              ))}
+            </ul>
+          )}
+          defaultState={{
+            search: '',
+            filters: {},
+            page: 1,
+            pageSize: 10,
+            hiddenColumns: [],
+          }}
+        />
+      </MantineProvider>,
+    );
+
+    expect(
+      document.querySelectorAll('[data-testid="custom-results"] li'),
+    ).toHaveLength(25);
+    expect(document.querySelector('[aria-label="Next page"]')).toBeNull();
+    expect(document.body.textContent).not.toContain('Per page');
   });
 
   it('renders cards-only presentations at desktop and mobile widths', async () => {

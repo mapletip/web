@@ -331,8 +331,106 @@ test('/items/all rail group counts follow search and filters and match after cho
 
   await useLink.click();
   await expect(page).toHaveURL('/maplestory/items/use?q=Pebble');
-  await expect(items.summary).toHaveText(
-    `${useCount} ${useCount === 1 ? 'Item' : 'Items'}`,
+  await expect(items.heading()).toHaveText(
+    'MapleStory Classic World Use Items',
+  );
+});
+
+test('Items group page shows category shelves with one row, See all links, and item drawer', async ({
+  page,
+  isMobile,
+}) => {
+  const items = new ItemsPage(page);
+  await items.goto('/maplestory/items/etc');
+
+  await expect(items.heading()).toHaveText(
+    'MapleStory Classic World ETC Items',
+  );
+
+  const shelfHeadings = page.locator('main h2');
+  await expect(shelfHeadings).toHaveText([
+    'Ores & Gems',
+    'Monster Drops',
+    'Quest Items',
+    'Other ETC',
+  ]);
+
+  const monsterDropsShelf = page.getByRole('region', {
+    name: 'Monster Drops',
+  });
+  await expect(
+    monsterDropsShelf.locator('[data-record-card="true"]'),
+  ).toHaveCount(5);
+  if (isMobile) {
+    await expect(
+      monsterDropsShelf.locator('[data-record-card="true"]').nth(1),
+    ).toBeVisible();
+    await expect(
+      monsterDropsShelf.locator('[data-record-card="true"]').nth(2),
+    ).toBeHidden();
+  } else {
+    await expect(
+      monsterDropsShelf.locator('[data-record-card="true"]').nth(4),
+    ).toBeVisible();
+    const viewport = page.viewportSize();
+    await page.setViewportSize({ width: 1050, height: 900 });
+    await expect(
+      monsterDropsShelf.locator('[data-record-card="true"]').nth(3),
+    ).toBeVisible();
+    await expect(
+      monsterDropsShelf.locator('[data-record-card="true"]').nth(4),
+    ).toBeHidden();
+    if (viewport !== null) await page.setViewportSize(viewport);
+  }
+
+  const seeAllDrops = monsterDropsShelf.getByRole('link', {
+    name: /^See all \d+ Monster Drops$/u,
+  });
+  await expect(seeAllDrops).toBeVisible();
+
+  const cardButton = monsterDropsShelf
+    .locator('[data-record-card="true"] button')
+    .first();
+  const cardName = (await cardButton.textContent())?.trim() ?? '';
+  await cardButton.click();
+  const drawer = page.getByRole('dialog', { name: cardName });
+  await expect(drawer).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(drawer).toBeHidden();
+  await expect(cardButton).toBeFocused();
+
+  if (isMobile) {
+    const trigger = page.getByRole('button', {
+      name: /Item categories: ETC/u,
+    });
+    await trigger.click();
+    const navDrawer = page.getByRole('dialog', { name: 'Item categories' });
+    await expect(navDrawer).toBeVisible();
+    await page.goBack();
+    await expect(navDrawer).toBeHidden();
+    await expect(trigger).toBeFocused();
+
+    await page.setViewportSize({ width: 320, height: 700 });
+    const widths = await page.evaluate(() => ({
+      document: document.documentElement.scrollWidth,
+      viewport: document.documentElement.clientWidth,
+    }));
+    expect(widths.document).toBeLessThanOrEqual(widths.viewport);
+  }
+
+  const search = page.getByRole('textbox', {
+    name: 'Search Classic World items',
+  });
+  await search.fill('Only Given Pebble');
+  await expect(monsterDropsShelf).toHaveCount(0);
+  await expect(page.getByRole('region', { name: 'Other ETC' })).toBeVisible();
+  await search.clear();
+  await expect(monsterDropsShelf).toBeVisible();
+
+  await seeAllDrops.click();
+  await expect(page).toHaveURL('/maplestory/items/etc/monster-drops');
+  await expect(items.heading()).toHaveText(
+    'MapleStory Classic World Monster Drops',
   );
 });
 
