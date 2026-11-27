@@ -6,6 +6,35 @@ import { ItemsPage } from './page/items-page';
 const SCROLLS = '/maplestory/items/use/scrolls';
 const POTIONS = '/maplestory/items/use/potions-and-food';
 const PROJECTILES = '/maplestory/items/use/stars-and-arrows';
+const QUEST_ITEMS = '/maplestory/items/etc/quest-items';
+
+test('Quest Items shows named requirements and filters by quest, then removes it', async ({
+  page,
+  isMobile,
+}) => {
+  const items = new ItemsPage(page);
+  await items.goto(QUEST_ITEMS);
+  await expect(
+    page.getByText('Required by Thread Trial', { exact: true }).first(),
+  ).toBeVisible();
+  await expect(
+    page.getByText('Required by 2 quests', { exact: true }).first(),
+  ).toBeVisible();
+  if (isMobile) await page.getByRole('button', { name: /Filters/u }).click();
+  const quest = page.getByRole('combobox', { name: 'Quest' });
+  await quest.fill('Thread Trial');
+  await page.getByRole('option', { name: 'Thread Trial' }).click();
+  if (isMobile)
+    await page
+      .getByRole('button', { name: /Show 2 Classic World items/u })
+      .click();
+  await expect(items.item('Many Quest Token')).toBeVisible();
+  await expect(items.item('Quiet Gallery Note')).toBeHidden();
+  await page
+    .getByRole('button', { name: 'Remove Quest: Thread Trial' })
+    .click();
+  await expect(items.item('Quiet Gallery Note')).toBeVisible();
+});
 
 test('Stars & Arrows pills, attack sort, and GMS v83 Monster Cards work as published', async ({
   page,

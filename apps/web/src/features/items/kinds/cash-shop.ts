@@ -31,7 +31,7 @@ export const cashShop = {
             },
           ]
         : [],
-    queryFields: [
+    queryFields: () => [
       {
         id: 'listed',
         accessor: (row) =>

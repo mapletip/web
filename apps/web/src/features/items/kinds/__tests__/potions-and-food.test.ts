@@ -35,9 +35,11 @@ describe('Potions & Food card', () => {
   });
 
   it('places a combined recovery item under both pills', () => {
-    const field = potionsAndFood.card.queryFields.find(
-      (entry) => typeof entry !== 'string' && entry.id === 'recoveryTypes',
-    );
+    const field = potionsAndFood.card
+      .queryFields()
+      .find(
+        (entry) => typeof entry !== 'string' && entry.id === 'recoveryTypes',
+      );
     expect(field).toMatchObject({ id: 'recoveryTypes' });
     if (
       typeof field === 'string' ||

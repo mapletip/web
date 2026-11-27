@@ -198,9 +198,11 @@ describe('visual category cards', () => {
   ] as const)('describes chair recovery', (facts, lead, types) => {
     const row = makeRow({ kind: 'chairs', ...facts });
     expect(chairs.card.lead(row)).toBe(lead);
-    const field = chairs.card.queryFields.find(
-      (entry) => typeof entry !== 'string' && entry.id === 'recoveryTypes',
-    );
+    const field = chairs.card
+      .queryFields()
+      .find(
+        (entry) => typeof entry !== 'string' && entry.id === 'recoveryTypes',
+      );
     expect(
       typeof field === 'string' ? undefined : field?.accessor?.(row),
     ).toEqual(types);
@@ -222,13 +224,16 @@ describe('visual category cards', () => {
     const coverage = {
       relationships: { 'cash-shop-listing': 'complete' },
     } as ItemBrowseCoverage;
-    expect(cashShop.card.facets({ rows: [], coverage })[0]?.options).toEqual([
+    expect(
+      cashShop.card.facets({ rows: [], coverage, relations: {} })[0]?.options,
+    ).toEqual([
       { value: 'listed', label: 'Listed' },
       { value: 'not-listed', label: 'Not listed' },
     ]);
     expect(
       cashShop.card.facets({
         rows: [],
+        relations: {},
         coverage: {
           ...coverage,
           relationships: {

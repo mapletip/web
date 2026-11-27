@@ -50,7 +50,7 @@ export const starsAndArrows = {
         },
       ];
     },
-    queryFields: [
+    queryFields: () => [
       {
         id: 'projectileTypes',
         accessor: (row) =>

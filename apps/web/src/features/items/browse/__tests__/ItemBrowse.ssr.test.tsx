@@ -2,7 +2,9 @@ import { MantineProvider } from '@mantine/core';
 import type {
   ItemBrowseRecordV2_2,
   ItemBrowseRowV2_2,
+  ItemRelatedEntityBrowsePack,
 } from '@mapletip/data/items';
+import { getItemRelatedEntities } from '@mapletip/data/items';
 import { theme } from '@mapletip/theme';
 import {
   createMemoryHistory,
@@ -32,7 +34,26 @@ vi.mock('../load', async (importOriginal) => {
   return { ...actual, loadItemBrowse: vi.fn() };
 });
 
+vi.mock(import('@mapletip/data/items'), async (original) => ({
+  ...(await original()),
+  getItemRelatedEntities: vi.fn(),
+}));
+
 const mockedLoad = vi.mocked(loadItemBrowse);
+const mockedRelations = vi.mocked(getItemRelatedEntities);
+
+function fixtureRelation(buildId: BuildId): ItemRelatedEntityBrowsePack {
+  const descriptor =
+    fixtureRelease.builds.get(buildId)?.itemRelatedEntityBrowse[
+      'needed-for-quest'
+    ];
+  if (!descriptor) throw new Error(`Missing quest roster for ${buildId}`);
+  const bytes = fixtureRelease.files.get(descriptor.path);
+  if (!bytes) throw new Error(`Missing quest roster bytes for ${buildId}`);
+  return JSON.parse(
+    new TextDecoder().decode(bytes),
+  ) as ItemRelatedEntityBrowsePack;
+}
 
 function fixtureBrowse(buildId: BuildId): LoadedItemBrowse {
   const descriptor = fixtureRelease.builds.get(buildId)?.itemBrowse;
@@ -134,6 +155,24 @@ describe('Items Browse server rendering', () => {
     mockedLoad.mockImplementation((buildId) =>
       Promise.resolve(fixtureBrowse(buildId)),
     );
+    mockedRelations.mockImplementation(({ buildId }) =>
+      Promise.resolve(
+        fixtureRelation(buildId === 'gms-v83' ? 'gms-v83' : 'cw-launch'),
+      ),
+    );
+  });
+
+  it('renders Quest Items with a named quest in the first response', async () => {
+    const { html } = await renderPath('/maplestory/items/etc/quest-items');
+    expect(mainHtml(html)).toContain('Required by Thread Trial');
+    expect(mainHtml(html)).toContain('Search quests');
+  });
+
+  it('keeps Quest Items counts when the roster fails and removes the Quest picker', async () => {
+    mockedRelations.mockRejectedValue(new Error('Fixture roster unavailable'));
+    const { html } = await renderPath('/maplestory/items/etc/quest-items');
+    expect(mainHtml(html)).toContain('Required by 2 quests');
+    expect(mainHtml(html)).not.toContain('Search quests');
   });
 
   it('renders a category with its heading, cards, drill-down rail and indexable metadata', async () => {

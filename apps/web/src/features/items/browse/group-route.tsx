@@ -10,6 +10,7 @@ import { requireBuildId } from '@/features/detail';
 import { ItemFrame } from './frame';
 import type { LoadedItemBrowse } from './load';
 import { itemPageHead, resolveItemKind, type ItemGroup } from './page';
+import { loadProjectedRelations } from './relation-projection';
 import { itemBrowseSearch } from './search-params';
 
 const browseRouteApi = getRouteApi('/maplestory/{-$buildId}/items/_browse');
@@ -35,6 +36,7 @@ export function itemGroupRouteOptions<TPath extends GroupRoutePath>({
     const params = routeApi.useParams();
     const search = routeApi.useSearch();
     const result = browseRouteApi.useLoaderData();
+    const { relations } = routeApi.useLoaderData();
     const buildId = requireBuildId(params.buildId);
     const kind = resolveItemKind({ group, slug: params.kind });
     return (
@@ -42,6 +44,7 @@ export function itemGroupRouteOptions<TPath extends GroupRoutePath>({
         buildId={buildId}
         rows={result.rows}
         coverage={result.coverage}
+        relations={relations}
         group={group}
         {...(kind === undefined ? {} : { kind })}
         search={search}
@@ -63,12 +66,25 @@ export function itemGroupRouteOptions<TPath extends GroupRoutePath>({
       params,
       parentMatchPromise,
     }: {
-      readonly params: { readonly kind?: string | undefined };
+      readonly params: {
+        readonly buildId?: string | undefined;
+        readonly kind?: string | undefined;
+      };
       readonly parentMatchPromise: Promise<{ loaderData?: LoadedItemBrowse }>;
     }) => {
       const kind = resolveItemKind({ group, slug: params.kind });
       const { loaderData } = await parentMatchPromise;
+      const relations =
+        kind !== undefined && loaderData !== undefined
+          ? await loadProjectedRelations({
+              buildId: requireBuildId(params.buildId),
+              kind,
+              rows: loaderData.rows,
+              coverage: loaderData.coverage,
+            })
+          : {};
       return {
+        relations,
         empty:
           kind !== undefined &&
           loaderData?.rows.every((row) => row.kind !== kind.id),
