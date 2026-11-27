@@ -5,6 +5,7 @@ import type { CategorizedItemRow } from '../browse/project';
 import type { ProjectedRelations } from '../browse/relation-projection';
 import { formatSellPrice } from '../browse/sell-price';
 
+import { relationFact } from './relation-facts';
 import { relationFilter, relationQueryField } from './relation-filter';
 import type { ItemKind } from './types';
 
@@ -28,36 +29,6 @@ function hasNoUses({
     (row.usedInRecipeCount ?? 0) === 0 &&
     !relations['needed-for-quest']?.unestablished?.includes(row.key)
   );
-}
-
-function relationFact({
-  row,
-  relations,
-  kind,
-  count,
-  singular,
-  plural,
-}: {
-  readonly row: { readonly key: string };
-  readonly relations: ProjectedRelations;
-  readonly kind: import('../browse/relation-projection').ProjectedRelationKind;
-  readonly count: number | undefined;
-  readonly singular: string;
-  readonly plural: string;
-}): string | undefined {
-  if (count === undefined || count === 0) return undefined;
-  const relation = relations[kind];
-  if (
-    kind === 'needed-for-quest' &&
-    relation?.unestablished?.includes(row.key) === true
-  )
-    return undefined;
-  const indices = relation?.byItem[row.key] ?? [];
-  const name =
-    indices.length === 1
-      ? relation?.targets[indices[0] ?? -1]?.name
-      : undefined;
-  return `${singular} ${count === 1 && name ? name : `${count} ${count === 1 ? plural.slice(0, -1) : plural}`}`;
 }
 
 /** How many Monster Drops no quest or recipe uses, for the landing lookup. */
@@ -96,30 +67,20 @@ export const monsterDrops = {
           relations,
           kind: 'needed-for-quest',
           count: row.neededForQuestCount,
-          singular: 'Required by',
-          plural: 'quests',
         }),
         relationFact({
           row,
           relations,
           kind: 'used-in-recipe',
           count: row.usedInRecipeCount,
-          singular: 'Used in',
-          plural: 'recipes',
         }),
         relationFact({
           row,
           relations,
           kind: 'monster-drop',
           count: row.monsterDropCount,
-          singular: 'Dropped by',
-          plural: 'monsters',
         }),
-      ].flatMap((label, index) =>
-        label === undefined
-          ? []
-          : [{ id: ['quests', 'recipes', 'monsters'][index] ?? '', label }],
-      );
+      ].filter((fact) => fact !== undefined);
       if (hasNoUses({ row, coverage, relations }))
         facts.push({
           id: 'not-required',

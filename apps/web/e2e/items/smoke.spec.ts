@@ -374,7 +374,7 @@ test('Items drawer shortens monster lists beyond the limit and expands on reques
 test('Items drawer keeps item facts when connections fail, hides diagnostics, and recovers on retry', async ({
   page,
 }) => {
-  const neededQuestPath = `/${fixtureRelease.builds.get('cw-launch')!.itemRelatedEntityBrowse['needed-for-quest']!.path}`;
+  const recipePath = `/${fixtureRelease.builds.get('cw-launch')!.itemRelatedEntityBrowse['used-in-recipe']!.path}`;
   const items = new ItemsPage(page);
   await items.goto('/maplestory/items/etc/ores-and-gems');
 
@@ -389,7 +389,7 @@ test('Items drawer keeps item facts when connections fail, hides diagnostics, an
       }
       return originalFetch(input, init);
     };
-  }, neededQuestPath);
+  }, recipePath);
 
   await items.itemAction('Woven Thread').click();
   const drawer = page.getByRole('dialog', { name: 'Woven Thread' });

@@ -19,16 +19,17 @@ export function relationFilter({
   readonly label: 'Quest' | 'Monster';
 }): readonly FacetDefinition<CategorizedItemRow>[] {
   const targets = relations[kind]?.targets;
-  if (!targets?.length) return [];
+  const options = targets?.flatMap(({ publicId, name }) =>
+    publicId === undefined ? [] : [{ value: publicId, label: name }],
+  );
+  if (!options?.length) return [];
   return [
     {
       id: label.toLowerCase(),
       field: label.toLowerCase(),
       label,
       kind: 'multi-select',
-      options: targets.flatMap(({ publicId, name }) =>
-        publicId === undefined ? [] : [{ value: publicId, label: name }],
-      ),
+      options,
       picker: {
         placeholder: `Search ${label.toLowerCase()}s`,
         nothingFound: `No ${label.toLowerCase()}s match`,

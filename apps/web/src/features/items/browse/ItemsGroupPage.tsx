@@ -51,14 +51,24 @@ function sortByDefaultOrder(
     ITEM_SORT_OPTIONS[0];
   const direction = defaultSort.direction === 'desc' ? -1 : 1;
   const field = defaultSort.field as keyof CategorizedItemRow;
+  const queryField = kind.card
+    ?.queryFields?.({ coverage: undefined, relations: {} })
+    .find(
+      (entry) => typeof entry !== 'string' && entry.id === defaultSort.field,
+    );
+  const accessor =
+    queryField && typeof queryField !== 'string'
+      ? queryField.accessor
+      : undefined;
+  const value = (row: CategorizedItemRow): unknown =>
+    typeof accessor === 'function' ? accessor(row) : row[accessor ?? field];
   return [...rows].sort((left, right) => {
+    const leftValue = value(left);
+    const rightValue = value(right);
     const order =
-      typeof left[field] === 'number' && typeof right[field] === 'number'
-        ? Number(left[field]) - Number(right[field])
-        : collator.compare(
-            sortKeyString(left[field]),
-            sortKeyString(right[field]),
-          );
+      typeof leftValue === 'number' && typeof rightValue === 'number'
+        ? leftValue - rightValue
+        : collator.compare(sortKeyString(leftValue), sortKeyString(rightValue));
     return order === 0
       ? collator.compare(left.name ?? '', right.name ?? '')
       : order * direction;

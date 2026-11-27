@@ -278,6 +278,17 @@ describe('Items Browse server rendering', () => {
     expect(main).toContain('data-record-card-layout="compactMediaAside"');
   });
 
+  it('renders Ores & Gems identity cards and ore-first order in the first response', async () => {
+    const { html } = await renderPath('/maplestory/items/etc/ores-and-gems');
+    const main = mainHtml(html);
+    expect(main).toContain('data-record-card-layout="identity"');
+    expect(main).toContain('Lamplight Ore');
+    expect(main.indexOf('Lamplight Ore')).toBeLessThan(
+      main.indexOf('Woven Thread'),
+    );
+    expect(main).toContain('Required by Thread Trial');
+  });
+
   it('renders Stars & Arrows effects and published type pills in the first response', async () => {
     const cw = await renderPath('/maplestory/items/use/stars-and-arrows');
     const cwMain = mainHtml(cw.html);

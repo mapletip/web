@@ -35,6 +35,28 @@ test('mobile Items monster drops', async ({ page }) => {
   await expect(page).toHaveScreenshot('mobile-items-drops.png');
 });
 
+test('desktop Items ores', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 1100 });
+  await page.goto(ORES);
+  await browseReady(page);
+  await expect(
+    page.locator('[data-record-card-layout="identity"]').first(),
+  ).toBeVisible();
+  await expect(page.getByText('Lamplight Ore')).toBeVisible();
+  await expect(page).toHaveScreenshot('desktop-items-ores.png');
+});
+
+test('mobile Items ores', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 1600 });
+  await page.goto(ORES);
+  await browseReady(page);
+  await expect(
+    page.locator('[data-record-card-layout="identity"]').first(),
+  ).toBeVisible();
+  await expect(page.getByText('Lamplight Ore')).toBeVisible();
+  await expect(page).toHaveScreenshot('mobile-items-ores.png');
+});
+
 test('desktop Items monster drops not required', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 1100 });
   await page.goto(MONSTER_DROPS);
@@ -274,7 +296,7 @@ test('mobile Items drawer', async ({ page }) => {
 });
 
 test('desktop Items drawer failed', async ({ page }) => {
-  const neededQuestPath = `/${fixtureRelease.builds.get('cw-launch')!.itemRelatedEntityBrowse['needed-for-quest']!.path}`;
+  const recipePath = `/${fixtureRelease.builds.get('cw-launch')!.itemRelatedEntityBrowse['used-in-recipe']!.path}`;
   await page.setViewportSize({ width: 1440, height: 1100 });
   await page.goto(ORES);
   await browseReady(page);
@@ -293,7 +315,7 @@ test('desktop Items drawer failed', async ({ page }) => {
       }
       return originalFetch(input, init);
     };
-  }, neededQuestPath);
+  }, recipePath);
   await page.getByRole('button', { name: 'Woven Thread', exact: true }).click();
   const drawer = page.getByRole('dialog', { name: 'Woven Thread' });
   await expect(drawer).toBeVisible();
