@@ -23,17 +23,19 @@ export const chairs = {
       ].filter((part) => part !== undefined);
       return parts.length > 0 ? parts.join(' · ') : undefined;
     },
-    pills: () => ({
-      id: 'recovery-type',
-      field: 'recoveryTypes',
-      label: 'Recovery',
-      kind: 'multi-select',
-      placement: 'results',
-      options: [
-        { value: 'hp', label: 'Recovers HP' },
-        { value: 'mp', label: 'Recovers MP' },
-      ],
-    }),
+    facets: () => [
+      {
+        id: 'recovery-type',
+        field: 'recoveryTypes',
+        label: 'Recovery',
+        kind: 'multi-select',
+        placement: 'results',
+        options: [
+          { value: 'hp', label: 'Recovers HP' },
+          { value: 'mp', label: 'Recovers MP' },
+        ],
+      },
+    ],
     queryFields: [
       {
         id: 'recoveryTypes',

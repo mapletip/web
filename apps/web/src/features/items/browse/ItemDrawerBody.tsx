@@ -8,12 +8,13 @@ import {
   Title,
 } from '@mantine/core';
 import { Thumbnail } from '@mapletip/component-library';
-import { itemIconUrl, type ItemBrowseRecordV2_2 } from '@mapletip/data/items';
+import { itemIconUrl } from '@mapletip/data/items';
 import { useEffect, useState, type ReactElement } from 'react';
 
 import { MAPLEKIT_RELEASE } from '@/config/maplekit';
 import { DropSources } from '@/features/drops';
 
+import { formatBuff } from './buff-format';
 import type { CategorizedItemRow } from './project';
 import {
   ITEM_DRAWER_MONSTER_LIMIT,
@@ -27,49 +28,7 @@ import {
   type ItemRelationReader,
 } from './relations';
 
-type BuffStat = NonNullable<
-  ItemBrowseRecordV2_2['buff']
->['effects'][number]['stat'];
-
-const BUFF_STAT_LABELS: Readonly<Record<BuffStat, string>> = {
-  weaponAttack: 'weapon attack',
-  magicAttack: 'magic attack',
-  weaponDefense: 'weapon defense',
-  magicDefense: 'magic defense',
-  accuracy: 'accuracy',
-  avoidability: 'avoidability',
-  speed: 'speed',
-  jump: 'jump',
-  criticalRate: 'critical rate',
-  criticalDamage: 'critical damage',
-  maxHp: 'max HP',
-  maxMp: 'max MP',
-  itemDropRate: 'item drop rate',
-  mesoDropRate: 'meso drop rate',
-};
-
 const numberFormat = new Intl.NumberFormat('en-US');
-
-function formatDuration(seconds: number): string {
-  if (seconds < 60) return `${seconds} sec`;
-  const minutes = Math.floor(seconds / 60);
-  const remainder = seconds % 60;
-  return remainder === 0 ? `${minutes} min` : `${minutes} min ${remainder} sec`;
-}
-
-function formatBuff(buff: NonNullable<CategorizedItemRow['buff']>): string {
-  const effects = buff.effects
-    .map(({ stat, unit, value }) => {
-      const sign = value >= 0 ? '+' : '';
-      const suffix = unit === 'percent' ? '%' : '';
-      return `${sign}${numberFormat.format(value)}${suffix} ${BUFF_STAT_LABELS[stat]}`;
-    })
-    .join(', ');
-  if (buff.durationSeconds != null && buff.durationSeconds > 0) {
-    return `${effects} · Lasts ${formatDuration(buff.durationSeconds)}`;
-  }
-  return effects;
-}
 
 /** Plain US English statements for the published facts on an item row. */
 export function formatItemFacts({
@@ -91,7 +50,7 @@ export function formatItemFacts({
     facts.push(`Restores ${numberFormat.format(record.mpPercent)}% MP`);
   }
   if (record.buff !== undefined && record.buff.effects.length > 0) {
-    facts.push(formatBuff(record.buff));
+    facts.push(formatBuff({ buff: record.buff }));
   }
   if (record.attack !== undefined) {
     facts.push(`+${numberFormat.format(record.attack)} attack`);

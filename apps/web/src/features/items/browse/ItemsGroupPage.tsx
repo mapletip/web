@@ -8,7 +8,7 @@ import { canonicalBuildParam } from '@/features/detail';
 import { ITEM_KINDS } from '../kinds';
 import type { ItemKind } from '../kinds/types';
 
-import { ITEM_CARD_COLUMNS, renderItemCard } from './item-card';
+import { itemCardColumns, renderItemCard } from './item-card';
 import classes from './ItemsGroupPage.module.css';
 import { ITEM_GROUP_ROUTES, type ItemGroup } from './page';
 import type { CategorizedItemRow } from './project';
@@ -80,7 +80,10 @@ export function buildGroupShelves({
     shelves.push({
       kind,
       totalCount: kindRows.length,
-      previewRows: sortByDefaultOrder(kindRows).slice(0, ITEM_CARD_COLUMNS.lg),
+      previewRows: sortByDefaultOrder(kindRows).slice(
+        0,
+        itemCardColumns({ kind }).lg,
+      ),
     });
   }
   return shelves;
@@ -129,7 +132,7 @@ export function ItemsGroupShelves({
               </Link>
             </div>
             <SimpleGrid
-              cols={ITEM_CARD_COLUMNS}
+              cols={itemCardColumns({ kind: shelf.kind })}
               spacing="sm"
               className={classes['shelfGrid']}
             >

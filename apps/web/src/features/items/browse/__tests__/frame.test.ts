@@ -31,7 +31,7 @@ describe('itemPrimaryFact', () => {
           sellPrice: 50,
         }),
       }),
-    ).toBe('Restores 300 HP');
+    ).toBe('+300 HP');
 
     expect(
       itemPrimaryFact({
@@ -40,7 +40,7 @@ describe('itemPrimaryFact', () => {
           hpPercent: 50,
         }),
       }),
-    ).toBe('Restores 50% HP');
+    ).toBe('+50% HP');
 
     expect(
       itemPrimaryFact({
@@ -195,7 +195,7 @@ describe('visual category cards', () => {
   });
 
   it('offers recovery pills and a descending recovery sort', () => {
-    expect(chairs.card.pills()?.options).toEqual([
+    expect(chairs.card.facets()[0]?.options).toEqual([
       { value: 'hp', label: 'Recovers HP' },
       { value: 'mp', label: 'Recovers MP' },
     ]);
@@ -210,19 +210,22 @@ describe('visual category cards', () => {
     const coverage = {
       relationships: { 'cash-shop-listing': 'complete' },
     } as ItemBrowseCoverage;
-    expect(cashShop.card.pills(coverage)?.options).toEqual([
+    expect(cashShop.card.facets({ rows: [], coverage })[0]?.options).toEqual([
       { value: 'listed', label: 'Listed' },
       { value: 'not-listed', label: 'Not listed' },
     ]);
     expect(
-      cashShop.card.pills({
-        ...coverage,
-        relationships: {
-          ...coverage.relationships,
-          'cash-shop-listing': 'partial',
+      cashShop.card.facets({
+        rows: [],
+        coverage: {
+          ...coverage,
+          relationships: {
+            ...coverage.relationships,
+            'cash-shop-listing': 'partial',
+          },
         },
       }),
-    ).toBeUndefined();
+    ).toEqual([]);
   });
 
   it('offers Quest reward only when a category has a grant', () => {

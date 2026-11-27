@@ -4,6 +4,36 @@ import { expect, test } from '../fixtures';
 import { ItemsPage } from './page/items-page';
 
 const SCROLLS = '/maplestory/items/use/scrolls';
+const POTIONS = '/maplestory/items/use/potions-and-food';
+
+test('Potions pill, Buffs filter, and HP sort narrow and order cards', async ({
+  page,
+  isMobile,
+}) => {
+  test.skip(isMobile, 'Desktop sidebar covers the filter and sort journey.');
+  const items = new ItemsPage(page);
+  await items.goto(POTIONS);
+  await expect(items.item('Practice Tonic A')).toBeVisible();
+  await expect(
+    page.getByText('+300 HP', { exact: true }).first(),
+  ).toBeVisible();
+  await page.getByText(/^Restores HP \(/u).click();
+  await expect(items.item('Practice Tonic B')).toBeHidden();
+  await expect(items.item('Sample Draught')).toBeVisible();
+  await page.getByText(/^Restores MP \(/u).click();
+  await expect(items.item('Sample Draught')).toBeVisible();
+  await page.getByText(/^Restores HP \(/u).click();
+  const buffs = page.getByRole('group', { name: 'Buff stat' });
+  await buffs.getByRole('checkbox', { name: /^Weapon attack \(/u }).click();
+  await expect(items.item('Zesty Tonic')).toBeVisible();
+  await expect(items.item('Brisk Tonic')).toBeVisible();
+  await page.getByRole('combobox', { name: 'Sort' }).click();
+  await page.getByRole('option', { name: 'HP (low to high)' }).click();
+  await expect(
+    page.locator('[data-record-card-layout="compactMediaAside"] h3'),
+  ).toContainText(['Zesty Tonic', 'Brisk Tonic']);
+  await expect(page).toHaveURL(/sort=hp-asc/u);
+});
 
 test('Chairs and Cash Shop show published facts and coverage-based pills', async ({
   page,

@@ -15,20 +15,22 @@ export const cashShop = {
       row.nxPrice === undefined
         ? undefined
         : `${numberFormat.format(row.nxPrice)} NX`,
-    pills: (coverage) =>
+    facets: ({ coverage }) =>
       coverage?.relationships['cash-shop-listing'] === 'complete'
-        ? {
-            id: 'listing-status',
-            field: 'listed',
-            label: 'Cash Shop listing',
-            kind: 'multi-select',
-            placement: 'results',
-            options: [
-              { value: 'listed', label: 'Listed' },
-              { value: 'not-listed', label: 'Not listed' },
-            ],
-          }
-        : undefined,
+        ? [
+            {
+              id: 'listing-status',
+              field: 'listed',
+              label: 'Cash Shop listing',
+              kind: 'multi-select',
+              placement: 'results',
+              options: [
+                { value: 'listed', label: 'Listed' },
+                { value: 'not-listed', label: 'Not listed' },
+              ],
+            },
+          ]
+        : [],
     queryFields: [
       {
         id: 'listed',

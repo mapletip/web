@@ -17,7 +17,7 @@ import { fixtureRelease } from '@/mocks/release';
 import { routeTree } from '@/routeTree.gen';
 
 import { ITEM_KINDS } from '../../kinds';
-import { ITEM_CARD_COLUMNS } from '../item-card';
+import { itemCardColumns } from '../item-card';
 import { buildGroupShelves } from '../ItemsGroupPage';
 import {
   ITEM_BROWSE_UNAVAILABLE_MESSAGE,
@@ -193,6 +193,40 @@ describe('Items Browse server rendering', () => {
     expect(mainHtml(html)).toContain('+50 HP');
     expect(mainHtml(html)).toContain('Recovers HP');
   });
+
+  it('renders potion effects and pills in the first response', async () => {
+    const { html } = await renderPath('/maplestory/items/use/potions-and-food');
+    const main = mainHtml(html);
+    expect(main).toContain('Practice Tonic A');
+    expect(main).toContain('+300 HP');
+    expect(main).toContain('Restores HP');
+    expect(main).toContain('Restores MP');
+    expect(main).toContain('Buff stat');
+    expect(main).toContain('data-record-card-layout="compactMediaAside"');
+  });
+
+  it.each(['hp', 'mp'] as const)(
+    'sorts flat %s amounts before percentage and absent values in both directions',
+    async (field) => {
+      for (const direction of ['asc', 'desc'] as const) {
+        const { html } = await renderPath(
+          `/maplestory/items/use/potions-and-food?sort=${field}-${direction}`,
+        );
+        const main = mainHtml(html);
+        const flatNames =
+          field === 'hp'
+            ? ['Practice Tonic A', 'Sample Draught']
+            : ['Practice Tonic B', 'Sample Draught'];
+        for (const name of flatNames) {
+          expect(main.indexOf(name)).toBeGreaterThan(-1);
+          expect(main.indexOf(name)).toBeLessThan(
+            main.indexOf('Percentage Recovery Tonic'),
+          );
+          expect(main.indexOf(name)).toBeLessThan(main.indexOf('Quiet Potion'));
+        }
+      }
+    },
+  );
 
   it('serves an empty category with its heading, empty state and noindex, and hides it from group rails', async () => {
     const base = fixtureBrowse('cw-launch');
@@ -499,7 +533,6 @@ describe('Items Browse server rendering', () => {
         group: groupId,
         rows: browse.rows,
       });
-      const maxPerRow = ITEM_CARD_COLUMNS.lg;
       const numberFormat = new Intl.NumberFormat('en-US');
 
       let lastHeadingIndex = -1;
@@ -525,7 +558,9 @@ describe('Items Browse server rendering', () => {
         );
         expect(main).toMatch(seeAllPattern);
 
-        expect(shelf.previewRows.length).toBeLessThanOrEqual(maxPerRow);
+        expect(shelf.previewRows.length).toBeLessThanOrEqual(
+          itemCardColumns({ kind: shelf.kind }).lg,
+        );
         for (const row of shelf.previewRows) {
           expect(main).toContain(escapeHtml(row.name!));
         }
@@ -569,8 +604,10 @@ describe('Items Browse server rendering', () => {
           sensitivity: 'base',
         }),
       );
-    expect(monsterDrops.length).toBeGreaterThan(ITEM_CARD_COLUMNS.lg);
-    const sixth = monsterDrops[ITEM_CARD_COLUMNS.lg]!;
+    expect(monsterDrops.length).toBeGreaterThan(
+      itemCardColumns({ kind: undefined }).lg,
+    );
+    const sixth = monsterDrops[itemCardColumns({ kind: undefined }).lg]!;
     expect(main).not.toContain(escapeHtml(sixth.name!));
   });
 

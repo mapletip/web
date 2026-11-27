@@ -30,11 +30,7 @@ import { useRouteOverlay } from '@/features/route-overlay/useRouteOverlay';
 import { ITEM_KINDS } from '../kinds';
 import type { ItemKind } from '../kinds/types';
 
-import {
-  ITEM_CARD_COLUMNS,
-  ITEM_KIND_LABELS,
-  renderItemCard,
-} from './item-card';
+import { itemCardColumns, ITEM_KIND_LABELS, renderItemCard } from './item-card';
 import { formatItemFacts, ItemDrawerBody } from './ItemDrawerBody';
 import { ItemsGroupShelves } from './ItemsGroupPage';
 import {
@@ -143,16 +139,11 @@ export function categoryFacets({
   readonly kind: ItemKind | undefined;
   readonly coverage: ItemBrowseCoverage | undefined;
 }): readonly FacetDefinition<CategorizedItemRow>[] {
-  const pills = kind?.card?.pills?.(coverage);
+  if (kind === undefined) return [];
+  const categoryRows = rows.filter((row) => row.kind === kind.id);
   return [
-    ...(pills === undefined ? [] : [pills]),
-    ...(kind !== undefined &&
-    rows.some(
-      (row) =>
-        row.kind === kind.id &&
-        row.questRewardCount !== undefined &&
-        row.questRewardCount > 0,
-    )
+    ...(kind.card?.facets?.({ rows: categoryRows, coverage }) ?? []),
+    ...(categoryRows.some((row) => (row.questRewardCount ?? 0) > 0)
       ? [QUEST_REWARD_FACET]
       : []),
   ];
@@ -169,14 +160,7 @@ export function itemPrimaryFact({
   );
   const categoryLead = category?.card?.lead(record);
   if (categoryLead !== undefined) return categoryLead;
-  if (
-    record.hp !== undefined ||
-    record.hpPercent !== undefined ||
-    record.mp !== undefined ||
-    record.mpPercent !== undefined ||
-    (record.buff !== undefined && record.buff.effects.length > 0) ||
-    record.attack !== undefined
-  ) {
+  if (record.attack !== undefined) {
     return formatItemFacts({ record })[0];
   }
   if (record.success !== undefined) {
@@ -450,7 +434,7 @@ export function ItemFrame({
             }
           : {
               presentation: 'cards' as const,
-              cardColumns: ITEM_CARD_COLUMNS,
+              cardColumns: itemCardColumns({ kind }),
               renderCard: (
                 record: CategorizedItemRow,
                 {
@@ -462,9 +446,9 @@ export function ItemFrame({
                   record,
                   openDetails,
                   isDetailsOpen,
-                  secondaryLine: all
-                    ? itemPrimaryFact({ record })
-                    : kind?.card?.lead(record),
+                  ...(all
+                    ? { secondaryLine: itemPrimaryFact({ record }) }
+                    : {}),
                   showCategoryLabel: all,
                 }),
             })}
