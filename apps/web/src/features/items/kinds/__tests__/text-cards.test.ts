@@ -53,7 +53,7 @@ describe('text category cards', () => {
         ...context,
         descriptions: { [baseRow.sourceId]: description },
       }),
-    ).toBe(expected);
+    ).toEqual([{ text: expected, emphasis: false }]);
   });
 
   it('uses the sell price when a description is missing', () => {

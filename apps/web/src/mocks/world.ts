@@ -964,7 +964,8 @@ const cwItems: readonly FixtureItem[] = [
     id: 'plain-use-item',
     name: 'Plain Use Item',
     itemClass: 'consume',
-    description: 'An invented item with a short published description.',
+    description:
+      '#cDouble-click# to open the practice box.\\nA small surprise waits inside.',
     sellPrice: known(10),
   }),
   item({

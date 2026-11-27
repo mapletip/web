@@ -176,7 +176,7 @@ export function itemPrimaryFact({
     coverage: undefined,
     relations: {},
   });
-  if (categoryLead !== undefined) return categoryLead;
+  if (typeof categoryLead === 'string') return categoryLead;
   if (record.success !== undefined) {
     return `${numberFormat.format(record.success)}% success`;
   }

@@ -7,6 +7,7 @@ import { MAPLEKIT_RELEASE } from '@/config/maplekit';
 import { ITEM_KINDS_BY_ID } from '../kinds';
 import type { ItemCardContext, ItemKind } from '../kinds/types';
 
+import { GameText } from './GameText';
 import type { CategorizedItemRow } from './project';
 
 const PICTURE_CARD_COLUMNS = { base: 2, md: 4, lg: 5 } as const;
@@ -66,6 +67,12 @@ export function renderItemCard({
   const card = crossCategory ? undefined : kind?.card;
   const layout = card?.layout ?? 'picture';
   const fact = secondaryLine ?? card?.lead(record, context);
+  const renderedFact =
+    fact === undefined || typeof fact === 'string' ? (
+      fact
+    ) : (
+      <GameText segments={fact} />
+    );
   const footer = card?.footer?.(record, context);
   const media = card?.media?.(record, context) ?? (
     <Thumbnail
@@ -95,7 +102,7 @@ export function renderItemCard({
     return (
       <RecordCard
         layout="identity"
-        {...(fact === undefined ? {} : { leadLine: fact })}
+        {...(renderedFact === undefined ? {} : { leadLine: renderedFact })}
         {...(facts === undefined ? {} : { facts })}
         {...shared}
       />
@@ -104,7 +111,7 @@ export function renderItemCard({
   return layout === 'short' ? (
     <RecordCard
       layout="compactMediaAside"
-      {...(fact === undefined ? {} : { secondaryLine: fact })}
+      {...(renderedFact === undefined ? {} : { secondaryLine: renderedFact })}
       {...(card?.secondaryLineClamp === undefined
         ? {}
         : { secondaryLineClamp: card.secondaryLineClamp })}
@@ -115,7 +122,7 @@ export function renderItemCard({
     <RecordCard
       layout="picture"
       leadLine={crossCategory ? ITEM_KIND_LABELS.get(record.kind) : undefined}
-      {...(fact === undefined ? {} : { secondaryLine: fact })}
+      {...(renderedFact === undefined ? {} : { secondaryLine: renderedFact })}
       {...shared}
     />
   );

@@ -15,6 +15,8 @@ import { MAPLEKIT_RELEASE } from '@/config/maplekit';
 import { DropSources } from '@/features/drops';
 
 import { formatBuff } from './buff-format';
+import { formatGameText } from './game-text';
+import { GameText } from './GameText';
 import { numberFormat } from './number-format';
 import type { CategorizedItemRow } from './project';
 import {
@@ -250,7 +252,11 @@ function ItemDrawerRelationsSection({
   return (
     <Stack gap="md">
       {relations.description === undefined ? null : (
-        <Text size="sm">{relations.description}</Text>
+        <Text size="sm">
+          <GameText
+            segments={formatGameText({ text: relations.description })}
+          />
+        </Text>
       )}
       <DrawerSection
         title="Required by quests"
