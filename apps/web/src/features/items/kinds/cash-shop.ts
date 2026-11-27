@@ -11,10 +11,16 @@ export const cashShop = {
     'e92811536cb6820a65eafaea2452b94161951361e5ed35b16035f0207d8939f0',
   matches: (row) => row.itemClass === 'cash',
   card: {
-    lead: (row) =>
+    value: (row) =>
       row.nxPrice === undefined
         ? undefined
-        : `${numberFormat.format(row.nxPrice)} NX`,
+        : [
+            {
+              id: 'nx-price',
+              text: `${numberFormat.format(row.nxPrice)} NX`,
+              tone: 'accent',
+            },
+          ],
     facets: ({ coverage }) =>
       coverage?.relationships['cash-shop-listing'] === 'complete'
         ? [

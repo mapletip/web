@@ -12,27 +12,78 @@ const row: ItemRow = {
 
 describe('Potions & Food card', () => {
   it.each([
-    [{ hp: 300 }, '+300 HP'],
-    [{ hpPercent: 35 }, '+35% HP'],
-    [{ mp: 120 }, '+120 MP'],
-    [{ hp: 300, mp: 120 }, '+300 HP · +120 MP'],
-    [{ hpPercent: 35, mpPercent: 20 }, '+35% HP · +20% MP'],
+    [{ hp: 300 }, [{ id: 'hp', text: '+300 HP', tone: 'warm' }]],
+    [{ hpPercent: 35 }, [{ id: 'hp-percent', text: '+35% HP', tone: 'warm' }]],
+    [{ mp: 120 }, [{ id: 'mp', text: '+120 MP', tone: 'cool' }]],
+    [
+      { hp: 300, mp: 120 },
+      [
+        { id: 'hp', text: '+300 HP', tone: 'warm' },
+        { id: 'mp', text: '+120 MP', tone: 'cool' },
+      ],
+    ],
+    [
+      { hpPercent: 35, mpPercent: 20 },
+      [
+        { id: 'hp-percent', text: '+35% HP', tone: 'warm' },
+        { id: 'mp-percent', text: '+20% MP', tone: 'cool' },
+      ],
+    ],
+    [
+      { hp: 300, hpPercent: 10 },
+      [
+        { id: 'hp', text: '+300 HP', tone: 'warm' },
+        { id: 'hp-percent', text: '+10% HP', tone: 'warm' },
+      ],
+    ],
     [{}, undefined],
-  ] as const)('formats recovery from published facts', (facts, expected) => {
-    expect(potionsAndFood.card.lead({ ...row, ...facts })).toBe(expected);
+  ] as const)(
+    'formats recovery headline parts and tones from published facts',
+    (facts, expected) => {
+      expect(potionsAndFood.card.value({ ...row, ...facts })).toEqual(expected);
+      expect(potionsAndFood.card.lead({ ...row, ...facts })).toBeUndefined();
+    },
+  );
+
+  it('formats buff effects with penalty tone and true minus sign, and spells out duration in the quiet line', () => {
+    const buffRow: ItemRow = {
+      ...row,
+      buff: {
+        durationSeconds: 300,
+        effects: [
+          { stat: 'weaponAttack', unit: 'flat', value: 15 },
+          { stat: 'accuracy', unit: 'flat', value: -5 },
+        ],
+      },
+    };
+    expect(potionsAndFood.card.value(buffRow)).toEqual([
+      { id: 'weaponAttack-flat-0', text: '+15 weapon attack', tone: 'accent' },
+      { id: 'accuracy-flat-1', text: '−5 accuracy', tone: 'critical' },
+    ]);
+    expect(potionsAndFood.card.lead(buffRow)).toBe('Lasts 5 minutes');
   });
 
-  it('shows buff effects and duration', () => {
-    expect(
-      potionsAndFood.card.lead({
-        ...row,
-        buff: {
-          durationSeconds: 600,
-          effects: [{ stat: 'weaponAttack', unit: 'flat', value: 10 }],
-        },
-      }),
-    ).toBe('+10 weapon attack · Lasts 10 min');
-  });
+  it.each([
+    [30, 'Lasts 30 seconds'],
+    [1, 'Lasts 1 second'],
+    [60, 'Lasts 1 minute'],
+    [90, 'Lasts 1 minute 30 seconds'],
+    [600, 'Lasts 10 minutes'],
+    [undefined, undefined],
+  ] as const)(
+    'spells out buff duration %s as %s',
+    (durationSeconds, expected) => {
+      expect(
+        potionsAndFood.card.lead({
+          ...row,
+          buff: {
+            ...(durationSeconds === undefined ? {} : { durationSeconds }),
+            effects: [{ stat: 'speed', unit: 'flat', value: 10 }],
+          },
+        }),
+      ).toBe(expected);
+    },
+  );
 
   it('places a combined recovery item under both pills', () => {
     const field = potionsAndFood.card

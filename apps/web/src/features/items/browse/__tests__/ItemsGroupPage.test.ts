@@ -112,7 +112,7 @@ describe('buildGroupShelves', () => {
     ]);
 
     expect(shelves[1]?.totalCount).toBe(6);
-    // Monster Drops use identity cards, three to the widest row.
+    // Ores & Gems and Monster Drops use identity cards, three to the widest row.
     expect(shelves[1]?.previewRows.map((row) => row.name)).toEqual([
       'Drop 01',
       'Drop 02',

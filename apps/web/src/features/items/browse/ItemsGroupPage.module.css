@@ -71,7 +71,7 @@
   .shelfGrid[data-card-columns='picture'] > :nth-child(n + 5) {
     display: revert;
   }
-  .shelfGrid[data-card-columns='aside'] > :nth-child(3) {
+  .shelfGrid[data-card-columns='aside'] > :nth-child(n + 3) {
     display: revert;
   }
 }

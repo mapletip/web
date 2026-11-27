@@ -424,7 +424,8 @@ describe('Items Browse server rendering', () => {
     const cw = await renderPath('/maplestory/items/use/stars-and-arrows');
     const cwMain = mainHtml(cw.html);
     expect(cwMain).toContain('Practice Stars');
-    expect(cwMain).toContain('+27 attack · 800 per stack');
+    expect(cwMain).toContain('+27 attack');
+    expect(cwMain).toContain('800 per stack');
     expect(cwMain).toContain('Silent Arrow');
     expect(cwMain).toContain('2,000 per stack');
     expect(cwMain).toContain('Throwing stars');
@@ -468,7 +469,8 @@ describe('Items Browse server rendering', () => {
     );
     const main = mainHtml(html);
     expect(main).toContain('GMS Native Alpha Card');
-    expect(main).toContain('+5 weapon attack · Lasts 30 min');
+    expect(main).toContain('+5 weapon attack');
+    expect(main).toContain('Lasts 30 minutes');
     expect(main).toContain('data-record-card-layout="compactMediaAside"');
   });
 

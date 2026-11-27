@@ -1,14 +1,9 @@
 import { formatGameText } from '../browse/game-text';
-import type { ItemRow } from '../browse/project';
 import { formatSellPrice } from '../browse/sell-price';
 
 import type { ItemCardDescription } from './types';
 
-export function textCard({
-  extraFact,
-}: {
-  readonly extraFact?: (row: ItemRow) => string | undefined;
-} = {}): ItemCardDescription {
+export function textCard(): ItemCardDescription {
   return {
     layout: 'short',
     columns: { base: 1, md: 2, lg: 2 },
@@ -21,6 +16,5 @@ export function textCard({
       }
       return formatSellPrice({ sellPrice: row.sellPrice });
     },
-    ...(extraFact === undefined ? {} : { footer: (row) => extraFact(row) }),
   };
 }

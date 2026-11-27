@@ -1,4 +1,4 @@
-import { numberFormat } from '../browse/number-format';
+import { recoveryParts } from '../browse/recovery-format';
 
 import type { ItemKind } from './types';
 
@@ -12,16 +12,9 @@ export const chairs = {
   matches: (row) =>
     row.itemClass === 'setup' && row.types?.includes('chair') === true,
   card: {
-    lead: (row) => {
-      const parts = [
-        row.seatHp === undefined
-          ? undefined
-          : `+${numberFormat.format(row.seatHp)} HP`,
-        row.seatMp === undefined
-          ? undefined
-          : `+${numberFormat.format(row.seatMp)} MP`,
-      ].filter((part) => part !== undefined);
-      return parts.length > 0 ? parts.join(' · ') : undefined;
+    value: (row) => {
+      const parts = recoveryParts({ hp: row.seatHp, mp: row.seatMp });
+      return parts.length > 0 ? parts : undefined;
     },
     facets: () => [
       {

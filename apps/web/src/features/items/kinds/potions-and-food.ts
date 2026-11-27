@@ -1,8 +1,8 @@
 import type { FacetDefinition } from '@mapletip/component-library';
 
-import { BUFF_STAT_LABELS, formatBuff } from '../browse/buff-format';
-import { numberFormat } from '../browse/number-format';
+import { BUFF_STAT_LABELS, formatBuffParts } from '../browse/buff-format';
 import type { CategorizedItemRow, ItemRow } from '../browse/project';
+import { recoveryParts } from '../browse/recovery-format';
 
 import type { ItemKind } from './types';
 
@@ -52,20 +52,24 @@ export const potionsAndFood = {
       row.types?.includes('food-buff') === true),
   card: {
     layout: 'short',
-    lead: (row) => {
-      const effects = [
-        ...(row.hp === undefined ? [] : [`+${numberFormat.format(row.hp)} HP`]),
-        ...(row.hpPercent === undefined
-          ? []
-          : [`+${numberFormat.format(row.hpPercent)}% HP`]),
-        ...(row.mp === undefined ? [] : [`+${numberFormat.format(row.mp)} MP`]),
-        ...(row.mpPercent === undefined
-          ? []
-          : [`+${numberFormat.format(row.mpPercent)}% MP`]),
-        ...(row.buff?.effects.length ? [formatBuff({ buff: row.buff })] : []),
+    value: (row) => {
+      const parts = [
+        ...recoveryParts({
+          hp: row.hp,
+          hpPercent: row.hpPercent,
+          mp: row.mp,
+          mpPercent: row.mpPercent,
+        }),
+        ...(row.buff?.effects.length
+          ? formatBuffParts({ buff: row.buff }).effects
+          : []),
       ];
-      return effects.length ? effects.join(' · ') : undefined;
+      return parts.length > 0 ? parts : undefined;
     },
+    lead: (row) =>
+      row.buff?.effects.length
+        ? formatBuffParts({ buff: row.buff }).duration
+        : undefined,
     facets: ({ rows }) => [
       {
         id: 'recovery-type',

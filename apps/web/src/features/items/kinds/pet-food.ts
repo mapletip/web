@@ -12,7 +12,13 @@ export const petFood = {
     '48bbbec3311d822c327cfc030c8d5a2d5f0c726a263356c40c02af0f125aac7c',
   matches: (row) => row.types?.includes('pet-food') === true,
   descriptions: true,
-  card: textCard({
-    extraFact: (row) => formatFullness({ fullness: row.fullness }),
-  }),
+  card: {
+    ...textCard(),
+    value: (row) => {
+      const text = formatFullness({ fullness: row.fullness });
+      return text === undefined
+        ? undefined
+        : [{ id: 'fullness', text, tone: 'accent' }];
+    },
+  },
 } satisfies ItemKind;

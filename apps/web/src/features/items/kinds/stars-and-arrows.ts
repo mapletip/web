@@ -22,17 +22,20 @@ export const starsAndArrows = {
     ),
   card: {
     layout: 'short',
-    lead: (row) => {
-      const parts = [
-        ...(row.attack === undefined
-          ? []
-          : [`+${numberFormat.format(row.attack)} attack`]),
-        ...(row.maxStack === undefined
-          ? []
-          : [`${numberFormat.format(row.maxStack)} per stack`]),
-      ];
-      return parts.length > 0 ? parts.join(' · ') : undefined;
-    },
+    value: (row) =>
+      row.attack === undefined
+        ? undefined
+        : [
+            {
+              id: 'attack',
+              text: `+${numberFormat.format(row.attack)} attack`,
+              tone: 'accent',
+            },
+          ],
+    lead: (row) =>
+      row.maxStack === undefined
+        ? undefined
+        : `${numberFormat.format(row.maxStack)} per stack`,
     facets: ({ rows }) => {
       const present = new Set(rows.flatMap((row) => row.types ?? []));
       const options = PROJECTILE_TYPE_OPTIONS.filter((option) =>

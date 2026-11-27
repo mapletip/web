@@ -75,7 +75,7 @@ describe('formatItemFacts', () => {
       'Restores 35% HP',
       'Restores 80 MP',
       'Restores 20% MP',
-      '+5 weapon attack, +10% critical rate · Lasts 10 min',
+      '+5 weapon attack, +10% critical rate · Lasts 10 minutes',
       '+27 attack',
       'Requires level 30',
       'Stacks to 100',
@@ -100,7 +100,7 @@ describe('formatItemFacts', () => {
           },
         }),
       }),
-    ).toEqual(['+10 speed · Lasts 45 sec']);
+    ).toEqual(['+10 speed · Lasts 45 seconds']);
 
     expect(
       formatItemFacts({
@@ -111,17 +111,20 @@ describe('formatItemFacts', () => {
           },
         }),
       }),
-    ).toEqual(['+5 jump · Lasts 1 min 35 sec']);
+    ).toEqual(['+5 jump · Lasts 1 minute 35 seconds']);
 
     expect(
       formatItemFacts({
         record: row({
           buff: {
-            effects: [{ stat: 'magicAttack', unit: 'flat', value: 8 }],
+            effects: [
+              { stat: 'magicAttack', unit: 'flat', value: 8 },
+              { stat: 'accuracy', unit: 'flat', value: -5 },
+            ],
           },
         }),
       }),
-    ).toEqual(['+8 magic attack']);
+    ).toEqual(['+8 magic attack, −5 accuracy']);
   });
 });
 

@@ -4,6 +4,7 @@ import type {
   QueryFieldDefinition,
   RecordFact,
   RecordCardInlineLabel,
+  RecordCardValuePart,
 } from '@mapletip/component-library';
 import type {
   ItemBrowseCoverage,
@@ -37,7 +38,11 @@ export interface ItemCardDescription {
     row: CategorizedItemRow,
     context: ItemCardContext,
   ) => ReactNode;
-  readonly lead: (
+  readonly value?: (
+    row: ItemRow,
+    context: ItemCardContext,
+  ) => readonly RecordCardValuePart[] | undefined;
+  readonly lead?: (
     row: ItemRow,
     context: ItemCardContext,
   ) => string | readonly GameTextSegment[] | undefined;

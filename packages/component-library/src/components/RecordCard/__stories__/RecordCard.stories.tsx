@@ -393,3 +393,55 @@ export const PictureGallery: Story = {
     await expect(canvas.getAllByRole('heading')).toHaveLength(3);
   },
 };
+
+export const ValueHeadline: Story = {
+  args: { title: 'Meadow Draught', layout: 'compactMediaAside' },
+  render: () => (
+    <Box w={680} maw="100%" p="md" bg="var(--mapletip-color-canvas)">
+      <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="sm">
+        <RecordCard
+          layout="compactMediaAside"
+          title="Meadow Draught"
+          media={<Thumbnail src={smallImage} size={48} alt="" />}
+          value={[
+            { id: 'warm', text: '+300 vitality', tone: 'warm' },
+            { id: 'cool', text: '+150 focus', tone: 'cool' },
+          ]}
+          secondaryLine="Lasts 5 minutes"
+          action={openDetails}
+        />
+        <RecordCard
+          layout="compactMediaAside"
+          title="Spiced Brew"
+          media={<Thumbnail src={smallImage} size={48} alt="" />}
+          value={[
+            { id: 'accent', text: '+15 power', tone: 'accent' },
+            { id: 'critical', text: '−5 balance', tone: 'critical' },
+          ]}
+          secondaryLine="Lasts 1 minute 30 seconds"
+          action={openDetails}
+        />
+        <RecordCard
+          layout="picture"
+          title="Amber Bench"
+          media={<Thumbnail src={smallImage} size={80} alt="" />}
+          value={[
+            { id: 'warm', text: '+50 vitality', tone: 'warm' },
+            { id: 'cool', text: '+50 focus', tone: 'cool' },
+          ]}
+          action={openDetails}
+        />
+      </SimpleGrid>
+    </Box>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByText('+300 vitality')).toBeVisible();
+    await expect(canvas.getByText('+150 focus')).toBeVisible();
+    await expect(canvas.getByText('−5 balance')).toBeVisible();
+    await userEvent.click(
+      canvas.getByRole('button', { name: 'Meadow Draught' }),
+    );
+    await expect(openDetails).toHaveBeenCalled();
+  },
+};

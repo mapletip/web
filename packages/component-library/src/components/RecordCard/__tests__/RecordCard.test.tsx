@@ -424,4 +424,52 @@ describe('RecordCard', () => {
     expect(wide?.querySelector('svg')).toBeNull();
     expect(container.querySelectorAll('a')).toHaveLength(2);
   });
+
+  it('renders value headline parts with tones directly under the title on compact and picture cards', () => {
+    const open = vi.fn();
+    const { container } = mount(
+      <>
+        <RecordCard
+          layout="compactMediaAside"
+          title="Meadow Draught"
+          value={[
+            { id: 'warm', text: '+300 vitality', tone: 'warm' },
+            { id: 'cool', text: '+150 focus', tone: 'cool' },
+            { id: 'critical', text: '−5 balance', tone: 'critical' },
+          ]}
+          secondaryLine="Lasts 5 minutes"
+          action={open}
+        />
+        <RecordCard
+          layout="picture"
+          title="Amber Bench"
+          value={[{ id: 'price', text: '7,000 tokens' }]}
+        />
+        <RecordCard
+          layout="compactMediaAside"
+          title="Plain Bottle"
+          value={[]}
+        />
+      </>,
+    );
+
+    expect(screen.getByText('+300 vitality').className).toContain(
+      'valuePartwarm',
+    );
+    expect(screen.getByText('+150 focus').className).toContain('valuePartcool');
+    expect(screen.getByText('−5 balance').className).toContain(
+      'valuePartcritical',
+    );
+    expect(screen.getByText('7,000 tokens').className).toContain(
+      'valuePartaccent',
+    );
+    expect(screen.getByText('Lasts 5 minutes')).toBeVisible();
+    // Empty value array renders no value line.
+    expect(container.querySelectorAll('[class*="valueLine"]')).toHaveLength(2);
+
+    const button = screen.getByRole('button', { name: 'Meadow Draught' });
+    expect(button).toHaveAccessibleName('Meadow Draught');
+    fireEvent.click(button);
+    expect(open).toHaveBeenCalledOnce();
+  });
 });

@@ -11,8 +11,10 @@ import { GameText } from './GameText';
 import type { CategorizedItemRow } from './project';
 
 const PICTURE_CARD_COLUMNS = { base: 2, md: 4, lg: 5 } as const;
-// Short and identity cards put text beside the picture, so they need wider columns.
-const ASIDE_CARD_COLUMNS = { base: 1, sm: 2, lg: 3 } as const;
+// Cards with the picture beside the text: 1 phone, 2 tablet; short value cards fit 4 wide,
+// identity cards with fact or tier rows need 3 (shelf CSS in ItemsGroupPage.module.css follows).
+const SHORT_CARD_COLUMNS = { base: 1, sm: 2, lg: 4 } as const;
+const IDENTITY_CARD_COLUMNS = { base: 1, sm: 2, lg: 3 } as const;
 
 /** Picture cards show the icon across the top; every other layout puts it beside the name. */
 export function isPictureLayout(kind: ItemKind | undefined): boolean {
@@ -31,7 +33,10 @@ export function itemCardColumns({
   readonly lg: number;
 } {
   if (kind?.card?.columns !== undefined) return kind.card.columns;
-  return isPictureLayout(kind) ? PICTURE_CARD_COLUMNS : ASIDE_CARD_COLUMNS;
+  if (isPictureLayout(kind)) return PICTURE_CARD_COLUMNS;
+  return kind?.card?.layout === 'short'
+    ? SHORT_CARD_COLUMNS
+    : IDENTITY_CARD_COLUMNS;
 }
 export const ITEM_KIND_LABELS: ReadonlyMap<string, string> = new Map(
   [...ITEM_KINDS_BY_ID].map(([id, kind]) => [id, kind.label]),
@@ -66,7 +71,8 @@ export function renderItemCard({
   // Category cards only on their own category page and shelf.
   const card = crossCategory ? undefined : kind?.card;
   const layout = card?.layout ?? 'picture';
-  const fact = secondaryLine ?? card?.lead(record, context);
+  const value = card?.value?.(record, context);
+  const fact = secondaryLine ?? card?.lead?.(record, context);
   const renderedFact =
     fact === undefined || typeof fact === 'string' ? (
       fact
@@ -129,6 +135,7 @@ export function renderItemCard({
   return layout === 'short' ? (
     <RecordCard
       layout="compactMediaAside"
+      {...(value === undefined ? {} : { value })}
       {...(renderedFact === undefined ? {} : { secondaryLine: renderedFact })}
       {...(card?.secondaryLineClamp === undefined
         ? {}
@@ -139,6 +146,7 @@ export function renderItemCard({
   ) : (
     <RecordCard
       layout="picture"
+      {...(value === undefined ? {} : { value })}
       leadLine={crossCategory ? ITEM_KIND_LABELS.get(record.kind) : undefined}
       {...(renderedFact === undefined ? {} : { secondaryLine: renderedFact })}
       {...shared}
