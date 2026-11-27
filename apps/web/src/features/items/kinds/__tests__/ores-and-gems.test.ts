@@ -33,15 +33,15 @@ function row({
 const relations: ProjectedRelations = {
   'monster-drop': {
     targets: [{ publicId: 'monster:one', name: 'Paper Beast' }],
-    byItem: { 'item:ore': [0] },
+    byItem: { ore: [0] },
   },
   'needed-for-quest': {
     targets: [{ publicId: 'quest:one', name: 'Amber Errand' }],
-    byItem: { 'item:ore': [0] },
+    byItem: { ore: [0] },
   },
   'used-in-recipe': {
     targets: [{ name: 'Amber Mixture' }],
-    byItem: { 'item:ore': [0] },
+    byItem: { ore: [0] },
   },
 };
 
@@ -74,7 +74,7 @@ describe('Ores & Gems card', () => {
           'needed-for-quest': {
             targets: [],
             byItem: {},
-            unestablished: ['item:ore'],
+            unestablished: ['ore'],
           },
         },
       }),

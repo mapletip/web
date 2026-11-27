@@ -15,7 +15,7 @@ function hasNoUses({
   relations,
 }: {
   readonly row: {
-    readonly key: string;
+    readonly sourceId: string;
     readonly neededForQuestCount?: number;
     readonly usedInRecipeCount?: number;
   };
@@ -27,7 +27,7 @@ function hasNoUses({
     coverage.relationships['used-in-recipe'] === 'complete' &&
     (row.neededForQuestCount ?? 0) === 0 &&
     (row.usedInRecipeCount ?? 0) === 0 &&
-    !relations['needed-for-quest']?.unestablished?.includes(row.key)
+    !relations['needed-for-quest']?.unestablished?.includes(row.sourceId)
   );
 }
 
@@ -127,8 +127,9 @@ export const monsterDrops = {
         id: 'dropUses',
         accessor: (row) => [
           ...((row.neededForQuestCount ?? 0) > 0 &&
-          relations['needed-for-quest']?.unestablished?.includes(row.key) !==
-            true
+          relations['needed-for-quest']?.unestablished?.includes(
+            row.sourceId,
+          ) !== true
             ? ['quests']
             : []),
           ...((row.usedInRecipeCount ?? 0) > 0 ? ['recipes'] : []),

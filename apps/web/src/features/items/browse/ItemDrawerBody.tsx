@@ -150,10 +150,15 @@ function ItemDrawerRelationsSection({
   useEffect(() => {
     let active = true;
     const kinds = requiredRelationKindsForItem({ record });
+    const projectedDescription = descriptions?.[record.sourceId];
     const descriptionsRequest =
       descriptions === undefined
         ? reader.readDescriptions()
-        : Promise.resolve(descriptions);
+        : Promise.resolve(
+            projectedDescription === undefined
+              ? {}
+              : { [record.key]: projectedDescription },
+          );
     const relationRequests = kinds.map((kind) => ({
       kind,
       request: reader.readRelation(kind),

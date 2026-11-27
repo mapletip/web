@@ -293,6 +293,12 @@ test('desktop Items landing', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 1100 });
   await page.goto(LANDING);
   await browseReady(page);
+  await expect(
+    page.getByRole('combobox', { name: 'Items a quest requires' }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole('combobox', { name: 'Items a monster drops' }),
+  ).toBeVisible();
   await expect(page).toHaveScreenshot('desktop-items-landing.png');
 });
 
@@ -300,6 +306,12 @@ test('mobile Items landing', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 1600 });
   await page.goto(LANDING);
   await browseReady(page);
+  await expect(
+    page.getByRole('combobox', { name: 'Items a quest requires' }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole('combobox', { name: 'Items a monster drops' }),
+  ).toBeVisible();
   await expect(page).toHaveScreenshot('mobile-items-landing.png');
 });
 
@@ -329,6 +341,29 @@ test('desktop Items all', async ({ page }) => {
   await page.goto(ALL);
   await browseReady(page);
   await expect(page).toHaveScreenshot('desktop-items-all.png');
+});
+
+test('desktop Items all filtered by a quest', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 1100 });
+  await page.goto(LANDING);
+  await browseReady(page);
+  const quest = page.getByRole('combobox', {
+    name: 'Items a quest requires',
+  });
+  await quest.fill('Thread Trial');
+  await page.getByRole('option', { name: 'Thread Trial' }).click();
+  await browseReady(page);
+  const summary = page.getByText(/^\d+ Items?$/u).first();
+  await expect(summary).toBeVisible();
+  const count = Number((await summary.textContent())?.split(' ')[0]);
+  await expect(
+    page
+      .getByText(`${count} ${count === 1 ? 'Item' : 'Items'}`, {
+        exact: true,
+      })
+      .first(),
+  ).toBeVisible();
+  await expect(page).toHaveScreenshot('desktop-items-all-quest.png');
 });
 
 test('mobile Items all', async ({ page }) => {

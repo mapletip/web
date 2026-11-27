@@ -13,7 +13,7 @@ export const questItems = {
   card: {
     lead: (row, { coverage, relations }) => {
       const relation = relations['needed-for-quest'];
-      const indices = relation?.byItem[row.key] ?? [];
+      const indices = relation?.byItem[row.sourceId] ?? [];
       const firstIndex = indices[0];
       if (indices.length === 1 && firstIndex !== undefined) {
         const name = relation?.targets[firstIndex]?.name;

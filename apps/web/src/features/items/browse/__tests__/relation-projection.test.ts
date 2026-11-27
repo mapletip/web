@@ -68,19 +68,35 @@ const pack: ItemDrawerPack<'needed-for-quest'> = {
 };
 
 describe('item relation projection', () => {
+  it('keys projected facts by source id while reading packs by item key', () => {
+    const items = [{ key: 'item:one', sourceId: '1001' }];
+    expect(projectItemRelation({ pack, items }).byItem).toEqual({
+      '1001': [1, 0],
+    });
+    expect(
+      projectItemDescriptions({
+        descriptions: { 'item:one': 'A published note.' },
+        items,
+      }),
+    ).toEqual({ '1001': 'A published note.' });
+  });
+
   it('sorts published names and maps item edges to their sorted indices', () => {
     expect(
       projectItemRelation({
         pack,
-        itemKeys: new Set(['item:one', 'item:unknown']),
+        items: [
+          { key: 'item:one', sourceId: 'one' },
+          { key: 'item:unknown', sourceId: 'unknown' },
+        ],
       }),
     ).toEqual({
       targets: [
         { publicId: 'a', name: 'Amber Errand' },
         { publicId: 'z', name: 'Zinc Errand' },
       ],
-      byItem: { 'item:one': [1, 0] },
-      unestablished: ['item:unknown'],
+      byItem: { one: [1, 0] },
+      unestablished: ['unknown'],
     });
   });
 
@@ -88,16 +104,19 @@ describe('item relation projection', () => {
     expect(
       projectItemRelation({
         pack,
-        itemKeys: new Set(['item:other-category']),
+        items: [{ key: 'item:other-category', sourceId: 'other' }],
       }),
     ).toEqual({
       targets: [{ publicId: 'z', name: 'Zinc Errand' }],
-      byItem: { 'item:other-category': [0] },
+      byItem: { other: [0] },
       unestablished: [],
     });
     expect(
-      projectItemRelation({ pack, itemKeys: new Set(['item:unknown']) }),
-    ).toEqual({ targets: [], byItem: {}, unestablished: ['item:unknown'] });
+      projectItemRelation({
+        pack,
+        items: [{ key: 'item:unknown', sourceId: 'unknown' }],
+      }),
+    ).toEqual({ targets: [], byItem: {}, unestablished: ['unknown'] });
   });
 
   it('skips an unsupported relationship', () => {
@@ -109,6 +128,44 @@ describe('item relation projection', () => {
         } as Parameters<typeof canReadItemRelation>[0]['coverage'],
       }),
     ).toBe(false);
+  });
+
+  it('projects every browse row when no category is selected', async () => {
+    reader.readRelation.mockResolvedValue(pack);
+    const allRows: readonly CategorizedItemRow[] = [
+      {
+        key: 'item:one',
+        sourceId: 'one',
+        itemClass: 'etc',
+        kind: 'other-use',
+        kindPath: ['all', 'use', 'other-use'],
+      },
+      {
+        key: 'item:other-category',
+        sourceId: 'other',
+        itemClass: 'etc',
+        kind: 'other-etc',
+        kindPath: ['all', 'etc', 'other-etc'],
+      },
+    ];
+
+    const loaded = await loadProjectedItemData({
+      buildId: 'cw-launch',
+      rows: allRows,
+      coverage: {
+        relationships: { 'needed-for-quest': 'complete' },
+      } as ItemBrowseCoverage,
+      relationKinds: ['needed-for-quest'],
+    });
+
+    expect(loaded.relations['needed-for-quest']).toEqual({
+      targets: [
+        { publicId: 'a', name: 'Amber Errand' },
+        { publicId: 'z', name: 'Zinc Errand' },
+      ],
+      byItem: { one: [1, 0], other: [1] },
+      unestablished: [],
+    });
   });
 });
 
@@ -145,9 +202,12 @@ describe('projected category descriptions', () => {
           'item:missing': 'An unrelated item.',
           'item:blank': '  ',
         },
-        itemKeys: new Set(['item:use', 'item:blank']),
+        items: [
+          { key: 'item:use', sourceId: 'use' },
+          { key: 'item:blank', sourceId: 'blank' },
+        ],
       }),
-    ).toEqual({ 'item:use': 'A useful note.' });
+    ).toEqual({ use: 'A useful note.' });
   });
 
   it('loads descriptions once and projects only the current category items', async () => {
@@ -166,7 +226,7 @@ describe('projected category descriptions', () => {
     expect(reader.readDescriptions).toHaveBeenCalledOnce();
     expect(loaded).toEqual({
       relations: {},
-      descriptions: { 'item:use': 'A useful note.' },
+      descriptions: { use: 'A useful note.' },
     });
   });
 
@@ -194,7 +254,7 @@ describe('projected category descriptions', () => {
       relations: {
         'needed-for-quest': {
           targets: [{ name: 'Amber Errand' }],
-          byItem: { 'item:use': [0] },
+          byItem: { use: [0] },
         },
       },
     });

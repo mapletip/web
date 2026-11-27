@@ -31,6 +31,7 @@ import { canonicalBuildParam, DetailBreadcrumbs } from '@/features/detail';
 import { useRouteOverlay } from '@/features/route-overlay/useRouteOverlay';
 
 import { ITEM_KINDS } from '../kinds';
+import { relationFilter, relationQueryField } from '../kinds/relation-filter';
 import type { ItemKind } from '../kinds/types';
 
 import { formatFullness } from './fullness';
@@ -350,11 +351,32 @@ export function ItemFrame({
   const facets = useMemo(() => {
     if (!all)
       return categoryFacets({ rows: displayedRows, kind, coverage, relations });
-    if (coverage?.relationships['used-in-recipe'] === 'unsupported') {
-      return ALL_FACETS.filter((facet) => facet.id !== 'used-in-recipes');
-    }
-    return ALL_FACETS;
+    return [
+      ...ALL_FACETS.filter(
+        (facet) =>
+          facet.id !== 'used-in-recipes' ||
+          coverage?.relationships['used-in-recipe'] !== 'unsupported',
+      ),
+      ...relationFilter({
+        relations,
+        kind: 'needed-for-quest',
+        label: 'Quest',
+      }),
+      ...relationFilter({ relations, kind: 'monster-drop', label: 'Monster' }),
+    ];
   }, [all, coverage, displayedRows, kind, relations]);
+  const allQueryFields = useMemo(
+    () => [
+      ...ALL_QUERY_FIELDS,
+      relationQueryField({
+        relations,
+        kind: 'needed-for-quest',
+        label: 'Quest',
+      }),
+      relationQueryField({ relations, kind: 'monster-drop', label: 'Monster' }),
+    ],
+    [relations],
+  );
   const rowBySourceId = useMemo(() => {
     const detailsRows = new Map(rows.map((row) => [row.sourceId, row]));
     for (const entry of itemKinds) {
@@ -496,7 +518,7 @@ export function ItemFrame({
         resolveRecordDetails={(selectedId) => rowBySourceId.get(selectedId)}
         queryFields={
           all
-            ? ALL_QUERY_FIELDS
+            ? allQueryFields
             : [
                 ...CATEGORY_QUERY_FIELDS,
                 ...(kind?.card?.queryFields?.({ coverage, relations }) ?? []),
