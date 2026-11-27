@@ -61,7 +61,16 @@ function validateFacets<TRecord extends Record<string, unknown>>(
 ): void {
   const facetIds = new Set<string>();
   const facetFields = new Set<string>();
+  let resultsFacetId: string | undefined;
   for (const facet of facets) {
+    if (facet.placement === 'results') {
+      if (resultsFacetId !== undefined) {
+        throw new Error(
+          `FacetedBrowser: only one results facet is supported ("${resultsFacetId}" and "${facet.id}").`,
+        );
+      }
+      resultsFacetId = facet.id;
+    }
     if (facetIds.has(facet.id)) {
       throw new Error(`FacetedBrowser: duplicate facet ID "${facet.id}".`);
     }
@@ -165,6 +174,7 @@ function resolveFacet<TRecord extends Record<string, unknown>>({
         label: facet.formatOption ? facet.formatOption({ value }) : value,
       }));
   const options: FacetOption[] = declaredOptions.filter((option) => {
+    if (facet.placement === 'results') return true;
     const count = counts.get(option.value) ?? 0;
     return count > 0 && count < records.length;
   });

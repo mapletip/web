@@ -45,7 +45,7 @@ export interface FacetPicker {
   readonly nothingFound: string;
 }
 
-export interface FacetDefinition<TRecord extends Record<string, unknown>> {
+interface FacetDefinitionBase<TRecord extends Record<string, unknown>> {
   /** Unique UI identifier used by quick facets. */
   readonly id: string;
   /** Registered TanStack query-field ID used by the canonical filter state. */
@@ -54,7 +54,6 @@ export interface FacetDefinition<TRecord extends Record<string, unknown>> {
   /** Optional decorative icon shared by the rail, drawer and mobile shortcut. */
   readonly icon?: ReactNode;
   /** Boolean facets are removed only when every record has the same value. */
-  readonly kind: 'multi-select' | 'range' | 'boolean';
   /** Optional labels and ordering for categorical values; values remain strings. */
   readonly options?: readonly FacetOption[];
   /**
@@ -93,3 +92,13 @@ export interface FacetDefinition<TRecord extends Record<string, unknown>> {
   /** Specialized controls receive the current canonical or draft value and setter. */
   readonly renderControl?: (context: FacetControlContext<TRecord>) => ReactNode;
 }
+
+export type FacetDefinition<TRecord extends Record<string, unknown>> =
+  FacetDefinitionBase<TRecord> &
+    (
+      | {
+          readonly kind: 'multi-select';
+          readonly placement?: 'rail' | 'results';
+        }
+      | { readonly kind: 'range' | 'boolean'; readonly placement?: 'rail' }
+    );

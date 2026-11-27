@@ -47,6 +47,7 @@ import { NavigationDrawer } from '@/components/FacetedBrowser/NavigationDrawer';
 import { Pagination } from '@/components/FacetedBrowser/Pagination/Pagination';
 import { QuickFacets } from '@/components/FacetedBrowser/QuickFacets/QuickFacets';
 import { RecordDetailsDrawer } from '@/components/FacetedBrowser/RecordDetailsDrawer/RecordDetailsDrawer';
+import { ResultPills } from '@/components/FacetedBrowser/ResultPills/ResultPills';
 import { Status, hasStatus } from '@/components/FacetedBrowser/Status/Status';
 import {
   formatSummaryText,
@@ -188,6 +189,8 @@ export function FacetedBrowser<TRecord extends Record<string, unknown>>(
     [facetDefinitions, queryFields, records, resolvedFields],
   );
   const facets = resolved.facets;
+  const resultFacet = facets.find((facet) => facet.placement === 'results');
+  const railFacets = facets.filter((facet) => facet.placement !== 'results');
   const resolvedQueryFields = resolved.queryFields;
 
   const navigationField = navigation?.field;
@@ -352,7 +355,7 @@ export function FacetedBrowser<TRecord extends Record<string, unknown>>(
   const shownDrawerFacet = facets.find(
     (facet) => facet.id === drawer.focusedFacetId,
   );
-  const drawerFacets = shownDrawerFacet ? [shownDrawerFacet] : facets;
+  const drawerFacets = shownDrawerFacet ? [shownDrawerFacet] : railFacets;
 
   // Facet controls keep local UI state that is not part of canonical filter state
   // (an opened-but-empty Custom range, for example). A deliberate reset must clear
@@ -423,9 +426,16 @@ export function FacetedBrowser<TRecord extends Record<string, unknown>>(
     canonicalState.search.trim().length > 0 ||
     Object.keys(canonicalState.filters).length > 0;
 
-  const activeFilterCount = countActiveFilters(canonicalState.filters);
+  const activeFilterCount = countActiveFilters(
+    Object.fromEntries(
+      railFacets.map((facet) => [
+        facet.field,
+        canonicalState.filters[facet.field],
+      ]),
+    ),
+  );
   // Mobile shortcuts mirror the resolved left-rail facets in the same order.
-  const quickFacets = facets.map((facet) => ({
+  const quickFacets = railFacets.map((facet) => ({
     id: facet.id,
     label: facet.label,
     ...(facet.icon !== undefined ? { icon: facet.icon } : {}),
@@ -578,7 +588,7 @@ export function FacetedBrowser<TRecord extends Record<string, unknown>>(
   );
 
   const railContent =
-    navigation || facets.length > 0 ? (
+    navigation || railFacets.length > 0 ? (
       <Stack gap="md">
         {navigation
           ? navigation.render({
@@ -587,7 +597,7 @@ export function FacetedBrowser<TRecord extends Record<string, unknown>>(
               counts: navigationCounts,
             })
           : null}
-        {facets.length > 0 ? (
+        {railFacets.length > 0 ? (
           <>
             {showFilterHeading ? (
               <Title order={2} size="h4">
@@ -596,7 +606,7 @@ export function FacetedBrowser<TRecord extends Record<string, unknown>>(
             ) : null}
             <FacetList
               key={facetResetEpoch}
-              facets={facets}
+              facets={railFacets}
               values={canonicalState.filters}
               records={records}
               surface="rail"
@@ -664,7 +674,15 @@ export function FacetedBrowser<TRecord extends Record<string, unknown>>(
   );
 
   const hasSortOptions = sortOptions !== undefined && sortOptions.length > 0;
-  const hasFilterOptions = facets.length > 0 || hasSortOptions;
+  const hasFilterOptions = railFacets.length > 0 || hasSortOptions;
+  const resultPillFilters = { ...canonicalState.filters };
+  if (resultFacet) delete resultPillFilters[resultFacet.field];
+  const allPillCount = resultFacet
+    ? browser.evaluateDraft(resultPillFilters).matchingCount
+    : 0;
+  const resultPillValue = resultFacet
+    ? canonicalState.filters[resultFacet.field]
+    : undefined;
 
   return (
     <>
@@ -711,7 +729,7 @@ export function FacetedBrowser<TRecord extends Record<string, unknown>>(
         }
         activeFilters={
           <ActiveFilters
-            facets={facets}
+            facets={railFacets}
             filters={canonicalState.filters}
             onRemove={removeChip}
             onClear={clearAllFilters}
@@ -719,6 +737,19 @@ export function FacetedBrowser<TRecord extends Record<string, unknown>>(
         }
         summary={<Summary text={summaryText} />}
         toolbar={toolbarContent}
+        resultPills={
+          resultFacet ? (
+            <ResultPills
+              facet={resultFacet}
+              selected={Array.isArray(resultPillValue) ? resultPillValue : []}
+              counts={browser.getFacetValues(resultFacet.field)}
+              allCount={allPillCount}
+              onChange={(value) =>
+                browser.setFilter(resultFacet.field, [...value])
+              }
+            />
+          ) : undefined
+        }
         status={statusContent}
         resultsLabel={resultsLabel}
         fillHeight={fillHeight}
