@@ -436,46 +436,45 @@ describe('Items Browse server rendering', () => {
     expect(main).toContain('Required by quests');
   });
 
-  it('renders Stars & Arrows effects and published type pills in the first response', async () => {
-    const cw = await renderPath('/maplestory/items/use/stars-and-arrows');
+  it('renders each projectile category and its class description', async () => {
+    const cw = await renderPath('/maplestory/items/use/throwing-stars');
     const cwMain = mainHtml(cw.html);
     expect(cwMain).toContain('Practice Stars');
     expect(cwMain).toContain('+27 attack');
     expect(cwMain).toContain('800 per stack');
-    expect(cwMain).toContain('Silent Arrow');
-    expect(cwMain).toContain('2,000 per stack');
-    expect(cwMain).toContain('Throwing stars');
-    expect(cwMain).toContain('Arrows');
-    expect(cwMain).not.toContain('Bullets');
+    expect(cwMain).not.toContain('Silent Arrow');
+    expect(cwMain).toContain('Used by Thieves with a claw.');
     expect(cwMain).toContain('data-record-card-layout="compactMediaAside"');
 
-    const gms = await renderPath(
-      '/maplestory/gms-v83/items/use/stars-and-arrows',
-    );
+    const gms = await renderPath('/maplestory/gms-v83/items/use/bullets');
     const gmsMain = mainHtml(gms.html);
     expect(gmsMain).toContain('GMS Practice Bullet');
-    expect(gmsMain).toContain('Bullets');
+    expect(gmsMain).toContain('Used by Pirates with a gun.');
+
+    const arrows = mainHtml(
+      (await renderPath('/maplestory/items/use/arrows')).html,
+    );
+    expect(arrows).toContain('Silent Arrow');
+    expect(arrows).toContain('2,000 per stack');
+    expect(arrows).toContain(
+      'Used by Bowmen. Bows and crossbows each take their own arrows.',
+    );
+    expect(arrows).not.toContain('Practice Stars');
 
     const desc = await renderPath(
-      '/maplestory/items/use/stars-and-arrows?sort=attack-desc',
+      '/maplestory/items/use/throwing-stars?sort=attack-desc',
     );
     const descMain = mainHtml(desc.html);
     expect(descMain.indexOf('Practice Stars')).toBeLessThan(
       descMain.indexOf('Training Stars'),
     );
-    expect(descMain.indexOf('Training Stars')).toBeLessThan(
-      descMain.indexOf('Silent Arrow'),
-    );
 
     const asc = await renderPath(
-      '/maplestory/items/use/stars-and-arrows?sort=attack-asc',
+      '/maplestory/items/use/throwing-stars?sort=attack-asc',
     );
     const ascMain = mainHtml(asc.html);
     expect(ascMain.indexOf('Training Stars')).toBeLessThan(
       ascMain.indexOf('Practice Stars'),
-    );
-    expect(ascMain.indexOf('Practice Stars')).toBeLessThan(
-      ascMain.indexOf('Silent Arrow'),
     );
   });
 

@@ -56,7 +56,7 @@ describe('item kind registry', () => {
     );
     expect(
       [...counts].filter(([, count]) => count === 0).map(([id]) => id),
-    ).toEqual([]);
+    ).toEqual(buildId === 'cw-launch' ? ['bullet'] : []);
   });
 
   it.each([

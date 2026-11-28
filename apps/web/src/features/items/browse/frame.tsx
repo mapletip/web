@@ -1,4 +1,4 @@
-import { Stack, Title } from '@mantine/core';
+import { Stack, Text, Title } from '@mantine/core';
 import {
   DrillDownNav,
   FacetedBrowser,
@@ -504,6 +504,9 @@ export function ItemFrame({
               ]}
             />
             <Title order={1}>{heading}</Title>
+            {kind?.description === undefined ? null : (
+              <Text>{kind.description}</Text>
+            )}
           </Stack>
         }
         navigation={{
