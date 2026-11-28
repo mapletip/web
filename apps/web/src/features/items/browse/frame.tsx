@@ -38,7 +38,6 @@ import { formatFullness } from './fullness';
 import { groupItemRows } from './identical-items';
 import { itemCardColumns, ITEM_KIND_LABELS, renderItemCard } from './item-card';
 import { formatItemFacts, ItemDrawerBody } from './ItemDrawerBody';
-import { ItemsGroupShelves } from './ItemsGroupPage';
 import { numberFormat } from './number-format';
 import {
   ITEM_GROUPS,
@@ -110,35 +109,61 @@ const QUEST_REWARD_FACET: FacetDefinition<CategorizedItemRow> = {
   label: 'Quest reward',
   kind: 'boolean',
 };
-const ALL_FACETS: readonly FacetDefinition<CategorizedItemRow>[] = [
-  {
-    id: 'kind',
-    field: 'kind',
-    label: 'Category',
-    kind: 'multi-select',
-    placement: 'results',
-    // Same order as the rail: Use, ETC, Set-up, then Pets & Cash.
-    options: ITEM_GROUPS.flatMap((group) =>
-      ITEM_KINDS.filter((entry) => entry.group === group.id).map((entry) => ({
-        value: entry.id,
-        label: entry.label,
-      })),
-    ),
-  },
-  {
-    id: 'required-by-quests',
-    field: 'requiredByQuests',
-    label: 'Required by quests',
-    kind: 'boolean',
-  },
-  {
-    id: 'used-in-recipes',
-    field: 'usedInRecipes',
-    label: 'Used in recipes',
-    kind: 'boolean',
-  },
-  QUEST_REWARD_FACET,
-];
+function crossCategoryFacets({
+  rows,
+  group,
+  coverage,
+}: {
+  readonly rows: readonly CategorizedItemRow[];
+  readonly group?: ItemGroup | undefined;
+  readonly coverage?: ItemBrowseCoverage | undefined;
+}): readonly FacetDefinition<CategorizedItemRow>[] {
+  const nonEmptyKinds = new Set(rows.map((row) => row.kind));
+  return [
+    {
+      id: 'kind',
+      field: 'kind',
+      label: 'Category',
+      kind: 'multi-select',
+      placement: 'results',
+      // Same order as the rail: Use, ETC, Set-up, then Pets & Cash.
+      options: ITEM_GROUPS.filter(
+        (entry) => group === undefined || entry.id === group,
+      ).flatMap((entry) =>
+        ITEM_KINDS.filter(
+          (kind) => kind.group === entry.id && nonEmptyKinds.has(kind.id),
+        ).map((kind) => ({
+          value: kind.id,
+          label: kind.label,
+        })),
+      ),
+    },
+    ...(rows.some((row) => (row.neededForQuestCount ?? 0) > 0)
+      ? [
+          {
+            id: 'required-by-quests',
+            field: 'requiredByQuests',
+            label: 'Required by quests',
+            kind: 'boolean' as const,
+          },
+        ]
+      : []),
+    ...(coverage?.relationships['used-in-recipe'] !== 'unsupported' &&
+    rows.some((row) => (row.usedInRecipeCount ?? 0) > 0)
+      ? [
+          {
+            id: 'used-in-recipes',
+            field: 'usedInRecipes',
+            label: 'Used in recipes',
+            kind: 'boolean' as const,
+          },
+        ]
+      : []),
+    ...(rows.some((row) => (row.questRewardCount ?? 0) > 0)
+      ? [QUEST_REWARD_FACET]
+      : []),
+  ];
+}
 
 export function categoryFacets({
   rows,
@@ -356,11 +381,15 @@ export function ItemFrame({
           ...(descriptions === undefined ? {} : { descriptions }),
           ...(scrollTargetIcons === undefined ? {} : { scrollTargetIcons }),
         },
-      }).filter((row) => kind === undefined || row.kind === kind.id),
-    [kind, rows, coverage, relations, descriptions, scrollTargetIcons],
+      }).filter((row) =>
+        kind !== undefined
+          ? row.kind === kind.id
+          : group === undefined || row.kindPath[1] === group,
+      ),
+    [kind, group, rows, coverage, relations, descriptions, scrollTargetIcons],
   );
   const facets = useMemo(() => {
-    if (!all)
+    if (kind !== undefined)
       return categoryFacets({
         rows: displayedRows,
         kind,
@@ -368,11 +397,7 @@ export function ItemFrame({
         relations,
       });
     return [
-      ...ALL_FACETS.filter(
-        (facet) =>
-          facet.id !== 'used-in-recipes' ||
-          coverage?.relationships['used-in-recipe'] !== 'unsupported',
-      ),
+      ...crossCategoryFacets({ rows: displayedRows, group, coverage }),
       ...relationFilter({
         relations,
         kind: 'needed-for-quest',
@@ -380,7 +405,7 @@ export function ItemFrame({
       }),
       ...relationFilter({ relations, kind: 'monster-drop', label: 'Monster' }),
     ];
-  }, [all, coverage, displayedRows, kind, relations]);
+  }, [coverage, displayedRows, group, kind, relations]);
   const allQueryFields = useMemo(
     () => [
       ...ALL_QUERY_FIELDS,
@@ -415,7 +440,8 @@ export function ItemFrame({
   const categorySearchFields = kind?.card?.group
     ? (['name', 'names'] as const)
     : CATEGORY_SEARCH_FIELDS;
-  const searchFields = all ? ALL_SEARCH_FIELDS : categorySearchFields;
+  const crossCategory = kind === undefined;
+  const searchFields = crossCategory ? ALL_SEARCH_FIELDS : categorySearchFields;
   const itemDrawerContent = useCallback(
     (record: CategorizedItemRow) => {
       const itemKind: ItemKind | undefined = ITEM_KINDS_BY_ID.get(record.kind);
@@ -527,7 +553,7 @@ export function ItemFrame({
         idAccessor="sourceId"
         resolveRecordDetails={(selectedId) => rowBySourceId.get(selectedId)}
         queryFields={
-          all
+          crossCategory
             ? allQueryFields
             : [
                 ...CATEGORY_QUERY_FIELDS,
@@ -541,55 +567,33 @@ export function ItemFrame({
         summaryMode="total"
         summaryNoun={SUMMARY_NOUN}
         pageSizeOptions={PAGE_SIZE_OPTIONS}
-        {...(group !== undefined && kind === undefined
-          ? {
-              presentation: 'custom' as const,
-              showPagination: false,
-              renderResults: ({
-                matchingRecords,
-              }: {
-                matchingRecords: readonly CategorizedItemRow[];
-              }) => (
-                <ItemsGroupShelves
-                  buildId={buildId}
-                  group={group}
-                  records={matchingRecords}
-                  context={{ coverage, relations }}
-                  selectedRecordId={details?.recordId}
-                  openDetails={(recordId) =>
-                    overlay.open({ type: 'record-details', recordId })
-                  }
-                />
-              ),
-            }
-          : {
-              presentation: 'cards' as const,
-              cardColumns: itemCardColumns({ kind }),
-              renderCard: (
-                record: CategorizedItemRow,
-                {
-                  openDetails,
-                  isDetailsOpen,
-                }: { openDetails?: () => void; isDetailsOpen?: boolean },
-              ) =>
-                renderItemCard({
-                  record,
-                  context: {
-                    coverage,
-                    relations,
-                    ...(descriptions === undefined ? {} : { descriptions }),
-                    ...(scrollTargetIcons ? { scrollTargetIcons } : {}),
-                  },
-                  openDetails,
-                  openItemDetails: (recordId) =>
-                    overlay.open({ type: 'record-details', recordId }),
-                  isDetailsOpen,
-                  ...(all
-                    ? { secondaryLine: itemPrimaryFact({ record }) }
-                    : {}),
-                  crossCategory: all,
-                }),
-            })}
+        presentation="cards"
+        cardColumns={itemCardColumns({ kind })}
+        renderCard={(
+          record: CategorizedItemRow,
+          {
+            openDetails,
+            isDetailsOpen,
+          }: { openDetails?: () => void; isDetailsOpen?: boolean },
+        ) =>
+          renderItemCard({
+            record,
+            context: {
+              coverage,
+              relations,
+              ...(descriptions === undefined ? {} : { descriptions }),
+              ...(scrollTargetIcons ? { scrollTargetIcons } : {}),
+            },
+            openDetails,
+            openItemDetails: (recordId) =>
+              overlay.open({ type: 'record-details', recordId }),
+            isDetailsOpen,
+            ...(crossCategory
+              ? { secondaryLine: itemPrimaryFact({ record }) }
+              : {}),
+            crossCategory,
+          })
+        }
         recordDetailsTitle={(record) => record.name}
         recordDetailsSideOnDesktop
         recordDetailsSideSize="md"

@@ -11,7 +11,7 @@ import { GameText } from './GameText';
 import type { CategorizedItemRow } from './project';
 
 // Cards with the picture beside the text: 1 phone, 2 tablet; short value cards fit 4 wide,
-// identity cards with fact or tier rows need 3 (shelf CSS in ItemsGroupPage.module.css follows).
+// identity cards with fact or tier rows need 3.
 const SHORT_CARD_COLUMNS = { base: 1, sm: 2, lg: 4 } as const;
 const IDENTITY_CARD_COLUMNS = { base: 1, sm: 2, lg: 3 } as const;
 
@@ -50,7 +50,7 @@ interface RenderItemCardOptions {
 // 32px item icons, magnified to fill the aside media slot.
 const ASIDE_THUMBNAIL = { size: 48, magnify: 1.5 } as const;
 
-/** Shared item card renderer used by category pages, cross-category results, and group shelves. */
+/** Shared item card renderer used by category pages and cross-category results. */
 export function renderItemCard({
   record,
   openDetails,
@@ -61,7 +61,7 @@ export function renderItemCard({
   openItemDetails,
 }: RenderItemCardOptions): ReactElement {
   const kind: ItemKind | undefined = ITEM_KINDS_BY_ID.get(record.kind);
-  // Category cards only on their own category page and shelf.
+  // Category cards only on their own category page.
   const card = crossCategory ? undefined : kind?.card;
   const layout = card?.layout ?? 'short';
   const value = card?.value?.(record, context);

@@ -21,9 +21,7 @@ import { fixtureRelease } from '@/mocks/release';
 import { routeTree } from '@/routeTree.gen';
 
 import { ITEM_KINDS } from '../../kinds';
-import { groupItemRows } from '../identical-items';
-import { itemCardColumns, renderItemCard } from '../item-card';
-import { buildGroupShelves } from '../ItemsGroupPage';
+import { renderItemCard } from '../item-card';
 import {
   ITEM_BROWSE_UNAVAILABLE_MESSAGE,
   loadItemBrowse,
@@ -823,104 +821,48 @@ describe('Items Browse server rendering', () => {
       ITEM_GROUPS.map((group) => [buildId, group.id, group.label] as const),
     ),
   )(
-    'renders %s group page %s with category shelves in rail order, counts, See all links, and no empty categories',
+    'renders %s group page %s with scoped category pills and cross-category cards',
     async (buildId, groupId, groupLabel) => {
-      const browse = fixtureBrowse(buildId);
-      const path = itemPath({ buildId, group: groupId });
-      const { router, html } = await renderPath(path);
+      const { router, html } = await renderPath(
+        itemPath({ buildId, group: groupId }),
+      );
       const main = mainHtml(html).replaceAll('<!-- -->', '');
+      const availableKinds = new Set(
+        fixtureBrowse(buildId).rows.map((row) => row.kind),
+      );
+      const groupKinds = ITEM_KINDS.filter(
+        (kind) => kind.group === groupId && availableKinds.has(kind.id),
+      );
+      const otherKinds = ITEM_KINDS.filter((kind) => kind.group !== groupId);
 
       expect(isNotFound(router)).toBe(false);
-      expect(main).toContain('Item categories');
-      expect(main).toContain('All items');
-      expect(main).toContain(
-        `Search ${buildId === 'cw-launch' ? 'Classic World' : 'GMS v83'} items`,
-      );
-
-      const expectedShelves = buildGroupShelves({
-        group: groupId,
-        rows: groupItemRows({
-          rows: browse.rows,
-          kinds: ITEM_KINDS,
-          context: { coverage: browse.coverage, relations: {} },
-        }),
-      });
-      const numberFormat = new Intl.NumberFormat('en-US');
-
-      let lastHeadingIndex = -1;
-      for (const shelf of expectedShelves) {
-        const headingPattern = new RegExp(
-          `<h2[^>]*id="items-shelf-${escapeRegExp(shelf.kind.id)}"[^>]*>${escapeRegExp(escapeHtml(shelf.kind.label))}</h2>`,
-          'u',
-        );
-        const match = headingPattern.exec(main);
-        expect(match, `shelf heading for ${shelf.kind.id}`).not.toBeNull();
-        expect(match!.index).toBeGreaterThan(lastHeadingIndex);
-        lastHeadingIndex = match!.index;
-
-        const kindHref = itemPath({
-          buildId,
-          group: groupId,
-          kind: shelf.kind.slug,
-        });
-        const formattedCount = numberFormat.format(shelf.totalCount);
-        const seeAllPattern = new RegExp(
-          `<a[^>]*href="${escapeRegExp(kindHref)}"[^>]*>See all ${escapeRegExp(formattedCount)}</a>`,
-          'u',
-        );
-        expect(main).toMatch(seeAllPattern);
-
-        expect(shelf.previewRows.length).toBeLessThanOrEqual(
-          itemCardColumns({ kind: shelf.kind }).lg,
-        );
-        for (const row of shelf.previewRows) {
-          expect(main).toContain(escapeHtml(row.name));
-        }
-      }
-
-      const emptyGroupKinds = ITEM_KINDS.filter(
-        (kind) =>
-          kind.group === groupId &&
-          !expectedShelves.some((shelf) => shelf.kind.id === kind.id),
-      );
-      for (const emptyKind of emptyGroupKinds) {
-        expect(main).not.toContain(`items-shelf-${emptyKind.id}`);
-        expect(main).not.toContain(
-          itemPath({ buildId, group: groupId, kind: emptyKind.slug }),
-        );
-      }
       expect(main).toContain(escapeHtml(groupLabel));
+      expect(main).toContain('Category choices');
+      expect(main).toContain('data-record-card-layout="compactMediaAside"');
+      for (const kind of groupKinds) {
+        expect(main).toContain(`${escapeHtml(kind.label)} (`);
+      }
+      for (const kind of otherKinds) {
+        expect(main).not.toContain(`${escapeHtml(kind.label)} (`);
+      }
+      expect(main).not.toContain('items-shelf-');
     },
   );
 
-  it('omits empty categories from a group page shelves and rail, and caps shelves to one row', async () => {
+  it('shows items from multiple ETC categories and omits empty category pills', async () => {
     const base = fixtureBrowse('cw-launch');
+    const { html } = await renderPath('/maplestory/items/etc');
+    const main = mainHtml(html);
+    expect(main).toContain('Lamplight Ore');
+    expect(main).toContain('Only Given Pebble');
+
     mockedLoad.mockResolvedValue({
       ...base,
       rows: base.rows.filter((row) => row.kind !== 'quest-items'),
     });
-
-    const { html } = await renderPath('/maplestory/items/etc');
-    const main = mainHtml(html).replaceAll('<!-- -->', '');
-
-    expect(main).not.toContain('items-shelf-quest-items');
-    expect(main).not.toContain('/maplestory/items/etc/quest-items');
-    expect(main).not.toContain('Quest Items');
-
-    // Monster Drops has > 5 items in the fixture; the 6th in default order is not on the shelf.
-    const monsterDrops = base.rows
-      .filter((row) => row.kind === 'monster-drops')
-      .sort((left, right) =>
-        left.name.localeCompare(right.name, 'en-US', {
-          numeric: true,
-          sensitivity: 'base',
-        }),
-      );
-    expect(monsterDrops.length).toBeGreaterThan(
-      itemCardColumns({ kind: undefined }).lg,
-    );
-    const sixth = monsterDrops[itemCardColumns({ kind: undefined }).lg]!;
-    expect(main).not.toContain(escapeHtml(sixth.name));
+    const filtered = mainHtml((await renderPath('/maplestory/items/etc')).html);
+    expect(filtered).not.toContain('Quest Items (');
+    expect(filtered).not.toContain('/maplestory/items/etc/quest-items');
   });
 
   it('shows the generic unavailable state when item data fails to load', async () => {
