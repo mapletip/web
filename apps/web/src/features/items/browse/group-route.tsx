@@ -7,8 +7,6 @@ import {
 import type { BrowseSearch } from '@/features/browse/search-params';
 import { requireBuildId } from '@/features/detail';
 
-import { monsterDrops } from '../kinds/monster-drops';
-
 import { ItemFrame } from './frame';
 import type { LoadedItemBrowse } from './load';
 import { itemPageHead, resolveItemKind, type ItemGroup } from './page';
@@ -78,13 +76,31 @@ export function itemGroupRouteOptions<TPath extends GroupRoutePath>({
     }) => {
       const kind = resolveItemKind({ group, slug: params.kind });
       const { loaderData } = await parentMatchPromise;
+      const groupRows =
+        loaderData?.rows.filter((row) => row.kindPath[1] === group) ?? [];
       const projected =
-        (kind !== undefined || group === 'etc') && loaderData !== undefined
+        loaderData !== undefined
           ? await loadProjectedItemData({
               buildId: requireBuildId(params.buildId),
-              kind: kind ?? monsterDrops,
-              rows: loaderData.rows,
+              ...(kind === undefined ? {} : { kind }),
+              rows: groupRows,
               coverage: loaderData.coverage,
+              ...(kind === undefined
+                ? {
+                    relationKinds: [
+                      ...(groupRows.some(
+                        (row) => (row.neededForQuestCount ?? 0) > 0,
+                      )
+                        ? ['needed-for-quest' as const]
+                        : []),
+                      ...(groupRows.some(
+                        (row) => (row.monsterDropCount ?? 0) > 0,
+                      )
+                        ? ['monster-drop' as const]
+                        : []),
+                    ],
+                  }
+                : {}),
             })
           : { relations: {} };
       return {
