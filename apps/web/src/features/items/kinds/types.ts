@@ -95,6 +95,7 @@ export interface ItemKind {
   readonly group: 'use' | 'etc' | 'setup' | 'cash';
   readonly slug: string;
   readonly label: string;
+  readonly description?: string;
   readonly iconContentId?: string;
   readonly matches: (row: ItemRow) => boolean;
   readonly relations?: readonly ProjectedRelationKind[];

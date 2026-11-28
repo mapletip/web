@@ -57,7 +57,7 @@ describe('itemPrimaryFact', () => {
     expect(
       itemPrimaryFact({
         record: makeRow({
-          kind: 'stars-and-arrows',
+          kind: 'throwing-star',
           attack: 27,
           maxStack: 800,
         }),

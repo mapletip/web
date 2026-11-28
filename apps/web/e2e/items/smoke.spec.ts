@@ -109,7 +109,7 @@ test('Other Use type pills keep untyped items under All', async ({ page }) => {
   await expect(items.item('Plain Use Item')).toBeVisible();
 });
 const POTIONS = '/maplestory/items/use/potions-and-food';
-const PROJECTILES = '/maplestory/items/use/stars-and-arrows';
+const PROJECTILES = '/maplestory/items/use/throwing-stars';
 const QUEST_ITEMS = '/maplestory/items/etc/quest-items';
 const MONSTER_DROPS = '/maplestory/items/etc/monster-drops';
 
@@ -187,7 +187,7 @@ test('Quest Items shows named requirements and filters by quest, then removes it
   await expect(items.item('Quiet Gallery Note')).toBeVisible();
 });
 
-test('Stars & Arrows pills, attack sort, and GMS v83 Monster Cards work as published', async ({
+test('projectile categories show their class and keep attack sorting', async ({
   page,
   isMobile,
 }) => {
@@ -198,28 +198,29 @@ test('Stars & Arrows pills, attack sort, and GMS v83 Monster Cards work as publi
   const items = new ItemsPage(page);
   await items.goto(PROJECTILES);
   await expect(items.item('Practice Stars')).toBeVisible();
+  await expect(page.getByText('Used by Thieves with a claw.')).toBeVisible();
   await expect(page.getByText('+27 attack', { exact: true })).toBeVisible();
   await expect(page.getByText('800 per stack', { exact: true })).toBeVisible();
-  await expect(
-    page.getByText('2,000 per stack', { exact: true }),
-  ).toBeVisible();
-  await expect(page.getByText(/^Throwing stars \(/u)).toBeVisible();
-  await expect(page.getByText(/^Arrows \(/u)).toBeVisible();
-  await expect(page.getByText(/^Bullets \(/u)).toHaveCount(0);
-
+  await expect(items.item('Silent Arrow')).toHaveCount(0);
   await page.getByRole('combobox', { name: 'Sort' }).click();
   await page.getByRole('option', { name: 'Attack (high to low)' }).click();
   await expect(
     page.locator('[data-record-card-layout="compactMediaAside"] h3'),
-  ).toContainText(['Practice Stars', 'Training Stars', 'Silent Arrow']);
+  ).toContainText(['Practice Stars', 'Training Stars']);
   await expect(page).toHaveURL(/sort=attack-desc/u);
 
-  await page.getByText(/^Arrows \(/u).click();
+  await items.goto('/maplestory/items/use/arrows');
   await expect(items.item('Silent Arrow')).toBeVisible();
-  await expect(items.item('Practice Stars')).toBeHidden();
+  await expect(
+    page.getByText(
+      'Used by Bowmen. Bows and crossbows each take their own arrows.',
+    ),
+  ).toBeVisible();
+  await expect(items.item('Practice Stars')).toHaveCount(0);
 
-  await items.goto('/maplestory/gms-v83/items/use/stars-and-arrows');
-  await expect(page.getByText(/^Bullets \(/u)).toBeVisible();
+  await items.goto('/maplestory/gms-v83/items/use/bullets');
+  await expect(items.item('GMS Practice Bullet')).toBeVisible();
+  await expect(page.getByText('Used by Pirates with a gun.')).toBeVisible();
 
   await items.goto('/maplestory/gms-v83/items/use/monster-cards');
   await expect(items.item('GMS Native Alpha Card')).toBeVisible();
@@ -360,13 +361,13 @@ test('Items category rail goes through the group and keeps search in browser his
     return;
   }
   await expect(
-    items.rail.getByRole('link', { name: /^Stars & Arrows/u }),
+    items.rail.getByRole('link', { name: /^Throwing Stars/u }),
   ).toHaveCount(0);
   await items.rail.getByRole('link', { name: 'Use', exact: true }).click();
   await expect(page).toHaveURL('/maplestory/items/use?q=practice');
-  await items.rail.getByRole('link', { name: /^Stars & Arrows/u }).click();
+  await items.rail.getByRole('link', { name: /^Throwing Stars/u }).click();
   await expect(page).toHaveURL(
-    '/maplestory/items/use/stars-and-arrows?q=practice',
+    '/maplestory/items/use/throwing-stars?q=practice',
   );
   await page.goBack();
   await expect(page).toHaveURL('/maplestory/items/use?q=practice');
@@ -376,11 +377,11 @@ test('Items category rail goes through the group and keeps search in browser his
   await expect(page).toHaveURL('/maplestory/items/use?q=practice');
   await page.goForward();
   await expect(page).toHaveURL(
-    '/maplestory/items/use/stars-and-arrows?q=practice',
+    '/maplestory/items/use/throwing-stars?q=practice',
   );
   await page.reload();
   await expect(items.heading()).toHaveText(
-    'MapleStory Classic World Stars & Arrows',
+    'MapleStory Classic World Throwing Stars',
   );
 });
 
@@ -740,6 +741,18 @@ test('Items landing search suggestions and Crafting ingredients lookup', async (
     /\/maplestory\/items\/use\/potions-and-food\?q=Sample(\+|%20)Draught$/u,
   );
   await expect(items.item('Sample Draught')).toBeVisible();
+
+  await items.goto('/maplestory/items');
+  await search.fill('Practice Stars');
+  await expect(
+    page.getByRole('option', { name: /Practice Stars.*Throwing Stars/u }),
+  ).toBeVisible();
+  await page
+    .getByRole('option', { name: /Practice Stars.*Throwing Stars/u })
+    .click();
+  await expect(page).toHaveURL(
+    /\/maplestory\/items\/use\/throwing-stars\?q=Practice(\+|%20)Stars$/u,
+  );
 
   // "See all results" opens /items/all with the query.
   await items.goto('/maplestory/items');

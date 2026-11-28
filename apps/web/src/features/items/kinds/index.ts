@@ -12,10 +12,10 @@ import { otherUse } from './other-use';
 import { petFood } from './pet-food';
 import { pets } from './pets';
 import { potionsAndFood } from './potions-and-food';
+import { arrows, bullets, throwingStars } from './projectiles';
 import { questItems } from './quest-items';
 import { scrolls } from './scrolls';
 import { skillBooks } from './skill-books';
-import { starsAndArrows } from './stars-and-arrows';
 import { summoningSacks } from './summoning-sacks';
 
 export const ITEM_KINDS = [
@@ -31,7 +31,9 @@ export const ITEM_KINDS = [
   questItems,
   otherEtc,
   scrolls,
-  starsAndArrows,
+  throwingStars,
+  arrows,
+  bullets,
   monsterCards,
   skillBooks,
   summoningSacks,
